@@ -105,6 +105,13 @@ namespace HyPlayer
             };
             TbSingerName.Text = ai.Artist;
             TbSongName.Text = ai.SongName;
+            Windows.Storage.StorageFolder storageFolder =
+                Windows.Storage.ApplicationData.Current.LocalFolder;
+            Windows.Storage.StorageFile sampleFile =
+                await storageFolder.CreateFileAsync("album.png",
+                    Windows.Storage.CreationCollisionOption.ReplaceExisting);
+            sampleFile.OpenStreamForWriteAsync().Result.Write(afi.Tag.Pictures[0].Data.ToArray(),0, afi.Tag.Pictures[0].Data.ToArray().Length);
+            AlbumImage.Source = new BitmapImage(new Uri(sampleFile.Path));
             mp.Play();
             timer = new Timer((state =>
             {
