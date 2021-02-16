@@ -4,11 +4,43 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:hyPlayer="using:HyPlayer"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+>
 
     <Grid>
-        <Canvas>
-        </Canvas>
+        <NavigationView
+            Margin="0,0,0,100"
+            IsBackButtonVisible="Collapsed"
+            IsSettingsVisible="False"
+            Background="{ThemeResource SystemControlAcrylicElementBrush}"
+            x:Name="NavMain">
+            <NavigationView.MenuItems>
+                <NavigationViewItem
+                    Icon="Home"
+                    Content="主页"
+                    Tag="PageHome" />
+                <NavigationViewItem
+                    Icon="FourBars"
+                    Content="排行"
+                    Tag="PageRank" />
+                <NavigationViewItem
+                    Icon="Zoom"
+                    Content="搜索"
+                    Tag="PageSearch" />
+                <NavigationViewItem
+                    Icon="Download"
+                    Content="下载"
+                    Tag="PageDownload" />
+                <NavigationViewItem
+                    Icon="Contact"
+                    Content="我"
+                    Tag="PageMe" />
+            </NavigationView.MenuItems>
+            <Frame
+                x:Name="contentFrame" />
+        </NavigationView>
+        <hyPlayer:PlayBar Height="100"
+                          VerticalAlignment="Bottom"></hyPlayer:PlayBar>
     </Grid>
 </Page>

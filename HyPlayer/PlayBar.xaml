@@ -1,0 +1,284 @@
+﻿<UserControl
+    x:Class="HyPlayer.PlayBar"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:HyPlayer"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    d:DesignHeight="100"
+    d:DesignWidth="1080">
+    <Grid>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger
+                            MinWindowWidth="1000" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter
+                            Target="SubControlGrid.Visibility"
+                            Value="Visible" />
+                        <Setter
+                            Target="MainControlGrid.(Grid.ColumnSpan)"
+                            Value="1" />
+                        <Setter
+                            Target="BtnNone.Visibility"
+                            Value="Visible"></Setter>
+                        <Setter
+                            Target="BtnPlayRollType.Visibility"
+                            Value="Visible"></Setter>
+                        <Setter
+                            Target="BtnPreviousSong.(Grid.ColumnSpan)"
+                            Value="1"></Setter>
+                        <Setter
+                            Target="BtnPreviousSong.(Grid.Column)"
+                            Value="3"></Setter>
+                        <Setter
+                            Target="BtnPlayStateChange.(Grid.ColumnSpan)"
+                            Value="1"></Setter>
+                        <Setter
+                            Target="BtnPlayStateChange.(Grid.Column)"
+                            Value="4"></Setter>
+                        <Setter
+                            Target="BtnNextSong.(Grid.ColumnSpan)"
+                            Value="1"></Setter>
+                        <Setter
+                            Target="BtnNextSong.(Grid.Column)"
+                            Value="5"></Setter>
+                        <Setter
+                            Target="SliderProgress.Margin"
+                            Value="0,0,0,0"></Setter>
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger
+                            MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter
+                            Target="SubControlGrid.Visibility"
+                            Value="Collapsed" />
+                        <Setter
+                            Target="MainControlGrid.(Grid.ColumnSpan)"
+                            Value="2" />
+                        <Setter
+                            Target="BtnNone.Visibility"
+                            Value="Collapsed"></Setter>
+                        <Setter
+                            Target="BtnPlayRollType.Visibility"
+                            Value="Collapsed"></Setter>
+                        <Setter
+                            Target="BtnPreviousSong.(Grid.ColumnSpan)"
+                            Value="2"></Setter>
+                        <Setter
+                            Target="BtnPreviousSong.(Grid.Column)"
+                            Value="2"></Setter>
+                        <Setter
+                            Target="BtnPlayStateChange.(Grid.ColumnSpan)"
+                            Value="2"></Setter>
+                        <Setter
+                            Target="BtnPlayStateChange.(Grid.Column)"
+                            Value="4"></Setter>
+                        <Setter
+                            Target="BtnNextSong.(Grid.ColumnSpan)"
+                            Value="2"></Setter>
+                        <Setter
+                            Target="BtnNextSong.(Grid.Column)"
+                            Value="6"></Setter>
+                        <Setter
+                            Target="SliderProgress.Margin"
+                            Value="0,0,15,0"></Setter>
+                    </VisualState.Setters>
+                </VisualState>
+
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger
+                            MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter
+                            Target="SubControlGrid.Visibility"
+                            Value="Collapsed" />
+                        <Setter
+                            Target="MainControlGrid.(Grid.ColumnSpan)"
+                            Value="2" />
+
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition
+                Width="Auto" />
+            <ColumnDefinition
+                Width="*" />
+            <ColumnDefinition
+                Width="2*" />
+            <ColumnDefinition
+                Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid
+            HorizontalAlignment="Left"
+            BorderThickness="1"
+            BorderBrush="{ThemeResource SystemControlBackgroundListMediumRevealBorderBrush}">
+            <Image
+                Width="100"
+                x:Name="AlbumImage"
+                Source="Assets/Square150x150Logo.png" />
+        </Grid>
+
+        <Grid
+            Grid.Column="1"
+            Margin="10 0 0 0"
+            BorderBrush="Blue">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <TextBlock
+                Grid.Row="0"
+                Margin="0,0,0,5"
+                VerticalAlignment="Bottom"
+                Text="歌曲名" />
+            <TextBlock
+                Grid.Row="1"
+                Margin="0,5,0,0"
+                VerticalAlignment="Top"
+                Foreground="Gray"
+                Text="歌手名" />
+        </Grid>
+        <Grid
+            Margin="5"
+            Name="MainControlGrid"
+            Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition
+                    Height="2*" />
+                <RowDefinition
+                    Height="*" />
+            </Grid.RowDefinitions>
+            <Grid
+                Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Button
+                    Width="45"
+                    Height="45"
+                    CornerRadius="30"
+                    Background="Transparent"
+                    Grid.Column="2"
+                    Name="BtnPlayRollType"
+                    VerticalAlignment="Center">
+                    <FontIcon
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        Glyph="&#xE14B;"></FontIcon>
+                </Button>
+                <Button
+                    Width="45"
+                    Height="45"
+                    Grid.Column="3"
+                    Background="Transparent"
+                    Name="BtnPreviousSong"
+                    VerticalAlignment="Center"
+                    CornerRadius="30">
+                    <FontIcon
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        Glyph="&#xE892;"></FontIcon>
+                </Button>
+                <Button
+                    Name="BtnPlayStateChange"
+                    Width="50"
+                    Height="50"
+                    Grid.Column="4"
+                    VerticalAlignment="Center"
+                    CornerRadius="30">
+                    <FontIcon
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        Glyph="&#xEDB4;"></FontIcon>
+                    <!--EDB5 -->
+                </Button>
+                <Button
+                    Grid.Column="5"
+                    Name="BtnNextSong"
+                    VerticalAlignment="Center"
+                    Background="Transparent"
+                    Width="45"
+                    Height="45"
+                    CornerRadius="30">
+                    <FontIcon
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        Glyph="&#xE101;"></FontIcon>
+                </Button>
+                <Button
+                    Grid.Column="6"
+                    VerticalAlignment="Center"
+                    Name="BtnNone"
+                    Background="Transparent"
+                    Width="45"
+                    Height="45"
+                    CornerRadius="30">
+                    <FontIcon
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        Glyph="&#xE00B;"></FontIcon>
+                </Button>
+            </Grid>
+            <Grid
+                Grid.Row="1">
+                <Slider
+                    Name="SliderProgress" />
+            </Grid>
+        </Grid>
+        <StackPanel
+            Orientation="Horizontal"
+            HorizontalAlignment="Right"
+            Name="SubControlGrid"
+            Grid.Column="3">
+            <StackPanel Width="150" Orientation="Horizontal" Margin="10">
+                <Button
+                    Width="40"
+                    Height="40"
+                    Margin="0,0,3,0"
+                    CornerRadius="20"
+                    Background="Transparent">
+                    <FontIcon
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        Glyph="&#xE15D;" /> <!--E198 -->
+                </Button>
+                <Slider VerticalAlignment="Center" Width="100"/>
+            </StackPanel>
+            <Button
+                Width="40"
+                Height="40"
+                Margin="10"
+                CornerRadius="20"
+                Background="Transparent">
+                <FontIcon
+                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                    Glyph="&#xE14C;" />
+            </Button>
+            <Button
+                Width="40"
+                Height="40"
+                Margin="10"
+                CornerRadius="20"
+                Background="Transparent">
+                <FontIcon
+                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                    Glyph="&#xE971;" />
+            </Button>
+        </StackPanel>
+    </Grid>
+</UserControl>
