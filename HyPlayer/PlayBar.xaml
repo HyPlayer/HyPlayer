@@ -130,7 +130,6 @@
                 x:Name="AlbumImage"
                 Source="Assets/Square150x150Logo.png" />
         </Grid>
-
         <Grid
             Grid.Column="1"
             Margin="10 0 0 0"
@@ -143,12 +142,14 @@
                 Grid.Row="0"
                 Margin="0,0,0,5"
                 VerticalAlignment="Bottom"
+                Name="TbSongName"
                 Text="歌曲名" />
             <TextBlock
                 Grid.Row="1"
                 Margin="0,5,0,0"
                 VerticalAlignment="Top"
                 Foreground="Gray"
+                Name="TbSingerName"
                 Text="歌手名" />
         </Grid>
         <Grid
@@ -204,8 +205,10 @@
                     Height="50"
                     Grid.Column="4"
                     VerticalAlignment="Center"
+                    Click="BtnPlayStateChange_OnClick"
                     CornerRadius="30">
                     <FontIcon
+                        Name="PlayStateIcon"
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
                         Glyph="&#xEDB4;"></FontIcon>
                     <!--EDB5 -->
@@ -252,12 +255,17 @@
                     Height="40"
                     Margin="0,0,3,0"
                     CornerRadius="20"
+                    Name="BtnMute"
+                    Click="BtnMute_OnCllick"
                     Background="Transparent">
                     <FontIcon
+                        Name="BtnMuteIcon"
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
                         Glyph="&#xE15D;" /> <!--E198 -->
                 </Button>
-                <Slider VerticalAlignment="Center" Width="100"/>
+                <Slider
+                    Name="SliderAudioRate" VerticalAlignment="Center" Width="100"
+                    ValueChanged="SliderAudioRate_ValueChanged" />
             </StackPanel>
             <Button
                 Width="40"

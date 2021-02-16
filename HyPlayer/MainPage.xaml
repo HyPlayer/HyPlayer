@@ -5,12 +5,12 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:hyPlayer="using:HyPlayer"
-    mc:Ignorable="d"
->
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    mc:Ignorable="d">
 
     <Grid>
         <NavigationView
-            Margin="0,0,0,100"
+            Margin="0,0,0,0"
             IsBackButtonVisible="Collapsed"
             IsSettingsVisible="False"
             Background="{ThemeResource SystemControlAcrylicElementBrush}"
@@ -37,10 +37,15 @@
                     Content="我"
                     Tag="PageMe" />
             </NavigationView.MenuItems>
-            <Frame
-                x:Name="contentFrame" />
         </NavigationView>
-        <hyPlayer:PlayBar Height="100"
-                          VerticalAlignment="Bottom"></hyPlayer:PlayBar>
+        <Grid
+            Margin="8"
+            CornerRadius="4"
+            Background="{ThemeResource SystemControlAcrylicWindowBrush}"
+            VerticalAlignment="Bottom"
+            Height="100">
+
+            <hyPlayer:PlayBar />
+        </Grid>
     </Grid>
 </Page>
