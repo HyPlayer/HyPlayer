@@ -194,6 +194,7 @@
                     Height="45"
                     Grid.Column="3"
                     Background="Transparent"
+                    Click="BtnPreviousSong_OnClick"
                     Name="BtnPreviousSong"
                     VerticalAlignment="Center"
                     CornerRadius="30">
@@ -220,6 +221,7 @@
                     Style="{StaticResource ButtonRevealStyle}"
                     Grid.Column="5"
                     Name="BtnNextSong"
+                    Click="BtnNextSong_OnClick"
                     VerticalAlignment="Center"
                     Background="Transparent"
                     Width="45"
@@ -291,17 +293,10 @@
                     <Flyout>
                         <ListBox
                             Name="ListBoxPlayList"
+                            SelectionChanged="ListBoxPlayList_OnSelectionChanged"
                             Height="500"
                             Width="400">
-                            <x:String>Blue
-                            </x:String>
-                            <x:String>Green
-                            </x:String>
-                            <x:String>Red
-                            </x:String>
-                            <x:String>Yellow
-                            </x:String>
-
+                            
                         </ListBox>
                     </Flyout>
                 </Button.Flyout>

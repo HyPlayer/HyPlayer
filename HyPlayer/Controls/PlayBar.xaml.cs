@@ -99,8 +99,9 @@ namespace HyPlayer
                 ListBoxPlayList.Items?.Clear();
                 foreach (MediaPlaybackItem mediaPlaybackItem in sender.Items)
                 {
-                    ListBoxPlayList.Items.Add(mediaPlaybackItem.GetDisplayProperties().MusicProperties.Title);
+                    ListBoxPlayList.Items.Add(mediaPlaybackItem.GetDisplayProperties().MusicProperties.Artist +" - "+mediaPlaybackItem.GetDisplayProperties().MusicProperties.Title);
                 }
+                ListBoxPlayList.SelectedIndex = (int)_mediaPlaybackList.CurrentItemIndex;
             }));
         }
 
@@ -143,7 +144,7 @@ namespace HyPlayer
             Windows.Storage.StorageFolder storageFolder =
                 Windows.Storage.ApplicationData.Current.LocalFolder;
             Windows.Storage.StorageFile sampleFile =
-                await storageFolder.CreateFileAsync(ai.Artist + " - " + ai.Album + " - " + ai.SongName + ".png",
+                await storageFolder.CreateFileAsync(random.Next().ToString(),
                     Windows.Storage.CreationCollisionOption.ReplaceExisting);
             sampleFile.OpenStreamForWriteAsync().Result.Write(afi.Tag.Pictures[0].Data.ToArray(), 0, afi.Tag.Pictures[0].Data.ToArray().Length);
             ai.Picture = new BitmapImage(new Uri(sampleFile.Path));
@@ -156,6 +157,7 @@ namespace HyPlayer
 
         private async void LoadPlayingFile(MediaPlaybackItem mpi)
         {
+            if (mpi == null) return;
             timer?.Dispose();
             MediaItemDisplayProperties dp = mpi.GetDisplayProperties();
             AudioInfo ai = audioInfos[mpi];
@@ -211,6 +213,22 @@ namespace HyPlayer
             mp.IsMuted = !mp.IsMuted;
             BtnMuteIcon.Glyph = mp.IsMuted ? "\uE198" : "\uE15D";
             SliderAudioRate.Visibility = mp.IsMuted ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        private void BtnPreviousSong_OnClick(object sender, RoutedEventArgs e)
+        {
+            _mediaPlaybackList.MovePrevious();
+        }
+
+        private void BtnNextSong_OnClick(object sender, RoutedEventArgs e)
+        {
+            _mediaPlaybackList.MoveNext();
+        }
+
+        private void ListBoxPlayList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (ListBoxPlayList.SelectedIndex != -1 && ListBoxPlayList.SelectedIndex!= _mediaPlaybackList.CurrentItemIndex)
+                _mediaPlaybackList.MoveTo((uint)ListBoxPlayList.SelectedIndex);
         }
     }
 

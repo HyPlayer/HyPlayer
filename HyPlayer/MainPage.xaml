@@ -5,7 +5,6 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:hyPlayer="using:HyPlayer"
-<<<<<<< Updated upstream
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:media="using:Windows.UI.Xaml.Media"
     mc:Ignorable="d">
@@ -17,13 +16,6 @@
             TintLuminosityOpacity="0.183000008692034"
             TintColor="Gray"
             FallbackColor="Gray" />
-=======
-    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls" xmlns:media="using:Windows.UI.Xaml.Media"
-    mc:Ignorable="d">
-    <Page.Resources x:Key="Default">
-        <media:AcrylicBrush x:Key="PlaybackAcrylicInAppLuminosity" BackgroundSource="Backdrop"
-            TintOpacity="0.67500003206078" TintLuminosityOpacity="0.183000008692034" TintColor="Gray" FallbackColor="White" />
->>>>>>> Stashed changes
     </Page.Resources>
     <Grid>
         <NavigationView
@@ -62,11 +54,6 @@
             VerticalAlignment="Bottom"
             Height="100">
             <hyPlayer:PlayBar />
-<<<<<<< Updated upstream
-
-=======
-            
->>>>>>> Stashed changes
         </Grid>
     </Grid>
 </Page>
