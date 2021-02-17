@@ -6,14 +6,23 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:hyPlayer="using:HyPlayer"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:media="using:Windows.UI.Xaml.Media"
     mc:Ignorable="d">
-
+    <Page.Resources>
+        <media:AcrylicBrush
+            x:Key="PlaybackAcrylicInAppLuminosity"
+            BackgroundSource="Backdrop"
+            TintOpacity="0.67500003206078"
+            TintLuminosityOpacity="0.183000008692034"
+            TintColor="Gray"
+            FallbackColor="White" />
+    </Page.Resources>
     <Grid>
         <NavigationView
             Margin="0,0,0,0"
             IsBackButtonVisible="Collapsed"
             IsSettingsVisible="False"
-            Background="{ThemeResource SystemControlAcrylicElementBrush}"
+            Background="{ThemeResource SystemControlAcrylicWindowBrush}"
             x:Name="NavMain">
             <NavigationView.MenuItems>
                 <NavigationViewItem
@@ -41,11 +50,11 @@
         <Grid
             Margin="8"
             CornerRadius="4"
-            Background="{ThemeResource SystemControlAcrylicWindowBrush}"
+            Background="{ThemeResource PlaybackAcrylicInAppLuminosity}"
             VerticalAlignment="Bottom"
             Height="100">
-
             <hyPlayer:PlayBar />
+
         </Grid>
     </Grid>
 </Page>

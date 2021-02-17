@@ -176,6 +176,7 @@
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
                 <Button
+                    Style="{StaticResource ButtonRevealStyle}"
                     Width="45"
                     Height="45"
                     CornerRadius="30"
@@ -188,6 +189,7 @@
                         Glyph="&#xE14B;"></FontIcon>
                 </Button>
                 <Button
+                    Style="{StaticResource ButtonRevealStyle}"
                     Width="45"
                     Height="45"
                     Grid.Column="3"
@@ -200,6 +202,7 @@
                         Glyph="&#xE892;"></FontIcon>
                 </Button>
                 <Button
+                    Style="{StaticResource ButtonRevealStyle}"
                     Name="BtnPlayStateChange"
                     Width="50"
                     Height="50"
@@ -214,6 +217,7 @@
                     <!--EDB5 -->
                 </Button>
                 <Button
+                    Style="{StaticResource ButtonRevealStyle}"
                     Grid.Column="5"
                     Name="BtnNextSong"
                     VerticalAlignment="Center"
@@ -226,6 +230,7 @@
                         Glyph="&#xE101;"></FontIcon>
                 </Button>
                 <Button
+                    Style="{StaticResource ButtonRevealStyle}"
                     Grid.Column="6"
                     VerticalAlignment="Center"
                     Name="BtnNone"
