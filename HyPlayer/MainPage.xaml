@@ -15,7 +15,7 @@
             TintOpacity="0.67500003206078"
             TintLuminosityOpacity="0.183000008692034"
             TintColor="Gray"
-            FallbackColor="White" />
+            FallbackColor="Gray" />
     </Page.Resources>
     <Grid>
         <NavigationView
