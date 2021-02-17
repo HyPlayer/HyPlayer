@@ -7,6 +7,7 @@
     xmlns:hyPlayer="using:HyPlayer"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:media="using:Windows.UI.Xaml.Media"
+    xmlns:controls1="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d">
     <Page.Resources>
         <media:AcrylicBrush
@@ -23,6 +24,7 @@
             IsBackButtonVisible="Collapsed"
             IsSettingsVisible="False"
             Background="{ThemeResource SystemControlAcrylicWindowBrush}"
+            SelectionChanged="NavMain_OnSelectionChanged"
             x:Name="NavMain">
             <NavigationView.MenuItems>
                 <NavigationViewItem
@@ -47,6 +49,28 @@
                     Tag="PageMe" />
             </NavigationView.MenuItems>
         </NavigationView>
+        <!-- 登录弹窗 -->
+        <ContentDialog
+            Name="DialogLogin"
+            Title="登录"
+            CloseButtonText="关闭">
+
+            <StackPanel
+                Orientation="Vertical"
+                HorizontalAlignment="Center">
+                <TextBox PlaceholderText="账号 / 邮箱" Name="TextBoxAccount" />
+                <PasswordBox PlaceholderText="密码" Name="TextBoxPassword" />
+                <TextBlock
+                    Text="登录即代表你同意xxxxxxx"
+                    TextWrapping="Wrap" />
+                <controls1:InfoBar
+                    Name="InfoBarLoginHint"
+                    IsOpen="False"/>
+                <Button Name="ButtonLogin" Content="登录" Click="ButtonLogin_OnClick"></Button>
+            </StackPanel>
+
+        </ContentDialog>
+
         <Grid
             Margin="8"
             CornerRadius="4"

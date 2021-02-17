@@ -10,5 +10,6 @@ namespace HyPlayer
     class Common
     {
         public static NeteaseCloudMusicApi.CloudMusicApi ncapi = new CloudMusicApi();
+        public static bool Logined = false;
     }
 }
