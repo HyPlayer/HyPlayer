@@ -10,14 +10,14 @@
 
   <Identity
     Name="64698713-b184-44e4-ae9b-80db14b129c6"
-    Publisher="CN=Kengwang"
+    Publisher="CN=HyPlayer Team"
     Version="1.0.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="64698713-b184-44e4-ae9b-80db14b129c6" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
     <DisplayName>HyPlayer</DisplayName>
-    <PublisherDisplayName>Kengwang</PublisherDisplayName>
+    <PublisherDisplayName>HyPlayer Team</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 

@@ -144,12 +144,13 @@ namespace HyPlayer
             Windows.Storage.StorageFolder storageFolder =
                 Windows.Storage.ApplicationData.Current.LocalFolder;
             Windows.Storage.StorageFile sampleFile =
-                await storageFolder.CreateFileAsync(random.Next().ToString(),
+                await storageFolder.CreateFileAsync("ImgCache\\Albums\\"+random.Next().ToString(),
                     Windows.Storage.CreationCollisionOption.ReplaceExisting);
             sampleFile.OpenStreamForWriteAsync().Result.Write(afi.Tag.Pictures[0].Data.ToArray(), 0, afi.Tag.Pictures[0].Data.ToArray().Length);
             ai.Picture = new BitmapImage(new Uri(sampleFile.Path));
             audioInfos[mediaPlaybackItem] = ai;
             properties.Thumbnail = Windows.Storage.Streams.RandomAccessStreamReference.CreateFromFile(sampleFile);
+            //sampleFile.DeleteAsync();
             mediaPlaybackItem.ApplyDisplayProperties(properties);
 
             _mediaPlaybackList.Items.Add(mediaPlaybackItem);
