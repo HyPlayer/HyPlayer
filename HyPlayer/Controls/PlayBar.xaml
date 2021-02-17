@@ -91,22 +91,26 @@
                         <Setter
                             Target="SliderProgress.Margin"
                             Value="0,0,15,0"></Setter>
-                    </VisualState.Setters>
-                </VisualState>
-
-                <VisualState>
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger
-                            MinWindowWidth="0" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
                         <Setter
                             Target="SubControlGrid.Visibility"
                             Value="Collapsed" />
                         <Setter
                             Target="MainControlGrid.(Grid.ColumnSpan)"
                             Value="2" />
+                        <Setter
+                            Target="AlbumImage.Visibility"
+                            Value="Collapsed" />
 
+                    </VisualState.Setters>
+                </VisualState>
+
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger
+                            MinWindowWidth="800" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="AlbumImage.Visibility" Value="Visible"/>
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
