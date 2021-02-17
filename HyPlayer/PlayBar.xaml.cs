@@ -69,50 +69,105 @@ namespace HyPlayer
     public sealed partial class PlayBar : UserControl
     {
         private MediaPlayer mp;
+        MediaPlaybackList _mediaPlaybackList;
         private Timer timer;
+        private Dictionary<MediaPlaybackItem, AudioInfo> audioInfos = new Dictionary<MediaPlaybackItem, AudioInfo>();
+        private Random random = new Random();
+
         public PlayBar()
         {
             this.InitializeComponent();
-            ButtonBase_OnClick(null, null);
+            _mediaPlaybackList = new MediaPlaybackList();
+            _mediaPlaybackList.ItemOpened += _mediaPlaybackList_ItemOpened;
+            _mediaPlaybackList.CurrentItemChanged += _mediaPlaybackList_CurrentItemChanged;
+            mp = new MediaPlayer()
+            {
+                Source = _mediaPlaybackList
+            };
+            TestFile();
         }
 
-        private async void ButtonBase_OnClick(object sender, RoutedEventArgs e)
+        private void _mediaPlaybackList_CurrentItemChanged(MediaPlaybackList sender, CurrentMediaPlaybackItemChangedEventArgs args)
+        {
+            LoadPlayingFile(args.NewItem);
+        }
+
+        private void _mediaPlaybackList_ItemOpened(MediaPlaybackList sender, MediaPlaybackItemOpenedEventArgs args)
+        {
+            this.Invoke((() =>
+            {
+                ListBoxPlayList.Items?.Clear();
+                foreach (MediaPlaybackItem mediaPlaybackItem in sender.Items)
+                {
+                    ListBoxPlayList.Items.Add(mediaPlaybackItem.GetDisplayProperties().MusicProperties.Title);
+                }
+            }));
+        }
+
+        private async void TestFile()
         {
             FileOpenPicker fop = new FileOpenPicker();
             fop.FileTypeFilter.Add(".flac");
             fop.FileTypeFilter.Add(".mp3");
-            StorageFile sf = await fop.PickSingleFileAsync();
+
+
+            var files = await fop.PickMultipleFilesAsync();
+            foreach (var file in files)
+            {
+                AppendFile(file);
+            }
+            mp.Play();
+        }
+
+        private async void AppendFile(StorageFile sf)
+        {
+            var mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(sf));
             var afi = TagLib.File.Create(new UwpStorageFileAbstraction(sf), ReadStyle.Average);
+            var properties = mediaPlaybackItem.GetDisplayProperties();
             AudioInfo ai = new AudioInfo()
             {
                 Album = afi.Tag.Album,
                 Artist = string.Join('/', afi.Tag.Artists),
                 LengthInMilliseconds = afi.Properties.Duration.Milliseconds,
-                SongName = afi.Tag.Title,
-                //Picture = afi.Tag.Pictures[0].Data
+                SongName = afi.Tag.Title
             };
-            MediaSource ms = MediaSource.CreateFromStorageFile(sf);
-            var _mediaPlaybackItem = new MediaPlaybackItem(ms);
-            var properties = _mediaPlaybackItem.GetDisplayProperties();
             properties.Type = MediaPlaybackType.Music;
             properties.MusicProperties.AlbumTitle = ai.Album;
             properties.MusicProperties.Artist = ai.Artist;
             properties.MusicProperties.Title = ai.SongName;
-            _mediaPlaybackItem.ApplyDisplayProperties(properties);
-            mp = new MediaPlayer()
-            {
-                Source = _mediaPlaybackItem
-            };
-            TbSingerName.Text = ai.Artist;
-            TbSongName.Text = ai.SongName;
+            /*
+                MemoryStream st = new MemoryStream(afi.Tag.Pictures[0].Data.ToArray());
+                IRandomAccessStream ras = st.AsRandomAccessStream();
+                BitmapImage bi = new BitmapImage();
+            */
             Windows.Storage.StorageFolder storageFolder =
                 Windows.Storage.ApplicationData.Current.LocalFolder;
             Windows.Storage.StorageFile sampleFile =
-                await storageFolder.CreateFileAsync("album.png",
+                await storageFolder.CreateFileAsync(ai.Artist + " - " + ai.Album + " - " + ai.SongName + ".png",
                     Windows.Storage.CreationCollisionOption.ReplaceExisting);
-            sampleFile.OpenStreamForWriteAsync().Result.Write(afi.Tag.Pictures[0].Data.ToArray(),0, afi.Tag.Pictures[0].Data.ToArray().Length);
-            AlbumImage.Source = new BitmapImage(new Uri(sampleFile.Path));
-            mp.Play();
+            sampleFile.OpenStreamForWriteAsync().Result.Write(afi.Tag.Pictures[0].Data.ToArray(), 0, afi.Tag.Pictures[0].Data.ToArray().Length);
+            ai.Picture = new BitmapImage(new Uri(sampleFile.Path));
+            audioInfos[mediaPlaybackItem] = ai;
+            properties.Thumbnail = Windows.Storage.Streams.RandomAccessStreamReference.CreateFromFile(sampleFile);
+            mediaPlaybackItem.ApplyDisplayProperties(properties);
+
+            _mediaPlaybackList.Items.Add(mediaPlaybackItem);
+        }
+
+        private async void LoadPlayingFile(MediaPlaybackItem mpi)
+        {
+            timer?.Dispose();
+            MediaItemDisplayProperties dp = mpi.GetDisplayProperties();
+            AudioInfo ai = audioInfos[mpi];
+            this.Invoke((() =>
+            {
+                TbSingerName.Text = ai.Artist;
+                TbSongName.Text = ai.SongName;
+                AlbumImage.Source = ai.Picture;
+                SliderAudioRate.Value = mp.Volume * 100;
+            }));
+
+            //mp.Play();
             timer = new Timer((state =>
             {
                 this.Invoke(() =>
@@ -126,7 +181,6 @@ namespace HyPlayer
                     PlayStateIcon.Glyph = mp.PlaybackSession.PlaybackState == MediaPlaybackState.Playing ? "\uEDB4" : "\uEDB5";
                     //SliderAudioRate.Value = mp.Volume;
                 });
-
             }), ai, 1000, 1000);
 
         }
@@ -166,6 +220,6 @@ namespace HyPlayer
         public string Artist;
         public string Album;
         public int LengthInMilliseconds;
-        public Picture Picture;
+        public BitmapImage Picture;
     }
 }

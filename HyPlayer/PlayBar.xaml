@@ -249,7 +249,10 @@
             HorizontalAlignment="Right"
             Name="SubControlGrid"
             Grid.Column="3">
-            <StackPanel Width="150" Orientation="Horizontal" Margin="10">
+            <StackPanel
+                Width="150"
+                Orientation="Horizontal"
+                Margin="10">
                 <Button
                     Width="40"
                     Height="40"
@@ -261,10 +264,13 @@
                     <FontIcon
                         Name="BtnMuteIcon"
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        Glyph="&#xE15D;" /> <!--E198 -->
+                        Glyph="&#xE15D;" />
+                    <!--E198 -->
                 </Button>
                 <Slider
-                    Name="SliderAudioRate" VerticalAlignment="Center" Width="100"
+                    Name="SliderAudioRate"
+                    VerticalAlignment="Center"
+                    Width="100"
                     ValueChanged="SliderAudioRate_ValueChanged" />
             </StackPanel>
             <Button
@@ -276,6 +282,24 @@
                 <FontIcon
                     FontFamily="{StaticResource SymbolThemeFontFamily}"
                     Glyph="&#xE14C;" />
+                <Button.Flyout>
+                    <Flyout>
+                        <ListBox
+                            Name="ListBoxPlayList"
+                            Height="500"
+                            Width="400">
+                            <x:String>Blue
+                            </x:String>
+                            <x:String>Green
+                            </x:String>
+                            <x:String>Red
+                            </x:String>
+                            <x:String>Yellow
+                            </x:String>
+
+                        </ListBox>
+                    </Flyout>
+                </Button.Flyout>
             </Button>
             <Button
                 Width="40"
