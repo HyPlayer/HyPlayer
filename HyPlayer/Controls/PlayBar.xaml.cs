@@ -21,6 +21,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using Microsoft.Toolkit.Extensions;
 using TagLib;
 using File = TagLib.File;
 
@@ -127,10 +128,10 @@ namespace HyPlayer
             var properties = mediaPlaybackItem.GetDisplayProperties();
             AudioInfo ai = new AudioInfo()
             {
-                Album = afi.Tag.Album,
-                Artist = string.Join('/', afi.Tag.Artists),
+                Album = string.IsNullOrEmpty(afi.Tag.Album)?"未知专辑": afi.Tag.Album,
+                Artist = string.IsNullOrEmpty(string.Join('/', afi.Tag.Artists))?"未知歌手": string.Join('/', afi.Tag.Artists),
                 LengthInMilliseconds = afi.Properties.Duration.Milliseconds,
-                SongName = afi.Tag.Title
+                SongName = string.IsNullOrEmpty(afi.Tag.Title) ? "Untitled" : afi.Tag.Title
             };
             properties.Type = MediaPlaybackType.Music;
             properties.MusicProperties.AlbumTitle = ai.Album;
