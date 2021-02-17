@@ -43,8 +43,7 @@ steps:
                   /p:UapAppxPackageBuildMode=SideloadOnly 
                   /p:AppxPackageSigningEnabled=true
                   /p:PackageCertificateThumbprint="" 
-                  /p:PackageCertificateKeyFile="$(signingCert.secureFilePath)"
-                  /p:PackageCertificatePassword="$(signingCert.password)"'
+                  /p:PackageCertificateKeyFile="$(signingCert.secureFilePath)"'
 
 - task: CopyFiles@2
   displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
