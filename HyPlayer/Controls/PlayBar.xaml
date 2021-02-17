@@ -14,7 +14,7 @@
                 <VisualState>
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger
-                            MinWindowWidth="1000" />
+                            MinWindowWidth="1024" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter
@@ -91,22 +91,58 @@
                         <Setter
                             Target="SliderProgress.Margin"
                             Value="0,0,15,0"></Setter>
-                    </VisualState.Setters>
-                </VisualState>
-
-                <VisualState>
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger
-                            MinWindowWidth="0" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
                         <Setter
                             Target="SubControlGrid.Visibility"
                             Value="Collapsed" />
                         <Setter
                             Target="MainControlGrid.(Grid.ColumnSpan)"
                             Value="2" />
+                        <Setter
+                            Target="AlbumImage.Visibility"
+                            Value="Collapsed" />
+                    </VisualState.Setters>
+                </VisualState>
 
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger
+                            MinWindowWidth="800" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter
+                            Target="BtnNone.Visibility"
+                            Value="Collapsed"></Setter>
+                        <Setter
+                            Target="BtnPlayRollType.Visibility"
+                            Value="Collapsed"></Setter>
+                        <Setter
+                            Target="BtnPreviousSong.(Grid.ColumnSpan)"
+                            Value="2"></Setter>
+                        <Setter
+                            Target="BtnPreviousSong.(Grid.Column)"
+                            Value="2"></Setter>
+                        <Setter
+                            Target="BtnPlayStateChange.(Grid.ColumnSpan)"
+                            Value="2"></Setter>
+                        <Setter
+                            Target="BtnPlayStateChange.(Grid.Column)"
+                            Value="4"></Setter>
+                        <Setter
+                            Target="BtnNextSong.(Grid.ColumnSpan)"
+                            Value="2"></Setter>
+                        <Setter
+                            Target="BtnNextSong.(Grid.Column)"
+                            Value="6"></Setter>
+                        <Setter
+                            Target="SliderProgress.Margin"
+                            Value="0,0,15,0"></Setter>
+                        <Setter
+                            Target="SubControlGrid.Visibility"
+                            Value="Collapsed" />
+                        <Setter
+                            Target="MainControlGrid.(Grid.ColumnSpan)"
+                            Value="2" />
+                        <Setter Target="AlbumImage.Visibility" Value="Visible"/>
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
@@ -123,12 +159,12 @@
         </Grid.ColumnDefinitions>
         <Grid
             HorizontalAlignment="Left"
-            BorderThickness="1"
+            BorderThickness="0"
             BorderBrush="{ThemeResource SystemControlBackgroundListMediumRevealBorderBrush}">
             <Image
                 Width="100"
                 x:Name="AlbumImage"
-                Source="Assets/Square150x150Logo.png" />
+                Source="/Assets/Square150x150Logo.png" />
         </Grid>
         <Grid
             Grid.Column="1"
