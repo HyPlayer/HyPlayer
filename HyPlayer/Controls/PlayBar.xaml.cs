@@ -35,34 +35,11 @@ namespace HyPlayer.Controls
     {
         public PlayBar()
         {
+            Common.BarPlayBar = this;
             this.InitializeComponent();
-            AudioPlayer.AudioMediaPlaybackList = new MediaPlaybackList();
-            AudioPlayer.AudioMediaPlaybackList.ItemOpened += _mediaPlaybackList_ItemOpened;
-            AudioPlayer.AudioMediaPlaybackList.CurrentItemChanged += _mediaPlaybackList_CurrentItemChanged;
-            AudioPlayer.AudioMediaPlayer = new MediaPlayer()
-            {
-                Source = AudioPlayer.AudioMediaPlaybackList,
-            };
             TestFile();
         }
 
-        private void _mediaPlaybackList_CurrentItemChanged(MediaPlaybackList sender, CurrentMediaPlaybackItemChangedEventArgs args)
-        {
-            LoadPlayingFile(args.NewItem);
-        }
-
-        private void _mediaPlaybackList_ItemOpened(MediaPlaybackList sender, MediaPlaybackItemOpenedEventArgs args)
-        {
-            this.Invoke((() =>
-            {
-                ListBoxPlayList.Items?.Clear();
-                foreach (MediaPlaybackItem mediaPlaybackItem in sender.Items)
-                {
-                    ListBoxPlayList.Items.Add(mediaPlaybackItem.GetDisplayProperties().MusicProperties.Artist +" - "+mediaPlaybackItem.GetDisplayProperties().MusicProperties.Title);
-                }
-                ListBoxPlayList.SelectedIndex = (int)AudioPlayer.AudioMediaPlaybackList.CurrentItemIndex;
-            }));
-        }
 
         private async void TestFile()
         {
@@ -79,7 +56,7 @@ namespace HyPlayer.Controls
             AudioPlayer.AudioMediaPlayer.Play();
         }
 
-        private async void LoadPlayingFile(MediaPlaybackItem mpi)
+        public void LoadPlayingFile(MediaPlaybackItem mpi)
         {
             if (mpi == null) return;
             AudioPlayer.AudioPlayerTimer?.Dispose();
@@ -93,7 +70,6 @@ namespace HyPlayer.Controls
                 SliderAudioRate.Value = AudioPlayer.AudioMediaPlayer.Volume * 100;
             }));
 
-            //mp.Play();
             AudioPlayer.AudioPlayerTimer = new Timer((state =>
             {
                 this.Invoke(() =>
@@ -110,10 +86,21 @@ namespace HyPlayer.Controls
             }), ai, 1000, 1000);
 
         }
+        
+        public void OnSongAdd()
+        {
+            this.Invoke((() =>
+            {
+                ListBoxPlayList.Items?.Clear();
+                foreach (MediaPlaybackItem mediaPlaybackItem in AudioPlayer.AudioMediaPlaybackList.Items)
+                {
+                    ListBoxPlayList.Items?.Add(mediaPlaybackItem.GetDisplayProperties().MusicProperties.Artist + " - " + mediaPlaybackItem.GetDisplayProperties().MusicProperties.Title);
+                }
+                ListBoxPlayList.SelectedIndex = (int)AudioPlayer.AudioMediaPlaybackList.CurrentItemIndex;
+            }));
+        }
 
-
-
-        private async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)
+        public async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)
         {
             await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority, () => { action(); });
         }
@@ -157,7 +144,6 @@ namespace HyPlayer.Controls
 
         private void ButtonExpand_OnClick(object sender, RoutedEventArgs e)
         {
-            Common.MainFrame
         }
     }
 

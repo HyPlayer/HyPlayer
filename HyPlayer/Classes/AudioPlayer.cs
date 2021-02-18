@@ -61,6 +61,16 @@ namespace HyPlayer.Classes
         public static Dictionary<MediaPlaybackItem, AudioInfo> AudioInfos = new Dictionary<MediaPlaybackItem, AudioInfo>();
         public static Random AudioRandom = new Random();
 
+        public static void AudioMediaPlaybackList_ItemOpened(MediaPlaybackList sender, MediaPlaybackItemOpenedEventArgs args)
+        {
+            Common.BarPlayBar.OnSongAdd();
+        }
+
+        public static void AudioMediaPlaybackList_CurrentItemChanged(MediaPlaybackList sender, CurrentMediaPlaybackItemChangedEventArgs args)
+        {
+            Common.BarPlayBar.LoadPlayingFile(args.NewItem);
+        }
+
         public static async void AppendFile(StorageFile sf)
         {
             var mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(sf));

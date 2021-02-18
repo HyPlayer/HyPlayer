@@ -22,6 +22,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.Classes;
 using Microsoft.UI.Xaml.Controls;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
@@ -40,9 +41,16 @@ namespace HyPlayer
     {
         public MainPage()
         {
-            this.InitializeComponent();
             Common.MainFrame = MainFrame;
             Common.PageMain = this;
+            AudioPlayer.AudioMediaPlaybackList = new MediaPlaybackList();
+            AudioPlayer.AudioMediaPlaybackList.ItemOpened += AudioPlayer.AudioMediaPlaybackList_ItemOpened;
+            AudioPlayer.AudioMediaPlaybackList.CurrentItemChanged += AudioPlayer.AudioMediaPlaybackList_CurrentItemChanged;
+            AudioPlayer.AudioMediaPlayer = new MediaPlayer()
+            {
+                Source = AudioPlayer.AudioMediaPlaybackList,
+            };
+            this.InitializeComponent();
         }
     }
 }

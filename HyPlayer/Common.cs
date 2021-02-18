@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using NeteaseCloudMusicApi;
 using Windows.UI.Xaml.Controls;
+using HyPlayer.Controls;
 
 namespace HyPlayer
 {
@@ -14,5 +15,6 @@ namespace HyPlayer
         public static bool Logined = false;
         public static Frame MainFrame;
         public static MainPage PageMain;
+        public static PlayBar BarPlayBar;
     }
 }

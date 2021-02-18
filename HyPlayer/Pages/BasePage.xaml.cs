@@ -92,12 +92,12 @@ namespace HyPlayer.Pages
             if (Common.Logined) DialogLogin.Hide();
         }
 
-        private void NavMain_OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+        private async void NavMain_OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
         {
             NavigationViewItem nowitem = (NavigationViewItem)sender.SelectedItem;
             if (nowitem.Tag.ToString() == "PageMe" && !Common.Logined)
             {
-                DialogLogin.ShowAsync();
+                await DialogLogin.ShowAsync();
             }
         }
     }
