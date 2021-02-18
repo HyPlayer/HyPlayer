@@ -41,64 +41,7 @@ namespace HyPlayer
         public MainPage()
         {
             this.InitializeComponent();
-            CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
-            ApplicationViewTitleBar titleBar = ApplicationView.GetForCurrentView().TitleBar;
-            titleBar.ButtonBackgroundColor = Colors.Transparent;
-            titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
-        }
-
-
-        private void NavMain_OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
-        {
-            NavigationViewItem nowitem = (NavigationViewItem) sender.SelectedItem;
-            if (nowitem.Tag.ToString() == "PageMe" && !Common.Logined)
-            {
-                DialogLogin.ShowAsync();
-            }
-        }
-
-        private async void ButtonLogin_OnClick(object sender, RoutedEventArgs e)
-        {
-            ButtonLogin.IsEnabled = false;
-            ButtonLogin.Content = "登录中......";
-            bool isOk;
-            JObject json;
-            Dictionary<string, string> queries;
-            string account;
-            bool isPhone;
-
-            queries = new Dictionary<string, string>();
-            account = TextBoxAccount.Text;
-            isPhone = Regex.Match(account, "^[0-9]+$").Success;
-            queries[isPhone ? "phone" : "email"] = account;
-            queries["password"] = TextBoxPassword.Password;
-            (isOk, json) = await Common.ncapi.RequestAsync(isPhone ? CloudMusicApiProviders.LoginCellphone : CloudMusicApiProviders.Login, queries);
-            if (!isOk || json["code"].ToString() != "200")
-            {
-                ButtonLogin.Visibility = Visibility.Visible;
-                InfoBarLoginHint.IsOpen = true;
-                InfoBarLoginHint.Title = "登录失败";
-                ButtonLogin.Content = "登录";
-                ButtonLogin.IsEnabled = true;
-                InfoBarLoginHint.Severity = InfoBarSeverity.Warning;
-                InfoBarLoginHint.Message = "登录失败 " + json["msg"];
-            }
-            else
-            {
-                Common.Logined = true;
-                InfoBarLoginHint.IsOpen = true;
-                InfoBarLoginHint.Title = "登录成功";
-                ButtonLogin.Content = "登录成功";
-                TextBlockUserName.Text = json["profile"]["nickname"].ToString();
-                PersonPictureUser.ProfilePicture = new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
-                InfoBarLoginHint.Severity = InfoBarSeverity.Success;
-                InfoBarLoginHint.Message = "欢迎 "+json["profile"]["nickname"];
-            }
-        }
-
-        private void InfoBarLoginHint_OnCloseButtonClick(InfoBar sender, object args)
-        {
-            if (Common.Logined) DialogLogin.Hide();
+            Common.MainFrame = MainFrame;
         }
     }
 }

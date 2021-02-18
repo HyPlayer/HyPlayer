@@ -21,6 +21,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.Classes;
 using Microsoft.Toolkit.Extensions;
 using TagLib;
 using File = TagLib.File;
@@ -29,61 +30,18 @@ using File = TagLib.File;
 
 namespace HyPlayer
 {
-    public class UwpStorageFileAbstraction : TagLib.File.IFileAbstraction
-    {
-        private readonly StorageFile file;
-
-        public string Name => file.Name;
-
-        public Stream ReadStream
-        {
-            get
-            {
-                return file.OpenStreamForReadAsync().GetAwaiter().GetResult();
-            }
-        }
-
-        public Stream WriteStream
-        {
-            get
-            {
-                return file.OpenStreamForWriteAsync().GetAwaiter().GetResult();
-            }
-        }
-
-
-        public UwpStorageFileAbstraction(StorageFile file)
-        {
-            if (file == null)
-                throw new ArgumentNullException(nameof(file));
-
-            this.file = file;
-        }
-
-
-        public void CloseStream(Stream stream)
-        {
-            stream?.Dispose();
-        }
-    }
-
+    
     public sealed partial class PlayBar : UserControl
     {
-        private MediaPlayer mp;
-        MediaPlaybackList _mediaPlaybackList;
-        private Timer timer;
-        private Dictionary<MediaPlaybackItem, AudioInfo> audioInfos = new Dictionary<MediaPlaybackItem, AudioInfo>();
-        private Random random = new Random();
-
         public PlayBar()
         {
             this.InitializeComponent();
-            _mediaPlaybackList = new MediaPlaybackList();
-            _mediaPlaybackList.ItemOpened += _mediaPlaybackList_ItemOpened;
-            _mediaPlaybackList.CurrentItemChanged += _mediaPlaybackList_CurrentItemChanged;
-            mp = new MediaPlayer()
+            AudioPlayer.AudioMediaPlaybackList = new MediaPlaybackList();
+            AudioPlayer.AudioMediaPlaybackList.ItemOpened += _mediaPlaybackList_ItemOpened;
+            AudioPlayer.AudioMediaPlaybackList.CurrentItemChanged += _mediaPlaybackList_CurrentItemChanged;
+            AudioPlayer.AudioMediaPlayer = new MediaPlayer()
             {
-                Source = _mediaPlaybackList
+                Source = AudioPlayer.AudioMediaPlaybackList,
             };
             TestFile();
         }
@@ -102,7 +60,7 @@ namespace HyPlayer
                 {
                     ListBoxPlayList.Items.Add(mediaPlaybackItem.GetDisplayProperties().MusicProperties.Artist +" - "+mediaPlaybackItem.GetDisplayProperties().MusicProperties.Title);
                 }
-                ListBoxPlayList.SelectedIndex = (int)_mediaPlaybackList.CurrentItemIndex;
+                ListBoxPlayList.SelectedIndex = (int)AudioPlayer.AudioMediaPlaybackList.CurrentItemIndex;
             }));
         }
 
@@ -116,73 +74,37 @@ namespace HyPlayer
             var files = await fop.PickMultipleFilesAsync();
             foreach (var file in files)
             {
-                AppendFile(file);
+                AudioPlayer.AppendFile(file);
             }
-            mp.Play();
-        }
-
-        private async void AppendFile(StorageFile sf)
-        {
-            var mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(sf));
-            var afi = TagLib.File.Create(new UwpStorageFileAbstraction(sf), ReadStyle.Average);
-            var properties = mediaPlaybackItem.GetDisplayProperties();
-            AudioInfo ai = new AudioInfo()
-            {
-                Album = string.IsNullOrEmpty(afi.Tag.Album)?"未知专辑": afi.Tag.Album,
-                Artist = string.IsNullOrEmpty(string.Join('/', afi.Tag.Artists))?"未知歌手": string.Join('/', afi.Tag.Artists),
-                LengthInMilliseconds = afi.Properties.Duration.Milliseconds,
-                SongName = string.IsNullOrEmpty(afi.Tag.Title) ? "Untitled" : afi.Tag.Title
-            };
-            properties.Type = MediaPlaybackType.Music;
-            properties.MusicProperties.AlbumTitle = ai.Album;
-            properties.MusicProperties.Artist = ai.Artist;
-            properties.MusicProperties.Title = ai.SongName;
-            /*
-                MemoryStream st = new MemoryStream(afi.Tag.Pictures[0].Data.ToArray());
-                IRandomAccessStream ras = st.AsRandomAccessStream();
-                BitmapImage bi = new BitmapImage();
-            */
-            Windows.Storage.StorageFolder storageFolder =
-                Windows.Storage.ApplicationData.Current.LocalFolder;
-            Windows.Storage.StorageFile sampleFile =
-                await storageFolder.CreateFileAsync("ImgCache\\Albums\\"+random.Next().ToString(),
-                    Windows.Storage.CreationCollisionOption.ReplaceExisting);
-            sampleFile.OpenStreamForWriteAsync().Result.Write(afi.Tag.Pictures[0].Data.ToArray(), 0, afi.Tag.Pictures[0].Data.ToArray().Length);
-            ai.Picture = new BitmapImage(new Uri(sampleFile.Path));
-            audioInfos[mediaPlaybackItem] = ai;
-            properties.Thumbnail = Windows.Storage.Streams.RandomAccessStreamReference.CreateFromFile(sampleFile);
-            //sampleFile.DeleteAsync();
-            mediaPlaybackItem.ApplyDisplayProperties(properties);
-
-            _mediaPlaybackList.Items.Add(mediaPlaybackItem);
+            AudioPlayer.AudioMediaPlayer.Play();
         }
 
         private async void LoadPlayingFile(MediaPlaybackItem mpi)
         {
             if (mpi == null) return;
-            timer?.Dispose();
+            AudioPlayer.AudioPlayerTimer?.Dispose();
             MediaItemDisplayProperties dp = mpi.GetDisplayProperties();
-            AudioInfo ai = audioInfos[mpi];
+            AudioInfo ai = AudioPlayer.AudioInfos[mpi];
             this.Invoke((() =>
             {
                 TbSingerName.Text = ai.Artist;
                 TbSongName.Text = ai.SongName;
                 AlbumImage.Source = ai.Picture;
-                SliderAudioRate.Value = mp.Volume * 100;
+                SliderAudioRate.Value = AudioPlayer.AudioMediaPlayer.Volume * 100;
             }));
 
             //mp.Play();
-            timer = new Timer((state =>
+            AudioPlayer.AudioPlayerTimer = new Timer((state =>
             {
                 this.Invoke(() =>
                 {
                     var tai = (AudioInfo)state;
                     TbSingerName.Text = tai.Artist;
                     TbSongName.Text = tai.SongName;
-                    double prog = (Math.Floor(mp.Position.TotalSeconds) * 100 / mp.NaturalDuration.TotalSeconds);
+                    double prog = (Math.Floor(AudioPlayer.AudioMediaPlayer.PlaybackSession.Position.TotalSeconds) * 100 / AudioPlayer.AudioMediaPlayer.PlaybackSession.NaturalDuration.TotalSeconds);
                     if (!double.IsNaN(prog))
                         SliderProgress.Value = prog;
-                    PlayStateIcon.Glyph = mp.PlaybackSession.PlaybackState == MediaPlaybackState.Playing ? "\uEDB4" : "\uEDB5";
+                    PlayStateIcon.Glyph = AudioPlayer.AudioMediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing ? "\uEDB4" : "\uEDB5";
                     //SliderAudioRate.Value = mp.Volume;
                 });
             }), ai, 1000, 1000);
@@ -198,48 +120,40 @@ namespace HyPlayer
 
         private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
         {
-            if (mp.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
-                mp.Pause();
-            else if (mp.PlaybackSession.PlaybackState == MediaPlaybackState.Paused)
-                mp.Play();
-            PlayStateIcon.Glyph = mp.PlaybackSession.PlaybackState == MediaPlaybackState.Playing ? "\uEDB5" : "\uEDB4";
+            if (AudioPlayer.AudioMediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
+                AudioPlayer.AudioMediaPlayer.Pause();
+            else if (AudioPlayer.AudioMediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Paused)
+                AudioPlayer.AudioMediaPlayer.Play();
+            PlayStateIcon.Glyph = AudioPlayer.AudioMediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing ? "\uEDB5" : "\uEDB4";
         }
 
         private void SliderAudioRate_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
-            mp.Volume = SliderAudioRate.Value / 100;
+            AudioPlayer.AudioMediaPlayer.Volume = SliderAudioRate.Value / 100;
         }
 
         private void BtnMute_OnCllick(object sender, RoutedEventArgs e)
         {
-            mp.IsMuted = !mp.IsMuted;
-            BtnMuteIcon.Glyph = mp.IsMuted ? "\uE198" : "\uE15D";
-            SliderAudioRate.Visibility = mp.IsMuted ? Visibility.Collapsed : Visibility.Visible;
+            AudioPlayer.AudioMediaPlayer.IsMuted = !AudioPlayer.AudioMediaPlayer.IsMuted;
+            BtnMuteIcon.Glyph = AudioPlayer.AudioMediaPlayer.IsMuted ? "\uE198" : "\uE15D";
+            SliderAudioRate.Visibility = AudioPlayer.AudioMediaPlayer.IsMuted ? Visibility.Collapsed : Visibility.Visible;
         }
 
         private void BtnPreviousSong_OnClick(object sender, RoutedEventArgs e)
         {
-            _mediaPlaybackList.MovePrevious();
+            AudioPlayer.AudioMediaPlaybackList.MovePrevious();
         }
 
         private void BtnNextSong_OnClick(object sender, RoutedEventArgs e)
         {
-            _mediaPlaybackList.MoveNext();
+            AudioPlayer.AudioMediaPlaybackList.MoveNext();
         }
 
         private void ListBoxPlayList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (ListBoxPlayList.SelectedIndex != -1 && ListBoxPlayList.SelectedIndex!= _mediaPlaybackList.CurrentItemIndex)
-                _mediaPlaybackList.MoveTo((uint)ListBoxPlayList.SelectedIndex);
+            if (ListBoxPlayList.SelectedIndex != -1 && ListBoxPlayList.SelectedIndex!= AudioPlayer.AudioMediaPlaybackList.CurrentItemIndex)
+                AudioPlayer.AudioMediaPlaybackList.MoveTo((uint)ListBoxPlayList.SelectedIndex);
         }
     }
 
-    struct AudioInfo
-    {
-        public string SongName;
-        public string Artist;
-        public string Album;
-        public int LengthInMilliseconds;
-        public BitmapImage Picture;
-    }
 }

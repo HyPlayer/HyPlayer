@@ -272,7 +272,7 @@
                     Style="{StaticResource ButtonRevealStyle}"
                     Grid.Column="6"
                     VerticalAlignment="Center"
-                    Name="BtnNone"
+                    Name="BtnLike"
                     Background="Transparent"
                     Width="45"
                     Height="45"
@@ -343,6 +343,7 @@
                 Height="40"
                 Margin="10"
                 CornerRadius="20"
+                Name="ButtonExpand"
                 Background="Transparent">
                 <FontIcon
                     FontFamily="{StaticResource SymbolThemeFontFamily}"
