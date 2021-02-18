@@ -21,7 +21,7 @@
 
 | 平台 | Azure DevOps                                                 | AppVeyor |
 | ---- | ------------------------------------------------------------ | -------- |
-| 状态 | [![Build status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/HyPlayer-Universal%20Windows%20Platform-CI)](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=26) | 暂无     |
+| 状态 | [![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/kengwang.HyPlayer?branchName=master)](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=27&branchName=master) | 暂无     |
 
 ## 使用
 
