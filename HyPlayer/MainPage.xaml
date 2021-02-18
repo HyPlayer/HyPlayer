@@ -51,28 +51,41 @@
                     Content="下载"
                     Tag="PageDownload" />
                 <NavigationViewItem
-                    Icon="Contact"
-                    Content="我"
-                    Tag="PageMe" />
+                    Tag="PageMe">
+                    <StackPanel Margin="-10,0,0,0" Orientation="Horizontal">
+                    <PersonPicture Name="PersonPictureUser" Margin="5,0,0,0" Width="20"
+                                   DisplayName="HyPlayer" />
+                    <TextBlock Name="TextBlockUserName" Margin="16,0,0,0" Text="登录"/>
+                    </StackPanel>
+                </NavigationViewItem>
             </NavigationView.MenuItems>
         </NavigationView>
         <!-- 登录弹窗 -->
         <ContentDialog
-            Name="DialogLogin"
-            Title="登录"
-            PrimaryButtonText="登录"
-            CloseButtonText="关闭"
-            DefaultButton="Primary">
-            
+            Name="DialogLogin">
             <StackPanel
-                Orientation="Vertical"
-                HorizontalAlignment="Center">
-                <TextBox PlaceholderText="账号 / 邮箱" Name="TextBoxAccount" />
-                <PasswordBox PlaceholderText="密码" Name="TextBoxPassword" />
+                Orientation="Vertical">
+                <Image Height="200" Source="Assets/LargeTile.scale-100.png"></Image>
+                <TextBlock Padding="0,3,0,10" FontSize="25" Text="登录到网易云音乐"
+                           HorizontalAlignment="Center" />
+                <TextBox Margin="5" PlaceholderText="账号 / 邮箱" Name="TextBoxAccount" />
+                <PasswordBox
+                    Margin="5"
+                    PlaceholderText="密码" Name="TextBoxPassword" />
+                <Button
+                    Name="ButtonLogin"
+                    Click="ButtonLogin_OnClick"
+                    Style="{StaticResource AccentButtonStyle}"
+                    Content="登录" HorizontalAlignment="Stretch" Margin="0,15,0,0"></Button>
                 <TextBlock
-                    Text="登录即代表你同意xxxxxxx"
-                    TextWrapping="Wrap" />
+                    Padding="0,25,0,0"
+                TextAlignment="Center">
+                    <TextBlock.Text>
+登录代表你同意相关条款
+                    </TextBlock.Text>
+                </TextBlock>
                 <controls1:InfoBar
+                    CloseButtonClick="InfoBarLoginHint_OnCloseButtonClick"
                     Name="InfoBarLoginHint"
                     IsOpen="False"/>
                 

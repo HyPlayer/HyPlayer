@@ -20,6 +20,7 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using Microsoft.UI.Xaml.Controls;
 using NeteaseCloudMusicApi;
@@ -58,7 +59,8 @@ namespace HyPlayer
 
         private async void ButtonLogin_OnClick(object sender, RoutedEventArgs e)
         {
-
+            ButtonLogin.IsEnabled = false;
+            ButtonLogin.Content = "登录中......";
             bool isOk;
             JObject json;
             Dictionary<string, string> queries;
@@ -73,8 +75,11 @@ namespace HyPlayer
             (isOk, json) = await Common.ncapi.RequestAsync(isPhone ? CloudMusicApiProviders.LoginCellphone : CloudMusicApiProviders.Login, queries);
             if (!isOk || json["code"].ToString() != "200")
             {
+                ButtonLogin.Visibility = Visibility.Visible;
                 InfoBarLoginHint.IsOpen = true;
                 InfoBarLoginHint.Title = "登录失败";
+                ButtonLogin.Content = "登录";
+                ButtonLogin.IsEnabled = true;
                 InfoBarLoginHint.Severity = InfoBarSeverity.Warning;
                 InfoBarLoginHint.Message = "登录失败 " + json["msg"];
             }
@@ -83,9 +88,17 @@ namespace HyPlayer
                 Common.Logined = true;
                 InfoBarLoginHint.IsOpen = true;
                 InfoBarLoginHint.Title = "登录成功";
+                ButtonLogin.Content = "登录成功";
+                TextBlockUserName.Text = json["profile"]["nickname"].ToString();
+                PersonPictureUser.ProfilePicture = new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
                 InfoBarLoginHint.Severity = InfoBarSeverity.Success;
                 InfoBarLoginHint.Message = "欢迎 "+json["profile"]["nickname"];
             }
+        }
+
+        private void InfoBarLoginHint_OnCloseButtonClick(InfoBar sender, object args)
+        {
+            if (Common.Logined) DialogLogin.Hide();
         }
     }
 }
