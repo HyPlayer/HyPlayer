@@ -17,6 +17,13 @@
             TintLuminosityOpacity="0.183000008692034"
             TintColor="Gray"
             FallbackColor="Gray" />
+        <media:AcrylicBrush
+            x:Key="BackgroundAcrylicInAppLuminosity"
+            BackgroundSource="Backdrop"
+            TintOpacity="0.784000037238002"
+            TintLuminosityOpacity="0.653000031015836"
+            TintColor="#FF93CDF1" 
+            FallbackColor="SkyBlue" />
     </Page.Resources>
     <Grid>
         <NavigationView
@@ -74,7 +81,7 @@
         </ContentDialog>
 
         <Grid
-            Margin="8"
+            Margin="16"
             CornerRadius="4"
             Background="{ThemeResource PlaybackAcrylicInAppLuminosity}"
             VerticalAlignment="Bottom"
