@@ -53,8 +53,10 @@
         <ContentDialog
             Name="DialogLogin"
             Title="登录"
-            CloseButtonText="关闭">
-
+            PrimaryButtonText="登录"
+            CloseButtonText="关闭"
+            DefaultButton="Primary">
+            
             <StackPanel
                 Orientation="Vertical"
                 HorizontalAlignment="Center">
@@ -66,9 +68,9 @@
                 <controls1:InfoBar
                     Name="InfoBarLoginHint"
                     IsOpen="False"/>
-                <Button Name="ButtonLogin" Content="登录" Click="ButtonLogin_OnClick"></Button>
+                
             </StackPanel>
-
+           
         </ContentDialog>
 
         <Grid
