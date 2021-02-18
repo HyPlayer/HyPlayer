@@ -31,7 +31,7 @@ using NavigationViewSelectionChangedEventArgs = Windows.UI.Xaml.Controls.Navigat
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
 
-namespace HyPlayer
+namespace HyPlayer.Pages
 {
     /// <summary>
     /// 可用于自身或导航至 Frame 内部的空白页。
@@ -47,15 +47,6 @@ namespace HyPlayer
             titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
         }
 
-
-        private void NavMain_OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
-        {
-            NavigationViewItem nowitem = (NavigationViewItem)sender.SelectedItem;
-            if (nowitem.Tag.ToString() == "PageMe" && !Common.Logined)
-            {
-                DialogLogin.ShowAsync();
-            }
-        }
 
         private async void ButtonLogin_OnClick(object sender, RoutedEventArgs e)
         {
@@ -99,6 +90,15 @@ namespace HyPlayer
         private void InfoBarLoginHint_OnCloseButtonClick(InfoBar sender, object args)
         {
             if (Common.Logined) DialogLogin.Hide();
+        }
+
+        private void NavMain_OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+        {
+            NavigationViewItem nowitem = (NavigationViewItem)sender.SelectedItem;
+            if (nowitem.Tag.ToString() == "PageMe" && !Common.Logined)
+            {
+                DialogLogin.ShowAsync();
+            }
         }
     }
 }

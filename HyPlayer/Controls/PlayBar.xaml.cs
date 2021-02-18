@@ -28,7 +28,7 @@ using File = TagLib.File;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
-namespace HyPlayer
+namespace HyPlayer.Controls
 {
     
     public sealed partial class PlayBar : UserControl
@@ -153,6 +153,11 @@ namespace HyPlayer
         {
             if (ListBoxPlayList.SelectedIndex != -1 && ListBoxPlayList.SelectedIndex!= AudioPlayer.AudioMediaPlaybackList.CurrentItemIndex)
                 AudioPlayer.AudioMediaPlaybackList.MoveTo((uint)ListBoxPlayList.SelectedIndex);
+        }
+
+        private void ButtonExpand_OnClick(object sender, RoutedEventArgs e)
+        {
+            Common.MainFrame
         }
     }
 

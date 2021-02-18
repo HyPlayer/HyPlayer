@@ -1,8 +1,8 @@
 ﻿<UserControl
-    x:Class="HyPlayer.PlayBar"
+    x:Class="HyPlayer.Controls.PlayBar"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:HyPlayer"
+    xmlns:local="using:HyPlayer.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
@@ -24,7 +24,7 @@
                             Target="MainControlGrid.(Grid.ColumnSpan)"
                             Value="1" />
                         <Setter
-                            Target="BtnNone.Visibility"
+                            Target="BtnLike.Visibility"
                             Value="Visible"></Setter>
                         <Setter
                             Target="BtnPlayRollType.Visibility"
@@ -65,7 +65,7 @@
                             Target="MainControlGrid.(Grid.ColumnSpan)"
                             Value="2" />
                         <Setter
-                            Target="BtnNone.Visibility"
+                            Target="BtnLike.Visibility"
                             Value="Collapsed"></Setter>
                         <Setter
                             Target="BtnPlayRollType.Visibility"
@@ -111,7 +111,7 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter
-                            Target="BtnNone.Visibility"
+                            Target="BtnLike.Visibility"
                             Value="Collapsed"></Setter>
                         <Setter
                             Target="BtnPlayRollType.Visibility"
@@ -343,6 +343,7 @@
                 Height="40"
                 Margin="10"
                 CornerRadius="20"
+                Click="ButtonExpand_OnClick"
                 Name="ButtonExpand"
                 Background="Transparent">
                 <FontIcon

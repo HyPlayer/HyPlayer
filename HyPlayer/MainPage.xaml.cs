@@ -42,6 +42,7 @@ namespace HyPlayer
         {
             this.InitializeComponent();
             Common.MainFrame = MainFrame;
+            Common.PageMain = this;
         }
     }
 }

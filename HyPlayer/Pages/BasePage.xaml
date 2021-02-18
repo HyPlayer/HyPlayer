@@ -1,5 +1,5 @@
 ﻿<Page
-    x:Class="HyPlayer.BasePage"
+    x:Class="HyPlayer.Pages.BasePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -10,13 +10,7 @@
     xmlns:controls1="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d">
     <Page.Resources>
-        <media:AcrylicBrush
-            x:Key="PlaybackAcrylicInAppLuminosity"
-            BackgroundSource="Backdrop"
-            TintOpacity="0.67500003206078"
-            TintLuminosityOpacity="0.183000008692034"
-            TintColor="Gray"
-            FallbackColor="Gray" />
+
         <media:AcrylicBrush
             x:Key="AccentAcrylicInAppLuminosity"
             BackgroundSource="Backdrop"
@@ -56,12 +50,12 @@
                         Margin="-10,0,0,0"
                         Orientation="Horizontal">
                         <PersonPicture
-                            Name="PersonPictureUser"
+                            x:Name="PersonPictureUser"
                             Margin="5,0,0,0"
                             Width="20"
                             DisplayName="HyPlayer" />
                         <TextBlock
-                            Name="TextBlockUserName"
+                            x:Name="TextBlockUserName"
                             Margin="16,0,0,0"
                             Text="登录" />
                     </StackPanel>
@@ -70,13 +64,13 @@
         </NavigationView>
         <!-- 登录弹窗 -->
         <ContentDialog
-            Name="DialogLogin"
+            x:Name="DialogLogin"
             Width="400">
             <StackPanel
                 Orientation="Vertical">
                 <Image
                     Height="200"
-                    Source="Assets/LargeTile.scale-100.png"></Image>
+                    Source="/Assets/LargeTile.scale-400.png"></Image>
                 <TextBlock
                     Padding="0,3,0,10"
                     FontSize="25"
@@ -85,11 +79,11 @@
                 <TextBox
                     Margin="5"
                     PlaceholderText="账号 / 邮箱"
-                    Name="TextBoxAccount" />
+                    x:Name="TextBoxAccount" />
                 <PasswordBox
                     Margin="5"
                     PlaceholderText="密码"
-                    Name="TextBoxPassword" />
+                    x:Name="TextBoxPassword" />
                 <Button
                     Name="ButtonLogin"
                     Click="ButtonLogin_OnClick"
@@ -106,19 +100,9 @@
                 </TextBlock>
                 <controls1:InfoBar
                     CloseButtonClick="InfoBarLoginHint_OnCloseButtonClick"
-                    Name="InfoBarLoginHint"
+                    x:Name="InfoBarLoginHint"
                     IsOpen="False" />
             </StackPanel>
-
         </ContentDialog>
-
-        <Grid
-            Margin="16"
-            CornerRadius="4"
-            Background="{ThemeResource PlaybackAcrylicInAppLuminosity}"
-            VerticalAlignment="Bottom"
-            Height="100">
-            <hyPlayer:PlayBar />
-        </Grid>
     </Grid>
 </Page>
