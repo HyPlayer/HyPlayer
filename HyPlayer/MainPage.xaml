@@ -18,7 +18,7 @@
             TintColor="Gray"
             FallbackColor="Gray" />
         <media:AcrylicBrush
-            x:Key="BackgroundAcrylicInAppLuminosity"
+            x:Key="AccentAcrylicInAppLuminosity"
             BackgroundSource="Backdrop"
             TintOpacity="0.784000037238002"
             TintLuminosityOpacity="0.653000031015836"
