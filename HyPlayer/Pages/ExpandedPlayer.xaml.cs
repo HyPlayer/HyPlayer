@@ -12,6 +12,7 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
 
@@ -28,12 +29,20 @@ namespace HyPlayer.Pages
         public ExpandedPlayer()
         {
             this.InitializeComponent();
+            Common.PageExpandedPlayer = this;
             timer = new Timer((state =>
             {
                 this.Invoke((() =>
                 {
                     if (AudioPlayer.AudioMediaPlaybackList.CurrentItem != null)
-                        ImageAlbum.Source = AudioPlayer.AudioInfos[AudioPlayer.AudioMediaPlaybackList.CurrentItem].Picture;
+                    {
+                        ImageAlbum.Source = AudioPlayer.AudioInfos[AudioPlayer.AudioMediaPlaybackList.CurrentItem]
+                            .Picture;
+                        TextBlockSinger.Text = AudioPlayer.AudioInfos[AudioPlayer.AudioMediaPlaybackList.CurrentItem]
+                            .Artist;
+                        TextBlockSongTitle.Text = AudioPlayer.AudioInfos[AudioPlayer.AudioMediaPlaybackList.CurrentItem]
+                            .SongName;
+                    }
                 }));
             }), null, 0, 1000);
         }
@@ -42,5 +51,23 @@ namespace HyPlayer.Pages
         {
             await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority, () => { action(); });
         }
+
+        public void StartExpandAnimation()
+        {
+            var anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
+            var anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
+            var anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
+            anim3?.TryStart(TextBlockSinger);
+            anim1?.TryStart(TextBlockSongTitle);
+            anim2?.TryStart(ImageAlbum);
+        }
+        
+        public void StartCollapseAnimation()
+        {
+            ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TextBlockSongTitle);
+            ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", ImageAlbum);
+            ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TextBlockSinger);
+        }
+
     }
 }

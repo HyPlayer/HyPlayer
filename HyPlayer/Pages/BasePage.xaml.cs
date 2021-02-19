@@ -12,6 +12,7 @@ using Windows.Media.Audio;
 using Windows.Media.Core;
 using Windows.Media.Playback;
 using Windows.Storage;
+using Windows.System;
 using Windows.UI;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
@@ -24,6 +25,7 @@ using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using Microsoft.UI.Xaml.Controls;
 using NeteaseCloudMusicApi;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NavigationView = Windows.UI.Xaml.Controls.NavigationView;
 using NavigationViewItem = Windows.UI.Xaml.Controls.NavigationViewItem;
@@ -45,6 +47,11 @@ namespace HyPlayer.Pages
             ApplicationViewTitleBar titleBar = ApplicationView.GetForCurrentView().TitleBar;
             titleBar.ButtonBackgroundColor = Colors.Transparent;
             titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+            if (Common.Logined)
+            {
+                TextBlockUserName.Text = Common.LoginedUser.UserName;
+                PersonPictureUser.ProfilePicture = new BitmapImage(new Uri(Common.LoginedUser.ImgUrl));
+            }
         }
 
 
@@ -74,13 +81,19 @@ namespace HyPlayer.Pages
             else
             {
                 Common.Logined = true;
+                string cookie = JsonConvert.SerializeObject(Common.ncapi.Cookies);
+                StorageFile sf = await Windows.Storage.ApplicationData.Current.LocalFolder.CreateFileAsync("Settings\\Cookie", Windows.Storage.CreationCollisionOption.ReplaceExisting);
+                await FileIO.WriteTextAsync(sf, cookie);
+                Common.LoginedUser.UserName = json["profile"]["nickname"].ToString();
+                Common.LoginedUser.ImgUrl = json["profile"]["avatarUrl"].ToString();
+                Common.LoginedUser.uid = json["account"]["id"].ToString();
                 InfoBarLoginHint.IsOpen = true;
                 InfoBarLoginHint.Title = "登录成功";
                 ButtonLogin.Content = "登录成功";
                 TextBlockUserName.Text = json["profile"]["nickname"].ToString();
                 PersonPictureUser.ProfilePicture = new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
                 InfoBarLoginHint.Severity = InfoBarSeverity.Success;
-                InfoBarLoginHint.Message = "欢迎 " + json["profile"]["nickname"];
+                InfoBarLoginHint.Message = "欢迎 " + json["profile"]["nickname"].ToString();
             }
         }
 

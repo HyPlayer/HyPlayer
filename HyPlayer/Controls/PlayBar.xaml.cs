@@ -35,7 +35,7 @@ using File = TagLib.File;
 
 namespace HyPlayer.Controls
 {
-    
+
     public sealed partial class PlayBar : UserControl
     {
         public PlayBar()
@@ -79,19 +79,23 @@ namespace HyPlayer.Controls
             {
                 this.Invoke(() =>
                 {
-                    var tai = (AudioInfo)state;
-                    TbSingerName.Text = tai.Artist;
-                    TbSongName.Text = tai.SongName;
-                    double prog = (Math.Floor(AudioPlayer.AudioMediaPlayer.PlaybackSession.Position.TotalSeconds) * 100 / AudioPlayer.AudioMediaPlayer.PlaybackSession.NaturalDuration.TotalSeconds);
-                    if (!double.IsNaN(prog))
-                        SliderProgress.Value = prog;
-                    PlayStateIcon.Glyph = AudioPlayer.AudioMediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing ? "\uEDB4" : "\uEDB5";
-                    //SliderAudioRate.Value = mp.Volume;
+                    try
+                    {
+                        var tai = (AudioInfo)state;
+                        TbSingerName.Text = tai.Artist;
+                        TbSongName.Text = tai.SongName;
+                        double prog = (Math.Floor(AudioPlayer.AudioMediaPlayer.PlaybackSession.Position.TotalSeconds) * 100 / AudioPlayer.AudioMediaPlayer.PlaybackSession.NaturalDuration.TotalSeconds);
+                        if (!double.IsNaN(prog))
+                            SliderProgress.Value = prog;
+                        PlayStateIcon.Glyph = AudioPlayer.AudioMediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing ? "\uEDB4" : "\uEDB5";
+                        //SliderAudioRate.Value = mp.Volume;
+                    }
+                    catch (Exception) { }
                 });
             }), ai, 1000, 1000);
 
         }
-        
+
         public void OnSongAdd()
         {
             this.Invoke((() =>
@@ -143,25 +147,39 @@ namespace HyPlayer.Controls
 
         private void ListBoxPlayList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (ListBoxPlayList.SelectedIndex != -1 && ListBoxPlayList.SelectedIndex!= AudioPlayer.AudioMediaPlaybackList.CurrentItemIndex)
+            if (ListBoxPlayList.SelectedIndex != -1 && ListBoxPlayList.SelectedIndex != AudioPlayer.AudioMediaPlaybackList.CurrentItemIndex)
                 AudioPlayer.AudioMediaPlaybackList.MoveTo((uint)ListBoxPlayList.SelectedIndex);
         }
 
         private void ButtonExpand_OnClick(object sender, RoutedEventArgs e)
         {
-            if (Common.MainFrame.SourcePageType != typeof(ExpandedPlayer))
-            {
-                BtnExpandFontIcon.Glyph = "\uE972";
-                Common.PageMain.GridPlayBar.Background = null;
-                Common.MainFrame.Navigate(typeof(ExpandedPlayer));
-            }
-            else
-            {
-                BtnExpandFontIcon.Glyph = "\uE971";
-                Common.PageMain.GridPlayBar.Background = new Windows.UI.Xaml.Media.AcrylicBrush(){BackgroundSource = AcrylicBackgroundSource.Backdrop, TintOpacity  = 0.67500003206078 ,TintLuminosityOpacity = 0.183000008692034 ,TintColor = Windows.UI.Color.FromArgb(255,128,128,128),FallbackColor = Windows.UI.Color.FromArgb(255, 128, 128, 128) };
-                Common.MainFrame.GoBack();
-            }
+            ButtonExpand.Visibility = Visibility.Collapsed;
+            ButtonCollapse.Visibility = Visibility.Visible;
+            Common.PageMain.GridPlayBar.Background = null;
+            Common.PageMain.MainFrame.Visibility = Visibility.Collapsed;
+            Common.PageMain.ExpandedPlayer.Visibility = Visibility.Visible;
+            GridSongInfo.Visibility = Visibility.Collapsed;
+            ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TbSongName);
+            ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", AlbumImage);
+            ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TbSingerName);
+            Common.PageExpandedPlayer.StartExpandAnimation();
+        }
 
+        private void ButtonCollapse_OnClick(object sender, RoutedEventArgs e)
+        {
+            Common.PageExpandedPlayer.StartCollapseAnimation();
+            GridSongInfo.Visibility = Visibility.Visible;
+            var anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
+            var anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
+            var anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
+            anim3?.TryStart(TbSingerName);
+            anim1?.TryStart(TbSongName);
+            anim2?.TryStart(AlbumImage);
+            ButtonExpand.Visibility = Visibility.Visible;
+            ButtonCollapse.Visibility = Visibility.Collapsed;
+            Common.PageMain.MainFrame.Visibility = Visibility.Visible;
+            Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
+            Common.PageMain.GridPlayBar.Background = new Windows.UI.Xaml.Media.AcrylicBrush() { BackgroundSource = AcrylicBackgroundSource.Backdrop, TintOpacity = 0.67500003206078, TintLuminosityOpacity = 0.183000008692034, TintColor = Windows.UI.Color.FromArgb(255, 128, 128, 128), FallbackColor = Windows.UI.Color.FromArgb(255, 128, 128, 128) };
         }
     }
 

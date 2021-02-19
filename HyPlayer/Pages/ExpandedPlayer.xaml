@@ -24,11 +24,50 @@
             <ColumnDefinition />
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition />
+        </Grid.RowDefinitions>
         <Image
+            x:FieldModifier="public"
             Grid.Column="1"
             Grid.ColumnSpan="4"
+            Grid.Row="2"
+            Grid.RowSpan="8"
             Name="ImageAlbum"
             Source="/Assets/Wide310x150Logo.scale-400.png"></Image>
-        <TextBlock Name="LyricNowLine" Grid.Column="7" Grid.ColumnSpan="4" TextAlignment="Center" FontSize="20" VerticalAlignment="Center" Text="纯音乐,请欣赏"></TextBlock>
+        <StackPanel
+            Orientation="Vertical"
+            Grid.Row="1"
+            Grid.RowSpan="11"
+            Grid.ColumnSpan="5"
+            Grid.Column="6">
+            <TextBlock
+                x:FieldModifier="public"
+                TextAlignment="Center"
+                Name="TextBlockSongTitle"
+                Text="歌曲名" />
+            <TextBlock
+                x:FieldModifier="public"
+                TextAlignment="Center"
+                Name="TextBlockSinger"
+                Text="歌手" />
+            <TextBlock
+                Name="LyricNowLine"
+                TextAlignment="Center"
+                VerticalAlignment="Center"
+                Text="纯音乐,请欣赏"></TextBlock>
+        </StackPanel>
     </Grid>
 </Page>

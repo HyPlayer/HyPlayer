@@ -125,6 +125,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Classes\AudioPlayer.cs" />
+    <Compile Include="Classes\LoginedUser.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>

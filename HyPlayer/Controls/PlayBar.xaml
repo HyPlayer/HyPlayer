@@ -143,7 +143,9 @@
                         <Setter
                             Target="MainControlGrid.(Grid.ColumnSpan)"
                             Value="2" />
-                        <Setter Target="AlbumImage.Visibility" Value="Visible"/>
+                        <Setter
+                            Target="AlbumImage.Visibility"
+                            Value="Visible" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
@@ -159,35 +161,43 @@
                 Width="*" />
         </Grid.ColumnDefinitions>
         <Grid
-            HorizontalAlignment="Left"
-            BorderThickness="0"
-            BorderBrush="{ThemeResource SystemControlBackgroundListMediumRevealBorderBrush}">
-            <Image
-                Width="100"
-                x:Name="AlbumImage"
-                Source="/Assets/Square150x150Logo.png" />
-        </Grid>
-        <Grid
-            Grid.Column="1"
-            Margin="10 0 0 0"
-            BorderBrush="Blue">
-            <Grid.RowDefinitions>
-                <RowDefinition />
-                <RowDefinition />
-            </Grid.RowDefinitions>
-            <TextBlock
-                Grid.Row="0"
-                Margin="0,0,0,5"
-                VerticalAlignment="Bottom"
-                Name="TbSongName"
-                Text="歌曲名"/>
-            <TextBlock
-                Grid.Row="1"
-                Margin="0,5,0,0"
-                VerticalAlignment="Top"
-                Foreground="Gray"
-                Name="TbSingerName"
-                Text="歌手名" />
+            Grid.ColumnSpan="2"
+            Grid.Column="0"
+            Name="GridSongInfo">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Grid
+                HorizontalAlignment="Left"
+                BorderThickness="0"
+                BorderBrush="{ThemeResource SystemControlBackgroundListMediumRevealBorderBrush}">
+                <Image
+                    Width="100"
+                    x:Name="AlbumImage"
+                    Source="/Assets/Square150x150Logo.png" />
+            </Grid>
+            <Grid
+                Grid.Column="1"
+                BorderBrush="Blue">
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <TextBlock
+                    Grid.Row="0"
+                    Margin="0,0,0,5"
+                    VerticalAlignment="Bottom"
+                    Name="TbSongName"
+                    Text="歌曲名" />
+                <TextBlock
+                    Grid.Row="1"
+                    Margin="0,5,0,0"
+                    VerticalAlignment="Top"
+                    Foreground="Gray"
+                    Name="TbSingerName"
+                    Text="歌手名" />
+            </Grid>
         </Grid>
         <Grid
             Margin="5"
@@ -333,7 +343,7 @@
                             SelectionChanged="ListBoxPlayList_OnSelectionChanged"
                             Height="500"
                             Width="400">
-                            
+
                         </ListBox>
                     </Flyout>
                 </Button.Flyout>
@@ -347,9 +357,21 @@
                 Name="ButtonExpand"
                 Background="Transparent">
                 <FontIcon
-                    Name="BtnExpandFontIcon"
                     FontFamily="{StaticResource SymbolThemeFontFamily}"
                     Glyph="&#xE971;" />
+            </Button>
+            <Button
+                Width="40"
+                Height="40"
+                Margin="10"
+                CornerRadius="20"
+                Click="ButtonCollapse_OnClick"
+                Name="ButtonCollapse"
+                Visibility="Collapsed"
+                Background="Transparent">
+                <FontIcon
+                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                    Glyph="&#xE972;" />
             </Button>
         </StackPanel>
     </Grid>

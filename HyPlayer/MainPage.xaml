@@ -30,8 +30,14 @@
     </Page.Resources>
     <Grid>
         <Frame
+            x:FieldModifier="public"
             Name="MainFrame"
             SourcePageType="hyPlayerPage:BasePage" />
+        <Frame
+            x:FieldModifier="public"
+            Visibility="Collapsed"
+            Name="ExpandedPlayer"
+            SourcePageType="hyPlayerPage:ExpandedPlayer" />
         <Grid
             x:FieldModifier="public"
             Name="GridPlayBar"
