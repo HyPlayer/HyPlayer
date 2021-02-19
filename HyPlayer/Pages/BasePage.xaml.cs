@@ -54,13 +54,10 @@ namespace HyPlayer.Pages
             ButtonLogin.Content = "登录中......";
             bool isOk;
             JObject json;
-            Dictionary<string, string> queries;
-            string account;
-            bool isPhone;
 
-            queries = new Dictionary<string, string>();
-            account = TextBoxAccount.Text;
-            isPhone = Regex.Match(account, "^[0-9]+$").Success;
+            var queries = new Dictionary<string, object>();
+            var account = TextBoxAccount.Text;
+            var isPhone = Regex.Match(account, "^[0-9]+$").Success;
             queries[isPhone ? "phone" : "email"] = account;
             queries["password"] = TextBoxPassword.Password;
             (isOk, json) = await Common.ncapi.RequestAsync(isPhone ? CloudMusicApiProviders.LoginCellphone : CloudMusicApiProviders.Login, queries);
