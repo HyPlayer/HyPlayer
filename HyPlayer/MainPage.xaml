@@ -12,22 +12,6 @@
     xmlns:triggers="using:Microsoft.Toolkit.Uwp.UI.Triggers"
     xmlns:hyPlayerPage="using:HyPlayer.Pages"
     mc:Ignorable="d">
-    <Page.Resources>
-        <media:AcrylicBrush
-            x:Key="PlaybackAcrylicInAppLuminosity"
-            BackgroundSource="Backdrop"
-            TintOpacity="0.67500003206078"
-            TintLuminosityOpacity="0.183000008692034"
-            TintColor="Gray"
-            FallbackColor="Gray" />
-        <media:AcrylicBrush
-            x:Key="AccentAcrylicInAppLuminosity"
-            BackgroundSource="Backdrop"
-            TintOpacity="0.784000037238002"
-            TintLuminosityOpacity="0.653000031015836"
-            TintColor="#FF93CDF1"
-            FallbackColor="SkyBlue" />
-    </Page.Resources>
     <Grid>
         <Frame
             x:FieldModifier="public"

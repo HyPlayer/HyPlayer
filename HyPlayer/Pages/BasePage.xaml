@@ -9,16 +9,6 @@
     xmlns:media="using:Windows.UI.Xaml.Media"
     xmlns:controls1="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d">
-    <Page.Resources>
-
-        <media:AcrylicBrush
-            x:Key="AccentAcrylicInAppLuminosity"
-            BackgroundSource="Backdrop"
-            TintOpacity="0.784000037238002"
-            TintLuminosityOpacity="0.653000031015836"
-            TintColor="#FF93CDF1"
-            FallbackColor="SkyBlue" />
-    </Page.Resources>
     <Grid>
         <NavigationView
             Margin="0,0,0,0"
