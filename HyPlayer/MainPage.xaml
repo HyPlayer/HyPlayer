@@ -27,7 +27,7 @@
             Name="GridPlayBar"
             Margin="16"
             CornerRadius="4"
-            Background="{ThemeResource PlaybackAcrylicInAppLuminosity}"
+            Background="{StaticResource PlaybackAcrylicInAppLuminosity}"
             VerticalAlignment="Bottom"
             Height="100">
             <controls2:PlayBar />
