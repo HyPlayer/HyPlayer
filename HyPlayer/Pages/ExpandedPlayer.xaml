@@ -6,10 +6,11 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    Background="{ThemeResource SystemControlAcrylicWindowBrush}">
 
     <Grid
-        Margin="0,0,0,100">
+        Background="{ThemeResource SystemControlAcrylicElementBrush}"
+        Margin="0,0,0,0">
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
             <ColumnDefinition />
@@ -46,7 +47,7 @@
             Grid.Row="2"
             Grid.RowSpan="8"
             Name="ImageAlbum"
-            Source="/Assets/Wide310x150Logo.scale-400.png"></Image>
+            Source="/Assets/Icon.png"/>
         <StackPanel
             Orientation="Vertical"
             Grid.Row="1"

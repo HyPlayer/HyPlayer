@@ -172,6 +172,9 @@ namespace HyPlayer.Controls
             var anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
             var anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
             var anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
+            anim3.Configuration = new DirectConnectedAnimationConfiguration();
+            anim2.Configuration = new DirectConnectedAnimationConfiguration();
+            anim1.Configuration = new DirectConnectedAnimationConfiguration();
             anim3?.TryStart(TbSingerName);
             anim1?.TryStart(TbSongName);
             anim2?.TryStart(AlbumImage);

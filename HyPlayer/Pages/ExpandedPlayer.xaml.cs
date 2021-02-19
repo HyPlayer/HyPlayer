@@ -13,6 +13,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
+using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
 
@@ -42,6 +43,7 @@ namespace HyPlayer.Pages
                             .Artist;
                         TextBlockSongTitle.Text = AudioPlayer.AudioInfos[AudioPlayer.AudioMediaPlaybackList.CurrentItem]
                             .SongName;
+                        this.Background = new ImageBrush() {ImageSource = ImageAlbum.Source};
                     }
                 }));
             }), null, 0, 1000);
@@ -57,6 +59,9 @@ namespace HyPlayer.Pages
             var anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
             var anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
             var anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
+            anim3.Configuration = new DirectConnectedAnimationConfiguration();
+            anim2.Configuration = new DirectConnectedAnimationConfiguration();
+            anim1.Configuration = new DirectConnectedAnimationConfiguration();
             anim3?.TryStart(TextBlockSinger);
             anim1?.TryStart(TextBlockSongTitle);
             anim2?.TryStart(ImageAlbum);

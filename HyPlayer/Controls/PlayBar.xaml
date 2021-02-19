@@ -160,14 +160,11 @@
             <ColumnDefinition
                 Width="*" />
         </Grid.ColumnDefinitions>
-        <Grid
+        <StackPanel
+            Orientation="Horizontal"
             Grid.ColumnSpan="2"
             Grid.Column="0"
             Name="GridSongInfo">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition />
-            </Grid.ColumnDefinitions>
             <Grid
                 HorizontalAlignment="Left"
                 BorderThickness="0"
@@ -175,10 +172,10 @@
                 <Image
                     Width="100"
                     x:Name="AlbumImage"
-                    Source="/Assets/Square150x150Logo.png" />
+                    Source="/Assets/icon.png" />
             </Grid>
             <Grid
-                Grid.Column="1"
+                Margin="10,0,0,0"
                 BorderBrush="Blue">
                 <Grid.RowDefinitions>
                     <RowDefinition />
@@ -198,7 +195,7 @@
                     Name="TbSingerName"
                     Text="歌手名" />
             </Grid>
-        </Grid>
+        </StackPanel>
         <Grid
             Margin="5"
             Name="MainControlGrid"
