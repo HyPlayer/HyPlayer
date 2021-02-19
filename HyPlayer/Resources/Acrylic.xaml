@@ -1,0 +1,26 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+    xmlns:media="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+    <media:AcrylicBrush
+            x:Key="AccentAcrylicInAppLuminosity"
+            BackgroundSource="Backdrop"
+            TintOpacity="0.784000037238002"
+            TintLuminosityOpacity="0.653000031015836"
+            TintColor="#FF93CDF1"
+            FallbackColor="SkyBlue" />
+    <media:AcrylicBrush
+            x:Key="BackgroundInAppLuminosity"
+            BackgroundSource="Backdrop"
+            TintOpacity="0.784000037238002"
+            TintLuminosityOpacity="0.653000031015836"
+            TintColor="Gray"
+            FallbackColor="Gray" />
+    <media:AcrylicBrush
+            x:Key="ExpandedPlayerLuminosity"
+            BackgroundSource="HostBackdrop"
+            TintOpacity="0.784000037238002"
+            TintLuminosityOpacity="0.653000031015836"
+            TintColor="Gray"
+            FallbackColor="SkyBlue" />
+</ResourceDictionary>
