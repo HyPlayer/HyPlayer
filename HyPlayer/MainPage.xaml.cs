@@ -41,7 +41,6 @@ namespace HyPlayer
     {
         public MainPage()
         {
-            Common.MainFrame = MainFrame;
             Common.PageMain = this;
             AudioPlayer.AudioMediaPlaybackList = new MediaPlaybackList();
             AudioPlayer.AudioMediaPlaybackList.ItemOpened += AudioPlayer.AudioMediaPlaybackList_ItemOpened;
@@ -51,6 +50,7 @@ namespace HyPlayer
                 Source = AudioPlayer.AudioMediaPlaybackList,
             };
             this.InitializeComponent();
+            Common.MainFrame = MainFrame;
         }
     }
 }

@@ -9,6 +9,7 @@
     xmlns:controls1="using:Microsoft.UI.Xaml.Controls"
     xmlns:controls2="using:HyPlayer.Controls"
     xmlns:hyPlayer="using:HyPlayer"
+    xmlns:triggers="using:Microsoft.Toolkit.Uwp.UI.Triggers"
     xmlns:hyPlayerPage="using:HyPlayer.Pages"
     mc:Ignorable="d">
     <Page.Resources>
@@ -28,16 +29,18 @@
             FallbackColor="SkyBlue" />
     </Page.Resources>
     <Grid>
-        <Frame Name="MainFrame"
-            SourcePageType="hyPlayerPage:BasePage"/>
+        <Frame
+            Name="MainFrame"
+            SourcePageType="hyPlayerPage:BasePage" />
         <Grid
+            x:FieldModifier="public"
             Name="GridPlayBar"
             Margin="16"
             CornerRadius="4"
             Background="{ThemeResource PlaybackAcrylicInAppLuminosity}"
             VerticalAlignment="Bottom"
             Height="100">
-            <controls2:PlayBar/>
+            <controls2:PlayBar />
         </Grid>
     </Grid>
 </Page>

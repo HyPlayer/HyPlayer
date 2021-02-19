@@ -347,6 +347,7 @@
                 Name="ButtonExpand"
                 Background="Transparent">
                 <FontIcon
+                    Name="BtnExpandFontIcon"
                     FontFamily="{StaticResource SymbolThemeFontFamily}"
                     Glyph="&#xE971;" />
             </Button>

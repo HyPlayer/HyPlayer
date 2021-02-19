@@ -52,8 +52,7 @@
                         <PersonPicture
                             x:Name="PersonPictureUser"
                             Margin="5,0,0,0"
-                            Width="20"
-                            DisplayName="HyPlayer" />
+                            Width="20"/>
                         <TextBlock
                             x:Name="TextBlockUserName"
                             Margin="16,0,0,0"

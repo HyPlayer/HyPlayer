@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -19,11 +20,15 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
+using HyPlayer.Pages;
 using Microsoft.Toolkit.Extensions;
+using Microsoft.UI.Xaml.Media;
 using TagLib;
+using AcrylicBackgroundSource = Windows.UI.Xaml.Media.AcrylicBackgroundSource;
 using File = TagLib.File;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
@@ -144,6 +149,19 @@ namespace HyPlayer.Controls
 
         private void ButtonExpand_OnClick(object sender, RoutedEventArgs e)
         {
+            if (Common.MainFrame.SourcePageType != typeof(ExpandedPlayer))
+            {
+                BtnExpandFontIcon.Glyph = "\uE972";
+                Common.PageMain.GridPlayBar.Background = null;
+                Common.MainFrame.Navigate(typeof(ExpandedPlayer));
+            }
+            else
+            {
+                BtnExpandFontIcon.Glyph = "\uE971";
+                Common.PageMain.GridPlayBar.Background = new Windows.UI.Xaml.Media.AcrylicBrush(){BackgroundSource = AcrylicBackgroundSource.Backdrop, TintOpacity  = 0.67500003206078 ,TintLuminosityOpacity = 0.183000008692034 ,TintColor = Windows.UI.Color.FromArgb(255,128,128,128),FallbackColor = Windows.UI.Color.FromArgb(255, 128, 128, 128) };
+                Common.MainFrame.GoBack();
+            }
+
         }
     }
 
