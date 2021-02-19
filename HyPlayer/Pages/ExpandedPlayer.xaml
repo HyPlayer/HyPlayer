@@ -29,6 +29,6 @@
             Grid.ColumnSpan="4"
             Name="ImageAlbum"
             Source="/Assets/Wide310x150Logo.scale-400.png"></Image>
-        <TextBlock Grid.Column="7" Grid.ColumnSpan="4" TextAlignment="Center" FontSize="25" VerticalAlignment="Center" Text="纯音乐,请欣赏"></TextBlock>
+        <TextBlock Name="LyricNowLine" Grid.Column="7" Grid.ColumnSpan="4" TextAlignment="Center" FontSize="20" VerticalAlignment="Center" Text="纯音乐,请欣赏"></TextBlock>
     </Grid>
 </Page>

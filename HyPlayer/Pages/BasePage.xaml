@@ -77,7 +77,7 @@
                     HorizontalAlignment="Center" />
                 <TextBox
                     Margin="5"
-                    PlaceholderText="账号 / 邮箱"
+                    PlaceholderText="手机 / 邮箱"
                     x:Name="TextBoxAccount" />
                 <PasswordBox
                     Margin="5"

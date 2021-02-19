@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
@@ -23,10 +24,23 @@ namespace HyPlayer.Pages
     /// </summary>
     public sealed partial class ExpandedPlayer : Page
     {
+        private Timer timer;
         public ExpandedPlayer()
         {
             this.InitializeComponent();
-            ImageAlbum.Source = AudioPlayer.AudioInfos[AudioPlayer.AudioMediaPlaybackList.CurrentItem].Picture;
+            timer = new Timer((state =>
+            {
+                this.Invoke((() =>
+                {
+                    if (AudioPlayer.AudioMediaPlaybackList.CurrentItem != null)
+                        ImageAlbum.Source = AudioPlayer.AudioInfos[AudioPlayer.AudioMediaPlaybackList.CurrentItem].Picture;
+                }));
+            }), null, 0, 1000);
+        }
+
+        public async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)
+        {
+            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority, () => { action(); });
         }
     }
 }

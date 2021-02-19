@@ -57,7 +57,6 @@ namespace HyPlayer.Classes
         public static MediaPlayer AudioMediaPlayer;
         public static MediaPlaybackList AudioMediaPlaybackList;
         public static Timer AudioPlayerTimer;
-        public static MediaPlaybackSession AudioMediaPlaybackSession;
         public static Dictionary<MediaPlaybackItem, AudioInfo> AudioInfos = new Dictionary<MediaPlaybackItem, AudioInfo>();
         public static Random AudioRandom = new Random();
 
