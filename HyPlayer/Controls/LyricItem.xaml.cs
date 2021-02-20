@@ -5,6 +5,8 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI;
+using Windows.UI.Text;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -13,6 +15,9 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
+using Microsoft.UI.Xaml.Media;
+using AcrylicBackgroundSource = Windows.UI.Xaml.Media.AcrylicBackgroundSource;
+using AcrylicBrush = Microsoft.UI.Xaml.Media.AcrylicBrush;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -34,6 +39,22 @@ namespace HyPlayer.Controls
             {
                 TextBoxTranslation.Visibility = Visibility.Collapsed;
             }
+        }
+
+        public void OnShow()
+        {
+            TextBoxPureLyric.FontWeight = FontWeights.ExtraBold;
+            TextBoxTranslation.FontWeight = FontWeights.ExtraBold;
+            TextBoxTranslation.FontSize = 20;
+            TextBoxPureLyric.FontSize = 20;
+        }
+
+        public void OnHind()
+        {
+            TextBoxPureLyric.FontWeight = FontWeights.Normal;
+            TextBoxTranslation.FontWeight = FontWeights.Normal;
+            TextBoxTranslation.FontSize = 14;
+            TextBoxPureLyric.FontSize = 14;
         }
     }
 }

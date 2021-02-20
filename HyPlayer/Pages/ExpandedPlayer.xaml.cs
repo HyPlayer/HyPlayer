@@ -33,15 +33,50 @@ namespace HyPlayer.Pages
         {
             this.InitializeComponent();
             Common.PageExpandedPlayer = this;
-            
+
             timer = new Timer((state =>
             {
-                this.Invoke((() =>
-                {
-
-                }));
+                this.Invoke((RefreshLyricTime));
             }), null, 0, 100);
-            
+
+        }
+
+        private void RefreshLyricTime()
+        {
+            LyricItem lastlrcitem = null;
+            bool showed = false;
+            foreach (UIElement lyricBoxChild in LyricBox.Children)
+            {
+                if (lyricBoxChild is LyricItem)
+                {
+                    LyricItem lrcitem = (LyricItem)lyricBoxChild;
+                    if (AudioPlayer.AudioMediaPlayer.PlaybackSession.Position < lrcitem.Lrc.LyricTime)
+                    {
+                        if (!showed)
+                        {
+                            lastlrcitem.OnShow();
+                            var transform = lastlrcitem.TransformToVisual((UIElement)LyricBoxContainer.Content);
+                            var position = transform.TransformPoint(new Point(0,0));
+                            LyricBoxContainer.ChangeView(null, position.Y - (LyricBoxContainer.ViewportHeight / 4), null, false);
+                            showed = true;
+                        }
+                    }
+                    else
+                    {
+                        lrcitem.OnHind();
+                    }
+                    lastlrcitem = lrcitem;
+                }
+            }
+
+            if (!showed && lastlrcitem!=null)
+            {
+                lastlrcitem.OnShow();
+                var transform = lastlrcitem.TransformToVisual((UIElement)LyricBoxContainer.Content);
+                var position = transform.TransformPoint(new Point(0, 0));
+                LyricBoxContainer.ChangeView(null, position.Y - (LyricBoxContainer.ViewportHeight / 4), null, false);
+                showed = true;
+            }
         }
 
         public void LoadLyricsBox()
