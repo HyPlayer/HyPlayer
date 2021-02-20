@@ -9,6 +9,7 @@ using Windows.Media;
 using Windows.Media.Core;
 using Windows.Media.Playback;
 using Windows.Storage;
+using Windows.Storage.Streams;
 using Windows.UI.Xaml.Media.Imaging;
 using TagLib;
 using File = System.IO.File;
@@ -142,28 +143,22 @@ namespace HyPlayer.Classes
                 ai.Lyric = await FileIO.ReadTextAsync(lrcfile);
             }
             catch (Exception) { }
-
-
-
-
             properties.Type = MediaPlaybackType.Music;
             properties.MusicProperties.AlbumTitle = ai.Album;
             properties.MusicProperties.Artist = ai.Artist;
             properties.MusicProperties.Title = ai.SongName;
-            /*
-                MemoryStream st = new MemoryStream(afi.Tag.Pictures[0].Data.ToArray());
-                IRandomAccessStream ras = st.AsRandomAccessStream();
-                BitmapImage bi = new BitmapImage();
-            */
-            Windows.Storage.StorageFolder storageFolder =
-                Windows.Storage.ApplicationData.Current.LocalFolder;
-            Windows.Storage.StorageFile sampleFile =
-                await storageFolder.CreateFileAsync("ImgCache\\Albums\\" + AudioRandom.Next().ToString(),
-                    Windows.Storage.CreationCollisionOption.ReplaceExisting);
-            sampleFile.OpenStreamForWriteAsync().Result.Write(afi.Tag.Pictures[0].Data.ToArray(), 0, afi.Tag.Pictures[0].Data.ToArray().Length);
-            ai.Picture = new BitmapImage(new Uri(sampleFile.Path));
+
+            BitmapImage img = new BitmapImage();
+            using (InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream())
+            {
+                stream.AsStreamForWrite().Write(afi.Tag.Pictures[0].Data.ToArray(), 0, afi.Tag.Pictures[0].Data.ToArray().Length);
+                stream.Seek(0);
+                img.SetSource(stream);
+                properties.Thumbnail = Windows.Storage.Streams.RandomAccessStreamReference.CreateFromStream(stream);
+            }
+            ai.Picture = img;
             AudioInfos[mediaPlaybackItem] = ai;
-            properties.Thumbnail = Windows.Storage.Streams.RandomAccessStreamReference.CreateFromFile(sampleFile);
+            
             //sampleFile.DeleteAsync();
             mediaPlaybackItem.ApplyDisplayProperties(properties);
 
