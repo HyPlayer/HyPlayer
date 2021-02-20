@@ -73,6 +73,8 @@ namespace HyPlayer.Controls
                 TbSongName.Text = ai.SongName;
                 AlbumImage.Source = ai.Picture;
                 SliderAudioRate.Value = AudioPlayer.AudioMediaPlayer.Volume * 100;
+                SliderProgress.Minimum = 0;
+                SliderProgress.Maximum = ai.LengthInMilliseconds;
             }));
 
             AudioPlayer.AudioPlayerTimer = new Timer((state =>
@@ -84,15 +86,13 @@ namespace HyPlayer.Controls
                         var tai = (AudioInfo)state;
                         TbSingerName.Text = tai.Artist;
                         TbSongName.Text = tai.SongName;
-                        double prog = (Math.Floor(AudioPlayer.AudioMediaPlayer.PlaybackSession.Position.TotalSeconds) * 100 / AudioPlayer.AudioMediaPlayer.PlaybackSession.NaturalDuration.TotalSeconds);
-                        if (!double.IsNaN(prog))
-                            SliderProgress.Value = prog;
+                        SliderProgress.Value = AudioPlayer.AudioMediaPlayer.PlaybackSession.Position.TotalMilliseconds;
                         PlayStateIcon.Glyph = AudioPlayer.AudioMediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing ? "\uEDB4" : "\uEDB5";
                         //SliderAudioRate.Value = mp.Volume;
                     }
                     catch (Exception) { }
                 });
-            }), ai, 1000, 1000);
+            }), ai, 1000, 100);
 
         }
 

@@ -21,6 +21,7 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using Microsoft.UI.Xaml.Controls;
@@ -52,6 +53,7 @@ namespace HyPlayer.Pages
                 TextBlockUserName.Text = Common.LoginedUser.UserName;
                 PersonPictureUser.ProfilePicture = new BitmapImage(new Uri(Common.LoginedUser.ImgUrl));
             }
+            Common.BaseFrame = BaseFrame;
         }
 
 
@@ -108,6 +110,14 @@ namespace HyPlayer.Pages
             if (nowitem.Tag.ToString() == "PageMe" && !Common.Logined)
             {
                 await DialogLogin.ShowAsync();
+                return;
+            }
+
+            switch (nowitem.Tag.ToString())
+            {
+                case "PageMe":
+                    Common.BaseFrame.Navigate(typeof(Pages.Me), null, new EntranceNavigationTransitionInfo());
+                    break;
             }
         }
     }

@@ -50,6 +50,8 @@
                     </StackPanel>
                 </NavigationViewItem>
             </NavigationView.MenuItems>
+            <Frame
+                x:Name="BaseFrame" />
         </NavigationView>
         <!-- 登录弹窗 -->
         <ContentDialog

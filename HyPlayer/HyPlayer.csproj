@@ -126,9 +126,16 @@
     </Compile>
     <Compile Include="Classes\AudioPlayer.cs" />
     <Compile Include="Classes\LoginedUser.cs" />
+    <Compile Include="Classes\NCSong.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="Controls\LyricItem.xaml.cs">
       <DependentUpon>LyricItem.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\PlaylistItem.xaml.cs">
+      <DependentUpon>PlaylistItem.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\SingleNCSong.xaml.cs">
+      <DependentUpon>SingleNCSong.xaml</DependentUpon>
     </Compile>
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
@@ -144,6 +151,15 @@
     </Compile>
     <Compile Include="Controls\PlayBar.xaml.cs">
       <DependentUpon>PlayBar.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Me.xaml.cs">
+      <DependentUpon>Me.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\SongListDetail.xaml.cs">
+      <DependentUpon>SongListDetail.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\SongListFrame.xaml.cs">
+      <DependentUpon>SongListFrame.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -220,6 +236,14 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\PlaylistItem.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\SingleNCSong.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -237,6 +261,18 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\PlayBar.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\Me.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\SongListDetail.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\SongListFrame.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -261,11 +297,10 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\NeteaseCloudMusicApi\NeteaseCloudMusicApi\NeteaseCloudMusicApi.csproj">
-      <Project>{525150d2-0f8c-4d79-8f8a-92124054c086}</Project>
+      <Project>{48f6363e-88ac-4846-9ea5-7800d9ef1a12}</Project>
       <Name>NeteaseCloudMusicApi</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>

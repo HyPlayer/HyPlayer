@@ -50,7 +50,6 @@ namespace HyPlayer
                 Source = AudioPlayer.AudioMediaPlaybackList,
             };
             this.InitializeComponent();
-            Common.MainFrame = MainFrame;
         }
     }
 }

@@ -1,0 +1,68 @@
+﻿<Page
+    x:Class="HyPlayer.Pages.SongListDetail"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:HyPlayer.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <ScrollViewer
+        VerticalScrollBarVisibility="Auto">
+        <ScrollViewer.Content>
+            <StackPanel
+                Orientation="Vertical">
+                <Grid
+                    Name="GridPersonalInformation">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Image
+                        Name="ImagePL"
+                        Grid.Column="1"
+                        Grid.ColumnSpan="3"
+                        Source="/Assets/icon.png"></Image>
+                    <StackPanel
+                        Grid.Column="5"
+                        Grid.ColumnSpan="6"
+                        Orientation="Vertical">
+                        <TextBlock
+                            Name="TextBoxPLName"
+                            Text="歌单名"
+                            FontSize="72"></TextBlock>
+                        <TextBlock
+                            Name="TextBoxAuthor"
+                            Text="歌单创建者"
+                            FontSize="25"
+                            Foreground="Gray"></TextBlock>
+                        <TextBlock
+                            Name="TextBlockDesc"
+                            Margin="0,10,0,0"
+                            Text="歌单简介"
+                            FontSize="25"
+                            Foreground="Gray" />
+                    </StackPanel>
+                </Grid>
+                <StackPanel
+                    Name="SongContainer"
+                    Orientation="Vertical" />
+
+            </StackPanel>
+
+        </ScrollViewer.Content>
+
+    </ScrollViewer>
+</Page>

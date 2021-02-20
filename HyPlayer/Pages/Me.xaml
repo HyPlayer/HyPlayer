@@ -1,0 +1,78 @@
+﻿<Page
+    x:Class="HyPlayer.Pages.Me"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:HyPlayer.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    mc:Ignorable="d">
+
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ScrollViewer.Content>
+                <StackPanel
+                    Orientation="Vertical">
+                    <Grid
+                        Name="GridPersonalInformation">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Image
+                            Name="ImageAvatar"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="3"
+                            Source="/Assets/icon.png"></Image>
+                        <StackPanel
+                            Grid.Column="5"
+                            Grid.ColumnSpan="6"
+                            Orientation="Vertical">
+                            <TextBlock
+                                Name="TextBoxUserName"
+                                Text="用户名"
+                                FontSize="72"></TextBlock>
+                            <TextBlock
+                                Name="TextBoxSignature"
+                                Text="签名"
+                                FontSize="25"
+                                Foreground="Gray"></TextBlock>
+                            <TextBlock
+                                Name="TextBlockLevel"
+                                Text="LV"
+                                FontSize="25"
+                                Foreground="Gray"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <muxc:NavigationView
+                        Margin="0,20,0,0"
+                        IsSettingsVisible="False"
+                        IsBackButtonVisible="Collapsed"
+                        SelectionChanged="NavigationView_OnSelectionChanged"
+                        PaneDisplayMode="Top">
+                        <muxc:NavigationView.MenuItems>
+                            <muxc:NavigationViewItem
+                                Content="歌单"
+                                Tag="SongList" />
+                        </muxc:NavigationView.MenuItems>
+                        <Frame
+                            x:Name="ContentFrame" />
+                    </muxc:NavigationView>
+                </StackPanel>
+
+            </ScrollViewer.Content>
+
+        </ScrollViewer>
+    </Grid>
+</Page>

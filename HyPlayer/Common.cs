@@ -16,9 +16,10 @@ namespace HyPlayer
         public static NeteaseCloudMusicApi.CloudMusicApi ncapi = new CloudMusicApi();
         public static bool Logined = false;
         public static LoginedUser LoginedUser;
-        public static Frame MainFrame;
         public static ExpandedPlayer PageExpandedPlayer;
         public static MainPage PageMain;
         public static PlayBar BarPlayBar;
+        public static Frame BaseFrame;
+        public static Dictionary<string,object> GLOBAL = new Dictionary<string, object>();
     }
 }

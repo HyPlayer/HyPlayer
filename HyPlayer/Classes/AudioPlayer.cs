@@ -123,6 +123,7 @@ namespace HyPlayer.Classes
             Common.PageExpandedPlayer.OnSongChange(args.NewItem);
         }
 
+
         public static async void AppendFile(StorageFile sf)
         {
             var mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(sf));
@@ -132,7 +133,7 @@ namespace HyPlayer.Classes
             {
                 Album = string.IsNullOrEmpty(afi.Tag.Album) ? "未知专辑" : afi.Tag.Album,
                 Artist = string.IsNullOrEmpty(string.Join('/', afi.Tag.Performers)) ? "未知歌手" : string.Join('/', afi.Tag.Performers),
-                LengthInMilliseconds = afi.Properties.Duration.Milliseconds,
+                LengthInMilliseconds = afi.Properties.Duration.TotalMilliseconds,
                 SongName = string.IsNullOrEmpty(afi.Tag.Title) ? "Untitled" : afi.Tag.Title
             };
 
@@ -186,7 +187,7 @@ namespace HyPlayer.Classes
         public string Artist;
         public string Album;
         public string Lyric;
-        public int LengthInMilliseconds;
+        public double LengthInMilliseconds;
         public BitmapImage Picture;
     }
 }
