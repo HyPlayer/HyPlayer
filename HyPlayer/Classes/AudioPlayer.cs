@@ -153,8 +153,11 @@ namespace HyPlayer.Classes
             {
                 stream.AsStreamForWrite().Write(afi.Tag.Pictures[0].Data.ToArray(), 0, afi.Tag.Pictures[0].Data.ToArray().Length);
                 stream.Seek(0);
-                img.SetSource(stream);
-                properties.Thumbnail = Windows.Storage.Streams.RandomAccessStreamReference.CreateFromStream(stream);
+                await img.SetSourceAsync(stream);
+                InMemoryRandomAccessStream streamb = new InMemoryRandomAccessStream();
+                streamb.AsStreamForWrite().Write(afi.Tag.Pictures[0].Data.ToArray(), 0, afi.Tag.Pictures[0].Data.ToArray().Length);
+                streamb.Seek(0);
+                properties.Thumbnail = Windows.Storage.Streams.RandomAccessStreamReference.CreateFromStream(streamb);
             }
             ai.Picture = img;
             AudioInfos[mediaPlaybackItem] = ai;
