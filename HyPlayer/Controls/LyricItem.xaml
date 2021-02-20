@@ -1,0 +1,28 @@
+﻿<UserControl
+    x:Class="HyPlayer.Controls.LyricItem"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:HyPlayer.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    mc:Ignorable="d"
+    d:DesignHeight="70"
+    d:DesignWidth="500">
+
+    <Grid>
+        <controls:DockPanel
+            LastChildFill="True">
+            <TextBlock
+                controls:DockPanel.Dock="Top"
+                Name="TextBoxPureLyric"
+                Text="原句"
+                TextAlignment="Center"></TextBlock>
+            <TextBlock
+                controls:DockPanel.Dock="Bottom"
+                Name="TextBoxTranslation"
+                Text="翻译"
+                TextAlignment="Center"></TextBlock>
+        </controls:DockPanel>
+    </Grid>
+</UserControl>

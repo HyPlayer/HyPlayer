@@ -11,6 +11,7 @@ using Windows.Media.Playback;
 using Windows.Storage;
 using Windows.UI.Xaml.Media.Imaging;
 using TagLib;
+using File = System.IO.File;
 
 namespace HyPlayer.Classes
 {
@@ -57,8 +58,57 @@ namespace HyPlayer.Classes
         public static MediaPlayer AudioMediaPlayer;
         public static MediaPlaybackList AudioMediaPlaybackList;
         public static Timer AudioPlayerTimer;
+        public static List<SongLyric> Lyrics = new List<SongLyric>();
         public static Dictionary<MediaPlaybackItem, AudioInfo> AudioInfos = new Dictionary<MediaPlaybackItem, AudioInfo>();
         public static Random AudioRandom = new Random();
+
+        public static void LoadPureLyric(string LyricAllText)
+        {
+            Lyrics = new List<SongLyric>();
+            if (string.IsNullOrEmpty(LyricAllText)) return;
+            string[] LyricsArr = LyricAllText.Replace("\r\n", "\n").Replace("\r", "\n").Split("\n");
+            TimeSpan offset = TimeSpan.Zero;
+            foreach (string sL in LyricsArr)
+            {
+                string LyricTextLine = sL.Trim();
+                if (LyricTextLine.IndexOf('[') == -1 || LyricTextLine.IndexOf(']') == -1)
+                    continue; //此行不为Lrc
+                string prefix = LyricTextLine.Substring(1, LyricTextLine.IndexOf(']') - 1);
+                if (prefix.StartsWith("al") || prefix.StartsWith("ar") || prefix.StartsWith("au") ||
+                    prefix.StartsWith("by") || prefix.StartsWith("re") || prefix.StartsWith("ti") ||
+                    prefix.StartsWith("ve"))
+                {//这种废标签不想解析
+                    continue;
+                }
+
+                if (prefix.StartsWith("offset"))
+                {
+                    if (!int.TryParse(prefix.Substring(6), out int offsetint))
+                        continue;
+                    offset = new TimeSpan(0, 0, 0, 0, offsetint);
+                }
+
+                if (!TimeSpan.TryParse("00:" + prefix, out TimeSpan time))
+                    continue;
+                string lrctxt = LyricTextLine.Substring(LyricTextLine.IndexOf(']') + 1);
+                //NLyric 的双语歌词 - 夹带私货
+                string translation = null;
+                if (LyricTextLine.IndexOf('「') != -1 && LyricTextLine.IndexOf('」') != -1)
+                {
+                    translation = LyricTextLine.Substring(LyricTextLine.IndexOf('「') + 1, LyricTextLine.IndexOf('」') - LyricTextLine.IndexOf('「') - 1);
+                    lrctxt = lrctxt.Substring(0, lrctxt.IndexOf('「'));
+                }
+
+                bool HaveTranslation = !string.IsNullOrEmpty(translation);
+                Lyrics.Add(new SongLyric()
+                {
+                    LyricTime = time,
+                    PureLyric = lrctxt,
+                    Translation = translation,
+                    HaveTranslation = HaveTranslation
+                });
+            }
+        }
 
         public static void AudioMediaPlaybackList_ItemOpened(MediaPlaybackList sender, MediaPlaybackItemOpenedEventArgs args)
         {
@@ -67,7 +117,9 @@ namespace HyPlayer.Classes
 
         public static void AudioMediaPlaybackList_CurrentItemChanged(MediaPlaybackList sender, CurrentMediaPlaybackItemChangedEventArgs args)
         {
+            LoadPureLyric(AudioInfos[args.NewItem].Lyric);
             Common.BarPlayBar.LoadPlayingFile(args.NewItem);
+            Common.PageExpandedPlayer.OnSongChange(args.NewItem);
         }
 
         public static async void AppendFile(StorageFile sf)
@@ -82,6 +134,18 @@ namespace HyPlayer.Classes
                 LengthInMilliseconds = afi.Properties.Duration.Milliseconds,
                 SongName = string.IsNullOrEmpty(afi.Tag.Title) ? "Untitled" : afi.Tag.Title
             };
+
+            //记载歌词
+            try
+            {
+                StorageFile lrcfile = await (await sf.GetParentAsync()).GetFileAsync(Path.ChangeExtension(sf.Name, "lrc"));
+                ai.Lyric = await FileIO.ReadTextAsync(lrcfile);
+            }
+            catch (Exception) { }
+
+
+
+
             properties.Type = MediaPlaybackType.Music;
             properties.MusicProperties.AlbumTitle = ai.Album;
             properties.MusicProperties.Artist = ai.Artist;
@@ -107,11 +171,23 @@ namespace HyPlayer.Classes
         }
     }
 
+    public struct SongLyric
+    {
+        public string PureLyric;
+        public string Translation;
+        public bool HaveTranslation;
+        public TimeSpan LyricTime;
+
+        public static SongLyric PureSong = new SongLyric()
+            {HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏"};
+    }
+
     struct AudioInfo
     {
         public string SongName;
         public string Artist;
         public string Album;
+        public string Lyric;
         public int LengthInMilliseconds;
         public BitmapImage Picture;
     }

@@ -5,6 +5,7 @@
     xmlns:local="using:HyPlayer.Pages"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     mc:Ignorable="d"
     Background="{ThemeResource SystemControlAcrylicElementBrush}">
     <Grid
@@ -46,28 +47,41 @@
             Grid.Row="2"
             Grid.RowSpan="8"
             Name="ImageAlbum"
-            Source="/Assets/Icon.png"/>
-        <StackPanel
-            Orientation="Vertical"
+            Source="/Assets/Icon.png" />
+        <controls:DockPanel
+            LastChildFill="True"
             Grid.Row="1"
-            Grid.RowSpan="11"
+            Margin="0,0,0,100"
+            Grid.RowSpan="12"
             Grid.ColumnSpan="5"
             Grid.Column="6">
             <TextBlock
+                controls:DockPanel.Dock="Top"
+                FontSize="30"
                 x:FieldModifier="public"
                 TextAlignment="Center"
                 Name="TextBlockSongTitle"
                 Text="歌曲名" />
             <TextBlock
+                controls:DockPanel.Dock="Top"
                 x:FieldModifier="public"
                 TextAlignment="Center"
                 Name="TextBlockSinger"
+                Foreground="Gray"
+                FontSize="20"
                 Text="歌手" />
-            <TextBlock
-                Name="LyricNowLine"
-                TextAlignment="Center"
-                VerticalAlignment="Center"
-                Text="纯音乐,请欣赏"></TextBlock>
-        </StackPanel>
+            <ScrollViewer
+                x:Name="scrolls"
+                VerticalScrollBarVisibility="Auto"
+                HorizontalScrollBarVisibility="Auto">
+                <ScrollViewer.Content>
+                    <StackPanel
+                        Name="LyricBox"
+                        Orientation="Vertical"
+                        ScrollViewer.VerticalScrollBarVisibility="Auto" />
+                </ScrollViewer.Content>
+            </ScrollViewer>
+
+        </controls:DockPanel>
     </Grid>
 </Page>
