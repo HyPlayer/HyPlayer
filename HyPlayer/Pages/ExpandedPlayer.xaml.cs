@@ -82,6 +82,7 @@ namespace HyPlayer.Pages
         public void LoadLyricsBox()
         {
             LyricBox.Children.Clear();
+            LyricBox.Children.Add(new Grid(){Height = LyricBoxContainer.ViewportHeight });
             if (AudioPlayer.Lyrics.Count == 0)
             {
                 LyricItem lrcitem = new LyricItem(SongLyric.PureSong);
@@ -96,6 +97,7 @@ namespace HyPlayer.Pages
                     LyricBox.Children.Add(lrcitem);
                 }
             }
+            LyricBox.Children.Add(new Grid() { Height = LyricBoxContainer.ViewportHeight });
         }
 
         public void OnSongChange(MediaPlaybackItem mpi)

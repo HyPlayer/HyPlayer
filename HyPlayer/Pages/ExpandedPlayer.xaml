@@ -72,8 +72,8 @@
                 Text="歌手" />
             <ScrollViewer
                 x:Name="LyricBoxContainer"
-                VerticalScrollBarVisibility="Auto"
-                HorizontalScrollBarVisibility="Auto">
+                VerticalScrollBarVisibility="Hidden"
+                HorizontalScrollBarVisibility="Hidden">
                 <ScrollViewer.Content>
                     <StackPanel
                         Name="LyricBox"
