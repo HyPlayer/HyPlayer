@@ -29,6 +29,7 @@ namespace HyPlayer.Pages
     public sealed partial class ExpandedPlayer : Page
     {
         private Timer timer;
+        private int sclock=0;
         public ExpandedPlayer()
         {
             this.InitializeComponent();
@@ -55,6 +56,11 @@ namespace HyPlayer.Pages
                         if (!showed)
                         {
                             lastlrcitem.OnShow();
+                            if (sclock > 0)
+                            {
+                                sclock--;
+                                return;
+                            }
                             var transform = lastlrcitem.TransformToVisual((UIElement)LyricBoxContainer.Content);
                             var position = transform.TransformPoint(new Point(0,0));
                             LyricBoxContainer.ChangeView(null, position.Y - (LyricBoxContainer.ViewportHeight / 4), null, false);
@@ -72,6 +78,11 @@ namespace HyPlayer.Pages
             if (!showed && lastlrcitem!=null)
             {
                 lastlrcitem.OnShow();
+                if (sclock > 0)
+                {
+                    sclock--;
+                    return;
+                }
                 var transform = lastlrcitem.TransformToVisual((UIElement)LyricBoxContainer.Content);
                 var position = transform.TransformPoint(new Point(0, 0));
                 LyricBoxContainer.ChangeView(null, position.Y - (LyricBoxContainer.ViewportHeight / 4), null, false);
@@ -143,5 +154,9 @@ namespace HyPlayer.Pages
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TextBlockSinger);
         }
 
+        private void LyricBoxContainer_OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
+        {
+            sclock = 30;
+        }
     }
 }

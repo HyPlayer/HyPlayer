@@ -42,12 +42,12 @@ namespace HyPlayer
         public MainPage()
         {
             Common.PageMain = this;
-            AudioPlayer.AudioMediaPlaybackList = new MediaPlaybackList();
+            AudioPlayer.AudioMediaPlaybackList = new MediaPlaybackList(){AutoRepeatEnabled = true};
             AudioPlayer.AudioMediaPlaybackList.ItemOpened += AudioPlayer.AudioMediaPlaybackList_ItemOpened;
             AudioPlayer.AudioMediaPlaybackList.CurrentItemChanged += AudioPlayer.AudioMediaPlaybackList_CurrentItemChanged;
             AudioPlayer.AudioMediaPlayer = new MediaPlayer()
             {
-                Source = AudioPlayer.AudioMediaPlaybackList,
+                Source = AudioPlayer.AudioMediaPlaybackList
             };
             this.InitializeComponent();
         }

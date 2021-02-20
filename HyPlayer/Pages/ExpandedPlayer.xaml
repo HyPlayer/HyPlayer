@@ -76,6 +76,7 @@
                 HorizontalScrollBarVisibility="Hidden">
                 <ScrollViewer.Content>
                     <StackPanel
+                        PointerWheelChanged="LyricBoxContainer_OnPointerWheelChanged"
                         Name="LyricBox"
                         Orientation="Vertical"
                         ScrollViewer.VerticalScrollBarVisibility="Auto" />
