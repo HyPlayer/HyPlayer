@@ -49,6 +49,8 @@
             <uap:Codec Name="flac"/>
             <uap:Codec Name="mp3"/>
             <uap:Codec Name="H.264"/>
+            <uap:Codec Name="ogg"/>
+            <uap:Codec Name="H.265"/>
           </uap:MediaPlayback>
         </uap:Extension>
       </Extensions>
