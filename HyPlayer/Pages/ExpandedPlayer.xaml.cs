@@ -29,7 +29,7 @@ namespace HyPlayer.Pages
     public sealed partial class ExpandedPlayer : Page
     {
         private Timer timer;
-        private int sclock=0;
+        private int sclock = 0;
         public ExpandedPlayer()
         {
             this.InitializeComponent();
@@ -48,22 +48,21 @@ namespace HyPlayer.Pages
             bool showed = false;
             foreach (UIElement lyricBoxChild in LyricBox.Children)
             {
-                if (lyricBoxChild is LyricItem)
+                if (lyricBoxChild is LyricItem lrcitem)
                 {
-                    LyricItem lrcitem = (LyricItem)lyricBoxChild;
                     if (AudioPlayer.AudioMediaPlayer.PlaybackSession.Position < lrcitem.Lrc.LyricTime)
                     {
                         if (!showed)
                         {
-                            lastlrcitem.OnShow();
+                            lastlrcitem?.OnShow();
                             if (sclock > 0)
                             {
                                 sclock--;
                                 return;
                             }
-                            var transform = lastlrcitem.TransformToVisual((UIElement)LyricBoxContainer.Content);
-                            var position = transform.TransformPoint(new Point(0,0));
-                            LyricBoxContainer.ChangeView(null, position.Y - (LyricBoxContainer.ViewportHeight / 4), null, false);
+                            var transform = lastlrcitem?.TransformToVisual((UIElement)LyricBoxContainer.Content);
+                            var position = transform?.TransformPoint(new Point(0, 0));
+                            LyricBoxContainer.ChangeView(null, position?.Y - (LyricBoxContainer.ViewportHeight / 2), null, false);
                             showed = true;
                         }
                     }
@@ -75,7 +74,7 @@ namespace HyPlayer.Pages
                 }
             }
 
-            if (!showed && lastlrcitem!=null)
+            if (!showed && lastlrcitem != null)
             {
                 lastlrcitem.OnShow();
                 if (sclock > 0)
@@ -85,7 +84,7 @@ namespace HyPlayer.Pages
                 }
                 var transform = lastlrcitem.TransformToVisual((UIElement)LyricBoxContainer.Content);
                 var position = transform.TransformPoint(new Point(0, 0));
-                LyricBoxContainer.ChangeView(null, position.Y - (LyricBoxContainer.ViewportHeight / 4), null, false);
+                LyricBoxContainer.ChangeView(null, position.Y - (LyricBoxContainer.ViewportHeight / 2), null, false);
                 showed = true;
             }
         }
@@ -93,7 +92,7 @@ namespace HyPlayer.Pages
         public void LoadLyricsBox()
         {
             LyricBox.Children.Clear();
-            LyricBox.Children.Add(new Grid(){Height = LyricBoxContainer.ViewportHeight });
+            LyricBox.Children.Add(new Grid() { Height = LyricBoxContainer.ViewportHeight });
             if (AudioPlayer.Lyrics.Count == 0)
             {
                 LyricItem lrcitem = new LyricItem(SongLyric.PureSong);

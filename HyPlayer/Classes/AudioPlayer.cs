@@ -148,19 +148,27 @@ namespace HyPlayer.Classes
             properties.MusicProperties.AlbumTitle = ai.Album;
             properties.MusicProperties.Artist = ai.Artist;
             properties.MusicProperties.Title = ai.SongName;
-
-            BitmapImage img = new BitmapImage();
-            using (InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream())
+            try
             {
-                stream.AsStreamForWrite().Write(afi.Tag.Pictures[0].Data.ToArray(), 0, afi.Tag.Pictures[0].Data.ToArray().Length);
-                stream.Seek(0);
-                await img.SetSourceAsync(stream);
-                InMemoryRandomAccessStream streamb = new InMemoryRandomAccessStream();
-                streamb.AsStreamForWrite().Write(afi.Tag.Pictures[0].Data.ToArray(), 0, afi.Tag.Pictures[0].Data.ToArray().Length);
-                streamb.Seek(0);
-                properties.Thumbnail = Windows.Storage.Streams.RandomAccessStreamReference.CreateFromStream(streamb);
+                BitmapImage img = new BitmapImage();
+                using (InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream())
+                {
+                    stream.AsStreamForWrite().Write(afi.Tag.Pictures[0].Data.ToArray(), 0,
+                        afi.Tag.Pictures[0].Data.ToArray().Length);
+                    stream.Seek(0);
+                    await img.SetSourceAsync(stream);
+                    InMemoryRandomAccessStream streamb = new InMemoryRandomAccessStream();
+                    streamb.AsStreamForWrite().Write(afi.Tag.Pictures[0].Data.ToArray(), 0,
+                        afi.Tag.Pictures[0].Data.ToArray().Length);
+                    streamb.Seek(0);
+                    properties.Thumbnail =
+                        Windows.Storage.Streams.RandomAccessStreamReference.CreateFromStream(streamb);
+                }
+
+                ai.Picture = img;
             }
-            ai.Picture = img;
+            catch (Exception) { }
+
             AudioInfos[mediaPlaybackItem] = ai;
             
             //sampleFile.DeleteAsync();
