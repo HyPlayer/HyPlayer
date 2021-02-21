@@ -41,6 +41,7 @@
             <RowDefinition />
         </Grid.RowDefinitions>
         <Image
+            DoubleTapped="ImageAlbum_OnDoubleTapped"
             x:FieldModifier="public"
             Grid.Column="1"
             Grid.ColumnSpan="4"

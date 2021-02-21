@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Media.Playback;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -31,6 +32,8 @@ namespace HyPlayer.Pages
     {
         private Timer timer;
         private int sclock = 0;
+        private bool iscompact = false;
+
         public ExpandedPlayer()
         {
             this.InitializeComponent();
@@ -186,6 +189,20 @@ namespace HyPlayer.Pages
         private void LyricBoxContainer_OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
         {
             sclock = 30;
+        }
+
+        private void ImageAlbum_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            if (!iscompact)
+            {
+                ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.CompactOverlay);
+                iscompact = true;
+            }
+            else
+            {
+                ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
+                iscompact = false;
+            }
         }
     }
 }
