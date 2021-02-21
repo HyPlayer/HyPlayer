@@ -10,7 +10,9 @@
     Height="300"
     Width="250"
     d:DesignHeight="300"
-    d:DesignWidth="250">
+    d:DesignWidth="250"
+    CornerRadius="4"
+    >
 
     <controls:DockPanel
         LastChildFill="False"
@@ -18,11 +20,14 @@
         Tapped="UIElement_OnTapped">
         <Image
             Name="ImageCover"
-            controls:DockPanel.Dock="Top"
-            Width="250" Height="250" Source="/Assets/icon.png" />
-        <TextBlock controls:DockPanel.Dock="Top" Name="TextBlockPLName" Text="歌单名称"></TextBlock>
-        <TextBlock
+            controls:DockPanel.Dock="Top" Source="/Assets/icon.png" Margin="-25,0,-25,-37" />
+        <Grid
+            CornerRadius="2" Margin="0,-22,-250,0">
+            <Rectangle Fill="{ThemeResource PlayListItemLuminosity}" Margin="0,-22,-250,0" />
+            <TextBlock
             controls:DockPanel.Dock="Bottom"
-            Name="TextBlockPLAuthor" Foreground="Gray" Text="歌单创建者"></TextBlock>
+            x:Name="TextBlockPLAuthor" Foreground="#FF262626" Text="歌单创建者" Margin="10,37,19,9" FontSize="10"/>
+            <TextBlock controls:DockPanel.Dock="Top" x:Name="TextBlockPLName" Text="歌单名称" Margin="10,12,10,27" FontSize="15"/>
+        </Grid>
     </controls:DockPanel>
 </UserControl>

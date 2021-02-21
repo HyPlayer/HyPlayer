@@ -51,5 +51,6 @@ namespace HyPlayer.Controls
         {
             Common.BaseFrame.Navigate(typeof(SongListDetail), playList,new CommonNavigationTransitionInfo());
         }
+
     }
 }
