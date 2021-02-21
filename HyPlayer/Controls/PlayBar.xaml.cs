@@ -155,14 +155,17 @@ namespace HyPlayer.Controls
         {
             ButtonExpand.Visibility = Visibility.Collapsed;
             ButtonCollapse.Visibility = Visibility.Visible;
+
             Common.PageMain.GridPlayBar.Background = null;
-            Common.PageMain.MainFrame.Visibility = Visibility.Collapsed;
+            //Common.PageMain.MainFrame.Visibility = Visibility.Collapsed;
             Common.PageMain.ExpandedPlayer.Visibility = Visibility.Visible;
-            GridSongInfo.Visibility = Visibility.Collapsed;
+            Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer), null,
+                new EntranceNavigationTransitionInfo());
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TbSongName);
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", AlbumImage);
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TbSingerName);
             Common.PageExpandedPlayer.StartExpandAnimation();
+            GridSongInfo.Visibility = Visibility.Collapsed;
         }
 
         private void ButtonCollapse_OnClick(object sender, RoutedEventArgs e)
@@ -180,7 +183,8 @@ namespace HyPlayer.Controls
             anim2?.TryStart(AlbumImage);
             ButtonExpand.Visibility = Visibility.Visible;
             ButtonCollapse.Visibility = Visibility.Collapsed;
-            Common.PageMain.MainFrame.Visibility = Visibility.Visible;
+            Common.PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));
+            //Common.PageMain.MainFrame.Visibility = Visibility.Visible;
             Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
             Common.PageMain.GridPlayBar.Background = new Windows.UI.Xaml.Media.AcrylicBrush() { BackgroundSource = AcrylicBackgroundSource.Backdrop, TintOpacity = 0.67500003206078, TintLuminosityOpacity = 0.183000008692034, TintColor = Windows.UI.Color.FromArgb(255, 128, 128, 128), FallbackColor = Windows.UI.Color.FromArgb(255, 128, 128, 128) };
         }

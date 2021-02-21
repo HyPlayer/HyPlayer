@@ -143,6 +143,9 @@
     <Compile Include="Pages\BasePage.xaml.cs">
       <DependentUpon>BasePage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\BlankPage.xaml.cs">
+      <DependentUpon>BlankPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Pages\ExpandedPlayer.xaml.cs">
       <DependentUpon>ExpandedPlayer.xaml</DependentUpon>
     </Compile>
@@ -249,6 +252,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Pages\BasePage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\BlankPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

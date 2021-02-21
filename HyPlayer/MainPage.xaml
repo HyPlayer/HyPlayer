@@ -21,7 +21,7 @@
             x:FieldModifier="public"
             Visibility="Collapsed"
             Name="ExpandedPlayer"
-            SourcePageType="hyPlayerPage:ExpandedPlayer" />
+            SourcePageType="hyPlayerPage:BlankPage" />
         <Grid
             x:FieldModifier="public"
             Name="GridPlayBar"
