@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text.RegularExpressions;
 using Windows.ApplicationModel.Core;
@@ -48,6 +49,7 @@ namespace HyPlayer.Pages
             ApplicationViewTitleBar titleBar = ApplicationView.GetForCurrentView().TitleBar;
             titleBar.ButtonBackgroundColor = Colors.Transparent;
             titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+            LoadLoginData();
             if (Common.Logined)
             {
                 TextBlockUserName.Text = Common.LoginedUser.UserName;
@@ -56,6 +58,19 @@ namespace HyPlayer.Pages
             Common.BaseFrame = BaseFrame;
         }
 
+        private async void LoadLoginData()
+        {
+            StorageFile sf = await Windows.Storage.ApplicationData.Current.LocalFolder.CreateFileAsync("Settings\\Cookie", Windows.Storage.CreationCollisionOption.ReplaceExisting);
+            //Common.ncapi = new CloudMusicApi();
+            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserAccount);
+            if (isOk && json["account"].HasValues)
+            {
+                Common.Logined = true;
+                Common.LoginedUser.UserName = json["profile"]["nickname"].ToString();
+                Common.LoginedUser.ImgUrl = json["profile"]["avatarUrl"].ToString();
+                Common.LoginedUser.uid = json["account"]["id"].ToString();
+            }
+        }
 
         private async void ButtonLogin_OnClick(object sender, RoutedEventArgs e)
         {
@@ -83,9 +98,9 @@ namespace HyPlayer.Pages
             else
             {
                 Common.Logined = true;
-                string cookie = JsonConvert.SerializeObject(Common.ncapi.Cookies);
+                //string cookie = JsonConvert.SerializeObject();
                 StorageFile sf = await Windows.Storage.ApplicationData.Current.LocalFolder.CreateFileAsync("Settings\\Cookie", Windows.Storage.CreationCollisionOption.ReplaceExisting);
-                await FileIO.WriteTextAsync(sf, cookie);
+                //await FileIO.WriteTextAsync(sf, cookie);
                 Common.LoginedUser.UserName = json["profile"]["nickname"].ToString();
                 Common.LoginedUser.ImgUrl = json["profile"]["avatarUrl"].ToString();
                 Common.LoginedUser.uid = json["account"]["id"].ToString();

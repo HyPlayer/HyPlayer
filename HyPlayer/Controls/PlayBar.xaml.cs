@@ -75,8 +75,8 @@ namespace HyPlayer.Controls
                 SliderAudioRate.Value = AudioPlayer.AudioMediaPlayer.Volume * 100;
                 SliderProgress.Minimum = 0;
                 SliderProgress.Maximum = ai.LengthInMilliseconds;
+                ListBoxPlayList.SelectedIndex = (int)AudioPlayer.AudioMediaPlaybackList.CurrentItemIndex;
             }));
-
             AudioPlayer.AudioPlayerTimer = new Timer((state =>
             {
                 this.Invoke(() =>
@@ -96,16 +96,20 @@ namespace HyPlayer.Controls
 
         }
 
+        public void RefreshSongList()
+        {
+            ListBoxPlayList.Items?.Clear();
+            foreach (MediaPlaybackItem mediaPlaybackItem in AudioPlayer.AudioMediaPlaybackList.Items)
+            {
+                ListBoxPlayList.Items?.Add(mediaPlaybackItem.GetDisplayProperties().MusicProperties.Artist + " - " + mediaPlaybackItem.GetDisplayProperties().MusicProperties.Title);
+            }
+        }
+
         public void OnSongAdd()
         {
             this.Invoke((() =>
             {
-                ListBoxPlayList.Items?.Clear();
-                foreach (MediaPlaybackItem mediaPlaybackItem in AudioPlayer.AudioMediaPlaybackList.Items)
-                {
-                    ListBoxPlayList.Items?.Add(mediaPlaybackItem.GetDisplayProperties().MusicProperties.Artist + " - " + mediaPlaybackItem.GetDisplayProperties().MusicProperties.Title);
-                }
-                ListBoxPlayList.SelectedIndex = (int)AudioPlayer.AudioMediaPlaybackList.CurrentItemIndex;
+                RefreshSongList();
             }));
         }
 
