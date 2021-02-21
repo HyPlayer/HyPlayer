@@ -60,16 +60,31 @@ namespace HyPlayer.Pages
 
         private async void LoadLoginData()
         {
-            StorageFile sf = await Windows.Storage.ApplicationData.Current.LocalFolder.CreateFileAsync("Settings\\Cookie", Windows.Storage.CreationCollisionOption.ReplaceExisting);
-            //Common.ncapi = new CloudMusicApi();
-            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserAccount);
-            if (isOk && json["account"].HasValues)
+            try
             {
-                Common.Logined = true;
-                Common.LoginedUser.UserName = json["profile"]["nickname"].ToString();
-                Common.LoginedUser.ImgUrl = json["profile"]["avatarUrl"].ToString();
-                Common.LoginedUser.uid = json["account"]["id"].ToString();
+                StorageFile sf = await Windows.Storage.ApplicationData.Current.LocalFolder.GetFileAsync("Settings\\UserPassword");
+                string txt = await FileIO.ReadTextAsync(sf);
+                string[] arr = txt.Split("\r\n");
+                var queries = new Dictionary<string, object>();
+                var account = arr[0];
+                var isPhone = Regex.Match(account, "^[0-9]+$").Success;
+                queries[isPhone ? "phone" : "email"] = account;
+                queries["md5_password"] = arr[1];
+                var (isOk, json) = await Common.ncapi.RequestAsync(isPhone ? CloudMusicApiProviders.LoginCellphone : CloudMusicApiProviders.Login, queries);
+                if (isOk && json["code"].ToString() == "200")
+                {
+                    Common.Logined = true;
+                    Common.LoginedUser.UserName = json["profile"]["nickname"].ToString();
+                    Common.LoginedUser.ImgUrl = json["profile"]["avatarUrl"].ToString();
+                    Common.LoginedUser.uid = json["account"]["id"].ToString();
+                    TextBlockUserName.Text = json["profile"]["nickname"].ToString();
+                    PersonPictureUser.ProfilePicture =
+                        new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
+                }
+
             }
+            catch (Exception) { }
+
         }
 
         private async void ButtonLogin_OnClick(object sender, RoutedEventArgs e)
@@ -98,9 +113,8 @@ namespace HyPlayer.Pages
             else
             {
                 Common.Logined = true;
-                //string cookie = JsonConvert.SerializeObject();
-                StorageFile sf = await Windows.Storage.ApplicationData.Current.LocalFolder.CreateFileAsync("Settings\\Cookie", Windows.Storage.CreationCollisionOption.ReplaceExisting);
-                //await FileIO.WriteTextAsync(sf, cookie);
+                StorageFile sf = await Windows.Storage.ApplicationData.Current.LocalFolder.CreateFileAsync("Settings\\UserPassword", Windows.Storage.CreationCollisionOption.ReplaceExisting);
+                _ = FileIO.WriteTextAsync(sf, account + "\r\n" + TextBoxPassword.Password.ToString().ToByteArrayUtf8().ComputeMd5().ToHexStringLower());
                 Common.LoginedUser.UserName = json["profile"]["nickname"].ToString();
                 Common.LoginedUser.ImgUrl = json["profile"]["avatarUrl"].ToString();
                 Common.LoginedUser.uid = json["account"]["id"].ToString();

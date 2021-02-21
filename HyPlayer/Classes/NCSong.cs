@@ -3,6 +3,15 @@ using System.Collections.Generic;
 
 namespace HyPlayer.Classes
 {
+
+    public struct NCCookie
+    {
+        public string name;
+        public string value;
+        public string path;
+        public string domain;
+    }
+
     public struct NCSong
     {
         public string sid;

@@ -10,40 +10,44 @@
     Height="300"
     Width="250"
     d:DesignHeight="300"
-    d:DesignWidth="250"
-    CornerRadius="4">
+    d:DesignWidth="250">
     <Grid
-        Tapped="UIElement_OnTapped">
-        <Grid.RowDefinitions>
-            <RowDefinition />
-            <RowDefinition
-                Height="60" />
-        </Grid.RowDefinitions>
-        <Image
-            Grid.RowSpan="2"
-            Grid.Row="0"
-            Name="ImageCover"
-            controls:DockPanel.Dock="Top"
-            Source="/Assets/icon.png" />
+        CornerRadius="10">
         <Grid
-            Background="{ThemeResource PlayListItemLuminosity}"
-            Grid.Row="1"
-            CornerRadius="4">
-            <TextBlock
-                Width="250"
-                TextWrapping="WrapWholeWords"
-                x:Name="TextBlockPLAuthor"
-                Foreground="#FF262626"
-                Text="歌单创建者"
-                Margin="10,37,19,9"
-                FontSize="10" />
-            <TextBlock
-                Width="250"
-                x:Name="TextBlockPLName"
-                TextWrapping="WrapWholeWords"
-                Text="歌单名称"
-                Margin="10,12,10,27"
-                FontSize="15" />
+            Tapped="UIElement_OnTapped">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition
+                    Height="60" />
+            </Grid.RowDefinitions>
+            <Grid
+                CornerRadius="10"
+                Grid.RowSpan="2"
+                Grid.Row="0">
+                <Image
+                    Name="ImageCover"
+                    Source="/Assets/icon.png" />
+            </Grid>
+            <Grid
+                Background="{ThemeResource PlayListItemLuminosity}"
+                Grid.Row="1"
+                CornerRadius="4">
+                <TextBlock
+                    Width="250"
+                    TextWrapping="WrapWholeWords"
+                    x:Name="TextBlockPLAuthor"
+                    Foreground="#FF262626"
+                    Text="歌单创建者"
+                    Margin="10,37,19,9"
+                    FontSize="10" />
+                <TextBlock
+                    Width="250"
+                    x:Name="TextBlockPLName"
+                    TextWrapping="WrapWholeWords"
+                    Text="歌单名称"
+                    Margin="10,12,10,27"
+                    FontSize="15" />
+            </Grid>
         </Grid>
     </Grid>
 </UserControl>
