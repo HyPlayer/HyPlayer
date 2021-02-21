@@ -26,9 +26,15 @@ namespace HyPlayer.Controls
     public sealed partial class LyricItem : UserControl
     {
         public readonly SongLyric Lrc;
+        private int showsize = 20;
+        private int hidsize = 14;
+        private bool showing = false;
         public LyricItem(SongLyric lrc)
         {
+
             this.InitializeComponent();
+            Window.Current.SizeChanged += Current_SizeChanged;
+            Current_SizeChanged(null, null);
             Lrc = lrc;
             TextBoxPureLyric.Text = Lrc.PureLyric;
             if (Lrc.HaveTranslation)
@@ -41,20 +47,40 @@ namespace HyPlayer.Controls
             }
         }
 
+        private void Current_SizeChanged(object sender, Windows.UI.Core.WindowSizeChangedEventArgs e)
+        {
+
+            showsize = (int)Window.Current.Bounds.Width / 50;
+            hidsize = (int)Window.Current.Bounds.Width / 80;
+            if (showing)
+            {
+                TextBoxTranslation.FontSize = showsize;
+                TextBoxPureLyric.FontSize = showsize;
+            }
+            else
+            {
+                TextBoxTranslation.FontSize = hidsize;
+                TextBoxPureLyric.FontSize = hidsize;
+            }
+
+        }
+
         public void OnShow()
         {
+            showing = true;
             TextBoxPureLyric.FontWeight = FontWeights.ExtraBold;
             TextBoxTranslation.FontWeight = FontWeights.ExtraBold;
-            TextBoxTranslation.FontSize = 20;
-            TextBoxPureLyric.FontSize = 20;
+            TextBoxTranslation.FontSize = showsize;
+            TextBoxPureLyric.FontSize = showsize;
         }
 
         public void OnHind()
         {
+            showing = false;
             TextBoxPureLyric.FontWeight = FontWeights.Normal;
             TextBoxTranslation.FontWeight = FontWeights.Normal;
-            TextBoxTranslation.FontSize = 14;
-            TextBoxPureLyric.FontSize = 14;
+            TextBoxTranslation.FontSize = hidsize;
+            TextBoxPureLyric.FontSize = hidsize;
         }
     }
 }
