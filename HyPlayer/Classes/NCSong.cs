@@ -29,6 +29,8 @@ namespace HyPlayer.Classes
         public NCAlbum Album;
         public string url;
         public string subext;
+        public string size;
+        public string md5;
         public double LengthInMilliseconds;
     }
 

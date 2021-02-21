@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -64,6 +65,8 @@ namespace HyPlayer.Classes
         public static Dictionary<MediaPlaybackItem, AudioInfo> AudioInfos = new Dictionary<MediaPlaybackItem, AudioInfo>();
         public static Random AudioRandom = new Random();
         public static BackgroundDownloader Downloader = new BackgroundDownloader();
+        private static List<DownloadOperation> downloadOperations = new List<DownloadOperation>();//防止被回收
+        private static DownloadOperation download;
 
         public static void LoadPureLyric(string LyricAllText)
         {
@@ -171,7 +174,7 @@ namespace HyPlayer.Classes
         {
 
             var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                new Dictionary<string, object>() { { "id", ncSong.sid } });
+                new Dictionary<string, object>() { { "id", ncSong.sid }, { "br", 320000 } });
             if (isOk)
             {
                 NCPlayItem ncp = new NCPlayItem()
@@ -182,7 +185,9 @@ namespace HyPlayer.Classes
                     sid = ncSong.sid,
                     songname = ncSong.songname,
                     url = json["data"][0]["url"].ToString(),
-                    LengthInMilliseconds = ncSong.LengthInMilliseconds
+                    LengthInMilliseconds = ncSong.LengthInMilliseconds,
+                    size = json["data"][0]["size"].ToString(),
+                    md5 = json["data"][0]["md5"].ToString()
                 };
                 AppendNCPlayItem(ncp);
             }
@@ -208,18 +213,23 @@ namespace HyPlayer.Classes
 
         public static async void AppendNCPlayItem(NCPlayItem ncp, string lyric, string translation)
         {
-            StorageFile item = null;
             MediaPlaybackItem mediaPlaybackItem;
-
             try
             {
-                item = await Windows.Storage.ApplicationData.Current.LocalCacheFolder.GetFileAsync("SongCache\\" + ncp.sid +
+                StorageFile item = await Windows.Storage.ApplicationData.Current.LocalCacheFolder.GetFileAsync("SongCache\\" + ncp.sid +
                     "." + ncp.subext.ToLower());
-                mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(item));
+                if (ncp.size == (await item.GetBasicPropertiesAsync()).Size.ToString())
+                {
+                    mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(item));
+                }
+                else
+                {
+                    throw new Exception("文件大小不一致");
+                }
             }
             catch (Exception)
             {
-                StorageFile sf = await Windows.Storage.ApplicationData.Current.LocalCacheFolder.CreateFileAsync("SongCache\\" + ncp.sid + "." + ncp.subext.ToLower(), CreationCollisionOption.ReplaceExisting);
+
                 mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromUri(new Uri(ncp.url)));
             }
 
@@ -240,12 +250,13 @@ namespace HyPlayer.Classes
             properties.MusicProperties.Title = ai.SongName;
             try
             {
-                properties.Thumbnail = RandomAccessStreamReference.CreateFromUri(new Uri(ncp.Album.cover + "100y100"));
+                properties.Thumbnail = RandomAccessStreamReference.CreateFromUri(new Uri(ncp.Album.cover + "?param=100y100"));
             }
             catch (Exception) { }
             mediaPlaybackItem.ApplyDisplayProperties(properties);
             AudioInfos[mediaPlaybackItem] = ai;
             AudioMediaPlaybackList.Items.Add(mediaPlaybackItem);
+            Common.BarPlayBar.RefreshSongList();
         }
 
         public static async void AppendFile(StorageFile sf)
@@ -299,6 +310,7 @@ namespace HyPlayer.Classes
             mediaPlaybackItem.ApplyDisplayProperties(properties);
 
             AudioMediaPlaybackList.Items.Add(mediaPlaybackItem);
+            Common.BarPlayBar.RefreshSongList();
         }
     }
 
