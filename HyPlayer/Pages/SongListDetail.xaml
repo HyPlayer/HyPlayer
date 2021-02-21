@@ -55,6 +55,7 @@
                             Text="歌单简介"
                             FontSize="25"
                             Foreground="Gray" />
+                        <Button Content="播放全部" Click="ButtonBase_OnClick"/>
                     </StackPanel>
                 </Grid>
                 <StackPanel

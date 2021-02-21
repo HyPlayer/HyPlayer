@@ -33,9 +33,14 @@ namespace HyPlayer.Controls
             TextBlockArtist.Text = artisttxt;
         }
 
-        private void UIElement_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        public void AppendMe()
         {
             AudioPlayer.AppendNCSong(ncsong);
+        }
+
+        private void UIElement_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            AppendMe();
         }
     }
 }

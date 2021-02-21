@@ -177,6 +177,7 @@ namespace HyPlayer.Classes
                 new Dictionary<string, object>() { { "id", ncSong.sid }, { "br", 320000 } });
             if (isOk)
             {
+                if (json["data"][0]["code"].ToString() != "200") return; //未获取到
                 NCPlayItem ncp = new NCPlayItem()
                 {
                     Album = ncSong.Album,
@@ -204,9 +205,20 @@ namespace HyPlayer.Classes
                     //纯音乐 无歌词
                     AppendNCPlayItem(ncp, null, null);
                 }
+                else if (json.ContainsKey("uncollected") && json["uncollected"].ToString().ToLower() == "true")
+                {
+                    AppendNCPlayItem(ncp, "[00:00.000] 该歌词未被网易云音乐收录", null);
+                }
                 else
                 {
-                    AppendNCPlayItem(ncp, json["lrc"]["lyric"].ToString(), json["tlyric"]["lyric"].ToString());
+                    try
+                    {
+                        AppendNCPlayItem(ncp, json["lrc"]["lyric"].ToString(), json["tlyric"]["lyric"].ToString());
+                    }
+                    catch (Exception e)
+                    {
+                        //DEBUG
+                    }
                 }
             }
         }

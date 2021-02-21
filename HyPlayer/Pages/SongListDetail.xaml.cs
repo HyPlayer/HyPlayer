@@ -87,5 +87,16 @@ namespace HyPlayer.Pages
         {
             await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority, () => { action(); });
         }
+
+        private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
+        {
+            foreach (UIElement songContainerChild in SongContainer.Children)
+            {
+                if (songContainerChild is SingleNCSong singleNcSong)
+                {
+                    singleNcSong.AppendMe();
+                }
+            }
+        }
     }
 }
