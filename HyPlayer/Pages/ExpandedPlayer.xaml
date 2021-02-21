@@ -72,6 +72,7 @@
                 FontSize="20"
                 Text="歌手" />
             <ScrollViewer
+                x:FieldModifier="public"
                 x:Name="LyricBoxContainer"
                 VerticalScrollBarVisibility="Hidden"
                 HorizontalScrollBarVisibility="Hidden">

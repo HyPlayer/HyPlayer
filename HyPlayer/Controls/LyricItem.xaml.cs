@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI;
@@ -47,8 +48,30 @@ namespace HyPlayer.Controls
             }
         }
 
+        public async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)
+        {
+            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority, () => { action(); });
+        }
+
         private void Current_SizeChanged(object sender, Windows.UI.Core.WindowSizeChangedEventArgs e)
         {
+            if (Common.PageExpandedPlayer.LyricBoxContainer.ViewportWidth == 0)
+            {
+                Task.Run(async () =>
+                {
+                    await Task.Delay(1000);
+                    this.Invoke(() =>
+                    {
+                        this.Width = Common.PageExpandedPlayer.LyricBoxContainer.ViewportWidth;
+                    });
+
+                });
+            }
+            else
+            {
+                this.Width = Common.PageExpandedPlayer.LyricBoxContainer.ViewportWidth;
+            }
+            
 
             showsize = Math.Max((int)Window.Current.Bounds.Width / 50, 18);
             hidsize = Math.Max((int)Window.Current.Bounds.Width / 80, 14);

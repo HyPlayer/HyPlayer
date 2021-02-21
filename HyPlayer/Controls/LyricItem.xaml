@@ -18,12 +18,14 @@
             LastChildFill="True">
             <TextBlock
                 controls:DockPanel.Dock="Top"
+                TextWrapping="WrapWholeWords"
                 Name="TextBoxPureLyric"
                 Text="原句"
                 FontSize="14"
                 TextAlignment="Center"></TextBlock>
             <TextBlock
                 controls:DockPanel.Dock="Bottom"
+                TextWrapping="WrapWholeWords"
                 Name="TextBoxTranslation"
                 Text="翻译"
                 FontSize="14"
