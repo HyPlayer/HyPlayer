@@ -41,6 +41,7 @@
                         Orientation="Vertical">
                         <TextBlock
                             Name="TextBoxPLName"
+                            TextWrapping="Wrap"
                             Text="歌单名"
                             FontSize="72"></TextBlock>
                         <TextBlock
