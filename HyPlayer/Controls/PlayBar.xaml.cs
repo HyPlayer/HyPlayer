@@ -42,7 +42,7 @@ namespace HyPlayer.Controls
         {
             Common.BarPlayBar = this;
             this.InitializeComponent();
-            TestFile();
+            //TestFile();
         }
 
 

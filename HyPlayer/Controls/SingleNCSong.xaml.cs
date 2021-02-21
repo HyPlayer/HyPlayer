@@ -21,19 +21,21 @@ namespace HyPlayer.Controls
 {
     public sealed partial class SingleNCSong : UserControl
     {
+        private NCSong ncsong;
         public SingleNCSong(NCSong song)
         {
             this.InitializeComponent();
-            ImageAlbum.Source = new BitmapImage(new Uri(song.Album.cover));
+            ncsong = song;
+            ImageAlbum.Source = new BitmapImage(new Uri(song.Album.cover+ "?param=70y70"));
             TextBlockSongname.Text = song.songname;
             string artisttxt = "";
-            song.artist.ForEach(s => { artisttxt += s.name; });
+            song.Artist.ForEach(s => { artisttxt += s.name; });
             TextBlockArtist.Text = artisttxt;
         }
 
         private void UIElement_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
-            
+            AudioPlayer.AppendNCSong(ncsong);
         }
     }
 }

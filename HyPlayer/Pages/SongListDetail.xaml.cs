@@ -43,7 +43,7 @@ namespace HyPlayer.Pages
             {
                 this.Invoke(async () =>
                 {
-                    ImagePL.Source = new BitmapImage(new Uri(playList.cover));
+                    ImagePL.Source = new BitmapImage(new Uri(playList.cover+ "?param=250y250"));
                     TextBoxPLName.Text = playList.name;
                     TextBlockDesc.Text = "";
                     TextBoxAuthor.Text = playList.creater.name;
@@ -67,9 +67,10 @@ namespace HyPlayer.Pages
                                     },
                                     sid = song["id"].ToString(),
                                     songname = song["name"].ToString(),
-                                    artist = new List<NCArtist>()
+                                    Artist = new List<NCArtist>(),
+                                    LengthInMilliseconds = Double.Parse(song["dt"].ToString())
                                 };
-                                song["ar"].ToList().ForEach(t=>{NCSong.artist.Add(new NCArtist()
+                                song["ar"].ToList().ForEach(t=>{NCSong.Artist.Add(new NCArtist()
                                 {
                                     id=t["id"].ToString(),
                                     name = t["name"].ToString()

@@ -8,9 +8,11 @@ using System.Threading.Tasks;
 using Windows.Media;
 using Windows.Media.Core;
 using Windows.Media.Playback;
+using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.UI.Xaml.Media.Imaging;
+using NeteaseCloudMusicApi;
 using TagLib;
 using File = System.IO.File;
 
@@ -53,8 +55,7 @@ namespace HyPlayer.Classes
             stream?.Dispose();
         }
     }
-
-    class AudioPlayer
+    static class AudioPlayer
     {
         public static MediaPlayer AudioMediaPlayer;
         public static MediaPlaybackList AudioMediaPlaybackList;
@@ -62,6 +63,7 @@ namespace HyPlayer.Classes
         public static List<SongLyric> Lyrics = new List<SongLyric>();
         public static Dictionary<MediaPlaybackItem, AudioInfo> AudioInfos = new Dictionary<MediaPlaybackItem, AudioInfo>();
         public static Random AudioRandom = new Random();
+        public static BackgroundDownloader Downloader = new BackgroundDownloader();
 
         public static void LoadPureLyric(string LyricAllText)
         {
@@ -103,11 +105,52 @@ namespace HyPlayer.Classes
                 bool HaveTranslation = !string.IsNullOrEmpty(translation);
                 Lyrics.Add(new SongLyric()
                 {
-                    LyricTime = time,
+                    LyricTime = time + offset,
                     PureLyric = lrctxt,
                     Translation = translation,
                     HaveTranslation = HaveTranslation
                 });
+            }
+        }
+
+        public static void LoadTranslation(string LyricAllText)
+        {
+            if (string.IsNullOrEmpty(LyricAllText)) return;
+            string[] LyricsArr = LyricAllText.Replace("\r\n", "\n").Replace("\r", "\n").Split("\n");
+            TimeSpan offset = TimeSpan.Zero;
+            foreach (string sL in LyricsArr)
+            {
+                string LyricTextLine = sL.Trim();
+                if (LyricTextLine.IndexOf('[') == -1 || LyricTextLine.IndexOf(']') == -1)
+                    continue; //此行不为Lrc
+                string prefix = LyricTextLine.Substring(1, LyricTextLine.IndexOf(']') - 1);
+                if (prefix.StartsWith("al") || prefix.StartsWith("ar") || prefix.StartsWith("au") ||
+                    prefix.StartsWith("by") || prefix.StartsWith("re") || prefix.StartsWith("ti") ||
+                    prefix.StartsWith("ve"))
+                {//这种废标签不想解析
+                    continue;
+                }
+
+                if (prefix.StartsWith("offset"))
+                {
+                    if (!int.TryParse(prefix.Substring(6), out int offsetint))
+                        continue;
+                    offset = new TimeSpan(0, 0, 0, 0, offsetint);
+                }
+
+                if (!TimeSpan.TryParse("00:" + prefix, out TimeSpan time))
+                    continue;
+                string lrctxt = LyricTextLine.Substring(LyricTextLine.IndexOf(']') + 1);
+                for (int i = 0; i < Lyrics.Count; i++)
+                {
+                    var songLyric = Lyrics[i];
+                    if (songLyric.LyricTime == time)
+                    {
+                        songLyric.Translation = lrctxt;
+                        songLyric.HaveTranslation = true;
+                        Lyrics[i] = songLyric;
+                    }
+                }
             }
         }
 
@@ -119,10 +162,91 @@ namespace HyPlayer.Classes
         public static void AudioMediaPlaybackList_CurrentItemChanged(MediaPlaybackList sender, CurrentMediaPlaybackItemChangedEventArgs args)
         {
             LoadPureLyric(AudioInfos[args.NewItem].Lyric);
+            LoadTranslation(AudioInfos[args.NewItem].TrLyric);
             Common.BarPlayBar.LoadPlayingFile(args.NewItem);
             Common.PageExpandedPlayer.OnSongChange(args.NewItem);
         }
 
+        public static async void AppendNCSong(NCSong ncSong)
+        {
+
+            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
+                new Dictionary<string, object>() { { "id", ncSong.sid } });
+            if (isOk)
+            {
+                NCPlayItem ncp = new NCPlayItem()
+                {
+                    Album = ncSong.Album,
+                    Artist = ncSong.Artist,
+                    subext = json["data"][0]["type"].ToString(),
+                    sid = ncSong.sid,
+                    songname = ncSong.songname,
+                    url = json["data"][0]["url"].ToString(),
+                    LengthInMilliseconds = ncSong.LengthInMilliseconds
+                };
+                AppendNCPlayItem(ncp);
+            }
+        }
+
+        public static async void AppendNCPlayItem(NCPlayItem ncp)
+        {
+            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Lyric,
+                new Dictionary<string, object>() { { "id", ncp.sid } });
+            if (isOk)
+            {
+                if (json.ContainsKey("nolyric") && json["nolyric"].ToString().ToLower() == "true")
+                {
+                    //纯音乐 无歌词
+                    AppendNCPlayItem(ncp, null, null);
+                }
+                else
+                {
+                    AppendNCPlayItem(ncp, json["lrc"]["lyric"].ToString(), json["tlyric"]["lyric"].ToString());
+                }
+            }
+        }
+
+        public static async void AppendNCPlayItem(NCPlayItem ncp, string lyric, string translation)
+        {
+            StorageFile item = null;
+            MediaPlaybackItem mediaPlaybackItem;
+
+            try
+            {
+                item = await Windows.Storage.ApplicationData.Current.LocalCacheFolder.GetFileAsync("SongCache\\" + ncp.sid +
+                    "." + ncp.subext.ToLower());
+                mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(item));
+            }
+            catch (Exception)
+            {
+                StorageFile sf = await Windows.Storage.ApplicationData.Current.LocalCacheFolder.CreateFileAsync("SongCache\\" + ncp.sid + "." + ncp.subext.ToLower(), CreationCollisionOption.ReplaceExisting);
+                mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromUri(new Uri(ncp.url)));
+            }
+
+            AudioInfo ai = new AudioInfo()
+            {
+                Album = ncp.Album.name,
+                Artist = string.Join(" / ", ncp.Artist.Select((artist => artist.name))),
+                LengthInMilliseconds = ncp.LengthInMilliseconds,
+                Lyric = lyric,
+                Picture = new BitmapImage(new Uri(ncp.Album.cover)),
+                SongName = ncp.songname,
+                TrLyric = translation
+            };
+            var properties = mediaPlaybackItem.GetDisplayProperties();
+            properties.Type = MediaPlaybackType.Music;
+            properties.MusicProperties.AlbumTitle = ai.Album;
+            properties.MusicProperties.Artist = ai.Artist;
+            properties.MusicProperties.Title = ai.SongName;
+            try
+            {
+                properties.Thumbnail = RandomAccessStreamReference.CreateFromUri(new Uri(ncp.Album.cover + "100y100"));
+            }
+            catch (Exception) { }
+            mediaPlaybackItem.ApplyDisplayProperties(properties);
+            AudioInfos[mediaPlaybackItem] = ai;
+            AudioMediaPlaybackList.Items.Add(mediaPlaybackItem);
+        }
 
         public static async void AppendFile(StorageFile sf)
         {
@@ -170,7 +294,7 @@ namespace HyPlayer.Classes
             catch (Exception) { }
 
             AudioInfos[mediaPlaybackItem] = ai;
-            
+
             //sampleFile.DeleteAsync();
             mediaPlaybackItem.ApplyDisplayProperties(properties);
 
@@ -186,7 +310,7 @@ namespace HyPlayer.Classes
         public TimeSpan LyricTime;
 
         public static SongLyric PureSong = new SongLyric()
-            {HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏"};
+        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏" };
     }
 
     struct AudioInfo
@@ -195,6 +319,7 @@ namespace HyPlayer.Classes
         public string Artist;
         public string Album;
         public string Lyric;
+        public string TrLyric;
         public double LengthInMilliseconds;
         public BitmapImage Picture;
     }

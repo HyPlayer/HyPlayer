@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace HyPlayer.Classes
 {
@@ -6,8 +7,20 @@ namespace HyPlayer.Classes
     {
         public string sid;
         public string songname;
-        public List<NCArtist> artist;
+        public List<NCArtist> Artist;
         public NCAlbum Album;
+        public double LengthInMilliseconds;
+    }
+
+    public struct NCPlayItem
+    {
+        public string sid;
+        public string songname;
+        public List<NCArtist> Artist;
+        public NCAlbum Album;
+        public string url;
+        public string subext;
+        public double LengthInMilliseconds;
     }
 
     public struct NCPlayList
