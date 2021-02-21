@@ -50,8 +50,8 @@ namespace HyPlayer.Controls
         private void Current_SizeChanged(object sender, Windows.UI.Core.WindowSizeChangedEventArgs e)
         {
 
-            showsize = (int)Window.Current.Bounds.Width / 50;
-            hidsize = (int)Window.Current.Bounds.Width / 80;
+            showsize = Math.Max((int)Window.Current.Bounds.Width / 50, 18);
+            hidsize = Math.Max((int)Window.Current.Bounds.Width / 80, 14);
             if (showing)
             {
                 TextBoxTranslation.FontSize = showsize;
