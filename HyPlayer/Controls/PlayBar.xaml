@@ -292,6 +292,7 @@
             <Grid
                 Grid.Row="1">
                 <Slider
+                    ValueChanged="SliderProgress_ValueChanged"
                     Name="SliderProgress" />
             </Grid>
         </Grid>
