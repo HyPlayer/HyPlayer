@@ -30,4 +30,11 @@
         TintLuminosityOpacity="0.653000031015836"
         TintColor="Gray"
         FallbackColor="SkyBlue" />
+    <media:AcrylicBrush
+        x:Key="PlayListItemLuminosity"
+        BackgroundSource="Backdrop"
+        TintOpacity="0.122000005794689"
+        TintLuminosityOpacity="0.528000025078654"
+        TintColor="SkyBlue"
+        FallbackColor="SkyBlue" />
 </ResourceDictionary>

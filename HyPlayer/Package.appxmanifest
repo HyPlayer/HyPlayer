@@ -64,5 +64,6 @@
     <uap:Capability Name="musicLibrary"/>
 	<rescap:Capability Name="broadFileSystemAccess" />
     <Capability Name="privateNetworkClientServer"/>
+    <Capability Name="internetClientServer"/>
   </Capabilities>
 </Package>
