@@ -33,7 +33,7 @@ namespace HyPlayer.Controls
             {
                 this.Invoke(() =>
                 {
-                    ImageCover.Source = new BitmapImage(new Uri(playList.cover));
+                    ImageCover.Source = new BitmapImage(new Uri(playList.cover+"?param=100y100"));
                     TextBlockPLName.Text = playList.name;
                     TextBlockPLAuthor.Text = playList.creater.name;
                 });

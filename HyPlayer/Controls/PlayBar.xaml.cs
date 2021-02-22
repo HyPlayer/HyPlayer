@@ -38,6 +38,8 @@ namespace HyPlayer.Controls
 
     public sealed partial class PlayBar : UserControl
     {
+        private bool canslide;
+
         public PlayBar()
         {
             Common.BarPlayBar = this;
@@ -205,7 +207,18 @@ namespace HyPlayer.Controls
 
         private void SliderProgress_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
-            AudioPlayer.AudioMediaPlayer.PlaybackSession.Position = TimeSpan.FromMilliseconds(SliderProgress.Value);
+            if (canslide)
+                AudioPlayer.AudioMediaPlayer.PlaybackSession.Position = TimeSpan.FromMilliseconds(SliderProgress.Value);
+        }
+
+        private void SliderProgress_OnManipulationStarted(object sender, ManipulationStartedRoutedEventArgs e)
+        {
+            canslide = true;
+        }
+
+        private void SliderProgress_OnManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
+        {
+            canslide = false;
         }
     }
 

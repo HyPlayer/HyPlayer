@@ -42,7 +42,7 @@ namespace HyPlayer.Pages
             {
                 this.Invoke(async () =>
                 {
-                    ImagePL.Source = new BitmapImage(new Uri(playList.cover+ "?param=250y250"));
+                    ImagePL.Source = new BitmapImage(new Uri(playList.cover+ "?param=150y150"));
                     TextBoxPLName.Text = playList.name;
                     TextBlockDesc.Text = playList.desc;
                     TextBoxAuthor.Text = playList.creater.name;
