@@ -245,6 +245,7 @@ namespace HyPlayer.Pages
                         }
                     }));
                 });
+                ImageAlbum.Visibility = Visibility.Visible;
                 _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
                 iscompact = false;
             }
@@ -274,6 +275,24 @@ namespace HyPlayer.Pages
         {
             if (loaded)
                 AudioPlayer.AudioMediaPlayer.Volume = SliderVolumn.Value / 100;
+        }
+
+        private void ExpandedPlayer_OnPointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            if (Window.Current.Bounds.Width <= 300)
+            {//小窗模式
+                ImageAlbum.Visibility = Visibility.Collapsed;
+                StackPanelTiny.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void ExpandedPlayer_OnPointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            if (Window.Current.Bounds.Width <= 300)
+            {//小窗模式
+                ImageAlbum.Visibility = Visibility.Visible;
+                StackPanelTiny.Visibility = Visibility.Collapsed;
+            }
         }
     }
 }

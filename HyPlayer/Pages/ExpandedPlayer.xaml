@@ -7,9 +7,12 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     mc:Ignorable="d"
+    PointerEntered="ExpandedPlayer_OnPointerEntered"
+    PointerExited="ExpandedPlayer_OnPointerExited"
     Background="{ThemeResource SystemControlAcrylicElementBrush}">
 
     <Grid
+        DoubleTapped="ImageAlbum_OnDoubleTapped"
         Background="{ThemeResource SystemControlAcrylicElementBrush}"
         Margin="0,0,0,0">
         <VisualStateManager.VisualStateGroups>
@@ -36,28 +39,16 @@
                             Value="13" />
                         <Setter
                             Target="DockPanelRight.Visibility"
-                            Value="Collapsed"/>
-                        <Setter
-                            Target="BtnPlayStateChange.Visibility"
-                            Value="Visible"/>
-                        <Setter
-                            Target="BtnPreviousSong.Visibility"
-                            Value="Visible"/>
-                        <Setter
-                            Target="BtnNextSong.Visibility"
-                            Value="Visible"/>
+                            Value="Collapsed" />
                         <Setter
                             Target="ProgressBarPlayProg.Visibility"
-                            Value="Visible"/>
-                        <Setter
-                            Target="SliderVolumn.Visibility"
-                            Value="Visible"/>
+                            Value="Visible" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState>
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger
-                            MinWindowWidth="250">
+                            MinWindowWidth="300">
                             <!--正常模式 -->
                         </AdaptiveTrigger>
                     </VisualState.StateTriggers>
@@ -76,21 +67,12 @@
                             Value="8" />
                         <Setter
                             Target="DockPanelRight.Visibility"
-                            Value="Visible"/>
+                            Value="Visible" />
                         <Setter
-                            Target="BtnPlayStateChange.Visibility"
-                            Value="Collapsed"/>
-                        <Setter
-                            Target="BtnPreviousSong.Visibility"
-                            Value="Collapsed" />
-                        <Setter
-                            Target="BtnNextSong.Visibility"
+                            Target="StackPanelTiny.Visibility"
                             Value="Collapsed" />
                         <Setter
                             Target="ProgressBarPlayProg.Visibility"
-                            Value="Collapsed" />
-                        <Setter
-                            Target="SliderVolumn.Visibility"
                             Value="Collapsed" />
                     </VisualState.Setters>
                 </VisualState>
@@ -127,7 +109,6 @@
         </Grid.RowDefinitions>
 
         <Image
-            DoubleTapped="ImageAlbum_OnDoubleTapped"
             x:FieldModifier="public"
             Grid.Column="1"
             Grid.ColumnSpan="4"
@@ -135,69 +116,81 @@
             Grid.RowSpan="8"
             Name="ImageAlbum"
             Source="/Assets/Icon.png" />
-        <Button
+        <Grid
+            x:Name="StackPanelTiny"
             Visibility="Collapsed"
-            Grid.Row="4"
-            Grid.RowSpan="4"
-            Style="{StaticResource ButtonRevealStyle}"
             Grid.Column="0"
-            Grid.ColumnSpan="4"
-            Name="BtnPreviousSong"
-            Click="BtnPreSong_OnClick"
-            VerticalAlignment="Center"
-            Background="Transparent"
-            Width="45"
-            Height="45"
-            CornerRadius="30">
-            <FontIcon
-                FontFamily="{StaticResource SymbolThemeFontFamily}"
-                Glyph="&#xE892;"></FontIcon>
-        </Button>
-        <Button
-            Visibility="Collapsed"
-            Grid.RowSpan="6"
-            Grid.Row="3"
-            Style="{StaticResource ButtonRevealStyle}"
-            Name="BtnPlayStateChange"
-            Width="50"
-            Height="50"
-            Grid.Column="4"
-            Grid.ColumnSpan="4"
-            VerticalAlignment="Center"
-            Click="BtnPlayStateChange_OnClick"
-            CornerRadius="30">
-            <FontIcon
-                Name="PlayStateIcon"
-                FontFamily="{StaticResource SymbolThemeFontFamily}"
-                Glyph="&#xEDB4;"></FontIcon>
-            <!--EDB5 -->
-        </Button>
-        <Button
-            Visibility="Collapsed"
-            Grid.Row="4"
-            Grid.RowSpan="4"
-            Style="{StaticResource ButtonRevealStyle}"
-            Grid.Column="8"
-            Grid.ColumnSpan="4"
-            Name="BtnNextSong"
-            Click="BtnNextSong_OnClick"
-            VerticalAlignment="Center"
-            Background="Transparent"
-            Width="45"
-            Height="45"
-            CornerRadius="30">
-            <FontIcon
-                FontFamily="{StaticResource SymbolThemeFontFamily}"
-                Glyph="&#xE101;"></FontIcon>
-        </Button>
-        <Slider
-            Visibility="Collapsed"
-            ValueChanged="SliderAudioRate_ValueChanged"
-            Name="SliderVolumn"
-            Grid.Column="1"
-            Grid.ColumnSpan="10"
-            Grid.Row="9"
-            Grid.RowSpan="3"/>
+            Grid.ColumnSpan="12"
+            Grid.Row="0"
+            Grid.RowSpan="12">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Button
+                Grid.Row="1"
+                Grid.Column="0"
+                Style="{StaticResource ButtonRevealStyle}"
+                HorizontalAlignment="Center"
+                Name="BtnPreviousSong"
+                Click="BtnPreSong_OnClick"
+                VerticalAlignment="Center"
+                Background="Transparent"
+                Width="45"
+                Height="45"
+                CornerRadius="30">
+                <FontIcon
+                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                    Glyph="&#xE892;"></FontIcon>
+            </Button>
+            <Button
+                Grid.Row="1"
+                Grid.Column="1"
+                Style="{StaticResource ButtonRevealStyle}"
+                Name="BtnPlayStateChange"
+                Width="50"
+                Height="50"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Click="BtnPlayStateChange_OnClick"
+                CornerRadius="30">
+                <FontIcon
+                    Name="PlayStateIcon"
+                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                    Glyph="&#xEDB4;"></FontIcon>
+                <!--EDB5 -->
+            </Button>
+            <Button
+                Grid.Row="1"
+                Grid.Column="2"
+                Style="{StaticResource ButtonRevealStyle}"
+                Name="BtnNextSong"
+                Click="BtnNextSong_OnClick"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center"
+                Background="Transparent"
+                Width="45"
+                Height="45"
+                CornerRadius="30">
+                <FontIcon
+                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                    Glyph="&#xE101;"></FontIcon>
+            </Button>
+            <Slider
+                Grid.Column="0"
+                Grid.ColumnSpan="3"
+                Margin="20,0,0,0"
+                Grid.Row="2"
+                ValueChanged="SliderAudioRate_ValueChanged"
+                Name="SliderVolumn" />
+        </Grid>
+
         <controls:DockPanel
             x:Name="DockPanelRight"
             LastChildFill="True"
