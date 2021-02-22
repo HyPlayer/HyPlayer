@@ -60,7 +60,8 @@ namespace HyPlayer.Pages
                                 signature = PlaylistItemJson["creator"]["signature"].ToString()
                             },
                             plid = PlaylistItemJson["id"].ToString(),
-                            name = PlaylistItemJson["name"].ToString()
+                            name = PlaylistItemJson["name"].ToString(),
+                            desc = PlaylistItemJson["description"].ToString()
                         };
                         GridContainer.Children.Add(new PlaylistItem(ncp));
                     }

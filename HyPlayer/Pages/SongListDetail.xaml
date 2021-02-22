@@ -9,7 +9,7 @@
     mc:Ignorable="d">
 
     <ScrollViewer
-                                  VerticalScrollBarVisibility="Auto">
+        VerticalScrollBarVisibility="Auto">
         <ScrollViewer.Content>
             <StackPanel
                 Orientation="Vertical">
@@ -42,19 +42,21 @@
                             Name="TextBoxPLName"
                             TextWrapping="Wrap"
                             Text="歌单名"
-                            FontSize="72"></TextBlock>
+                            FontSize="36"></TextBlock>
                         <TextBlock
                             Name="TextBoxAuthor"
                             Text="歌单创建者"
-                            FontSize="25"
+                            FontSize="18"
                             Foreground="Gray"></TextBlock>
                         <TextBlock
                             Name="TextBlockDesc"
                             Margin="0,10,0,0"
                             Text="歌单简介"
-                            FontSize="25"
+                            FontSize="13"
                             Foreground="Gray" />
-                        <Button Content="播放全部" Click="ButtonBase_OnClick"/>
+                        <Button
+                            Content="播放全部"
+                            Click="ButtonBase_OnClick" />
                     </StackPanel>
                 </Grid>
                 <StackPanel

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI;
+using Windows.UI.Core;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -55,26 +56,27 @@ namespace HyPlayer.Controls
 
         public void Current_SizeChanged(object sender, Windows.UI.Core.WindowSizeChangedEventArgs e)
         {
-            if (Common.PageExpandedPlayer.LyricBoxContainer.ViewportWidth == 0)
-            {
-                Task.Run(async () =>
-                {
-                    await Task.Delay(1000);
-                    this.Invoke(() =>
-                    {
-                        this.Width = Common.PageExpandedPlayer.LyricBoxContainer.ViewportWidth;
-                    });
 
-                });
-            }
-            else
-            {
-                this.Width = Common.PageExpandedPlayer.LyricBoxContainer.ViewportWidth;
-            }
-            
-
+            this.Width = Window.Current.Bounds.Width * 0.4;
             showsize = Math.Max((int)Window.Current.Bounds.Width / 50, 18);
             hidsize = Math.Max((int)Window.Current.Bounds.Width / 80, 14);
+            /*
+             * 其他几种大小的算法 - 最后敲定了这一种
+             *
+             if (e != null)
+                   {
+                   this.Width = e.Size.Width * 0.4;
+                   showsize = Math.Max((int)(e.Size.Width * 0.025), 18);
+                   hidsize = Math.Max((int)(e.Size.Width * 0.020), 14);
+                   }
+                   else if(Common.PageExpandedPlayer.LyricBoxContainer.ViewportWidth!=0)
+                   {
+                   this.Width = Common.PageExpandedPlayer.LyricBoxContainer.ViewportWidth;
+                   showsize = Math.Max((int)(Common.PageExpandedPlayer.LyricBoxContainer.ViewportWidth * 0.048), 18);
+                   hidsize = Math.Max((int)(Common.PageExpandedPlayer.LyricBoxContainer.ViewportWidth * 0.028), 14);
+                   }
+             */
+
             if (showing)
             {
                 TextBoxTranslation.FontSize = showsize;

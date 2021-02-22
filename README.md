@@ -29,7 +29,13 @@
 
 **播放页面**
 
-![image-20210222094735464](/Assets/preview.png)
+![播放界面](/Assets/preview1.png)
+
+**Super-mini 模式**
+
+![image-20210222194811131](/Assets/preview2.png)
+
+> 其他界面待完善 / 优化
 
 ## 自动编译状态
 

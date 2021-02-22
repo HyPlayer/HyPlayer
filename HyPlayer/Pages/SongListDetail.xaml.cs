@@ -44,7 +44,7 @@ namespace HyPlayer.Pages
                 {
                     ImagePL.Source = new BitmapImage(new Uri(playList.cover+ "?param=250y250"));
                     TextBoxPLName.Text = playList.name;
-                    TextBlockDesc.Text = "";
+                    TextBlockDesc.Text = playList.desc;
                     TextBoxAuthor.Text = playList.creater.name;
                     var (isOk,json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
                         new Dictionary<string, object>() {{"id", playList.plid}});

@@ -39,6 +39,7 @@ namespace HyPlayer.Classes
         public string plid;
         public string cover;
         public string name;
+        public string desc;
         public NCUser creater;
     }
 

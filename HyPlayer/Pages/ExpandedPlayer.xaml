@@ -197,8 +197,7 @@
             Grid.Column="1"
             Grid.ColumnSpan="10"
             Grid.Row="9"
-            Grid.RowSpan="3"
-            Value="15" />
+            Grid.RowSpan="3"/>
         <controls:DockPanel
             Name="DockPanelRight"
             LastChildFill="True"

@@ -33,10 +33,13 @@ namespace HyPlayer.Pages
         private Timer timer;
         private int sclock = 0;
         private bool iscompact = false;
+        private bool loaded = false;
 
         public ExpandedPlayer()
         {
             this.InitializeComponent();
+            SliderVolumn.Value = AudioPlayer.AudioMediaPlayer.Volume * 100;
+            loaded = true;
             Common.PageExpandedPlayer = this;
 
             timer = new Timer((state =>
@@ -269,7 +272,8 @@ namespace HyPlayer.Pages
 
         private void SliderAudioRate_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
-            AudioPlayer.AudioMediaPlayer.Volume = SliderVolumn.Value / 100;
+            if (loaded)
+                AudioPlayer.AudioMediaPlayer.Volume = SliderVolumn.Value / 100;
         }
     }
 }
