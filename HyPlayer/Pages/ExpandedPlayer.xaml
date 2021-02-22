@@ -8,9 +8,76 @@
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     mc:Ignorable="d"
     Background="{ThemeResource SystemControlAcrylicElementBrush}">
+
     <Grid
         Background="{ThemeResource SystemControlAcrylicElementBrush}"
         Margin="0,0,0,0">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger
+                            MinWindowWidth="0">
+                            <!--小窗模式 -->
+                        </AdaptiveTrigger>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter
+                            Target="ImageAlbum.(Grid.Column)"
+                            Value="0" />
+                        <Setter
+                            Target="ImageAlbum.(Grid.ColumnSpan)"
+                            Value="12" />
+                        <Setter
+                            Target="ImageAlbum.(Grid.Row)"
+                            Value="0" />
+                        <Setter
+                            Target="ImageAlbum.(Grid.RowSpan)"
+                            Value="13" />
+                        <Setter
+                            Target="DockPanelRight.Visibility"
+                            Value="Collapsed"/>
+                        <Setter
+                            Target="BtnPlayStateChange.Visibility"
+                            Value="Visible"/>
+                        <Setter
+                            Target="ProgressBarPlayProg.Visibility"
+                            Value="Visible"/>
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger
+                            MinWindowWidth="250">
+                            <!--正常模式 -->
+                        </AdaptiveTrigger>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter
+                            Target="ImageAlbum.(Grid.Column)"
+                            Value="1" />
+                        <Setter
+                            Target="ImageAlbum.(Grid.ColumnSpan)"
+                            Value="4" />
+                        <Setter
+                            Target="ImageAlbum.(Grid.Row)"
+                            Value="2" />
+                        <Setter
+                            Target="ImageAlbum.(Grid.RowSpan)"
+                            Value="8" />
+                        <Setter
+                            Target="DockPanelRight.Visibility"
+                            Value="Visible"/>
+                        <Setter
+                            Target="BtnPlayStateChange.Visibility"
+                            Value="Collapsed"/>
+                        <Setter
+                            Target="ProgressBarPlayProg.Visibility"
+                            Value="Collapsed" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
             <ColumnDefinition />
@@ -40,6 +107,7 @@
             <RowDefinition />
             <RowDefinition />
         </Grid.RowDefinitions>
+
         <Image
             DoubleTapped="ImageAlbum_OnDoubleTapped"
             x:FieldModifier="public"
@@ -49,7 +117,26 @@
             Grid.RowSpan="8"
             Name="ImageAlbum"
             Source="/Assets/Icon.png" />
+        <Button
+            Grid.RowSpan="6"
+            Grid.Row="3"
+            Style="{StaticResource ButtonRevealStyle}"
+            Name="BtnPlayStateChange"
+            Width="50"
+            Height="50"
+            Grid.Column="4"
+            Grid.ColumnSpan="4"
+            VerticalAlignment="Center"
+            Click="BtnPlayStateChange_OnClick"
+            CornerRadius="30">
+            <FontIcon
+                Name="PlayStateIcon"
+                FontFamily="{StaticResource SymbolThemeFontFamily}"
+                Glyph="&#xEDB4;"></FontIcon>
+            <!--EDB5 -->
+        </Button>
         <controls:DockPanel
+            Name="DockPanelRight"
             LastChildFill="True"
             Grid.Row="1"
             Margin="0,0,0,100"
@@ -84,7 +171,13 @@
                         ScrollViewer.VerticalScrollBarVisibility="Auto" />
                 </ScrollViewer.Content>
             </ScrollViewer>
-
         </controls:DockPanel>
+        <ProgressBar
+            Name="ProgressBarPlayProg"
+            Visibility="Collapsed"
+            Grid.Column="0"
+            Grid.ColumnSpan="12"
+            Grid.Row="12"
+            Value="0" />
     </Grid>
 </Page>

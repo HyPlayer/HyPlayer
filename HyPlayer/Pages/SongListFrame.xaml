@@ -9,6 +9,6 @@
     mc:Ignorable="d">
 
     <Grid>
-        <controls:WrapPanel Margin="0,0,0,350" HorizontalSpacing="50" VerticalSpacing="50" Name="GridContainer" />
+        <controls:WrapPanel Margin="0,0,0,350" HorizontalSpacing="50" VerticalSpacing="50" x:Name="GridContainer" />
     </Grid>
 </Page>

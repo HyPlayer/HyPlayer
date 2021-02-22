@@ -109,6 +109,11 @@ namespace HyPlayer.Pages
                 LyricBoxContainer.ChangeView(null, position.Y - (LyricBoxContainer.ViewportHeight / 3), null, false);
                 showed = true;
             }
+
+            //暂停按钮
+            PlayStateIcon.Glyph = AudioPlayer.AudioMediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing ? "\uEDB4" : "\uEDB5";
+            //播放进度
+            ProgressBarPlayProg.Value = AudioPlayer.AudioMediaPlayer.PlaybackSession.Position.TotalMilliseconds;
         }
 
         public void LoadLyricsBox()
@@ -152,6 +157,7 @@ namespace HyPlayer.Pages
                         TextBlockSongTitle.Text = AudioPlayer.AudioInfos[mpi]
                             .SongName;
                         this.Background = new ImageBrush() { ImageSource = ImageAlbum.Source };
+                        ProgressBarPlayProg.Maximum = AudioPlayer.AudioInfos[mpi].LengthInMilliseconds;
                         LoadLyricsBox();
                     }
                     catch (Exception) { }
@@ -238,6 +244,16 @@ namespace HyPlayer.Pages
                 _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
                 iscompact = false;
             }
+        }
+
+        private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (AudioPlayer.AudioMediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
+                AudioPlayer.AudioMediaPlayer.Pause();
+            else if (AudioPlayer.AudioMediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Paused)
+                AudioPlayer.AudioMediaPlayer.Play();
+            PlayStateIcon.Glyph = AudioPlayer.AudioMediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing ? "\uEDB5" : "\uEDB4";
+
         }
     }
 }

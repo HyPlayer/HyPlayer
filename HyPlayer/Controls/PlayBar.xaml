@@ -8,7 +8,8 @@
     mc:Ignorable="d"
     d:DesignHeight="100"
     d:DesignWidth="1080">
-    <Grid>
+    <Grid
+        Name="GridThis">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState>
@@ -54,13 +55,26 @@
                 </VisualState>
                 <VisualState>
                     <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0">
+                        </AdaptiveTrigger>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter
+                            Target="GridThis.Visibility" Value="Collapsed"></Setter>
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState>
+                    <VisualState.StateTriggers>
                         <AdaptiveTrigger
-                            MinWindowWidth="0" />
+                            MinWindowWidth="200" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter
                             Target="SubControlGrid.Visibility"
                             Value="Collapsed" />
+                        <Setter
+                            Target="GridThis.Visibility"
+                            Value="Visible"></Setter>
                         <Setter
                             Target="MainControlGrid.(Grid.ColumnSpan)"
                             Value="2" />
