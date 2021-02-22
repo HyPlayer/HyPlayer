@@ -41,7 +41,16 @@
                             Target="BtnPlayStateChange.Visibility"
                             Value="Visible"/>
                         <Setter
+                            Target="BtnPreviousSong.Visibility"
+                            Value="Visible"/>
+                        <Setter
+                            Target="BtnNextSong.Visibility"
+                            Value="Visible"/>
+                        <Setter
                             Target="ProgressBarPlayProg.Visibility"
+                            Value="Visible"/>
+                        <Setter
+                            Target="SliderVolumn.Visibility"
                             Value="Visible"/>
                     </VisualState.Setters>
                 </VisualState>
@@ -72,7 +81,16 @@
                             Target="BtnPlayStateChange.Visibility"
                             Value="Collapsed"/>
                         <Setter
+                            Target="BtnPreviousSong.Visibility"
+                            Value="Collapsed" />
+                        <Setter
+                            Target="BtnNextSong.Visibility"
+                            Value="Collapsed" />
+                        <Setter
                             Target="ProgressBarPlayProg.Visibility"
+                            Value="Collapsed" />
+                        <Setter
+                            Target="SliderVolumn.Visibility"
                             Value="Collapsed" />
                     </VisualState.Setters>
                 </VisualState>
@@ -118,6 +136,25 @@
             Name="ImageAlbum"
             Source="/Assets/Icon.png" />
         <Button
+            Visibility="Collapsed"
+            Grid.Row="4"
+            Grid.RowSpan="4"
+            Style="{StaticResource ButtonRevealStyle}"
+            Grid.Column="0"
+            Grid.ColumnSpan="4"
+            Name="BtnPreviousSong"
+            Click="BtnPreSong_OnClick"
+            VerticalAlignment="Center"
+            Background="Transparent"
+            Width="45"
+            Height="45"
+            CornerRadius="30">
+            <FontIcon
+                FontFamily="{StaticResource SymbolThemeFontFamily}"
+                Glyph="&#xE892;"></FontIcon>
+        </Button>
+        <Button
+            Visibility="Collapsed"
             Grid.RowSpan="6"
             Grid.Row="3"
             Style="{StaticResource ButtonRevealStyle}"
@@ -135,6 +172,33 @@
                 Glyph="&#xEDB4;"></FontIcon>
             <!--EDB5 -->
         </Button>
+        <Button
+            Visibility="Collapsed"
+            Grid.Row="4"
+            Grid.RowSpan="4"
+            Style="{StaticResource ButtonRevealStyle}"
+            Grid.Column="8"
+            Grid.ColumnSpan="4"
+            Name="BtnNextSong"
+            Click="BtnNextSong_OnClick"
+            VerticalAlignment="Center"
+            Background="Transparent"
+            Width="45"
+            Height="45"
+            CornerRadius="30">
+            <FontIcon
+                FontFamily="{StaticResource SymbolThemeFontFamily}"
+                Glyph="&#xE101;"></FontIcon>
+        </Button>
+        <Slider
+            Visibility="Collapsed"
+            ValueChanged="SliderAudioRate_ValueChanged"
+            Name="SliderVolumn"
+            Grid.Column="1"
+            Grid.ColumnSpan="10"
+            Grid.Row="9"
+            Grid.RowSpan="3"
+            Value="15" />
         <controls:DockPanel
             Name="DockPanelRight"
             LastChildFill="True"

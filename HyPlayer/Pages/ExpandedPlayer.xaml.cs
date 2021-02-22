@@ -158,6 +158,7 @@ namespace HyPlayer.Pages
                             .SongName;
                         this.Background = new ImageBrush() { ImageSource = ImageAlbum.Source };
                         ProgressBarPlayProg.Maximum = AudioPlayer.AudioInfos[mpi].LengthInMilliseconds;
+                        SliderVolumn.Value = AudioPlayer.AudioMediaPlayer.Volume * 100;
                         LoadLyricsBox();
                     }
                     catch (Exception) { }
@@ -254,6 +255,21 @@ namespace HyPlayer.Pages
                 AudioPlayer.AudioMediaPlayer.Play();
             PlayStateIcon.Glyph = AudioPlayer.AudioMediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing ? "\uEDB5" : "\uEDB4";
 
+        }
+
+        private void BtnNextSong_OnClick(object sender, RoutedEventArgs e)
+        {
+            AudioPlayer.AudioMediaPlaybackList.MoveNext();
+        }
+
+        private void BtnPreSong_OnClick(object sender, RoutedEventArgs e)
+        {
+            AudioPlayer.AudioMediaPlaybackList.MovePrevious();
+        }
+
+        private void SliderAudioRate_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            AudioPlayer.AudioMediaPlayer.Volume = SliderVolumn.Value / 100;
         }
     }
 }
