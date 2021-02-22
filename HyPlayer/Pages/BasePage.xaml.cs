@@ -93,38 +93,57 @@ namespace HyPlayer.Pages
             ButtonLogin.Content = "登录中......";
             bool isOk;
             JObject json;
+            try
+            {
 
-            var queries = new Dictionary<string, object>();
-            var account = TextBoxAccount.Text;
-            var isPhone = Regex.Match(account, "^[0-9]+$").Success;
-            queries[isPhone ? "phone" : "email"] = account;
-            queries["password"] = TextBoxPassword.Password;
-            (isOk, json) = await Common.ncapi.RequestAsync(isPhone ? CloudMusicApiProviders.LoginCellphone : CloudMusicApiProviders.Login, queries);
-            if (!isOk || json["code"].ToString() != "200")
-            {
-                ButtonLogin.Visibility = Visibility.Visible;
-                InfoBarLoginHint.IsOpen = true;
-                InfoBarLoginHint.Title = "登录失败";
-                ButtonLogin.Content = "登录";
-                ButtonLogin.IsEnabled = true;
-                InfoBarLoginHint.Severity = InfoBarSeverity.Warning;
-                InfoBarLoginHint.Message = "登录失败 " + json["msg"];
+                var queries = new Dictionary<string, object>();
+                var account = TextBoxAccount.Text;
+                var isPhone = Regex.Match(account, "^[0-9]+$").Success;
+                queries[isPhone ? "phone" : "email"] = account;
+                queries["password"] = TextBoxPassword.Password;
+                (isOk, json) = await Common.ncapi.RequestAsync(
+                    isPhone ? CloudMusicApiProviders.LoginCellphone : CloudMusicApiProviders.Login, queries);
+                if (!isOk || json["code"].ToString() != "200")
+                {
+                    ButtonLogin.Visibility = Visibility.Visible;
+                    InfoBarLoginHint.IsOpen = true;
+                    InfoBarLoginHint.Title = "登录失败";
+                    ButtonLogin.Content = "登录";
+                    ButtonLogin.IsEnabled = true;
+                    InfoBarLoginHint.Severity = InfoBarSeverity.Warning;
+                    InfoBarLoginHint.Message = "登录失败 " + json["msg"];
+                }
+                else
+                {
+                    Common.Logined = true;
+                    StorageFile sf = await Windows.Storage.ApplicationData.Current.LocalFolder.CreateFileAsync(
+                        "Settings\\UserPassword", Windows.Storage.CreationCollisionOption.ReplaceExisting);
+                    _ = FileIO.WriteTextAsync(sf,
+                        account + "\r\n" + TextBoxPassword.Password.ToString().ToByteArrayUtf8().ComputeMd5()
+                            .ToHexStringLower());
+                    Common.LoginedUser.UserName = json["profile"]["nickname"].ToString();
+                    Common.LoginedUser.ImgUrl = json["profile"]["avatarUrl"].ToString();
+                    Common.LoginedUser.uid = json["account"]["id"].ToString();
+                    InfoBarLoginHint.IsOpen = true;
+                    InfoBarLoginHint.Title = "登录成功";
+                    ButtonLogin.Content = "登录成功";
+                    TextBlockUserName.Text = json["profile"]["nickname"].ToString();
+                    PersonPictureUser.ProfilePicture =
+                        new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
+                    InfoBarLoginHint.Severity = InfoBarSeverity.Success;
+                    InfoBarLoginHint.Message = "欢迎 " + json["profile"]["nickname"].ToString();
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Common.Logined = true;
-                StorageFile sf = await Windows.Storage.ApplicationData.Current.LocalFolder.CreateFileAsync("Settings\\UserPassword", Windows.Storage.CreationCollisionOption.ReplaceExisting);
-                _ = FileIO.WriteTextAsync(sf, account + "\r\n" + TextBoxPassword.Password.ToString().ToByteArrayUtf8().ComputeMd5().ToHexStringLower());
-                Common.LoginedUser.UserName = json["profile"]["nickname"].ToString();
-                Common.LoginedUser.ImgUrl = json["profile"]["avatarUrl"].ToString();
-                Common.LoginedUser.uid = json["account"]["id"].ToString();
+                ButtonLogin.IsEnabled = true;
                 InfoBarLoginHint.IsOpen = true;
-                InfoBarLoginHint.Title = "登录成功";
-                ButtonLogin.Content = "登录成功";
-                TextBlockUserName.Text = json["profile"]["nickname"].ToString();
-                PersonPictureUser.ProfilePicture = new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
-                InfoBarLoginHint.Severity = InfoBarSeverity.Success;
-                InfoBarLoginHint.Message = "欢迎 " + json["profile"]["nickname"].ToString();
+                InfoBarLoginHint.Severity = InfoBarSeverity.Error;
+                StorageFile sf = await Windows.Storage.ApplicationData.Current.LocalFolder.CreateFileAsync(
+                    "Settings\\Log", Windows.Storage.CreationCollisionOption.ReplaceExisting);
+                _ = FileIO.WriteTextAsync(sf,
+                    ex.ToString());
+                InfoBarLoginHint.Message = "登录失败 " + ex.ToString();
             }
         }
 

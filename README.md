@@ -17,13 +17,19 @@
 
 界面设计: [@aaaaaaccd](https://github.com/aaaaaaccd)
 
+## 下载
+
+> 目前正在开发阶段 暂时没有正式Release 您可以前往 Azure DevOps 下载自动构建包
+
+[Azure DevOps](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=27&branchName=master)
+
 ## 界面预览
 
 > 请注意: 由于目前还在开发中,请以实际交付为准
 
 **播放页面**
 
-![image-20210222094735464](D:\Workspace\Personal\HyPlayer\HyPlayer\Assets\preview.png)
+![image-20210222094735464](/Assets/preview.png)
 
 ## 自动编译状态
 
