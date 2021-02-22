@@ -17,6 +17,14 @@
 
 界面设计: [@aaaaaaccd](https://github.com/aaaaaaccd)
 
+## 界面预览
+
+> 请注意: 由于目前还在开发中,请以实际交付为准
+
+**播放页面**
+
+![image-20210222094735464](D:\Workspace\Personal\HyPlayer\HyPlayer\Assets\preview.png)
+
 ## 自动编译状态
 
 | 平台 | Azure DevOps                                                 | AppVeyor |
@@ -26,9 +34,10 @@
 ## 使用
 
 * NeteaseCloudMusicApi
-[wwh1004/NeteaseCloudMusicApi](https://github.com/wwh1004/NeteaseCloudMusicApi) => [kengwang/NeteaseCloudMusicApi](https://github.com/kengwang/NeteaseCloudMusicApi) <MIT Licence>
+[wwh1004/NeteaseCloudMusicApi](https://github.com/wwh1004/NeteaseCloudMusicApi) => [kengwang/NeteaseCloudMusicApi](https://github.com/kengwang/NeteaseCloudMusicApi) (MIT Licence)
 
 ## 捐助
 
 爱发电: https://afdian.net/@kengwang
+
 以太坊：0xad13286a373221672a4b4fdb6607eb2d2aa5966a

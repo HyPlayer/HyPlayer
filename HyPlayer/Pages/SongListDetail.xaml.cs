@@ -29,7 +29,6 @@ namespace HyPlayer.Pages
     public sealed partial class SongListDetail : Page
     {
         private NCPlayList playList;
-        private List<NCSong> Songs;
         public SongListDetail()
         {
             this.InitializeComponent();

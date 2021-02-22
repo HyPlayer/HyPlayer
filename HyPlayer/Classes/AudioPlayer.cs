@@ -64,9 +64,6 @@ namespace HyPlayer.Classes
         public static List<SongLyric> Lyrics = new List<SongLyric>();
         public static Dictionary<MediaPlaybackItem, AudioInfo> AudioInfos = new Dictionary<MediaPlaybackItem, AudioInfo>();
         public static Random AudioRandom = new Random();
-        public static BackgroundDownloader Downloader = new BackgroundDownloader();
-        private static List<DownloadOperation> downloadOperations = new List<DownloadOperation>();//防止被回收
-        private static DownloadOperation download;
 
         public static void LoadPureLyric(string LyricAllText)
         {
@@ -215,7 +212,7 @@ namespace HyPlayer.Classes
                     {
                         AppendNCPlayItem(ncp, json["lrc"]["lyric"].ToString(), json["tlyric"]["lyric"].ToString());
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         //DEBUG
                     }

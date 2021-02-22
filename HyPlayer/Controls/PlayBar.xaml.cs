@@ -205,7 +205,7 @@ namespace HyPlayer.Controls
 
         private void SliderProgress_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
-            AudioPlayer.AudioMediaPlayer.Position = TimeSpan.FromMilliseconds(SliderProgress.Value);
+            AudioPlayer.AudioMediaPlayer.PlaybackSession.Position = TimeSpan.FromMilliseconds(SliderProgress.Value);
         }
     }
 

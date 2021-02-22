@@ -53,7 +53,7 @@ namespace HyPlayer.Controls
             await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority, () => { action(); });
         }
 
-        private void Current_SizeChanged(object sender, Windows.UI.Core.WindowSizeChangedEventArgs e)
+        public void Current_SizeChanged(object sender, Windows.UI.Core.WindowSizeChangedEventArgs e)
         {
             if (Common.PageExpandedPlayer.LyricBoxContainer.ViewportWidth == 0)
             {

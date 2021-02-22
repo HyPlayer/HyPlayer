@@ -83,6 +83,10 @@ namespace HyPlayer.Pages
                             LyricBoxContainer.ChangeView(null, position?.Y - (LyricBoxContainer.ViewportHeight / 3), null, false);
                             showed = true;
                         }
+                        else
+                        {
+                            lrcitem.OnHind();
+                        }
                     }
                     else
                     {
@@ -139,14 +143,19 @@ namespace HyPlayer.Pages
             {
                 this.Invoke((() =>
                 {
-                    ImageAlbum.Source = AudioPlayer.AudioInfos[mpi]
-                        .Picture;
-                    TextBlockSinger.Text = AudioPlayer.AudioInfos[mpi]
-                        .Artist;
-                    TextBlockSongTitle.Text = AudioPlayer.AudioInfos[mpi]
-                        .SongName;
-                    this.Background = new ImageBrush() { ImageSource = ImageAlbum.Source };
-                    LoadLyricsBox();
+                    try
+                    {
+                        ImageAlbum.Source = AudioPlayer.AudioInfos[mpi]
+                            .Picture;
+                        TextBlockSinger.Text = AudioPlayer.AudioInfos[mpi]
+                            .Artist;
+                        TextBlockSongTitle.Text = AudioPlayer.AudioInfos[mpi]
+                            .SongName;
+                        this.Background = new ImageBrush() { ImageSource = ImageAlbum.Source };
+                        LoadLyricsBox();
+                    }
+                    catch (Exception) { }
+;
                 }));
             }
         }
@@ -195,12 +204,38 @@ namespace HyPlayer.Pages
         {
             if (!iscompact)
             {
-                ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.CompactOverlay);
+                Task.Run(() =>
+                {
+                    this.Invoke((() =>
+                    {
+                        foreach (UIElement lyricBoxChild in LyricBox.Children)
+                        {
+                            if (lyricBoxChild is LyricItem li)
+                            {
+                                li.Current_SizeChanged(null, null);
+                            }
+                        }
+                    }));
+                });
+                _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.CompactOverlay);
                 iscompact = true;
             }
             else
             {
-                ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
+                Task.Run(() =>
+                {
+                    this.Invoke((() =>
+                    {
+                        foreach (UIElement lyricBoxChild in LyricBox.Children)
+                        {
+                            if (lyricBoxChild is LyricItem li)
+                            {
+                                li.Current_SizeChanged(null, null);
+                            }
+                        }
+                    }));
+                });
+                _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
                 iscompact = false;
             }
         }

@@ -87,7 +87,7 @@ namespace HyPlayer.Pages
             {
                 case "SongList":
                     Common.GLOBAL["SongListUID"] = uid;
-                    ContentFrame.Navigate(typeof(SongListFrame), null);
+                    ContentFrame.Navigate(typeof(SongListFrame), null,new EntranceNavigationTransitionInfo());
                     break;
             }
         }
