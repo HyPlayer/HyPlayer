@@ -26,7 +26,7 @@ namespace HyPlayer.Controls
         {
             this.InitializeComponent();
             ncsong = song;
-            ImageAlbum.Source = new BitmapImage(new Uri(song.Album.cover+ "?param=70y70"));
+            ImageAlbum.Source = new BitmapImage(new Uri(song.Album.cover+ "?param="+StaticSource.PICSIZE_SINGLENCSONG_COVER));
             TextBlockSongname.Text = song.songname;
             string artisttxt = "";
             song.Artist.ForEach(s => { artisttxt += s.name; });
