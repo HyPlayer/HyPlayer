@@ -20,8 +20,8 @@
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
         <Rectangle
-            RadiusX="20"
-            RadiusY="20"
+            RadiusX="4"
+            RadiusY="4"
             Width="70"
             Height="70"
             Grid.Column="0">

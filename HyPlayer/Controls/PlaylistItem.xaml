@@ -12,7 +12,7 @@
 	d:DesignHeight="300"
 	d:DesignWidth="250">
 	<Grid
-		CornerRadius="10">
+		CornerRadius="8">
 		<Grid
 			Tapped="UIElement_OnTapped">
 			<Grid.RowDefinitions>
@@ -25,8 +25,8 @@
                     Grid.RowSpan="2"
 					Width="250"
 					Height="250"
-                    RadiusX="20"
-                    RadiusY="20">
+                    RadiusX="8"
+                    RadiusY="8">
                     <Rectangle.Fill>
                         <ImageBrush
                             x:Name="ImageRect"
