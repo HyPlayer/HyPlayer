@@ -6,6 +6,7 @@
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+	xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
 	mc:Ignorable="d">
 
     <ScrollViewer
@@ -52,30 +53,17 @@
         <ScrollViewer.Content>
             <StackPanel
 				Orientation="Vertical">
-                <Grid
-					Name="GridPersonalInformation">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="30" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="146*" />
-                        <ColumnDefinition Width="146*" />
-                        <ColumnDefinition Width="20" />
-                        <ColumnDefinition Width="215*" />
-                        <ColumnDefinition Width="146*" />
-                        <ColumnDefinition Width="146*" />
-                        <ColumnDefinition Width="146*" />
-                        <ColumnDefinition Width="146*" />
-                        <ColumnDefinition Width="146*" />
-                        <ColumnDefinition Width="146*" />
-                    </Grid.ColumnDefinitions>
+                <controls:DockPanel
+                    LastChildFill="True"
+                    Name="GridPersonalInformation">
                     <Rectangle
                         x:Name="RectangleImage"
                         RadiusX="10"
                         RadiusY="10"
                         Width="250"
                         Height="250"
-                        Grid.Column="1"
-                        Grid.ColumnSpan="3">
+                        Margin="15"
+                        controls:DockPanel.Dock="Left">
                         <Rectangle.Fill>
                             <ImageBrush
                                 x:Name="ImageRect"
@@ -89,9 +77,7 @@
                     </Rectangle>
                     <StackPanel
                         Name="StackPanelUserInfo"
-						Grid.Column="5"
-						Grid.ColumnSpan="7"
-						Orientation="Vertical" Margin="0,0,144,0">
+                        Orientation="Vertical" Margin="15,15,144,0">
                         <TextBlock
 							Margin="0,0,0,0"
 							Name="TextBoxPLName"
@@ -115,7 +101,7 @@
 							FontSize="13"
 							Foreground="Gray" />
                     </StackPanel>
-                </Grid>
+                </controls:DockPanel>
                 <StackPanel
                     Margin="20,30,0,0"
                     Spacing="10"
