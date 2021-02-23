@@ -10,6 +10,45 @@
 
     <ScrollViewer
 		VerticalScrollBarVisibility="Auto">
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger
+                            MinWindowWidth="0"></AdaptiveTrigger>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter
+                            Target="RectangleImage.Visibility"
+                            Value="Collapsed" />
+                        <Setter
+                            Target="StackPanelUserInfo.(Grid.Column)"
+                            Value="1" />
+                        <Setter
+                            Target="StackPanelUserInfo.(Grid.ColumnSpan)"
+                            Value="10" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger
+                            MinWindowWidth="1024"></AdaptiveTrigger>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter
+                            Target="RectangleImage.Visibility"
+                            Value="Visible" />
+                        <Setter
+                            Target="StackPanelUserInfo.(Grid.Column)"
+                            Value="5" />
+                        <Setter
+                            Target="StackPanelUserInfo.(Grid.ColumnSpan)"
+                            Value="6" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
         <ScrollViewer.Content>
             <StackPanel
 				Orientation="Vertical">
@@ -30,6 +69,7 @@
                         <ColumnDefinition Width="146*" />
                     </Grid.ColumnDefinitions>
                     <Rectangle
+                        x:Name="RectangleImage"
                         RadiusX="10"
                         RadiusY="10"
                         Width="250"
@@ -48,6 +88,7 @@
                         </Rectangle.Fill>
                     </Rectangle>
                     <StackPanel
+                        Name="StackPanelUserInfo"
 						Grid.Column="5"
 						Grid.ColumnSpan="7"
 						Orientation="Vertical" Margin="0,0,144,0">

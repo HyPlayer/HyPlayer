@@ -35,6 +35,7 @@ namespace HyPlayer.Pages
             this.InitializeComponent();
             uid = Common.LoginedUser.uid;
             LoadInfo();
+            NavigationView1.SelectedItem = NavigationView1.MenuItems[0];
         }
 
         public async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)

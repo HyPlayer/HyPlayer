@@ -12,8 +12,10 @@
     <Grid>
         <NavigationView
             Margin="0,0,0,0"
-            IsBackButtonVisible="Collapsed"
+            IsBackButtonVisible="Visible"
+            IsBackEnabled="True"
             IsSettingsVisible="False"
+            BackRequested="OnNavigateBack"
             Background="{ThemeResource SystemControlAcrylicWindowBrush}"
             SelectionChanged="NavMain_OnSelectionChanged"
             x:Name="NavMain">
@@ -51,6 +53,7 @@
                 </NavigationViewItem>
             </NavigationView.MenuItems>
             <Frame
+                Margin="0,40,0,0"
                 x:Name="BaseFrame" />
         </NavigationView>
         <!-- 登录弹窗 -->
@@ -68,10 +71,12 @@
                     Text="登录到网易云音乐"
                     HorizontalAlignment="Center" />
                 <TextBox
+                    KeyDown="TextBoxAccount_OnKeyDown"
                     Margin="5"
                     PlaceholderText="手机 / 邮箱"
                     x:Name="TextBoxAccount" />
                 <PasswordBox
+                    KeyDown="TextBoxPassword_OnKeyDown"
                     Margin="5"
                     PlaceholderText="密码"
                     x:Name="TextBoxPassword" />

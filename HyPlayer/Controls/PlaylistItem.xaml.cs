@@ -49,7 +49,7 @@ namespace HyPlayer.Controls
 
         private void UIElement_OnTapped(object sender, TappedRoutedEventArgs e)
         {
-            Common.BaseFrame.Navigate(typeof(SongListDetail), playList,new CommonNavigationTransitionInfo());
+            Common.BaseFrame.Navigate(typeof(SongListDetail), playList,new DrillInNavigationTransitionInfo());
         }
 
     }

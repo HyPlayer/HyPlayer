@@ -9,6 +9,42 @@
     mc:Ignorable="d">
 
     <Grid>
+
+            <VisualStateManager.VisualStateGroups>
+                <VisualStateGroup>
+                    <VisualState>
+                        <VisualState.StateTriggers>
+                        <AdaptiveTrigger
+                            MinWindowWidth="0"></AdaptiveTrigger>
+                        </VisualState.StateTriggers>
+                        <VisualState.Setters>
+                        <Setter
+                            Target="RectangleImage.Visibility"
+                            Value="Collapsed"/>
+                        <Setter
+                            Target="StackPanelUserInfo.(Grid.Column)" Value="1"/>
+                            <Setter
+                            Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="10"/>
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState>
+                        <VisualState.StateTriggers>
+                        <AdaptiveTrigger
+                            MinWindowWidth="1024"></AdaptiveTrigger>
+                        </VisualState.StateTriggers>
+                        <VisualState.Setters>
+                        <Setter
+                            Target="RectangleImage.Visibility" Value="Visible"/>
+                            <Setter
+                                Target="StackPanelUserInfo.(Grid.Column)"
+                                Value="5" />
+                            <Setter
+                                Target="StackPanelUserInfo.(Grid.ColumnSpan)"
+                                Value="6" />
+                    </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateManager.VisualStateGroups>
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <ScrollViewer.Content>
                 <StackPanel
@@ -30,6 +66,7 @@
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
                         <Rectangle
+                            x:Name="RectangleImage"
                             RadiusX="10"
                             RadiusY="10"
                             Width="300"
@@ -48,6 +85,7 @@
                             </Rectangle.Fill>
                         </Rectangle>
                         <StackPanel
+                            Name="StackPanelUserInfo"
                             Grid.Column="5"
                             Grid.ColumnSpan="6"
                             Orientation="Vertical">
@@ -69,6 +107,7 @@
                     </Grid>
 
                     <muxc:NavigationView
+                        x:Name="NavigationView1"
                         Margin="0,20,0,0"
                         IsSettingsVisible="False"
                         IsBackButtonVisible="Collapsed"

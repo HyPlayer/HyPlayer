@@ -30,6 +30,7 @@ using NeteaseCloudMusicApi;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NavigationView = Windows.UI.Xaml.Controls.NavigationView;
+using NavigationViewBackRequestedEventArgs = Windows.UI.Xaml.Controls.NavigationViewBackRequestedEventArgs;
 using NavigationViewItem = Windows.UI.Xaml.Controls.NavigationViewItem;
 using NavigationViewSelectionChangedEventArgs = Windows.UI.Xaml.Controls.NavigationViewSelectionChangedEventArgs;
 
@@ -166,6 +167,29 @@ namespace HyPlayer.Pages
                 case "PageMe":
                     Common.BaseFrame.Navigate(typeof(Pages.Me), null, new EntranceNavigationTransitionInfo());
                     break;
+            }
+
+        }
+
+        private void OnNavigateBack(NavigationView sender, NavigationViewBackRequestedEventArgs args)
+        {
+            if (Common.BaseFrame.CanGoBack)
+                Common.BaseFrame.GoBack();
+        }
+
+        private void TextBoxAccount_OnKeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == VirtualKey.Enter)
+            {
+                TextBoxPassword.Focus(FocusState.Keyboard);
+            }
+        }
+
+        private void TextBoxPassword_OnKeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == VirtualKey.Enter)
+            {
+                ButtonLogin_OnClick(null, null);
             }
         }
     }
