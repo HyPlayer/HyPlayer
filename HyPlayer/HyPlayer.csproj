@@ -127,6 +127,7 @@
     <Compile Include="Classes\AudioPlayer.cs" />
     <Compile Include="Classes\LoginedUser.cs" />
     <Compile Include="Classes\NCSong.cs" />
+    <Compile Include="Classes\StaticSource.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="Controls\LyricItem.xaml.cs">
       <DependentUpon>LyricItem.xaml</DependentUpon>

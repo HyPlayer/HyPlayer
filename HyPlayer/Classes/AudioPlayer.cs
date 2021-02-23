@@ -259,7 +259,7 @@ namespace HyPlayer.Classes
             properties.MusicProperties.Title = ai.SongName;
             try
             {
-                properties.Thumbnail = RandomAccessStreamReference.CreateFromUri(new Uri(ncp.Album.cover + "?param=100y100"));
+                properties.Thumbnail = RandomAccessStreamReference.CreateFromUri(new Uri(ncp.Album.cover + "?param="+StaticSource.PICSIZE_AUDIO_PLAYER_COVER));
             }
             catch (Exception) { }
             mediaPlaybackItem.ApplyDisplayProperties(properties);
