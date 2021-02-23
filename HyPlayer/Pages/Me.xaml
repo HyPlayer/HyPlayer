@@ -29,11 +29,24 @@
                             <ColumnDefinition />
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
-                        <Image
-                            Name="ImageAvatar"
+                        <Rectangle
+                            RadiusX="20"
+                            RadiusY="20"
+                            Width="300"
+                            Height="300"
                             Grid.Column="1"
-                            Grid.ColumnSpan="3"
-                            Source="/Assets/icon.png"></Image>
+                            Grid.ColumnSpan="3">
+                            <Rectangle.Fill>
+                                <ImageBrush
+                                    x:Name="ImageRect"
+                                    Stretch="UniformToFill">
+                                    <ImageBrush.ImageSource>
+                                        <BitmapImage
+                                            UriSource="/Assets/icon.png" />
+                                    </ImageBrush.ImageSource>
+                                </ImageBrush>
+                            </Rectangle.Fill>
+                        </Rectangle>
                         <StackPanel
                             Grid.Column="5"
                             Grid.ColumnSpan="6"

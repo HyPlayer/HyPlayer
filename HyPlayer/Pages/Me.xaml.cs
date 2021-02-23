@@ -61,7 +61,7 @@ namespace HyPlayer.Pages
                     {
                         TextBoxUserName.Text = json["profile"]["nickname"].ToString();
                         TextBoxSignature.Text = json["profile"]["signature"].ToString();
-                        ImageAvatar.Source = new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
+                        ImageRect.ImageSource = new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
                     }
                 });
 

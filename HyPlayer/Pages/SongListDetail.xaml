@@ -29,11 +29,24 @@
                         <ColumnDefinition Width="146*" />
                         <ColumnDefinition Width="146*" />
                     </Grid.ColumnDefinitions>
-                    <Image
-						Name="ImagePL"
-						Grid.Column="1"
-						Grid.ColumnSpan="3"
-						Source="/Assets/icon.png"></Image>
+                    <Rectangle
+                        RadiusX="20"
+                        RadiusY="20"
+                        Width="250"
+                        Height="250"
+                        Grid.Column="1"
+                        Grid.ColumnSpan="3">
+                        <Rectangle.Fill>
+                            <ImageBrush
+                                x:Name="ImageRect"
+                                Stretch="UniformToFill">
+                                <ImageBrush.ImageSource>
+                                    <BitmapImage
+                                        UriSource="/Assets/icon.png" />
+                                </ImageBrush.ImageSource>
+                            </ImageBrush>
+                        </Rectangle.Fill>
+                    </Rectangle>
                     <StackPanel
 						Grid.Column="5"
 						Grid.ColumnSpan="7"
@@ -67,7 +80,8 @@
                     Spacing="10"
 					Name="SongContainer"
 					Orientation="Vertical" />
-
+                <Grid
+                    Height="150" />
             </StackPanel>
 
         </ScrollViewer.Content>

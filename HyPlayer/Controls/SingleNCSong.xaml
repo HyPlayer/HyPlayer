@@ -19,7 +19,23 @@
             <ColumnDefinition />
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
-        <Image Grid.Column="0" Name="ImageAlbum" Source="/Assets/icon.png"></Image>
+        <Rectangle
+            RadiusX="20"
+            RadiusY="20"
+            Width="70"
+            Height="70"
+            Grid.Column="0">
+            <Rectangle.Fill>
+                <ImageBrush
+                    x:Name="ImageRect"
+                    Stretch="UniformToFill">
+                    <ImageBrush.ImageSource>
+                        <BitmapImage
+                            UriSource="/Assets/icon.png" />
+                    </ImageBrush.ImageSource>
+                </ImageBrush>
+            </Rectangle.Fill>
+        </Rectangle>
         <controls:DockPanel Dock="Top" Padding="7,0,0,0" Grid.Column="1">
             <TextBlock controls:DockPanel.Dock="Top" Name="TextBlockSongname" FontSize="20" Text="歌曲名"/>
             <TextBlock Foreground="Gray" Name="TextBlockArtist" controls:DockPanel.Dock="Bottom" Margin="0,7,0,0" FontSize="13" Text="歌手名"/>
