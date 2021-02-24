@@ -131,7 +131,9 @@ namespace HyPlayer.Controls
 
         private void SliderAudioRate_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
-            AudioPlayer.AudioMediaPlayer.Volume = SliderAudioRate.Value / 100;
+            AudioPlayer.AudioMediaPlayer.Volume = e.NewValue / 100;
+            if (Common.PageExpandedPlayer != null)
+                Common.PageExpandedPlayer.SliderVolumn.Value = e.NewValue;
         }
 
         private void BtnMute_OnCllick(object sender, RoutedEventArgs e)
@@ -190,6 +192,7 @@ namespace HyPlayer.Controls
             ButtonExpand.Visibility = Visibility.Visible;
             ButtonCollapse.Visibility = Visibility.Collapsed;
             Common.PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));
+            Common.PageExpandedPlayer = null;
             //Common.PageMain.MainFrame.Visibility = Visibility.Visible;
             Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
             Common.PageMain.GridPlayBar.Background = new Windows.UI.Xaml.Media.AcrylicBrush() { BackgroundSource = AcrylicBackgroundSource.Backdrop, TintOpacity = 0.67500003206078, TintLuminosityOpacity = 0.183000008692034, TintColor = Windows.UI.Color.FromArgb(255, 128, 128, 128), FallbackColor = Windows.UI.Color.FromArgb(255, 128, 128, 128) };

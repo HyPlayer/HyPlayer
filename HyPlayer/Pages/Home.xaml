@@ -34,6 +34,7 @@
                 Spacing="15"
                 x:Name="RankList" />
         </ScrollViewer>
+        <Grid Height="150"></Grid>
         </StackPanel>
         </ScrollViewer>
 </Page>

@@ -337,6 +337,7 @@
                     <!--E198 -->
                 </Button>
                 <Slider
+                    x:FieldModifier="public"
                     Name="SliderAudioRate"
                     VerticalAlignment="Center"
                     Width="100"

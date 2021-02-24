@@ -187,6 +187,7 @@
                 Grid.ColumnSpan="3"
                 Margin="20,0,20,0"
                 Grid.Row="2"
+                x:FieldModifier="public"
                 ValueChanged="SliderAudioRate_ValueChanged"
                 Name="SliderVolumn" />
         </Grid>

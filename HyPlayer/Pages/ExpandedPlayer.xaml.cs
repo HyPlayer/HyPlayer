@@ -274,7 +274,10 @@ namespace HyPlayer.Pages
         private void SliderAudioRate_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
             if (loaded)
-                AudioPlayer.AudioMediaPlayer.Volume = SliderVolumn.Value / 100;
+            {
+                Common.BarPlayBar.SliderAudioRate.Value = e.NewValue;
+                AudioPlayer.AudioMediaPlayer.Volume = e.NewValue / 100;
+            }
         }
 
         private void ExpandedPlayer_OnPointerEntered(object sender, PointerRoutedEventArgs e)
