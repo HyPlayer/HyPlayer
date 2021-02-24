@@ -31,9 +31,7 @@ namespace HyPlayer.Controls
             ncsong = song;
             ImageRect.ImageSource = new BitmapImage(new Uri(song.Album.cover+ "?param="+StaticSource.PICSIZE_SINGLENCSONG_COVER));
             TextBlockSongname.Text = song.songname;
-            string artisttxt = "";
-            song.Artist.ForEach(s => { artisttxt += s.name; });
-            TextBlockArtist.Text = artisttxt;
+            TextBlockArtist.Text = string.Join(" / ", song.Artist.Select(ar => ar.name));
         }
 
         public void AppendMe()

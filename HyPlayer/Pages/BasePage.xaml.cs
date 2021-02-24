@@ -167,6 +167,9 @@ namespace HyPlayer.Pages
                 case "PageMe":
                     Common.BaseFrame.Navigate(typeof(Pages.Me), null, new EntranceNavigationTransitionInfo());
                     break;
+                case "PageSearch":
+                    Common.BaseFrame.Navigate(typeof(Search), null, new EntranceNavigationTransitionInfo());
+                    break;
             }
 
         }

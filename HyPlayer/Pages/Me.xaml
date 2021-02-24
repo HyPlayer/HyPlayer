@@ -52,7 +52,7 @@
                     Orientation="Vertical">
                     <controls:DockPanel
                         LastChildFill="True"
-                        Name="GridPersonalInformation">
+                        x:Name="GridPersonalInformation">
                         <Rectangle
                             Margin="15"
                             controls:DockPanel.Dock="Left"

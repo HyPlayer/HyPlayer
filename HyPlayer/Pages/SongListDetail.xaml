@@ -96,6 +96,7 @@
                             Click="ButtonBase_OnClick" />
                         <TextBlock
 							Margin="0,5,0,0"
+                            MaxLines="7"
 							x:Name="TextBlockDesc"
 							Text="歌单简介"
 							FontSize="13"
