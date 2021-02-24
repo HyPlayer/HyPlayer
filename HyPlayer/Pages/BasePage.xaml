@@ -25,10 +25,6 @@
                     Content="主页"
                     Tag="PageHome" />
                 <NavigationViewItem
-                    Icon="FourBars"
-                    Content="排行"
-                    Tag="PageRank" />
-                <NavigationViewItem
                     Icon="Zoom"
                     Content="搜索"
                     Tag="PageSearch" />

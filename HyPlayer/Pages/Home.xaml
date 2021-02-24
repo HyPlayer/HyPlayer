@@ -8,7 +8,32 @@
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
-    <Grid>
+    <ScrollViewer
+        VerticalScrollBarVisibility="Auto">
+        <StackPanel
+        Padding="15"
+        Orientation="Vertical">
+        <TextBlock
+            Padding="15,0,0,0"
+            FontSize="25"
+            Text="推荐歌单" />
+        <ScrollViewer HorizontalScrollBarVisibility="Auto">
+            <StackPanel Orientation="Horizontal" Padding="0,0,0,15" Spacing="15" x:Name="RcmdSongList" />
+        </ScrollViewer>
 
-    </Grid>
+
+        <TextBlock
+            Padding="15,0,0,0"
+            FontSize="25"
+            Text="排行榜" />
+        <ScrollViewer
+            HorizontalScrollBarVisibility="Auto">
+            <StackPanel
+                Orientation="Horizontal"
+                Padding="0,0,0,15"
+                Spacing="15"
+                x:Name="RankList" />
+        </ScrollViewer>
+        </StackPanel>
+        </ScrollViewer>
 </Page>
