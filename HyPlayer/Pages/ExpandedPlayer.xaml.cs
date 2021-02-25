@@ -145,7 +145,7 @@ namespace HyPlayer.Pages
                 {
                     try
                     {
-                        ImageAlbum.Source = new BitmapImage(new Uri(mpi.AudioInfo.Picture));
+                        ImageAlbum.Source = mpi.ItemType == HyPlayItemType.Local ? mpi.AudioInfo.BitmapImage : new BitmapImage(new Uri(mpi.AudioInfo.Picture));
                         TextBlockSinger.Text = mpi.AudioInfo.Artist;
                         TextBlockSongTitle.Text = mpi.AudioInfo.SongName;
                         this.Background = new ImageBrush() { ImageSource = ImageAlbum.Source };
