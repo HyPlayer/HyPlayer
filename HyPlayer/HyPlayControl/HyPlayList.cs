@@ -430,7 +430,7 @@ namespace HyPlayer.HyPlayControl
                     HaveTranslation = HaveTranslation
                 });
             }
-            return Lyrics;
+            return Lyrics.OrderBy((lyric => lyric.LyricTime.TotalMilliseconds)).ToList();
         }
 
         public static void ConvertTranslation(string LyricAllText, List<SongLyric> Lyrics)
