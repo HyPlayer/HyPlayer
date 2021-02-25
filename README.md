@@ -17,6 +17,8 @@
 
 界面设计: [@aaaaaaccd](https://github.com/aaaaaaccd)
 
+**本软件仅供学习交流使用  请勿用于其他用途**
+
 ## 下载
 
 > 目前正在开发阶段 暂时没有正式Release 您可以前往 Azure DevOps 下载自动构建包
