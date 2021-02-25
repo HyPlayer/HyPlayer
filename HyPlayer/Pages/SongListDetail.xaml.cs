@@ -76,7 +76,11 @@ namespace HyPlayer.Pages
                                     id=t["id"].ToString(),
                                     name = t["name"].ToString()
                                 });});
-                                SongContainer.Children.Add(new SingleNCSong(NCSong, idx++));
+                                bool canplay =
+                                    json["privileges"].ToList().Find(x => x["id"].ToString() == song["id"].ToString())[
+                                        "st"].ToString() == "0";
+
+                                SongContainer.Children.Add(new SingleNCSong(NCSong, idx++,canplay));
                             }
                         }
                     }

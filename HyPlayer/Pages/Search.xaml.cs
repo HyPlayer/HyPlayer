@@ -26,6 +26,7 @@ namespace HyPlayer.Pages
     /// </summary>
     public sealed partial class Search : Page
     {
+        int page = 0;
         public Search()
         {
             this.InitializeComponent();
@@ -33,7 +34,14 @@ namespace HyPlayer.Pages
 
         private async void ButtonBase_OnClick(object sender, RoutedEventArgs e)
         {
-            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Cloudsearch, new Dictionary<string, object>() { { "keywords", TextBoxSearchText.Text } });
+            page = 0;
+            LoadResult();
+        }
+
+        private async void LoadResult()
+        {
+            SearchResultContainer.Children.Clear();
+            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Cloudsearch, new Dictionary<string, object>() { { "keywords", TextBoxSearchText.Text},{"offset",page*30}});
             if (isOk)
             {
                 int idx = 0;
@@ -60,9 +68,38 @@ namespace HyPlayer.Pages
                             name = t["name"].ToString()
                         });
                     });
-                    SearchResultContainer.Children.Add(new SingleNCSong(NCSong,idx++));
+                    SearchResultContainer.Children.Add(new SingleNCSong(NCSong, idx++, song["privilege"]["st"].ToString() == "0"));
+                }
+
+                if (int.Parse(json["result"]["songCount"].ToString()) >= (page+1) * 30)
+                {
+                    NextPage.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    NextPage.Visibility = Visibility.Collapsed;
+                }
+                if (page > 0)
+                {
+                    PrevPage.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    PrevPage.Visibility = Visibility.Collapsed;
                 }
             }
+        }
+
+        private void PrevPage_OnClick(object sender, RoutedEventArgs e)
+        {
+            page--;
+            LoadResult();
+        }
+
+        private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
+        {
+            page++;
+            LoadResult();
         }
     }
 }

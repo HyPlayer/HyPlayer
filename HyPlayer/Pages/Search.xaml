@@ -57,7 +57,15 @@
                         Spacing="5"
                         Orientation="Vertical"
                         Name="SearchResultContainer" />
-
+<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+    <Button Visibility="Collapsed" Content="上一页" x:Name="PrevPage" Click="PrevPage_OnClick" />
+    <TextBlock x:Name="PageIndicator" />
+    <Button
+        Visibility="Collapsed"
+                        Content="下一页"
+        x:Name="NextPage"
+        Click="NextPage_OnClickPage_OnClick" />
+                </StackPanel>
                     <Grid
                         Height="150" />
                 </StackPanel>

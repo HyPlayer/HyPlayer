@@ -61,10 +61,11 @@
                 controls:DockPanel.Dock="Bottom"
                 Margin="0,7,0,-6"
                 FontSize="12"
-                Text="歌手名" SelectionChanged="TextBlockArtist_SelectionChanged" />
+                Text="歌手名"/>
 
         </controls:DockPanel>
         <Button
+            x:Name="BtnPlay"
             Click="ButtonBase_OnClick"
             Grid.Column="4">
             <FontIcon

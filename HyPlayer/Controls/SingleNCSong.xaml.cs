@@ -6,6 +6,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -27,10 +28,15 @@ namespace HyPlayer.Controls
     public sealed partial class SingleNCSong : UserControl
     {
         private NCSong ncsong;
-        public SingleNCSong(NCSong song,int order)
+        private bool CanPlay;
+        public SingleNCSong(NCSong song,int order,bool canplay=true)
         {
             this.InitializeComponent();
             ncsong = song;
+            CanPlay = canplay;
+            if (!CanPlay) {BtnPlay.Visibility = Visibility.Collapsed;
+                TextBlockSongname.Foreground = new SolidColorBrush(Color.FromArgb(255, 128, 128, 128));
+            }
             ImageRect.ImageSource = new BitmapImage(new Uri(song.Album.cover+ "?param="+StaticSource.PICSIZE_SINGLENCSONG_COVER));
             TextBlockSongname.Text = song.songname;
             TextBlockAlbum.Text = song.Album.name;
@@ -40,6 +46,7 @@ namespace HyPlayer.Controls
 
         public async Task<bool> AppendMe()
         {
+            if (!CanPlay) return false;
             await HyPlayList.AppendNCSong(ncsong);
             return true;
         }
@@ -89,9 +96,5 @@ namespace HyPlayer.Controls
             _ = AppendMe();
         }
 
-        private void TextBlockArtist_SelectionChanged(object sender, RoutedEventArgs e)
-        {
-
-        }
     }
 }
