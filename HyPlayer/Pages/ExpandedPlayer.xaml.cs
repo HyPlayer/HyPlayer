@@ -85,6 +85,7 @@ namespace HyPlayer.Pages
                         if (!showed)
                         {
                             lastlrcitem?.OnShow();
+                            lrcitem.OnHind();
                             if (sclock > 0)
                             {
                                 sclock--;

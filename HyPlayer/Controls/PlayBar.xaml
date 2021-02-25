@@ -24,6 +24,15 @@
                             Target="SubControlGrid.Visibility"
                             Value="Visible" />
                         <Setter
+                            Target="ButtonCollapse.Margin"
+                            Value="10" />
+                        <Setter
+                            Target="ButtonExpand.Margin"
+                            Value="10" />
+                        <Setter
+                            Target="ButtonPlayList.Margin"
+                            Value="10,10,55,10" />
+                        <Setter
                             Target="MainControlGrid.(Grid.ColumnSpan)"
                             Value="1" />
                         <Setter
@@ -79,6 +88,15 @@
                             MinWindowWidth="300" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
+                        <Setter
+                            Target="ButtonCollapse.Margin"
+                            Value="10,10,10,40" />
+                        <Setter
+                            Target="ButtonExpand.Margin"
+                            Value="10,10,10,40" />
+                        <Setter
+                            Target="ButtonPlayList.Margin"
+                            Value="10,10,55,40" />
                         <Setter
                             Target="SubControlGrid.Visibility"
                             Value="Collapsed" />
@@ -173,6 +191,15 @@
                         <Setter
                             Target="AlbumImage.Visibility"
                             Value="Visible" />
+                        <Setter
+                            Target="ButtonCollapse.Margin"
+                            Value="10,10,10,40" />
+                        <Setter
+                            Target="ButtonExpand.Margin"
+                            Value="10,10,10,40" />
+                        <Setter
+                            Target="ButtonPlayList.Margin"
+                            Value="10,10,55,40" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
@@ -328,7 +355,7 @@
         </Grid>
         <StackPanel
             Orientation="Horizontal"
-            Margin="0,0,50,0"
+            Margin="0,0,110,0"
             HorizontalAlignment="Right"
             Name="SubControlGrid"
             Grid.Column="3">
@@ -357,73 +384,77 @@
                     Width="100"
                     ValueChanged="SliderAudioRate_ValueChanged" />
             </StackPanel>
-            <Button
-                Width="40"
-                Height="40"
-                Margin="10"
-                CornerRadius="20"
-                Background="Transparent">
-                <FontIcon
-                    FontFamily="{StaticResource SymbolThemeFontFamily}"
-                    Glyph="&#xE14C;" />
-                <Button.Flyout>
-                    <Flyout>
-                        <StackPanel
-                            Orientation="Vertical">
-                            <StackPanel
-                                Orientation="Horizontal">
-                                <Button
-                                    Click="ButtonCleanAll_OnClick"
-                                    Content="清除全部" />
-                                <Button
-                                    Click="ButtonAddLocal_OnClick"
-                                    Content="添加本地" />
-                            </StackPanel>
-                            <ListView
-                                SelectionMode="Single"
-                                Name="ListBoxPlayList"
-                                SelectionChanged="ListBoxPlayList_OnSelectionChanged"
-                                Height="500"
-                                Width="400">
-                                <ListView.ItemTemplate>
-                                    <DataTemplate x:DataType="local:ListViewPlayItem">
-                                        <StackPanel Orientation="Horizontal">
-                                            <StackPanel
-                                                Width="340"
-                                                Orientation="Vertical">
-                                                <TextBlock
-                                                    Text="{x:Bind Name}" />
-                                                <TextBlock
-                                                    Foreground="Gray"
-                                                    Text="{x:Bind Artist}" />
-                                            </StackPanel>
-                                            <Button
-                                                Width="30"
-                                                Height="30"
-                                                Background="Transparent"
-                                                Click="PlayListRemove_OnClick"
-                                                Tag="{x:Bind index}">
-                                                <FontIcon
-                                                    Margin="-5,0,0,0"
-                                                    HorizontalAlignment="Left"
-                                                    FontFamily="{StaticResource SymbolThemeFontFamily}"
-                                                    Glyph="&#xE10A;" />
-                                            </Button>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ListView.ItemTemplate>
-                            </ListView>
-                        </StackPanel>
-                    </Flyout>
-                </Button.Flyout>
-            </Button>
-
         </StackPanel>
+        <Button
+            HorizontalAlignment="Right"
+            Grid.Column="3"
+            Width="40"
+            x:Name="ButtonPlayList"
+            Height="40"
+            Margin="10,10,55,10"
+            CornerRadius="20"
+            Background="Transparent">
+            <FontIcon
+                FontFamily="{StaticResource SymbolThemeFontFamily}"
+                Glyph="&#xE14C;" />
+            <Button.Flyout>
+                <Flyout>
+                    <StackPanel
+                        Orientation="Vertical">
+                        <StackPanel
+                            Orientation="Horizontal">
+                            <Button
+                                Click="ButtonCleanAll_OnClick"
+                                Content="清除全部" />
+                            <Button
+                                Click="ButtonAddLocal_OnClick"
+                                Content="添加本地" />
+                        </StackPanel>
+                        <ListView
+                            SelectionMode="Single"
+                            Name="ListBoxPlayList"
+                            SelectionChanged="ListBoxPlayList_OnSelectionChanged"
+                            Height="500"
+                            Width="400">
+                            <ListView.ItemTemplate>
+                                <DataTemplate
+                                    x:DataType="local:ListViewPlayItem">
+                                    <StackPanel
+                                        Orientation="Horizontal">
+                                        <StackPanel
+                                            Width="340"
+                                            Orientation="Vertical">
+                                            <TextBlock
+                                                Text="{x:Bind Name}" />
+                                            <TextBlock
+                                                Foreground="Gray"
+                                                Text="{x:Bind Artist}" />
+                                        </StackPanel>
+                                        <Button
+                                            Width="30"
+                                            Height="30"
+                                            Background="Transparent"
+                                            Click="PlayListRemove_OnClick"
+                                            Tag="{x:Bind index}">
+                                            <FontIcon
+                                                Margin="-5,0,0,0"
+                                                HorizontalAlignment="Left"
+                                                FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                                Glyph="&#xE10A;" />
+                                        </Button>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </StackPanel>
+                </Flyout>
+            </Button.Flyout>
+        </Button>
         <Button Grid.Column="3"
                 HorizontalAlignment="Right"
             Width="40"
             Height="40"
-            Margin="10"
+            Margin="10,10,10,10"
             CornerRadius="20"
             Click="ButtonExpand_OnClick"
             Name="ButtonExpand"
@@ -437,7 +468,7 @@
             Grid.Column="3"
             Width="40"
             Height="40"
-            Margin="10"
+            Margin="10,10,10,10"
             CornerRadius="20"
             Click="ButtonCollapse_OnClick"
             Name="ButtonCollapse"
