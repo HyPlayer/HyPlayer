@@ -378,10 +378,15 @@
                                 <ListView.ItemTemplate>
                                     <DataTemplate x:DataType="local:ListViewPlayItem">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock
+                                            <StackPanel
                                                 Width="340"
-                                                Text="{x:Bind Name}"
-                                                controls:DockPanel.Dock="Left" />
+                                                Orientation="Vertical">
+                                                <TextBlock
+                                                    Text="{x:Bind Name}" />
+                                                <TextBlock
+                                                    Foreground="Gray"
+                                                    Text="{x:Bind Artist}" />
+                                            </StackPanel>
                                             <Button
                                                 Width="30"
                                                 Height="30"

@@ -114,7 +114,7 @@ namespace HyPlayer.Controls
             ObservableCollection<ListViewPlayItem> Contacts = new ObservableCollection<ListViewPlayItem>();
             for (int i = 0; i < HyPlayList.List.Count; i++)
             {
-                Contacts.Add(new ListViewPlayItem(HyPlayList.List[i].Name,i ));
+                Contacts.Add(new ListViewPlayItem(HyPlayList.List[i].Name, i, HyPlayList.List[i].AudioInfo.Artist));
             }
             ListBoxPlayList.ItemsSource = Contacts;
             ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
@@ -252,17 +252,21 @@ namespace HyPlayer.Controls
     public class ListViewPlayItem
     {
         public string Name { get; private set; }
+        public string Artist { get; private set; }
+        public string DisplayName => Artist + " - " + Name;
+
         public int index { get; private set; }
 
-        public ListViewPlayItem(string name, int index)
+        public ListViewPlayItem(string name, int index, string artist)
         {
             Name = name;
+            Artist = artist;
             this.index = index;
         }
 
         public override string ToString()
         {
-            return Name;
+            return Artist + " - " + Name;
         }
     }
 

@@ -265,6 +265,7 @@ namespace HyPlayer.HyPlayControl
                 if (PlaybackList.Items.Count <= i || List[i].MediaItem == null)
                 {
                     MediaPlaybackItem mediaPlaybackItem;
+                    RandomAccessStreamReference rasr;
                     if (List[i].ItemType == HyPlayItemType.Netease)
                     {
                         try
@@ -287,12 +288,13 @@ namespace HyPlayer.HyPlayControl
 
                             mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromUri(new Uri(List[i].NcPlayItem.url)));
                         }
-
+                        rasr = RandomAccessStreamReference.CreateFromUri(new Uri(List[i].NcPlayItem.Album.cover+"?param="+StaticSource.PICSIZE_AUDIO_PLAYER_COVER));
                         List[i].MediaItem = mediaPlaybackItem;
                     }
                     else
                     {
                         mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(List[i].AudioInfo.LocalSongFile));
+                        rasr = List[i].AudioInfo.Thumbnail;
                     }
 
                     var properties = mediaPlaybackItem.GetDisplayProperties();
@@ -300,13 +302,7 @@ namespace HyPlayer.HyPlayControl
                     properties.MusicProperties.AlbumTitle = List[i].AudioInfo.Album;
                     properties.MusicProperties.Artist = List[i].AudioInfo.Artist;
                     properties.MusicProperties.Title = List[i].AudioInfo.SongName;
-
-                    try
-                    {
-                        properties.Thumbnail = List[i].AudioInfo.Thumbnail;
-                    }
-                    catch { }
-
+                    properties.Thumbnail = rasr;
                     List[i].MediaItem = mediaPlaybackItem;
 
                     List[i].MediaItem.ApplyDisplayProperties(properties);
