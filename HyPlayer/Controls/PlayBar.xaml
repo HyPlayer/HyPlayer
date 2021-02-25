@@ -63,6 +63,12 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter
+                            Target="MainControlGrid.(Grid.Column)"
+                            Value="0" />
+                        <Setter
+                            Target="MainControlGrid.(Grid.ColumnSpan)"
+                            Value="4" />
+                        <Setter
                             Target="GridThis.Visibility"
                             Value="Collapsed"></Setter>
                     </VisualState.Setters>
@@ -80,8 +86,11 @@
                             Target="GridThis.Visibility"
                             Value="Visible"></Setter>
                         <Setter
+                            Target="MainControlGrid.(Grid.Column)"
+                            Value="0" />
+                        <Setter
                             Target="MainControlGrid.(Grid.ColumnSpan)"
-                            Value="2" />
+                            Value="4" />
                         <Setter
                             Target="BtnLike.Visibility"
                             Value="Collapsed"></Setter>
@@ -112,9 +121,6 @@
                         <Setter
                             Target="SubControlGrid.Visibility"
                             Value="Collapsed" />
-                        <Setter
-                            Target="MainControlGrid.(Grid.ColumnSpan)"
-                            Value="2" />
                         <Setter
                             Target="AlbumImage.Visibility"
                             Value="Collapsed" />
@@ -159,8 +165,11 @@
                             Target="SubControlGrid.Visibility"
                             Value="Collapsed" />
                         <Setter
+                            Target="MainControlGrid.(Grid.Column)"
+                            Value="0" />
+                        <Setter
                             Target="MainControlGrid.(Grid.ColumnSpan)"
-                            Value="2" />
+                            Value="4" />
                         <Setter
                             Target="AlbumImage.Visibility"
                             Value="Visible" />
@@ -319,6 +328,7 @@
         </Grid>
         <StackPanel
             Orientation="Horizontal"
+            Margin="0,0,50,0"
             HorizontalAlignment="Right"
             Name="SubControlGrid"
             Grid.Column="3">
@@ -407,31 +417,35 @@
                     </Flyout>
                 </Button.Flyout>
             </Button>
-            <Button
-                Width="40"
-                Height="40"
-                Margin="10"
-                CornerRadius="20"
-                Click="ButtonExpand_OnClick"
-                Name="ButtonExpand"
-                Background="Transparent">
-                <FontIcon
-                    FontFamily="{StaticResource SymbolThemeFontFamily}"
-                    Glyph="&#xE971;" />
-            </Button>
-            <Button
-                Width="40"
-                Height="40"
-                Margin="10"
-                CornerRadius="20"
-                Click="ButtonCollapse_OnClick"
-                Name="ButtonCollapse"
-                Visibility="Collapsed"
-                Background="Transparent">
-                <FontIcon
-                    FontFamily="{StaticResource SymbolThemeFontFamily}"
-                    Glyph="&#xE972;" />
-            </Button>
+
         </StackPanel>
+        <Button Grid.Column="3"
+                HorizontalAlignment="Right"
+            Width="40"
+            Height="40"
+            Margin="10"
+            CornerRadius="20"
+            Click="ButtonExpand_OnClick"
+            Name="ButtonExpand"
+            Background="Transparent">
+            <FontIcon
+                FontFamily="{StaticResource SymbolThemeFontFamily}"
+                Glyph="&#xE971;" />
+        </Button>
+        <Button
+            HorizontalAlignment="Right"
+            Grid.Column="3"
+            Width="40"
+            Height="40"
+            Margin="10"
+            CornerRadius="20"
+            Click="ButtonCollapse_OnClick"
+            Name="ButtonCollapse"
+            Visibility="Collapsed"
+            Background="Transparent">
+            <FontIcon
+                FontFamily="{StaticResource SymbolThemeFontFamily}"
+                Glyph="&#xE972;" />
+        </Button>
     </Grid>
 </UserControl>

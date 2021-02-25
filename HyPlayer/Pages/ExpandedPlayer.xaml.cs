@@ -35,9 +35,8 @@ namespace HyPlayer.Pages
         private int sclock = 0;
         private bool iscompact = false;
         private bool loaded = false;
-        public int showsize;
-        public int hidsize;
-        public double LyricWidth;
+        public double showsize;
+        public double hidsize;
 
         public ExpandedPlayer()
         {
@@ -53,14 +52,9 @@ namespace HyPlayer.Pages
 
         private void Current_SizeChanged(object sender, WindowSizeChangedEventArgs e)
         {
-            LyricWidth = Window.Current.Bounds.Width * 0.4;
+            //LyricWidth = Math.Max(Window.Current.Bounds.Width * 0.4,LyricBoxContainer.ActualWidth);
             showsize = Math.Max((int)Window.Current.Bounds.Width / 50, 18);
             hidsize = Math.Max((int)Window.Current.Bounds.Width / 80, 14);
-            foreach (UIElement lyricBoxChild in LyricBox.Children)
-            {
-                if (lyricBoxChild is LyricItem li)
-                    li.Width = LyricWidth;
-            }
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -96,9 +90,10 @@ namespace HyPlayer.Pages
                                 sclock--;
                                 return;
                             }
+
                             var transform = lastlrcitem?.TransformToVisual((UIElement)LyricBoxContainer.Content);
                             var position = transform?.TransformPoint(new Point(0, 0));
-                            LyricBoxContainer.ChangeView(null, position?.Y - (LyricBoxContainer.ViewportHeight / 3), null, false);
+                            LyricBoxContainer.ChangeView(null, position?.Y - (LyricBoxContainer.ViewportHeight / 3), null, false); ;
                             showed = true;
                         }
                         else
@@ -158,8 +153,6 @@ namespace HyPlayer.Pages
                 }
             }
             LyricBox.Children.Add(new Grid() { Height = blanksize });
-
-            Current_SizeChanged(null, null);
         }
 
 
@@ -204,7 +197,8 @@ namespace HyPlayer.Pages
                     var anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
                     var anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
                     anim3.Configuration = new DirectConnectedAnimationConfiguration();
-                    anim2.Configuration = new DirectConnectedAnimationConfiguration();
+                    if (anim2 != null)
+                        anim2.Configuration = new DirectConnectedAnimationConfiguration();
                     anim1.Configuration = new DirectConnectedAnimationConfiguration();
                     anim3?.TryStart(TextBlockSinger);
                     anim1?.TryStart(TextBlockSongTitle);
@@ -217,7 +211,8 @@ namespace HyPlayer.Pages
         public void StartCollapseAnimation()
         {
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TextBlockSongTitle);
-            ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", ImageAlbum);
+            if (ImageAlbum.Visibility == Visibility.Visible)
+                ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", ImageAlbum);
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TextBlockSinger);
         }
 
@@ -249,7 +244,6 @@ namespace HyPlayer.Pages
                         Current_SizeChanged(null, null);
                     }));
                 });
-                ImageAlbum.Visibility = Visibility.Visible;
                 _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
                 iscompact = false;
             }

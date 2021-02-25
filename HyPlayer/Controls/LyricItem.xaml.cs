@@ -29,13 +29,12 @@ namespace HyPlayer.Controls
     public sealed partial class LyricItem : UserControl
     {
         public readonly SongLyric Lrc;
-        private int showsize => Common.PageExpandedPlayer.showsize;
-        private int hidsize => Common.PageExpandedPlayer.hidsize;
+        public double showsize => Common.PageExpandedPlayer.showsize;
+        public double hidsize => Common.PageExpandedPlayer.hidsize;
 
-        private int actualsize => showing ? showsize : hidsize;
-        private double CopWidth => Common.PageExpandedPlayer.LyricWidth;
+        public double actualsize => showing ? showsize : hidsize;
 
-        private bool showing = false;
+        public bool showing = false;
         public LyricItem(SongLyric lrc)
         {
 
@@ -62,8 +61,8 @@ namespace HyPlayer.Controls
             showing = true;
             TextBoxPureLyric.FontWeight = FontWeights.ExtraBold;
             TextBoxTranslation.FontWeight = FontWeights.ExtraBold;
-            TextBoxTranslation.FontSize = showsize;
             TextBoxPureLyric.FontSize = showsize;
+            TextBoxTranslation.FontSize = showsize;
         }
 
         public void OnHind()
@@ -71,8 +70,8 @@ namespace HyPlayer.Controls
             showing = false;
             TextBoxPureLyric.FontWeight = FontWeights.Normal;
             TextBoxTranslation.FontWeight = FontWeights.Normal;
-            TextBoxTranslation.FontSize = hidsize;
             TextBoxPureLyric.FontSize = hidsize;
+            TextBoxTranslation.FontSize = hidsize;
         }
     }
 }

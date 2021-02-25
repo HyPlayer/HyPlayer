@@ -51,7 +51,7 @@ namespace HyPlayer.Controls
             this.InitializeComponent();
             HyPlayList.OnPlayItemChange += LoadPlayingFile;
             HyPlayList.OnPlayPositionChange += OnPlayPositionChange;
-            HyPlayList.OnPlayListAdd += HyPlayList_OnPlayListAdd; 
+            HyPlayList.OnPlayListAdd += HyPlayList_OnPlayListAdd;
             //TestFile();
         }
 
@@ -184,7 +184,8 @@ namespace HyPlayer.Controls
             Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer), null,
                 new EntranceNavigationTransitionInfo());
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TbSongName);
-            ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", AlbumImage);
+            if (AlbumImage.Visibility == Visibility.Visible)
+                ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", AlbumImage);
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TbSingerName);
             Common.PageExpandedPlayer.StartExpandAnimation();
             GridSongInfo.Visibility = Visibility.Collapsed;
@@ -198,11 +199,13 @@ namespace HyPlayer.Controls
             var anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
             var anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
             anim3.Configuration = new DirectConnectedAnimationConfiguration();
-            anim2.Configuration = new DirectConnectedAnimationConfiguration();
+            if (anim2 != null)
+                anim2.Configuration = new DirectConnectedAnimationConfiguration();
             anim1.Configuration = new DirectConnectedAnimationConfiguration();
             anim3?.TryStart(TbSingerName);
             anim1?.TryStart(TbSongName);
-            anim2?.TryStart(AlbumImage);
+            if (AlbumImage.Visibility == Visibility.Visible)
+                anim2?.TryStart(AlbumImage);
             ButtonExpand.Visibility = Visibility.Visible;
             ButtonCollapse.Visibility = Visibility.Collapsed;
             Common.PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));

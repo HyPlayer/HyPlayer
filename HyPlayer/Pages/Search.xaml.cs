@@ -36,6 +36,7 @@ namespace HyPlayer.Pages
             var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Cloudsearch, new Dictionary<string, object>() { { "keywords", TextBoxSearchText.Text } });
             if (isOk)
             {
+                int idx = 0;
                 foreach (JToken song in json["result"]["songs"].ToArray())
                 {
                     NCSong NCSong = new NCSong()
@@ -59,7 +60,7 @@ namespace HyPlayer.Pages
                             name = t["name"].ToString()
                         });
                     });
-                    SearchResultContainer.Children.Add(new SingleNCSong(NCSong));
+                    SearchResultContainer.Children.Add(new SingleNCSong(NCSong,idx++));
                 }
             }
         }

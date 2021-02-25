@@ -7,10 +7,10 @@
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
 	mc:Ignorable="d"
-	Height="300"
-	Width="250"
-	d:DesignHeight="300"
-	d:DesignWidth="250">
+	Height="250"
+	Width="200"
+	d:DesignHeight="250"
+	d:DesignWidth="200">
 	<Grid
 		CornerRadius="8">
 		<Grid
@@ -24,8 +24,8 @@
                 <Rectangle
 					x:Name="ImageContainer"
                     Grid.RowSpan="2"
-					Width="250"
-					Height="250"
+					Width="200"
+					Height="200"
                     RadiusX="8"
                     RadiusY="8">
                     <Rectangle.Fill>
@@ -44,7 +44,7 @@
 				Grid.Row="1"
 				CornerRadius="4">
 				<TextBlock
-					Width="250"
+					Width="200"
 					TextWrapping="WrapWholeWords"
 					x:Name="TextBlockPLAuthor"
 					Foreground="#FF262626"
@@ -52,7 +52,7 @@
 					Margin="10,37,19,9"
 					FontSize="10" />
 				<TextBlock
-					Width="250"
+					Width="200"
 					x:Name="TextBlockPLName"
 					TextWrapping="WrapWholeWords"
 					Text="歌单名称"

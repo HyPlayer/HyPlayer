@@ -407,6 +407,12 @@ namespace HyPlayer.HyPlayControl
                 if (!TimeSpan.TryParse("00:" + prefix, out TimeSpan time))
                     continue;
                 string lrctxt = LyricTextLine.Substring(LyricTextLine.IndexOf(']') + 1);
+                while (lrctxt.Trim().StartsWith('['))
+                {
+                    //一句双时间
+                    Lyrics = Lyrics.Union(ConvertPureLyric(lrctxt)).ToList();
+                    lrctxt = lrctxt.Substring(LyricTextLine.IndexOf(']') + 1);
+                }
                 //NLyric 的双语歌词 - 夹带私货
                 string translation = null;
                 if (LyricTextLine.IndexOf('「') != -1 && LyricTextLine.IndexOf('」') != -1)
@@ -455,6 +461,11 @@ namespace HyPlayer.HyPlayControl
                 if (!TimeSpan.TryParse("00:" + prefix, out TimeSpan time))
                     continue;
                 string lrctxt = LyricTextLine.Substring(LyricTextLine.IndexOf(']') + 1);
+                while (lrctxt.Trim().StartsWith('['))
+                {
+                    //一句双时间
+                    ConvertTranslation(lrctxt,Lyrics);
+                }
                 for (int i = 0; i < Lyrics.Count; i++)
                 {
                     var songLyric = Lyrics[i];

@@ -55,6 +55,7 @@ namespace HyPlayer.Pages
                         (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail, new Dictionary<string, object> { ["ids"] = string.Join(",", trackIds) });
                         if (isOk)
                         {
+                            int idx = 0;
                             foreach (JObject song in json["songs"])
                             {
                                 NCSong NCSong = new NCSong()
@@ -75,7 +76,7 @@ namespace HyPlayer.Pages
                                     id=t["id"].ToString(),
                                     name = t["name"].ToString()
                                 });});
-                                SongContainer.Children.Add(new SingleNCSong(NCSong));
+                                SongContainer.Children.Add(new SingleNCSong(NCSong, idx++));
                             }
                         }
                     }

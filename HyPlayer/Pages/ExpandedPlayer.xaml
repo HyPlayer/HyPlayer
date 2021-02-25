@@ -48,8 +48,8 @@
                 <VisualState>
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger
-                            MinWindowWidth="300">
-                            <!--正常模式 -->
+                            MinWindowWidth="800">
+                            <!--宽屏模式 -->
                         </AdaptiveTrigger>
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
@@ -65,6 +65,35 @@
                         <Setter
                             Target="ImageAlbum.(Grid.RowSpan)"
                             Value="8" />
+
+                        <Setter
+                            Target="DockPanelRight.Visibility"
+                            Value="Visible" />
+                        <Setter
+                            Target="StackPanelTiny.Visibility"
+                            Value="Collapsed" />
+                        <Setter
+                            Target="ProgressBarPlayProg.Visibility"
+                            Value="Collapsed" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger
+                            MinWindowWidth="300">
+                            <!--正常模式 -->
+                        </AdaptiveTrigger>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter
+                            Target="ImageAlbum.Visibility"
+                            Value="Collapsed" />
+                        <Setter
+                            Target="DockPanelRight.(Grid.Column)"
+                            Value="0" />
+                        <Setter
+                            Target="DockPanelRight.(Grid.ColumnSpan)"
+                            Value="12" />
                         <Setter
                             Target="DockPanelRight.Visibility"
                             Value="Visible" />

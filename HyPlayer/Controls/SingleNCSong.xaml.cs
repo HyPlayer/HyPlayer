@@ -27,12 +27,14 @@ namespace HyPlayer.Controls
     public sealed partial class SingleNCSong : UserControl
     {
         private NCSong ncsong;
-        public SingleNCSong(NCSong song)
+        public SingleNCSong(NCSong song,int order)
         {
             this.InitializeComponent();
             ncsong = song;
             ImageRect.ImageSource = new BitmapImage(new Uri(song.Album.cover+ "?param="+StaticSource.PICSIZE_SINGLENCSONG_COVER));
             TextBlockSongname.Text = song.songname;
+            TextBlockAlbum.Text = song.Album.name;
+            OrderId.Text = order.ToString();
             TextBlockArtist.Text = string.Join(" / ", song.Artist.Select(ar => ar.name));
         }
 
