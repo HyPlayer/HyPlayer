@@ -55,7 +55,7 @@
 				Orientation="Vertical">
                 <controls:DockPanel
                     LastChildFill="True"
-                    Name="GridPersonalInformation">
+                    x:Name="GridPersonalInformation">
                     <Rectangle
                         x:Name="RectangleImage"
                         RadiusX="10"

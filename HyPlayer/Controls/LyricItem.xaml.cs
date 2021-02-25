@@ -25,18 +25,21 @@ using AcrylicBrush = Microsoft.UI.Xaml.Media.AcrylicBrush;
 
 namespace HyPlayer.Controls
 {
+    
     public sealed partial class LyricItem : UserControl
     {
         public readonly SongLyric Lrc;
-        private int showsize = 20;
-        private int hidsize = 14;
+        private int showsize => Common.PageExpandedPlayer.showsize;
+        private int hidsize => Common.PageExpandedPlayer.hidsize;
+
+        private int actualsize => showing ? showsize : hidsize;
+        private double CopWidth => Common.PageExpandedPlayer.LyricWidth;
+
         private bool showing = false;
         public LyricItem(SongLyric lrc)
         {
 
             this.InitializeComponent();
-            Window.Current.SizeChanged += Current_SizeChanged;
-            Current_SizeChanged(null, null);
             Lrc = lrc;
             TextBoxPureLyric.Text = Lrc.PureLyric;
             if (Lrc.HaveTranslation)
@@ -52,42 +55,6 @@ namespace HyPlayer.Controls
         public async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)
         {
             await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority, () => { action(); });
-        }
-
-        public void Current_SizeChanged(object sender, Windows.UI.Core.WindowSizeChangedEventArgs e)
-        {
-
-            this.Width = Window.Current.Bounds.Width * 0.4;
-            showsize = Math.Max((int)Window.Current.Bounds.Width / 50, 18);
-            hidsize = Math.Max((int)Window.Current.Bounds.Width / 80, 14);
-            /*
-             * 其他几种大小的算法 - 最后敲定了这一种
-             *
-             if (e != null)
-                   {
-                   this.Width = e.Size.Width * 0.4;
-                   showsize = Math.Max((int)(e.Size.Width * 0.025), 18);
-                   hidsize = Math.Max((int)(e.Size.Width * 0.020), 14);
-                   }
-                   else if(Common.PageExpandedPlayer.LyricBoxContainer.ViewportWidth!=0)
-                   {
-                   this.Width = Common.PageExpandedPlayer.LyricBoxContainer.ViewportWidth;
-                   showsize = Math.Max((int)(Common.PageExpandedPlayer.LyricBoxContainer.ViewportWidth * 0.048), 18);
-                   hidsize = Math.Max((int)(Common.PageExpandedPlayer.LyricBoxContainer.ViewportWidth * 0.028), 14);
-                   }
-             */
-
-            if (showing)
-            {
-                TextBoxTranslation.FontSize = showsize;
-                TextBoxPureLyric.FontSize = showsize;
-            }
-            else
-            {
-                TextBoxTranslation.FontSize = hidsize;
-                TextBoxPureLyric.FontSize = hidsize;
-            }
-
         }
 
         public void OnShow()

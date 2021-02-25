@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Media.Playback;
+using Windows.UI.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -34,6 +35,9 @@ namespace HyPlayer.Pages
         private int sclock = 0;
         private bool iscompact = false;
         private bool loaded = false;
+        public int showsize;
+        public int hidsize;
+        public double LyricWidth;
 
         public ExpandedPlayer()
         {
@@ -43,7 +47,17 @@ namespace HyPlayer.Pages
             Common.PageExpandedPlayer = this;
             HyPlayList.OnPlayPositionChange += RefreshLyricTime;
             HyPlayList.OnPlayItemChange += OnSongChange;
+            Window.Current.SizeChanged += Current_SizeChanged;
+            Current_SizeChanged(null, null);
         }
+
+        private void Current_SizeChanged(object sender, WindowSizeChangedEventArgs e)
+        {
+            LyricWidth = Window.Current.Bounds.Width * 0.4;
+            showsize = Math.Max((int)Window.Current.Bounds.Width / 50, 18);
+            hidsize = Math.Max((int)Window.Current.Bounds.Width / 80, 14);
+        }
+
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
@@ -52,7 +66,12 @@ namespace HyPlayer.Pages
             ImageAlbum.Visibility = Visibility.Collapsed;
             TextBlockSinger.Visibility = Visibility.Collapsed;
             TextBlockSongTitle.Visibility = Visibility.Collapsed;
-            OnSongChange(HyPlayList.List[HyPlayList.NowPlaying]);
+            try
+            {
+                OnSongChange(HyPlayList.List[HyPlayList.NowPlaying]);
+            }
+            catch { }
+
         }
 
         private void RefreshLyricTime(TimeSpan nowtime)
@@ -137,6 +156,8 @@ namespace HyPlayer.Pages
             LyricBox.Children.Add(new Grid() { Height = blanksize });
         }
 
+
+
         public void OnSongChange(HyPlayItem mpi)
         {
             if (mpi != null)
@@ -207,12 +228,12 @@ namespace HyPlayer.Pages
                 {
                     this.Invoke((() =>
                     {
+                        Current_SizeChanged(null, null);
+                        //待优化
                         foreach (UIElement lyricBoxChild in LyricBox.Children)
                         {
                             if (lyricBoxChild is LyricItem li)
-                            {
-                                li.Current_SizeChanged(null, null);
-                            }
+                                li.Width = LyricWidth;
                         }
                     }));
                 });
@@ -225,12 +246,12 @@ namespace HyPlayer.Pages
                 {
                     this.Invoke((() =>
                     {
+                        Current_SizeChanged(null, null);
+                        //待优化
                         foreach (UIElement lyricBoxChild in LyricBox.Children)
                         {
                             if (lyricBoxChild is LyricItem li)
-                            {
-                                li.Current_SizeChanged(null, null);
-                            }
+                                li.Width = LyricWidth;
                         }
                     }));
                 });

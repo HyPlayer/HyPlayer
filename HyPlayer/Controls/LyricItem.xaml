@@ -10,8 +10,7 @@
     d:DesignHeight="70"
     d:DesignWidth="500"
     FocusVisualPrimaryThickness="3"
-    FocusVisualSecondaryThickness="1"
-    >
+    FocusVisualSecondaryThickness="1">
 
     <Grid>
         <controls:DockPanel
@@ -21,14 +20,14 @@
                 TextWrapping="WrapWholeWords"
                 Name="TextBoxPureLyric"
                 Text="原句"
-                FontSize="14"
+                FontSize="{x:Bind actualsize}"
                 TextAlignment="Center"></TextBlock>
             <TextBlock
                 controls:DockPanel.Dock="Bottom"
                 TextWrapping="WrapWholeWords"
                 Name="TextBoxTranslation"
                 Text="翻译"
-                FontSize="14"
+                FontSize="{x:Bind actualsize}"
                 TextAlignment="Center"></TextBlock>
         </controls:DockPanel>
     </Grid>

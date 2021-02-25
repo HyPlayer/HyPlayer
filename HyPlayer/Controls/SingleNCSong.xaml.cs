@@ -52,7 +52,7 @@ namespace HyPlayer.Controls
                 TintColor = Windows.UI.Color.FromArgb(255, 0, 142, 230),
                 FallbackColor = Windows.UI.Color.FromArgb(255, 0, 120, 210)
             };
-            _ = AppendMe();
+
         }
 
         private void UIElement_OnPointerEntered(object sender, PointerRoutedEventArgs e)
@@ -80,6 +80,11 @@ namespace HyPlayer.Controls
                 TintColor = Windows.UI.Color.FromArgb(10, 147, 205, 241),
                 FallbackColor = Windows.UI.Color.FromArgb(10, 135, 206, 235)
             };
+        }
+
+        private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
+        {
+            _ = AppendMe();
         }
     }
 }

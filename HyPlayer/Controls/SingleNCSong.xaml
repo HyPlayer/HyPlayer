@@ -13,7 +13,6 @@
     <Grid
         x:Name="Grid1"
         Tapped="Grid1_OnTapped"
-        DoubleTapped="UIElement_OnDoubleTapped"
         PointerEntered="UIElement_OnPointerEntered"
         PointerExited="Grid1_OnPointerExited"
         >
@@ -21,7 +20,7 @@
             <ColumnDefinition Width="70"/>
             <ColumnDefinition Width="2*"/>
             <ColumnDefinition />
-            <ColumnDefinition />
+            <ColumnDefinition  Width="50"/>
         </Grid.ColumnDefinitions>
         <Rectangle
             RadiusX="4"
@@ -44,5 +43,13 @@
             <TextBlock controls:DockPanel.Dock="Top" Name="TextBlockSongname" FontSize="20" Text="歌曲名"/>
             <TextBlock Foreground="Gray" Name="TextBlockArtist" controls:DockPanel.Dock="Bottom" Margin="0,7,0,0" FontSize="13" Text="歌手名"/>
         </controls:DockPanel>
+        <Button
+            Click="ButtonBase_OnClick"
+            Grid.Column="3">
+            <FontIcon
+                Name="PlayStateIcon"
+                FontFamily="{StaticResource SymbolThemeFontFamily}"
+                Glyph="&#xEDB5;"></FontIcon>
+        </Button>
     </Grid>
 </UserControl>

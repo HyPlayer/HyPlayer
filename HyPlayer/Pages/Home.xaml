@@ -7,8 +7,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Background="{ThemeResource SystemControlAcrylicWindowBrush}">
-PageBackgroundThemeBrush}">
-
     <ScrollViewer
         VerticalScrollBarVisibility="Auto">
         <StackPanel
