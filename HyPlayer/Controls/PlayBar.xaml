@@ -5,6 +5,8 @@
     xmlns:local="using:HyPlayer.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:hyPlayControl="using:HyPlayer.HyPlayControl"
     mc:Ignorable="d"
     d:DesignHeight="100"
     d:DesignWidth="1080">
@@ -55,12 +57,14 @@
                 </VisualState>
                 <VisualState>
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="0">
+                        <AdaptiveTrigger
+                            MinWindowWidth="0">
                         </AdaptiveTrigger>
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter
-                            Target="GridThis.Visibility" Value="Collapsed"></Setter>
+                            Target="GridThis.Visibility"
+                            Value="Collapsed"></Setter>
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState>
@@ -356,17 +360,44 @@
                     <Flyout>
                         <StackPanel
                             Orientation="Vertical">
-                            <StackPanel Orientation="Horizontal">
-                            <Button Click="ButtonCleanAll_OnClick" Content="清除全部"/>
-                            <Button Click="ButtonAddLocal_OnClick" Content="添加本地"/>
+                            <StackPanel
+                                Orientation="Horizontal">
+                                <Button
+                                    Click="ButtonCleanAll_OnClick"
+                                    Content="清除全部" />
+                                <Button
+                                    Click="ButtonAddLocal_OnClick"
+                                    Content="添加本地" />
                             </StackPanel>
-                            <ListBox
-                            Name="ListBoxPlayList"
-                            SelectionChanged="ListBoxPlayList_OnSelectionChanged"
-                            Height="500"
-                            Width="400">
-
-                        </ListBox>
+                            <ListView
+                                SelectionMode="Single"
+                                Name="ListBoxPlayList"
+                                SelectionChanged="ListBoxPlayList_OnSelectionChanged"
+                                Height="500"
+                                Width="400">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="local:ListViewPlayItem">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock
+                                                Width="340"
+                                                Text="{x:Bind Name}"
+                                                controls:DockPanel.Dock="Left" />
+                                            <Button
+                                                Width="30"
+                                                Height="30"
+                                                Background="Transparent"
+                                                Click="PlayListRemove_OnClick"
+                                                Tag="{x:Bind index}">
+                                                <FontIcon
+                                                    Margin="-5,0,0,0"
+                                                    HorizontalAlignment="Left"
+                                                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                                    Glyph="&#xE10A;" />
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
                         </StackPanel>
                     </Flyout>
                 </Button.Flyout>

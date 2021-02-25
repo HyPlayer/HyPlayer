@@ -20,6 +20,7 @@ using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
+using HyPlayer.HyPlayControl;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -30,7 +31,6 @@ namespace HyPlayer.Pages
     /// </summary>
     public sealed partial class ExpandedPlayer : Page
     {
-        private Timer timer;
         private int sclock = 0;
         private bool iscompact = false;
         private bool loaded = false;
@@ -38,15 +38,11 @@ namespace HyPlayer.Pages
         public ExpandedPlayer()
         {
             this.InitializeComponent();
-            SliderVolumn.Value = AudioPlayer.AudioMediaPlayer.Volume * 100;
+            SliderVolumn.Value = HyPlayList.Player.Volume * 100;
             loaded = true;
             Common.PageExpandedPlayer = this;
-
-            timer = new Timer((state =>
-            {
-                this.Invoke((RefreshLyricTime));
-            }), null, 0, 100);
-
+            HyPlayList.OnPlayPositionChange += RefreshLyricTime;
+            HyPlayList.OnPlayItemChange += OnSongChange;
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -56,14 +52,10 @@ namespace HyPlayer.Pages
             ImageAlbum.Visibility = Visibility.Collapsed;
             TextBlockSinger.Visibility = Visibility.Collapsed;
             TextBlockSongTitle.Visibility = Visibility.Collapsed;
-            OnSongChange(AudioPlayer.AudioMediaPlaybackList.CurrentItem);
-            timer = new Timer((state =>
-            {
-                this.Invoke((RefreshLyricTime));
-            }), null, 0, 100);
+            OnSongChange(HyPlayList.List[HyPlayList.NowPlaying]);
         }
 
-        private void RefreshLyricTime()
+        private void RefreshLyricTime(TimeSpan nowtime)
         {
             LyricItem lastlrcitem = null;
             bool showed = false;
@@ -71,7 +63,7 @@ namespace HyPlayer.Pages
             {
                 if (lyricBoxChild is LyricItem lrcitem)
                 {
-                    if (AudioPlayer.AudioMediaPlayer.PlaybackSession.Position < lrcitem.Lrc.LyricTime)
+                    if (HyPlayList.Player.PlaybackSession.Position < lrcitem.Lrc.LyricTime)
                     {
                         if (!showed)
                         {
@@ -114,9 +106,9 @@ namespace HyPlayer.Pages
             }
 
             //暂停按钮
-            PlayStateIcon.Glyph = AudioPlayer.AudioMediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing ? "\uEDB4" : "\uEDB5";
+            PlayStateIcon.Glyph = HyPlayList.isPlaying ? "\uEDB4" : "\uEDB5";
             //播放进度
-            ProgressBarPlayProg.Value = AudioPlayer.AudioMediaPlayer.PlaybackSession.Position.TotalMilliseconds;
+            ProgressBarPlayProg.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
         }
 
         public void LoadLyricsBox()
@@ -128,14 +120,14 @@ namespace HyPlayer.Pages
                 blanksize = Window.Current.Bounds.Height / 3;
             }
             LyricBox.Children.Add(new Grid() { Height = blanksize });
-            if (AudioPlayer.Lyrics.Count == 0)
+            if (HyPlayList.Lyrics.Count == 0)
             {
                 LyricItem lrcitem = new LyricItem(SongLyric.PureSong);
                 LyricBox.Children.Add(lrcitem);
             }
             else
             {
-                foreach (SongLyric songLyric in AudioPlayer.Lyrics)
+                foreach (SongLyric songLyric in HyPlayList.Lyrics)
                 {
                     LyricItem lrcitem = new LyricItem(songLyric);
                     lrcitem.Margin = new Thickness(0, 10, 0, 10);
@@ -145,7 +137,7 @@ namespace HyPlayer.Pages
             LyricBox.Children.Add(new Grid() { Height = blanksize });
         }
 
-        public void OnSongChange(MediaPlaybackItem mpi)
+        public void OnSongChange(HyPlayItem mpi)
         {
             if (mpi != null)
             {
@@ -153,15 +145,12 @@ namespace HyPlayer.Pages
                 {
                     try
                     {
-                        ImageAlbum.Source = AudioPlayer.AudioInfos[mpi]
-                            .Picture;
-                        TextBlockSinger.Text = AudioPlayer.AudioInfos[mpi]
-                            .Artist;
-                        TextBlockSongTitle.Text = AudioPlayer.AudioInfos[mpi]
-                            .SongName;
+                        ImageAlbum.Source = new BitmapImage(new Uri(mpi.AudioInfo.Picture));
+                        TextBlockSinger.Text = mpi.AudioInfo.Artist;
+                        TextBlockSongTitle.Text = mpi.AudioInfo.SongName;
                         this.Background = new ImageBrush() { ImageSource = ImageAlbum.Source };
-                        ProgressBarPlayProg.Maximum = AudioPlayer.AudioInfos[mpi].LengthInMilliseconds;
-                        SliderVolumn.Value = AudioPlayer.AudioMediaPlayer.Volume * 100;
+                        ProgressBarPlayProg.Maximum = mpi.AudioInfo.LengthInMilliseconds;
+                        SliderVolumn.Value = HyPlayList.Player.Volume * 100;
                         LoadLyricsBox();
                     }
                     catch (Exception) { }
@@ -253,22 +242,22 @@ namespace HyPlayer.Pages
 
         private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
         {
-            if (AudioPlayer.AudioMediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
-                AudioPlayer.AudioMediaPlayer.Pause();
-            else if (AudioPlayer.AudioMediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Paused)
-                AudioPlayer.AudioMediaPlayer.Play();
-            PlayStateIcon.Glyph = AudioPlayer.AudioMediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing ? "\uEDB5" : "\uEDB4";
+            if (HyPlayList.isPlaying)
+                HyPlayList.Player.Pause();
+            else
+                HyPlayList.Player.Play();
+            PlayStateIcon.Glyph = HyPlayList.isPlaying ? "\uEDB5" : "\uEDB4";
 
         }
 
         private void BtnNextSong_OnClick(object sender, RoutedEventArgs e)
         {
-            AudioPlayer.AudioMediaPlaybackList.MoveNext();
+            HyPlayList.PlaybackList.MoveNext();
         }
 
         private void BtnPreSong_OnClick(object sender, RoutedEventArgs e)
         {
-            AudioPlayer.AudioMediaPlaybackList.MovePrevious();
+            HyPlayList.PlaybackList.MovePrevious();
         }
 
         private void SliderAudioRate_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
@@ -276,7 +265,7 @@ namespace HyPlayer.Pages
             if (loaded)
             {
                 Common.BarPlayBar.SliderAudioRate.Value = e.NewValue;
-                AudioPlayer.AudioMediaPlayer.Volume = e.NewValue / 100;
+                HyPlayList.Player.Volume = e.NewValue / 100;
             }
         }
 

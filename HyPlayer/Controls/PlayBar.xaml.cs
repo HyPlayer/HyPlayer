@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
+using Windows.ApplicationModel.Contacts;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Graphics.Imaging;
@@ -19,11 +21,13 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Markup;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
 using Microsoft.Toolkit.Extensions;
 using Microsoft.UI.Xaml.Media;
@@ -43,7 +47,10 @@ namespace HyPlayer.Controls
         public PlayBar()
         {
             Common.BarPlayBar = this;
+            HyPlayList.OnPlayItemAdd += RefreshSongList;
             this.InitializeComponent();
+            HyPlayList.OnPlayItemChange += LoadPlayingFile;
+            HyPlayList.OnPlayPositionChange += OnPlayPositionChange;
             //TestFile();
         }
 
@@ -58,61 +65,59 @@ namespace HyPlayer.Controls
             var files = await fop.PickMultipleFilesAsync();
             foreach (var file in files)
             {
-                AudioPlayer.AppendFile(file);
+                HyPlayList.AppendFile(file);
             }
-            AudioPlayer.AudioMediaPlayer.Play();
+            HyPlayList.Player.Play();
         }
 
-        public void LoadPlayingFile(MediaPlaybackItem mpi)
+        public void OnPlayPositionChange(TimeSpan ts)
+        {
+            this.Invoke(() =>
+            {
+                try
+                {
+                    var tai = HyPlayList.NowPlayingItem.AudioInfo;
+                    TbSingerName.Text = tai.Artist;
+                    TbSongName.Text = tai.SongName;
+                    SliderProgress.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
+                    PlayStateIcon.Glyph =
+                        HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
+                            ? "\uEDB4"
+                            : "\uEDB5";
+                    //SliderAudioRate.Value = mp.Volume;
+                }
+                catch (Exception)
+                {
+                }
+            });
+        }
+
+        public void LoadPlayingFile(HyPlayItem mpi)
         {
             if (mpi == null) return;
-            AudioPlayer.AudioPlayerTimer?.Dispose();
-            MediaItemDisplayProperties dp = mpi.GetDisplayProperties();
-            AudioInfo ai = AudioPlayer.AudioInfos[mpi];
+            MediaItemDisplayProperties dp = mpi.MediaItem.GetDisplayProperties();
+            AudioInfo ai = mpi.AudioInfo;
             this.Invoke((() =>
             {
                 TbSingerName.Text = ai.Artist;
                 TbSongName.Text = ai.SongName;
-                AlbumImage.Source = ai.Picture;
-                SliderAudioRate.Value = AudioPlayer.AudioMediaPlayer.Volume * 100;
+                AlbumImage.Source = mpi.ItemType == HyPlayItemType.Local ? ai.BitmapImage : new BitmapImage(new Uri(ai.Picture));
+                SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
                 SliderProgress.Minimum = 0;
                 SliderProgress.Maximum = ai.LengthInMilliseconds;
-                ListBoxPlayList.SelectedIndex = (int)AudioPlayer.AudioMediaPlaybackList.CurrentItemIndex;
+                ListBoxPlayList.SelectedIndex = (int)HyPlayList.NowPlaying;
             }));
-            AudioPlayer.AudioPlayerTimer = new Timer((state =>
-            {
-                this.Invoke(() =>
-                {
-                    try
-                    {
-                        var tai = (AudioInfo)state;
-                        TbSingerName.Text = tai.Artist;
-                        TbSongName.Text = tai.SongName;
-                        SliderProgress.Value = AudioPlayer.AudioMediaPlayer.PlaybackSession.Position.TotalMilliseconds;
-                        PlayStateIcon.Glyph = AudioPlayer.AudioMediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing ? "\uEDB4" : "\uEDB5";
-                        //SliderAudioRate.Value = mp.Volume;
-                    }
-                    catch (Exception) { }
-                });
-            }), ai, 1000, 100);
-
         }
 
-        public void RefreshSongList()
+        public void RefreshSongList(HyPlayItem hpi)
         {
-            ListBoxPlayList.Items?.Clear();
-            foreach (MediaPlaybackItem mediaPlaybackItem in AudioPlayer.AudioMediaPlaybackList.Items)
+            ObservableCollection<ListViewPlayItem> Contacts = new ObservableCollection<ListViewPlayItem>();
+            for (int i = 0; i < HyPlayList.List.Count; i++)
             {
-                ListBoxPlayList.Items?.Add(mediaPlaybackItem.GetDisplayProperties().MusicProperties.Artist + " - " + mediaPlaybackItem.GetDisplayProperties().MusicProperties.Title);
+                Contacts.Add(new ListViewPlayItem(HyPlayList.List[i].Name,i ));
             }
-        }
-
-        public void OnSongAdd()
-        {
-            this.Invoke((() =>
-            {
-                RefreshSongList();
-            }));
+            ListBoxPlayList.ItemsSource = Contacts;
+            ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
         }
 
         public async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)
@@ -122,41 +127,41 @@ namespace HyPlayer.Controls
 
         private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
         {
-            if (AudioPlayer.AudioMediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
-                AudioPlayer.AudioMediaPlayer.Pause();
-            else if (AudioPlayer.AudioMediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Paused)
-                AudioPlayer.AudioMediaPlayer.Play();
-            PlayStateIcon.Glyph = AudioPlayer.AudioMediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing ? "\uEDB5" : "\uEDB4";
+            if (HyPlayList.isPlaying)
+                HyPlayList.Player.Pause();
+            else if (!HyPlayList.isPlaying)
+                HyPlayList.Player.Play();
+            PlayStateIcon.Glyph = HyPlayList.isPlaying ? "\uEDB5" : "\uEDB4";
         }
 
         private void SliderAudioRate_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
-            AudioPlayer.AudioMediaPlayer.Volume = e.NewValue / 100;
+            HyPlayList.Player.Volume = e.NewValue / 100;
             if (Common.PageExpandedPlayer != null)
                 Common.PageExpandedPlayer.SliderVolumn.Value = e.NewValue;
         }
 
         private void BtnMute_OnCllick(object sender, RoutedEventArgs e)
         {
-            AudioPlayer.AudioMediaPlayer.IsMuted = !AudioPlayer.AudioMediaPlayer.IsMuted;
-            BtnMuteIcon.Glyph = AudioPlayer.AudioMediaPlayer.IsMuted ? "\uE198" : "\uE15D";
-            SliderAudioRate.Visibility = AudioPlayer.AudioMediaPlayer.IsMuted ? Visibility.Collapsed : Visibility.Visible;
+            HyPlayList.Player.IsMuted = !HyPlayList.Player.IsMuted;
+            BtnMuteIcon.Glyph = HyPlayList.Player.IsMuted ? "\uE198" : "\uE15D";
+            SliderAudioRate.Visibility = HyPlayList.Player.IsMuted ? Visibility.Collapsed : Visibility.Visible;
         }
 
         private void BtnPreviousSong_OnClick(object sender, RoutedEventArgs e)
         {
-            AudioPlayer.AudioMediaPlaybackList.MovePrevious();
+            HyPlayList.PlaybackList.MovePrevious();
         }
 
         private void BtnNextSong_OnClick(object sender, RoutedEventArgs e)
         {
-            AudioPlayer.AudioMediaPlaybackList.MoveNext();
+            HyPlayList.PlaybackList.MoveNext();
         }
 
         private void ListBoxPlayList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (ListBoxPlayList.SelectedIndex != -1 && ListBoxPlayList.SelectedIndex != AudioPlayer.AudioMediaPlaybackList.CurrentItemIndex)
-                AudioPlayer.AudioMediaPlaybackList.MoveTo((uint)ListBoxPlayList.SelectedIndex);
+            if (ListBoxPlayList.SelectedIndex != -1 && ListBoxPlayList.SelectedIndex != HyPlayList.NowPlaying)
+                HyPlayList.PlaybackList.MoveTo((uint)ListBoxPlayList.SelectedIndex);
         }
 
         private void ButtonExpand_OnClick(object sender, RoutedEventArgs e)
@@ -200,7 +205,9 @@ namespace HyPlayer.Controls
 
         private void ButtonCleanAll_OnClick(object sender, RoutedEventArgs e)
         {
-            AudioPlayer.AudioMediaPlaybackList.Items.Clear();
+            HyPlayList.List.Clear();
+            HyPlayList.SyncPlayList();
+            ListBoxPlayList.ItemsSource = new ObservableCollection<ListViewPlayItem>();
         }
 
         private void ButtonAddLocal_OnClick(object sender, RoutedEventArgs e)
@@ -211,7 +218,7 @@ namespace HyPlayer.Controls
         private void SliderProgress_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
             if (canslide)
-                AudioPlayer.AudioMediaPlayer.PlaybackSession.Position = TimeSpan.FromMilliseconds(SliderProgress.Value);
+                HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(SliderProgress.Value);
         }
 
         private void SliderProgress_OnManipulationStarted(object sender, ManipulationStartedRoutedEventArgs e)
@@ -223,6 +230,41 @@ namespace HyPlayer.Controls
         {
             canslide = false;
         }
+
+        private void PlayListRemove_OnClick(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (sender is Button btn)
+                {
+                    HyPlayList.List.RemoveAt(int.Parse(btn.Tag.ToString()));
+                    HyPlayList.SyncPlayList();
+                    RefreshSongList(null);
+                }
+            }
+            catch { }
+
+        }
     }
+
+
+
+    public class ListViewPlayItem
+    {
+        public string Name { get; private set; }
+        public int index { get; private set; }
+
+        public ListViewPlayItem(string name, int index)
+        {
+            Name = name;
+            this.index = index;
+        }
+
+        public override string ToString()
+        {
+            return Name;
+        }
+    }
+
 
 }

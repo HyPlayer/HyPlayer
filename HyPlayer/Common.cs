@@ -37,16 +37,18 @@ namespace HyPlayer
         public static string ToHexStringLower(this byte[] value)
         {
             var sb = new StringBuilder();
-            for (int i = 0; i < value.Length; i++)
-                sb.Append(value[i].ToString("x2"));
+            foreach (var t in value)
+                sb.Append(t.ToString("x2"));
+
             return sb.ToString();
         }
 
         public static string ToHexStringUpper(this byte[] value)
         {
             var sb = new StringBuilder();
-            for (int i = 0; i < value.Length; i++)
-                sb.Append(value[i].ToString("X2"));
+            foreach (var t in value)
+                sb.Append(t.ToString("X2"));
+
             return sb.ToString();
         }
 

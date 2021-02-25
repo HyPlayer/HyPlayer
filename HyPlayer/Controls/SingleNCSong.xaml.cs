@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
@@ -15,6 +16,7 @@ using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
 using Microsoft.UI.Xaml.Media;
 using AcrylicBackgroundSource = Windows.UI.Xaml.Media.AcrylicBackgroundSource;
 
@@ -34,9 +36,10 @@ namespace HyPlayer.Controls
             TextBlockArtist.Text = string.Join(" / ", song.Artist.Select(ar => ar.name));
         }
 
-        public void AppendMe()
+        public async Task<bool> AppendMe()
         {
-            AudioPlayer.AppendNCSong(ncsong);
+            await HyPlayList.AppendNCSong(ncsong);
+            return true;
         }
 
         private void UIElement_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
@@ -49,7 +52,7 @@ namespace HyPlayer.Controls
                 TintColor = Windows.UI.Color.FromArgb(255, 0, 142, 230),
                 FallbackColor = Windows.UI.Color.FromArgb(255, 0, 120, 210)
             };
-            AppendMe();
+            _ = AppendMe();
         }
 
         private void UIElement_OnPointerEntered(object sender, PointerRoutedEventArgs e)

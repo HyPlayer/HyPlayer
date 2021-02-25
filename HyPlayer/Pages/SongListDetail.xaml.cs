@@ -89,13 +89,20 @@ namespace HyPlayer.Pages
 
         private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
         {
-            foreach (UIElement songContainerChild in SongContainer.Children)
+            Task.Run((() =>
             {
-                if (songContainerChild is SingleNCSong singleNcSong)
+                this.Invoke((async () =>
                 {
-                    singleNcSong.AppendMe();
-                }
-            }
+                    foreach (UIElement songContainerChild in SongContainer.Children)
+                    {
+                        if (songContainerChild is SingleNCSong singleNcSong)
+                        {
+                            await singleNcSong.AppendMe();
+                        }
+                    }
+                }));
+            }));
+
         }
     }
 }

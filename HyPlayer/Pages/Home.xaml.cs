@@ -41,11 +41,11 @@ namespace HyPlayer.Pages
 
         public async void LoadRcmdSonglist()
         {
-            _ = Task.Run((() =>
+            await Task.Run((() =>
             {
                 this.Invoke((async () =>
                 {
-                    var (isOk,json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendResource);
+                    var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendResource);
                     if (isOk)
                     {
                         foreach (JToken PlaylistItemJson in json["recommend"].ToArray())
@@ -73,34 +73,34 @@ namespace HyPlayer.Pages
 
         public async void LoadRanklist()
         {
-            _ = Task.Run((() =>
-            {
-                this.Invoke((async () =>
-                {
-                    var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Toplist);
-                    if (isOk)
-                    {
-                        foreach (JToken PlaylistItemJson in json["list"].ToArray())
-                        {
-                            NCPlayList ncp = new NCPlayList()
-                            {
-                                cover = PlaylistItemJson["coverImgUrl"].ToString(),
-                                creater = new NCUser()
-                                {
-                                    avatar = "https://p1.music.126.net/KxePid7qTvt6V2iYVy-rYQ==/109951165050882728.jpg",
-                                    id = PlaylistItemJson["userId"].ToString(),
-                                    name = PlaylistItemJson["updateFrequency"].ToString(),
-                                    signature = "网易云音乐官方帐号"
-                                },
-                                plid = PlaylistItemJson["id"].ToString(),
-                                name = PlaylistItemJson["name"].ToString(),
-                                desc = PlaylistItemJson["description"].ToString()
-                            };
-                            RankList.Children.Add(new PlaylistItem(ncp));
-                        }
-                    }
-                }));
-            }));
+            await Task.Run((() =>
+             {
+                 this.Invoke((async () =>
+                 {
+                     var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Toplist);
+                     if (isOk)
+                     {
+                         foreach (JToken PlaylistItemJson in json["list"].ToArray())
+                         {
+                             NCPlayList ncp = new NCPlayList()
+                             {
+                                 cover = PlaylistItemJson["coverImgUrl"].ToString(),
+                                 creater = new NCUser()
+                                 {
+                                     avatar = "https://p1.music.126.net/KxePid7qTvt6V2iYVy-rYQ==/109951165050882728.jpg",
+                                     id = PlaylistItemJson["userId"].ToString(),
+                                     name = PlaylistItemJson["updateFrequency"].ToString(),
+                                     signature = "网易云音乐官方帐号"
+                                 },
+                                 plid = PlaylistItemJson["id"].ToString(),
+                                 name = PlaylistItemJson["name"].ToString(),
+                                 desc = PlaylistItemJson["description"].ToString()
+                             };
+                             RankList.Children.Add(new PlaylistItem(ncp));
+                         }
+                     }
+                 }));
+             }));
         }
     }
 }

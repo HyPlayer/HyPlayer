@@ -3,6 +3,23 @@ using System.Collections.Generic;
 
 namespace HyPlayer.Classes
 {
+    public struct PureLyricInfo
+    {
+        public string PureLyrics;
+        public string TrLyrics;
+    }
+    public struct SongLyric
+    {
+        public string PureLyric;
+        public string Translation;
+        public bool HaveTranslation;
+        public TimeSpan LyricTime;
+
+        public static SongLyric PureSong = new SongLyric()
+        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏" };
+        public static SongLyric NoLyric = new SongLyric()
+        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏" };
+    }
 
     public struct NCCookie
     {
