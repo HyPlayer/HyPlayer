@@ -85,6 +85,10 @@
                                 Text="签名"
                                 FontSize="18"
                                 Foreground="Gray"/>
+                            <Button
+                                Margin="0,10,0,0"
+                                Content="退出登录"
+                                Click="Logout_OnClick" />
                         </StackPanel>
                     </controls:DockPanel>
 

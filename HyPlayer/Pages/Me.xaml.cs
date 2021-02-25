@@ -6,6 +6,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -15,6 +16,7 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.Classes;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
 using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
@@ -91,6 +93,22 @@ namespace HyPlayer.Pages
                     ContentFrame.Navigate(typeof(SongListFrame), null,new EntranceNavigationTransitionInfo());
                     break;
             }
+        }
+
+        private async void Logout_OnClick(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Common.ncapi = new CloudMusicApi();
+                StorageFile sf = await Windows.Storage.ApplicationData.Current.LocalFolder.GetFileAsync("Settings\\UserPassword");
+                await sf.DeleteAsync();
+                Common.Logined = false;
+                Common.LoginedUser = new LoginedUser();
+                Common.PageMain.MainFrame.Navigate(typeof(BlankPage));
+                Common.PageMain.MainFrame.Navigate(typeof(BasePage));
+            }
+            catch { }
+
         }
     }
 }
