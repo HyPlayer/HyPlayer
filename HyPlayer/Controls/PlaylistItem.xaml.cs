@@ -49,6 +49,7 @@ namespace HyPlayer.Controls
 
         private void UIElement_OnTapped(object sender, TappedRoutedEventArgs e)
         {
+            ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongListExpand", ImageContainer);
             Common.BaseFrame.Navigate(typeof(SongListDetail), playList,new DrillInNavigationTransitionInfo());
         }
 

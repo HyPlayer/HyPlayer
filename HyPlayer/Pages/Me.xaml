@@ -79,16 +79,11 @@
                             <TextBlock
                                 Name="TextBoxUserName"
                                 Text="用户名"
-                                FontSize="72"></TextBlock>
+                                FontSize="36"></TextBlock>
                             <TextBlock
                                 Name="TextBoxSignature"
                                 Text="签名"
-                                FontSize="25"
-                                Foreground="Gray"></TextBlock>
-                            <TextBlock
-                                Name="TextBlockLevel"
-                                Text="LV"
-                                FontSize="25"
+                                FontSize="18"
                                 Foreground="Gray"/>
                         </StackPanel>
                     </controls:DockPanel>

@@ -22,6 +22,7 @@
 			</Grid.RowDefinitions>
 
                 <Rectangle
+					x:Name="ImageContainer"
                     Grid.RowSpan="2"
 					Width="250"
 					Height="250"

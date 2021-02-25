@@ -12,6 +12,7 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
@@ -80,6 +81,12 @@ namespace HyPlayer.Pages
                     }
                 });
             }));
+            var anim = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongListExpand");
+            if (anim != null)
+            {
+                anim.TryStart(RectangleImage);
+            }
+
         }
 
         public async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)

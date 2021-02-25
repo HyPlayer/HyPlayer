@@ -107,7 +107,6 @@
             <RowDefinition />
             <RowDefinition />
         </Grid.RowDefinitions>
-
         <Image
             x:FieldModifier="public"
             Grid.Column="1"
@@ -191,7 +190,6 @@
                 ValueChanged="SliderAudioRate_ValueChanged"
                 Name="SliderVolumn" />
         </Grid>
-
         <controls:DockPanel
             x:Name="DockPanelRight"
             LastChildFill="True"

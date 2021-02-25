@@ -56,8 +56,12 @@ namespace HyPlayer.Pages
             LyricWidth = Window.Current.Bounds.Width * 0.4;
             showsize = Math.Max((int)Window.Current.Bounds.Width / 50, 18);
             hidsize = Math.Max((int)Window.Current.Bounds.Width / 80, 14);
+            foreach (UIElement lyricBoxChild in LyricBox.Children)
+            {
+                if (lyricBoxChild is LyricItem li)
+                    li.Width = LyricWidth;
+            }
         }
-
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
@@ -154,6 +158,8 @@ namespace HyPlayer.Pages
                 }
             }
             LyricBox.Children.Add(new Grid() { Height = blanksize });
+
+            Current_SizeChanged(null, null);
         }
 
 
@@ -229,12 +235,6 @@ namespace HyPlayer.Pages
                     this.Invoke((() =>
                     {
                         Current_SizeChanged(null, null);
-                        //待优化
-                        foreach (UIElement lyricBoxChild in LyricBox.Children)
-                        {
-                            if (lyricBoxChild is LyricItem li)
-                                li.Width = LyricWidth;
-                        }
                     }));
                 });
                 _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.CompactOverlay);
@@ -247,12 +247,6 @@ namespace HyPlayer.Pages
                     this.Invoke((() =>
                     {
                         Current_SizeChanged(null, null);
-                        //待优化
-                        foreach (UIElement lyricBoxChild in LyricBox.Children)
-                        {
-                            if (lyricBoxChild is LyricItem li)
-                                li.Width = LyricWidth;
-                        }
                     }));
                 });
                 ImageAlbum.Visibility = Visibility.Visible;

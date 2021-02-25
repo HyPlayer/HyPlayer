@@ -51,9 +51,14 @@ namespace HyPlayer.Controls
             this.InitializeComponent();
             HyPlayList.OnPlayItemChange += LoadPlayingFile;
             HyPlayList.OnPlayPositionChange += OnPlayPositionChange;
+            HyPlayList.OnPlayListAdd += HyPlayList_OnPlayListAdd; 
             //TestFile();
         }
 
+        private void HyPlayList_OnPlayListAdd(HyPlayItem playItem)
+        {
+            RefreshSongList(playItem);
+        }
 
         private async void TestFile()
         {
@@ -111,13 +116,17 @@ namespace HyPlayer.Controls
 
         public void RefreshSongList(HyPlayItem hpi)
         {
-            ObservableCollection<ListViewPlayItem> Contacts = new ObservableCollection<ListViewPlayItem>();
-            for (int i = 0; i < HyPlayList.List.Count; i++)
+            try
             {
-                Contacts.Add(new ListViewPlayItem(HyPlayList.List[i].Name, i, HyPlayList.List[i].AudioInfo.Artist));
+                ObservableCollection<ListViewPlayItem> Contacts = new ObservableCollection<ListViewPlayItem>();
+                for (int i = 0; i < HyPlayList.List.Count; i++)
+                {
+                    Contacts.Add(new ListViewPlayItem(HyPlayList.List[i].Name, i, HyPlayList.List[i].AudioInfo.Artist));
+                }
+                ListBoxPlayList.ItemsSource = Contacts;
+                ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
             }
-            ListBoxPlayList.ItemsSource = Contacts;
-            ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
+            catch { }
         }
 
         public async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)

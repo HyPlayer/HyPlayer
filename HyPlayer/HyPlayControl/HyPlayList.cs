@@ -42,6 +42,8 @@ namespace HyPlayer.HyPlayControl
         public static event PlayPositionChangeEvent OnPlayPositionChange;
         public delegate void VolumeChangeEvent(double newVolumn);
         public static event VolumeChangeEvent OnVolumeChange;
+        public delegate void PlayListAddEvent(HyPlayItem playItem);
+        public static event PlayListAddEvent OnPlayListAdd;
         public delegate void LyricLoadedEvent();
         public static event LyricLoadedEvent OnLyricLoaded;
 
@@ -308,8 +310,12 @@ namespace HyPlayer.HyPlayControl
                     List[i].MediaItem.ApplyDisplayProperties(properties);
                     MPIToIndex[List[i].MediaItem] = i;
                     PlaybackList.Items.Add(List[i].MediaItem);
+                    Invoke(() =>
+                    {
+                        if (i >= 0 && List.Count > i) OnPlayListAdd?.Invoke(List[i]);
+                    });
                 }
-                if (List[i].MediaItem != PlaybackList.Items[i])
+                if (i >= 0 && List.Count > i && List[i].MediaItem != PlaybackList.Items[i])
                     PlaybackList.Items[i] = List[i].MediaItem;
                 MPIToIndex[List[i].MediaItem] = i;
             }
