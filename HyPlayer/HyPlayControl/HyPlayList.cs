@@ -201,20 +201,27 @@ namespace HyPlayer.HyPlayControl
                 new Dictionary<string, object>() { { "id", ncSong.sid }, { "br", 320000 } });
             if (isOk)
             {
-                if (json["data"][0]["code"].ToString() != "200") return null; //未获取到
-                NCPlayItem ncp = new NCPlayItem()
+                try
                 {
-                    Album = ncSong.Album,
-                    Artist = ncSong.Artist,
-                    subext = json["data"][0]["type"].ToString(),
-                    sid = ncSong.sid,
-                    songname = ncSong.songname,
-                    url = json["data"][0]["url"].ToString(),
-                    LengthInMilliseconds = ncSong.LengthInMilliseconds,
-                    size = json["data"][0]["size"].ToString(),
-                    md5 = json["data"][0]["md5"].ToString()
-                };
-                return AppendNCPlayItem(ncp);
+                    if (json["data"][0]["code"].ToString() != "200") return null; //未获取到
+                    NCPlayItem ncp = new NCPlayItem()
+                    {
+                        Album = ncSong.Album,
+                        Artist = ncSong.Artist,
+                        subext = json["data"][0]["type"].ToString(),
+                        sid = ncSong.sid,
+                        songname = ncSong.songname,
+                        url = json["data"][0]["url"].ToString(),
+                        LengthInMilliseconds = ncSong.LengthInMilliseconds,
+                        size = json["data"][0]["size"].ToString(),
+                        md5 = json["data"][0]["md5"].ToString()
+                    };
+                    return AppendNCPlayItem(ncp);
+                }catch(Exception e)
+                {
+                    return null;
+                }
+
             }
             else
             {
