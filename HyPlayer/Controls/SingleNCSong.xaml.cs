@@ -88,5 +88,10 @@ namespace HyPlayer.Controls
         {
             _ = AppendMe();
         }
+
+        private void TextBlockArtist_SelectionChanged(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }

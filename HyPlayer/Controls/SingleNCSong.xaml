@@ -59,9 +59,9 @@
                 Foreground="Gray"
                 Name="TextBlockArtist"
                 controls:DockPanel.Dock="Bottom"
-                Margin="0,7,0,0"
-                FontSize="13"
-                Text="歌手名" />
+                Margin="0,7,0,-6"
+                FontSize="12"
+                Text="歌手名" SelectionChanged="TextBlockArtist_SelectionChanged" />
 
         </controls:DockPanel>
         <Button

@@ -54,6 +54,7 @@
             <StackPanel
 				Orientation="Vertical">
                 <controls:DockPanel
+                    Background="{ThemeResource AccentPanelAcrylic}"
                     LastChildFill="True"
                     x:Name="GridPersonalInformation">
                     <Rectangle

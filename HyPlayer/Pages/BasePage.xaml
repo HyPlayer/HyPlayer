@@ -16,7 +16,7 @@
             IsBackEnabled="True"
             IsSettingsVisible="False"
             BackRequested="OnNavigateBack"
-            Background="{ThemeResource SystemControlAcrylicWindowBrush}"
+            Background="{ThemeResource AccentPanelAcrylic}"
             SelectionChanged="NavMain_OnSelectionChanged"
             x:Name="NavMain">
             <NavigationView.MenuItems>
