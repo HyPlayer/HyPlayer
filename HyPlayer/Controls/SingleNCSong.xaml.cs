@@ -59,7 +59,7 @@ namespace HyPlayer.Controls
                 TintOpacity = 0.67500003206078,
                 TintLuminosityOpacity = 0.183000008692034,
                 TintColor = Windows.UI.Color.FromArgb(255, 0, 142, 230),
-                FallbackColor = Windows.UI.Color.FromArgb(255, 0, 120, 210)
+                FallbackColor = Windows.UI.Color.FromArgb(255, 54, 54, 210)
             };
 
         }
@@ -69,8 +69,8 @@ namespace HyPlayer.Controls
             Grid1.Background = new Windows.UI.Xaml.Media.AcrylicBrush()
             {
                 BackgroundSource = AcrylicBackgroundSource.Backdrop, TintOpacity = 0.67500003206078,
-                TintLuminosityOpacity = 0.183000008692034, TintColor = Windows.UI.Color.FromArgb(255, 128, 128, 128),
-                FallbackColor = Windows.UI.Color.FromArgb(255, 128, 128, 128)
+                TintLuminosityOpacity = 0.183000008692034, TintColor = Windows.UI.Color.FromArgb(255, 54, 54, 54),
+                FallbackColor = Windows.UI.Color.FromArgb(255, 54, 54, 54)
             };
         }
 

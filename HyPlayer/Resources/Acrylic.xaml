@@ -7,8 +7,8 @@
         BackgroundSource="Backdrop"
         TintOpacity="0.67500003206078"
         TintLuminosityOpacity="0.183000008692034"
-        TintColor="Gray"
-        FallbackColor="Gray" />
+        TintColor="#3E3E3E"
+        FallbackColor="#3E3E3E" />
     <media:AcrylicBrush
         x:Key="AccentAcrylicInAppLuminosity"
         BackgroundSource="Backdrop"
@@ -21,14 +21,14 @@
         BackgroundSource="Backdrop"
         TintOpacity="0.784000037238002"
         TintLuminosityOpacity="0.653000031015836"
-        TintColor="Gray"
-        FallbackColor="Gray" />
+        TintColor="#2B2B2B"
+        FallbackColor="#2B2B2B" />
     <media:AcrylicBrush
         x:Key="ExpandedPlayerLuminosity"
         BackgroundSource="HostBackdrop"
         TintOpacity="0.784000037238002"
         TintLuminosityOpacity="0.653000031015836"
-        TintColor="Gray"
+        TintColor="#2B2B2B"
         FallbackColor="SkyBlue" />
     <media:AcrylicBrush
         x:Key="PlayListItemLuminosity"
@@ -42,6 +42,6 @@
         BackgroundSource="HostBackdrop"
         TintOpacity="0.178000008454546" 
         TintLuminosityOpacity="0.36" 
-        TintColor="#4D76B3" 
-        FallbackColor="Gray" />
+        TintColor="#4D76B3"
+        FallbackColor="#2B2B2B" />
 </ResourceDictionary>

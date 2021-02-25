@@ -211,7 +211,7 @@ namespace HyPlayer.Controls
             Common.PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));
             //Common.PageMain.MainFrame.Visibility = Visibility.Visible;
             Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
-            Common.PageMain.GridPlayBar.Background = new Windows.UI.Xaml.Media.AcrylicBrush() { BackgroundSource = AcrylicBackgroundSource.Backdrop, TintOpacity = 0.67500003206078, TintLuminosityOpacity = 0.183000008692034, TintColor = Windows.UI.Color.FromArgb(255, 128, 128, 128), FallbackColor = Windows.UI.Color.FromArgb(255, 128, 128, 128) };
+            Common.PageMain.GridPlayBar.Background = new Windows.UI.Xaml.Media.AcrylicBrush() { BackgroundSource = AcrylicBackgroundSource.Backdrop, TintOpacity = 0.67500003206078, TintLuminosityOpacity = 0.183000008692034, TintColor = Windows.UI.Color.FromArgb(255, 62, 62, 62), FallbackColor = Windows.UI.Color.FromArgb(255, 62, 62, 62) };
         }
 
         private void ButtonCleanAll_OnClick(object sender, RoutedEventArgs e)
