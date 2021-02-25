@@ -256,6 +256,12 @@ namespace HyPlayer.Controls
             catch { }
 
         }
+
+        private void BtnPlayRollType_OnClick(object sender, RoutedEventArgs e)
+        {
+            HyPlayList.PlaybackList.ShuffleEnabled = !HyPlayList.PlaybackList.ShuffleEnabled;
+            BtnPlayRollType.IsChecked = HyPlayList.PlaybackList.ShuffleEnabled;
+        }
     }
 
 
