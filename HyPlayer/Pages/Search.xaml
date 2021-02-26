@@ -15,61 +15,68 @@
             <StackPanel
                 Orientation="Vertical">
                 <Grid
-            Margin="30">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition
-                    Width="20" />
-                <ColumnDefinition
-                    Width="*" />
-                <ColumnDefinition
-                    Width="100" />
-            </Grid.ColumnDefinitions>
-            <FontIcon
-                Grid.Column="0"
-                controls:DockPanel.Dock="Left"
-                FontFamily="Segoe MDL2 Assets"
-                Glyph="&#xE1A3;" />
+                    Margin="30">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition
+                            Width="20" />
+                        <ColumnDefinition
+                            Width="*" />
+                        <ColumnDefinition
+                            Width="100" />
+                    </Grid.ColumnDefinitions>
+                    <FontIcon
+                        Grid.Column="0"
+                        controls:DockPanel.Dock="Left"
+                        FontFamily="Segoe MDL2 Assets"
+                        Glyph="&#xE1A3;" />
 
-            <TextBox
-                Grid.Column="1"
-                Margin="15"
-                x:Name="TextBoxSearchText" />
-            <Button
-                Click="ButtonBase_OnClick"
-                Grid.Column="2">
-                <Button.Content>
-                    <StackPanel
-                        Orientation="Horizontal">
-                        <FontIcon
-                            Margin="0,0,5,0"
-                            controls:DockPanel.Dock="Right"
-                            FontFamily="Segoe MDL2 Assets"
-                            Glyph="&#xE1A3;" />
-                        <TextBlock
-                            Text="搜索"></TextBlock>
-                    </StackPanel>
-                </Button.Content>
-            </Button>
-        </Grid>
+                    <TextBox
+                        Grid.Column="1"
+                        Margin="15"
+                        x:Name="TextBoxSearchText" />
+                    <Button
+                        Click="ButtonBase_OnClick"
+                        Grid.Column="2">
+                        <Button.Content>
+                            <StackPanel
+                                Orientation="Horizontal">
+                                <FontIcon
+                                    Margin="0,0,5,0"
+                                    controls:DockPanel.Dock="Right"
+                                    FontFamily="Segoe MDL2 Assets"
+                                    Glyph="&#xE1A3;" />
+                                <TextBlock
+                                    Text="搜索"></TextBlock>
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
+                </Grid>
 
                 <StackPanel
-                        Margin="30"
-                        Spacing="5"
-                        Orientation="Vertical"
-                        Name="SearchResultContainer" />
-<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-    <Button Visibility="Collapsed" Content="上一页" x:Name="PrevPage" Click="PrevPage_OnClick" />
-    <TextBlock x:Name="PageIndicator" />
-    <Button
-        Visibility="Collapsed"
+                    Margin="30"
+                    Spacing="5"
+                    Orientation="Vertical"
+                    Name="SearchResultContainer" />
+                <StackPanel
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Center">
+                    <Button
+                        Visibility="Collapsed"
+                        Content="上一页"
+                        x:Name="PrevPage"
+                        Click="PrevPage_OnClick" />
+                    <TextBlock
+                        x:Name="PageIndicator" />
+                    <Button
+                        Visibility="Collapsed"
                         Content="下一页"
-        x:Name="NextPage"
-        Click="NextPage_OnClickPage_OnClick" />
+                        x:Name="NextPage"
+                        Click="NextPage_OnClickPage_OnClick" />
                 </StackPanel>
-                    <Grid
-                        Height="150" />
-                </StackPanel>
-            </ScrollViewer.Content>
-        </ScrollViewer>
+                <Grid
+                    Height="150" />
+            </StackPanel>
+        </ScrollViewer.Content>
+    </ScrollViewer>
 
 </Page>

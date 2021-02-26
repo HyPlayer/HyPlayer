@@ -109,6 +109,12 @@
                     Spacing="10"
 					Name="SongContainer"
 					Orientation="Vertical" />
+                <Button
+                    HorizontalAlignment="Center"
+                    Visibility="Collapsed"
+                    Content="加载更多"
+                    x:Name="NextPage"
+                    Click="NextPage_OnClickPage_OnClick" />
                 <Grid
                     Height="150" />
             </StackPanel>

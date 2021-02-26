@@ -346,12 +346,32 @@
             </Grid>
             <Grid
                 Grid.Row="1">
-                <Slider
-                    ManipulationStarted="SliderProgress_OnManipulationStarted"
-                    ManipulationCompleted="SliderProgress_OnManipulationCompleted"
-                    ManipulationMode="All"
-                    ValueChanged="SliderProgress_ValueChanged"
-                    Name="SliderProgress" />
+                <controls:DockPanel
+                    LastChildFill="True">
+                    <TextBlock
+                        Margin="5,5,0,0"
+                        controls:DockPanel.Dock="Right"
+                        x:Name="TextBlockTotalTime" />
+                    <TextBlock
+                        Margin="0,5,5,0"
+                        controls:DockPanel.Dock="Left"
+                        x:Name="TextBlockNowTime" />
+                    <Slider
+                        controls:DockPanel.Dock="Bottom"
+                        ManipulationStarted="SliderProgress_OnManipulationStarted"
+                        ManipulationCompleted="SliderProgress_OnManipulationCompleted"
+                        ManipulationMode="All"
+                        ValueChanged="SliderProgress_ValueChanged"
+                        Name="SliderProgress">
+                        <Slider.ThumbToolTipValueConverter>
+                            <local:ThumbConverter
+                                SecondValue="{Binding SecondValue}" />
+
+                        </Slider.ThumbToolTipValueConverter>
+                    </Slider>
+
+                </controls:DockPanel>
+
             </Grid>
         </Grid>
         <StackPanel
