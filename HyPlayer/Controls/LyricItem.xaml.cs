@@ -30,12 +30,17 @@ namespace HyPlayer.Controls
     {
         public readonly SongLyric Lrc;
         public double actualsize => Common.PageExpandedPlayer.showsize;
+        private Brush originBrush;
 
         public bool showing = false;
+        public bool hiding = false;
         public LyricItem(SongLyric lrc)
         {
 
             this.InitializeComponent();
+            originBrush = TextBoxPureLyric.Foreground;
+            TextBoxPureLyric.FontSize = actualsize;
+            TextBoxTranslation.FontSize = actualsize;
             Lrc = lrc;
             TextBoxPureLyric.Text = Lrc.PureLyric;
             if (Lrc.HaveTranslation)
@@ -46,6 +51,8 @@ namespace HyPlayer.Controls
             {
                 TextBoxTranslation.Visibility = Visibility.Collapsed;
             }
+
+            OnHind();
         }
 
         public async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)
@@ -58,6 +65,8 @@ namespace HyPlayer.Controls
             showing = true;
             TextBoxPureLyric.FontWeight = FontWeights.ExtraBold;
             TextBoxTranslation.FontWeight = FontWeights.ExtraBold;
+            TextBoxPureLyric.Foreground = originBrush;
+            TextBoxTranslation.Foreground = originBrush;
             TextBoxPureLyric.FontSize = actualsize;
             TextBoxTranslation.FontSize = actualsize;
         }
@@ -67,6 +76,8 @@ namespace HyPlayer.Controls
             showing = false;
             TextBoxPureLyric.FontWeight = FontWeights.Normal;
             TextBoxTranslation.FontWeight = FontWeights.Normal;
+            TextBoxPureLyric.Foreground = new SolidColorBrush(Color.FromArgb(255,155,155,155));
+            TextBoxTranslation.Foreground = new SolidColorBrush(Color.FromArgb(255, 155, 155, 155));
             TextBoxPureLyric.FontSize = actualsize;
             TextBoxTranslation.FontSize = actualsize;
         }
