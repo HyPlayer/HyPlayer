@@ -2,38 +2,43 @@
     x:Class="HyPlayer.Pages.Home"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:HyPlayer.Pages"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:HyPlayer.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
-    Background="{ThemeResource SystemControlAcrylicWindowBrush}">
-    <ScrollViewer
-        VerticalScrollBarVisibility="Auto">
-        <StackPanel
-        Padding="15"
-        Orientation="Vertical">
-        <TextBlock
-            Padding="15,0,0,0"
-            FontSize="25"
-            Text="推荐歌单" />
-        <ScrollViewer HorizontalScrollBarVisibility="Auto">
-            <StackPanel Orientation="Horizontal" Padding="0,0,0,15" Spacing="15" x:Name="RcmdSongList" />
-        </ScrollViewer>
+    Background="{ThemeResource SystemControlAcrylicWindowBrush}"
+    mc:Ignorable="d">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Padding="15" Orientation="Vertical">
+            <TextBlock
+                Padding="15,0,0,0"
+                FontSize="25"
+                Text="推荐歌单" />
+            <ScrollViewer
+                HorizontalScrollBarVisibility="Auto"
+                HorizontalScrollMode="Enabled"
+                VerticalScrollMode="Disabled">
+                <StackPanel
+                    x:Name="RcmdSongList"
+                    Padding="0,0,0,15"
+                    Orientation="Horizontal"
+                    Spacing="15" />
+            </ScrollViewer>
 
-
-        <TextBlock
-            Padding="15,0,0,0"
-            FontSize="25"
-            Text="排行榜" />
-        <ScrollViewer
-            HorizontalScrollBarVisibility="Auto">
-            <StackPanel
-                Orientation="Horizontal"
-                Padding="0,0,0,15"
-                Spacing="15"
-                x:Name="RankList" />
-        </ScrollViewer>
-        <Grid Height="150"></Grid>
+            <TextBlock
+                Padding="15,0,0,0"
+                FontSize="25"
+                Text="排行榜" />
+            <ScrollViewer
+                HorizontalScrollBarVisibility="Auto"
+                HorizontalScrollMode="Enabled"
+                VerticalScrollMode="Disabled">
+                <StackPanel
+                    x:Name="RankList"
+                    Padding="0,0,0,15"
+                    Orientation="Horizontal"
+                    Spacing="15" />
+            </ScrollViewer>
+            <Grid Height="150" />
         </StackPanel>
-        </ScrollViewer>
+    </ScrollViewer>
 </Page>
