@@ -63,8 +63,8 @@ namespace HyPlayer.Controls
         public void OnShow()
         {
             showing = true;
-            TextBoxPureLyric.FontWeight = FontWeights.ExtraBold;
-            TextBoxTranslation.FontWeight = FontWeights.ExtraBold;
+            TextBoxPureLyric.FontWeight = FontWeights.SemiBold;
+            TextBoxTranslation.FontWeight = FontWeights.SemiBold;
             TextBoxPureLyric.Foreground = originBrush;
             TextBoxTranslation.Foreground = originBrush;
             TextBoxPureLyric.FontSize = actualsize;
