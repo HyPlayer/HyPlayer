@@ -2,12 +2,16 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Graphics.DirectX;
 using Windows.Media.Playback;
+using Windows.UI;
+using Windows.UI.Composition;
 using Windows.UI.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
@@ -19,9 +23,11 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using AudioVisualizer;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
+using Microsoft.Graphics.Canvas.UI.Composition;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -30,12 +36,14 @@ namespace HyPlayer.Pages
     /// <summary>
     /// 可用于自身或导航至 Frame 内部的空白页。
     /// </summary>
-    public sealed partial class ExpandedPlayer : Page
+    public sealed partial class ExpandedPlayer : Page, IBarElementFactory
     {
         private int sclock = 0;
         private bool iscompact = false;
         private bool loaded = false;
         public double showsize;
+        private SourceConverter _spectrumSource;
+        private PlaybackSource _playbackSource;
         public double LyricWidth { get; set; }
 
         public ExpandedPlayer()
@@ -46,8 +54,28 @@ namespace HyPlayer.Pages
             Common.PageExpandedPlayer = this;
             HyPlayList.OnPlayPositionChange += RefreshLyricTime;
             HyPlayList.OnPlayItemChange += OnSongChange;
+
+            _playbackSource = PlaybackSource.CreateFromMediaPlayer(HyPlayList.Player);
+            _playbackSource.SourceChanged += PlaybackSource_Changed;
+            _spectrumSource = (SourceConverter)Resources["spectrumSource"];
+            _spectrumSource.SpectrumRiseTime = TimeSpan.FromMilliseconds(100);
+            _spectrumSource.SpectrumFallTime = TimeSpan.FromMilliseconds(200);
+            _spectrumSource.FrequencyCount = 50;
+            _spectrumSource.MinFrequency = 20.0f;
+            _spectrumSource.MaxFrequency = 20000.0f;
+            _spectrumSource.FrequencyScale = ScaleType.Logarithmic;
+            _spectrumSource.AnalyzerTypes = AnalyzerType.Spectrum;
+            barspectrum.ElementFactory = this;
+            barspectrum.ElementShadowBlurRadius = 5;
+            barspectrum.ElementShadowOffset = new Vector3(2, 2, -10);
+            barspectrum.ElementShadowColor = Colors.LightGreen;
             Window.Current.SizeChanged += Current_SizeChanged;
             Current_SizeChanged(null, null);
+        }
+
+        private void PlaybackSource_Changed(object sender, IVisualizationSource args)
+        {
+            _spectrumSource.Source = _playbackSource.Source;
         }
 
         private void Current_SizeChanged(object sender, WindowSizeChangedEventArgs e)
@@ -318,6 +346,41 @@ namespace HyPlayer.Pages
                 ImageAlbumContainer.Visibility = Visibility.Visible;
                 StackPanelTiny.Visibility = Visibility.Collapsed;
             }
+        }
+
+
+
+
+        public CompositionBrush CreateElementBrush(object sender, Color elementColor, Size size, Compositor compositor, CompositionGraphicsDevice device)
+        {
+            if (size.Width == 0 && size.Height == 0)
+                return null;
+
+            var surface = device.CreateDrawingSurface(size, DirectXPixelFormat.B8G8R8A8UIntNormalized, DirectXAlphaMode.Premultiplied);
+            using (var drawingSession = CanvasComposition.CreateDrawingSession(surface))
+            {
+                drawingSession.Clear(Colors.Transparent);
+                var center = size.ToVector2() / 2.0f;
+                var radius = center.X > center.Y ? center.Y : center.X;
+                drawingSession.FillCircle(center, radius, elementColor);
+            }
+            return compositor.CreateSurfaceBrush(surface);
+        }
+
+        public CompositionBrush CreateShadowMask(object sender, Size size, Compositor compositor, CompositionGraphicsDevice device)
+        {
+            if (size.Width == 0 && size.Height == 0)
+                return null;
+
+            var surface = device.CreateDrawingSurface(size, DirectXPixelFormat.B8G8R8A8UIntNormalized, DirectXAlphaMode.Premultiplied);
+            using (var drawingSession = CanvasComposition.CreateDrawingSession(surface))
+            {
+                drawingSession.Clear(Colors.Transparent);
+                var center = size.ToVector2() / 2.0f;
+                var radius = center.X > center.Y ? center.Y : center.X;
+                drawingSession.FillCircle(center, radius, Color.FromArgb(255, 255, 255, 255));
+            }
+            return compositor.CreateSurfaceBrush(surface);
         }
     }
 }

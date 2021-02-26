@@ -9,8 +9,12 @@
     mc:Ignorable="d"
     PointerEntered="ExpandedPlayer_OnPointerEntered"
     PointerExited="ExpandedPlayer_OnPointerExited"
+    xmlns:a="using:AudioVisualizer"
     Background="{ThemeResource SystemControlAcrylicElementBrush}">
-
+    <Page.Resources>
+        <a:SourceConverter
+            x:Key="spectrumSource"></a:SourceConverter>
+    </Page.Resources>
     <Grid
         DoubleTapped="ToggleWindowShowMode"
         Background="{ThemeResource SystemControlAcrylicElementBrush}"
@@ -154,6 +158,15 @@
                 x:FieldModifier="public"
                 Source="/Assets/Icon.png" />
         </controls:DropShadowPanel>
+        <a:SpectrumVisualizer
+            Grid.Column="0"
+            Grid.ColumnSpan="12"
+            Grid.Row="5"
+            Grid.RowSpan="7"
+            x:Name="barspectrum"
+            Opacity="0.1"
+            Source="{StaticResource spectrumSource}"
+            RelativeElementMargin="0.1,0.2,0.1,0.2"></a:SpectrumVisualizer>
 
         <Grid
             x:Name="StackPanelTiny"
