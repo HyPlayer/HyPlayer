@@ -44,6 +44,7 @@ namespace HyPlayer.Controls
     {
         private bool canslide;
         public TimeSpan nowtime => HyPlayList.Player.PlaybackSession.Position;
+        private Brush originPlaybarBrush;
 
         public PlayBar()
         {
@@ -182,7 +183,7 @@ namespace HyPlayer.Controls
         {
             ButtonExpand.Visibility = Visibility.Collapsed;
             ButtonCollapse.Visibility = Visibility.Visible;
-
+            originPlaybarBrush = Common.PageMain.GridPlayBar.Background;
             Common.PageMain.GridPlayBar.Background = null;
             //Common.PageMain.MainFrame.Visibility = Visibility.Collapsed;
             Common.PageMain.ExpandedPlayer.Visibility = Visibility.Visible;
@@ -216,7 +217,7 @@ namespace HyPlayer.Controls
             Common.PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));
             //Common.PageMain.MainFrame.Visibility = Visibility.Visible;
             Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
-            Common.PageMain.GridPlayBar.Background = new Windows.UI.Xaml.Media.AcrylicBrush() { BackgroundSource = AcrylicBackgroundSource.Backdrop, TintOpacity = 0.67500003206078, TintLuminosityOpacity = 0.183000008692034, TintColor = Windows.UI.Color.FromArgb(255, 62, 62, 62), FallbackColor = Windows.UI.Color.FromArgb(255, 62, 62, 62) };
+            Common.PageMain.GridPlayBar.Background = originPlaybarBrush;
         }
 
         private void ButtonCleanAll_OnClick(object sender, RoutedEventArgs e)

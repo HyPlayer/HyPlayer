@@ -11,6 +11,7 @@
     xmlns:hyPlayer="using:HyPlayer"
     xmlns:triggers="using:Microsoft.Toolkit.Uwp.UI.Triggers"
     xmlns:hyPlayerPage="using:HyPlayer.Pages"
+    Background="{ThemeResource SystemControlChromeMediumAcrylicWindowMediumBrush}"
     mc:Ignorable="d">
     <Grid>
         <Frame
@@ -27,7 +28,7 @@
             Name="GridPlayBar"
             Margin="16"
             CornerRadius="4"
-            Background="{StaticResource PlaybackAcrylicInAppLuminosity}"
+            Background="{ThemeResource SystemControlAcrylicElementMediumHighBrush}"
             VerticalAlignment="Bottom"
             Height="100">
             <controls2:PlayBar />

@@ -14,7 +14,7 @@
             x:Name="NavMain"
             Margin="0,0,0,0"
             BackRequested="OnNavigateBack"
-            Background="{ThemeResource AccentPanelAcrylic}"
+            Background="{ThemeResource SystemControlChromeMediumAcrylicWindowMediumBrush}"
             IsBackButtonVisible="Visible"
             IsBackEnabled="True"
             IsSettingsVisible="False"

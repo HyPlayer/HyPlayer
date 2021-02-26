@@ -54,7 +54,6 @@
             <StackPanel
 				Orientation="Vertical">
                 <controls:DockPanel
-                    Background="{ThemeResource AccentPanelAcrylic}"
                     LastChildFill="True"
                     x:Name="GridPersonalInformation">
                     <Rectangle
@@ -105,6 +104,7 @@
                     </StackPanel>
                 </controls:DockPanel>
                 <StackPanel
+                    Background="{ThemeResource SystemControlAcrylicElementBrush}"
                     Margin="20,30,0,0"
                     Spacing="10"
 					Name="SongContainer"
