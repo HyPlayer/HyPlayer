@@ -54,21 +54,6 @@ namespace HyPlayer.Pages
             Common.PageExpandedPlayer = this;
             HyPlayList.OnPlayPositionChange += RefreshLyricTime;
             HyPlayList.OnPlayItemChange += OnSongChange;
-
-            _playbackSource = PlaybackSource.CreateFromMediaPlayer(HyPlayList.Player);
-            _playbackSource.SourceChanged += PlaybackSource_Changed;
-            _spectrumSource = (SourceConverter)Resources["spectrumSource"];
-            _spectrumSource.SpectrumRiseTime = TimeSpan.FromMilliseconds(100);
-            _spectrumSource.SpectrumFallTime = TimeSpan.FromMilliseconds(200);
-            _spectrumSource.FrequencyCount = 50;
-            _spectrumSource.MinFrequency = 20.0f;
-            _spectrumSource.MaxFrequency = 20000.0f;
-            _spectrumSource.FrequencyScale = ScaleType.Logarithmic;
-            _spectrumSource.AnalyzerTypes = AnalyzerType.Spectrum;
-            barspectrum.ElementFactory = this;
-            barspectrum.ElementShadowBlurRadius = 5;
-            barspectrum.ElementShadowOffset = new Vector3(2, 2, -10);
-            barspectrum.ElementShadowColor = Colors.LightGreen;
             Window.Current.SizeChanged += Current_SizeChanged;
             Current_SizeChanged(null, null);
         }
@@ -104,7 +89,32 @@ namespace HyPlayer.Pages
             }));
         }
 
+        public void LoadVisualizer()
+        {
+            Task.Run(( async () =>
+            {
+                await Task.Delay(2000);
+                this.Invoke((() =>
+                {
+                    _playbackSource = PlaybackSource.CreateFromMediaPlayer(HyPlayList.Player);
+                    _playbackSource.SourceChanged += PlaybackSource_Changed;
+                    _spectrumSource = (SourceConverter) Resources["spectrumSource"];
+                    _spectrumSource.SpectrumRiseTime = TimeSpan.FromMilliseconds(100);
+                    _spectrumSource.SpectrumFallTime = TimeSpan.FromMilliseconds(200);
+                    _spectrumSource.FrequencyCount = 50;
+                    _spectrumSource.MinFrequency = 20.0f;
+                    _spectrumSource.MaxFrequency = 20000.0f;
+                    _spectrumSource.FrequencyScale = ScaleType.Logarithmic;
+                    _spectrumSource.AnalyzerTypes = AnalyzerType.Spectrum;
+                    barspectrum.ElementFactory = this;
+                    barspectrum.ElementShadowBlurRadius = 5;
+                    barspectrum.ElementShadowOffset = new Vector3(2, 2, -10);
+                    barspectrum.ElementShadowColor = Colors.LightGreen;
+                    _spectrumSource.Source = _playbackSource.Source;
+                }));
+            }));
 
+        }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
@@ -115,6 +125,7 @@ namespace HyPlayer.Pages
             TextBlockSongTitle.Visibility = Visibility.Collapsed;
             try
             {
+                LoadVisualizer();
                 OnSongChange(HyPlayList.List[HyPlayList.NowPlaying]);
             }
             catch { }
