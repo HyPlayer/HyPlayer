@@ -217,7 +217,7 @@ namespace HyPlayer.HyPlayControl
                         md5 = json["data"][0]["md5"].ToString()
                     };
                     return AppendNCPlayItem(ncp);
-                }catch(Exception e)
+                }catch
                 {
                     return null;
                 }

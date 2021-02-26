@@ -59,8 +59,8 @@
                             x:Name="RectangleImage"
                             RadiusX="10"
                             RadiusY="10"
-                            Width="300"
-                            Height="300">
+                            Width="200"
+                            Height="200">
                             <Rectangle.Fill>
                                 <ImageBrush
                                     x:Name="ImageRect"

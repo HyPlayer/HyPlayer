@@ -32,7 +32,7 @@ namespace HyPlayer.Pages
             this.InitializeComponent();
         }
 
-        private async void ButtonBase_OnClick(object sender, RoutedEventArgs e)
+        private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
         {
             page = 0;
             LoadResult();
