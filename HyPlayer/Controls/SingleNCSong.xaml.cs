@@ -96,5 +96,9 @@ namespace HyPlayer.Controls
             _ = AppendMe();
         }
 
+        private void Grid1_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            _ = AppendMe();
+        }
     }
 }

@@ -13,6 +13,7 @@
     <Grid
         x:Name="Grid1"
         Tapped="Grid1_OnTapped"
+        DoubleTapped="Grid1_OnDoubleTapped"
         PointerEntered="UIElement_OnPointerEntered"
         PointerExited="Grid1_OnPointerExited"
         >
