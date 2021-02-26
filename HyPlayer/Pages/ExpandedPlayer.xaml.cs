@@ -67,7 +67,7 @@ namespace HyPlayer.Pages
         {
             if (e == null)
             {
-                LyricWidth = Math.Max(Window.Current.Bounds.Width * 0.6, LyricBoxContainer.ViewportWidth);
+                LyricWidth = Math.Max(Window.Current.Bounds.Width * 0.4, LyricBoxContainer.ViewportWidth);
                 showsize = Math.Max((int)Window.Current.Bounds.Width / 70, 16);
             }
             else
