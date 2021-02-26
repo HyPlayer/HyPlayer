@@ -12,7 +12,7 @@
     Background="{ThemeResource SystemControlAcrylicElementBrush}">
 
     <Grid
-        DoubleTapped="ImageAlbum_OnDoubleTapped"
+        DoubleTapped="ToggleWindowShowMode"
         Background="{ThemeResource SystemControlAcrylicElementBrush}"
         Margin="0,0,0,0">
         <VisualStateManager.VisualStateGroups>
@@ -26,16 +26,16 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter
-                            Target="ImageAlbum.(Grid.Column)"
+                            Target="ImageAlbumContainer.(Grid.Column)"
                             Value="0" />
                         <Setter
-                            Target="ImageAlbum.(Grid.ColumnSpan)"
+                            Target="ImageAlbumContainer.(Grid.ColumnSpan)"
                             Value="12" />
                         <Setter
-                            Target="ImageAlbum.(Grid.Row)"
+                            Target="ImageAlbumContainer.(Grid.Row)"
                             Value="0" />
                         <Setter
-                            Target="ImageAlbum.(Grid.RowSpan)"
+                            Target="ImageAlbumContainer.(Grid.RowSpan)"
                             Value="13" />
                         <Setter
                             Target="DockPanelRight.Visibility"
@@ -54,16 +54,16 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter
-                            Target="ImageAlbum.(Grid.Column)"
+                            Target="ImageAlbumContainer.(Grid.Column)"
                             Value="1" />
                         <Setter
-                            Target="ImageAlbum.(Grid.ColumnSpan)"
+                            Target="ImageAlbumContainer.(Grid.ColumnSpan)"
                             Value="4" />
                         <Setter
-                            Target="ImageAlbum.(Grid.Row)"
+                            Target="ImageAlbumContainer.(Grid.Row)"
                             Value="2" />
                         <Setter
-                            Target="ImageAlbum.(Grid.RowSpan)"
+                            Target="ImageAlbumContainer.(Grid.RowSpan)"
                             Value="8" />
 
                         <Setter
@@ -86,7 +86,7 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter
-                            Target="ImageAlbum.Visibility"
+                            Target="ImageAlbumContainer.Visibility"
                             Value="Collapsed" />
                         <Setter
                             Target="DockPanelRight.(Grid.Column)"
@@ -136,14 +136,24 @@
             <RowDefinition />
             <RowDefinition />
         </Grid.RowDefinitions>
-        <Image
-            x:FieldModifier="public"
+        <controls:DropShadowPanel
+            BlurRadius="8"
+            ShadowOpacity="1"
+            OffsetX="5"
+            OffsetY="5"
+            Color="Black"
+            IsMasked="True"
             Grid.Column="1"
             Grid.ColumnSpan="4"
             Grid.Row="2"
-            Grid.RowSpan="8"
-            Name="ImageAlbum"
-            Source="/Assets/Icon.png" />
+            Name="ImageAlbumContainer"
+            Grid.RowSpan="8">
+            <Image
+                x:Name="ImageAlbum"
+                x:FieldModifier="public"
+                Source="/Assets/Icon.png" />
+        </controls:DropShadowPanel>
+
         <Grid
             x:Name="StackPanelTiny"
             Visibility="Collapsed"
@@ -223,7 +233,7 @@
             x:Name="DockPanelRight"
             LastChildFill="True"
             Grid.Row="1"
-            Margin="0,0,0,100"
+            Margin="0,0,0,110"
             Grid.RowSpan="12"
             Grid.ColumnSpan="5"
             Grid.Column="6">

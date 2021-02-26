@@ -37,6 +37,7 @@ namespace HyPlayer.Pages
         private bool loaded = false;
         public double showsize;
         public double hidsize;
+        public double LyricWidth { get; set; }
 
         public ExpandedPlayer()
         {
@@ -52,16 +53,29 @@ namespace HyPlayer.Pages
 
         private void Current_SizeChanged(object sender, WindowSizeChangedEventArgs e)
         {
-            //LyricWidth = Math.Max(Window.Current.Bounds.Width * 0.4,LyricBoxContainer.ActualWidth);
+            LyricWidth = Math.Max(Window.Current.Bounds.Width * 0.4, LyricBoxContainer.ViewportWidth);
             showsize = Math.Max((int)Window.Current.Bounds.Width / 50, 18);
             hidsize = Math.Max((int)Window.Current.Bounds.Width / 80, 14);
+            Task.Run((() =>
+            {
+                this.Invoke((() =>
+                {
+                    foreach (UIElement elm in LyricBox.Children)
+                    {
+                        if (elm is LyricItem li)
+                            li.Width = LyricWidth;
+                    }
+                }));
+            }));
         }
+
+
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
             Common.PageExpandedPlayer = this;
-            ImageAlbum.Visibility = Visibility.Collapsed;
+            ImageAlbumContainer.Visibility = Visibility.Collapsed;
             TextBlockSinger.Visibility = Visibility.Collapsed;
             TextBlockSongTitle.Visibility = Visibility.Collapsed;
             try
@@ -142,6 +156,7 @@ namespace HyPlayer.Pages
             if (HyPlayList.Lyrics.Count == 0)
             {
                 LyricItem lrcitem = new LyricItem(SongLyric.PureSong);
+                lrcitem.Width = LyricWidth;
                 LyricBox.Children.Add(lrcitem);
             }
             else
@@ -150,6 +165,7 @@ namespace HyPlayer.Pages
                 {
                     LyricItem lrcitem = new LyricItem(songLyric);
                     lrcitem.Margin = new Thickness(0, 10, 0, 10);
+                    lrcitem.Width = LyricWidth;
                     LyricBox.Children.Add(lrcitem);
                 }
             }
@@ -191,7 +207,7 @@ namespace HyPlayer.Pages
             {
                 this.Invoke(() =>
                 {
-                    ImageAlbum.Visibility = Visibility.Visible;
+                    ImageAlbumContainer.Visibility = Visibility.Visible;
                     TextBlockSinger.Visibility = Visibility.Visible;
                     TextBlockSongTitle.Visibility = Visibility.Visible;
                     var anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
@@ -212,7 +228,7 @@ namespace HyPlayer.Pages
         public void StartCollapseAnimation()
         {
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TextBlockSongTitle);
-            if (ImageAlbum.Visibility == Visibility.Visible)
+            if (ImageAlbumContainer.Visibility == Visibility.Visible)
                 ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", ImageAlbum);
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TextBlockSinger);
         }
@@ -222,7 +238,7 @@ namespace HyPlayer.Pages
             sclock = 30;
         }
 
-        private void ImageAlbum_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        private void ToggleWindowShowMode(object sender, DoubleTappedRoutedEventArgs e)
         {
             if (!iscompact)
             {
@@ -283,7 +299,7 @@ namespace HyPlayer.Pages
         {
             if (Window.Current.Bounds.Width <= 300)
             {//小窗模式
-                ImageAlbum.Visibility = Visibility.Collapsed;
+                ImageAlbumContainer.Visibility = Visibility.Collapsed;
                 StackPanelTiny.Visibility = Visibility.Visible;
             }
         }
@@ -292,7 +308,7 @@ namespace HyPlayer.Pages
         {
             if (Window.Current.Bounds.Width <= 300)
             {//小窗模式
-                ImageAlbum.Visibility = Visibility.Visible;
+                ImageAlbumContainer.Visibility = Visibility.Visible;
                 StackPanelTiny.Visibility = Visibility.Collapsed;
             }
         }

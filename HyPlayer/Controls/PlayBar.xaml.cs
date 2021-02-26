@@ -43,6 +43,7 @@ namespace HyPlayer.Controls
     public sealed partial class PlayBar : UserControl
     {
         private bool canslide;
+        public TimeSpan nowtime => HyPlayList.Player.PlaybackSession.Position;
 
         public PlayBar()
         {
@@ -85,6 +86,10 @@ namespace HyPlayer.Controls
                     TbSingerName.Text = tai.Artist;
                     TbSongName.Text = tai.SongName;
                     SliderProgress.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
+                    TextBlockTotalTime.Text =
+                        TimeSpan.FromMilliseconds(tai.LengthInMilliseconds).ToString(@"hh\:mm\:ss");
+                    TextBlockNowTime.Text =
+                        HyPlayList.Player.PlaybackSession.Position.ToString(@"hh\:mm\:ss");
                     PlayStateIcon.Glyph =
                         HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
                             ? "\uEDB4"
@@ -287,5 +292,29 @@ namespace HyPlayer.Controls
         }
     }
 
+    public class ThumbConverter : DependencyObject, IValueConverter
+    {
+        public double SecondValue
+        {
+            get { return (double)GetValue(SecondValueProperty); }
+            set { SetValue(SecondValueProperty, value); }
+        }
 
+        // Using a DependencyProperty as the backing store for SecondValue.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty SecondValueProperty =
+            DependencyProperty.Register("SecondValue", typeof(double), typeof(ThumbConverter), new PropertyMetadata(0d));
+
+
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            // assuming you want to display precentages
+
+            return TimeSpan.FromMilliseconds(double.Parse(value.ToString())).ToString(@"hh\:mm\:ss");
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }
