@@ -82,10 +82,8 @@ namespace HyPlayer.Pages
                     PersonPictureUser.ProfilePicture =
                         new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
                 }
-
             }
             catch (Exception) { }
-
         }
 
         private async void ButtonLogin_OnClick(object sender, RoutedEventArgs e)
@@ -96,7 +94,6 @@ namespace HyPlayer.Pages
             JObject json;
             try
             {
-
                 var queries = new Dictionary<string, object>();
                 var account = TextBoxAccount.Text;
                 var isPhone = Regex.Match(account, "^[0-9]+$").Success;
@@ -167,14 +164,15 @@ namespace HyPlayer.Pages
                 case "PageMe":
                     Common.BaseFrame.Navigate(typeof(Pages.Me), null, new EntranceNavigationTransitionInfo());
                     break;
+
                 case "PageHome":
                     Common.BaseFrame.Navigate(typeof(Pages.Home), null, new EntranceNavigationTransitionInfo());
                     break;
+
                 case "PageSearch":
                     Common.BaseFrame.Navigate(typeof(Search), null, new EntranceNavigationTransitionInfo());
                     break;
             }
-
         }
 
         private void OnNavigateBack(NavigationView sender, NavigationViewBackRequestedEventArgs args)
@@ -197,6 +195,12 @@ namespace HyPlayer.Pages
             {
                 ButtonLogin_OnClick(null, null);
             }
+        }
+
+        private void NavMain_Loaded(object sender, RoutedEventArgs e)
+        {
+            NavMain.SelectedItem = NavMain.MenuItems[0];
+            Common.BaseFrame.Navigate(typeof(Home));
         }
     }
 }
