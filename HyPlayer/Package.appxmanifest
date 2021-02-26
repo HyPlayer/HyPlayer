@@ -11,7 +11,7 @@
   <Identity
     Name="64698713-b184-44e4-ae9b-80db14b129c6"
     Publisher="CN=HyPlayer Team"
-    Version="1.0.2.0" />
+    Version="1.0.9.0" />
 
   <mp:PhoneIdentity PhoneProductId="64698713-b184-44e4-ae9b-80db14b129c6" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 

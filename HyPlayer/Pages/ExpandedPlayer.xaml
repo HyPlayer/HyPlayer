@@ -147,7 +147,7 @@
             Grid.ColumnSpan="4"
             Grid.Row="2"
             VerticalAlignment="Center"
-            Name="ImageAlbumContainer"
+            x:Name="ImageAlbumContainer"
             Grid.RowSpan="8">
             <Image
                 x:Name="ImageAlbum"
