@@ -36,7 +36,6 @@ namespace HyPlayer.Pages
         private bool iscompact = false;
         private bool loaded = false;
         public double showsize;
-        public double hidsize;
         public double LyricWidth { get; set; }
 
         public ExpandedPlayer()
@@ -53,9 +52,17 @@ namespace HyPlayer.Pages
 
         private void Current_SizeChanged(object sender, WindowSizeChangedEventArgs e)
         {
-            LyricWidth = Math.Max(Window.Current.Bounds.Width * 0.4, LyricBoxContainer.ViewportWidth);
-            showsize = Math.Max((int)Window.Current.Bounds.Width / 50, 18);
-            hidsize = Math.Max((int)Window.Current.Bounds.Width / 80, 14);
+            if (e == null)
+            {
+                LyricWidth = Math.Max(Window.Current.Bounds.Width * 0.4, LyricBoxContainer.ViewportWidth);
+                showsize = Math.Max((int)Window.Current.Bounds.Width / 70, 16);
+            }
+            else
+            {
+                LyricWidth = Math.Max(e.Size.Width * 0.4, LyricBoxContainer.ViewportWidth);
+                showsize = Math.Max(e.Size.Width / 70, 16);
+            }
+
             Task.Run((() =>
             {
                 this.Invoke((() =>
