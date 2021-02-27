@@ -22,10 +22,14 @@ namespace HyPlayer
         public static MainPage PageMain;
         public static PlayBar BarPlayBar;
         public static Frame BaseFrame;
+        public static Setting Setting;
         public static Dictionary<string,object> GLOBAL = new Dictionary<string, object>();
     }
 
-
+    struct Setting
+    {
+        public string bitrate;
+    }
 
     internal static class Extensions
     {

@@ -184,7 +184,7 @@ namespace HyPlayer.Pages
                         ImageAlbum.Source = mpi.ItemType == HyPlayItemType.Local ? mpi.AudioInfo.BitmapImage : new BitmapImage(new Uri(mpi.AudioInfo.Picture));
                         TextBlockSinger.Text = mpi.AudioInfo.Artist;
                         TextBlockSongTitle.Text = mpi.AudioInfo.SongName;
-                        this.Background = new ImageBrush() { ImageSource = ImageAlbum.Source };
+                        this.Background = new ImageBrush() { ImageSource = ImageAlbum.Source , Stretch = Stretch.UniformToFill};
                         ProgressBarPlayProg.Maximum = mpi.AudioInfo.LengthInMilliseconds;
                         SliderVolumn.Value = HyPlayList.Player.Volume * 100;
                         LoadLyricsBox();

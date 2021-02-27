@@ -42,6 +42,8 @@ namespace HyPlayer.Pages
                 PersonPictureUser.ProfilePicture = new BitmapImage(new Uri(Common.LoginedUser.ImgUrl));
             }
             Common.BaseFrame = BaseFrame;
+            NavMain.SelectedItem = NavMain.MenuItems[0];
+            Common.BaseFrame.Navigate(typeof(Home));
         }
 
         private async void LoadLoginData()
@@ -157,6 +159,9 @@ namespace HyPlayer.Pages
                 case "PageSearch":
                     Common.BaseFrame.Navigate(typeof(Search), null, new EntranceNavigationTransitionInfo());
                     break;
+                case "PageSettings":
+                    Common.BaseFrame.Navigate(typeof(Pages.Settings), null, new EntranceNavigationTransitionInfo());
+                    break;
             }
         }
 
@@ -180,12 +185,6 @@ namespace HyPlayer.Pages
             {
                 ButtonLogin_OnClick(null, null);
             }
-        }
-
-        private void NavMain_Loaded(object sender, RoutedEventArgs e)
-        {
-            NavMain.SelectedItem = NavMain.MenuItems[0];
-            Common.BaseFrame.Navigate(typeof(Home));
         }
     }
 }

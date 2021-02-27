@@ -18,7 +18,6 @@
             IsBackButtonVisible="Visible"
             IsBackEnabled="True"
             IsSettingsVisible="False"
-            Loaded="NavMain_Loaded"
             SelectionChanged="NavMain_OnSelectionChanged">
             <NavigationView.MenuItems>
                 <NavigationViewItem
@@ -30,9 +29,9 @@
                     Icon="Zoom"
                     Tag="PageSearch" />
                 <NavigationViewItem
-                    Content="下载"
-                    Icon="Download"
-                    Tag="PageDownload" />
+                    Content="设置"
+                    Icon="Setting"
+                    Tag="PageSettings" />
                 <NavigationViewItem Tag="PageMe">
                     <StackPanel Margin="-10,0,0,0" Orientation="Horizontal">
                         <PersonPicture
@@ -51,7 +50,7 @@
         <!--  登录弹窗  -->
         <ContentDialog x:Name="DialogLogin" Width="400">
             <StackPanel Orientation="Vertical">
-                <Image Height="200" Source="/Assets/LargeTile.scale-400.png" />
+                <Image Height="200" Source="/Assets/icon.png" />
                 <TextBlock
                     Padding="0,3,0,10"
                     HorizontalAlignment="Center"
