@@ -25,7 +25,7 @@
 >
 > 软件暂时没有正式Release 您可以前往 Azure DevOps 下载自动构建包
 
-[Azure DevOps](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=27&branchName=master)
+[Azure DevOps](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=29&branchName=master) : [![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/HyPlayer.HyPlayer?branchName=master)](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=29&branchName=master)
 
 ## 界面预览
 
@@ -69,7 +69,7 @@
 
 | 平台 | Azure DevOps                                                 | AppVeyor |
 | ---- | ------------------------------------------------------------ | -------- |
-| 状态 | [![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/kengwang.HyPlayer?branchName=master)](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=27&branchName=master) | 暂无     |
+| 状态 | [![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/HyPlayer.HyPlayer?branchName=master)](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=29&branchName=master) | 暂无     |
 
 ## 隐私策略
 
