@@ -71,6 +71,10 @@
 | ---- | ------------------------------------------------------------ | -------- |
 | 状态 | [![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/kengwang.HyPlayer?branchName=master)](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=27&branchName=master) | 暂无     |
 
+## 隐私策略
+
+使用此应用即代表您同意 [网易云音乐隐私策略](https://st.music.163.com/official-terms/privacy#)
+
 ## 相关说明
 
 ### 软件性质
