@@ -221,7 +221,7 @@ namespace HyPlayer.Controls
         private void ButtonCleanAll_OnClick(object sender, RoutedEventArgs e)
         {
             HyPlayList.List.Clear();
-            HyPlayList.SyncPlayList();
+            HyPlayList.RequestSyncPlayList();
             ListBoxPlayList.ItemsSource = new ObservableCollection<ListViewPlayItem>();
         }
 
@@ -253,7 +253,7 @@ namespace HyPlayer.Controls
                 if (sender is Button btn)
                 {
                     HyPlayList.List.RemoveAt(int.Parse(btn.Tag.ToString()));
-                    HyPlayList.SyncPlayList();
+                    HyPlayList.RequestSyncPlayList();
                     RefreshSongList(null);
                 }
             }

@@ -17,6 +17,7 @@ using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
+using HyPlayer.HyPlayControl;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
 
@@ -30,8 +31,10 @@ namespace HyPlayer.Pages
     public sealed partial class SongListDetail : Page
     {
         private int page = 0;
+        private string intelsong = "";
 
         private NCPlayList playList;
+
         public SongListDetail()
         {
             this.InitializeComponent();
@@ -39,7 +42,8 @@ namespace HyPlayer.Pages
 
         public void LoadSongListDetail()
         {
-            ImageRect.ImageSource = new BitmapImage(new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
+            ImageRect.ImageSource =
+                new BitmapImage(new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
             TextBoxPLName.Text = playList.name;
             TextBlockDesc.Text = playList.desc;
             TextBoxAuthor.Text = playList.creater.name;
@@ -50,18 +54,23 @@ namespace HyPlayer.Pages
             if (playList.plid != "-666")
             {
                 var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
-                new Dictionary<string, object>() { { "id", playList.plid }, });
+                    new Dictionary<string, object>() {{"id", playList.plid},});
                 if (isOk)
                 {
-                    int[] trackIds = json["playlist"]["trackIds"].Select(t => (int)t["id"]).Skip(page * 500).Take(500).ToArray();
-                    if (trackIds.Length >= 500) NextPage.Visibility = Visibility.Visible; else NextPage.Visibility = Visibility.Collapsed;
-                    (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail, new Dictionary<string, object> { ["ids"] = string.Join(",", trackIds) });
+                    int[] trackIds = json["playlist"]["trackIds"].Select(t => (int) t["id"]).Skip(page * 500).Take(500)
+                        .ToArray();
+                    if (trackIds.Length >= 500) NextPage.Visibility = Visibility.Visible;
+                    else NextPage.Visibility = Visibility.Collapsed;
+                    if (json["playlist"]["specialType"].ToString() == "5") ButtonIntel.Visibility = Visibility.Visible;
+                    (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
+                        new Dictionary<string, object> {["ids"] = string.Join(",", trackIds)});
                     if (isOk)
                     {
                         int idx = page * 500;
                         foreach (var jToken in json["songs"])
                         {
-                            var song = (JObject)jToken;
+                            var song = (JObject) jToken;
+                            if (string.IsNullOrEmpty(intelsong)) intelsong = song["id"].ToString();
                             NCSong NCSong = new NCSong()
                             {
                                 Album = new NCAlbum()
@@ -95,6 +104,7 @@ namespace HyPlayer.Pages
             else
             {
                 //每日推荐
+                ButtonIntel.Visibility = Visibility.Collapsed;
                 var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendSongs);
                 if (isOk)
                 {
@@ -134,7 +144,7 @@ namespace HyPlayer.Pages
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            playList = (NCPlayList)e.Parameter;
+            playList = (NCPlayList) e.Parameter;
             Task.Run((() =>
             {
                 this.Invoke(() =>
@@ -148,17 +158,21 @@ namespace HyPlayer.Pages
 
         }
 
-        public async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)
+        public async void Invoke(Action action,
+            Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)
         {
-            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority, () => { action(); });
+            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority,
+                () => { action(); });
         }
 
-        private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
+        private void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
         {
             Task.Run((() =>
             {
                 this.Invoke((async () =>
                 {
+                    HyPlayList.List.Clear();
+                    HyPlayList.RequestSyncPlayList();
                     foreach (UIElement songContainerChild in SongContainer.Children)
                     {
                         if (songContainerChild is SingleNCSong singleNcSong)
@@ -176,6 +190,43 @@ namespace HyPlayer.Pages
         {
             page++;
             LoadSongListItem();
+        }
+
+        private async void ButtonHeartBeat_OnClick(object sender, RoutedEventArgs e)
+        {
+            HyPlayList.List.Clear();
+            HyPlayList.RequestSyncPlayList();
+            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaymodeIntelligenceList,
+                new Dictionary<string, object>() {{"pid", playList.plid}, {"id", intelsong}});
+            if (isOk)
+            {
+                foreach (JToken token in json["data"])
+                {
+                    NCSong ncSong = new NCSong()
+                    {
+                        Album = new NCAlbum()
+                        {
+                            cover = token["songInfo"]["al"]["picUrl"].ToString(),
+                            id = token["songInfo"]["al"]["id"].ToString(),
+                            name = token["songInfo"]["al"]["name"].ToString()
+                        },
+                        Artist = new List<NCArtist>(),
+                        LengthInMilliseconds = Double.Parse(token["songInfo"]["dt"].ToString()),
+                        sid = token["songInfo"]["id"].ToString(),
+                        songname = token["songInfo"]["name"].ToString()
+                    };
+                    token["songInfo"]["ar"].ToList().ForEach(t =>
+                    {
+                        ncSong.Artist.Add(new NCArtist()
+                        {
+                            id = t["id"].ToString(),
+                            name = t["name"].ToString()
+                        });
+                    });
+                    await HyPlayList.AppendNCSong(ncSong);
+                }
+            }
+
         }
     }
 }

@@ -28,6 +28,10 @@ namespace HyPlayer.HyPlayControl
         public static readonly Dictionary<MediaPlaybackItem, int> MPIToIndex = new Dictionary<MediaPlaybackItem, int>();
         //public static Timer Timer = null;
         public static List<SongLyric> Lyrics = new List<SongLyric>();
+        public static int RequestId;
+        public static bool Syncing;
+        public static Timer SyncTimer;
+
 
         /********        事件        ********/
         public delegate void PlayItemChangeEvent(HyPlayItem playItem);
@@ -66,6 +70,7 @@ namespace HyPlayer.HyPlayControl
             Player.CurrentStateChanged += Player_CurrentStateChanged;
             Player.VolumeChanged += Player_VolumeChanged;
             Player.PlaybackSession.PositionChanged += PlaybackSession_PositionChanged;
+            SyncTimer = new Timer(state => { SyncPlayList(); }, null, 1000, 1000);
         }
 
         private static void PlaybackSession_PositionChanged(MediaPlaybackSession sender, object args)
@@ -133,6 +138,7 @@ namespace HyPlayer.HyPlayControl
         {
             if (args.NewItem == null) return;
             NowPlaying = (int)HyPlayList.PlaybackList.CurrentItemIndex;
+            if (!MPIToIndex.ContainsKey(args.NewItem)) return;
             HyPlayItem hpi = List[MPIToIndex[args.NewItem]];
             var ai = hpi.AudioInfo;
             //LoadSystemPlayBar(MPIToIndex[args.NewItem]);
@@ -217,7 +223,8 @@ namespace HyPlayer.HyPlayControl
                         md5 = json["data"][0]["md5"].ToString()
                     };
                     return AppendNCPlayItem(ncp);
-                }catch
+                }
+                catch
                 {
                     return null;
                 }
@@ -249,82 +256,102 @@ namespace HyPlayer.HyPlayControl
                 Path = ncp.url
             };
             List.Add(hpi);
-            SyncPlayList();
+            RequestSyncPlayList();
             return hpi;
+        }
+
+        public static void RequestSyncPlayList()
+        {
+            RequestId++;
         }
 
         public static async void SyncPlayList()
         {
-            if (List.Count == 0)
+            int nowsid = 0;
+            if (nowsid != RequestId && !Syncing)
             {
-                PlaybackList.Items.Clear();
-                MPIToIndex.Clear();
-                return;
-            }
-            if (PlaybackList.Items.Count > List.Count)
-            {
-                MPIToIndex.Clear();
-                for (int i = List.Count - 1; i < PlaybackList.Items.Count; i++)
+                Syncing = true;
+                nowsid = RequestId;
+                if (List.Count == 0)
                 {
-                    PlaybackList.Items.RemoveAt(i);
+                    PlaybackList.Items.Clear();
+                    MPIToIndex.Clear();
+                    Syncing = false;
+                    return;
                 }
-            }
-            for (int i = 0; i < List.Count; i++)
-            {
-                if (PlaybackList.Items.Count <= i || List[i].MediaItem == null)
+                if (PlaybackList.Items.Count > List.Count)
                 {
-                    MediaPlaybackItem mediaPlaybackItem;
-                    RandomAccessStreamReference rasr;
-                    if (List[i].ItemType == HyPlayItemType.Netease)
+                    MPIToIndex.Clear();
+                    for (int i = List.Count - 1; i < PlaybackList.Items.Count; i++)
                     {
-                        try
+                        PlaybackList.Items.RemoveAt(i);
+                    }
+                }
+                for (int i = 0; i < List.Count; i++)
+                {
+                    if (PlaybackList.Items.Count <= i || List[i].MediaItem == null)
+                    {
+                        MediaPlaybackItem mediaPlaybackItem;
+                        RandomAccessStreamReference rasr;
+                        if (List[i].ItemType == HyPlayItemType.Netease)
                         {
-                            StorageFile item =
-                                await Windows.Storage.ApplicationData.Current.LocalCacheFolder.GetFileAsync(
-                                    "SongCache\\" + List[i].NcPlayItem.sid +
-                                    "." + List[i].NcPlayItem.subext.ToLower());
-                            if (List[i].NcPlayItem.size == (await item.GetBasicPropertiesAsync()).Size.ToString())
+                            try
                             {
-                                mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(item));
+                                StorageFile item =
+                                    await Windows.Storage.ApplicationData.Current.LocalCacheFolder.GetFileAsync(
+                                        "SongCache\\" + List[i].NcPlayItem.sid +
+                                        "." + List[i].NcPlayItem.subext.ToLower());
+                                if (List[i].NcPlayItem.size == (await item.GetBasicPropertiesAsync()).Size.ToString())
+                                {
+                                    mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(item));
+                                }
+                                else
+                                {
+                                    throw new Exception("文件大小不一致");
+                                }
                             }
-                            else
+                            catch (Exception)
                             {
-                                throw new Exception("文件大小不一致");
-                            }
-                        }
-                        catch (Exception)
-                        {
 
-                            mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromUri(new Uri(List[i].NcPlayItem.url)));
+                                mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromUri(new Uri(List[i].NcPlayItem.url)));
+                            }
+                            rasr = RandomAccessStreamReference.CreateFromUri(new Uri(List[i].NcPlayItem.Album.cover + "?param=" + StaticSource.PICSIZE_AUDIO_PLAYER_COVER));
+                            List[i].MediaItem = mediaPlaybackItem;
                         }
-                        rasr = RandomAccessStreamReference.CreateFromUri(new Uri(List[i].NcPlayItem.Album.cover+"?param="+StaticSource.PICSIZE_AUDIO_PLAYER_COVER));
+                        else
+                        {
+                            mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(List[i].AudioInfo.LocalSongFile));
+                            rasr = List[i].AudioInfo.Thumbnail;
+                        }
+
+                        var properties = mediaPlaybackItem.GetDisplayProperties();
+                        properties.Type = MediaPlaybackType.Music;
+                        properties.MusicProperties.AlbumTitle = List[i].AudioInfo.Album;
+                        properties.MusicProperties.Artist = List[i].AudioInfo.Artist;
+                        properties.MusicProperties.Title = List[i].AudioInfo.SongName;
+                        properties.Thumbnail = rasr;
                         List[i].MediaItem = mediaPlaybackItem;
+
+                        List[i].MediaItem.ApplyDisplayProperties(properties);
+                        MPIToIndex[List[i].MediaItem] = i;
+                        PlaybackList.Items.Add(List[i].MediaItem);
+                        Invoke(() =>
+                        {
+                            if (i >= 0 && List.Count > i) OnPlayListAdd?.Invoke(List[i]);
+                        });
                     }
-                    else
+
+                    if (i >= 0 && List.Count > i && List[i].MediaItem != PlaybackList.Items[i])
                     {
-                        mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(List[i].AudioInfo.LocalSongFile));
-                        rasr = List[i].AudioInfo.Thumbnail;
+                        if (PlaybackList.Items.Contains(List[i].MediaItem))
+                        {//已经有这个了
+                            PlaybackList.Items.Remove(List[i].MediaItem);
+                        }
+                        PlaybackList.Items[i] = List[i].MediaItem;
                     }
-
-                    var properties = mediaPlaybackItem.GetDisplayProperties();
-                    properties.Type = MediaPlaybackType.Music;
-                    properties.MusicProperties.AlbumTitle = List[i].AudioInfo.Album;
-                    properties.MusicProperties.Artist = List[i].AudioInfo.Artist;
-                    properties.MusicProperties.Title = List[i].AudioInfo.SongName;
-                    properties.Thumbnail = rasr;
-                    List[i].MediaItem = mediaPlaybackItem;
-
-                    List[i].MediaItem.ApplyDisplayProperties(properties);
                     MPIToIndex[List[i].MediaItem] = i;
-                    PlaybackList.Items.Add(List[i].MediaItem);
-                    Invoke(() =>
-                    {
-                        if (i >= 0 && List.Count > i) OnPlayListAdd?.Invoke(List[i]);
-                    });
                 }
-                if (i >= 0 && List.Count > i && List[i].MediaItem != PlaybackList.Items[i])
-                    PlaybackList.Items[i] = List[i].MediaItem;
-                MPIToIndex[List[i].MediaItem] = i;
+                Syncing = false;
             }
         }
 
@@ -377,7 +404,7 @@ namespace HyPlayer.HyPlayControl
             };
 
             List.Add(hyPlayItem);
-            SyncPlayList();
+            RequestSyncPlayList();
         }
     }
 
@@ -471,7 +498,7 @@ namespace HyPlayer.HyPlayControl
                 while (lrctxt.Trim().StartsWith('['))
                 {
                     //一句双时间
-                    ConvertTranslation(lrctxt,Lyrics);
+                    ConvertTranslation(lrctxt, Lyrics);
                 }
                 for (int i = 0; i < Lyrics.Count; i++)
                 {

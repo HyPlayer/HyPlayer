@@ -90,10 +90,16 @@
 							Text="歌单创建者"
 							FontSize="18"
 							Foreground="Gray"></TextBlock>
-                        <Button
-                            Margin="0,10,0,0"
-                            Content="播放全部"
-                            Click="ButtonBase_OnClick" />
+                        <StackPanel Spacing="15" Margin="0,10,0,0" Orientation="Horizontal">
+                            <Button
+                                Content="播放全部"
+                                Click="ButtonPlayAll_OnClick" />
+                            <Button
+                                Visibility="Collapsed"
+                                x:Name="ButtonIntel"
+                                Content="心动模式"
+                                Click="ButtonHeartBeat_OnClick" />
+                        </StackPanel>
                         <TextBlock
 							Margin="0,5,0,0"
                             MaxLines="7"
