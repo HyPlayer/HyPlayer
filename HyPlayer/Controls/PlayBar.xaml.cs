@@ -1,39 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using HyPlayer.HyPlayControl;
+using HyPlayer.Pages;
+using System;
 using System.Collections.ObjectModel;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading;
-using Windows.ApplicationModel.Contacts;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.Graphics.Imaging;
-using Windows.Media;
-using Windows.Media.Core;
 using Windows.Media.Playback;
-using Windows.Storage;
 using Windows.Storage.Pickers;
-using Windows.Storage.Streams;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Markup;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
-using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
-using HyPlayer.Pages;
-using Microsoft.Toolkit.Extensions;
-using Microsoft.UI.Xaml.Media;
-using TagLib;
-using AcrylicBackgroundSource = Windows.UI.Xaml.Media.AcrylicBackgroundSource;
-using File = TagLib.File;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 

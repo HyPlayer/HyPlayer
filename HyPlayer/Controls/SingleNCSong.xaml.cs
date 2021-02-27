@@ -1,24 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
+using System;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
-using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
-using Microsoft.UI.Xaml.Media;
 using AcrylicBackgroundSource = Windows.UI.Xaml.Media.AcrylicBackgroundSource;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板

@@ -1,20 +1,18 @@
-﻿using System;
+﻿using HyPlayer.Classes;
+using NeteaseCloudMusicApi;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using TagLib;
 using Windows.Media;
 using Windows.Media.Core;
 using Windows.Media.Playback;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.UI.Xaml.Media.Imaging;
-using HyPlayer.Classes;
-using NeteaseCloudMusicApi;
-using TagLib;
 
 namespace HyPlayer.HyPlayControl
 {

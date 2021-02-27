@@ -1,22 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
+﻿using HyPlayer.Classes;
+using HyPlayer.Pages;
+using System;
 using System.Threading.Tasks;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
-using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using HyPlayer.Pages;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -33,7 +22,7 @@ namespace HyPlayer.Controls
             {
                 this.Invoke(() =>
                 {
-                    ImageRect.ImageSource = new BitmapImage(new Uri(playList.cover+"?param="+StaticSource.PICSIZE_PLAYLIST_ITEM_COVER));
+                    ImageRect.ImageSource = new BitmapImage(new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_PLAYLIST_ITEM_COVER));
                     TextBlockPLName.Text = playList.name;
                     TextBlockPLAuthor.Text = playList.creater.name;
                 });
@@ -50,7 +39,7 @@ namespace HyPlayer.Controls
         private void UIElement_OnTapped(object sender, TappedRoutedEventArgs e)
         {
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongListExpand", ImageContainer);
-            Common.BaseFrame.Navigate(typeof(SongListDetail), playList,new DrillInNavigationTransitionInfo());
+            Common.BaseFrame.Navigate(typeof(SongListDetail), playList, new DrillInNavigationTransitionInfo());
         }
 
     }

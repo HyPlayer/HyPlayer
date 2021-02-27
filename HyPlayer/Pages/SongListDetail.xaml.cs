@@ -1,25 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading.Tasks;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Media.Animation;
-using Windows.UI.Xaml.Media.Imaging;
-using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
+﻿using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media.Animation;
+using Windows.UI.Xaml.Media.Imaging;
+using Windows.UI.Xaml.Navigation;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -54,22 +47,22 @@ namespace HyPlayer.Pages
             if (playList.plid != "-666")
             {
                 var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
-                    new Dictionary<string, object>() {{"id", playList.plid},});
+                    new Dictionary<string, object>() { { "id", playList.plid }, });
                 if (isOk)
                 {
-                    int[] trackIds = json["playlist"]["trackIds"].Select(t => (int) t["id"]).Skip(page * 500).Take(500)
+                    int[] trackIds = json["playlist"]["trackIds"].Select(t => (int)t["id"]).Skip(page * 500).Take(500)
                         .ToArray();
                     if (trackIds.Length >= 500) NextPage.Visibility = Visibility.Visible;
                     else NextPage.Visibility = Visibility.Collapsed;
                     if (json["playlist"]["specialType"].ToString() == "5") ButtonIntel.Visibility = Visibility.Visible;
                     (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
-                        new Dictionary<string, object> {["ids"] = string.Join(",", trackIds)});
+                        new Dictionary<string, object> { ["ids"] = string.Join(",", trackIds) });
                     if (isOk)
                     {
                         int idx = page * 500;
                         foreach (var jToken in json["songs"])
                         {
-                            var song = (JObject) jToken;
+                            var song = (JObject)jToken;
                             if (string.IsNullOrEmpty(intelsong)) intelsong = song["id"].ToString();
                             NCSong NCSong = new NCSong()
                             {
@@ -144,7 +137,7 @@ namespace HyPlayer.Pages
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            playList = (NCPlayList) e.Parameter;
+            playList = (NCPlayList)e.Parameter;
             Task.Run((() =>
             {
                 this.Invoke(() =>
@@ -197,7 +190,7 @@ namespace HyPlayer.Pages
             HyPlayList.List.Clear();
             HyPlayList.RequestSyncPlayList();
             var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaymodeIntelligenceList,
-                new Dictionary<string, object>() {{"pid", playList.plid}, {"id", intelsong}});
+                new Dictionary<string, object>() { { "pid", playList.plid }, { "id", intelsong } });
             if (isOk)
             {
                 foreach (JToken token in json["data"])
