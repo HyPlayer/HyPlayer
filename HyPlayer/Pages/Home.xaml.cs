@@ -45,9 +45,25 @@ namespace HyPlayer.Pages
             {
                 this.Invoke((async () =>
                 {
+
                     var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendResource);
                     if (isOk)
                     {
+                        NCPlayList dayly = new NCPlayList()
+                        {
+                            cover = "https://gitee.com/kengwang/HyPlayer/raw/master/HyPlayer/Assets/icon.png",
+                            creater = new NCUser()
+                            {
+                                avatar = "https://p1.music.126.net/KxePid7qTvt6V2iYVy-rYQ==/109951165050882728.jpg",
+                                id = "1",
+                                name = "网易云音乐",
+                                signature = "网易云音乐官方账号 "
+                            },
+                            plid ="-666",
+                            name = "每日歌曲推荐",
+                            desc = "根据你的口味生成，每天6:00更新"
+                        };
+                        RcmdSongList.Children.Add(new PlaylistItem(dayly));
                         foreach (JToken PlaylistItemJson in json["recommend"].ToArray())
                         {
                             NCPlayList ncp = new NCPlayList()
