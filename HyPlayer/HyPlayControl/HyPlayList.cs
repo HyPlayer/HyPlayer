@@ -83,11 +83,15 @@ namespace HyPlayer.HyPlayControl
 
         private static void LoadSystemPlayBar(int index)
         {
-            if (index >= List.Count) return;
-            var hpi = List[index];
-            var ai = hpi.AudioInfo;
+            if (index >= List.Count)
+            {
+                return;
+            }
+
+            HyPlayItem hpi = List[index];
+            AudioInfo ai = hpi.AudioInfo;
             //然后设置播放相关属性
-            var properties = PlaybackList.Items[index].GetDisplayProperties();
+            MediaItemDisplayProperties properties = PlaybackList.Items[index].GetDisplayProperties();
             properties.Type = MediaPlaybackType.Music;
             properties.MusicProperties.AlbumTitle = ai.Album;
             properties.MusicProperties.Artist = ai.Artist;
@@ -134,15 +138,23 @@ namespace HyPlayer.HyPlayControl
 
         public static async void AudioMediaPlaybackList_CurrentItemChanged(MediaPlaybackList sender, CurrentMediaPlaybackItemChangedEventArgs args)
         {
-            if (args.NewItem == null) return;
+            if (args.NewItem == null)
+            {
+                return;
+            }
+
             NowPlaying = (int)HyPlayList.PlaybackList.CurrentItemIndex;
-            if (!MPIToIndex.ContainsKey(args.NewItem)) return;
+            if (!MPIToIndex.ContainsKey(args.NewItem))
+            {
+                return;
+            }
+
             HyPlayItem hpi = List[MPIToIndex[args.NewItem]];
-            var ai = hpi.AudioInfo;
+            AudioInfo ai = hpi.AudioInfo;
             //LoadSystemPlayBar(MPIToIndex[args.NewItem]);
             if (hpi.ItemType == HyPlayItemType.Netease && hpi.AudioInfo.Lyric == null)
             {
-                var lrcs = await LoadNCLyric(hpi);
+                PureLyricInfo lrcs = await LoadNCLyric(hpi);
                 ai.Lyric = lrcs.PureLyrics;
                 ai.TrLyric = lrcs.TrLyrics;
             }
@@ -157,7 +169,7 @@ namespace HyPlayer.HyPlayControl
 
         public static async Task<PureLyricInfo> LoadNCLyric(HyPlayItem ncp)
         {
-            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Lyric,
+            (bool isOk, Newtonsoft.Json.Linq.JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Lyric,
                 new Dictionary<string, object>() { { "id", ncp.NcPlayItem.sid } });
             if (isOk)
             {
@@ -201,13 +213,17 @@ namespace HyPlayer.HyPlayControl
 
         public static async Task<HyPlayItem> AppendNCSong(NCSong ncSong)
         {
-            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
+            (bool isOk, Newtonsoft.Json.Linq.JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
                 new Dictionary<string, object>() { { "id", ncSong.sid }, { "br", 320000 } });
             if (isOk)
             {
                 try
                 {
-                    if (json["data"][0]["code"].ToString() != "200") return null; //未获取到
+                    if (json["data"][0]["code"].ToString() != "200")
+                    {
+                        return null; //未获取到
+                    }
+
                     NCPlayItem ncp = new NCPlayItem()
                     {
                         Album = ncSong.Album,
@@ -244,7 +260,7 @@ namespace HyPlayer.HyPlayControl
                 Picture = ncp.Album.cover,
                 SongName = ncp.songname
             };
-            var hpi = new HyPlayItem()
+            HyPlayItem hpi = new HyPlayItem()
             {
                 AudioInfo = ai,
                 isOnline = true,
@@ -322,7 +338,7 @@ namespace HyPlayer.HyPlayControl
                             rasr = List[i].AudioInfo.Thumbnail;
                         }
 
-                        var properties = mediaPlaybackItem.GetDisplayProperties();
+                        MediaItemDisplayProperties properties = mediaPlaybackItem.GetDisplayProperties();
                         properties.Type = MediaPlaybackType.Music;
                         properties.MusicProperties.AlbumTitle = List[i].AudioInfo.Album;
                         properties.MusicProperties.Artist = List[i].AudioInfo.Artist;
@@ -335,7 +351,10 @@ namespace HyPlayer.HyPlayControl
                         PlaybackList.Items.Add(List[i].MediaItem);
                         Invoke(() =>
                         {
-                            if (i >= 0 && List.Count > i) OnPlayListAdd?.Invoke(List[i]);
+                            if (i >= 0 && List.Count > i)
+                            {
+                                OnPlayListAdd?.Invoke(List[i]);
+                            }
                         });
                     }
 
@@ -355,7 +374,7 @@ namespace HyPlayer.HyPlayControl
 
         public static async void AppendFile(StorageFile sf)
         {
-            var afi = TagLib.File.Create(new UwpStorageFileAbstraction(sf), ReadStyle.Average);
+            TagLib.File afi = TagLib.File.Create(new UwpStorageFileAbstraction(sf), ReadStyle.Average);
             AudioInfo ai = new AudioInfo()
             {
                 Album = string.IsNullOrEmpty(afi.Tag.Album) ? "未知专辑" : afi.Tag.Album,
@@ -392,7 +411,7 @@ namespace HyPlayer.HyPlayControl
             }
             catch (Exception) { }
 
-            var hyPlayItem = new HyPlayItem()
+            HyPlayItem hyPlayItem = new HyPlayItem()
             {
                 AudioInfo = ai,
                 isOnline = false,
@@ -412,15 +431,22 @@ namespace HyPlayer.HyPlayControl
     {
         public static List<SongLyric> ConvertPureLyric(string LyricAllText)
         {
-            var Lyrics = new List<SongLyric>();
-            if (string.IsNullOrEmpty(LyricAllText)) return new List<SongLyric>();
+            List<SongLyric> Lyrics = new List<SongLyric>();
+            if (string.IsNullOrEmpty(LyricAllText))
+            {
+                return new List<SongLyric>();
+            }
+
             string[] LyricsArr = LyricAllText.Replace("\r\n", "\n").Replace("\r", "\n").Split("\n");
             TimeSpan offset = TimeSpan.Zero;
             foreach (string sL in LyricsArr)
             {
                 string LyricTextLine = sL.Trim();
                 if (LyricTextLine.IndexOf('[') == -1 || LyricTextLine.IndexOf(']') == -1)
+                {
                     continue; //此行不为Lrc
+                }
+
                 string prefix = LyricTextLine.Substring(1, LyricTextLine.IndexOf(']') - 1);
                 if (prefix.StartsWith("al") || prefix.StartsWith("ar") || prefix.StartsWith("au") ||
                     prefix.StartsWith("by") || prefix.StartsWith("re") || prefix.StartsWith("ti") ||
@@ -432,12 +458,18 @@ namespace HyPlayer.HyPlayControl
                 if (prefix.StartsWith("offset"))
                 {
                     if (!int.TryParse(prefix.Substring(6), out int offsetint))
+                    {
                         continue;
+                    }
+
                     offset = new TimeSpan(0, 0, 0, 0, offsetint);
                 }
 
                 if (!TimeSpan.TryParse("00:" + prefix, out TimeSpan time))
+                {
                     continue;
+                }
+
                 string lrctxt = LyricTextLine.Substring(LyricTextLine.IndexOf(']') + 1);
                 while (lrctxt.Trim().StartsWith('['))
                 {
@@ -467,14 +499,21 @@ namespace HyPlayer.HyPlayControl
 
         public static void ConvertTranslation(string LyricAllText, List<SongLyric> Lyrics)
         {
-            if (string.IsNullOrEmpty(LyricAllText)) return;
+            if (string.IsNullOrEmpty(LyricAllText))
+            {
+                return;
+            }
+
             string[] LyricsArr = LyricAllText.Replace("\r\n", "\n").Replace("\r", "\n").Split("\n");
             TimeSpan offset = TimeSpan.Zero;
             foreach (string sL in LyricsArr)
             {
                 string LyricTextLine = sL.Trim();
                 if (LyricTextLine.IndexOf('[') == -1 || LyricTextLine.IndexOf(']') == -1)
+                {
                     continue; //此行不为Lrc
+                }
+
                 string prefix = LyricTextLine.Substring(1, LyricTextLine.IndexOf(']') - 1);
                 if (prefix.StartsWith("al") || prefix.StartsWith("ar") || prefix.StartsWith("au") ||
                     prefix.StartsWith("by") || prefix.StartsWith("re") || prefix.StartsWith("ti") ||
@@ -486,12 +525,18 @@ namespace HyPlayer.HyPlayControl
                 if (prefix.StartsWith("offset"))
                 {
                     if (!int.TryParse(prefix.Substring(6), out int offsetint))
+                    {
                         continue;
+                    }
+
                     offset = new TimeSpan(0, 0, 0, 0, offsetint);
                 }
 
                 if (!TimeSpan.TryParse("00:" + prefix, out TimeSpan time))
+                {
                     continue;
+                }
+
                 string lrctxt = LyricTextLine.Substring(LyricTextLine.IndexOf(']') + 1);
                 while (lrctxt.Trim().StartsWith('['))
                 {
@@ -500,7 +545,7 @@ namespace HyPlayer.HyPlayControl
                 }
                 for (int i = 0; i < Lyrics.Count; i++)
                 {
-                    var songLyric = Lyrics[i];
+                    SongLyric songLyric = Lyrics[i];
                     if (songLyric.LyricTime == time)
                     {
                         songLyric.Translation = lrctxt;

@@ -18,7 +18,7 @@ namespace HyPlayer.Controls
     public sealed partial class SingleNCSong : UserControl
     {
         private NCSong ncsong;
-        private bool CanPlay;
+        private readonly bool CanPlay;
         public SingleNCSong(NCSong song, int order, bool canplay = true)
         {
             this.InitializeComponent();
@@ -38,7 +38,11 @@ namespace HyPlayer.Controls
 
         public async Task<bool> AppendMe()
         {
-            if (!CanPlay) return false;
+            if (!CanPlay)
+            {
+                return false;
+            }
+
             await HyPlayList.AppendNCSong(ncsong);
             return true;
         }

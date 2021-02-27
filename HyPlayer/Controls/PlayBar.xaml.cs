@@ -46,8 +46,8 @@ namespace HyPlayer.Controls
             fop.FileTypeFilter.Add(".mp3");
 
 
-            var files = await fop.PickMultipleFilesAsync();
-            foreach (var file in files)
+            System.Collections.Generic.IReadOnlyList<Windows.Storage.StorageFile> files = await fop.PickMultipleFilesAsync();
+            foreach (Windows.Storage.StorageFile file in files)
             {
                 HyPlayList.AppendFile(file);
             }
@@ -60,7 +60,7 @@ namespace HyPlayer.Controls
             {
                 try
                 {
-                    var tai = HyPlayList.NowPlayingItem.AudioInfo;
+                    AudioInfo tai = HyPlayList.NowPlayingItem.AudioInfo;
                     TbSingerName.Text = tai.Artist;
                     TbSongName.Text = tai.SongName;
                     SliderProgress.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
@@ -82,7 +82,11 @@ namespace HyPlayer.Controls
 
         public void LoadPlayingFile(HyPlayItem mpi)
         {
-            if (mpi == null) return;
+            if (mpi == null)
+            {
+                return;
+            }
+
             MediaItemDisplayProperties dp = mpi.MediaItem.GetDisplayProperties();
             AudioInfo ai = mpi.AudioInfo;
             this.Invoke((() =>
@@ -120,9 +124,14 @@ namespace HyPlayer.Controls
         private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
         {
             if (HyPlayList.isPlaying)
+            {
                 HyPlayList.Player.Pause();
+            }
             else if (!HyPlayList.isPlaying)
+            {
                 HyPlayList.Player.Play();
+            }
+
             PlayStateIcon.Glyph = HyPlayList.isPlaying ? "\uEDB5" : "\uEDB4";
         }
 
@@ -130,7 +139,9 @@ namespace HyPlayer.Controls
         {
             HyPlayList.Player.Volume = e.NewValue / 100;
             if (Common.PageExpandedPlayer != null)
+            {
                 Common.PageExpandedPlayer.SliderVolumn.Value = e.NewValue;
+            }
         }
 
         private void BtnMute_OnCllick(object sender, RoutedEventArgs e)
@@ -153,7 +164,9 @@ namespace HyPlayer.Controls
         private void ListBoxPlayList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (ListBoxPlayList.SelectedIndex != -1 && ListBoxPlayList.SelectedIndex != HyPlayList.NowPlaying)
+            {
                 HyPlayList.PlaybackList.MoveTo((uint)ListBoxPlayList.SelectedIndex);
+            }
         }
 
         private void ButtonExpand_OnClick(object sender, RoutedEventArgs e)
@@ -167,7 +180,10 @@ namespace HyPlayer.Controls
                 new EntranceNavigationTransitionInfo());
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TbSongName);
             if (AlbumImage.Visibility == Visibility.Visible)
+            {
                 ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", AlbumImage);
+            }
+
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TbSingerName);
             Common.PageExpandedPlayer.StartExpandAnimation();
             GridSongInfo.Visibility = Visibility.Collapsed;
@@ -177,17 +193,23 @@ namespace HyPlayer.Controls
         {
             Common.PageExpandedPlayer.StartCollapseAnimation();
             GridSongInfo.Visibility = Visibility.Visible;
-            var anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
-            var anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
-            var anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
+            ConnectedAnimation anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
+            ConnectedAnimation anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
+            ConnectedAnimation anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
             anim3.Configuration = new DirectConnectedAnimationConfiguration();
             if (anim2 != null)
+            {
                 anim2.Configuration = new DirectConnectedAnimationConfiguration();
+            }
+
             anim1.Configuration = new DirectConnectedAnimationConfiguration();
             anim3?.TryStart(TbSingerName);
             anim1?.TryStart(TbSongName);
             if (AlbumImage.Visibility == Visibility.Visible)
+            {
                 anim2?.TryStart(AlbumImage);
+            }
+
             ButtonExpand.Visibility = Visibility.Visible;
             ButtonCollapse.Visibility = Visibility.Collapsed;
             Common.PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));
@@ -211,7 +233,9 @@ namespace HyPlayer.Controls
         private void SliderProgress_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
             if (canslide)
+            {
                 HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(SliderProgress.Value);
+            }
         }
 
         private void SliderProgress_OnManipulationStarted(object sender, ManipulationStartedRoutedEventArgs e)
@@ -273,8 +297,8 @@ namespace HyPlayer.Controls
     {
         public double SecondValue
         {
-            get { return (double)GetValue(SecondValueProperty); }
-            set { SetValue(SecondValueProperty, value); }
+            get => (double)GetValue(SecondValueProperty);
+            set => SetValue(SecondValueProperty, value);
         }
 
         // Using a DependencyProperty as the backing store for SecondValue.  This enables animation, styling, binding, etc...
