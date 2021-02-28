@@ -266,8 +266,33 @@ namespace HyPlayer.Controls
         private void BtnPlayRollType_OnClick(object sender, RoutedEventArgs e)
         {
             HyPlayList.PlaybackList.ShuffleEnabled = !HyPlayList.PlaybackList.ShuffleEnabled;
-            BtnPlayRollType.IsChecked = HyPlayList.PlaybackList.ShuffleEnabled;
+            switch (NowPlayType)
+            {
+                case PlayMode.DefaultRoll:
+                    //变成随机
+                    HyPlayList.PlaybackList.ShuffleEnabled = true;
+                    HyPlayList.Player.IsLoopingEnabled = false;
+                    NowPlayType = PlayMode.Shuffled;
+                    IconPlayType.Glyph = "\uE14B";
+                    break;
+                case PlayMode.Shuffled:
+                    //变成单曲
+                    IconPlayType.Glyph = "\uE1CC";
+                    HyPlayList.PlaybackList.ShuffleEnabled = false;
+                    HyPlayList.Player.IsLoopingEnabled = true;
+                    NowPlayType = PlayMode.SinglePlay;
+                    break;
+                case PlayMode.SinglePlay:
+                    //变成顺序
+                    HyPlayList.PlaybackList.ShuffleEnabled = false;
+                    HyPlayList.Player.IsLoopingEnabled = false;
+                    NowPlayType = PlayMode.DefaultRoll;
+                    IconPlayType.Glyph = "\uE169";
+                    break;
+            }
         }
+
+        public PlayMode NowPlayType = PlayMode.DefaultRoll;
     }
 
 
@@ -317,5 +342,12 @@ namespace HyPlayer.Controls
         {
             throw new NotImplementedException();
         }
+    }
+
+    public enum PlayMode
+    {
+        DefaultRoll,
+        SinglePlay,
+        Shuffled
     }
 }
