@@ -62,11 +62,13 @@ namespace HyPlayer.Controls
         private void UIElement_OnPointerEntered(object sender, PointerRoutedEventArgs e)
         {
             Grid1.Background = Application.Current.Resources["SystemControlAltLowAcrylicElementBrush"] as Brush;
+            Grid1.BorderBrush = Application.Current.Resources["SystemControlBackgroundListMediumRevealBorderBrush"] as Brush;
         }
 
         private void Grid1_OnPointerExited(object sender, PointerRoutedEventArgs e)
         {
             Grid1.Background = null;
+            Grid1.BorderBrush = new SolidColorBrush();
         }
 
         private void Grid1_OnTapped(object sender, TappedRoutedEventArgs e)

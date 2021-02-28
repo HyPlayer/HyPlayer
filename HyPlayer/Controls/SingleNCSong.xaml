@@ -15,6 +15,7 @@
         Tapped="Grid1_OnTapped"
         DoubleTapped="Grid1_OnDoubleTapped"
         PointerEntered="UIElement_OnPointerEntered"
+        BorderThickness="1"
         PointerExited="Grid1_OnPointerExited"
         >
         <Grid.ColumnDefinitions>
