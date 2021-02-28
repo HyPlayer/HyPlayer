@@ -27,6 +27,7 @@ namespace HyPlayer.HyPlayControl
         //public static Timer Timer = null;
         public static List<SongLyric> Lyrics = new List<SongLyric>();
         public static int RequestId;
+        private static int nowsid;
         public static bool Syncing;
         public static Timer SyncTimer;
 
@@ -140,6 +141,7 @@ namespace HyPlayer.HyPlayControl
         {
             if (args.NewItem == null)
             {
+                RequestSyncPlayList();
                 return;
             }
 
@@ -281,7 +283,6 @@ namespace HyPlayer.HyPlayControl
 
         public static async void SyncPlayList()
         {
-            int nowsid = 0;
             if (nowsid != RequestId && !Syncing)
             {
                 Syncing = true;
@@ -303,7 +304,7 @@ namespace HyPlayer.HyPlayControl
                 }
                 for (int i = 0; i < List.Count; i++)
                 {
-                    if (PlaybackList.Items.Count <= i || List[i].MediaItem == null)
+                    if (PlaybackList.Items.Count <= i || List[i].MediaItem == null || List[i].MediaItem.Source.State == MediaSourceState.Failed  || PlaybackList.Items[i] != List[i].MediaItem)
                     {
                         MediaPlaybackItem mediaPlaybackItem;
                         RandomAccessStreamReference rasr;
