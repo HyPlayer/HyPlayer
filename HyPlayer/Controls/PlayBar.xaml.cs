@@ -1,39 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using HyPlayer.HyPlayControl;
+using HyPlayer.Pages;
+using System;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
-using System.Drawing;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading;
-using Windows.ApplicationModel.Contacts;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.Graphics.Imaging;
-using Windows.Media;
-using Windows.Media.Core;
 using Windows.Media.Playback;
-using Windows.Storage;
 using Windows.Storage.Pickers;
-using Windows.Storage.Streams;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Markup;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
-using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
-using HyPlayer.Pages;
-using Microsoft.Toolkit.Extensions;
-using Microsoft.UI.Xaml.Media;
-using TagLib;
-using AcrylicBackgroundSource = Windows.UI.Xaml.Media.AcrylicBackgroundSource;
-using File = TagLib.File;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -68,8 +49,8 @@ namespace HyPlayer.Controls
             fop.FileTypeFilter.Add(".mp3");
 
 
-            var files = await fop.PickMultipleFilesAsync();
-            foreach (var file in files)
+            System.Collections.Generic.IReadOnlyList<Windows.Storage.StorageFile> files = await fop.PickMultipleFilesAsync();
+            foreach (Windows.Storage.StorageFile file in files)
             {
                 HyPlayList.AppendFile(file);
             }
@@ -82,7 +63,7 @@ namespace HyPlayer.Controls
             {
                 try
                 {
-                    var tai = HyPlayList.NowPlayingItem.AudioInfo;
+                    AudioInfo tai = HyPlayList.NowPlayingItem.AudioInfo;
                     TbSingerName.Text = tai.Artist;
                     TbSongName.Text = tai.SongName;
                     SliderProgress.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
@@ -104,7 +85,11 @@ namespace HyPlayer.Controls
 
         public void LoadPlayingFile(HyPlayItem mpi)
         {
-            if (mpi == null) return;
+            if (mpi == null)
+            {
+                return;
+            }
+
             MediaItemDisplayProperties dp = mpi.MediaItem.GetDisplayProperties();
             AudioInfo ai = mpi.AudioInfo;
             this.Invoke((() =>
@@ -115,6 +100,7 @@ namespace HyPlayer.Controls
                 SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
                 SliderProgress.Minimum = 0;
                 SliderProgress.Maximum = ai.LengthInMilliseconds;
+                if (mpi.isOnline) BtnLike.IsChecked = Common.LikedSongs.Contains(mpi.NcPlayItem.sid);
                 ListBoxPlayList.SelectedIndex = (int)HyPlayList.NowPlaying;
             }));
         }
@@ -142,9 +128,14 @@ namespace HyPlayer.Controls
         private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
         {
             if (HyPlayList.isPlaying)
+            {
                 HyPlayList.Player.Pause();
+            }
             else if (!HyPlayList.isPlaying)
+            {
                 HyPlayList.Player.Play();
+            }
+
             PlayStateIcon.Glyph = HyPlayList.isPlaying ? "\uEDB5" : "\uEDB4";
         }
 
@@ -152,7 +143,9 @@ namespace HyPlayer.Controls
         {
             HyPlayList.Player.Volume = e.NewValue / 100;
             if (Common.PageExpandedPlayer != null)
+            {
                 Common.PageExpandedPlayer.SliderVolumn.Value = e.NewValue;
+            }
         }
 
         private void BtnMute_OnCllick(object sender, RoutedEventArgs e)
@@ -175,7 +168,9 @@ namespace HyPlayer.Controls
         private void ListBoxPlayList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (ListBoxPlayList.SelectedIndex != -1 && ListBoxPlayList.SelectedIndex != HyPlayList.NowPlaying)
+            {
                 HyPlayList.PlaybackList.MoveTo((uint)ListBoxPlayList.SelectedIndex);
+            }
         }
 
         private void ButtonExpand_OnClick(object sender, RoutedEventArgs e)
@@ -189,7 +184,10 @@ namespace HyPlayer.Controls
                 new EntranceNavigationTransitionInfo());
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TbSongName);
             if (AlbumImage.Visibility == Visibility.Visible)
+            {
                 ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", AlbumImage);
+            }
+
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TbSingerName);
             Common.PageExpandedPlayer.StartExpandAnimation();
             GridSongInfo.Visibility = Visibility.Collapsed;
@@ -199,17 +197,23 @@ namespace HyPlayer.Controls
         {
             Common.PageExpandedPlayer.StartCollapseAnimation();
             GridSongInfo.Visibility = Visibility.Visible;
-            var anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
-            var anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
-            var anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
+            ConnectedAnimation anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
+            ConnectedAnimation anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
+            ConnectedAnimation anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
             anim3.Configuration = new DirectConnectedAnimationConfiguration();
             if (anim2 != null)
+            {
                 anim2.Configuration = new DirectConnectedAnimationConfiguration();
+            }
+
             anim1.Configuration = new DirectConnectedAnimationConfiguration();
             anim3?.TryStart(TbSingerName);
             anim1?.TryStart(TbSongName);
             if (AlbumImage.Visibility == Visibility.Visible)
+            {
                 anim2?.TryStart(AlbumImage);
+            }
+
             ButtonExpand.Visibility = Visibility.Visible;
             ButtonCollapse.Visibility = Visibility.Collapsed;
             Common.PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));
@@ -221,7 +225,7 @@ namespace HyPlayer.Controls
         private void ButtonCleanAll_OnClick(object sender, RoutedEventArgs e)
         {
             HyPlayList.List.Clear();
-            HyPlayList.SyncPlayList();
+            HyPlayList.RequestSyncPlayList();
             ListBoxPlayList.ItemsSource = new ObservableCollection<ListViewPlayItem>();
         }
 
@@ -233,7 +237,9 @@ namespace HyPlayer.Controls
         private void SliderProgress_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
             if (canslide)
+            {
                 HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(SliderProgress.Value);
+            }
         }
 
         private void SliderProgress_OnManipulationStarted(object sender, ManipulationStartedRoutedEventArgs e)
@@ -253,7 +259,7 @@ namespace HyPlayer.Controls
                 if (sender is Button btn)
                 {
                     HyPlayList.List.RemoveAt(int.Parse(btn.Tag.ToString()));
-                    HyPlayList.SyncPlayList();
+                    HyPlayList.RequestSyncPlayList();
                     RefreshSongList(null);
                 }
             }
@@ -264,7 +270,49 @@ namespace HyPlayer.Controls
         private void BtnPlayRollType_OnClick(object sender, RoutedEventArgs e)
         {
             HyPlayList.PlaybackList.ShuffleEnabled = !HyPlayList.PlaybackList.ShuffleEnabled;
-            BtnPlayRollType.IsChecked = HyPlayList.PlaybackList.ShuffleEnabled;
+            switch (NowPlayType)
+            {
+                case PlayMode.DefaultRoll:
+                    //变成随机
+                    HyPlayList.PlaybackList.ShuffleEnabled = true;
+                    HyPlayList.Player.IsLoopingEnabled = false;
+                    NowPlayType = PlayMode.Shuffled;
+                    IconPlayType.Glyph = "\uE14B";
+                    break;
+                case PlayMode.Shuffled:
+                    //变成单曲
+                    IconPlayType.Glyph = "\uE1CC";
+                    HyPlayList.PlaybackList.ShuffleEnabled = false;
+                    HyPlayList.Player.IsLoopingEnabled = true;
+                    NowPlayType = PlayMode.SinglePlay;
+                    break;
+                case PlayMode.SinglePlay:
+                    //变成顺序
+                    HyPlayList.PlaybackList.ShuffleEnabled = false;
+                    HyPlayList.Player.IsLoopingEnabled = false;
+                    NowPlayType = PlayMode.DefaultRoll;
+                    IconPlayType.Glyph = "\uE169";
+                    break;
+            }
+        }
+
+        public PlayMode NowPlayType = PlayMode.DefaultRoll;
+
+        private void BtnLike_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (HyPlayList.NowPlayingItem.isOnline)
+            {
+                Api.LikeSong(HyPlayList.NowPlayingItem.NcPlayItem.sid, !Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.NcPlayItem.sid));
+                if (Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.NcPlayItem.sid))
+                {
+                    Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.NcPlayItem.sid);
+                }
+                else
+                {
+                    Common.LikedSongs.Add(HyPlayList.NowPlayingItem.NcPlayItem.sid);
+                }
+                BtnLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.NcPlayItem.sid);
+            }
         }
     }
 
@@ -295,8 +343,8 @@ namespace HyPlayer.Controls
     {
         public double SecondValue
         {
-            get { return (double)GetValue(SecondValueProperty); }
-            set { SetValue(SecondValueProperty, value); }
+            get => (double)GetValue(SecondValueProperty);
+            set => SetValue(SecondValueProperty, value);
         }
 
         // Using a DependencyProperty as the backing store for SecondValue.  This enables animation, styling, binding, etc...
@@ -315,5 +363,12 @@ namespace HyPlayer.Controls
         {
             throw new NotImplementedException();
         }
+    }
+
+    public enum PlayMode
+    {
+        DefaultRoll,
+        SinglePlay,
+        Shuffled
     }
 }

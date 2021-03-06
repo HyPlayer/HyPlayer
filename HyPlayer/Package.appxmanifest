@@ -5,13 +5,12 @@
   xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
-  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-  IgnorableNamespaces="uap mp uap3 rescap">
+  IgnorableNamespaces="uap mp uap3">
 
   <Identity
     Name="64698713-b184-44e4-ae9b-80db14b129c6"
     Publisher="CN=HyPlayer Team"
-    Version="1.0.9.0" />
+    Version="1.0.12.0" />
 
   <mp:PhoneIdentity PhoneProductId="64698713-b184-44e4-ae9b-80db14b129c6" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
@@ -62,7 +61,6 @@
     <uap3:Capability Name="backgroundMediaPlayback"/>
     <uap:Capability Name="removableStorage"/>
     <uap:Capability Name="musicLibrary"/>
-	<rescap:Capability Name="broadFileSystemAccess" />
     <Capability Name="privateNetworkClientServer"/>
     <Capability Name="internetClientServer"/>
   </Capabilities>

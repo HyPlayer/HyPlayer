@@ -32,6 +32,8 @@ namespace HyPlayer.HyPlayControl
         public string TrLyric;
         public double LengthInMilliseconds;
         public string Picture;
+        public bool liked;
+        public string tag;
         public StorageFile LocalSongFile;
         public BitmapImage BitmapImage;
         public RandomAccessStreamReference Thumbnail;

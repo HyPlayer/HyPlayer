@@ -1,24 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
+using System;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
-using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
-using Microsoft.UI.Xaml.Media;
 using AcrylicBackgroundSource = Windows.UI.Xaml.Media.AcrylicBackgroundSource;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
@@ -28,7 +18,7 @@ namespace HyPlayer.Controls
     public sealed partial class SingleNCSong : UserControl
     {
         private NCSong ncsong;
-        private bool CanPlay;
+        private readonly bool CanPlay;
         public SingleNCSong(NCSong song, int order, bool canplay = true)
         {
             this.InitializeComponent();
@@ -48,7 +38,11 @@ namespace HyPlayer.Controls
 
         public async Task<bool> AppendMe()
         {
-            if (!CanPlay) return false;
+            if (!CanPlay)
+            {
+                return false;
+            }
+
             await HyPlayList.AppendNCSong(ncsong);
             return true;
         }
@@ -68,11 +62,13 @@ namespace HyPlayer.Controls
         private void UIElement_OnPointerEntered(object sender, PointerRoutedEventArgs e)
         {
             Grid1.Background = Application.Current.Resources["SystemControlAltLowAcrylicElementBrush"] as Brush;
+            Grid1.BorderBrush = Application.Current.Resources["SystemControlBackgroundListMediumRevealBorderBrush"] as Brush;
         }
 
         private void Grid1_OnPointerExited(object sender, PointerRoutedEventArgs e)
         {
             Grid1.Background = null;
+            Grid1.BorderBrush = new SolidColorBrush();
         }
 
         private void Grid1_OnTapped(object sender, TappedRoutedEventArgs e)

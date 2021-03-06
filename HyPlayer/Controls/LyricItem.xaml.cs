@@ -1,31 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading.Tasks;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
+﻿using HyPlayer.Classes;
+using System;
 using Windows.UI;
-using Windows.UI.Core;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using Microsoft.UI.Xaml.Media;
-using AcrylicBackgroundSource = Windows.UI.Xaml.Media.AcrylicBackgroundSource;
-using AcrylicBrush = Microsoft.UI.Xaml.Media.AcrylicBrush;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
 namespace HyPlayer.Controls
 {
-    
+
     public sealed partial class LyricItem : UserControl
     {
         public readonly SongLyric Lrc;
@@ -76,7 +61,7 @@ namespace HyPlayer.Controls
             showing = false;
             TextBoxPureLyric.FontWeight = FontWeights.Normal;
             TextBoxTranslation.FontWeight = FontWeights.Normal;
-            TextBoxPureLyric.Foreground = new SolidColorBrush(Color.FromArgb(255,155,155,155));
+            TextBoxPureLyric.Foreground = new SolidColorBrush(Color.FromArgb(255, 155, 155, 155));
             TextBoxTranslation.Foreground = new SolidColorBrush(Color.FromArgb(255, 155, 155, 155));
             TextBoxPureLyric.FontSize = actualsize;
             TextBoxTranslation.FontSize = actualsize;

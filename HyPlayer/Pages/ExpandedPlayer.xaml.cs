@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,21 +12,20 @@ using Windows.Graphics.DirectX;
 using Windows.Media.Playback;
 using Windows.UI;
 using Windows.UI.Composition;
+using HyPlayer.Classes;
+using HyPlayer.Controls;
+using HyPlayer.HyPlayControl;
 using Windows.UI.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using AudioVisualizer;
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using HyPlayer.HyPlayControl;
 using Microsoft.Graphics.Canvas.UI.Composition;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
@@ -54,6 +53,7 @@ namespace HyPlayer.Pages
             Common.PageExpandedPlayer = this;
             HyPlayList.OnPlayPositionChange += RefreshLyricTime;
             HyPlayList.OnPlayItemChange += OnSongChange;
+            HyPlayList.OnLyricLoaded += HyPlayList_OnLyricLoaded;
             Window.Current.SizeChanged += Current_SizeChanged;
             Current_SizeChanged(null, null);
         }
@@ -61,6 +61,10 @@ namespace HyPlayer.Pages
         private void PlaybackSource_Changed(object sender, IVisualizationSource args)
         {
             _spectrumSource.Source = _playbackSource.Source;
+            }
+        private void HyPlayList_OnLyricLoaded()
+        {
+            LoadLyricsBox();
         }
 
         private void Current_SizeChanged(object sender, WindowSizeChangedEventArgs e)
@@ -72,7 +76,15 @@ namespace HyPlayer.Pages
             }
             else
             {
-                LyricWidth = Math.Max(e.Size.Width * 0.4, LyricBoxContainer.ViewportWidth);
+                if (e.Size.Width > 800)
+                {
+                    LyricWidth = e.Size.Width * 0.4;
+                }
+                else
+                {
+                    LyricWidth = Math.Max(e.Size.Width * 0.4, LyricBoxContainer.ViewportWidth);
+                }
+
                 showsize = Math.Max(e.Size.Width / 70, 16);
             }
 
@@ -127,6 +139,7 @@ namespace HyPlayer.Pages
             {
                 LoadVisualizer();
                 OnSongChange(HyPlayList.List[HyPlayList.NowPlaying]);
+                LoadLyricsBox();
             }
             catch { }
 
@@ -231,10 +244,9 @@ namespace HyPlayer.Pages
                         ImageAlbum.Source = mpi.ItemType == HyPlayItemType.Local ? mpi.AudioInfo.BitmapImage : new BitmapImage(new Uri(mpi.AudioInfo.Picture));
                         TextBlockSinger.Text = mpi.AudioInfo.Artist;
                         TextBlockSongTitle.Text = mpi.AudioInfo.SongName;
-                        this.Background = new ImageBrush() { ImageSource = ImageAlbum.Source };
+                        this.Background = new ImageBrush() { ImageSource = ImageAlbum.Source , Stretch = Stretch.UniformToFill};
                         ProgressBarPlayProg.Maximum = mpi.AudioInfo.LengthInMilliseconds;
                         SliderVolumn.Value = HyPlayList.Player.Volume * 100;
-                        LoadLyricsBox();
                     }
                     catch (Exception) { }
 ;

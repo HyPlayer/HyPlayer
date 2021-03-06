@@ -11,7 +11,7 @@ pool:
 
 variables:
   solution: 'HyPlayer.sln'
-  buildPlatform: 'x86|x64|ARM'
+  buildPlatform: 'x86|x64|ARM|ARM64'
   buildConfiguration: 'Release'
   appxPackageDir: '$(build.artifactStagingDirectory)\AppxPackages\\'
 
@@ -31,7 +31,7 @@ steps:
   displayName: 'Download CA certificate'
   inputs:
     secureFile: 'HyPlayer.pfx'
-  
+ 
 - task: VSBuild@1
   inputs:
     platform: 'x86'
@@ -41,7 +41,7 @@ steps:
                   /p:AppxPackageDir="$(appxPackageDir)" 
                   /p:AppxBundle=Always 
                   /p:UapAppxPackageBuildMode=SideloadOnly 
-                  /p:AppxPackageSigningEnabled=true
+                  /p:AppxPackageSigningEnabled=true 
                   /p:PackageCertificateThumbprint="" 
                   /p:PackageCertificateKeyFile="$(signingCert.secureFilePath)"'
 

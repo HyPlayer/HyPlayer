@@ -1,0 +1,121 @@
+﻿<Page
+    x:Class="HyPlayer.Pages.Settings"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:HyPlayer.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls"
+    mc:Ignorable="d">
+
+    <StackPanel
+        Margin="15,0,0,0"
+        Spacing="20"
+        Orientation="Vertical">
+        <TextBlock
+            FontSize="36"
+            Text="设置" />
+        <TextBlock
+            FontSize="18">建设中......</TextBlock>
+        <!--
+        <TextBlock
+            FontSize="18"
+            Text="音质设置" />
+        <controls:RadioButtons
+            Header="在线播放音质:"
+            x:Name="RadioButtonsSongBr">
+            <RadioButton
+                Content="标准"
+                Tag="320000"
+                Checked="RadioButton_Checked" />
+            <RadioButton
+                Content="无损"
+                Tag="999000"
+                Checked="RadioButton_Checked" />
+        </controls:RadioButtons>
+        -->
+        <TextBlock
+            FontSize="28"
+            Text="关于" />
+        <Image
+            Width="100"
+            Height="100"
+            HorizontalAlignment="Left"
+            Source="/Assets/icon.png" />
+        <RichTextBlock>
+            <Paragraph
+                FontSize="28">HyPlayer</Paragraph>
+            <Paragraph>This is an open-source project under GPL-v3 Licence</Paragraph>
+            <Paragraph>
+                <Hyperlink
+                    NavigateUri="https://github.com/HyPlayer/HyPlayer">Github</Hyperlink> |
+                <Hyperlink
+                    NavigateUri="https://gitee.com/kengwang/HyPlayer">Gitee</Hyperlink>
+            </Paragraph>
+            <Paragraph>Copyright © HyPlayer Develop Team 2021</Paragraph>
+            <Paragraph>All rights reserved.</Paragraph>
+        </RichTextBlock>
+        <TextBlock
+            FontSize="20"
+            Text="开发者" />
+        <StackPanel
+            Orientation="Horizontal">
+            <PersonPicture
+                ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=GibeJPa6pAcRMKgoHC9ibI4w&amp;s=100" />
+            <StackPanel
+                Margin="15,0,0,0"
+                Orientation="Vertical">
+                <TextBlock
+                    FontSize="18"
+                    FontWeight="Medium">Kengwang</TextBlock>
+                <TextBlock
+                    Foreground="Gray"
+                    FontSize="15"
+                    FontWeight="Medium">Developer</TextBlock>
+                <TextBlock
+                    Foreground="Gray"
+                    FontSize="15" FontWeight="Light">Stay Cool~</TextBlock>
+                <RichTextBlock>
+                    <Paragraph>
+                        <Hyperlink
+                            NavigateUri="https://github.com/kengwang">Github</Hyperlink> |
+                        <Hyperlink
+                            NavigateUri="https://blog.kengwang.co">博客</Hyperlink> |
+                        <Hyperlink
+                            NavigateUri="http://www.coolapk.com/u/1683034">酷安@kengwang</Hyperlink> |
+                        <Hyperlink
+                            NavigateUri="https://afdian.net/@kengwang">爱发电</Hyperlink>
+                    </Paragraph>
+                </RichTextBlock>
+            </StackPanel>
+        </StackPanel>
+        <StackPanel
+            Orientation="Horizontal">
+            <PersonPicture
+                ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=eHh3SVVDUJKHf1I5XD7CPg&amp;s=100" />
+            <StackPanel
+                Margin="15,0,0,0"
+                Orientation="Vertical">
+                <TextBlock
+                    FontSize="18"
+                    FontWeight="Medium">aaaaaaccd</TextBlock>
+                <TextBlock
+                    Foreground="Gray"
+                    FontSize="15"
+                    FontWeight="Medium">Design</TextBlock>
+                <TextBlock
+                    Foreground="Gray"
+                    FontSize="15"
+                    FontWeight="Light">HyPlayer Team EasyCraft Team Waifu2X4A</TextBlock>
+                <RichTextBlock>
+                    <Paragraph>
+                        <Hyperlink
+                            NavigateUri="https://github.com/kengwang">Github</Hyperlink> |
+                        <Hyperlink
+                            NavigateUri="https://www.coolapk.com/u/2409682">酷安@aaaaaaccd66</Hyperlink>
+                    </Paragraph>
+                </RichTextBlock>
+            </StackPanel>
+        </StackPanel>
+    </StackPanel>
+</Page>

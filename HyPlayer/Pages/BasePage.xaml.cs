@@ -1,34 +1,20 @@
-﻿using System;
+﻿using Microsoft.UI.Xaml.Controls;
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text.RegularExpressions;
 using Windows.ApplicationModel.Core;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.Media;
-using Windows.Media.Audio;
-using Windows.Media.Core;
-using Windows.Media.Playback;
 using Windows.Storage;
 using Windows.System;
 using Windows.UI;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
-using Windows.UI.Xaml.Navigation;
-using Microsoft.UI.Xaml.Controls;
-using NeteaseCloudMusicApi;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using NavigationView = Windows.UI.Xaml.Controls.NavigationView;
 using NavigationViewBackRequestedEventArgs = Windows.UI.Xaml.Controls.NavigationViewBackRequestedEventArgs;
 using NavigationViewItem = Windows.UI.Xaml.Controls.NavigationViewItem;
@@ -57,6 +43,8 @@ namespace HyPlayer.Pages
                 PersonPictureUser.ProfilePicture = new BitmapImage(new Uri(Common.LoginedUser.ImgUrl));
             }
             Common.BaseFrame = BaseFrame;
+            NavMain.SelectedItem = NavMain.MenuItems[0];
+            Common.BaseFrame.Navigate(typeof(Home));
         }
 
         private async void LoadLoginData()
@@ -81,9 +69,15 @@ namespace HyPlayer.Pages
                     TextBlockUserName.Text = json["profile"]["nickname"].ToString();
                     PersonPictureUser.ProfilePicture =
                         new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
+
+                    var (isok,js) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Likelist,new Dictionary<string, object>(){{"uid", Common.LoginedUser.uid } });
+                    Common.LikedSongs = js["ids"].ToObject<List<string>>();
                 }
             }
-            catch (Exception) { }
+            catch
+            {
+                // ignored
+            }
         }
 
         private async void ButtonLogin_OnClick(object sender, RoutedEventArgs e)
@@ -130,6 +124,8 @@ namespace HyPlayer.Pages
                         new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
                     InfoBarLoginHint.Severity = InfoBarSeverity.Success;
                     InfoBarLoginHint.Message = "欢迎 " + json["profile"]["nickname"].ToString();
+                    var (isok, js) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Likelist, new Dictionary<string, object>() { { "uid", Common.LoginedUser.uid } });
+                    Common.LikedSongs = js["ids"].ToObject<List<string>>();
                 }
             }
             catch (Exception ex)
@@ -172,6 +168,9 @@ namespace HyPlayer.Pages
                 case "PageSearch":
                     Common.BaseFrame.Navigate(typeof(Search), null, new EntranceNavigationTransitionInfo());
                     break;
+                case "PageSettings":
+                    Common.BaseFrame.Navigate(typeof(Pages.Settings), null, new EntranceNavigationTransitionInfo());
+                    break;
             }
         }
 
@@ -195,12 +194,6 @@ namespace HyPlayer.Pages
             {
                 ButtonLogin_OnClick(null, null);
             }
-        }
-
-        private void NavMain_Loaded(object sender, RoutedEventArgs e)
-        {
-            NavMain.SelectedItem = NavMain.MenuItems[0];
-            Common.BaseFrame.Navigate(typeof(Home));
         }
     }
 }
