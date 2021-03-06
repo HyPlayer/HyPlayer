@@ -3,6 +3,7 @@ using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Windows.ApplicationModel.Core;
 using Windows.Storage;
@@ -68,9 +69,15 @@ namespace HyPlayer.Pages
                     TextBlockUserName.Text = json["profile"]["nickname"].ToString();
                     PersonPictureUser.ProfilePicture =
                         new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
+
+                    var (isok,js) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Likelist,new Dictionary<string, object>(){{"uid", Common.LoginedUser.uid } });
+                    Common.LikedSongs = js["ids"].ToObject<List<string>>();
                 }
             }
-            catch (Exception) { }
+            catch
+            {
+                // ignored
+            }
         }
 
         private async void ButtonLogin_OnClick(object sender, RoutedEventArgs e)
@@ -117,6 +124,8 @@ namespace HyPlayer.Pages
                         new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
                     InfoBarLoginHint.Severity = InfoBarSeverity.Success;
                     InfoBarLoginHint.Message = "欢迎 " + json["profile"]["nickname"].ToString();
+                    var (isok, js) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Likelist, new Dictionary<string, object>() { { "uid", Common.LoginedUser.uid } });
+                    Common.LikedSongs = js["ids"].ToObject<List<string>>();
                 }
             }
             catch (Exception ex)

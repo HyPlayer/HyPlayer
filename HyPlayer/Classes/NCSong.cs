@@ -21,13 +21,6 @@ namespace HyPlayer.Classes
         { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏" };
     }
 
-    public struct NCCookie
-    {
-        public string name;
-        public string value;
-        public string path;
-        public string domain;
-    }
 
     public struct NCSong
     {

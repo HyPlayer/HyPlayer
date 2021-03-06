@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TagLib;
@@ -153,22 +154,26 @@ namespace HyPlayer.HyPlayControl
 
             HyPlayItem hpi = List[MPIToIndex[args.NewItem]];
             AudioInfo ai = hpi.AudioInfo;
-            //LoadSystemPlayBar(MPIToIndex[args.NewItem]);
-            if (hpi.ItemType == HyPlayItemType.Netease && hpi.AudioInfo.Lyric == null)
-            {
-                PureLyricInfo lrcs = await LoadNCLyric(hpi);
-                ai.Lyric = lrcs.PureLyrics;
-                ai.TrLyric = lrcs.TrLyrics;
-            }
-            //先进行歌词转换以免被搞
-            Lyrics = Utils.ConvertPureLyric(ai.Lyric);
-            Utils.ConvertTranslation(ai.TrLyric, Lyrics);
             hpi.AudioInfo = ai;
+            //LoadSystemPlayBar(MPIToIndex[args.NewItem]);
+            LoadLyrics(hpi);
             //这里为调用订阅本事件的元素
             Invoke(() => OnPlayItemChange?.Invoke(hpi));
         }
 
-
+        public static async void LoadLyrics(HyPlayItem hpi)
+        {
+            if (hpi.ItemType == HyPlayItemType.Netease && hpi.AudioInfo.Lyric == null)
+            {
+                PureLyricInfo lrcs = await LoadNCLyric(hpi);
+                hpi.AudioInfo.Lyric = lrcs.PureLyrics;
+                hpi.AudioInfo.TrLyric = lrcs.TrLyrics;
+            }
+            //先进行歌词转换以免被搞
+            Lyrics = Utils.ConvertPureLyric(hpi.AudioInfo.Lyric);
+            Utils.ConvertTranslation(hpi.AudioInfo.TrLyric, Lyrics);
+            Invoke(() => OnLyricLoaded?.Invoke());
+        }
         public static async Task<PureLyricInfo> LoadNCLyric(HyPlayItem ncp)
         {
             (bool isOk, Newtonsoft.Json.Linq.JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Lyric,

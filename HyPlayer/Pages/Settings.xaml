@@ -61,7 +61,7 @@
         <StackPanel
             Orientation="Horizontal">
             <PersonPicture
-                ProfilePicture="https://cdn.v2ex.com/gravatar/f09c8c1d3640a91b2c2115d6becc8fca" />
+                ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=GibeJPa6pAcRMKgoHC9ibI4w&amp;s=100" />
             <StackPanel
                 Margin="15,0,0,0"
                 Orientation="Vertical">

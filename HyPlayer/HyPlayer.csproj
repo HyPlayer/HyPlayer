@@ -127,6 +127,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Classes\Api.cs" />
     <Compile Include="Classes\LoginedUser.cs" />
     <Compile Include="Classes\NCSong.cs" />
     <Compile Include="Classes\StaticSource.cs" />

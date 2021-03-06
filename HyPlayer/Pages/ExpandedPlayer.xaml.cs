@@ -38,8 +38,14 @@ namespace HyPlayer.Pages
             Common.PageExpandedPlayer = this;
             HyPlayList.OnPlayPositionChange += RefreshLyricTime;
             HyPlayList.OnPlayItemChange += OnSongChange;
+            HyPlayList.OnLyricLoaded += HyPlayList_OnLyricLoaded;
             Window.Current.SizeChanged += Current_SizeChanged;
             Current_SizeChanged(null, null);
+        }
+
+        private void HyPlayList_OnLyricLoaded()
+        {
+            LoadLyricsBox();
         }
 
         private void Current_SizeChanged(object sender, WindowSizeChangedEventArgs e)
@@ -51,7 +57,15 @@ namespace HyPlayer.Pages
             }
             else
             {
-                LyricWidth = Math.Max(e.Size.Width * 0.4, LyricBoxContainer.ViewportWidth);
+                if (e.Size.Width > 800)
+                {
+                    LyricWidth = e.Size.Width * 0.4;
+                }
+                else
+                {
+                    LyricWidth = Math.Max(e.Size.Width * 0.4, LyricBoxContainer.ViewportWidth);
+                }
+
                 showsize = Math.Max(e.Size.Width / 70, 16);
             }
 
@@ -80,6 +94,7 @@ namespace HyPlayer.Pages
             try
             {
                 OnSongChange(HyPlayList.List[HyPlayList.NowPlaying]);
+                LoadLyricsBox();
             }
             catch { }
 
@@ -187,7 +202,6 @@ namespace HyPlayer.Pages
                         this.Background = new ImageBrush() { ImageSource = ImageAlbum.Source , Stretch = Stretch.UniformToFill};
                         ProgressBarPlayProg.Maximum = mpi.AudioInfo.LengthInMilliseconds;
                         SliderVolumn.Value = HyPlayList.Player.Volume * 100;
-                        LoadLyricsBox();
                     }
                     catch (Exception) { }
 ;

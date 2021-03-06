@@ -1,7 +1,9 @@
 ﻿using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
 using System;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.Linq;
 using Windows.Media.Playback;
 using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
@@ -12,6 +14,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
+using HyPlayer.Classes;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -97,6 +100,7 @@ namespace HyPlayer.Controls
                 SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
                 SliderProgress.Minimum = 0;
                 SliderProgress.Maximum = ai.LengthInMilliseconds;
+                if (mpi.isOnline) BtnLike.IsChecked = Common.LikedSongs.Contains(mpi.NcPlayItem.sid);
                 ListBoxPlayList.SelectedIndex = (int)HyPlayList.NowPlaying;
             }));
         }
@@ -293,6 +297,23 @@ namespace HyPlayer.Controls
         }
 
         public PlayMode NowPlayType = PlayMode.DefaultRoll;
+
+        private void BtnLike_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (HyPlayList.NowPlayingItem.isOnline)
+            {
+                Api.LikeSong(HyPlayList.NowPlayingItem.NcPlayItem.sid, !Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.NcPlayItem.sid));
+                if (Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.NcPlayItem.sid))
+                {
+                    Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.NcPlayItem.sid);
+                }
+                else
+                {
+                    Common.LikedSongs.Add(HyPlayList.NowPlayingItem.NcPlayItem.sid);
+                }
+                BtnLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.NcPlayItem.sid);
+            }
+        }
     }
 
 

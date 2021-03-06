@@ -331,8 +331,9 @@
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
                         Glyph="&#xE101;"></FontIcon>
                 </Button>
-                <Button
-                    Style="{StaticResource ButtonRevealStyle}"
+                <ToggleButton
+                    Style="{StaticResource ToggleButtonRevealStyle}"
+                    Click="BtnLike_OnClick"
                     Grid.Column="6"
                     VerticalAlignment="Center"
                     Name="BtnLike"
@@ -343,7 +344,7 @@
                     <FontIcon
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
                         Glyph="&#xE00B;"></FontIcon>
-                </Button>
+                </ToggleButton>
             </Grid>
             <Grid
                 Grid.Row="1">
