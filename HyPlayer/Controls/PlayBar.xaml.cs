@@ -31,10 +31,16 @@ namespace HyPlayer.Controls
             Common.BarPlayBar = this;
             HyPlayList.OnPlayItemAdd += RefreshSongList;
             this.InitializeComponent();
+            HyPlayList.OnLyricChange += HyPlayList_OnLyricChange;
             HyPlayList.OnPlayItemChange += LoadPlayingFile;
             HyPlayList.OnPlayPositionChange += OnPlayPositionChange;
             HyPlayList.OnPlayListAdd += HyPlayList_OnPlayListAdd;
-            //TestFile();
+            
+        }
+
+        private void HyPlayList_OnLyricChange(SongLyric lrc)
+        {
+            //throw new NotImplementedException();
         }
 
         private void HyPlayList_OnPlayListAdd(HyPlayItem playItem)

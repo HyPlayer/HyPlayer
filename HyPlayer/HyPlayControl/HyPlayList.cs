@@ -50,6 +50,8 @@ namespace HyPlayer.HyPlayControl
         public static event PlayListAddEvent OnPlayListAdd;
         public delegate void LyricLoadedEvent();
         public static event LyricLoadedEvent OnLyricLoaded;
+        public delegate void LyricChangeEvent(SongLyric lrc);
+        public static event LyricChangeEvent OnLyricChange;
 
         /********        API        ********/
         public static MediaPlayer Player;
@@ -76,6 +78,13 @@ namespace HyPlayer.HyPlayControl
         private static void PlaybackSession_PositionChanged(MediaPlaybackSession sender, object args)
         {
             Invoke(() => OnPlayPositionChange?.Invoke(Player.PlaybackSession.Position));
+            LoadLyricChange();
+        }
+
+        private static void LoadLyricChange()
+        {
+            SongLyric songLyric = Lyrics.LastOrDefault((t => t.LyricTime < Player.PlaybackSession.Position));
+            Invoke(() => OnLyricChange?.Invoke(songLyric));
         }
 
         private static void Player_VolumeChanged(MediaPlayer sender, object args)
@@ -138,7 +147,7 @@ namespace HyPlayer.HyPlayControl
             await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority, () => { action(); });
         }
 
-        public static async void AudioMediaPlaybackList_CurrentItemChanged(MediaPlaybackList sender, CurrentMediaPlaybackItemChangedEventArgs args)
+        public static void AudioMediaPlaybackList_CurrentItemChanged(MediaPlaybackList sender, CurrentMediaPlaybackItemChangedEventArgs args)
         {
             if (args.NewItem == null)
             {
@@ -309,7 +318,7 @@ namespace HyPlayer.HyPlayControl
                 }
                 for (int i = 0; i < List.Count; i++)
                 {
-                    if (PlaybackList.Items.Count <= i || List[i].MediaItem == null || List[i].MediaItem.Source.State == MediaSourceState.Failed  || PlaybackList.Items[i] != List[i].MediaItem)
+                    if (PlaybackList.Items.Count <= i || List[i].MediaItem == null || List[i].MediaItem.Source.State == MediaSourceState.Failed || PlaybackList.Items[i] != List[i].MediaItem)
                     {
                         MediaPlaybackItem mediaPlaybackItem;
                         RandomAccessStreamReference rasr;

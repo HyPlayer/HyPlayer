@@ -2,6 +2,8 @@
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.UI.Core;
@@ -29,6 +31,7 @@ namespace HyPlayer.Pages
         private bool loaded = false;
         public double showsize;
         public double LyricWidth { get; set; }
+        List<LyricItem> LyricList = new List<LyricItem>();
 
         public ExpandedPlayer()
         {
@@ -36,11 +39,20 @@ namespace HyPlayer.Pages
             SliderVolumn.Value = HyPlayList.Player.Volume * 100;
             loaded = true;
             Common.PageExpandedPlayer = this;
-            HyPlayList.OnPlayPositionChange += RefreshLyricTime;
+            HyPlayList.OnLyricChange += RefreshLyricTime;
             HyPlayList.OnPlayItemChange += OnSongChange;
             HyPlayList.OnLyricLoaded += HyPlayList_OnLyricLoaded;
+            HyPlayList.OnPlayPositionChange += HyPlayList_OnPlayPositionChange;
             Window.Current.SizeChanged += Current_SizeChanged;
             Current_SizeChanged(null, null);
+        }
+
+        private void HyPlayList_OnPlayPositionChange(TimeSpan Position)
+        {
+            //暂停按钮
+            PlayStateIcon.Glyph = HyPlayList.isPlaying ? "\uEDB4" : "\uEDB5";
+            //播放进度
+            ProgressBarPlayProg.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
         }
 
         private void HyPlayList_OnLyricLoaded()
@@ -100,62 +112,21 @@ namespace HyPlayer.Pages
 
         }
 
-        private void RefreshLyricTime(TimeSpan nowtime)
+        private void RefreshLyricTime(SongLyric LRC)
         {
-            LyricItem lastlrcitem = null;
-            bool showed = false;
-            foreach (UIElement lyricBoxChild in LyricBox.Children)
+            var item = LyricList.Find(t => t.Lrc.LyricTime == LRC.LyricTime);
+            item.OnShow();
+            if (sclock > 0)
             {
-                if (lyricBoxChild is LyricItem lrcitem)
-                {
-                    if (HyPlayList.Player.PlaybackSession.Position < lrcitem.Lrc.LyricTime)
-                    {
-                        if (!showed)
-                        {
-                            lastlrcitem?.OnShow();
-                            lrcitem.OnHind();
-                            if (sclock > 0)
-                            {
-                                sclock--;
-                                return;
-                            }
-
-                            var transform = lastlrcitem?.TransformToVisual((UIElement)LyricBoxContainer.Content);
-                            var position = transform?.TransformPoint(new Point(0, 0));
-                            LyricBoxContainer.ChangeView(null, position?.Y - (LyricBoxContainer.ViewportHeight / 3), null, false); ;
-                            showed = true;
-                        }
-                        else
-                        {
-                            lrcitem.OnHind();
-                        }
-                    }
-                    else
-                    {
-                        lrcitem.OnHind();
-                    }
-                    lastlrcitem = lrcitem;
-                }
+                sclock--;
+                return;
             }
 
-            if (!showed && lastlrcitem != null)
-            {
-                lastlrcitem.OnShow();
-                if (sclock > 0)
-                {
-                    sclock--;
-                    return;
-                }
-                var transform = lastlrcitem.TransformToVisual((UIElement)LyricBoxContainer.Content);
-                var position = transform.TransformPoint(new Point(0, 0));
-                LyricBoxContainer.ChangeView(null, position.Y - (LyricBoxContainer.ViewportHeight / 3), null, false);
-                showed = true;
-            }
+            var transform = item?.TransformToVisual((UIElement)LyricBoxContainer.Content);
+            var position = transform?.TransformPoint(new Point(0, 0));
+            LyricBoxContainer.ChangeView(null, position?.Y - (LyricBoxContainer.ViewportHeight / 3), null, false); ;
+            LyricList.FindAll(t => t.Lrc.LyricTime != LRC.LyricTime).ForEach(t => t.OnHind());
 
-            //暂停按钮
-            PlayStateIcon.Glyph = HyPlayList.isPlaying ? "\uEDB4" : "\uEDB5";
-            //播放进度
-            ProgressBarPlayProg.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
         }
 
         public void LoadLyricsBox()
@@ -184,6 +155,7 @@ namespace HyPlayer.Pages
                 }
             }
             LyricBox.Children.Add(new Grid() { Height = blanksize });
+            LyricList = LyricBox.Children.OfType<LyricItem>().ToList();
         }
 
 
@@ -199,12 +171,12 @@ namespace HyPlayer.Pages
                         ImageAlbum.Source = mpi.ItemType == HyPlayItemType.Local ? mpi.AudioInfo.BitmapImage : new BitmapImage(new Uri(mpi.AudioInfo.Picture));
                         TextBlockSinger.Text = mpi.AudioInfo.Artist;
                         TextBlockSongTitle.Text = mpi.AudioInfo.SongName;
-                        this.Background = new ImageBrush() { ImageSource = ImageAlbum.Source , Stretch = Stretch.UniformToFill};
+                        this.Background = new ImageBrush() { ImageSource = ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                         ProgressBarPlayProg.Maximum = mpi.AudioInfo.LengthInMilliseconds;
                         SliderVolumn.Value = HyPlayList.Player.Volume * 100;
                     }
                     catch (Exception) { }
-;
+        ;
                 }));
             }
         }
