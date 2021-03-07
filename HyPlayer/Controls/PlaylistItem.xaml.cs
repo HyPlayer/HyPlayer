@@ -16,11 +16,11 @@ namespace HyPlayer.Controls
         private NCPlayList playList;
         public PlaylistItem(NCPlayList playList)
         {
-            this.InitializeComponent();
+            InitializeComponent();
             this.playList = playList;
             Task.Run(() =>
             {
-                this.Invoke(() =>
+                Invoke(() =>
                 {
                     ImageRect.ImageSource = new BitmapImage(new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_PLAYLIST_ITEM_COVER));
                     TextBlockPLName.Text = playList.name;

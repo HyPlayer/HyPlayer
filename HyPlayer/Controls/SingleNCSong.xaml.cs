@@ -21,7 +21,7 @@ namespace HyPlayer.Controls
         private readonly bool CanPlay;
         public SingleNCSong(NCSong song, int order, bool canplay = true)
         {
-            this.InitializeComponent();
+            InitializeComponent();
             ncsong = song;
             CanPlay = canplay;
             if (!CanPlay)

@@ -11,7 +11,7 @@ namespace HyPlayer.Pages
     {
         public BlankPage()
         {
-            this.InitializeComponent();
+            InitializeComponent();
         }
     }
 }

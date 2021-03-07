@@ -1,19 +1,17 @@
-﻿using System;
+﻿using HyPlayer.Classes;
+using HyPlayer.Controls;
+using HyPlayer.Pages;
+using NeteaseCloudMusicApi;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
-using NeteaseCloudMusicApi;
 using Windows.UI.Xaml.Controls;
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using HyPlayer.Pages;
 
 namespace HyPlayer
 {
-    class Common
+    internal class Common
     {
         public static NeteaseCloudMusicApi.CloudMusicApi ncapi = new CloudMusicApi();
         public static bool Logined = false;
@@ -23,11 +21,11 @@ namespace HyPlayer
         public static PlayBar BarPlayBar;
         public static Frame BaseFrame;
         public static Setting Setting;
-        public static Dictionary<string,object> GLOBAL = new Dictionary<string, object>();
+        public static Dictionary<string, object> GLOBAL = new Dictionary<string, object>();
         public static List<string> LikedSongs;
     }
 
-    struct Setting
+    internal struct Setting
     {
         public string bitrate;
     }
@@ -41,18 +39,22 @@ namespace HyPlayer
 
         public static string ToHexStringLower(this byte[] value)
         {
-            var sb = new StringBuilder();
-            foreach (var t in value)
+            StringBuilder sb = new StringBuilder();
+            foreach (byte t in value)
+            {
                 sb.Append(t.ToString("x2"));
+            }
 
             return sb.ToString();
         }
 
         public static string ToHexStringUpper(this byte[] value)
         {
-            var sb = new StringBuilder();
-            foreach (var t in value)
+            StringBuilder sb = new StringBuilder();
+            foreach (byte t in value)
+            {
                 sb.Append(t.ToString("X2"));
+            }
 
             return sb.ToString();
         }
@@ -64,7 +66,7 @@ namespace HyPlayer
 
         public static byte[] ComputeMd5(this byte[] value)
         {
-            var md5 = MD5.Create();
+            MD5 md5 = MD5.Create();
             return md5.ComputeHash(value);
         }
 

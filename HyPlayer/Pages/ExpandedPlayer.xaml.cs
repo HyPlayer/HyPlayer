@@ -28,14 +28,15 @@ namespace HyPlayer.Pages
     {
         private int sclock = 0;
         private bool iscompact = false;
-        private bool loaded = false;
+        private readonly bool loaded = false;
         public double showsize;
         public double LyricWidth { get; set; }
-        List<LyricItem> LyricList = new List<LyricItem>();
+
+        private List<LyricItem> LyricList = new List<LyricItem>();
 
         public ExpandedPlayer()
         {
-            this.InitializeComponent();
+            InitializeComponent();
             SliderVolumn.Value = HyPlayList.Player.Volume * 100;
             loaded = true;
             Common.PageExpandedPlayer = this;
@@ -83,12 +84,14 @@ namespace HyPlayer.Pages
 
             Task.Run((() =>
             {
-                this.Invoke((() =>
+                Invoke((() =>
                 {
                     foreach (UIElement elm in LyricBox.Children)
                     {
                         if (elm is LyricItem li)
+                        {
                             li.Width = LyricWidth;
+                        }
                     }
                 }));
             }));
@@ -114,7 +117,7 @@ namespace HyPlayer.Pages
 
         private void RefreshLyricTime(SongLyric LRC)
         {
-            var item = LyricList.Find(t => t.Lrc.LyricTime == LRC.LyricTime);
+            LyricItem item = LyricList.Find(t => t.Lrc.LyricTime == LRC.LyricTime);
             item.OnShow();
             if (sclock > 0)
             {
@@ -122,8 +125,8 @@ namespace HyPlayer.Pages
                 return;
             }
 
-            var transform = item?.TransformToVisual((UIElement)LyricBoxContainer.Content);
-            var position = transform?.TransformPoint(new Point(0, 0));
+            GeneralTransform transform = item?.TransformToVisual((UIElement)LyricBoxContainer.Content);
+            Point? position = transform?.TransformPoint(new Point(0, 0));
             LyricBoxContainer.ChangeView(null, position?.Y - (LyricBoxContainer.ViewportHeight / 3), null, false); ;
             LyricList.FindAll(t => t.Lrc.LyricTime != LRC.LyricTime).ForEach(t => t.OnHind());
 
@@ -140,17 +143,21 @@ namespace HyPlayer.Pages
             LyricBox.Children.Add(new Grid() { Height = blanksize });
             if (HyPlayList.Lyrics.Count == 0)
             {
-                LyricItem lrcitem = new LyricItem(SongLyric.PureSong);
-                lrcitem.Width = LyricWidth;
+                LyricItem lrcitem = new LyricItem(SongLyric.PureSong)
+                {
+                    Width = LyricWidth
+                };
                 LyricBox.Children.Add(lrcitem);
             }
             else
             {
                 foreach (SongLyric songLyric in HyPlayList.Lyrics)
                 {
-                    LyricItem lrcitem = new LyricItem(songLyric);
-                    lrcitem.Margin = new Thickness(0, 10, 0, 10);
-                    lrcitem.Width = LyricWidth;
+                    LyricItem lrcitem = new LyricItem(songLyric)
+                    {
+                        Margin = new Thickness(0, 10, 0, 10),
+                        Width = LyricWidth
+                    };
                     LyricBox.Children.Add(lrcitem);
                 }
             }
@@ -164,14 +171,14 @@ namespace HyPlayer.Pages
         {
             if (mpi != null)
             {
-                this.Invoke((() =>
+                Invoke((() =>
                 {
                     try
                     {
                         ImageAlbum.Source = mpi.ItemType == HyPlayItemType.Local ? mpi.AudioInfo.BitmapImage : new BitmapImage(new Uri(mpi.AudioInfo.Picture));
                         TextBlockSinger.Text = mpi.AudioInfo.Artist;
                         TextBlockSongTitle.Text = mpi.AudioInfo.SongName;
-                        this.Background = new ImageBrush() { ImageSource = ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                        Background = new ImageBrush() { ImageSource = ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                         ProgressBarPlayProg.Maximum = mpi.AudioInfo.LengthInMilliseconds;
                         SliderVolumn.Value = HyPlayList.Player.Volume * 100;
                     }
@@ -190,17 +197,20 @@ namespace HyPlayer.Pages
         {
             Task.Run(() =>
             {
-                this.Invoke(() =>
+                Invoke(() =>
                 {
                     ImageAlbumContainer.Visibility = Visibility.Visible;
                     TextBlockSinger.Visibility = Visibility.Visible;
                     TextBlockSongTitle.Visibility = Visibility.Visible;
-                    var anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
-                    var anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
-                    var anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
+                    ConnectedAnimation anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
+                    ConnectedAnimation anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
+                    ConnectedAnimation anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
                     anim3.Configuration = new DirectConnectedAnimationConfiguration();
                     if (anim2 != null)
+                    {
                         anim2.Configuration = new DirectConnectedAnimationConfiguration();
+                    }
+
                     anim1.Configuration = new DirectConnectedAnimationConfiguration();
                     anim3?.TryStart(TextBlockSinger);
                     anim1?.TryStart(TextBlockSongTitle);
@@ -214,7 +224,10 @@ namespace HyPlayer.Pages
         {
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TextBlockSongTitle);
             if (ImageAlbumContainer.Visibility == Visibility.Visible)
+            {
                 ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", ImageAlbum);
+            }
+
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TextBlockSinger);
         }
 
@@ -229,7 +242,7 @@ namespace HyPlayer.Pages
             {
                 Task.Run(() =>
                 {
-                    this.Invoke((() =>
+                    Invoke((() =>
                     {
                         Current_SizeChanged(null, null);
                     }));
@@ -241,7 +254,7 @@ namespace HyPlayer.Pages
             {
                 Task.Run(() =>
                 {
-                    this.Invoke((() =>
+                    Invoke((() =>
                     {
                         Current_SizeChanged(null, null);
                     }));
@@ -254,9 +267,14 @@ namespace HyPlayer.Pages
         private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
         {
             if (HyPlayList.isPlaying)
+            {
                 HyPlayList.Player.Pause();
+            }
             else
+            {
                 HyPlayList.Player.Play();
+            }
+
             PlayStateIcon.Glyph = HyPlayList.isPlaying ? "\uEDB5" : "\uEDB4";
 
         }

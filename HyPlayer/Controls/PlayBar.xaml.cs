@@ -1,9 +1,8 @@
-﻿using HyPlayer.HyPlayControl;
+﻿using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
 using System;
-using System.Collections.Immutable;
 using System.Collections.ObjectModel;
-using System.Linq;
 using Windows.Media.Playback;
 using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
@@ -14,7 +13,6 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
-using HyPlayer.Classes;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -30,12 +28,12 @@ namespace HyPlayer.Controls
         {
             Common.BarPlayBar = this;
             HyPlayList.OnPlayItemAdd += RefreshSongList;
-            this.InitializeComponent();
+            InitializeComponent();
             HyPlayList.OnLyricChange += HyPlayList_OnLyricChange;
             HyPlayList.OnPlayItemChange += LoadPlayingFile;
             HyPlayList.OnPlayPositionChange += OnPlayPositionChange;
             HyPlayList.OnPlayListAdd += HyPlayList_OnPlayListAdd;
-            
+
         }
 
         private void HyPlayList_OnLyricChange(SongLyric lrc)
@@ -65,7 +63,7 @@ namespace HyPlayer.Controls
 
         public void OnPlayPositionChange(TimeSpan ts)
         {
-            this.Invoke(() =>
+            Invoke(() =>
             {
                 try
                 {
@@ -98,7 +96,7 @@ namespace HyPlayer.Controls
 
             MediaItemDisplayProperties dp = mpi.MediaItem.GetDisplayProperties();
             AudioInfo ai = mpi.AudioInfo;
-            this.Invoke((() =>
+            Invoke((() =>
             {
                 TbSingerName.Text = ai.Artist;
                 TbSongName.Text = ai.SongName;
@@ -106,8 +104,12 @@ namespace HyPlayer.Controls
                 SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
                 SliderProgress.Minimum = 0;
                 SliderProgress.Maximum = ai.LengthInMilliseconds;
-                if (mpi.isOnline) BtnLike.IsChecked = Common.LikedSongs.Contains(mpi.NcPlayItem.sid);
-                ListBoxPlayList.SelectedIndex = (int)HyPlayList.NowPlaying;
+                if (mpi.isOnline)
+                {
+                    BtnLike.IsChecked = Common.LikedSongs.Contains(mpi.NcPlayItem.sid);
+                }
+
+                ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
             }));
         }
 

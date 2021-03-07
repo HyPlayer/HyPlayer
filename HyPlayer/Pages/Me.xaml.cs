@@ -1,24 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
+﻿using HyPlayer.Classes;
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Threading.Tasks;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using NeteaseCloudMusicApi;
-using Newtonsoft.Json.Linq;
 using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
 using NavigationViewSelectionChangedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewSelectionChangedEventArgs;
 
@@ -34,7 +24,7 @@ namespace HyPlayer.Pages
         private string uid = "";
         public Me()
         {
-            this.InitializeComponent();
+            InitializeComponent();
             uid = Common.LoginedUser.uid;
             LoadInfo();
             NavigationView1.SelectedItem = NavigationView1.MenuItems[0];
@@ -54,21 +44,21 @@ namespace HyPlayer.Pages
 
         public async void LoadInfo()
         {
-            
-            await Task.Run(( () =>
-            {
-                this.Invoke(async () =>
-                {
-                    (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserAccount);
-                    if (isok)
-                    {
-                        TextBoxUserName.Text = json["profile"]["nickname"].ToString();
-                        TextBoxSignature.Text = json["profile"]["signature"].ToString();
-                        ImageRect.ImageSource = new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
-                    }
-                });
 
-            }));
+            await Task.Run((() =>
+           {
+               Invoke(async () =>
+               {
+                   (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserAccount);
+                   if (isok)
+                   {
+                       TextBoxUserName.Text = json["profile"]["nickname"].ToString();
+                       TextBoxSignature.Text = json["profile"]["signature"].ToString();
+                       ImageRect.ImageSource = new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
+                   }
+               });
+
+           }));
             /*
             await Task.Run(() =>
             {
@@ -90,7 +80,7 @@ namespace HyPlayer.Pages
             {
                 case "SongList":
                     Common.GLOBAL["SongListUID"] = uid;
-                    ContentFrame.Navigate(typeof(SongListFrame), null,new EntranceNavigationTransitionInfo());
+                    ContentFrame.Navigate(typeof(SongListFrame), null, new EntranceNavigationTransitionInfo());
                     break;
             }
         }

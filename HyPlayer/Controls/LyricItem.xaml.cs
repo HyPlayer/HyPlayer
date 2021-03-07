@@ -15,14 +15,14 @@ namespace HyPlayer.Controls
     {
         public readonly SongLyric Lrc;
         public double actualsize => Common.PageExpandedPlayer.showsize;
-        private Brush originBrush;
+        private readonly Brush originBrush;
 
         public bool showing = false;
         public bool hiding = false;
         public LyricItem(SongLyric lrc)
         {
 
-            this.InitializeComponent();
+            InitializeComponent();
             originBrush = TextBoxPureLyric.Foreground;
             TextBoxPureLyric.FontSize = actualsize;
             TextBoxTranslation.FontSize = actualsize;

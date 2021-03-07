@@ -14,7 +14,7 @@ namespace HyPlayer
         {
             Common.PageMain = this;
             HyPlayList.InitializeHyPlaylist();
-            this.InitializeComponent();
+            InitializeComponent();
         }
     }
 }

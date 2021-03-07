@@ -3,7 +3,6 @@ using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 using Windows.ApplicationModel.Core;
 using Windows.Storage;
@@ -31,7 +30,7 @@ namespace HyPlayer.Pages
     {
         public BasePage()
         {
-            this.InitializeComponent();
+            InitializeComponent();
             CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
             ApplicationViewTitleBar titleBar = ApplicationView.GetForCurrentView().TitleBar;
             titleBar.ButtonBackgroundColor = Colors.Transparent;
@@ -54,12 +53,12 @@ namespace HyPlayer.Pages
                 StorageFile sf = await Windows.Storage.ApplicationData.Current.LocalFolder.GetFileAsync("Settings\\UserPassword");
                 string txt = await FileIO.ReadTextAsync(sf);
                 string[] arr = txt.Split("\r\n");
-                var queries = new Dictionary<string, object>();
-                var account = arr[0];
-                var isPhone = Regex.Match(account, "^[0-9]+$").Success;
+                Dictionary<string, object> queries = new Dictionary<string, object>();
+                string account = arr[0];
+                bool isPhone = Regex.Match(account, "^[0-9]+$").Success;
                 queries[isPhone ? "phone" : "email"] = account;
                 queries["md5_password"] = arr[1];
-                var (isOk, json) = await Common.ncapi.RequestAsync(isPhone ? CloudMusicApiProviders.LoginCellphone : CloudMusicApiProviders.Login, queries);
+                (bool isOk, JObject json) = await Common.ncapi.RequestAsync(isPhone ? CloudMusicApiProviders.LoginCellphone : CloudMusicApiProviders.Login, queries);
                 if (isOk && json["code"].ToString() == "200")
                 {
                     Common.Logined = true;
@@ -70,7 +69,7 @@ namespace HyPlayer.Pages
                     PersonPictureUser.ProfilePicture =
                         new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
 
-                    var (isok,js) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Likelist,new Dictionary<string, object>(){{"uid", Common.LoginedUser.uid } });
+                    (bool isok, JObject js) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Likelist, new Dictionary<string, object>() { { "uid", Common.LoginedUser.uid } });
                     Common.LikedSongs = js["ids"].ToObject<List<string>>();
                 }
             }
@@ -88,9 +87,9 @@ namespace HyPlayer.Pages
             JObject json;
             try
             {
-                var queries = new Dictionary<string, object>();
-                var account = TextBoxAccount.Text;
-                var isPhone = Regex.Match(account, "^[0-9]+$").Success;
+                Dictionary<string, object> queries = new Dictionary<string, object>();
+                string account = TextBoxAccount.Text;
+                bool isPhone = Regex.Match(account, "^[0-9]+$").Success;
                 queries[isPhone ? "phone" : "email"] = account;
                 queries["password"] = TextBoxPassword.Password;
                 (isOk, json) = await Common.ncapi.RequestAsync(
@@ -124,7 +123,7 @@ namespace HyPlayer.Pages
                         new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
                     InfoBarLoginHint.Severity = InfoBarSeverity.Success;
                     InfoBarLoginHint.Message = "欢迎 " + json["profile"]["nickname"].ToString();
-                    var (isok, js) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Likelist, new Dictionary<string, object>() { { "uid", Common.LoginedUser.uid } });
+                    (bool isok, JObject js) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Likelist, new Dictionary<string, object>() { { "uid", Common.LoginedUser.uid } });
                     Common.LikedSongs = js["ids"].ToObject<List<string>>();
                 }
             }
@@ -143,7 +142,10 @@ namespace HyPlayer.Pages
 
         private void InfoBarLoginHint_OnCloseButtonClick(InfoBar sender, object args)
         {
-            if (Common.Logined) DialogLogin.Hide();
+            if (Common.Logined)
+            {
+                DialogLogin.Hide();
+            }
         }
 
         private async void NavMain_OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
@@ -177,7 +179,9 @@ namespace HyPlayer.Pages
         private void OnNavigateBack(NavigationView sender, NavigationViewBackRequestedEventArgs args)
         {
             if (Common.BaseFrame.CanGoBack)
+            {
                 Common.BaseFrame.GoBack();
+            }
         }
 
         private void TextBoxAccount_OnKeyDown(object sender, KeyRoutedEventArgs e)

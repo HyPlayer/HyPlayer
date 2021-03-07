@@ -1,21 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
+﻿using HyPlayer.Classes;
 using HyPlayer.Controls;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -26,10 +17,10 @@ namespace HyPlayer.Pages
     /// </summary>
     public sealed partial class Search : Page
     {
-        int page = 0;
+        private int page = 0;
         public Search()
         {
-            this.InitializeComponent();
+            InitializeComponent();
         }
 
         private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
@@ -41,7 +32,7 @@ namespace HyPlayer.Pages
         private async void LoadResult()
         {
             SearchResultContainer.Children.Clear();
-            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Cloudsearch, new Dictionary<string, object>() { { "keywords", TextBoxSearchText.Text},{"offset",page*30}});
+            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Cloudsearch, new Dictionary<string, object>() { { "keywords", TextBoxSearchText.Text }, { "offset", page * 30 } });
             if (isOk)
             {
                 int idx = 0;
@@ -58,7 +49,7 @@ namespace HyPlayer.Pages
                         sid = song["id"].ToString(),
                         songname = song["name"].ToString(),
                         Artist = new List<NCArtist>(),
-                        LengthInMilliseconds = Double.Parse(song["dt"].ToString())
+                        LengthInMilliseconds = double.Parse(song["dt"].ToString())
                     };
                     song["ar"].ToList().ForEach(t =>
                     {
@@ -71,7 +62,7 @@ namespace HyPlayer.Pages
                     SearchResultContainer.Children.Add(new SingleNCSong(NCSong, idx++, song["privilege"]["st"].ToString() == "0"));
                 }
 
-                if (int.Parse(json["result"]["songCount"].ToString()) >= (page+1) * 30)
+                if (int.Parse(json["result"]["songCount"].ToString()) >= (page + 1) * 30)
                 {
                     NextPage.Visibility = Visibility.Visible;
                 }

@@ -25,12 +25,12 @@ namespace HyPlayer.Pages
     {
         private int page = 0;
         private string intelsong = "";
-        private List<NCSong> songs = new List<NCSong>();
+        private readonly List<NCSong> songs = new List<NCSong>();
         private NCPlayList playList;
 
         public SongListDetail()
         {
-            this.InitializeComponent();
+            InitializeComponent();
         }
 
         public void LoadSongListDetail()
@@ -103,7 +103,11 @@ namespace HyPlayer.Pages
                             bool canplay =
                                 json["privileges"].ToList().Find(x => x["id"].ToString() == song["id"].ToString())[
                                     "st"].ToString() == "0";
-                            if (canplay) songs.Add(NCSong);
+                            if (canplay)
+                            {
+                                songs.Add(NCSong);
+                            }
+
                             SongContainer.Children.Add(new SingleNCSong(NCSong, idx++, canplay));
                         }
                     }
@@ -142,7 +146,11 @@ namespace HyPlayer.Pages
                             });
                         });
                         bool canplay = true;
-                        if (canplay) songs.Add(NCSong);
+                        if (canplay)
+                        {
+                            songs.Add(NCSong);
+                        }
+
                         SongContainer.Children.Add(new SingleNCSong(NCSong, idx++, canplay));
                     }
                 }
@@ -153,7 +161,11 @@ namespace HyPlayer.Pages
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            if (e.Parameter != null) playList = (NCPlayList)e.Parameter;
+            if (e.Parameter != null)
+            {
+                playList = (NCPlayList)e.Parameter;
+            }
+
             Task.Run((() =>
             {
                 Invoke(() =>
@@ -178,19 +190,23 @@ namespace HyPlayer.Pages
         {
             Task.Run((() =>
             {
-                this.Invoke((async () =>
+                Invoke((async () =>
                 {
                     HyPlayList.List.Clear();
                     HyPlayList.RequestSyncPlayList();
-                    var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
+                    (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
                         new Dictionary<string, object>() { { "id", string.Join(',', songs.Select(t => t.sid)) } });
                     if (isok)
                     {
-                        var arr = json["data"].ToList();
+                        List<JToken> arr = json["data"].ToList();
                         for (int i = 0; i < songs.Count; i++)
                         {
-                            var token = arr.Find(jt => jt["id"].ToString() == songs[i].sid);
-                            if (!token.HasValues) continue;
+                            JToken token = arr.Find(jt => jt["id"].ToString() == songs[i].sid);
+                            if (!token.HasValues)
+                            {
+                                continue;
+                            }
+
                             NCSong ncSong = songs[i];
                             NCPlayItem ncp = new NCPlayItem()
                             {

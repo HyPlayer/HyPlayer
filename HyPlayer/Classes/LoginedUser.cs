@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace HyPlayer.Classes
+﻿namespace HyPlayer.Classes
 {
-    struct LoginedUser
+    internal struct LoginedUser
     {
         public string UserName;
         public string uid;

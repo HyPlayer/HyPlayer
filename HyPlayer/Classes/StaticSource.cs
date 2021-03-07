@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace HyPlayer.Classes
+﻿namespace HyPlayer.Classes
 {
-    static class StaticSource
+    internal static class StaticSource
     {
         public static string PICSIZE_AUDIO_PLAYER_COVER = "100y100";
         public static string PICSIZE_PLAYLIST_ITEM_COVER = "250y250";

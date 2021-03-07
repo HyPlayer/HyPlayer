@@ -1,22 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading.Tasks;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
+﻿using HyPlayer.Classes;
 using HyPlayer.Controls;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Navigation;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -29,7 +20,7 @@ namespace HyPlayer.Pages
     {
         public Home()
         {
-            this.InitializeComponent();
+            InitializeComponent();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -48,10 +39,10 @@ namespace HyPlayer.Pages
         {
             await Task.Run((() =>
             {
-                this.Invoke((async () =>
+                Invoke((async () =>
                 {
 
-                    var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendResource);
+                    (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendResource);
                     if (isOk)
                     {
                         NCPlayList dayly = new NCPlayList()
@@ -64,7 +55,7 @@ namespace HyPlayer.Pages
                                 name = "网易云音乐",
                                 signature = "网易云音乐官方账号 "
                             },
-                            plid ="-666",
+                            plid = "-666",
                             name = "每日歌曲推荐",
                             desc = "根据你的口味生成，每天6:00更新"
                         };
@@ -96,9 +87,9 @@ namespace HyPlayer.Pages
         {
             await Task.Run((() =>
              {
-                 this.Invoke((async () =>
+                 Invoke((async () =>
                  {
-                     var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Toplist);
+                     (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Toplist);
                      if (isOk)
                      {
                          foreach (JToken PlaylistItemJson in json["list"].ToArray())

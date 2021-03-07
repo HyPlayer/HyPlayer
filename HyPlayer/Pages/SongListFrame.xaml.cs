@@ -1,24 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading.Tasks;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Media.Animation;
-using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
+﻿using HyPlayer.Classes;
 using HyPlayer.Controls;
 using NeteaseCloudMusicApi;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.UI.Xaml.Controls;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -29,11 +17,11 @@ namespace HyPlayer.Pages
     /// </summary>
     public sealed partial class SongListFrame : Page
     {
-        private string uid;
+        private readonly string uid;
 
         public SongListFrame()
         {
-            this.InitializeComponent();
+            InitializeComponent();
             uid = Common.LoginedUser.uid;
             LoadList();
         }
@@ -42,7 +30,7 @@ namespace HyPlayer.Pages
         {
             try
             {
-                var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
+                (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
                     new Dictionary<string, object> { ["uid"] = uid });
 
                 if (isok)
