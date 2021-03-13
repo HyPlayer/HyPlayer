@@ -6,11 +6,11 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using TagLib;
 using Windows.Media;
 using Windows.Media.Core;
 using Windows.Media.Playback;
 using Windows.Storage;
+using Windows.Storage.FileProperties;
 using Windows.Storage.Streams;
 using Windows.UI.Xaml.Media.Imaging;
 
@@ -388,13 +388,19 @@ namespace HyPlayer.HyPlayControl
 
         public static async void AppendFile(StorageFile sf)
         {
-            TagLib.File afi = TagLib.File.Create(new UwpStorageFileAbstraction(sf), ReadStyle.Average);
+            //TagLib.File afi = TagLib.File.Create(new UwpStorageFileAbstraction(sf), ReadStyle.Average);
+            var mdp = await sf.Properties.GetMusicPropertiesAsync();
+            string[] contributingArtistsKey = { "System.Music.Artist" };
+            IDictionary<string, object> contributingArtistsProperty =
+                await mdp.RetrievePropertiesAsync(contributingArtistsKey);
+            string[] contributingArtists = contributingArtistsProperty["System.Music.Artist"] as string[];
             AudioInfo ai = new AudioInfo()
             {
-                Album = string.IsNullOrEmpty(afi.Tag.Album) ? "未知专辑" : afi.Tag.Album,
-                Artist = string.IsNullOrEmpty(string.Join('/', afi.Tag.Performers)) ? "未知歌手" : string.Join('/', afi.Tag.Performers),
-                LengthInMilliseconds = afi.Properties.Duration.TotalMilliseconds,
-                SongName = string.IsNullOrEmpty(afi.Tag.Title) ? "Untitled" : afi.Tag.Title,
+                Album = string.IsNullOrEmpty(mdp.Album) ? "未知专辑" : mdp.Album,
+                ArtistArr = contributingArtists,
+                Artist = string.IsNullOrEmpty(string.Join('/', contributingArtists)) ? "未知歌手" : string.Join('/', contributingArtists),
+                LengthInMilliseconds = mdp.Duration.TotalMilliseconds,
+                SongName = string.IsNullOrEmpty(mdp.Title) ? sf.DisplayName : mdp.Title,
                 LocalSongFile = sf
             };
 
@@ -408,19 +414,11 @@ namespace HyPlayer.HyPlayControl
             try
             {
                 BitmapImage img = new BitmapImage();
-                using (InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream())
-                {
-                    stream.AsStreamForWrite().Write(afi.Tag.Pictures[0].Data.ToArray(), 0,
-                        afi.Tag.Pictures[0].Data.ToArray().Length);
-                    stream.Seek(0);
-                    await img.SetSourceAsync(stream);
-                    InMemoryRandomAccessStream streamb = new InMemoryRandomAccessStream();
-                    streamb.AsStreamForWrite().Write(afi.Tag.Pictures[0].Data.ToArray(), 0,
-                        afi.Tag.Pictures[0].Data.ToArray().Length);
-                    streamb.Seek(0);
-                    ai.Thumbnail = Windows.Storage.Streams.RandomAccessStreamReference.CreateFromStream(streamb);
-                }
+                var thumbnail = await sf.GetThumbnailAsync(ThumbnailMode.MusicView,99999);
 
+                ai.Thumbnail = Windows.Storage.Streams.RandomAccessStreamReference.CreateFromStream(thumbnail);
+
+                img.SetSource(thumbnail);
                 ai.BitmapImage = img;
             }
             catch (Exception) { }
@@ -568,29 +566,6 @@ namespace HyPlayer.HyPlayControl
                     }
                 }
             }
-        }
-    }
-
-    public class UwpStorageFileAbstraction : TagLib.File.IFileAbstraction
-    {
-        private readonly StorageFile file;
-
-        public string Name => file.Name;
-
-        public Stream ReadStream => file.OpenStreamForReadAsync().GetAwaiter().GetResult();
-
-        public Stream WriteStream => file.OpenStreamForWriteAsync().GetAwaiter().GetResult();
-
-
-        public UwpStorageFileAbstraction(StorageFile file)
-        {
-            this.file = file ?? throw new ArgumentNullException(nameof(file));
-        }
-
-
-        public void CloseStream(Stream stream)
-        {
-            stream?.Dispose();
         }
     }
 }

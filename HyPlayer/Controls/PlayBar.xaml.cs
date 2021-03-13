@@ -108,7 +108,6 @@ namespace HyPlayer.Controls
                 {
                     BtnLike.IsChecked = Common.LikedSongs.Contains(mpi.NcPlayItem.sid);
                 }
-
                 ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
             }));
         }
@@ -320,6 +319,10 @@ namespace HyPlayer.Controls
                     Common.LikedSongs.Add(HyPlayList.NowPlayingItem.NcPlayItem.sid);
                 }
                 BtnLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.NcPlayItem.sid);
+            }
+            else
+            {
+                BtnLike.IsChecked = false;
             }
         }
     }
