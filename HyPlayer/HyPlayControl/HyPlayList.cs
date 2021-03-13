@@ -9,9 +9,11 @@ using System.Threading.Tasks;
 using Windows.Media;
 using Windows.Media.Core;
 using Windows.Media.Playback;
+using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Streams;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media.Imaging;
 
 namespace HyPlayer.HyPlayControl
@@ -19,17 +21,12 @@ namespace HyPlayer.HyPlayControl
     public static class HyPlayList
     {
         /*********        基本       ********/
+        public static PlayMode NowPlayType = PlayMode.DefaultRoll;
         public static int NowPlaying = 0;
         public static bool isPlaying => Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing;
         public static HyPlayItem NowPlayingItem => List[NowPlaying];
         public static readonly List<HyPlayItem> List = new List<HyPlayItem>();
-        public static readonly Dictionary<MediaPlaybackItem, int> MPIToIndex = new Dictionary<MediaPlaybackItem, int>();
-        //public static Timer Timer = null;
         public static List<SongLyric> Lyrics = new List<SongLyric>();
-        public static int RequestId;
-        private static int nowsid;
-        public static bool Syncing;
-        public static Timer SyncTimer;
 
 
         /********        事件        ********/
@@ -40,38 +37,220 @@ namespace HyPlayer.HyPlayControl
         public delegate void PauseEvent();
         public static event PauseEvent OnPause;
         public delegate void PlayEvent();
-        public static event PauseEvent OnPlay;
+        public static event PlayEvent OnPlay;
         public delegate void PlayPositionChangeEvent(TimeSpan Position);
         public static event PlayPositionChangeEvent OnPlayPositionChange;
         public delegate void VolumeChangeEvent(double newVolumn);
         public static event VolumeChangeEvent OnVolumeChange;
-        public delegate void PlayListAddEvent(HyPlayItem playItem);
-        public static event PlayListAddEvent OnPlayListAdd;
+        public delegate void PlayListAddDoneEvent();
+        public static event PlayListAddDoneEvent OnPlayListAddDone;
         public delegate void LyricLoadedEvent();
         public static event LyricLoadedEvent OnLyricLoaded;
         public delegate void LyricChangeEvent(SongLyric lrc);
         public static event LyricChangeEvent OnLyricChange;
+        public delegate void MediaEndEvent(HyPlayItem hpi);
+        public static event MediaEndEvent OnMediaEnd;
 
         /********        API        ********/
         public static MediaPlayer Player;
-        public static MediaPlaybackList PlaybackList;
+        public static SystemMediaTransportControls MediaSystemControls;
+        public static SystemMediaTransportControlsDisplayUpdater ControlsDisplayUpdater;
+        public static BackgroundDownloader downloader = new BackgroundDownloader();
 
 
 
         public static void InitializeHyPlaylist()
         {
-            PlaybackList = new MediaPlaybackList() { AutoRepeatEnabled = true };
-            PlaybackList.ItemOpened += AudioMediaPlaybackList_ItemOpened;
-            PlaybackList.CurrentItemChanged += AudioMediaPlaybackList_CurrentItemChanged;
             Player = new MediaPlayer()
             {
-                Source = PlaybackList,
-                AutoPlay = true
+                AutoPlay = true,
+                IsLoopingEnabled = false
             };
+            MediaSystemControls = SystemMediaTransportControls.GetForCurrentView();
+            ControlsDisplayUpdater = MediaSystemControls.DisplayUpdater;
+            Player.CommandManager.IsEnabled = false;
+            MediaSystemControls.IsPlayEnabled = true;
+            MediaSystemControls.IsPauseEnabled = true;
+            MediaSystemControls.IsNextEnabled = true;
+            MediaSystemControls.IsPreviousEnabled = true;
+            MediaSystemControls.IsEnabled = false;
+            MediaSystemControls.ButtonPressed += SystemControls_ButtonPressed;
+            MediaSystemControls.PlaybackStatus = MediaPlaybackStatus.Closed;
+            Player.SourceChanged += Player_SourceChanged;
+            Player.MediaEnded += Player_MediaEnded;
             Player.CurrentStateChanged += Player_CurrentStateChanged;
             Player.VolumeChanged += Player_VolumeChanged;
             Player.PlaybackSession.PositionChanged += PlaybackSession_PositionChanged;
-            SyncTimer = new Timer(state => { SyncPlayList(); }, null, 1000, 1000);
+        }
+
+        /********        方法         ********/
+        public static void SongAppendDone()
+        {
+            Invoke(() => OnPlayListAddDone?.Invoke());
+        }
+
+        public static void SongMoveNext()
+        {
+            if (NowPlaying + 1 >= List.Count)
+            {
+                NowPlaying = 0;
+            }
+            else
+            {
+                NowPlaying++;
+            }
+            LoadPlayerSong();
+            Player.Play();
+        }
+
+        public static void SongMovePrevious()
+        {
+            if (NowPlaying - 1 < 0)
+            {
+                NowPlaying = List.Count - 1;
+            }
+            else
+            {
+                NowPlaying--;
+            }
+            LoadPlayerSong();
+            Player.Play();
+        }
+
+        public static void SongMoveTo(int index)
+        {
+            if (List.Count <= index) return;
+            NowPlaying = index;
+            LoadPlayerSong();
+            Player.Play();
+        }
+
+        public static void RemoveSong(int index)
+        {
+            if (List.Count <= index) return;
+            List.RemoveAt(index);
+            LoadPlayerSong();
+        }
+
+        public static void RemoveAllSong()
+        {
+            List.Clear();
+            Player.Source = null;
+        }
+
+        /********        相关事件处理        ********/
+
+        private static void SystemControls_ButtonPressed(SystemMediaTransportControls sender, SystemMediaTransportControlsButtonPressedEventArgs args)
+        {
+            switch (args.Button)
+            {
+                case SystemMediaTransportControlsButton.Play:
+                    Invoke(()=> Player.Play());
+                    break;
+                case SystemMediaTransportControlsButton.Pause:
+                    Invoke(() => Player.Pause());
+                    break;
+                case SystemMediaTransportControlsButton.Previous:
+                    Invoke(() => SongMovePrevious());
+                    break;
+                case SystemMediaTransportControlsButton.Next:
+                    Invoke(() => SongMoveNext());
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private static void Player_MediaEnded(MediaPlayer sender, object args)
+        {
+            //当播放结束时,此时你应当进行切歌操作
+            //不过在此之前还是把订阅了的时间给返回回去吧
+            Invoke(() => OnMediaEnd?.Invoke(NowPlayingItem));
+
+            //首先切换指针到下一首要播放的歌
+            switch (NowPlayType)
+            {
+                case PlayMode.DefaultRoll:
+                    //正常Roll的话,id++
+                    if (NowPlaying + 1 >= List.Count)
+                    {
+                        NowPlaying = 0;
+                    }
+                    else
+                    {
+                        NowPlaying++;
+                    }
+
+                    break;
+                case PlayMode.Shuffled:
+                    //随机播放
+                    NowPlaying = new Random().Next(List.Count - 1);
+                    break;
+            }
+
+            //然后尝试加载下一首歌
+            LoadPlayerSong();
+        }
+
+        private static async void LoadPlayerSong()
+        {
+            MediaSource ms;
+            if (NowPlayingItem.isOnline)
+            {
+                //检测是否已经缓存且大小正常
+                try
+                {
+                    StorageFile sf =
+                        await ApplicationData.Current.LocalCacheFolder.GetFileAsync(NowPlayingItem.NcPlayItem.sid +
+                            "." + NowPlayingItem.NcPlayItem.subext);
+                    if ((await sf.GetBasicPropertiesAsync()).Size.ToString() == NowPlayingItem.NcPlayItem.size)
+                    {
+                        ms = MediaSource.CreateFromStorageFile(sf);
+                    }
+                    else
+                    {
+                        throw new Exception("文件大小不匹配");
+                    }
+                }
+                catch (Exception)
+                {
+                    //尝试从DownloadOperation下载
+                    /*
+                    StorageFile destinationFile = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync(NowPlayingItem.NcPlayItem.sid +
+                        "." + NowPlayingItem.NcPlayItem.subext, CreationCollisionOption.ReplaceExisting);
+                    var downloadOperation = downloader.CreateDownload(new Uri(NowPlayingItem.NcPlayItem.url), destinationFile);
+                    downloadOperation.IsRandomAccessRequired = true;
+                    var startAsyncTask = downloadOperation.StartAsync().AsTask();
+                    
+                    */
+                    ms =
+                        MediaSource.CreateFromUri(new Uri(NowPlayingItem.NcPlayItem.url));
+                }
+            }
+            else
+            {
+                ms = MediaSource.CreateFromStorageFile(NowPlayingItem.AudioInfo.LocalSongFile);
+            }
+            Player.Source = ms;
+            MediaSystemControls.IsEnabled = true;
+            Player.Play();
+        }
+
+        private static async void Player_SourceChanged(MediaPlayer sender, object args)
+        {
+            if (List.Count <= NowPlaying) return;
+            //当加载一个新的播放文件时,此时你应当加载歌词和SMTC
+            //加载SMTC
+            ControlsDisplayUpdater.Type = MediaPlaybackType.Music;
+            ControlsDisplayUpdater.MusicProperties.Artist = NowPlayingItem.AudioInfo.Artist;
+            ControlsDisplayUpdater.MusicProperties.AlbumTitle = NowPlayingItem.AudioInfo.Album;
+            ControlsDisplayUpdater.MusicProperties.Title = NowPlayingItem.AudioInfo.SongName;
+            //因为加载图片可能会高耗时,所以在此处加载
+            Invoke(() => OnPlayItemChange?.Invoke(NowPlayingItem));
+            //加载歌词
+            LoadLyrics(NowPlayingItem);
+            ControlsDisplayUpdater.Thumbnail = NowPlayingItem.isOnline ? RandomAccessStreamReference.CreateFromUri(new Uri(NowPlayingItem.NcPlayItem.Album.cover)) : RandomAccessStreamReference.CreateFromStream(await NowPlayingItem.AudioInfo.LocalSongFile.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
+            ControlsDisplayUpdater.Update();
         }
 
         private static void PlaybackSession_PositionChanged(MediaPlaybackSession sender, object args)
@@ -91,41 +270,21 @@ namespace HyPlayer.HyPlayControl
             Invoke(() => OnVolumeChange?.Invoke(Player.Volume));
         }
 
-        private static void LoadSystemPlayBar(int index)
-        {
-            if (index >= List.Count)
-            {
-                return;
-            }
-
-            HyPlayItem hpi = List[index];
-            AudioInfo ai = hpi.AudioInfo;
-            //然后设置播放相关属性
-            MediaItemDisplayProperties properties = PlaybackList.Items[index].GetDisplayProperties();
-            properties.Type = MediaPlaybackType.Music;
-            properties.MusicProperties.AlbumTitle = ai.Album;
-            properties.MusicProperties.Artist = ai.Artist;
-            properties.MusicProperties.Title = ai.SongName;
-
-            try
-            {
-                if (hpi.isOnline)
-                {
-                    properties.Thumbnail = RandomAccessStreamReference.CreateFromUri(new Uri(hpi.NcPlayItem.Album.cover + "?param=" + StaticSource.PICSIZE_AUDIO_PLAYER_COVER));
-                }
-                else
-                {
-                    properties.Thumbnail = ai.Thumbnail;
-
-                }
-            }
-            catch { }
-
-            hpi.MediaItem.ApplyDisplayProperties(properties);
-        }
-
         private static void Player_CurrentStateChanged(MediaPlayer sender, object args)
         {
+            //先通知SMTC
+            switch (Player.PlaybackSession.PlaybackState)
+            {
+                case MediaPlaybackState.Playing:
+                    MediaSystemControls.PlaybackStatus = MediaPlaybackStatus.Playing;
+                    break;
+                case MediaPlaybackState.Paused:
+                    MediaSystemControls.PlaybackStatus = MediaPlaybackStatus.Paused;
+                    break;
+                default:
+                    break;
+            }
+
             if (Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
             {
                 Invoke(() => OnPlay?.Invoke());
@@ -136,37 +295,9 @@ namespace HyPlayer.HyPlayControl
             }
         }
 
-        private static void AudioMediaPlaybackList_ItemOpened(MediaPlaybackList sender, MediaPlaybackItemOpenedEventArgs args)
-        {
-            Invoke(() => OnPlayItemAdd?.Invoke(List[MPIToIndex[args.Item]]));
-        }
-
         public static async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)
         {
             await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority, () => { action(); });
-        }
-
-        public static void AudioMediaPlaybackList_CurrentItemChanged(MediaPlaybackList sender, CurrentMediaPlaybackItemChangedEventArgs args)
-        {
-            if (args.NewItem == null)
-            {
-                RequestSyncPlayList();
-                return;
-            }
-
-            NowPlaying = (int)HyPlayList.PlaybackList.CurrentItemIndex;
-            if (!MPIToIndex.ContainsKey(args.NewItem))
-            {
-                return;
-            }
-
-            HyPlayItem hpi = List[MPIToIndex[args.NewItem]];
-            AudioInfo ai = hpi.AudioInfo;
-            hpi.AudioInfo = ai;
-            //LoadSystemPlayBar(MPIToIndex[args.NewItem]);
-            LoadLyrics(hpi);
-            //这里为调用订阅本事件的元素
-            Invoke(() => OnPlayItemChange?.Invoke(hpi));
         }
 
         public static async void LoadLyrics(HyPlayItem hpi)
@@ -243,7 +374,7 @@ namespace HyPlayer.HyPlayControl
                     {
                         Album = ncSong.Album,
                         Artist = ncSong.Artist,
-                        subext = json["data"][0]["type"].ToString(),
+                        subext = json["data"][0]["type"].ToString().ToLowerInvariant(),
                         sid = ncSong.sid,
                         songname = ncSong.songname,
                         url = json["data"][0]["url"].ToString(),
@@ -270,6 +401,7 @@ namespace HyPlayer.HyPlayControl
             AudioInfo ai = new AudioInfo()
             {
                 Album = ncp.Album.name,
+                ArtistArr = ncp.Artist.Select((artist => artist.name)).ToArray(),
                 Artist = string.Join(" / ", ncp.Artist.Select((artist => artist.name))),
                 LengthInMilliseconds = ncp.LengthInMilliseconds,
                 Picture = ncp.Album.cover,
@@ -285,105 +417,7 @@ namespace HyPlayer.HyPlayControl
                 Path = ncp.url
             };
             List.Add(hpi);
-            RequestSyncPlayList();
             return hpi;
-        }
-
-        public static void RequestSyncPlayList()
-        {
-            RequestId++;
-        }
-
-        public static async void SyncPlayList()
-        {
-            if (nowsid != RequestId && !Syncing)
-            {
-                Syncing = true;
-                nowsid = RequestId;
-                if (List.Count == 0)
-                {
-                    PlaybackList.Items.Clear();
-                    MPIToIndex.Clear();
-                    Syncing = false;
-                    return;
-                }
-                if (PlaybackList.Items.Count > List.Count)
-                {
-                    MPIToIndex.Clear();
-                    for (int i = List.Count - 1; i < PlaybackList.Items.Count; i++)
-                    {
-                        PlaybackList.Items.RemoveAt(i);
-                    }
-                }
-                for (int i = 0; i < List.Count; i++)
-                {
-                    if (PlaybackList.Items.Count <= i || List[i].MediaItem == null || List[i].MediaItem.Source.State == MediaSourceState.Failed || PlaybackList.Items[i] != List[i].MediaItem)
-                    {
-                        MediaPlaybackItem mediaPlaybackItem;
-                        RandomAccessStreamReference rasr;
-                        if (List[i].ItemType == HyPlayItemType.Netease)
-                        {
-                            try
-                            {
-                                StorageFile item =
-                                    await Windows.Storage.ApplicationData.Current.LocalCacheFolder.GetFileAsync(
-                                        "SongCache\\" + List[i].NcPlayItem.sid +
-                                        "." + List[i].NcPlayItem.subext.ToLower());
-                                if (List[i].NcPlayItem.size == (await item.GetBasicPropertiesAsync()).Size.ToString())
-                                {
-                                    mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(item));
-                                }
-                                else
-                                {
-                                    throw new Exception("文件大小不一致");
-                                }
-                            }
-                            catch (Exception)
-                            {
-
-                                mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromUri(new Uri(List[i].NcPlayItem.url)));
-                            }
-                            rasr = RandomAccessStreamReference.CreateFromUri(new Uri(List[i].NcPlayItem.Album.cover + "?param=" + StaticSource.PICSIZE_AUDIO_PLAYER_COVER));
-                            List[i].MediaItem = mediaPlaybackItem;
-                        }
-                        else
-                        {
-                            mediaPlaybackItem = new MediaPlaybackItem(MediaSource.CreateFromStorageFile(List[i].AudioInfo.LocalSongFile));
-                            rasr = List[i].AudioInfo.Thumbnail;
-                        }
-
-                        MediaItemDisplayProperties properties = mediaPlaybackItem.GetDisplayProperties();
-                        properties.Type = MediaPlaybackType.Music;
-                        properties.MusicProperties.AlbumTitle = List[i].AudioInfo.Album;
-                        properties.MusicProperties.Artist = List[i].AudioInfo.Artist;
-                        properties.MusicProperties.Title = List[i].AudioInfo.SongName;
-                        properties.Thumbnail = rasr;
-                        List[i].MediaItem = mediaPlaybackItem;
-
-                        List[i].MediaItem.ApplyDisplayProperties(properties);
-                        MPIToIndex[List[i].MediaItem] = i;
-                        PlaybackList.Items.Add(List[i].MediaItem);
-                        Invoke(() =>
-                        {
-                            if (i >= 0 && List.Count > i)
-                            {
-                                OnPlayListAdd?.Invoke(List[i]);
-                            }
-                        });
-                    }
-
-                    if (i >= 0 && List.Count > i && List[i].MediaItem != PlaybackList.Items[i])
-                    {
-                        if (PlaybackList.Items.Contains(List[i].MediaItem))
-                        {//已经有这个了
-                            PlaybackList.Items.Remove(List[i].MediaItem);
-                        }
-                        PlaybackList.Items[i] = List[i].MediaItem;
-                    }
-                    MPIToIndex[List[i].MediaItem] = i;
-                }
-                Syncing = false;
-            }
         }
 
         public static async void AppendFile(StorageFile sf)
@@ -411,17 +445,6 @@ namespace HyPlayer.HyPlayControl
                 ai.Lyric = await FileIO.ReadTextAsync(lrcfile);
             }
             catch (Exception) { }
-            try
-            {
-                BitmapImage img = new BitmapImage();
-                var thumbnail = await sf.GetThumbnailAsync(ThumbnailMode.MusicView,99999);
-
-                ai.Thumbnail = Windows.Storage.Streams.RandomAccessStreamReference.CreateFromStream(thumbnail);
-
-                img.SetSource(thumbnail);
-                ai.BitmapImage = img;
-            }
-            catch (Exception) { }
 
             HyPlayItem hyPlayItem = new HyPlayItem()
             {
@@ -433,11 +456,15 @@ namespace HyPlayer.HyPlayControl
             };
 
             List.Add(hyPlayItem);
-            RequestSyncPlayList();
         }
     }
 
-
+    public enum PlayMode
+    {
+        DefaultRoll,
+        SinglePlay,
+        Shuffled
+    }
 
     public static class Utils
     {

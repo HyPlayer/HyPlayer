@@ -12,7 +12,6 @@ namespace HyPlayer.HyPlayControl
         public HyPlayItemType ItemType;
         public string Path;
         public bool isOnline;
-        public MediaPlaybackItem MediaItem;
         public AudioInfo AudioInfo;
         public NCPlayItem NcPlayItem;
     }
@@ -30,8 +29,6 @@ namespace HyPlayer.HyPlayControl
         public bool liked;
         public string tag;
         public StorageFile LocalSongFile;
-        public BitmapImage BitmapImage;
-        public RandomAccessStreamReference Thumbnail;
     }
 
     public enum HyPlayItemType

@@ -44,6 +44,9 @@ namespace HyPlayer.Controls
             }
 
             await HyPlayList.AppendNCSong(ncsong);
+            HyPlayList.SongAppendDone();
+            //此处可以进行优化
+            HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t=>t.NcPlayItem.sid == ncsong.sid));
             return true;
         }
 

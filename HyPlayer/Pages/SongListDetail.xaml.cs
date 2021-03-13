@@ -192,8 +192,7 @@ namespace HyPlayer.Pages
             {
                 Invoke((async () =>
                 {
-                    HyPlayList.List.Clear();
-                    HyPlayList.RequestSyncPlayList();
+                    HyPlayList.RemoveAllSong();
                     (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
                         new Dictionary<string, object>() { { "id", string.Join(',', songs.Select(t => t.sid)) } });
                     if (isok)
@@ -222,8 +221,10 @@ namespace HyPlayer.Pages
                             };
                             HyPlayList.AppendNCPlayItem(ncp);
                         }
+                        HyPlayList.SongAppendDone();
+
+                        HyPlayList.SongMoveTo(0);
                     }
-                    HyPlayList.RequestSyncPlayList();
                 }));
             }));
 
@@ -238,8 +239,7 @@ namespace HyPlayer.Pages
 
         private async void ButtonHeartBeat_OnClick(object sender, RoutedEventArgs e)
         {
-            HyPlayList.List.Clear();
-            HyPlayList.RequestSyncPlayList();
+            HyPlayList.RemoveAllSong();
             (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaymodeIntelligenceList,
                 new Dictionary<string, object>() { { "pid", playList.plid }, { "id", intelsong } });
             if (isOk)
@@ -269,6 +269,8 @@ namespace HyPlayer.Pages
                     });
                     await HyPlayList.AppendNCSong(ncSong);
                 }
+                HyPlayList.SongAppendDone();
+                HyPlayList.SongMoveTo(0);
             }
 
         }

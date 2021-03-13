@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Foundation;
+using Windows.Storage.FileProperties;
 using Windows.UI.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
@@ -66,7 +67,7 @@ namespace HyPlayer.Pages
             if (e == null)
             {
                 LyricWidth = Math.Max(Window.Current.Bounds.Width * 0.4, LyricBoxContainer.ViewportWidth);
-                showsize = Math.Max((int)Window.Current.Bounds.Width / 70, 16);
+                showsize = Math.Max((int)Window.Current.Bounds.Width / 66, 16);
             }
             else
             {
@@ -79,7 +80,7 @@ namespace HyPlayer.Pages
                     LyricWidth = Math.Max(e.Size.Width * 0.4, LyricBoxContainer.ViewportWidth);
                 }
 
-                showsize = Math.Max(e.Size.Width / 70, 16);
+                showsize = Math.Max(e.Size.Width / 66, 16);
             }
 
             Task.Run((() =>
@@ -118,6 +119,7 @@ namespace HyPlayer.Pages
         private void RefreshLyricTime(SongLyric LRC)
         {
             LyricItem item = LyricList.Find(t => t.Lrc.LyricTime == LRC.LyricTime);
+            if (item == null) return;
             item.OnShow();
             if (sclock > 0)
             {
@@ -171,11 +173,21 @@ namespace HyPlayer.Pages
         {
             if (mpi != null)
             {
-                Invoke((() =>
+                Invoke(( async () =>
                 {
                     try
                     {
-                        ImageAlbum.Source = mpi.ItemType == HyPlayItemType.Local ? mpi.AudioInfo.BitmapImage : new BitmapImage(new Uri(mpi.AudioInfo.Picture));
+                        if (mpi.ItemType == HyPlayItemType.Local)
+                        {
+                            BitmapImage img = new BitmapImage();
+                            await img.SetSourceAsync((await mpi.AudioInfo.LocalSongFile.GetThumbnailAsync(ThumbnailMode.MusicView,9999)));
+                            ImageAlbum.Source = img;
+                        }
+                        else
+                        {
+                            ImageAlbum.Source = new BitmapImage(new Uri(mpi.AudioInfo.Picture));
+                        }
+                        
                         TextBlockSinger.Text = mpi.AudioInfo.Artist;
                         TextBlockSongTitle.Text = mpi.AudioInfo.SongName;
                         Background = new ImageBrush() { ImageSource = ImageAlbum.Source, Stretch = Stretch.UniformToFill };
@@ -281,12 +293,12 @@ namespace HyPlayer.Pages
 
         private void BtnNextSong_OnClick(object sender, RoutedEventArgs e)
         {
-            HyPlayList.PlaybackList.MoveNext();
+            HyPlayList.SongMoveNext();
         }
 
         private void BtnPreSong_OnClick(object sender, RoutedEventArgs e)
         {
-            HyPlayList.PlaybackList.MovePrevious();
+            HyPlayList.SongMovePrevious();
         }
 
         private void SliderAudioRate_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)

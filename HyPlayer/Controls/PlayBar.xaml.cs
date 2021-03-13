@@ -4,6 +4,7 @@ using HyPlayer.Pages;
 using System;
 using System.Collections.ObjectModel;
 using Windows.Media.Playback;
+using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -27,23 +28,16 @@ namespace HyPlayer.Controls
         public PlayBar()
         {
             Common.BarPlayBar = this;
-            HyPlayList.OnPlayItemAdd += RefreshSongList;
             InitializeComponent();
-            HyPlayList.OnLyricChange += HyPlayList_OnLyricChange;
             HyPlayList.OnPlayItemChange += LoadPlayingFile;
             HyPlayList.OnPlayPositionChange += OnPlayPositionChange;
-            HyPlayList.OnPlayListAdd += HyPlayList_OnPlayListAdd;
-
+            HyPlayList.OnPlayListAddDone += HyPlayList_OnPlayListAdd;
         }
 
-        private void HyPlayList_OnLyricChange(SongLyric lrc)
-        {
-            //throw new NotImplementedException();
-        }
 
-        private void HyPlayList_OnPlayListAdd(HyPlayItem playItem)
+        private void HyPlayList_OnPlayListAdd()
         {
-            RefreshSongList(playItem);
+            RefreshSongList();
         }
 
         private async void TestFile()
@@ -54,11 +48,13 @@ namespace HyPlayer.Controls
 
 
             System.Collections.Generic.IReadOnlyList<Windows.Storage.StorageFile> files = await fop.PickMultipleFilesAsync();
+            HyPlayList.RemoveAllSong();
             foreach (Windows.Storage.StorageFile file in files)
             {
                 HyPlayList.AppendFile(file);
             }
-            HyPlayList.Player.Play();
+            HyPlayList.SongAppendDone();
+            HyPlayList.SongMoveTo(0);
         }
 
         public void OnPlayPositionChange(TimeSpan ts)
@@ -93,14 +89,21 @@ namespace HyPlayer.Controls
             {
                 return;
             }
-
-            MediaItemDisplayProperties dp = mpi.MediaItem.GetDisplayProperties();
             AudioInfo ai = mpi.AudioInfo;
-            Invoke((() =>
+            Invoke(( async () =>
             {
                 TbSingerName.Text = ai.Artist;
                 TbSongName.Text = ai.SongName;
-                AlbumImage.Source = mpi.ItemType == HyPlayItemType.Local ? ai.BitmapImage : new BitmapImage(new Uri(ai.Picture));
+                if (mpi.ItemType == HyPlayItemType.Local)
+                {
+                    BitmapImage img = new BitmapImage();
+                    await img.SetSourceAsync((await mpi.AudioInfo.LocalSongFile.GetThumbnailAsync(ThumbnailMode.MusicView, 9999)));
+                    AlbumImage.Source = img;
+                }
+                else
+                {
+                    AlbumImage.Source = new BitmapImage(new Uri(mpi.AudioInfo.Picture));
+                }
                 SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
                 SliderProgress.Minimum = 0;
                 SliderProgress.Maximum = ai.LengthInMilliseconds;
@@ -112,7 +115,7 @@ namespace HyPlayer.Controls
             }));
         }
 
-        public void RefreshSongList(HyPlayItem hpi)
+        public void RefreshSongList()
         {
             try
             {
@@ -164,19 +167,19 @@ namespace HyPlayer.Controls
 
         private void BtnPreviousSong_OnClick(object sender, RoutedEventArgs e)
         {
-            HyPlayList.PlaybackList.MovePrevious();
+            HyPlayList.SongMovePrevious();
         }
 
         private void BtnNextSong_OnClick(object sender, RoutedEventArgs e)
         {
-            HyPlayList.PlaybackList.MoveNext();
+            HyPlayList.SongMoveNext();
         }
 
         private void ListBoxPlayList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (ListBoxPlayList.SelectedIndex != -1 && ListBoxPlayList.SelectedIndex != HyPlayList.NowPlaying)
             {
-                HyPlayList.PlaybackList.MoveTo((uint)ListBoxPlayList.SelectedIndex);
+                HyPlayList.SongMoveTo(ListBoxPlayList.SelectedIndex);
             }
         }
 
@@ -231,8 +234,7 @@ namespace HyPlayer.Controls
 
         private void ButtonCleanAll_OnClick(object sender, RoutedEventArgs e)
         {
-            HyPlayList.List.Clear();
-            HyPlayList.RequestSyncPlayList();
+            HyPlayList.RemoveAllSong();
             ListBoxPlayList.ItemsSource = new ObservableCollection<ListViewPlayItem>();
         }
 
@@ -265,9 +267,8 @@ namespace HyPlayer.Controls
             {
                 if (sender is Button btn)
                 {
-                    HyPlayList.List.RemoveAt(int.Parse(btn.Tag.ToString()));
-                    HyPlayList.RequestSyncPlayList();
-                    RefreshSongList(null);
+                    HyPlayList.RemoveSong(int.Parse(btn.Tag.ToString()));
+                    RefreshSongList();
                 }
             }
             catch { }
@@ -276,27 +277,23 @@ namespace HyPlayer.Controls
 
         private void BtnPlayRollType_OnClick(object sender, RoutedEventArgs e)
         {
-            HyPlayList.PlaybackList.ShuffleEnabled = !HyPlayList.PlaybackList.ShuffleEnabled;
             switch (NowPlayType)
             {
                 case PlayMode.DefaultRoll:
                     //变成随机
-                    HyPlayList.PlaybackList.ShuffleEnabled = true;
-                    HyPlayList.Player.IsLoopingEnabled = false;
+                    HyPlayList.NowPlayType = PlayMode.Shuffled;
                     NowPlayType = PlayMode.Shuffled;
                     IconPlayType.Glyph = "\uE14B";
                     break;
                 case PlayMode.Shuffled:
                     //变成单曲
                     IconPlayType.Glyph = "\uE1CC";
-                    HyPlayList.PlaybackList.ShuffleEnabled = false;
-                    HyPlayList.Player.IsLoopingEnabled = true;
+                    HyPlayList.NowPlayType = PlayMode.SinglePlay;
                     NowPlayType = PlayMode.SinglePlay;
                     break;
                 case PlayMode.SinglePlay:
                     //变成顺序
-                    HyPlayList.PlaybackList.ShuffleEnabled = false;
-                    HyPlayList.Player.IsLoopingEnabled = false;
+                    HyPlayList.NowPlayType = PlayMode.DefaultRoll;
                     NowPlayType = PlayMode.DefaultRoll;
                     IconPlayType.Glyph = "\uE169";
                     break;
@@ -376,10 +373,5 @@ namespace HyPlayer.Controls
         }
     }
 
-    public enum PlayMode
-    {
-        DefaultRoll,
-        SinglePlay,
-        Shuffled
-    }
+
 }
