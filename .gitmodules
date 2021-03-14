@@ -3,4 +3,4 @@
 	url = https://github.com/kengwang/NeteaseCloudMusicApi.git
 [submodule "Kawazu"]
 	path = Kawazu
-	url = https://github.com/Cutano/Kawazu.git
+	url = https://github.com/HyPlayer/Kawazu.git

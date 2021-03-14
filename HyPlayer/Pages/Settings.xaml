@@ -16,7 +16,9 @@
             FontSize="36"
             Text="设置" />
         <TextBlock
-            FontSize="18">建设中......</TextBlock>
+            FontSize="18">罗马音设置</TextBlock>
+        <TextBlock x:Name="RomajiStatus" Text="获取中"></TextBlock>
+        <Button Click="ButtonBase_OnClick" Content="获取罗马音资源文件"></Button>
         <!--
         <TextBlock
             FontSize="18"
