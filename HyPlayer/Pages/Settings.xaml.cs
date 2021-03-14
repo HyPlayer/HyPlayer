@@ -36,6 +36,11 @@ namespace HyPlayer.Pages
                 Common.Invoke((async () =>
                 {
                     RomajiStatus.Text = "正在下载资源文件";
+                    try
+                    {
+                        await (await ApplicationData.Current.LocalCacheFolder.GetFileAsync("RomajiData.zip")).DeleteAsync();
+                    }
+                    catch { }
                     StorageFile sf = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("RomajiData.zip");
                     var downloader = new BackgroundDownloader();
                     var dl = downloader.CreateDownload(new Uri("https://api.kengwang.co/hyplayer/getromaji.php"), sf);
@@ -53,21 +58,33 @@ namespace HyPlayer.Pages
 
         private async void ProgressCallback(DownloadOperation obj)
         {
+            RomajiStatus.Text = $"正在下载资源文件 ({((obj.Progress.BytesReceived * 100) / obj.Progress.TotalBytesToReceive):D}%)";
             if (obj.Progress.BytesReceived >= obj.Progress.TotalBytesToReceive)
             {
-                //下载完成
-                Stream a = await obj.ResultFile.OpenStreamForReadAsync();
-                //unzip
-                ZipArchive archive = new ZipArchive(a);
-                string path = (await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("Romaji")).Path;
-                archive.ExtractToDirectory(path);
-                _ = obj.ResultFile.DeleteAsync();
-                try
+                _ = Task.Run((() =>
                 {
-                    Common.KawazuConv = new KawazuConverter(path);
-                }
-                catch (Exception) { }
-                RomajiStatus.Text = "当前日语转罗马音状态: " + (Common.KawazuConv == null ? "无法转换 请尝试重新下载资源文件" : "可以转换");
+                    Common.Invoke((async () =>
+                    {
+                        try
+                        {
+                            //下载完成
+                            Stream a = await obj.ResultFile.OpenStreamForReadAsync();
+                            //unzip
+                            ZipArchive archive = new ZipArchive(a);
+                            string path = (await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("Romaji")).Path;
+                            archive.ExtractToDirectory(path);
+                            _ = obj.ResultFile.DeleteAsync();
+
+                            Common.KawazuConv = new KawazuConverter(path);
+                        }
+                        catch (Exception e)
+                        {
+
+                        }
+                        RomajiStatus.Text = "当前日语转罗马音状态: " + (Common.KawazuConv == null ? "无法转换 请尝试重新下载资源文件" : "可以转换");
+                    }));
+                }));
+
             }
         }
 
