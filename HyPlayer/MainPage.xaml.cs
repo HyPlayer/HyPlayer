@@ -1,5 +1,9 @@
-﻿using HyPlayer.HyPlayControl;
+﻿using System;
+using System.Threading.Tasks;
+using Windows.Storage;
+using HyPlayer.HyPlayControl;
 using Windows.UI.Xaml.Controls;
+using Kawazu;
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
 
@@ -14,6 +18,22 @@ namespace HyPlayer
         {
             Common.PageMain = this;
             HyPlayList.InitializeHyPlaylist();
+
+            Task.Run(() =>
+            {
+                Common.Invoke((async () =>
+                {
+                    try
+                    {
+                        var sf = await ApplicationData.Current.LocalCacheFolder.GetFolderAsync("Romaji");
+                        Common.KawazuConv = new KawazuConverter(sf.Path);
+                    }
+                    catch (Exception e)
+                    {
+                        // ignored
+                    }
+                }));
+            });
             InitializeComponent();
         }
     }

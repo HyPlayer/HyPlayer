@@ -8,6 +8,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using Windows.UI.Xaml.Controls;
+using Kawazu;
 
 namespace HyPlayer
 {
@@ -23,6 +24,12 @@ namespace HyPlayer
         public static Setting Setting;
         public static Dictionary<string, object> GLOBAL = new Dictionary<string, object>();
         public static List<string> LikedSongs;
+        public static KawazuConverter KawazuConv = null;
+
+        public static async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)
+        {
+            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority, () => { action(); });
+        }
     }
 
     internal struct Setting

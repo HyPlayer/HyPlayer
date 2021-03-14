@@ -92,7 +92,10 @@
 ## 使用
 
 * NeteaseCloudMusicApi
-[wwh1004/NeteaseCloudMusicApi](https://github.com/wwh1004/NeteaseCloudMusicApi) => [kengwang/NeteaseCloudMusicApi](https://github.com/kengwang/NeteaseCloudMusicApi) (MIT Licence)
+  [wwh1004/NeteaseCloudMusicApi](https://github.com/wwh1004/NeteaseCloudMusicApi) => [kengwang/NeteaseCloudMusicApi](https://github.com/kengwang/NeteaseCloudMusicApi) (MIT Licence)
+
+* Kawazu [Cutano/Kawazu](https://github.com/Cutano/Kawazu) (MIT Licence)
+
 
 ## 捐助
 

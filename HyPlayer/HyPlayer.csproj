@@ -320,6 +320,10 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Kawazu\Kawazu\Kawazu.csproj">
+      <Project>{8e700196-0cc0-4e10-8927-73cba12e2fa3}</Project>
+      <Name>Kawazu</Name>
+    </ProjectReference>
     <ProjectReference Include="..\NeteaseCloudMusicApi\NeteaseCloudMusicApi\NeteaseCloudMusicApi.csproj">
       <Project>{48f6363e-88ac-4846-9ea5-7800d9ef1a12}</Project>
       <Name>NeteaseCloudMusicApi</Name>

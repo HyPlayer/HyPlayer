@@ -1,10 +1,12 @@
 ﻿using HyPlayer.Classes;
 using System;
+using System.Threading.Tasks;
 using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
+using Kawazu;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -21,7 +23,6 @@ namespace HyPlayer.Controls
         public bool hiding = false;
         public LyricItem(SongLyric lrc)
         {
-
             InitializeComponent();
             originBrush = TextBoxPureLyric.Foreground;
             TextBoxPureLyric.FontSize = actualsize;
@@ -35,6 +36,21 @@ namespace HyPlayer.Controls
             else
             {
                 TextBoxTranslation.Visibility = Visibility.Collapsed;
+            }
+
+            if (Common.KawazuConv != null)
+            {
+                Task.Run(() =>
+                {
+                    Invoke((async () =>
+                    {
+                        if (Kawazu.Utilities.HasKana(Lrc.PureLyric))
+                        {
+                            TextBoxSound.Text = await Common.KawazuConv.Convert(Lrc.PureLyric, To.Romaji, Mode.Spaced);
+                        }
+
+                    }));
+                });
             }
 
             OnHind();
@@ -51,6 +67,7 @@ namespace HyPlayer.Controls
             TextBoxPureLyric.FontWeight = FontWeights.SemiBold;
             TextBoxTranslation.FontWeight = FontWeights.SemiBold;
             TextBoxPureLyric.Foreground = originBrush;
+            TextBoxSound.Foreground = originBrush;
             TextBoxTranslation.Foreground = originBrush;
             TextBoxPureLyric.FontSize = actualsize;
             TextBoxTranslation.FontSize = actualsize;
@@ -63,6 +80,7 @@ namespace HyPlayer.Controls
             TextBoxTranslation.FontWeight = FontWeights.Normal;
             TextBoxPureLyric.Foreground = new SolidColorBrush(Color.FromArgb(255, 155, 155, 155));
             TextBoxTranslation.Foreground = new SolidColorBrush(Color.FromArgb(255, 155, 155, 155));
+            TextBoxSound.Foreground = new SolidColorBrush(Color.FromArgb(255, 155, 155, 155));
             TextBoxPureLyric.FontSize = actualsize;
             TextBoxTranslation.FontSize = actualsize;
         }
