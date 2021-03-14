@@ -68,11 +68,10 @@ namespace HyPlayer.Pages
                         try
                         {
                             //下载完成
-                            Stream a = await obj.ResultFile.OpenStreamForReadAsync();
                             //unzip
-                            ZipArchive archive = new ZipArchive(a);
+
                             string path = (await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("Romaji")).Path;
-                            archive.ExtractToDirectory(path);
+                            ZipFile.ExtractToDirectory(obj.ResultFile.Path, path);
                             _ = obj.ResultFile.DeleteAsync();
 
                             Common.KawazuConv = new KawazuConverter(path);
