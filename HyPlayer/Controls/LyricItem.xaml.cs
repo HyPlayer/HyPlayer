@@ -46,7 +46,7 @@ namespace HyPlayer.Controls
                     {
                         if (Kawazu.Utilities.HasKana(Lrc.PureLyric))
                         {
-                            TextBoxSound.Text = await Common.KawazuConv.Convert(Lrc.PureLyric, To.Romaji, Mode.Spaced);
+                            TextBoxSound.Text = await Common.KawazuConv.Convert(Lrc.PureLyric, To.Romaji, Mode.Separated);
                         }
 
                     }));

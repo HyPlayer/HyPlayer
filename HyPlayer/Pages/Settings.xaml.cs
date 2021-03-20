@@ -56,10 +56,10 @@ namespace HyPlayer.Pages
             await dl.StartAsync().AsTask(process);
         }
 
-        private async void ProgressCallback(DownloadOperation obj)
+        private void ProgressCallback(DownloadOperation obj)
         {
             RomajiStatus.Text = $"正在下载资源文件 ({((obj.Progress.BytesReceived * 100) / obj.Progress.TotalBytesToReceive):D}%)";
-            if (obj.Progress.BytesReceived >= obj.Progress.TotalBytesToReceive)
+            if (obj.Progress.Status == BackgroundTransferStatus.Completed)
             {
                 _ = Task.Run((() =>
                 {
