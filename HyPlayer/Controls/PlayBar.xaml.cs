@@ -4,6 +4,7 @@ using HyPlayer.Pages;
 using System;
 using System.Collections.ObjectModel;
 using Windows.Media.Playback;
+using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
@@ -33,6 +34,7 @@ namespace HyPlayer.Controls
             HyPlayList.OnPlayItemChange += LoadPlayingFile;
             HyPlayList.OnPlayPositionChange += OnPlayPositionChange;
             HyPlayList.OnPlayListAddDone += HyPlayList_OnPlayListAdd;
+            AlbumImage.Source = new BitmapImage(new Uri("ms-appx:Assets/icon.png"));
         }
 
 
@@ -91,29 +93,30 @@ namespace HyPlayer.Controls
                 return;
             }
             AudioInfo ai = mpi.AudioInfo;
-            Invoke(( async () =>
-            {
-                TbSingerName.Text = ai.Artist;
-                TbSongName.Text = ai.SongName;
-                if (mpi.ItemType == HyPlayItemType.Local)
-                {
-                    BitmapImage img = new BitmapImage();
-                    await img.SetSourceAsync((await mpi.AudioInfo.LocalSongFile.GetThumbnailAsync(ThumbnailMode.MusicView, 9999)));
-                    AlbumImage.Source = img;
-                }
-                else
-                {
-                    AlbumImage.Source = new BitmapImage(new Uri(mpi.AudioInfo.Picture));
-                }
-                SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
-                SliderProgress.Minimum = 0;
-                SliderProgress.Maximum = ai.LengthInMilliseconds;
-                if (mpi.isOnline)
-                {
-                    BtnLike.IsChecked = Common.LikedSongs.Contains(mpi.NcPlayItem.sid);
-                }
-                ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
-            }));
+            Invoke((async () =>
+           {
+               TbSingerName.Text = ai.Artist;
+               TbSongName.Text = ai.SongName;
+               if (mpi.ItemType == HyPlayItemType.Local)
+               {
+                   BitmapImage img = new BitmapImage();
+                   await img.SetSourceAsync((await mpi.AudioInfo.LocalSongFile.GetThumbnailAsync(ThumbnailMode.MusicView, 9999)));
+                   AlbumImage.Source = img;
+               }
+               else
+               {
+                   AlbumImage.Source = new BitmapImage(new Uri(mpi.AudioInfo.Picture));
+               }
+               SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
+               SliderProgress.Minimum = 0;
+               SliderProgress.Maximum = ai.LengthInMilliseconds;
+               if (mpi.isOnline)
+               {
+                   BtnLike.IsChecked = Common.LikedSongs.Contains(mpi.NcPlayItem.sid);
+               }
+               ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
+               TbSongTag.Text = HyPlayList.NowPlayingItem.AudioInfo.tag;
+           }));
         }
 
         public void RefreshSongList()
@@ -324,6 +327,21 @@ namespace HyPlayer.Controls
             {
                 BtnLike.IsChecked = false;
             }
+        }
+
+        private void ImageContainer_OnPointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            ImageContainer.BorderBrush = Application.Current.Resources["SystemControlBackgroundListMediumRevealBorderBrush"] as Brush;
+        }
+
+        private void ImageContainer_OnPointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            ImageContainer.BorderBrush = null;
+        }
+
+        private void ImageContainer_OnPointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            ButtonExpand_OnClick(sender,e);
         }
     }
 

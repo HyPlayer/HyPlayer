@@ -27,33 +27,40 @@ namespace HyPlayer
 
         private async void CurrentDomain_UnhandledException(object sender, System.UnhandledExceptionEventArgs e)
         {
-            ContentDialog Dialog = new ContentDialog
+            Common.Invoke((async () =>
             {
-                Title = "遇到了错误",
-                Content = e.ExceptionObject.ToString(),
-                PrimaryButtonText = "退出"
-            };
-            ContentDialogResult result = await Dialog.ShowAsync();
+                ContentDialog Dialog = new ContentDialog
+                {
+                    Title = "遇到了错误",
+                    Content = e.ExceptionObject.ToString(),
+                    PrimaryButtonText = "退出"
+                };
+                ContentDialogResult result = await Dialog.ShowAsync();
+            }));
+
         }
 
         private async void App_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            ContentDialog Dialog = new ContentDialog
+            Common.Invoke((async () =>
             {
-                Title = "遇到了错误",
-                Content = e.Exception.ToString(),
-                CloseButtonText = "忽略",
-                PrimaryButtonText = "退出"
-            };
-            ContentDialogResult result = await Dialog.ShowAsync();
-            if (result == ContentDialogResult.Primary)
-            {
-                Environment.Exit(-1);
-            }
-            else
-            {
-                e.Handled = true;
-            }
+                ContentDialog Dialog = new ContentDialog
+                {
+                    Title = "遇到了错误",
+                    Content = e.Exception.ToString(),
+                    CloseButtonText = "忽略",
+                    PrimaryButtonText = "退出"
+                };
+                ContentDialogResult result = await Dialog.ShowAsync();
+                if (result == ContentDialogResult.Primary)
+                {
+                    Environment.Exit(-1);
+                }
+                else
+                {
+                    e.Handled = true;
+                }
+            }));
         }
 
         /// <summary>

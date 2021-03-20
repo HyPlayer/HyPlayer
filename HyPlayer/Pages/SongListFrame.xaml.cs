@@ -22,7 +22,7 @@ namespace HyPlayer.Pages
         public SongListFrame()
         {
             InitializeComponent();
-            uid = Common.LoginedUser.uid;
+            uid = Common.LoginedUser.id;
             LoadList();
         }
 

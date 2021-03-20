@@ -35,6 +35,7 @@ namespace HyPlayer.Classes
 
     public struct NCPlayItem
     {
+        public string tag;
         public string sid;
         public string songname;
         public List<NCArtist> Artist;

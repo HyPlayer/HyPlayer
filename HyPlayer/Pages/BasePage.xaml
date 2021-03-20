@@ -10,7 +10,7 @@
     xmlns:media="using:Windows.UI.Xaml.Media"
     mc:Ignorable="d">
     <Grid>
-        <NavigationView
+        <controls1:NavigationView
             x:Name="NavMain"
             Margin="0,0,0,0"
             BackRequested="OnNavigateBack"
@@ -19,21 +19,26 @@
             IsBackEnabled="True"
             IsSettingsVisible="False"
             SelectionChanged="NavMain_OnSelectionChanged">
-            <NavigationView.MenuItems>
-                <NavigationViewItem
+            <controls1:NavigationView.AutoSuggestBox>
+                <AutoSuggestBox
+                    QueryIcon="Find"
+                    PlaceholderText="搜索歌曲......"
+                    QuerySubmitted="AutoSuggestBox_QuerySubmitted" />
+            </controls1:NavigationView.AutoSuggestBox>
+            <controls1:NavigationView.MenuItems>
+                <controls1:NavigationViewItem
                     Content="主页"
                     Icon="Home"
                     Tag="PageHome" />
-                <NavigationViewItem
-                    Content="搜索"
-                    Icon="Zoom"
-                    Tag="PageSearch" />
-                <NavigationViewItem
+                <controls1:NavigationViewItem
                     Content="设置"
                     Icon="Setting"
                     Tag="PageSettings" />
-                <NavigationViewItem Tag="PageMe">
-                    <StackPanel Margin="-10,0,0,0" Orientation="Horizontal">
+                <controls1:NavigationViewItem
+                    Tag="PageMe">
+                    <StackPanel
+                        Margin="-10,0,0,0"
+                        Orientation="Horizontal">
                         <PersonPicture
                             x:Name="PersonPictureUser"
                             Width="20"
@@ -43,14 +48,36 @@
                             Margin="16,0,0,0"
                             Text="登录" />
                     </StackPanel>
-                </NavigationViewItem>
-            </NavigationView.MenuItems>
-            <Frame x:Name="BaseFrame" Margin="0,40,0,0" />
-        </NavigationView>
+                </controls1:NavigationViewItem>
+                <controls1:NavigationViewItemSeparator />
+                <controls1:NavigationViewItem
+                    Icon="List"
+                    Content="我创建的歌单"
+                    Visibility="Collapsed"
+                    x:Name="NavItemsMyList" />
+
+                <controls1:NavigationViewItem
+                    Icon="List"
+                    Content="我收藏的歌单"
+                    Visibility="Collapsed"
+                    x:Name="NavItemsLikeList" />
+            </controls1:NavigationView.MenuItems>
+            <controls1:NavigationView.PaneFooter>
+                <Grid Height="100"/>
+            </controls1:NavigationView.PaneFooter>
+            <Frame
+                Margin="0,40,0,0"
+                x:Name="BaseFrame" />
+        </controls1:NavigationView>
         <!--  登录弹窗  -->
-        <ContentDialog x:Name="DialogLogin" Width="400">
-            <StackPanel Orientation="Vertical">
-                <Image Height="200" Source="/Assets/icon.png" />
+        <ContentDialog
+            x:Name="DialogLogin"
+            Width="400">
+            <StackPanel
+                Orientation="Vertical">
+                <Image
+                    Height="200"
+                    Source="/Assets/icon.png" />
                 <TextBlock
                     Padding="0,3,0,10"
                     HorizontalAlignment="Center"
@@ -73,7 +100,9 @@
                     Click="ButtonLogin_OnClick"
                     Content="登录"
                     Style="{StaticResource AccentButtonStyle}" />
-                <TextBlock Padding="0,25,0,0" TextAlignment="Center">
+                <TextBlock
+                    Padding="0,25,0,0"
+                    TextAlignment="Center">
                     <TextBlock.Text>
                         登录代表你同意相关条款
                     </TextBlock.Text>

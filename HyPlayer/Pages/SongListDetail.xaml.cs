@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
+using Windows.UI.Input.Spatial;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
@@ -158,24 +159,63 @@ namespace HyPlayer.Pages
 
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            if (e.Parameter != null)
+            await Task.Run((() =>
             {
-                playList = (NCPlayList)e.Parameter;
-            }
-
-            Task.Run((() =>
-            {
-                Invoke(() =>
+                Common.Invoke(async () =>
                 {
+                    if (e.Parameter != null)
+                    {
+                        if (e.Parameter is NCPlayList)
+                            playList = (NCPlayList)e.Parameter;
+                        else
+                        {
+                            string pid = e.Parameter.ToString();
+
+                            (bool isok, var json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
+                                new Dictionary<string, object>() { { "id", pid } });
+                            if (isok)
+                            {
+                                NCUser user;
+                                if (!json["playlist"]["creator"].HasValues)
+                                {
+                                    user = Common.LoginedUser;
+                                }
+                                else
+                                {
+                                    user = new NCUser()
+                                    {
+                                        avatar = json["playlist"]["creator"]["avatarUrl"].ToString(),
+                                        id = json["playlist"]["creator"]["userId"].ToString(),
+                                        name = json["playlist"]["creator"]["nickname"].ToString(),
+                                        signature = json["playlist"]["creator"]["signature"].ToString()
+                                    };
+                                }
+                                playList = new NCPlayList()
+                                {
+                                    cover = json["playlist"]["coverImgUrl"].ToString(),
+                                    creater = user,
+                                    desc = json["playlist"]["description"].ToString(),
+                                    name = json["playlist"]["name"].ToString(),
+                                    plid = json["playlist"]["id"].ToString()
+                                };
+                            }
+
+
+                        }
+                    }
                     LoadSongListDetail();
                     LoadSongListItem();
                 });
             }));
-            ConnectedAnimation anim = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongListExpand");
-            anim?.TryStart(RectangleImage);
+            try
+            {
+                ConnectedAnimation anim = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongListExpand");
+                anim?.TryStart(RectangleImage);
+            }
+            catch { }
 
         }
 
@@ -207,8 +247,19 @@ namespace HyPlayer.Pages
                             }
 
                             NCSong ncSong = songs[i];
+
+                            string tag = "";
+                            if (token["type"].ToString().ToLowerInvariant() == "flac")
+                            {
+                                tag = "SQ";
+                            }
+                            else
+                            {
+                                tag = (token["br"].ToObject<int>() / 1000).ToString() + "k";
+                            }
                             NCPlayItem ncp = new NCPlayItem()
                             {
+                                tag = tag,
                                 Album = ncSong.Album,
                                 Artist = ncSong.Artist,
                                 subext = token["type"].ToString(),

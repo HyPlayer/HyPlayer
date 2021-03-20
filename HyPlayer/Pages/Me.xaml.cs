@@ -25,7 +25,7 @@ namespace HyPlayer.Pages
         public Me()
         {
             InitializeComponent();
-            uid = Common.LoginedUser.uid;
+            uid = Common.LoginedUser.id;
             LoadInfo();
             NavigationView1.SelectedItem = NavigationView1.MenuItems[0];
         }
@@ -38,7 +38,7 @@ namespace HyPlayer.Pages
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            uid = Common.LoginedUser.uid;
+            uid = Common.LoginedUser.id;
             LoadInfo();
         }
 
@@ -93,7 +93,7 @@ namespace HyPlayer.Pages
                 StorageFile sf = await Windows.Storage.ApplicationData.Current.LocalFolder.GetFileAsync("Settings\\UserPassword");
                 await sf.DeleteAsync();
                 Common.Logined = false;
-                Common.LoginedUser = new LoginedUser();
+                Common.LoginedUser = new NCUser();
                 Common.PageMain.MainFrame.Navigate(typeof(BlankPage));
                 Common.PageMain.MainFrame.Navigate(typeof(BasePage));
             }

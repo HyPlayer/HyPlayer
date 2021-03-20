@@ -56,7 +56,8 @@ namespace HyPlayer.Pages
             HyPlayList.OnPlayItemChange -= OnSongChange;
             HyPlayList.OnLyricLoaded -= HyPlayList_OnLyricLoaded;
             HyPlayList.OnPlayPositionChange -= HyPlayList_OnPlayPositionChange;
-            Window.Current.SizeChanged -= Current_SizeChanged;
+            if (Window.Current != null)
+                Window.Current.SizeChanged -= Current_SizeChanged;
         }
 
         ~ExpandedPlayer()
@@ -301,6 +302,7 @@ namespace HyPlayer.Pages
                     }));
                 });
                 _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
+                ImageAlbumContainer.Visibility = Visibility.Visible;
                 iscompact = false;
             }
         }

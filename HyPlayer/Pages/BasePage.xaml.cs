@@ -14,10 +14,10 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
-using NavigationView = Windows.UI.Xaml.Controls.NavigationView;
-using NavigationViewBackRequestedEventArgs = Windows.UI.Xaml.Controls.NavigationViewBackRequestedEventArgs;
-using NavigationViewItem = Windows.UI.Xaml.Controls.NavigationViewItem;
-using NavigationViewSelectionChangedEventArgs = Windows.UI.Xaml.Controls.NavigationViewSelectionChangedEventArgs;
+using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
+using NavigationViewBackRequestedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewBackRequestedEventArgs;
+using NavigationViewItem = Microsoft.UI.Xaml.Controls.NavigationViewItem;
+using NavigationViewSelectionChangedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewSelectionChangedEventArgs;
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
 
@@ -38,8 +38,8 @@ namespace HyPlayer.Pages
             LoadLoginData();
             if (Common.Logined)
             {
-                TextBlockUserName.Text = Common.LoginedUser.UserName;
-                PersonPictureUser.ProfilePicture = new BitmapImage(new Uri(Common.LoginedUser.ImgUrl));
+                TextBlockUserName.Text = Common.LoginedUser.name;
+                PersonPictureUser.ProfilePicture = new BitmapImage(new Uri(Common.LoginedUser.avatar));
             }
             Common.BaseFrame = BaseFrame;
             NavMain.SelectedItem = NavMain.MenuItems[0];
@@ -62,15 +62,14 @@ namespace HyPlayer.Pages
                 if (isOk && json["code"].ToString() == "200")
                 {
                     Common.Logined = true;
-                    Common.LoginedUser.UserName = json["profile"]["nickname"].ToString();
-                    Common.LoginedUser.ImgUrl = json["profile"]["avatarUrl"].ToString();
-                    Common.LoginedUser.uid = json["account"]["id"].ToString();
+                    Common.LoginedUser.name = json["profile"]["nickname"].ToString();
+                    Common.LoginedUser.avatar = json["profile"]["avatarUrl"].ToString();
+                    Common.LoginedUser.id = json["account"]["id"].ToString();
+                    Common.LoginedUser.signature = json["profile"]["signature"].ToString();
                     TextBlockUserName.Text = json["profile"]["nickname"].ToString();
                     PersonPictureUser.ProfilePicture =
                         new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
-
-                    (bool isok, JObject js) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Likelist, new Dictionary<string, object>() { { "uid", Common.LoginedUser.uid } });
-                    Common.LikedSongs = js["ids"].ToObject<List<string>>();
+                    LoginDone();
                 }
             }
             catch
@@ -112,9 +111,10 @@ namespace HyPlayer.Pages
                     _ = FileIO.WriteTextAsync(sf,
                         account + "\r\n" + TextBoxPassword.Password.ToString().ToByteArrayUtf8().ComputeMd5()
                             .ToHexStringLower());
-                    Common.LoginedUser.UserName = json["profile"]["nickname"].ToString();
-                    Common.LoginedUser.ImgUrl = json["profile"]["avatarUrl"].ToString();
-                    Common.LoginedUser.uid = json["account"]["id"].ToString();
+                    Common.LoginedUser.name = json["profile"]["nickname"].ToString();
+                    Common.LoginedUser.avatar = json["profile"]["avatarUrl"].ToString();
+                    Common.LoginedUser.id = json["account"]["id"].ToString();
+                    Common.LoginedUser.signature = json["profile"]["signature"].ToString();
                     InfoBarLoginHint.IsOpen = true;
                     InfoBarLoginHint.Title = "登录成功";
                     ButtonLogin.Content = "登录成功";
@@ -123,8 +123,7 @@ namespace HyPlayer.Pages
                         new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
                     InfoBarLoginHint.Severity = InfoBarSeverity.Success;
                     InfoBarLoginHint.Message = "欢迎 " + json["profile"]["nickname"].ToString();
-                    (bool isok, JObject js) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Likelist, new Dictionary<string, object>() { { "uid", Common.LoginedUser.uid } });
-                    Common.LikedSongs = js["ids"].ToObject<List<string>>();
+                    LoginDone();
                 }
             }
             catch (Exception ex)
@@ -140,6 +139,42 @@ namespace HyPlayer.Pages
             }
         }
 
+        private async void LoginDone()
+        {
+            //加载我喜欢的歌
+            (bool isok, JObject js) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Likelist, new Dictionary<string, object>() { { "uid", Common.LoginedUser.id } });
+            Common.LikedSongs = js["ids"].ToObject<List<string>>();
+
+            //加载用户歌单
+            Microsoft.UI.Xaml.Controls.NavigationViewItem nowitem = NavItemsMyList;
+            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist, new Dictionary<string, object>() { { "uid", Common.LoginedUser.id } });
+            if (isok)
+            {
+                NavItemsLikeList.Visibility = Visibility.Visible;
+                NavItemsMyList.Visibility = Visibility.Visible;
+                foreach (JToken jToken in json["playlist"])
+                {
+                    if (jToken["subscribed"].ToString() == "True")
+                    {
+                        NavItemsLikeList.MenuItems.Add(new NavigationViewItem()
+                        {
+                            Content = jToken["name"].ToString(),
+                            Tag = "Playlist" + jToken["id"]
+                        });
+                    }
+                    else
+                    {
+                        NavItemsMyList.MenuItems.Add(new NavigationViewItem()
+                        {
+                            Content = jToken["name"].ToString(),
+                            Tag = "Playlist" + jToken["id"]
+                        });
+                    }
+                }
+            }
+        }
+
+
         private void InfoBarLoginHint_OnCloseButtonClick(InfoBar sender, object args)
         {
             if (Common.Logined)
@@ -150,11 +185,17 @@ namespace HyPlayer.Pages
 
         private async void NavMain_OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
         {
-            NavigationViewItem nowitem = (NavigationViewItem)sender.SelectedItem;
+            var nowitem = sender.SelectedItem as NavigationViewItem;
+            if (nowitem.Tag is null) return;
             if (nowitem.Tag.ToString() == "PageMe" && !Common.Logined)
             {
                 await DialogLogin.ShowAsync();
                 return;
+            }
+
+            if (nowitem.Tag.ToString().StartsWith("Playlist"))
+            {
+                Common.BaseFrame.Navigate(typeof(Pages.SongListDetail), nowitem.Tag.ToString().Substring(8), new EntranceNavigationTransitionInfo());
             }
 
             switch (nowitem.Tag.ToString())
@@ -165,10 +206,6 @@ namespace HyPlayer.Pages
 
                 case "PageHome":
                     Common.BaseFrame.Navigate(typeof(Pages.Home), null, new EntranceNavigationTransitionInfo());
-                    break;
-
-                case "PageSearch":
-                    Common.BaseFrame.Navigate(typeof(Search), null, new EntranceNavigationTransitionInfo());
                     break;
                 case "PageSettings":
                     Common.BaseFrame.Navigate(typeof(Pages.Settings), null, new EntranceNavigationTransitionInfo());
@@ -198,6 +235,11 @@ namespace HyPlayer.Pages
             {
                 ButtonLogin_OnClick(null, null);
             }
+        }
+
+        private void AutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+        {
+            BaseFrame.Navigate(typeof(Search), args.QueryText);
         }
     }
 }

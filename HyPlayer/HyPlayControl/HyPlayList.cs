@@ -370,7 +370,7 @@ namespace HyPlayer.HyPlayControl
         public static async Task<HyPlayItem> AppendNCSong(NCSong ncSong)
         {
             (bool isOk, Newtonsoft.Json.Linq.JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                new Dictionary<string, object>() { { "id", ncSong.sid }, { "br", 320000 } });
+                new Dictionary<string, object>() { { "id", ncSong.sid }/*, { "br", 320000 } */});
             if (isOk)
             {
                 try
@@ -380,8 +380,19 @@ namespace HyPlayer.HyPlayControl
                         return null; //未获取到
                     }
 
+                    string tag = "";
+                    if (json["data"][0]["type"].ToString().ToLowerInvariant() == "flac")
+                    {
+                        tag = "SQ";
+                    }
+                    else
+                    {
+                        tag = (json["data"][0]["br"].ToObject<int>() / 1000).ToString()+ "k";
+                    }
+
                     NCPlayItem ncp = new NCPlayItem()
                     {
+                        tag = tag,
                         Album = ncSong.Album,
                         Artist = ncSong.Artist,
                         subext = json["data"][0]["type"].ToString().ToLowerInvariant(),
@@ -415,7 +426,8 @@ namespace HyPlayer.HyPlayControl
                 Artist = string.Join(" / ", ncp.Artist.Select((artist => artist.name))),
                 LengthInMilliseconds = ncp.LengthInMilliseconds,
                 Picture = ncp.Album.cover,
-                SongName = ncp.songname
+                SongName = ncp.songname,
+                tag=ncp.tag
             };
             HyPlayItem hpi = new HyPlayItem()
             {

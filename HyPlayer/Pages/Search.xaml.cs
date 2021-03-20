@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Navigation;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -18,21 +19,16 @@ namespace HyPlayer.Pages
     public sealed partial class Search : Page
     {
         private int page = 0;
+        private string Text = "";
         public Search()
         {
             InitializeComponent();
         }
 
-        private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
-        {
-            page = 0;
-            LoadResult();
-        }
-
         private async void LoadResult()
         {
             SearchResultContainer.Children.Clear();
-            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Cloudsearch, new Dictionary<string, object>() { { "keywords", TextBoxSearchText.Text }, { "offset", page * 30 } });
+            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Cloudsearch, new Dictionary<string, object>() { { "keywords", Text }, { "offset", page * 30 } });
             if (isOk)
             {
                 int idx = 0;
@@ -51,7 +47,7 @@ namespace HyPlayer.Pages
                         Artist = new List<NCArtist>(),
                         LengthInMilliseconds = double.Parse(song["dt"].ToString())
                     };
-                    song["ar"].ToList().ForEach(t =>
+                    song["ar"]?.ToList().ForEach(t =>
                     {
                         NCSong.Artist.Add(new NCArtist()
                         {
@@ -79,6 +75,13 @@ namespace HyPlayer.Pages
                     PrevPage.Visibility = Visibility.Collapsed;
                 }
             }
+        }
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            Text = (string) e.Parameter;
+            LoadResult();
         }
 
         private void PrevPage_OnClick(object sender, RoutedEventArgs e)

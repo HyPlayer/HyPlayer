@@ -220,35 +220,46 @@
             Grid.Column="0"
             Name="GridSongInfo">
             <Grid
+                Margin="7"
+                x:Name="ImageContainer"
+                PointerPressed="ImageContainer_OnPointerPressed"
+                PointerEntered="ImageContainer_OnPointerEntered"
+                PointerExited="ImageContainer_OnPointerExited"
                 HorizontalAlignment="Left"
-                BorderThickness="0"
-                BorderBrush="{ThemeResource SystemControlBackgroundListMediumRevealBorderBrush}">
+                BorderThickness="1">
                 <Image
-                    Width="100"
-                    x:Name="AlbumImage"
-                    Source="/Assets/icon.png" />
+                    Stretch="UniformToFill"
+                    x:Name="AlbumImage"/>
             </Grid>
-            <Grid
-                Margin="10,0,0,0"
-                BorderBrush="Blue">
-                <Grid.RowDefinitions>
-                    <RowDefinition />
-                    <RowDefinition />
-                </Grid.RowDefinitions>
+            <StackPanel
+                VerticalAlignment="Center"
+                HorizontalAlignment="Stretch"
+                Spacing="10"
+                Margin="10,5,0,0">
+                <StackPanel
+                    Spacing="12"
+                    Orientation="Horizontal">
+                    <TextBlock
+                        VerticalAlignment="Bottom"
+                        HorizontalAlignment="Left"
+                        FontWeight="Light"
+                        Name="TbSongName"/>
+                    <Grid Padding="3,0,3,0" BorderThickness="1" BorderBrush="Red">
+                        <TextBlock
+                            FontWeight="Medium"
+                            FontSize="12"
+                            Name="TbSongTag"
+                            Text="无歌曲"
+                            Foreground="Red"/>
+                    </Grid>
+
+                </StackPanel>
+
                 <TextBlock
-                    Grid.Row="0"
-                    Margin="0,0,0,5"
-                    VerticalAlignment="Bottom"
-                    Name="TbSongName"
-                    Text="歌曲名" />
-                <TextBlock
-                    Grid.Row="1"
-                    Margin="0,5,0,0"
                     VerticalAlignment="Top"
                     Foreground="Gray"
-                    Name="TbSingerName"
-                    Text="歌手名" />
-            </Grid>
+                    Name="TbSingerName" />
+            </StackPanel>
         </StackPanel>
         <Grid
             Margin="5"
