@@ -16,7 +16,7 @@ namespace HyPlayer.Controls
     public sealed partial class LyricItem : UserControl
     {
         public readonly SongLyric Lrc;
-        public double actualsize => Common.PageExpandedPlayer.showsize;
+        public double actualsize => Common.PageExpandedPlayer == null ? 18 : Common.PageExpandedPlayer.showsize;
         private readonly Brush originBrush;
 
         public bool showing = false;

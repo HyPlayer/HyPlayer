@@ -91,14 +91,7 @@ namespace HyPlayer.HyPlayControl
 
         public static void SongMoveNext()
         {
-            if (NowPlaying + 1 >= List.Count)
-            {
-                NowPlaying = 0;
-            }
-            else
-            {
-                NowPlaying++;
-            }
+            MoveSongPointer(true);
             LoadPlayerSong();
             Player.Play();
         }
@@ -145,7 +138,7 @@ namespace HyPlayer.HyPlayControl
             switch (args.Button)
             {
                 case SystemMediaTransportControlsButton.Play:
-                    Invoke(()=> Player.Play());
+                    Invoke(() => Player.Play());
                     break;
                 case SystemMediaTransportControlsButton.Pause:
                     Invoke(() => Player.Pause());
@@ -161,12 +154,8 @@ namespace HyPlayer.HyPlayControl
             }
         }
 
-        private static void Player_MediaEnded(MediaPlayer sender, object args)
+        private static void MoveSongPointer(bool realnext = false)
         {
-            //当播放结束时,此时你应当进行切歌操作
-            //不过在此之前还是把订阅了的时间给返回回去吧
-            Invoke(() => OnMediaEnd?.Invoke(NowPlayingItem));
-
             //首先切换指针到下一首要播放的歌
             switch (NowPlayType)
             {
@@ -186,8 +175,29 @@ namespace HyPlayer.HyPlayControl
                     //随机播放
                     NowPlaying = new Random().Next(List.Count - 1);
                     break;
-            }
+                case PlayMode.SinglePlay:
+                    if (realnext)
+                    {
+                        if (NowPlaying + 1 >= List.Count)
+                        {
+                            NowPlaying = 0;
+                        }
+                        else
+                        {
 
+                            NowPlaying++;
+                        }
+                    }
+                    break;
+            }
+        }
+
+        private static void Player_MediaEnded(MediaPlayer sender, object args)
+        {
+            //当播放结束时,此时你应当进行切歌操作
+            //不过在此之前还是把订阅了的时间给返回回去吧
+            Invoke(() => OnMediaEnd?.Invoke(NowPlayingItem));
+            MoveSongPointer();
             //然后尝试加载下一首歌
             LoadPlayerSong();
         }

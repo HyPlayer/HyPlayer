@@ -28,10 +28,7 @@ namespace HyPlayer
                         var sf = await ApplicationData.Current.LocalCacheFolder.GetFolderAsync("Romaji");
                         Common.KawazuConv = new KawazuConverter(sf.Path);
                     }
-                    catch (Exception e)
-                    {
-                        // ignored
-                    }
+                    catch { }
                 }));
             });
             InitializeComponent();

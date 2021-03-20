@@ -29,6 +29,7 @@ namespace HyPlayer.Controls
         {
             Common.BarPlayBar = this;
             InitializeComponent();
+            SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
             HyPlayList.OnPlayItemChange += LoadPlayingFile;
             HyPlayList.OnPlayPositionChange += OnPlayPositionChange;
             HyPlayList.OnPlayListAddDone += HyPlayList_OnPlayListAdd;
@@ -226,7 +227,9 @@ namespace HyPlayer.Controls
 
             ButtonExpand.Visibility = Visibility.Visible;
             ButtonCollapse.Visibility = Visibility.Collapsed;
-            Common.PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));
+            Common.PageExpandedPlayer.Dispose();
+            Common.PageExpandedPlayer = null;
+            Common.PageMain.ExpandedPlayer.Content = new BlankPage();
             //Common.PageMain.MainFrame.Visibility = Visibility.Visible;
             Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
             Common.PageMain.GridPlayBar.Background = Application.Current.Resources["SystemControlAcrylicElementMediumHighBrush"] as Brush;

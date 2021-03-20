@@ -19,6 +19,8 @@ namespace HyPlayer.Classes
         { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏" };
         public static SongLyric NoLyric = new SongLyric()
         { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏" };
+        public static SongLyric LoadingLyric = new SongLyric()
+            { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..." };
     }
 
 

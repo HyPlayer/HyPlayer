@@ -20,6 +20,8 @@
             SourcePageType="hyPlayerPage:BasePage" />
         <Frame
             x:FieldModifier="public"
+            CacheSize="0"
+            IsNavigationStackEnabled="False"
             Visibility="Collapsed"
             Name="ExpandedPlayer"
             SourcePageType="hyPlayerPage:BlankPage" />

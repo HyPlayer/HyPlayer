@@ -25,12 +25,13 @@ namespace HyPlayer.Pages
     /// <summary>
     /// 可用于自身或导航至 Frame 内部的空白页。
     /// </summary>
-    public sealed partial class ExpandedPlayer : Page
+    public sealed partial class ExpandedPlayer : Page, IDisposable
     {
         private int sclock = 0;
         private bool iscompact = false;
         private readonly bool loaded = false;
         public double showsize;
+        private int lastlrcid = 0;
         public double LyricWidth { get; set; }
 
         private List<LyricItem> LyricList = new List<LyricItem>();
@@ -49,6 +50,20 @@ namespace HyPlayer.Pages
             Current_SizeChanged(null, null);
         }
 
+        public void Dispose()
+        {
+            HyPlayList.OnLyricChange -= RefreshLyricTime;
+            HyPlayList.OnPlayItemChange -= OnSongChange;
+            HyPlayList.OnLyricLoaded -= HyPlayList_OnLyricLoaded;
+            HyPlayList.OnPlayPositionChange -= HyPlayList_OnPlayPositionChange;
+            Window.Current.SizeChanged -= Current_SizeChanged;
+        }
+
+        ~ExpandedPlayer()
+        {
+            Dispose();
+        }
+
         private void HyPlayList_OnPlayPositionChange(TimeSpan Position)
         {
             //暂停按钮
@@ -64,24 +79,18 @@ namespace HyPlayer.Pages
 
         private void Current_SizeChanged(object sender, WindowSizeChangedEventArgs e)
         {
-            if (e == null)
+            int nowwidth = e is null ? (int)Window.Current.Bounds.Width : (int)e.Size.Width;
+            if (nowwidth > 800)
             {
-                LyricWidth = Math.Max(Window.Current.Bounds.Width * 0.4, LyricBoxContainer.ViewportWidth);
-                showsize = Math.Max((int)Window.Current.Bounds.Width / 66, 16);
+                LyricWidth = nowwidth * 0.4;
             }
             else
             {
-                if (e.Size.Width > 800)
-                {
-                    LyricWidth = e.Size.Width * 0.4;
-                }
-                else
-                {
-                    LyricWidth = Math.Max(e.Size.Width * 0.4, LyricBoxContainer.ViewportWidth);
-                }
-
-                showsize = Math.Max(e.Size.Width / 66, 16);
+                LyricWidth = nowwidth;
             }
+
+            showsize = Math.Max(nowwidth / 66, 16);
+
 
             Task.Run((() =>
             {
@@ -120,7 +129,7 @@ namespace HyPlayer.Pages
         {
             LyricItem item = LyricList.Find(t => t.Lrc.LyricTime == LRC.LyricTime);
             if (item == null) return;
-            item.OnShow();
+            item?.OnShow();
             if (sclock > 0)
             {
                 sclock--;
@@ -165,6 +174,7 @@ namespace HyPlayer.Pages
             }
             LyricBox.Children.Add(new Grid() { Height = blanksize });
             LyricList = LyricBox.Children.OfType<LyricItem>().ToList();
+            lastlrcid = HyPlayList.NowPlayingItem.GetHashCode();
         }
 
 
@@ -173,30 +183,49 @@ namespace HyPlayer.Pages
         {
             if (mpi != null)
             {
-                Invoke(( async () =>
-                {
-                    try
-                    {
-                        if (mpi.ItemType == HyPlayItemType.Local)
-                        {
-                            BitmapImage img = new BitmapImage();
-                            await img.SetSourceAsync((await mpi.AudioInfo.LocalSongFile.GetThumbnailAsync(ThumbnailMode.MusicView,9999)));
-                            ImageAlbum.Source = img;
-                        }
-                        else
-                        {
-                            ImageAlbum.Source = new BitmapImage(new Uri(mpi.AudioInfo.Picture));
-                        }
-                        
-                        TextBlockSinger.Text = mpi.AudioInfo.Artist;
-                        TextBlockSongTitle.Text = mpi.AudioInfo.SongName;
-                        Background = new ImageBrush() { ImageSource = ImageAlbum.Source, Stretch = Stretch.UniformToFill };
-                        ProgressBarPlayProg.Maximum = mpi.AudioInfo.LengthInMilliseconds;
-                        SliderVolumn.Value = HyPlayList.Player.Volume * 100;
-                    }
-                    catch (Exception) { }
-        ;
-                }));
+                Invoke((async () =>
+               {
+                   try
+                   {
+                       if (mpi.ItemType == HyPlayItemType.Local)
+                       {
+                           BitmapImage img = new BitmapImage();
+                           await img.SetSourceAsync((await mpi.AudioInfo.LocalSongFile.GetThumbnailAsync(ThumbnailMode.MusicView, 9999)));
+                           ImageAlbum.Source = img;
+                       }
+                       else
+                       {
+                           ImageAlbum.Source = new BitmapImage(new Uri(mpi.AudioInfo.Picture));
+                       }
+
+                       TextBlockSinger.Text = mpi.AudioInfo.Artist;
+                       TextBlockSongTitle.Text = mpi.AudioInfo.SongName;
+                       Background = new ImageBrush() { ImageSource = ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                       ProgressBarPlayProg.Maximum = mpi.AudioInfo.LengthInMilliseconds;
+                       SliderVolumn.Value = HyPlayList.Player.Volume * 100;
+
+                       if (lastlrcid != HyPlayList.NowPlayingItem.GetHashCode())
+                       {
+                           //歌词加载中提示
+                           double blanksize = (LyricBoxContainer.ViewportHeight / 2);
+                           if (double.IsNaN(blanksize) || blanksize == 0)
+                           {
+                               blanksize = Window.Current.Bounds.Height / 3;
+                           }
+                           LyricBox.Children.Clear();
+                           LyricBox.Children.Add(new Grid() { Height = blanksize });
+                           LyricItem lrcitem = new LyricItem(SongLyric.LoadingLyric)
+                           {
+                               Width = LyricWidth
+                           };
+                           LyricList = new List<LyricItem>() { lrcitem };
+                           LyricBox.Children.Add(lrcitem);
+                           LyricBox.Children.Add(new Grid() { Height = blanksize });
+                       }
+                   }
+                   catch (Exception) { }
+       ;
+               }));
             }
         }
 
