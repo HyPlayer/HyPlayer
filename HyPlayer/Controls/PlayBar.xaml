@@ -220,13 +220,13 @@
             Grid.Column="0"
             Name="GridSongInfo">
             <Grid
-                Margin="7"
+                Margin="0"
                 x:Name="ImageContainer"
                 PointerPressed="ImageContainer_OnPointerPressed"
                 PointerEntered="ImageContainer_OnPointerEntered"
                 PointerExited="ImageContainer_OnPointerExited"
                 HorizontalAlignment="Left"
-                BorderThickness="1">
+                BorderThickness="0">
                 <Image
                     Stretch="UniformToFill"
                     x:Name="AlbumImage"/>
