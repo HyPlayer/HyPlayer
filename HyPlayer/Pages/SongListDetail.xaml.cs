@@ -162,6 +162,21 @@ namespace HyPlayer.Pages
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
+            _ = Task.Run((() =>
+            {
+                Common.Invoke(() =>
+                {
+                    try
+                    {
+                        ConnectedAnimation anim = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongListExpand");
+                        ConnectedAnimation anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongListExpandAcrylic");
+                        anim1?.TryStart(GridPersonalInformation);
+                        anim?.TryStart(RectangleImage);
+                    }
+                    catch { }
+
+                });
+            }));
             await Task.Run((() =>
             {
                 Common.Invoke(async () =>
@@ -210,13 +225,6 @@ namespace HyPlayer.Pages
                     LoadSongListItem();
                 });
             }));
-            try
-            {
-                ConnectedAnimation anim = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongListExpand");
-                anim?.TryStart(RectangleImage);
-            }
-            catch { }
-
         }
 
         public async void Invoke(Action action,

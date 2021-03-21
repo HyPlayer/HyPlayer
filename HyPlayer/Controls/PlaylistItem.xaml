@@ -12,7 +12,9 @@
 	d:DesignHeight="250"
 	d:DesignWidth="200">
 	<Grid
-		CornerRadius="8">
+		PointerEntered="UIElement_OnPointerEntered"
+		PointerExited="UIElement_OnPointerExited"
+        CornerRadius="8">
 		<Grid
 			Tapped="UIElement_OnTapped">
 			<Grid.RowDefinitions>
@@ -20,27 +22,58 @@
 				<RowDefinition
 					Height="60" />
 			</Grid.RowDefinitions>
+            <Grid.Resources>
+                <Storyboard
+                    x:Name="StoryboardOut">
+                    <DoubleAnimation
+                        Storyboard.TargetName="Transform"
+                        Storyboard.TargetProperty="Y"
+                        From="0"
+                        To="-20">
+                        <DoubleAnimation.EasingFunction>
+                            <ExponentialEase
+                                Exponent="7"
+                                EasingMode="EaseOut" />
+                        </DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                </Storyboard>
 
+                <Storyboard
+                    x:Name="StoryboardIn">
+                    <DoubleAnimation
+                        Storyboard.TargetName="Transform"
+                        Storyboard.TargetProperty="Y"
+                        From="-20"
+                        To="0">
+                        <DoubleAnimation.EasingFunction>
+                            <ExponentialEase
+                                Exponent="7"
+                                EasingMode="EaseOut" />
+                        </DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                </Storyboard>
+            </Grid.Resources>
                 <Rectangle
-					x:Name="ImageContainer"
+                    x:Name="ImageContainer"
                     Grid.RowSpan="2"
 					Width="200"
 					Height="200"
                     RadiusX="8"
                     RadiusY="8">
-                    <Rectangle.Fill>
+                    <Rectangle.RenderTransform>
+                        <TranslateTransform
+                        x:Name="Transform" />
+                    </Rectangle.RenderTransform>
+                <Rectangle.Fill>
                         <ImageBrush
                             x:Name="ImageRect"
-                            Stretch="UniformToFill">
-                            <ImageBrush.ImageSource>
-                                <BitmapImage
-                                    UriSource="/Assets/icon.png" />
-                            </ImageBrush.ImageSource>
+							Stretch="UniformToFill">
                         </ImageBrush>
                     </Rectangle.Fill>
                 </Rectangle>
             <Grid
 				Background="{ThemeResource PlayListItemLuminosity}"
+				x:Name="GridInfo"
 				Grid.Row="1"
 				CornerRadius="4">
 				<TextBlock
@@ -48,15 +81,13 @@
 					TextWrapping="WrapWholeWords"
 					x:Name="TextBlockPLAuthor"
 					Foreground="#FF262626"
-					Text="歌单创建者"
-					Margin="10,37,19,9"
+                    Margin="10,37,19,9"
 					FontSize="10" />
 				<TextBlock
 					Width="200"
 					x:Name="TextBlockPLName"
 					TextWrapping="WrapWholeWords"
-					Text="歌单名称"
-					Margin="10,12,10,27"
+                    Margin="10,12,10,27"
 					FontSize="15" />
 			</Grid>
 		</Grid>

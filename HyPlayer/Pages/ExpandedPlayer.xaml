@@ -13,7 +13,6 @@
     Background="{ThemeResource SystemControlAcrylicElementBrush}">
 
     <Grid
-        DoubleTapped="ToggleWindowShowMode"
         Background="{ThemeResource SystemControlAcrylicElementBrush}"
         Margin="0,0,0,0">
         <VisualStateManager.VisualStateGroups>
@@ -240,6 +239,7 @@
             Grid.ColumnSpan="5"
             Grid.Column="6">
             <TextBlock
+                DoubleTapped="ToggleWindowShowMode"
                 controls:DockPanel.Dock="Top"
                 FontSize="30"
                 x:FieldModifier="public"
@@ -255,6 +255,7 @@
                 FontSize="20"
                 Text="歌手" />
             <ScrollViewer
+                Margin="0,5"
                 x:FieldModifier="public"
                 x:Name="LyricBoxContainer"
                 VerticalScrollBarVisibility="Hidden"

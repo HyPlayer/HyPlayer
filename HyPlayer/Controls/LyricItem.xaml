@@ -12,8 +12,7 @@
     d:DesignHeight="70"
     VerticalAlignment="Stretch"
     d:DesignWidth="500"
-    FocusVisualPrimaryThickness="3"
-    FocusVisualSecondaryThickness="1">
+    DoubleTapped="LyricItem_OnDoubleTapped">
 
     <Grid>
         <controls:DockPanel

@@ -55,6 +55,7 @@
 				Orientation="Vertical">
                 <controls:DockPanel
                     LastChildFill="True"
+                    Background="{ThemeResource PlayListItemLuminosity}"
                     x:Name="GridPersonalInformation">
                     <Rectangle
                         x:Name="RectangleImage"
@@ -89,7 +90,7 @@
 							Name="TextBoxAuthor"
 							Text="歌单创建者"
 							FontSize="18"
-							Foreground="Gray"></TextBlock>
+                            Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"/>
                         <StackPanel Spacing="15" Margin="0,10,0,0" Orientation="Horizontal">
                             <Button
                                 Content="播放全部"

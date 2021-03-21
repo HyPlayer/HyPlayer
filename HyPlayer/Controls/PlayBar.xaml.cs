@@ -54,7 +54,7 @@ namespace HyPlayer.Controls
             HyPlayList.RemoveAllSong();
             foreach (Windows.Storage.StorageFile file in files)
             {
-                HyPlayList.AppendFile(file);
+                await HyPlayList.AppendFile(file);
             }
             HyPlayList.SongAppendDone();
             HyPlayList.SongMoveTo(0);

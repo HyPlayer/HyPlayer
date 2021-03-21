@@ -25,7 +25,7 @@ namespace HyPlayer
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         }
 
-        private async void CurrentDomain_UnhandledException(object sender, System.UnhandledExceptionEventArgs e)
+        private void CurrentDomain_UnhandledException(object sender, System.UnhandledExceptionEventArgs e)
         {
             Common.Invoke((async () =>
             {
@@ -40,7 +40,7 @@ namespace HyPlayer
 
         }
 
-        private async void App_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        private void App_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             Common.Invoke((async () =>
             {

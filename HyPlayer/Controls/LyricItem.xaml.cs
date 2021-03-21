@@ -5,7 +5,9 @@ using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using HyPlayer.HyPlayControl;
 using Kawazu;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
@@ -83,6 +85,11 @@ namespace HyPlayer.Controls
             TextBoxSound.Foreground = new SolidColorBrush(Color.FromArgb(255, 155, 155, 155));
             TextBoxPureLyric.FontSize = actualsize;
             TextBoxTranslation.FontSize = actualsize;
+        }
+
+        private void LyricItem_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            HyPlayList.Player.PlaybackSession.Position = Lrc.LyricTime;
         }
     }
 }

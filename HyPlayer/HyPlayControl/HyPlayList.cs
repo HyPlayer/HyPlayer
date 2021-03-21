@@ -442,7 +442,7 @@ namespace HyPlayer.HyPlayControl
             return hpi;
         }
 
-        public static async void AppendFile(StorageFile sf)
+        public static async Task<bool> AppendFile(StorageFile sf)
         {
             //TagLib.File afi = TagLib.File.Create(new UwpStorageFileAbstraction(sf), ReadStyle.Average);
             var mdp = await sf.Properties.GetMusicPropertiesAsync();
@@ -452,6 +452,7 @@ namespace HyPlayer.HyPlayControl
             string[] contributingArtists = contributingArtistsProperty["System.Music.Artist"] as string[];
             AudioInfo ai = new AudioInfo()
             {
+                tag = "本地",
                 Album = string.IsNullOrEmpty(mdp.Album) ? "未知专辑" : mdp.Album,
                 ArtistArr = contributingArtists,
                 Artist = string.IsNullOrEmpty(string.Join('/', contributingArtists)) ? "未知歌手" : string.Join('/', contributingArtists),
@@ -478,6 +479,8 @@ namespace HyPlayer.HyPlayControl
             };
 
             List.Add(hyPlayItem);
+            return true;
+
         }
     }
 
