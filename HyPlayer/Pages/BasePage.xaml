@@ -75,6 +75,15 @@
             Width="400">
             <StackPanel
                 Orientation="Vertical">
+                <Button HorizontalAlignment="Right" Background="Transparent" Click="LoginCloseButton_Click">
+                    <Button.Content>
+                        <Image
+                            Width="20"
+                            Source="/Assets/close.png"
+                            />
+                    </Button.Content>
+                </Button>
+                
                 <Image
                     Height="200"
                     Source="/Assets/icon.png" />

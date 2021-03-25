@@ -241,5 +241,11 @@ namespace HyPlayer.Pages
         {
             BaseFrame.Navigate(typeof(Search), args.QueryText);
         }
+
+        private void LoginCloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            DialogLogin.Hide();
+            NavMain.SelectedItem = NavMain.MenuItems[0];
+        }
     }
 }

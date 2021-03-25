@@ -23,7 +23,7 @@ namespace HyPlayer
         public static Frame BaseFrame;
         public static Setting Setting;
         public static Dictionary<string, object> GLOBAL = new Dictionary<string, object>();
-        public static List<string> LikedSongs;
+        public static List<string> LikedSongs = new List<string>();
         public static KawazuConverter KawazuConv = null;
 
         public static async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)
