@@ -36,6 +36,7 @@ namespace HyPlayer
                     PrimaryButtonText = "退出"
                 };
                 ContentDialogResult result = await Dialog.ShowAsync();
+                Environment.Exit(0);
             }));
 
         }

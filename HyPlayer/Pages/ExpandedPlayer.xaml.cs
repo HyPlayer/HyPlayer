@@ -89,7 +89,7 @@ namespace HyPlayer.Pages
             {
                 LyricWidth = nowwidth;
             }
-            ImageAlbumContainer.Visibility = nowwidth >= 800 ? Visibility.Visible : Visibility.Collapsed;
+            ImageAlbumContainer.Visibility = nowwidth >= 800 || nowwidth <= 300  ? Visibility.Visible : Visibility.Collapsed;
             showsize = Math.Max(nowwidth / 66, 16);
 
 
@@ -174,6 +174,8 @@ namespace HyPlayer.Pages
             LyricBox.Children.Add(new Grid() { Height = blanksize });
             LyricList = LyricBox.Children.OfType<LyricItem>().ToList();
             lastlrcid = HyPlayList.NowPlayingItem.GetHashCode();
+            SongLyric nowlrc = HyPlayList.Lyrics.LastOrDefault((t => t.LyricTime < HyPlayList.Player.PlaybackSession.Position));
+            RefreshLyricTime(nowlrc);
         }
 
 

@@ -57,7 +57,7 @@ namespace HyPlayer.HyPlayControl
         public static SystemMediaTransportControlsDisplayUpdater ControlsDisplayUpdater;
         public static BackgroundDownloader downloader = new BackgroundDownloader();
 
-
+        private static SongLyric lastLyric;
 
         public static void InitializeHyPlaylist()
         {
@@ -121,8 +121,20 @@ namespace HyPlayer.HyPlayControl
         public static void RemoveSong(int index)
         {
             if (List.Count <= index) return;
-            List.RemoveAt(index);
-            LoadPlayerSong();
+            if (index == NowPlaying)
+            {
+                List.RemoveAt(index);
+                LoadPlayerSong();
+            }
+            if (index < NowPlaying)
+            {
+                //需要将序号向前挪动
+                NowPlaying--;
+                List.RemoveAt(index);
+            }
+            if (index > NowPlaying)
+                List.RemoveAt(index);
+            //假如移除后面的我就不管了
         }
 
         public static void RemoveAllSong()
@@ -272,7 +284,12 @@ namespace HyPlayer.HyPlayControl
         private static void LoadLyricChange()
         {
             SongLyric songLyric = Lyrics.LastOrDefault((t => t.LyricTime < Player.PlaybackSession.Position));
-            Invoke(() => OnLyricChange?.Invoke(songLyric));
+            if (lastLyric.GetHashCode() != songLyric.GetHashCode())
+            {
+                lastLyric = songLyric;
+                Invoke(() => OnLyricChange?.Invoke(songLyric));
+            }
+               
         }
 
         private static void Player_VolumeChanged(MediaPlayer sender, object args)
@@ -387,7 +404,7 @@ namespace HyPlayer.HyPlayControl
                     }
                     else
                     {
-                        tag = (json["data"][0]["br"].ToObject<int>() / 1000).ToString()+ "k";
+                        tag = (json["data"][0]["br"].ToObject<int>() / 1000).ToString() + "k";
                     }
 
                     NCPlayItem ncp = new NCPlayItem()
@@ -427,7 +444,7 @@ namespace HyPlayer.HyPlayControl
                 LengthInMilliseconds = ncp.LengthInMilliseconds,
                 Picture = ncp.Album.cover,
                 SongName = ncp.songname,
-                tag=ncp.tag
+                tag = ncp.tag
             };
             HyPlayItem hpi = new HyPlayItem()
             {
@@ -450,6 +467,10 @@ namespace HyPlayer.HyPlayControl
             IDictionary<string, object> contributingArtistsProperty =
                 await mdp.RetrievePropertiesAsync(contributingArtistsKey);
             string[] contributingArtists = contributingArtistsProperty["System.Music.Artist"] as string[];
+            if (contributingArtists is null)
+            {
+                contributingArtists = new[] { "未知歌手" };
+            }
             AudioInfo ai = new AudioInfo()
             {
                 tag = "本地",

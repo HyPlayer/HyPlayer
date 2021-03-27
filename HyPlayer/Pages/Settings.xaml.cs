@@ -60,7 +60,7 @@ namespace HyPlayer.Pages
         private void ProgressCallback(DownloadOperation obj)
         {
             RomajiStatus.Text = $"正在下载资源文件 ({((obj.Progress.BytesReceived * 100) / obj.Progress.TotalBytesToReceive):D}%)";
-            if (obj.Progress.Status == BackgroundTransferStatus.Completed)
+            if (obj.Progress.BytesReceived == obj.Progress.TotalBytesToReceive)
             {
                 _ = Task.Run((() =>
                 {
@@ -71,7 +71,7 @@ namespace HyPlayer.Pages
                             //下载完成
                             //unzip
 
-                            string path = (await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("Romaji")).Path;
+                            string path = (await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("Romaji",CreationCollisionOption.FailIfExists)).Path;
                             ZipFile.ExtractToDirectory(obj.ResultFile.Path, path);
                             _ = obj.ResultFile.DeleteAsync();
 
