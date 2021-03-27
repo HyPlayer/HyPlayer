@@ -299,11 +299,12 @@ namespace HyPlayer.Pages
         private async void ButtonHeartBeat_OnClick(object sender, RoutedEventArgs e)
         {
             HyPlayList.RemoveAllSong();
-            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaymodeIntelligenceList,
+            (bool isOk, JObject jsona) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaymodeIntelligenceList,
                 new Dictionary<string, object>() { { "pid", playList.plid }, { "id", intelsong } });
             if (isOk)
             {
-                foreach (JToken token in json["data"])
+                List<NCSong> Songs = new List<NCSong>();
+                foreach (JToken token in jsona["data"])
                 {
                     NCSong ncSong = new NCSong()
                     {
@@ -326,10 +327,55 @@ namespace HyPlayer.Pages
                             name = t["name"].ToString()
                         });
                     });
-                    await HyPlayList.AppendNCSong(ncSong);
+                    Songs.Add(ncSong);
                 }
-                HyPlayList.SongAppendDone();
-                HyPlayList.SongMoveTo(0);
+
+                (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
+                    new Dictionary<string, object>() { { "id", string.Join(",", Songs.Select(t => t.sid)) } });
+                ;
+                if (isok)
+                {
+                    List<JToken> arr = json["data"].ToList();
+                    for (int i = 0; i < Songs.Count; i++)
+                    {
+                        JToken token = arr.Find(jt => jt["id"].ToString() == Songs[i].sid);
+                        if (!token.HasValues)
+                        {
+                            continue;
+                        }
+
+                        NCSong ncSong = Songs[i];
+
+                        string tag = "";
+                        if (token["type"].ToString().ToLowerInvariant() == "flac")
+                        {
+                            tag = "SQ";
+                        }
+                        else
+                        {
+                            tag = (token["br"].ToObject<int>() / 1000).ToString() + "k";
+                        }
+
+                        NCPlayItem ncp = new NCPlayItem()
+                        {
+                            tag = tag,
+                            Album = ncSong.Album,
+                            Artist = ncSong.Artist,
+                            subext = token["type"].ToString(),
+                            sid = ncSong.sid,
+                            songname = ncSong.songname,
+                            url = token["url"].ToString(),
+                            LengthInMilliseconds = ncSong.LengthInMilliseconds,
+                            size = token["size"].ToString(),
+                            md5 = token["md5"].ToString()
+                        };
+                        HyPlayList.AppendNCPlayItem(ncp);
+                    }
+
+                    HyPlayList.SongAppendDone();
+
+                    HyPlayList.SongMoveTo(0);
+                }
             }
 
         }

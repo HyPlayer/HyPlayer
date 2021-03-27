@@ -91,7 +91,7 @@ namespace HyPlayer.Pages
             {
                 LyricWidth = nowwidth;
             }
-            ImageAlbumContainer.Visibility = nowwidth >= 800 || nowwidth <= 300  ? Visibility.Visible : Visibility.Collapsed;
+            ImageAlbumContainer.Visibility = nowwidth >= 800 || nowwidth <= 300 ? Visibility.Visible : Visibility.Collapsed;
             showsize = Math.Max(nowwidth / 66, 16);
 
 
@@ -383,6 +383,28 @@ namespace HyPlayer.Pages
         {
             Common.ShowLyricSound = ToggleButtonSound.IsChecked.Value;
             LoadLyricsBox();
+        }
+
+        private async void TextBlockSinger_OnPointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            try
+            {
+                if (HyPlayList.NowPlayingItem.isOnline)
+                {
+                    if (HyPlayList.NowPlayingItem.NcPlayItem.Artist.Count > 1)
+                    {
+                        await new ArtistSelectDialog(HyPlayList.NowPlayingItem.NcPlayItem.Artist).ShowAsync();
+                    }
+                    else
+                    {
+                        Common.BaseFrame.Navigate(typeof(ArtistPage), HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
+                    }
+
+                    Common.BarPlayBar.ButtonCollapse_OnClick(this, e);
+                }
+            }
+            catch { }
+
         }
     }
 }

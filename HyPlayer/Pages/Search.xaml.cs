@@ -52,7 +52,7 @@ namespace HyPlayer.Pages
                         NCSong.Artist.Add(new NCArtist()
                         {
                             id = t["id"].ToString(),
-                            name = t["name"].ToString()
+                            name = t["name"].ToString(),
                         });
                     });
                     SearchResultContainer.Children.Add(new SingleNCSong(NCSong, idx++, song["privilege"]["st"].ToString() == "0"));

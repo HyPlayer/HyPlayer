@@ -20,7 +20,7 @@ namespace HyPlayer.Classes
         public static SongLyric NoLyric = new SongLyric()
         { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏" };
         public static SongLyric LoadingLyric = new SongLyric()
-            { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..." };
+        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..." };
     }
 
 
@@ -67,7 +67,10 @@ namespace HyPlayer.Classes
     public struct NCArtist
     {
         public string id;
+        public object idobj => (object)id;
         public string name;
+        public string avatar;
+        public Uri avatarUri => new Uri(this.avatar);
     }
 
     public struct NCAlbum

@@ -9,6 +9,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
+using HyPlayer.Pages;
 using AcrylicBackgroundSource = Windows.UI.Xaml.Media.AcrylicBackgroundSource;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
@@ -88,6 +89,18 @@ namespace HyPlayer.Controls
         {
             Grid1.Background = Application.Current.Resources["SystemControlAccentAcrylicElementAccentMediumHighBrush"] as Brush;
             _ = AppendMe();
+        }
+
+        private async void TextBlockArtist_OnPointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            if (ncsong.Artist.Count > 1)
+            {
+                await new ArtistSelectDialog(ncsong.Artist).ShowAsync();
+            }
+            else
+            {
+                Common.BaseFrame.Navigate(typeof(ArtistPage), ncsong.Artist[0].id);
+            }
         }
     }
 }

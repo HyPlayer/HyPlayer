@@ -207,7 +207,7 @@ namespace HyPlayer.Controls
             GridSongInfo.Visibility = Visibility.Collapsed;
         }
 
-        private void ButtonCollapse_OnClick(object sender, RoutedEventArgs e)
+        public void ButtonCollapse_OnClick(object sender, RoutedEventArgs e)
         {
             Common.PageExpandedPlayer.StartCollapseAnimation();
             GridSongInfo.Visibility = Visibility.Visible;
@@ -342,6 +342,27 @@ namespace HyPlayer.Controls
         private void ImageContainer_OnPointerPressed(object sender, PointerRoutedEventArgs e)
         {
             ButtonExpand_OnClick(sender,e);
+        }
+
+        private async void TbSingerName_OnPointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            try
+            {
+                if (HyPlayList.NowPlayingItem.isOnline)
+                {
+                    if (HyPlayList.NowPlayingItem.NcPlayItem.Artist.Count > 1)
+                    {
+                        await new ArtistSelectDialog(HyPlayList.NowPlayingItem.NcPlayItem.Artist).ShowAsync();
+                    }
+                    else
+                    {
+                        Common.BaseFrame.Navigate(typeof(ArtistPage), HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
+                    }
+
+                   ButtonCollapse_OnClick(this, e);
+                }
+            }
+            catch { }
         }
     }
 

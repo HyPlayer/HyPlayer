@@ -59,6 +59,7 @@
                 Text="专辑名" />
             <TextBlock
                 Foreground="Gray"
+                PointerPressed="TextBlockArtist_OnPointerPressed"
                 Name="TextBlockArtist"
                 controls:DockPanel.Dock="Bottom"
                 Margin="0,7,0,-6"

@@ -258,6 +258,7 @@
                 <TextBlock
                     VerticalAlignment="Top"
                     Foreground="Gray"
+                    PointerPressed="TbSingerName_OnPointerPressed"
                     Name="TbSingerName" />
             </StackPanel>
         </StackPanel>
