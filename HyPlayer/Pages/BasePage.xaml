@@ -95,22 +95,16 @@
                     PlaceholderText="密码" />
                 <Button
                     Name="ButtonLogin"
-                    Margin="0,15,0,0"
+                    Margin="0,15,0,15"
                     HorizontalAlignment="Stretch"
                     Click="ButtonLogin_OnClick"
                     Content="登录"
                     Style="{StaticResource AccentButtonStyle}" />
-                <TextBlock
-                    Padding="0,25,0,0"
-                    TextAlignment="Center">
-                    <TextBlock.Text>
-                        登录代表你同意相关条款
-                    </TextBlock.Text>
-                </TextBlock>
                 <controls1:InfoBar
                     x:Name="InfoBarLoginHint"
                     CloseButtonClick="InfoBarLoginHint_OnCloseButtonClick"
-                    IsOpen="False" />
+                    Title="登录代表你同意相关条款"
+                    IsOpen="True" />
             </StackPanel>
         </ContentDialog>
     </Grid>

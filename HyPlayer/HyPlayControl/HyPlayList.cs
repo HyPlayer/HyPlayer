@@ -91,6 +91,7 @@ namespace HyPlayer.HyPlayControl
 
         public static void SongMoveNext()
         {
+            if (List.Count == 0) return;
             MoveSongPointer(true);
             LoadPlayerSong();
             Player.Play();
@@ -98,6 +99,7 @@ namespace HyPlayer.HyPlayControl
 
         public static void SongMovePrevious()
         {
+            if (List.Count == 0) return;
             if (NowPlaying - 1 < 0)
             {
                 NowPlaying = List.Count - 1;
@@ -121,6 +123,11 @@ namespace HyPlayer.HyPlayControl
         public static void RemoveSong(int index)
         {
             if (List.Count <= index) return;
+            if (List.Count - 1 == 0)
+            {
+                RemoveAllSong();
+                return;
+            }
             if (index == NowPlaying)
             {
                 List.RemoveAt(index);

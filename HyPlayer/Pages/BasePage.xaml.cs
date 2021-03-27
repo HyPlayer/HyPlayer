@@ -177,10 +177,7 @@ namespace HyPlayer.Pages
 
         private void InfoBarLoginHint_OnCloseButtonClick(InfoBar sender, object args)
         {
-            if (Common.Logined)
-            {
-                DialogLogin.Hide();
-            }
+            DialogLogin.Hide();
         }
 
         private async void NavMain_OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
@@ -189,6 +186,7 @@ namespace HyPlayer.Pages
             if (nowitem.Tag is null) return;
             if (nowitem.Tag.ToString() == "PageMe" && !Common.Logined)
             {
+                InfoBarLoginHint.IsOpen = true;
                 await DialogLogin.ShowAsync();
                 return;
             }
