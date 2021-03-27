@@ -48,6 +48,8 @@ namespace HyPlayer.Pages
             HyPlayList.OnPlayPositionChange += HyPlayList_OnPlayPositionChange;
             Window.Current.SizeChanged += Current_SizeChanged;
             Current_SizeChanged(null, null);
+            ToggleButtonSound.IsChecked = Common.ShowLyricSound;
+            ToggleButtonTranslation.IsChecked = Common.ShowLyricTrans;
         }
 
         public void Dispose()
@@ -165,7 +167,6 @@ namespace HyPlayer.Pages
                 {
                     LyricItem lrcitem = new LyricItem(songLyric)
                     {
-                        Margin = new Thickness(0, 10, 0, 10),
                         Width = LyricWidth
                     };
                     LyricBox.Children.Add(lrcitem);
@@ -174,8 +175,17 @@ namespace HyPlayer.Pages
             LyricBox.Children.Add(new Grid() { Height = blanksize });
             LyricList = LyricBox.Children.OfType<LyricItem>().ToList();
             lastlrcid = HyPlayList.NowPlayingItem.GetHashCode();
-            SongLyric nowlrc = HyPlayList.Lyrics.LastOrDefault((t => t.LyricTime < HyPlayList.Player.PlaybackSession.Position));
-            RefreshLyricTime(nowlrc);
+            Task.Run((() =>
+            {
+                Common.Invoke((async () =>
+                {
+                    await Task.Delay(500);
+                    SongLyric nowlrc =
+                        HyPlayList.Lyrics.LastOrDefault((t =>
+                            t.LyricTime < HyPlayList.Player.PlaybackSession.Position));
+                    RefreshLyricTime(nowlrc);
+                }));
+            }));
         }
 
 
@@ -291,6 +301,8 @@ namespace HyPlayer.Pages
                 });
                 _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.CompactOverlay);
                 iscompact = true;
+                ToggleButtonTranslation.Visibility = Visibility.Collapsed;
+                ToggleButtonSound.Visibility = Visibility.Collapsed;
             }
             else
             {
@@ -303,6 +315,8 @@ namespace HyPlayer.Pages
                 });
                 _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
                 ImageAlbumContainer.Visibility = Window.Current.Bounds.Width >= 800 ? Visibility.Visible : Visibility.Collapsed;
+                ToggleButtonTranslation.Visibility = Visibility.Visible;
+                ToggleButtonSound.Visibility = Visibility.Visible;
                 iscompact = false;
             }
         }
@@ -357,6 +371,18 @@ namespace HyPlayer.Pages
                 ImageAlbumContainer.Visibility = Visibility.Visible;
                 StackPanelTiny.Visibility = Visibility.Collapsed;
             }
+        }
+
+        private void ToggleButtonTranslation_OnClick(object sender, RoutedEventArgs e)
+        {
+            Common.ShowLyricTrans = ToggleButtonTranslation.IsChecked.Value;
+            LoadLyricsBox();
+        }
+
+        private void ToggleButtonSound_OnClick(object sender, RoutedEventArgs e)
+        {
+            Common.ShowLyricSound = ToggleButtonSound.IsChecked.Value;
+            LoadLyricsBox();
         }
     }
 }

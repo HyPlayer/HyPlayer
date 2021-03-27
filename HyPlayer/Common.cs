@@ -22,6 +22,8 @@ namespace HyPlayer
         public static PlayBar BarPlayBar;
         public static Frame BaseFrame;
         public static Setting Setting;
+        public static bool ShowLyricSound = true;
+        public static bool ShowLyricTrans = false;
         public static Dictionary<string, object> GLOBAL = new Dictionary<string, object>();
         public static List<string> LikedSongs = new List<string>();
         public static KawazuConverter KawazuConv = null;

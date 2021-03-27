@@ -8,15 +8,15 @@
   IgnorableNamespaces="uap mp uap3">
 
   <Identity
-    Name="64698713-b184-44e4-ae9b-80db14b129c6"
-    Publisher="CN=HyPlayer Team"
-    Version="1.0.12.0" />
+    Name="48848aaaaaaccd.HyPlayer"
+    Publisher="CN=C23FC254-B9D2-439F-BE7C-7849EE55BEB2"
+    Version="1.0.20.0" />
 
-  <mp:PhoneIdentity PhoneProductId="64698713-b184-44e4-ae9b-80db14b129c6" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <mp:PhoneIdentity PhoneProductId="f59825c1-7418-4bf0-9515-cbd8b69f70ac" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
     <DisplayName>HyPlayer</DisplayName>
-    <PublisherDisplayName>HyPlayer Team</PublisherDisplayName>
+    <PublisherDisplayName>aaaaaaccd</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 

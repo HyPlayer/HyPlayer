@@ -254,6 +254,20 @@
                 Foreground="Gray"
                 FontSize="20"
                 Text="歌手" />
+            <StackPanel
+                Spacing="15"
+                HorizontalAlignment="Center"
+                controls:DockPanel.Dock="Bottom"
+                Orientation="Horizontal">
+                <ToggleButton
+                    Name="ToggleButtonTranslation"
+                    Click="ToggleButtonTranslation_OnClick"
+                    Content="译" />
+                <ToggleButton
+                    Click="ToggleButtonSound_OnClick"
+                    Name="ToggleButtonSound"
+                    Content="音" />
+            </StackPanel>
             <ScrollViewer
                 Margin="0,5"
                 x:FieldModifier="public"
@@ -262,6 +276,7 @@
                 HorizontalScrollBarVisibility="Hidden">
                 <ScrollViewer.Content>
                     <StackPanel
+                        Spacing="15"
                         PointerWheelChanged="LyricBoxContainer_OnPointerWheelChanged"
                         Name="LyricBox"
                         Orientation="Vertical"

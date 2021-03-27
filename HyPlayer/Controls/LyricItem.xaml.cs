@@ -31,7 +31,7 @@ namespace HyPlayer.Controls
             TextBoxTranslation.FontSize = actualsize;
             Lrc = lrc;
             TextBoxPureLyric.Text = Lrc.PureLyric;
-            if (Lrc.HaveTranslation)
+            if (Lrc.HaveTranslation && Common.ShowLyricTrans)
             {
                 TextBoxTranslation.Text = Lrc.Translation;
             }
@@ -40,7 +40,7 @@ namespace HyPlayer.Controls
                 TextBoxTranslation.Visibility = Visibility.Collapsed;
             }
 
-            if (Common.KawazuConv != null)
+            if (Common.KawazuConv != null && Common.ShowLyricSound)
             {
                 Task.Run(() =>
                 {
@@ -53,6 +53,10 @@ namespace HyPlayer.Controls
 
                     }));
                 });
+            }
+            else
+            {
+                TextBoxSound.Visibility = Visibility.Collapsed;
             }
 
             OnHind();
