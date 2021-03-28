@@ -14,11 +14,17 @@
             x:Name="NavMain"
             Margin="0,0,0,0"
             BackRequested="OnNavigateBack"
-            Background="{ThemeResource SystemControlChromeMediumAcrylicWindowMediumBrush}"
             IsBackButtonVisible="Visible"
             IsBackEnabled="True"
             IsSettingsVisible="False"
             SelectionChanged="NavMain_OnSelectionChanged">
+            <controls1:NavigationView.Background>
+                <ImageBrush Stretch="UniformToFill" ImageSource="/Assets/BackGround.png">
+                    <ImageBrush.RelativeTransform>
+                        <CompositeTransform CenterY="0.5" CenterX="0.5" TranslateX="0"/>
+                    </ImageBrush.RelativeTransform>
+                </ImageBrush>
+            </controls1:NavigationView.Background>
             <controls1:NavigationView.AutoSuggestBox>
                 <AutoSuggestBox
                     QueryIcon="Find"
