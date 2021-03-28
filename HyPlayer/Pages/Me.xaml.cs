@@ -2,6 +2,8 @@
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.UI.Xaml;
@@ -9,6 +11,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.Controls;
 using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
 using NavigationViewSelectionChangedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewSelectionChangedEventArgs;
 
@@ -25,9 +28,6 @@ namespace HyPlayer.Pages
         public Me()
         {
             InitializeComponent();
-            uid = Common.LoginedUser.id;
-            LoadInfo();
-            NavigationView1.SelectedItem = NavigationView1.MenuItems[0];
         }
 
         public async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)
@@ -38,8 +38,52 @@ namespace HyPlayer.Pages
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            uid = Common.LoginedUser.id;
+            if (e.Parameter != null)
+            {
+                uid = (string)e.Parameter;
+                ButtonLogout.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                uid = Common.LoginedUser.id;
+            }
             LoadInfo();
+            LoadPlayList();
+        }
+
+        public async void LoadPlayList()
+        {
+            try
+            {
+                (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
+                    new Dictionary<string, object> { ["uid"] = uid });
+
+                if (isok)
+                {
+                    foreach (JToken PlaylistItemJson in json["playlist"].ToArray())
+                    {
+                        NCPlayList ncp = new NCPlayList()
+                        {
+                            cover = PlaylistItemJson["coverImgUrl"].ToString(),
+                            creater = new NCUser()
+                            {
+                                avatar = PlaylistItemJson["creator"]["avatarUrl"].ToString(),
+                                id = PlaylistItemJson["creator"]["userId"].ToString(),
+                                name = PlaylistItemJson["creator"]["nickname"].ToString(),
+                                signature = PlaylistItemJson["creator"]["signature"].ToString()
+                            },
+                            plid = PlaylistItemJson["id"].ToString(),
+                            name = PlaylistItemJson["name"].ToString(),
+                            desc = PlaylistItemJson["description"].ToString()
+                        };
+                        GridContainer.Children.Add(new PlaylistItem(ncp));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
         }
 
         public async void LoadInfo()
@@ -73,18 +117,7 @@ namespace HyPlayer.Pages
             });*/
 
         }
-
-        private void NavigationView_OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
-        {
-            switch (args.SelectedItemContainer.Tag.ToString())
-            {
-                case "SongList":
-                    Common.GLOBAL["SongListUID"] = uid;
-                    ContentFrame.Navigate(typeof(SongListFrame), null, new EntranceNavigationTransitionInfo());
-                    break;
-            }
-        }
-
+        
         private async void Logout_OnClick(object sender, RoutedEventArgs e)
         {
             try

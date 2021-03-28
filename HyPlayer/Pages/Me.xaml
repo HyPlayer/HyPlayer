@@ -51,6 +51,7 @@
                 <StackPanel
                     Orientation="Vertical">
                     <controls:DockPanel
+                        Margin="35,0,0,0"
                         LastChildFill="True"
                         x:Name="GridPersonalInformation">
                         <Rectangle
@@ -73,41 +74,31 @@
                             </Rectangle.Fill>
                         </Rectangle>
                         <StackPanel
-                            Margin="15"
                             Name="StackPanelUserInfo"
                             Orientation="Vertical">
                             <TextBlock
                                 Name="TextBoxUserName"
                                 Text="用户名"
                                 FontWeight="Medium"
-                                FontSize="36"></TextBlock>
+                                FontSize="36" />
                             <TextBlock
                                 Name="TextBoxSignature"
                                 Text="签名"
-                                FontSize="18"
-                                Foreground="Gray"/>
+                                FontSize="18"/>
                             <Button
                                 Margin="0,10,0,0"
+                                x:Name="ButtonLogout"
                                 Content="退出登录"
                                 Click="Logout_OnClick" />
                         </StackPanel>
                     </controls:DockPanel>
-
-                    <muxc:NavigationView
-                        x:Name="NavigationView1"
-                        Margin="0,20,0,0"
-                        IsSettingsVisible="False"
-                        IsBackButtonVisible="Collapsed"
-                        SelectionChanged="NavigationView_OnSelectionChanged"
-                        PaneDisplayMode="Top">
-                        <muxc:NavigationView.MenuItems>
-                            <muxc:NavigationViewItem
-                                Content="歌单"
-                                Tag="SongList" />
-                        </muxc:NavigationView.MenuItems>
-                        <Frame
-                            x:Name="ContentFrame" />
-                    </muxc:NavigationView>
+                    <TextBlock Text="歌单" FontWeight="Medium" FontSize="25" Margin="50,30,0,0" />
+                    <controls:WrapPanel
+                        Margin="0,0,0,350"
+                        HorizontalAlignment="Center"
+                        HorizontalSpacing="15"
+                        VerticalSpacing="15"
+                        x:Name="GridContainer" />
                 </StackPanel>
 
             </ScrollViewer.Content>

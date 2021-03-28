@@ -8,6 +8,7 @@
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:hyPlayControl="using:HyPlayer.HyPlayControl"
     mc:Ignorable="d"
+    Background="{ThemeResource SystemControlAcrylicElementMediumHighBrush}"
     d:DesignHeight="100"
     d:DesignWidth="1080">
     <Grid

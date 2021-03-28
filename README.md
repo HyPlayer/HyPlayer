@@ -11,13 +11,15 @@
 	<img alt="Using GPL-v3" src="https://img.shields.io/github/license/kengwang/HyPlayer">
 	<img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/kengwang/HyPlayer">
 </p>
+<p align="center">
+主开发者: <a href="https://github.com/kengwang">@kengwang</a> | 界面设计: <a href="https://github.com/aaaaaaccd">@aaaaaaccd</a> | <a href="PREVIEW.md">界面预览</a>
+</p>
 
 
-主要开发者: [@kengwang](https://github.com/kengwang)
-
-界面设计: [@aaaaaaccd](https://github.com/aaaaaaccd)
 
 **本软件仅供学习交流使用  请勿用于其他用途**
+
+
 
 ## 下载
 
@@ -29,41 +31,6 @@
 
 ## 界面预览
 
-> 请注意: 由于目前还在开发中,请以实际交付为准
-
-**播放页面**
-
-![播放界面](/Assets/preview1.png)
-
-![竖屏模式](/Assets/preview3.png)
-
-**Super-mini 模式**
-
-> 此模式将会启用窗口置顶,你可以将其当作迷你播放控件 双击展开后的播放器的歌曲标题即可显示
-
-![image-20210222194811131](/Assets/preview-2.gif)
-
-**主页**
-
-> 此页面后期可能会有较大变动,请以实际交付为准
-
-![image-20210222194811131](/Assets/preview4.png)
-
-**搜索**
-
-![preview5](/Assets/preview5.png)
-
-**用户歌单**
-
-> 此页面可能会有较大改动,请以实际交付为准
-
-![preview7](/Assets/preview7.png)
-
-**歌单详情**
-
-![preview6](/Assets/preview6.png)
-
-> 其他界面待制作 / 完善 / 优化
 
 ## 自动编译状态
 
@@ -94,7 +61,7 @@
 * NeteaseCloudMusicApi
   [wwh1004/NeteaseCloudMusicApi](https://github.com/wwh1004/NeteaseCloudMusicApi) => [kengwang/NeteaseCloudMusicApi](https://github.com/kengwang/NeteaseCloudMusicApi) (MIT Licence)
 
-* Kawazu [Cutano/Kawazu](https://github.com/Cutano/Kawazu) (MIT Licence)
+* Kawazu [Cutano/Kawazu](https://github.com/Cutano/Kawazu) => [HyPlayer / Kawazu](https://github.com/HyPlayer/Kawazu) (MIT Licence)
 
 
 ## 捐助

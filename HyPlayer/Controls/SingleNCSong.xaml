@@ -58,7 +58,7 @@
                 FontSize="13"
                 Text="专辑名" />
             <TextBlock
-                Foreground="Gray"
+                Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                 PointerPressed="TextBlockArtist_OnPointerPressed"
                 Name="TextBlockArtist"
                 controls:DockPanel.Dock="Bottom"

@@ -28,37 +28,7 @@ namespace HyPlayer.Pages
 
         public async void LoadList()
         {
-            try
-            {
-                (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
-                    new Dictionary<string, object> { ["uid"] = uid });
-
-                if (isok)
-                {
-                    foreach (JToken PlaylistItemJson in json["playlist"].ToArray())
-                    {
-                        NCPlayList ncp = new NCPlayList()
-                        {
-                            cover = PlaylistItemJson["coverImgUrl"].ToString(),
-                            creater = new NCUser()
-                            {
-                                avatar = PlaylistItemJson["creator"]["avatarUrl"].ToString(),
-                                id = PlaylistItemJson["creator"]["userId"].ToString(),
-                                name = PlaylistItemJson["creator"]["nickname"].ToString(),
-                                signature = PlaylistItemJson["creator"]["signature"].ToString()
-                            },
-                            plid = PlaylistItemJson["id"].ToString(),
-                            name = PlaylistItemJson["name"].ToString(),
-                            desc = PlaylistItemJson["description"].ToString()
-                        };
-                        GridContainer.Children.Add(new PlaylistItem(ncp));
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
+            
 
         }
 

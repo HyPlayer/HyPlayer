@@ -35,13 +35,13 @@
         BackgroundSource="Backdrop"
         TintOpacity="0.122000005794689"
         TintLuminosityOpacity="0.528000025078654"
-        TintColor="SkyBlue"
+        TintColor="#3d6276"
         FallbackColor="SkyBlue" />
     <media:AcrylicBrush
-        x:Key="AccentPanelAcrylic" 
+        x:Key="AccentPanelAcrylic"
         BackgroundSource="HostBackdrop"
-        TintOpacity="0.178000008454546" 
-        TintLuminosityOpacity="0.36" 
+        TintOpacity="0.178000008454546"
+        TintLuminosityOpacity="0.36"
         TintColor="#4D76B3"
         FallbackColor="#2B2B2B" />
 </ResourceDictionary>
