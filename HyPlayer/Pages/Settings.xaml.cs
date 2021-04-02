@@ -71,14 +71,27 @@ namespace HyPlayer.Pages
                             //下载完成
                             //unzip
 
-                            string path = (await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("Romaji",CreationCollisionOption.FailIfExists)).Path;
-                            ZipFile.ExtractToDirectory(obj.ResultFile.Path, path);
+                            string path =
+                                (await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("Romaji",
+                                    CreationCollisionOption.FailIfExists)).Path;
+                            //Read the file stream
+                            Stream a = await obj.ResultFile.OpenStreamForReadAsync();
+
+                            //unzip
+                            ZipArchive archive = new ZipArchive(a);
+                            archive.ExtractToDirectory(path);
                             _ = obj.ResultFile.DeleteAsync();
 
                             Common.KawazuConv = new KawazuConverter(path);
                         }
-                        catch { }
-                        RomajiStatus.Text = "当前日语转罗马音状态: " + (Common.KawazuConv == null ? "无法转换 请尝试重新下载资源文件" : "可以转换");
+                        catch (Exception e)
+                        {
+                            RomajiStatus.Text = "罗马音文件解压错误: " + e.ToString();
+                        }
+                        finally
+                        {
+                            RomajiStatus.Text = "当前日语转罗马音状态: " + (Common.KawazuConv == null ? "无法转换 请尝试重新下载资源文件" : "可以转换");
+                        }
                     }));
                 }));
 
