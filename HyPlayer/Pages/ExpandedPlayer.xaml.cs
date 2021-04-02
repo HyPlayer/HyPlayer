@@ -130,10 +130,15 @@ namespace HyPlayer.Pages
 
         private void RefreshLyricTime(SongLyric LRC)
         {
-            LyricItem item = LyricList.Find(t => t.Lrc.LyricTime == LRC.LyricTime);
+            LyricItem item = LyricList[HyPlayList.lyricpos];
             if (item == null) return;
             item?.OnShow();
-            LyricList.FindAll(t => t.Lrc.LyricTime != LRC.LyricTime).ForEach(t => t.OnHind());
+            try
+            {
+                LyricList.GetRange(0, HyPlayList.lyricpos).ForEach(t => t.OnHind());
+                LyricList.GetRange(HyPlayList.lyricpos + 1, LyricList.Count - HyPlayList.lyricpos -1 ).ForEach(t => t.OnHind());
+            }
+            catch { }
             if (sclock > 0)
             {
                 sclock--;

@@ -36,7 +36,7 @@ namespace HyPlayer.Pages
             {
                 Common.Invoke((async () =>
                 {
-                    RomajiStatus.Text = "正在下载资源文件";
+                    RomajiStatus.Text = "正在下载资源文件 请稍等";
                     try
                     {
                         await (await ApplicationData.Current.LocalCacheFolder.GetFileAsync("RomajiData.zip")).DeleteAsync();

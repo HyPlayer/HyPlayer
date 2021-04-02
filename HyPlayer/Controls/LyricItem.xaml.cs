@@ -19,14 +19,13 @@ namespace HyPlayer.Controls
     {
         public readonly SongLyric Lrc;
         public double actualsize => Common.PageExpandedPlayer == null ? 18 : Common.PageExpandedPlayer.showsize;
-        private readonly Brush originBrush;
+        private Brush originBrush => Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as Brush;
 
-        public bool showing = false;
+        public bool showing = true;
         public bool hiding = false;
         public LyricItem(SongLyric lrc)
         {
             InitializeComponent();
-            originBrush = TextBoxPureLyric.Foreground;
             TextBoxPureLyric.FontSize = actualsize;
             TextBoxTranslation.FontSize = actualsize;
             Lrc = lrc;
@@ -50,6 +49,10 @@ namespace HyPlayer.Controls
                         {
                             TextBoxSound.Text = await Common.KawazuConv.Convert(Lrc.PureLyric, To.Romaji, Mode.Separated);
                         }
+                        else
+                        {
+                            TextBoxSound.Visibility = Visibility.Collapsed;
+                        }
 
                     }));
                 });
@@ -69,26 +72,35 @@ namespace HyPlayer.Controls
 
         public void OnShow()
         {
+            if (showing)
+            {
+                TextBoxPureLyric.FontSize = actualsize;
+                TextBoxTranslation.FontSize = actualsize; 
+                return;
+            }
             showing = true;
             TextBoxPureLyric.FontWeight = FontWeights.SemiBold;
             TextBoxTranslation.FontWeight = FontWeights.SemiBold;
             TextBoxPureLyric.Foreground = originBrush;
             TextBoxSound.Foreground = originBrush;
             TextBoxTranslation.Foreground = originBrush;
-            TextBoxPureLyric.FontSize = actualsize;
-            TextBoxTranslation.FontSize = actualsize;
+
         }
 
         public void OnHind()
         {
+            if (!showing)
+            {
+                TextBoxPureLyric.FontSize = actualsize;
+                TextBoxTranslation.FontSize = actualsize;
+                return;
+            }
             showing = false;
             TextBoxPureLyric.FontWeight = FontWeights.Normal;
             TextBoxTranslation.FontWeight = FontWeights.Normal;
             TextBoxPureLyric.Foreground = new SolidColorBrush(Color.FromArgb(255, 155, 155, 155));
             TextBoxTranslation.Foreground = new SolidColorBrush(Color.FromArgb(255, 155, 155, 155));
             TextBoxSound.Foreground = new SolidColorBrush(Color.FromArgb(255, 155, 155, 155));
-            TextBoxPureLyric.FontSize = actualsize;
-            TextBoxTranslation.FontSize = actualsize;
         }
 
         private void LyricItem_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)

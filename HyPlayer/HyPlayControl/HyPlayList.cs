@@ -57,7 +57,7 @@ namespace HyPlayer.HyPlayControl
         public static SystemMediaTransportControlsDisplayUpdater ControlsDisplayUpdater;
         public static BackgroundDownloader downloader = new BackgroundDownloader();
 
-        private static SongLyric lastLyric;
+        public static int lyricpos;
 
         public static void InitializeHyPlaylist()
         {
@@ -290,13 +290,17 @@ namespace HyPlayer.HyPlayControl
 
         private static void LoadLyricChange()
         {
-            SongLyric songLyric = Lyrics.LastOrDefault((t => t.LyricTime < Player.PlaybackSession.Position));
-            if (lastLyric.GetHashCode() != songLyric.GetHashCode())
+            if (lyricpos >= Lyrics.Count || lyricpos < 0) lyricpos = 0;
+            if (Lyrics[lyricpos].LyricTime > Player.PlaybackSession.Position) //当感知到进度回溯时执行
             {
-                lastLyric = songLyric;
-                Invoke(() => OnLyricChange?.Invoke(songLyric));
+                lyricpos = Lyrics.FindLastIndex(t => t.LyricTime <= Player.PlaybackSession.Position) - 1;
             }
-               
+
+            if ((Lyrics.Count > lyricpos + 1 && Lyrics[lyricpos + 1].LyricTime <= Player.PlaybackSession.Position)) //正常的滚歌词
+            {
+                lyricpos++;
+                Invoke(() => OnLyricChange?.Invoke(Lyrics[lyricpos]));
+            }
         }
 
         private static void Player_VolumeChanged(MediaPlayer sender, object args)
@@ -345,6 +349,7 @@ namespace HyPlayer.HyPlayControl
             //先进行歌词转换以免被搞
             Lyrics = Utils.ConvertPureLyric(hpi.AudioInfo.Lyric);
             Utils.ConvertTranslation(hpi.AudioInfo.TrLyric, Lyrics);
+            lyricpos = 0;
             Invoke(() => OnLyricLoaded?.Invoke());
         }
         public static async Task<PureLyricInfo> LoadNCLyric(HyPlayItem ncp)
