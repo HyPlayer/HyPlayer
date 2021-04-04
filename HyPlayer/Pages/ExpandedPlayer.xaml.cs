@@ -34,6 +34,8 @@ namespace HyPlayer.Pages
         private int lastlrcid = 0;
         public double LyricWidth { get; set; }
 
+        private LyricItem lastitem;
+        private int lastwidth;
         private List<LyricItem> LyricList = new List<LyricItem>();
 
         public ExpandedPlayer()
@@ -83,6 +85,8 @@ namespace HyPlayer.Pages
         private void Current_SizeChanged(object sender, WindowSizeChangedEventArgs e)
         {
             int nowwidth = e is null ? (int)Window.Current.Bounds.Width : (int)e.Size.Width;
+            if (lastwidth == nowwidth) return; //有些时候会莫名其妙不更改大小的情况引发这个
+            lastwidth = nowwidth;
             if (nowwidth > 800)
             {
                 LyricWidth = nowwidth * 0.4;
@@ -104,6 +108,7 @@ namespace HyPlayer.Pages
                         if (elm is LyricItem li)
                         {
                             li.Width = LyricWidth;
+                            li.RefreshFontSize();
                         }
                     }
                 }));
@@ -132,13 +137,9 @@ namespace HyPlayer.Pages
         {
             LyricItem item = LyricList[HyPlayList.lyricpos];
             if (item == null) return;
+            lastitem?.OnHind();
             item?.OnShow();
-            try
-            {
-                LyricList.GetRange(0, HyPlayList.lyricpos).ForEach(t => t.OnHind());
-                LyricList.GetRange(HyPlayList.lyricpos + 1, LyricList.Count - HyPlayList.lyricpos -1 ).ForEach(t => t.OnHind());
-            }
-            catch { }
+            lastitem = item;
             if (sclock > 0)
             {
                 sclock--;

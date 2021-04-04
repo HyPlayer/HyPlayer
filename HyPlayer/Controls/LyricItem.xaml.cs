@@ -70,12 +70,17 @@ namespace HyPlayer.Controls
             await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority, () => { action(); });
         }
 
+        public void RefreshFontSize()
+        {
+            TextBoxPureLyric.FontSize = actualsize;
+            TextBoxTranslation.FontSize = actualsize;
+        }
+
         public void OnShow()
         {
             if (showing)
             {
-                TextBoxPureLyric.FontSize = actualsize;
-                TextBoxTranslation.FontSize = actualsize; 
+                //RefreshFontSize();
                 return;
             }
             showing = true;
@@ -91,8 +96,7 @@ namespace HyPlayer.Controls
         {
             if (!showing)
             {
-                TextBoxPureLyric.FontSize = actualsize;
-                TextBoxTranslation.FontSize = actualsize;
+                //RefreshFontSize();
                 return;
             }
             showing = false;

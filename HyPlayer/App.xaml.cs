@@ -41,27 +41,16 @@ namespace HyPlayer
 
         }
 
-        private void App_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        private async void App_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            Common.Invoke((async () =>
+            e.Handled = true;
+            await new ContentDialog
             {
-                ContentDialog Dialog = new ContentDialog
-                {
-                    Title = "遇到了错误",
-                    Content = e.Exception.ToString(),
-                    CloseButtonText = "忽略",
-                    PrimaryButtonText = "退出"
-                };
-                ContentDialogResult result = await Dialog.ShowAsync();
-                if (result == ContentDialogResult.Primary)
-                {
-                    Environment.Exit(-1);
-                }
-                else
-                {
-                    e.Handled = true;
-                }
-            }));
+                Title = "发生错误",
+                Content = e.Message,
+                CloseButtonText = "关闭",
+                DefaultButton = ContentDialogButton.Close
+            }.ShowAsync();
         }
 
         /// <summary>

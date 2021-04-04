@@ -55,7 +55,7 @@
                     NavigateUri="https://gitee.com/kengwang/HyPlayer">Gitee</Hyperlink>
             </Paragraph>
             <Paragraph>Copyright © HyPlayer Develop Team 2021</Paragraph>
-            <Paragraph>All rights reserved.</Paragraph>
+            <Paragraph>HyPlayer is licensed under the GNU General Public License v3.0</Paragraph>
         </RichTextBlock>
         <TextBlock
             FontSize="20"
