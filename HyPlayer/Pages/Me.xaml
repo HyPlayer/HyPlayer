@@ -80,7 +80,7 @@
                                 Name="TextBoxUserName"
                                 Text="用户名"
                                 FontWeight="Medium"
-                                FontSize="36" />
+                                FontSize="40" />
                             <TextBlock
                                 Name="TextBoxSignature"
                                 Text="签名"

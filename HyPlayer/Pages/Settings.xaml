@@ -13,7 +13,7 @@
         Spacing="20"
         Orientation="Vertical">
         <TextBlock
-            FontSize="36"
+            FontSize="60"
             Text="设置" />
         <TextBlock
             FontSize="18">罗马音设置</TextBlock>
@@ -37,7 +37,7 @@
         </controls:RadioButtons>
         -->
         <TextBlock
-            FontSize="28"
+            FontSize="40"
             Text="关于" />
         <Image
             Width="100"
@@ -46,7 +46,7 @@
             Source="/Assets/icon.png" />
         <RichTextBlock>
             <Paragraph
-                FontSize="28">HyPlayer</Paragraph>
+                FontSize="25">HyPlayer</Paragraph>
             <Paragraph>This is an open-source project under GPL-v3 Licence</Paragraph>
             <Paragraph>
                 <Hyperlink
@@ -58,7 +58,7 @@
             <Paragraph>HyPlayer is licensed under the GNU General Public License v3.0</Paragraph>
         </RichTextBlock>
         <TextBlock
-            FontSize="20"
+            FontSize="25"
             Text="开发者" />
         <StackPanel
             Orientation="Horizontal">

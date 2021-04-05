@@ -108,7 +108,7 @@
                             TextWrapping="WrapWholeWords"
 							Text="歌单简介"
 							FontSize="13"
-                            Foreground="{ThemeResource SystemControlForegroundChromeMediumBrush}" />
+                            Foreground="{ThemeResource SystemControlForegroundChromeHighBrush}" />
                     </StackPanel>
                 </controls:DockPanel>
                 <StackPanel

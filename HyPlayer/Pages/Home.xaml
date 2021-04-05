@@ -10,8 +10,9 @@
         <StackPanel Padding="15" Orientation="Vertical">
             <TextBlock
                 Padding="15,0,0,0"
-                FontSize="25"
-                Text="推荐歌单" />
+                FontSize="40"
+                Text="推荐歌单" 
+                FontFamily="Microsoft YaHei UI" />
             <ScrollViewer
                 HorizontalScrollBarVisibility="Auto"
                 HorizontalScrollMode="Enabled"
@@ -25,8 +26,9 @@
 
             <TextBlock
                 Padding="15,0,0,0"
-                FontSize="25"
-                Text="排行榜" />
+                FontSize="40"
+                Text="排行榜" 
+                FontFamily="Microsoft YaHei UI" />
             <ScrollViewer
                 HorizontalScrollBarVisibility="Auto"
                 HorizontalScrollMode="Enabled"

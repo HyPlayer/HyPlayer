@@ -139,8 +139,8 @@
         <controls:DropShadowPanel
             BlurRadius="8"
             ShadowOpacity="1"
-            OffsetX="5"
-            OffsetY="5"
+            OffsetX="3"
+            OffsetY="3"
             Color="Black"
             IsMasked="True"
             Grid.Column="1"

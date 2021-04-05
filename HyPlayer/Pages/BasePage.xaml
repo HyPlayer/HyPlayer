@@ -19,9 +19,9 @@
             IsSettingsVisible="False"
             SelectionChanged="NavMain_OnSelectionChanged">
             <controls1:NavigationView.Background>
-                <ImageBrush Stretch="UniformToFill" AlignmentY="Top" ImageSource="/Assets/BackGround.png">
+                <ImageBrush Stretch="UniformToFill" AlignmentY="Bottom" ImageSource="/Assets/BackGround.png">
                     <ImageBrush.RelativeTransform>
-                        <CompositeTransform CenterY="0.5" CenterX="0.5" TranslateX="0"/>
+                        <CompositeTransform CenterY="-0.5" CenterX="0.5" TranslateX="0"/>
                     </ImageBrush.RelativeTransform>
                 </ImageBrush>
             </controls1:NavigationView.Background>
