@@ -58,6 +58,7 @@ namespace HyPlayer.HyPlayControl
         public static BackgroundDownloader downloader = new BackgroundDownloader();
 
         public static int lyricpos;
+        public static int crashedTime = 0;
 
         public static void InitializeHyPlaylist()
         {
@@ -81,6 +82,26 @@ namespace HyPlayer.HyPlayControl
             Player.CurrentStateChanged += Player_CurrentStateChanged;
             Player.VolumeChanged += Player_VolumeChanged;
             Player.PlaybackSession.PositionChanged += PlaybackSession_PositionChanged;
+            Player.MediaFailed += PlayerOnMediaFailed;
+        }
+
+        private static void PlayerOnMediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
+        {
+            //歌曲崩溃了的话就是这个
+            //SongMoveNext();
+            //TimeSpan temppos = Player.PlaybackSession.Position;
+            crashedTime++;
+            if (crashedTime == 5)
+            {
+                SongMoveNext();
+                crashedTime = 0;
+            }
+            else
+            {
+                LoadPlayerSong();
+            }
+
+            //Player.PlaybackSession.Position = temppos;
         }
 
         /********        方法         ********/
@@ -290,15 +311,25 @@ namespace HyPlayer.HyPlayControl
 
         private static void LoadLyricChange()
         {
+            if (Lyrics.Count == 0) return;
             if (lyricpos >= Lyrics.Count || lyricpos < 0) lyricpos = 0;
             if (Lyrics[lyricpos].LyricTime > Player.PlaybackSession.Position) //当感知到进度回溯时执行
             {
                 lyricpos = Lyrics.FindLastIndex(t => t.LyricTime <= Player.PlaybackSession.Position) - 1;
             }
-
-            if ((Lyrics.Count > lyricpos + 1 && Lyrics[lyricpos + 1].LyricTime <= Player.PlaybackSession.Position)) //正常的滚歌词
+            bool changed = false;
+            try
             {
-                lyricpos++;
+                while ((Lyrics.Count > lyricpos + 1 && Lyrics[lyricpos + 1].LyricTime <= Player.PlaybackSession.Position)) //正常的滚歌词
+                {
+                    lyricpos++;
+                    changed = true;
+                }
+            }
+            catch { }
+
+            if (changed)
+            {
                 Invoke(() => OnLyricChange?.Invoke(Lyrics[lyricpos]));
             }
         }
@@ -314,6 +345,7 @@ namespace HyPlayer.HyPlayControl
             switch (Player.PlaybackSession.PlaybackState)
             {
                 case MediaPlaybackState.Playing:
+                    crashedTime = 0;
                     MediaSystemControls.PlaybackStatus = MediaPlaybackStatus.Playing;
                     break;
                 case MediaPlaybackState.Paused:
