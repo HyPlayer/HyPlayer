@@ -149,10 +149,22 @@
             VerticalAlignment="Center"
             x:Name="ImageAlbumContainer"
             Grid.RowSpan="8">
-            <Image
-                x:Name="ImageAlbum"
-                x:FieldModifier="public"
-                Source="/Assets/Icon.png" />
+            <Rectangle
+                Stretch="UniformToFill"
+                RadiusX="4"
+                RadiusY="4">
+                <Rectangle.Fill>
+                    <ImageBrush
+                        x:Name="ImageAlbum"
+                        x:FieldModifier="public"
+                        Stretch="UniformToFill">
+                        <ImageBrush.ImageSource>
+                            <BitmapImage
+                                UriSource="/Assets/icon.png" />
+                        </ImageBrush.ImageSource>
+                    </ImageBrush>
+                </Rectangle.Fill>
+            </Rectangle>
         </controls:DropShadowPanel>
 
         <Grid

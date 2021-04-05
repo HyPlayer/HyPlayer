@@ -208,16 +208,16 @@ namespace HyPlayer.Pages
                        {
                            BitmapImage img = new BitmapImage();
                            await img.SetSourceAsync((await mpi.AudioInfo.LocalSongFile.GetThumbnailAsync(ThumbnailMode.MusicView, 9999)));
-                           ImageAlbum.Source = img;
+                           ImageAlbum.ImageSource = img;
                        }
                        else
                        {
-                           ImageAlbum.Source = new BitmapImage(new Uri(mpi.AudioInfo.Picture));
+                           ImageAlbum.ImageSource = new BitmapImage(new Uri(mpi.AudioInfo.Picture));
                        }
 
                        TextBlockSinger.Text = mpi.AudioInfo.Artist;
                        TextBlockSongTitle.Text = mpi.AudioInfo.SongName;
-                       Background = new ImageBrush() { ImageSource = ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                       Background = new ImageBrush() { ImageSource = ImageAlbum.ImageSource, Stretch = Stretch.UniformToFill };
                        ProgressBarPlayProg.Maximum = mpi.AudioInfo.LengthInMilliseconds;
                        SliderVolumn.Value = HyPlayList.Player.Volume * 100;
 
@@ -272,7 +272,7 @@ namespace HyPlayer.Pages
                     anim1.Configuration = new DirectConnectedAnimationConfiguration();
                     anim3?.TryStart(TextBlockSinger);
                     anim1?.TryStart(TextBlockSongTitle);
-                    anim2?.TryStart(ImageAlbum);
+                    anim2?.TryStart(ImageAlbumContainer);
 
                 });
             });
@@ -283,7 +283,7 @@ namespace HyPlayer.Pages
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TextBlockSongTitle);
             if (ImageAlbumContainer.Visibility == Visibility.Visible)
             {
-                ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", ImageAlbum);
+                ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", ImageAlbumContainer);
             }
 
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TextBlockSinger);
