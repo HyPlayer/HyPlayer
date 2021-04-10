@@ -46,7 +46,7 @@ namespace HyPlayer.HyPlayControl
         public static event PlayListAddDoneEvent OnPlayListAddDone;
         public delegate void LyricLoadedEvent();
         public static event LyricLoadedEvent OnLyricLoaded;
-        public delegate void LyricChangeEvent(SongLyric lrc);
+        public delegate void LyricChangeEvent();
         public static event LyricChangeEvent OnLyricChange;
         public delegate void MediaEndEvent(HyPlayItem hpi);
         public static event MediaEndEvent OnMediaEnd;
@@ -313,13 +313,20 @@ namespace HyPlayer.HyPlayControl
         {
             if (Lyrics.Count == 0) return;
             if (lyricpos >= Lyrics.Count || lyricpos < 0) lyricpos = 0;
+            bool changed = false;
             if (Lyrics[lyricpos].LyricTime > Player.PlaybackSession.Position) //当感知到进度回溯时执行
             {
                 lyricpos = Lyrics.FindLastIndex(t => t.LyricTime <= Player.PlaybackSession.Position) - 1;
+                if (lyricpos == -2)
+                {
+                    lyricpos = -1;
+                }
+                changed = true;
             }
-            bool changed = false;
+
             try
             {
+                if (lyricpos == 0) changed = true;
                 while ((Lyrics.Count > lyricpos + 1 && Lyrics[lyricpos + 1].LyricTime <= Player.PlaybackSession.Position)) //正常的滚歌词
                 {
                     lyricpos++;
@@ -328,9 +335,10 @@ namespace HyPlayer.HyPlayControl
             }
             catch { }
 
+
             if (changed)
             {
-                Invoke(() => OnLyricChange?.Invoke(Lyrics[lyricpos]));
+                Invoke(() => OnLyricChange?.Invoke());
             }
         }
 

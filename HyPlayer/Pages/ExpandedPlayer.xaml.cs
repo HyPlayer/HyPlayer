@@ -133,8 +133,14 @@ namespace HyPlayer.Pages
 
         }
 
-        private void RefreshLyricTime(SongLyric LRC)
+        private void RefreshLyricTime()
         {
+            if (HyPlayList.lyricpos < 0 || HyPlayList.lyricpos >= LyricList.Count) return;
+            if (HyPlayList.lyricpos == -1)
+            {
+                lastitem?.OnHind();
+                LyricBoxContainer.ChangeView(null, 0, null, false);
+            }
             LyricItem item = LyricList[HyPlayList.lyricpos];
             if (item == null) return;
             lastitem?.OnHind();
@@ -186,10 +192,7 @@ namespace HyPlayer.Pages
                 Common.Invoke((async () =>
                 {
                     await Task.Delay(500);
-                    SongLyric nowlrc =
-                        HyPlayList.Lyrics.LastOrDefault((t =>
-                            t.LyricTime < HyPlayList.Player.PlaybackSession.Position));
-                    RefreshLyricTime(nowlrc);
+                    RefreshLyricTime();
                 }));
             }));
         }
