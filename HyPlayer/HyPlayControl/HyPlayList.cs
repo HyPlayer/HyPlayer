@@ -85,6 +85,7 @@ namespace HyPlayer.HyPlayControl
             Player.VolumeChanged += Player_VolumeChanged;
             Player.PlaybackSession.PositionChanged += PlaybackSession_PositionChanged;
             Player.MediaFailed += PlayerOnMediaFailed;
+            Common.GLOBAL["PERSONALFM"] = "false";
         }
 
         private static void PlayerOnMediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
