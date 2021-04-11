@@ -37,6 +37,15 @@
                     Icon="Home"
                     Tag="PageHome" />
                 <controls1:NavigationViewItem
+                    Content="私人FM"
+                    Tag="PersonalFM" >
+                    <controls1:NavigationViewItem.Icon>
+                        <FontIcon
+                            FontFamily="{StaticResource SymbolThemeFontFamily}"
+                            Glyph="&#xEFA9;" />
+                    </controls1:NavigationViewItem.Icon>
+                </controls1:NavigationViewItem>
+                <controls1:NavigationViewItem
                     Content="设置"
                     Icon="Setting"
                     Tag="PageSettings" />

@@ -50,6 +50,8 @@ namespace HyPlayer.HyPlayControl
         public static event LyricChangeEvent OnLyricChange;
         public delegate void MediaEndEvent(HyPlayItem hpi);
         public static event MediaEndEvent OnMediaEnd;
+        public delegate void SongMoveNextEvent();
+        public static event LyricChangeEvent OnSongMoveNext;
 
         /********        API        ********/
         public static MediaPlayer Player;
@@ -90,15 +92,35 @@ namespace HyPlayer.HyPlayControl
             //歌曲崩溃了的话就是这个
             //SongMoveNext();
             //TimeSpan temppos = Player.PlaybackSession.Position;
-            crashedTime++;
-            if (crashedTime == 5)
+            if (crashedTime == NowPlayingItem.GetHashCode())
             {
                 SongMoveNext();
                 crashedTime = 0;
             }
             else
             {
-                LoadPlayerSong();
+                crashedTime = NowPlayingItem.GetHashCode();
+                if (NowPlayingItem.isOnline)
+                {
+                    Invoke((async () =>
+                    {
+                        List[NowPlaying] = await LoadNCSong(new NCSong()
+                        {
+                            Album = NowPlayingItem.NcPlayItem.Album,
+                            Artist = NowPlayingItem.NcPlayItem.Artist,
+                            LengthInMilliseconds = NowPlayingItem.NcPlayItem.LengthInMilliseconds,
+                            sid = NowPlayingItem.NcPlayItem.sid,
+                            songname = NowPlayingItem.NcPlayItem.songname
+                        });
+                        LoadPlayerSong();
+                    }));
+                }
+                else
+                {
+                    //本地歌曲炸了的话就Move下一首吧
+                    SongMoveNext();
+                }
+
             }
 
             //Player.PlaybackSession.Position = temppos;
@@ -112,6 +134,7 @@ namespace HyPlayer.HyPlayControl
 
         public static void SongMoveNext()
         {
+            Invoke(() => OnSongMoveNext?.Invoke());
             if (List.Count == 0) return;
             MoveSongPointer(true);
             LoadPlayerSong();
@@ -209,7 +232,6 @@ namespace HyPlayer.HyPlayControl
                     {
                         NowPlaying++;
                     }
-
                     break;
                 case PlayMode.Shuffled:
                     //随机播放
@@ -438,8 +460,16 @@ namespace HyPlayer.HyPlayControl
 
         public static async Task<HyPlayItem> AppendNCSong(NCSong ncSong)
         {
+            var hpi = await LoadNCSong(ncSong);
+            if (hpi != null)
+                List.Add(hpi);
+            return hpi;
+        }
+
+        public static async Task<HyPlayItem> LoadNCSong(NCSong ncSong)
+        {
             (bool isOk, Newtonsoft.Json.Linq.JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                new Dictionary<string, object>() { { "id", ncSong.sid }/*, { "br", 320000 } */});
+    new Dictionary<string, object>() { { "id", ncSong.sid }/*, { "br", 320000 } */});
             if (isOk)
             {
                 try
@@ -472,7 +502,7 @@ namespace HyPlayer.HyPlayControl
                         size = json["data"][0]["size"].ToString(),
                         md5 = json["data"][0]["md5"].ToString()
                     };
-                    return AppendNCPlayItem(ncp);
+                    return LoadNCPlayItem(ncp);
                 }
                 catch
                 {
@@ -487,6 +517,13 @@ namespace HyPlayer.HyPlayControl
         }
 
         public static HyPlayItem AppendNCPlayItem(NCPlayItem ncp)
+        {
+            var hpi = LoadNCPlayItem(ncp);
+            List.Add(hpi);
+            return hpi;
+        }
+
+        public static HyPlayItem LoadNCPlayItem(NCPlayItem ncp)
         {
             AudioInfo ai = new AudioInfo()
             {
@@ -507,7 +544,6 @@ namespace HyPlayer.HyPlayControl
                 NcPlayItem = ncp,
                 Path = ncp.url
             };
-            List.Add(hpi);
             return hpi;
         }
 

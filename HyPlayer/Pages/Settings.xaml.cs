@@ -73,7 +73,7 @@ namespace HyPlayer.Pages
 
                             string path =
                                 (await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("Romaji",
-                                    CreationCollisionOption.FailIfExists)).Path;
+                                    CreationCollisionOption.OpenIfExists)).Path;
                             //Read the file stream
                             Stream a = await obj.ResultFile.OpenStreamForReadAsync();
 

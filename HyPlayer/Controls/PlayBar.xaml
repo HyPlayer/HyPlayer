@@ -312,6 +312,7 @@
                     VerticalAlignment="Center"
                     CornerRadius="30">
                     <FontIcon
+                        x:Name="IconPrevious"
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
                         Glyph="&#xE892;"></FontIcon>
                 </Button>

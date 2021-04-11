@@ -130,6 +130,7 @@
     </Compile>
     <Compile Include="Classes\Api.cs" />
     <Compile Include="Classes\NCSong.cs" />
+    <Compile Include="Classes\PersonalFM.cs" />
     <Compile Include="Classes\StaticSource.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="Controls\ArtistSelectDialog.xaml.cs">

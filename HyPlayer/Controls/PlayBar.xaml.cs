@@ -2,6 +2,7 @@
 using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Windows.Media.Playback;
 using Windows.Storage;
@@ -15,6 +16,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
+using NeteaseCloudMusicApi;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -88,6 +90,17 @@ namespace HyPlayer.Controls
 
         public void LoadPlayingFile(HyPlayItem mpi)
         {
+            if (Common.GLOBAL["PERSONALFM"].ToString() == "true")
+            {
+                IconPrevious.Glyph = "\uE7E8";
+                IconPlayType.Glyph = "\uE107";
+            }
+            else
+            {
+                IconPrevious.Glyph = "\uE892";
+                IconPlayType.Glyph = "\uE169";
+            }
+
             if (mpi == null)
             {
                 return;
@@ -171,7 +184,14 @@ namespace HyPlayer.Controls
 
         private void BtnPreviousSong_OnClick(object sender, RoutedEventArgs e)
         {
-            HyPlayList.SongMovePrevious();
+            if (Common.GLOBAL["PERSONALFM"].ToString() == "true")
+            {
+                PersonalFM.ExitFm();
+            }
+            else
+            {
+                HyPlayList.SongMovePrevious();
+            }
         }
 
         private void BtnNextSong_OnClick(object sender, RoutedEventArgs e)
@@ -283,26 +303,35 @@ namespace HyPlayer.Controls
 
         private void BtnPlayRollType_OnClick(object sender, RoutedEventArgs e)
         {
-            switch (NowPlayType)
+            if (Common.GLOBAL["PERSONALFM"].ToString() != "true")
             {
-                case PlayMode.DefaultRoll:
-                    //变成随机
-                    HyPlayList.NowPlayType = PlayMode.Shuffled;
-                    NowPlayType = PlayMode.Shuffled;
-                    IconPlayType.Glyph = "\uE14B";
-                    break;
-                case PlayMode.Shuffled:
-                    //变成单曲
-                    IconPlayType.Glyph = "\uE1CC";
-                    HyPlayList.NowPlayType = PlayMode.SinglePlay;
-                    NowPlayType = PlayMode.SinglePlay;
-                    break;
-                case PlayMode.SinglePlay:
-                    //变成顺序
-                    HyPlayList.NowPlayType = PlayMode.DefaultRoll;
-                    NowPlayType = PlayMode.DefaultRoll;
-                    IconPlayType.Glyph = "\uE169";
-                    break;
+                switch (NowPlayType)
+                {
+                    case PlayMode.DefaultRoll:
+                        //变成随机
+                        HyPlayList.NowPlayType = PlayMode.Shuffled;
+                        NowPlayType = PlayMode.Shuffled;
+                        IconPlayType.Glyph = "\uE14B";
+                        break;
+                    case PlayMode.Shuffled:
+                        //变成单曲
+                        IconPlayType.Glyph = "\uE1CC";
+                        HyPlayList.NowPlayType = PlayMode.SinglePlay;
+                        NowPlayType = PlayMode.SinglePlay;
+                        break;
+                    case PlayMode.SinglePlay:
+                        //变成顺序
+                        HyPlayList.NowPlayType = PlayMode.DefaultRoll;
+                        NowPlayType = PlayMode.DefaultRoll;
+                        IconPlayType.Glyph = "\uE169";
+                        break;
+                }
+            }
+            else
+            {
+                Common.ncapi.RequestAsync(CloudMusicApiProviders.FmTrash,
+                    new Dictionary<string, object>() {{"id", HyPlayList.NowPlayingItem.NcPlayItem.sid}});
+                PersonalFM.LoadNextFM();
             }
         }
 
@@ -341,7 +370,7 @@ namespace HyPlayer.Controls
 
         private void ImageContainer_OnPointerPressed(object sender, PointerRoutedEventArgs e)
         {
-            ButtonExpand_OnClick(sender,e);
+            ButtonExpand_OnClick(sender, e);
         }
 
         private async void TbSingerName_OnPointerPressed(object sender, PointerRoutedEventArgs e)
@@ -359,7 +388,7 @@ namespace HyPlayer.Controls
                         Common.BaseFrame.Navigate(typeof(ArtistPage), HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
                     }
 
-                   ButtonCollapse_OnClick(this, e);
+                    ButtonCollapse_OnClick(this, e);
                 }
             }
             catch { }

@@ -14,6 +14,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
+using HyPlayer.Classes;
 using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
 using NavigationViewBackRequestedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewBackRequestedEventArgs;
 using NavigationViewItem = Microsoft.UI.Xaml.Controls.NavigationViewItem;
@@ -184,6 +185,12 @@ namespace HyPlayer.Pages
         {
             var nowitem = sender.SelectedItem as NavigationViewItem;
             if (nowitem.Tag is null) return;
+            if (nowitem.Tag.ToString() == "PersonalFM")
+            {
+                PersonalFM.InitPersonalFM();
+                return;
+            }
+
             if (nowitem.Tag.ToString() == "PageMe" && !Common.Logined)
             {
                 InfoBarLoginHint.IsOpen = true;
