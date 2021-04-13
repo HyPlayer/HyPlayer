@@ -80,34 +80,34 @@
                             FontWeight="ExtraBold"
                             TextWrapping="Wrap"
                             Text="歌手名"
-                            FontSize="36"></TextBlock>
+                            FontSize="40"></TextBlock>
                         <TextBlock
                             Margin="0,2,0,0"
                             Name="TextboxArtistNameTranslated"
                             Text="歌手别名"
-                            FontSize="18"/>
+                            FontSize="25"/>
                         <TextBlock
                             Margin="0,5,0,0"
                             MaxLines="7"
                             TextWrapping="WrapWholeWords"
                             x:Name="TextBlockDesc"
                             Text="歌手简介"
-                            FontSize="13"/>
+                            FontSize="15"/>
                         <TextBlock
                             Margin="0,10,0,0"
                             MaxLines="7"
                             x:Name="TextBlockInfo"
                             Text="歌手简略信息"
-                            FontSize="13" />
+                            FontSize="15" />
                     </StackPanel>
                 </controls:DockPanel>
                 <StackPanel
-                    Margin="50,30,0,0"
+                    Margin="45,30,0,0"
                     Spacing="15"
                     Orientation="Horizontal">
                     <TextBlock
                         Text="热门10首"
-                        FontSize="25" />
+                        FontSize="25" Width="109" />
                     <Button Content="播放全部" Name="ButtonPlayAll" Click="ButtonPlayAll_OnClick"></Button>
                 </StackPanel>
                 <StackPanel
