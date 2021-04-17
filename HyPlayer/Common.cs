@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using Windows.Storage;
 using Windows.UI.Xaml.Controls;
 using Kawazu;
 
@@ -56,7 +57,41 @@ namespace HyPlayer
 
     internal struct Setting
     {
-        public string bitrate;
+        public string audioRate
+        {
+            get
+            {
+                if (ApplicationData.Current.LocalSettings.Values.ContainsKey("audioRate"))
+                    return ApplicationData.Current.LocalSettings.Values["audioRate"].ToString();
+                return "999000";
+            }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["audioRate"] = value;
+            }
+        }
+
+        public int Volume
+        {
+            get
+            {
+                try
+                {
+                    if (ApplicationData.Current.LocalSettings.Values.ContainsKey("Volume"))
+                        return int.Parse(ApplicationData.Current.LocalSettings.Values["Volume"].ToString());
+                }
+                catch
+                {
+                    return 1;
+                }
+                return 1;
+            }
+
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["Volume"] = value;
+            }
+        }
     }
 
     internal static class Extensions

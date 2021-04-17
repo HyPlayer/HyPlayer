@@ -32,6 +32,7 @@ namespace HyPlayer.Controls
         {
             Common.BarPlayBar = this;
             InitializeComponent();
+            HyPlayList.Player.Volume = (double)Common.Setting.Volume / 100;
             SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
             HyPlayList.OnPlayItemChange += LoadPlayingFile;
             HyPlayList.OnPlayPositionChange += OnPlayPositionChange;
@@ -325,7 +326,7 @@ namespace HyPlayer.Controls
             else
             {
                 Common.ncapi.RequestAsync(CloudMusicApiProviders.FmTrash,
-                    new Dictionary<string, object>() {{"id", HyPlayList.NowPlayingItem.NcPlayItem.sid}});
+                    new Dictionary<string, object>() { { "id", HyPlayList.NowPlayingItem.NcPlayItem.sid } });
                 PersonalFM.LoadNextFM();
             }
         }

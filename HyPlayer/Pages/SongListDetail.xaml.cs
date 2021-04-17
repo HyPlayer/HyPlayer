@@ -236,7 +236,7 @@ namespace HyPlayer.Pages
                 {
                     HyPlayList.RemoveAllSong();
                     (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                        new Dictionary<string, object>() { { "id", string.Join(',', songs.Select(t => t.sid)) } });
+                        new Dictionary<string, object>() { { "id", string.Join(',', songs.Select(t => t.sid)) }, { "br", Common.Setting.audioRate } });
                     if (isok)
                     {
                         List<JToken> arr = json["data"].ToList();
@@ -325,7 +325,7 @@ namespace HyPlayer.Pages
                 }
 
                 (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                    new Dictionary<string, object>() { { "id", string.Join(",", Songs.Select(t => t.sid)) } });
+                    new Dictionary<string, object>() { { "id", string.Join(",", Songs.Select(t => t.sid)) }, { "br", Common.Setting.audioRate } });
                 ;
                 if (isok)
                 {

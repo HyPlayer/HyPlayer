@@ -409,6 +409,7 @@ namespace HyPlayer.HyPlayControl
 
         private static void Player_VolumeChanged(MediaPlayer sender, object args)
         {
+            Common.Setting.Volume = (int)(Player.Volume * 100);
             Common.Invoke(() => OnVolumeChange?.Invoke(Player.Volume));
         }
 
@@ -507,7 +508,7 @@ namespace HyPlayer.HyPlayControl
         public static async Task<HyPlayItem> LoadNCSong(NCSong ncSong)
         {
             (bool isOk, Newtonsoft.Json.Linq.JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-    new Dictionary<string, object>() { { "id", ncSong.sid }/*, { "br", 320000 } */});
+    new Dictionary<string, object>() { { "id", ncSong.sid }, { "br", Common.Setting.audioRate } });
             if (isOk)
             {
                 try

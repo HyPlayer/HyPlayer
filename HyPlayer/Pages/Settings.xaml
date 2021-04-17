@@ -19,7 +19,7 @@
             FontSize="18">罗马音设置</TextBlock>
         <TextBlock x:Name="RomajiStatus" Text="获取中"></TextBlock>
         <Button Click="ButtonBase_OnClick" Content="获取罗马音资源文件"></Button>
-        <!--
+        
         <TextBlock
             FontSize="18"
             Text="音质设置" />
@@ -27,15 +27,23 @@
             Header="在线播放音质:"
             x:Name="RadioButtonsSongBr">
             <RadioButton
-                Content="标准"
+                Content="标准 (128k)"
+                Tag="128000"
+                Checked="RadioButton_Checked" />
+            <RadioButton
+                Content="较高 (192k)"
+                Tag="192000"
+                Checked="RadioButton_Checked" />
+            <RadioButton
+                Content="极高 (320k)"
                 Tag="320000"
                 Checked="RadioButton_Checked" />
             <RadioButton
-                Content="无损"
+                Content="无损 (VIP)"
                 Tag="999000"
                 Checked="RadioButton_Checked" />
         </controls:RadioButtons>
-        -->
+        
         <TextBlock
             FontSize="40"
             Text="关于" />

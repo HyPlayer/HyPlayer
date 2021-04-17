@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Windows.Networking.BackgroundTransfer;
@@ -22,12 +23,15 @@ namespace HyPlayer.Pages
         {
             InitializeComponent();
             RomajiStatus.Text = "当前日语转罗马音状态: " + (Common.KawazuConv == null ? "无法转换 请尝试重新下载资源文件" : "可以转换");
+            RadioButtonsSongBr.SelectedIndex =
+                RadioButtonsSongBr.Items.IndexOf(RadioButtonsSongBr.Items.First(t => ((RadioButton)t).Tag.ToString() == Common.Setting.audioRate));
+
             //ToggleButtonDaylight.IsChecked = Application.Current.RequestedTheme == ApplicationTheme.Dark;
         }
 
         private void RadioButton_Checked(object sender, RoutedEventArgs e)
         {
-            Common.Setting.bitrate = ((RadioButton)sender).Tag.ToString();
+            Common.Setting.audioRate = ((RadioButton)sender).Tag.ToString();
         }
 
         private void GetRomaji()
@@ -103,5 +107,5 @@ namespace HyPlayer.Pages
         {
             GetRomaji();
         }
-        }
+    }
 }
