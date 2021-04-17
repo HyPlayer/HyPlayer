@@ -70,7 +70,8 @@ namespace HyPlayer.Pages
                         {
                             //下载完成
                             //unzip
-
+                            RomajiStatus.Text = "正在解压,请稍等......";
+                            await Task.Delay(1000);
                             string path =
                                 (await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("Romaji",
                                     CreationCollisionOption.OpenIfExists)).Path;
@@ -86,7 +87,7 @@ namespace HyPlayer.Pages
                         }
                         catch (Exception e)
                         {
-                            RomajiStatus.Text = "罗马音文件解压错误: " + e.ToString();
+                            RomajiStatus.Text = "罗马音文件解压错误: " + e.Message;
                         }
                         finally
                         {

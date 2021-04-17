@@ -2,6 +2,7 @@
 using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -32,8 +33,8 @@ namespace HyPlayer.HyPlayControl
         /********        事件        ********/
         public delegate void PlayItemChangeEvent(HyPlayItem playItem);
         public static event PlayItemChangeEvent OnPlayItemChange;
-        public delegate void PlayItemAddEvent(HyPlayItem playItem);
-        public static event PlayItemAddEvent OnPlayItemAdd;
+        //public delegate void PlayItemAddEvent(HyPlayItem playItem);
+        //public static event PlayItemAddEvent OnPlayItemAdd; //此方法因为效率原因废弃
         public delegate void PauseEvent();
         public static event PauseEvent OnPause;
         public delegate void PlayEvent();
@@ -52,6 +53,10 @@ namespace HyPlayer.HyPlayControl
         public static event MediaEndEvent OnMediaEnd;
         public delegate void SongMoveNextEvent();
         public static event LyricChangeEvent OnSongMoveNext;
+        public delegate void SongBufferStartEvent();
+        public static event LyricChangeEvent OnSongBufferStart;
+        public delegate void SongBufferEndEvent();
+        public static event LyricChangeEvent OnSongBufferEnd;
 
         /********        API        ********/
         public static MediaPlayer Player;
@@ -85,7 +90,19 @@ namespace HyPlayer.HyPlayControl
             Player.VolumeChanged += Player_VolumeChanged;
             Player.PlaybackSession.PositionChanged += PlaybackSession_PositionChanged;
             Player.MediaFailed += PlayerOnMediaFailed;
+            Player.BufferingStarted += Player_BufferingStarted;
+            Player.BufferingEnded += Player_BufferingEnded; ;
             Common.GLOBAL["PERSONALFM"] = "false";
+        }
+
+        private static void Player_BufferingEnded(MediaPlayer sender, object args)
+        {
+            Invoke(() => OnSongBufferEnd?.Invoke());
+        }
+
+        private static void Player_BufferingStarted(MediaPlayer sender, object args)
+        {
+            Invoke(() => OnSongBufferStart?.Invoke());
         }
 
         private static void PlayerOnMediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
@@ -289,13 +306,31 @@ namespace HyPlayer.HyPlayControl
                 {
                     //尝试从DownloadOperation下载
                     /*
-                    StorageFile destinationFile = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync(NowPlayingItem.NcPlayItem.sid +
-                        "." + NowPlayingItem.NcPlayItem.subext, CreationCollisionOption.ReplaceExisting);
-                    var downloadOperation = downloader.CreateDownload(new Uri(NowPlayingItem.NcPlayItem.url), destinationFile);
-                    downloadOperation.IsRandomAccessRequired = true;
-                    var startAsyncTask = downloadOperation.StartAsync().AsTask();
-                    
-                    */
+                    try
+                    {
+                        
+                        if (nocache) throw new Exception();
+                        StorageFile destinationFile = await (await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("SongCache", CreationCollisionOption.OpenIfExists)).CreateFileAsync(
+                            NowPlayingItem.NcPlayItem.sid +
+                            "." + NowPlayingItem.NcPlayItem.subext, CreationCollisionOption.ReplaceExisting);
+                        var downloadOperation =
+                            downloader.CreateDownload(new Uri(NowPlayingItem.NcPlayItem.url), destinationFile);
+                        downloadOperation.IsRandomAccessRequired = true;
+                        var process = new Progress<DownloadOperation>((operation =>
+                        {
+                            if (operation.Progress.Status == BackgroundTransferStatus.Error)
+                            {
+                                nocache = true;
+                                Debug.WriteLine("Download Operation Failed");
+                            }
+                        }));
+                        _ = downloadOperation.StartAsync().AsTask(process);
+                        ms = MediaSource.CreateFromDownloadOperation(downloadOperation);
+                    }
+                    catch
+                    {
+
+                    }*/
                     ms =
                         MediaSource.CreateFromUri(new Uri(NowPlayingItem.NcPlayItem.url));
                 }
