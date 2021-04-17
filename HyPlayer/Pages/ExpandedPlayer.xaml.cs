@@ -101,7 +101,7 @@ namespace HyPlayer.Pages
 
             Task.Run((() =>
             {
-                Invoke((() =>
+                Common.Invoke((() =>
                 {
                     foreach (UIElement elm in LyricBox.Children)
                     {
@@ -203,7 +203,7 @@ namespace HyPlayer.Pages
         {
             if (mpi != null)
             {
-                Invoke((async () =>
+                Common.Invoke((async () =>
                {
                    try
                    {
@@ -249,16 +249,11 @@ namespace HyPlayer.Pages
             }
         }
 
-        public async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)
-        {
-            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority, () => { action(); });
-        }
-
         public void StartExpandAnimation()
         {
             Task.Run(() =>
             {
-                Invoke(() =>
+                Common.Invoke(() =>
                 {
                     ImageAlbumContainer.Visibility = Visibility.Visible;
                     TextBlockSinger.Visibility = Visibility.Visible;
@@ -303,7 +298,7 @@ namespace HyPlayer.Pages
             {
                 Task.Run(() =>
                 {
-                    Invoke((() =>
+                    Common.Invoke((() =>
                     {
                         Current_SizeChanged(null, null);
                     }));
@@ -317,7 +312,7 @@ namespace HyPlayer.Pages
             {
                 Task.Run(() =>
                 {
-                    Invoke((() =>
+                    Common.Invoke((() =>
                     {
                         Current_SizeChanged(null, null);
                     }));

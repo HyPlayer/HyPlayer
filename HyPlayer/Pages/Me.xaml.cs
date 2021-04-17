@@ -29,12 +29,7 @@ namespace HyPlayer.Pages
         {
             InitializeComponent();
         }
-
-        public async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)
-        {
-            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority, () => { action(); });
-        }
-
+        
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
@@ -91,7 +86,7 @@ namespace HyPlayer.Pages
 
             await Task.Run((() =>
            {
-               Invoke(async () =>
+               Common.Invoke(async () =>
                {
                    (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserAccount);
                    if (isok)

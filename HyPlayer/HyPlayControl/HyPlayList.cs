@@ -25,7 +25,14 @@ namespace HyPlayer.HyPlayControl
         public static PlayMode NowPlayType = PlayMode.DefaultRoll;
         public static int NowPlaying = 0;
         public static bool isPlaying => Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing;
-        public static HyPlayItem NowPlayingItem => List[NowPlaying];
+        public static HyPlayItem NowPlayingItem
+        {
+            get
+            {
+                if (List.Count <= NowPlaying) return null;
+                return List[NowPlaying];
+            }
+        }
         public static readonly List<HyPlayItem> List = new List<HyPlayItem>();
         public static List<SongLyric> Lyrics = new List<SongLyric>();
 
@@ -97,12 +104,12 @@ namespace HyPlayer.HyPlayControl
 
         private static void Player_BufferingEnded(MediaPlayer sender, object args)
         {
-            Invoke(() => OnSongBufferEnd?.Invoke());
+            Common.Invoke(() => OnSongBufferEnd?.Invoke());
         }
 
         private static void Player_BufferingStarted(MediaPlayer sender, object args)
         {
-            Invoke(() => OnSongBufferStart?.Invoke());
+            Common.Invoke(() => OnSongBufferStart?.Invoke());
         }
 
         private static void PlayerOnMediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
@@ -120,7 +127,7 @@ namespace HyPlayer.HyPlayControl
                 crashedTime = NowPlayingItem.GetHashCode();
                 if (NowPlayingItem.isOnline)
                 {
-                    Invoke((async () =>
+                    Common.Invoke((async () =>
                     {
                         List[NowPlaying] = await LoadNCSong(new NCSong()
                         {
@@ -147,12 +154,12 @@ namespace HyPlayer.HyPlayControl
         /********        方法         ********/
         public static void SongAppendDone()
         {
-            Invoke(() => OnPlayListAddDone?.Invoke());
+            Common.Invoke(() => OnPlayListAddDone?.Invoke());
         }
 
         public static void SongMoveNext()
         {
-            Invoke(() => OnSongMoveNext?.Invoke());
+            Common.Invoke(() => OnSongMoveNext?.Invoke());
             if (List.Count == 0) return;
             MoveSongPointer(true);
             LoadPlayerSong();
@@ -219,16 +226,16 @@ namespace HyPlayer.HyPlayControl
             switch (args.Button)
             {
                 case SystemMediaTransportControlsButton.Play:
-                    Invoke(() => Player.Play());
+                    Common.Invoke(() => Player.Play());
                     break;
                 case SystemMediaTransportControlsButton.Pause:
-                    Invoke(() => Player.Pause());
+                    Common.Invoke(() => Player.Pause());
                     break;
                 case SystemMediaTransportControlsButton.Previous:
-                    Invoke(() => SongMovePrevious());
+                    Common.Invoke(() => SongMovePrevious());
                     break;
                 case SystemMediaTransportControlsButton.Next:
-                    Invoke(() => SongMoveNext());
+                    Common.Invoke(() => SongMoveNext());
                     break;
                 default:
                     break;
@@ -276,7 +283,7 @@ namespace HyPlayer.HyPlayControl
         {
             //当播放结束时,此时你应当进行切歌操作
             //不过在此之前还是把订阅了的时间给返回回去吧
-            Invoke(() => OnMediaEnd?.Invoke(NowPlayingItem));
+            Common.Invoke(() => OnMediaEnd?.Invoke(NowPlayingItem));
             MoveSongPointer();
             //然后尝试加载下一首歌
             LoadPlayerSong();
@@ -354,7 +361,7 @@ namespace HyPlayer.HyPlayControl
             ControlsDisplayUpdater.MusicProperties.AlbumTitle = NowPlayingItem.AudioInfo.Album;
             ControlsDisplayUpdater.MusicProperties.Title = NowPlayingItem.AudioInfo.SongName;
             //因为加载图片可能会高耗时,所以在此处加载
-            Invoke(() => OnPlayItemChange?.Invoke(NowPlayingItem));
+            Common.Invoke(() => OnPlayItemChange?.Invoke(NowPlayingItem));
             //加载歌词
             LoadLyrics(NowPlayingItem);
             ControlsDisplayUpdater.Thumbnail = NowPlayingItem.isOnline ? RandomAccessStreamReference.CreateFromUri(new Uri(NowPlayingItem.NcPlayItem.Album.cover)) : RandomAccessStreamReference.CreateFromStream(await NowPlayingItem.AudioInfo.LocalSongFile.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
@@ -363,7 +370,7 @@ namespace HyPlayer.HyPlayControl
 
         private static void PlaybackSession_PositionChanged(MediaPlaybackSession sender, object args)
         {
-            Invoke(() => OnPlayPositionChange?.Invoke(Player.PlaybackSession.Position));
+            Common.Invoke(() => OnPlayPositionChange?.Invoke(Player.PlaybackSession.Position));
             LoadLyricChange();
         }
 
@@ -396,13 +403,13 @@ namespace HyPlayer.HyPlayControl
 
             if (changed)
             {
-                Invoke(() => OnLyricChange?.Invoke());
+                Common.Invoke(() => OnLyricChange?.Invoke());
             }
         }
 
         private static void Player_VolumeChanged(MediaPlayer sender, object args)
         {
-            Invoke(() => OnVolumeChange?.Invoke(Player.Volume));
+            Common.Invoke(() => OnVolumeChange?.Invoke(Player.Volume));
         }
 
         private static void Player_CurrentStateChanged(MediaPlayer sender, object args)
@@ -423,17 +430,12 @@ namespace HyPlayer.HyPlayControl
 
             if (Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
             {
-                Invoke(() => OnPlay?.Invoke());
+                Common.Invoke(() => OnPlay?.Invoke());
             }
             else
             {
-                Invoke(() => OnPause?.Invoke());
+                Common.Invoke(() => OnPause?.Invoke());
             }
-        }
-
-        public static async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)
-        {
-            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority, () => { action(); });
         }
 
         public static async void LoadLyrics(HyPlayItem hpi)
@@ -448,7 +450,7 @@ namespace HyPlayer.HyPlayControl
             Lyrics = Utils.ConvertPureLyric(hpi.AudioInfo.Lyric);
             Utils.ConvertTranslation(hpi.AudioInfo.TrLyric, Lyrics);
             lyricpos = 0;
-            Invoke(() => OnLyricLoaded?.Invoke());
+            Common.Invoke(() => OnLyricLoaded?.Invoke());
         }
         public static async Task<PureLyricInfo> LoadNCLyric(HyPlayItem ncp)
         {

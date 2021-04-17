@@ -20,7 +20,7 @@ namespace HyPlayer.Controls
             this.playList = playList;
             Task.Run(() =>
             {
-                Invoke(() =>
+                Common.Invoke(() =>
                 {
                     ImageRect.ImageSource = new BitmapImage(new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_PLAYLIST_ITEM_COVER));
                     TextBlockPLName.Text = playList.name;
@@ -29,11 +29,6 @@ namespace HyPlayer.Controls
             });
 
 
-        }
-
-        public async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)
-        {
-            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority, () => { action(); });
         }
 
         private void UIElement_OnTapped(object sender, TappedRoutedEventArgs e)

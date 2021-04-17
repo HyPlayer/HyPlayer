@@ -64,7 +64,7 @@ namespace HyPlayer.Controls
 
         public void OnPlayPositionChange(TimeSpan ts)
         {
-            Invoke(() =>
+            Common.Invoke(() =>
             {
                 try
                 {
@@ -106,7 +106,7 @@ namespace HyPlayer.Controls
                 return;
             }
             AudioInfo ai = mpi.AudioInfo;
-            Invoke((async () =>
+            Common.Invoke((async () =>
            {
                TbSingerName.Text = ai.Artist;
                TbSongName.Text = ai.SongName;
@@ -145,11 +145,6 @@ namespace HyPlayer.Controls
                 ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
             }
             catch { }
-        }
-
-        public async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)
-        {
-            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority, () => { action(); });
         }
 
         private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)

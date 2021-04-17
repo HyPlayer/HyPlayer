@@ -30,16 +30,12 @@ namespace HyPlayer.Pages
             LoadRanklist();
         }
 
-        public async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)
-        {
-            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority, () => { action(); });
-        }
 
         public async void LoadRcmdSonglist()
         {
             await Task.Run((() =>
             {
-                Invoke((async () =>
+                Common.Invoke((async () =>
                 {
 
                     (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendResource);
@@ -87,7 +83,7 @@ namespace HyPlayer.Pages
         {
             await Task.Run((() =>
              {
-                 Invoke((async () =>
+                 Common.Invoke((async () =>
                  {
                      (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Toplist);
                      if (isOk)

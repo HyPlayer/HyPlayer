@@ -44,13 +44,15 @@ namespace HyPlayer
         private async void App_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             e.Handled = true;
+            /*
             await new ContentDialog
             {
                 Title = "发生错误",
-                Content = e.Message,
+                Content = "Error: " + e.Message + "\r\n" + e.Exception.StackTrace,
                 CloseButtonText = "关闭",
                 DefaultButton = ContentDialogButton.Close
             }.ShowAsync();
+            */
         }
 
         /// <summary>

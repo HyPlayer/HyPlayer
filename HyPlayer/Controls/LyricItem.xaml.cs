@@ -43,7 +43,7 @@ namespace HyPlayer.Controls
             {
                 Task.Run(() =>
                 {
-                    Invoke((async () =>
+                    Common.Invoke((async () =>
                     {
                         if (Kawazu.Utilities.HasKana(Lrc.PureLyric))
                         {
@@ -63,11 +63,6 @@ namespace HyPlayer.Controls
             }
 
             OnHind();
-        }
-
-        public async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)
-        {
-            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority, () => { action(); });
         }
 
         public void RefreshFontSize()

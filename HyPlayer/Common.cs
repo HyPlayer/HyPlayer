@@ -30,7 +30,27 @@ namespace HyPlayer
 
         public static async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)
         {
-            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority, () => { action(); });
+            try
+            {
+                await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority,
+                    () => { action(); });
+            }
+            catch (Exception e)
+            {
+                /*
+                Invoke((async () =>
+                {
+                    await new ContentDialog
+                    {
+                        Title = "发生错误",
+                        Content = "Error: " + e.Message + "\r\n" + e.StackTrace,
+                        CloseButtonText = "关闭",
+                        DefaultButton = ContentDialogButton.Close
+                    }.ShowAsync();
+                }));
+                */
+            }
+
         }
     }
 

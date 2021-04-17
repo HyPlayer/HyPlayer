@@ -227,18 +227,12 @@ namespace HyPlayer.Pages
             }));
         }
 
-        public async void Invoke(Action action,
-            Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)
-        {
-            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority,
-                () => { action(); });
-        }
 
         private void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
         {
             Task.Run((() =>
             {
-                Invoke((async () =>
+                Common.Invoke((async () =>
                 {
                     HyPlayList.RemoveAllSong();
                     (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
