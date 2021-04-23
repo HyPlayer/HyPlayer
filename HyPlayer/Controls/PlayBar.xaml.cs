@@ -99,7 +99,21 @@ namespace HyPlayer.Controls
             else
             {
                 IconPrevious.Glyph = "\uE892";
-                IconPlayType.Glyph = "\uE169";
+				switch (HyPlayList.NowPlayType)
+				{
+                    case PlayMode.Shuffled:
+                        //随机
+                        IconPlayType.Glyph = "\uE14B";
+                        break;
+                    case PlayMode.SinglePlay:
+                        //单曲
+                        IconPlayType.Glyph = "\uE1CC";
+                        break;
+                    case PlayMode.DefaultRoll:
+                        //顺序
+                        IconPlayType.Glyph = "\uE169";
+                        break;
+				}
             }
 
             if (mpi == null)

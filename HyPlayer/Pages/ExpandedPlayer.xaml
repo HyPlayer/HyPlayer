@@ -150,6 +150,8 @@
             x:Name="ImageAlbumContainer"
             Grid.RowSpan="8">
             <Rectangle
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
                 Stretch="UniformToFill"
                 RadiusX="4"
                 RadiusY="4">
