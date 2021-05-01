@@ -23,9 +23,9 @@
 
 ## 下载
 
-> 目前正在开发阶段 功能可能不稳定
->
-> 软件暂时没有正式Release 您可以前往 Azure DevOps 下载自动构建包
+目前已经上架 Mircrosoft Store,但是更新速度较为缓慢
+
+Microsoft Store: [点击查看](https://www.microsoft.com/store/productId/9N5TD916686K)
 
 [Azure DevOps](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=29&branchName=master) : [![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/HyPlayer.HyPlayer?branchName=master)](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=29&branchName=master)
 

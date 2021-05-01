@@ -1,8 +1,11 @@
 # 效果预览
 
 > 请注意: 由于目前还在开发中,请以实际交付为准
+>
 > Designed by [aaaaaaccd](https://github.com/aaaaaaccd) & [kengwang](https://github.com/kengwang) 
+>
 > Copyright © HyPlayer Develop Team
+>
 > All rights reserved
 
 > 由于作者截图的时候采用的是Debug模式,所以有个最上方的小黑块,这个是Visual Studio调试用的, 正式版本里面不会有
