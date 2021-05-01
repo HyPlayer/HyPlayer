@@ -9,7 +9,9 @@
                 <XamlControlsResources
                     xmlns="using:Microsoft.UI.Xaml.Controls" />
                 <ResourceDictionary
-                    Source="/Resources/Acrylic.xaml"></ResourceDictionary>
+                    Source="/Resources/Acrylic.xaml" />
+                <ResourceDictionary
+                    Source="/Resources/Theme.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

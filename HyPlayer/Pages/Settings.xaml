@@ -7,7 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d">
-
+    <ScrollViewer HorizontalScrollMode="Auto">
     <StackPanel
         Margin="15,0,0,0"
         Spacing="20"
@@ -127,5 +127,7 @@
                 </RichTextBlock>
             </StackPanel>
         </StackPanel>
+        <StackPanel Height="150" />
     </StackPanel>
+    </ScrollViewer>
 </Page>

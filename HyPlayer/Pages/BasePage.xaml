@@ -19,10 +19,11 @@
             IsSettingsVisible="False"
             SelectionChanged="NavMain_OnSelectionChanged">
             <controls1:NavigationView.Background>
-                <ImageBrush Stretch="UniformToFill" AlignmentY="Bottom" ImageSource="/Assets/BackGround.png">
-                    <ImageBrush.RelativeTransform>
-                        <CompositeTransform CenterY="-0.5" CenterX="0.5" TranslateX="0"/>
-                    </ImageBrush.RelativeTransform>
+                <ImageBrush
+                    Stretch="UniformToFill"
+                    AlignmentY="Top"
+                    AlignmentX="Center"
+                    ImageSource="/Assets/Background_Dark.jpg">
                 </ImageBrush>
             </controls1:NavigationView.Background>
             <controls1:NavigationView.AutoSuggestBox>
