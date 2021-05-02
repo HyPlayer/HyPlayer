@@ -56,6 +56,11 @@
                 <TextBox Width="500" x:Name="TextBoxDownloadDir" />
                 <Button x:Name="ButtonDownloadSelect" Content="选择" Click="ButtonDownloadSelect_OnClick"></Button>
             </StackPanel>
+            <CheckBox
+                x:Name="ToastLyricCheckbox"
+                Content="是否开启 Toast 歌词"
+                Checked="ToastLyricCheckbox_OnChecked"
+                Unchecked="ToastLyricCheckbox_OnChecked" />
             <TextBlock
                 FontSize="40"
                 Text="关于" />

@@ -97,6 +97,20 @@ namespace HyPlayer
             }
             set => ApplicationData.Current.LocalSettings.Values["downloadDir"] = value;
         }
+
+        public bool toastLyric
+        {
+            get
+            {
+                if (ApplicationData.Current.LocalSettings.Values.ContainsKey("toastLyric"))
+                    return ApplicationData.Current.LocalSettings.Values["toastLyric"].ToString() == "true";
+                return false;
+            }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["toastLyric"] = value ? "true" : "false";
+            }
+        }
     }
 
     internal static class Extensions

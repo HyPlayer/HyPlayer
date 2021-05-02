@@ -8,6 +8,7 @@ using Windows.Media.Playback;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
+using Windows.UI.Notifications;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -16,6 +17,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
+using Microsoft.Toolkit.Uwp.Notifications;
 using NeteaseCloudMusicApi;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
@@ -35,11 +37,57 @@ namespace HyPlayer.Controls
             HyPlayList.Player.Volume = (double)Common.Setting.Volume / 100;
             SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
             HyPlayList.OnPlayItemChange += LoadPlayingFile;
+            HyPlayList.OnLyricChange += HyPlayList_OnLyricChange;
             HyPlayList.OnPlayPositionChange += OnPlayPositionChange;
             HyPlayList.OnPlayListAddDone += HyPlayList_OnPlayListAdd;
             AlbumImage.Source = new BitmapImage(new Uri("ms-appx:Assets/icon.png"));
         }
 
+        private void HyPlayList_OnLyricChange()
+        {
+            //用toast实现桌面歌词 - 参考自 https://github.com/HyPlayer/HyPlayer/pull/16/commits/53b9c1cc49b86db75bc1da7aea65783e044870be
+            if (Common.Setting.toastLyric)
+            {
+                ToastContent desktopLyrics = new ToastContent()
+                {
+                    Visual = new ToastVisual()
+                    {
+                        BindingGeneric = new ToastBindingGeneric()
+                        {
+                            Children =
+                            {
+                                new AdaptiveText()
+                                {
+                                    Text = HyPlayList.NowPlayingItem.Name,
+                                    HintStyle = AdaptiveTextStyle.Header
+                                },
+                                new AdaptiveText()
+                                {
+                                    Text = HyPlayList.Lyrics[HyPlayList.lyricpos].PureLyric
+                                },
+                                new AdaptiveText()
+                                {
+                                    Text = HyPlayList.Lyrics[HyPlayList.lyricpos].Translation
+                                },
+                            }
+                        }
+                    },
+                    Launch = "",
+                    Scenario = ToastScenario.Reminder,
+                    Audio = new ToastAudio() { Silent = true }
+
+
+                };
+                var toast = new ToastNotification(desktopLyrics.GetXml())
+                {
+                    Tag = "HyPlayerDesktopLyrics",
+                    Data = new NotificationData()
+                };
+                toast.Data.SequenceNumber = 0;
+                ToastNotifier notifier = ToastNotificationManager.CreateToastNotifier();
+                notifier.Show(toast);
+            }
+        }
 
         private void HyPlayList_OnPlayListAdd()
         {
@@ -99,8 +147,8 @@ namespace HyPlayer.Controls
             else
             {
                 IconPrevious.Glyph = "\uE892";
-				switch (HyPlayList.NowPlayType)
-				{
+                switch (HyPlayList.NowPlayType)
+                {
                     case PlayMode.Shuffled:
                         //随机
                         IconPlayType.Glyph = "\uE14B";
@@ -113,7 +161,7 @@ namespace HyPlayer.Controls
                         //顺序
                         IconPlayType.Glyph = "\uE169";
                         break;
-				}
+                }
             }
 
             if (mpi == null)
