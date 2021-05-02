@@ -359,16 +359,19 @@
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
                         Glyph="&#xE00B;"></FontIcon>
                 </ToggleButton>
+                <ToggleButton Grid.Column="7" HorizontalAlignment="Center" x:Name="DesktopLyric" IsChecked="{x:Bind IsDesktopLyricsOn,Mode=TwoWay}" Content="词" Style="{StaticResource ToggleButtonRevealStyle}" />
             </Grid>
             <Grid
                 Grid.Row="1">
                 <controls:DockPanel
                     LastChildFill="True">
                     <TextBlock
+                        x:FieldModifier="public"
                         Margin="5,5,0,0"
                         controls:DockPanel.Dock="Right"
                         x:Name="TextBlockTotalTime" />
                     <TextBlock
+                        x:FieldModifier="public"
                         Margin="0,5,5,0"
                         controls:DockPanel.Dock="Left"
                         x:Name="TextBlockNowTime" />
@@ -400,6 +403,7 @@
                 Width="150"
                 Orientation="Horizontal"
                 Margin="10">
+                
                 <Button
                     Width="40"
                     Height="40"

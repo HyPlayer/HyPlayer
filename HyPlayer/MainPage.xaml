@@ -28,7 +28,7 @@
         <Grid
             x:FieldModifier="public"
             Name="GridPlayBar"
-            Margin="0"
+            Margin="16"
             CornerRadius="4"
             Background="{ThemeResource SystemControlAccentAcrylicElementAccentMediumHighBrush}"
             VerticalAlignment="Bottom"

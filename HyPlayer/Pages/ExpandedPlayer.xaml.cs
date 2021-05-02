@@ -1,6 +1,7 @@
 ﻿using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
+using Microsoft.Toolkit.Uwp.Notifications;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Storage.FileProperties;
 using Windows.UI.Core;
+using Windows.UI.Notifications;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -44,10 +46,19 @@ namespace HyPlayer.Pages
             SliderVolumn.Value = HyPlayList.Player.Volume * 100;
             loaded = true;
             Common.PageExpandedPlayer = this;
-            HyPlayList.OnLyricChange += RefreshLyricTime;
-            HyPlayList.OnPlayItemChange += OnSongChange;
-            HyPlayList.OnLyricLoaded += HyPlayList_OnLyricLoaded;
-            HyPlayList.OnPlayPositionChange += HyPlayList_OnPlayPositionChange;
+            //以免在再次导航到此页面时发生异常
+            try
+            {
+                HyPlayList.OnLyricChange += RefreshLyricTime;
+                HyPlayList.OnPlayItemChange += OnSongChange;
+                HyPlayList.OnLyricLoaded += HyPlayList_OnLyricLoaded;
+                HyPlayList.OnPlayPositionChange += HyPlayList_OnPlayPositionChange;
+            }
+            catch
+            {
+
+            }
+
             Window.Current.SizeChanged += Current_SizeChanged;
             Current_SizeChanged(null, null);
             ToggleButtonSound.IsChecked = Common.ShowLyricSound;
@@ -56,10 +67,8 @@ namespace HyPlayer.Pages
 
         public void Dispose()
         {
-            HyPlayList.OnLyricChange -= RefreshLyricTime;
-            HyPlayList.OnPlayItemChange -= OnSongChange;
-            HyPlayList.OnLyricLoaded -= HyPlayList_OnLyricLoaded;
-            HyPlayList.OnPlayPositionChange -= HyPlayList_OnPlayPositionChange;
+            //此处不将歌词有关事件解除绑定是保持桌面歌词正常显示
+
             if (Window.Current != null)
                 Window.Current.SizeChanged -= Current_SizeChanged;
         }
@@ -139,7 +148,8 @@ namespace HyPlayer.Pages
             if (HyPlayList.lyricpos == -1)
             {
                 lastitem?.OnHind();
-                LyricBoxContainer.ChangeView(null, 0, null, false);
+                try { LyricBoxContainer.ChangeView(null, 0, null, false); }
+                catch { }
             }
             LyricItem item = LyricList[HyPlayList.lyricpos];
             if (item == null) return;
@@ -153,7 +163,62 @@ namespace HyPlayer.Pages
             }
             GeneralTransform transform = item?.TransformToVisual((UIElement)LyricBoxContainer.Content);
             Point? position = transform?.TransformPoint(new Point(0, 0));
-            LyricBoxContainer.ChangeView(null, position?.Y - (LyricBoxContainer.ViewportHeight / 3), null, false);
+            try
+            {
+                LyricBoxContainer.ChangeView(null, position?.Y - (LyricBoxContainer.ViewportHeight / 3), null, false);
+            }
+            catch
+            {
+
+            }
+            //用toast实现桌面歌词
+            if(Common.BarPlayBar.IsDesktopLyricsOn)
+            {
+                ToastContent desktopLyrics = new ToastContent() {
+                    Visual = new ToastVisual()
+                    {
+                        BindingGeneric = new ToastBindingGeneric()
+                        {
+                            Children =
+                            {
+                                new AdaptiveText()
+                                {
+                                    Text = TextBlockSongTitle.Text
+                                },
+                                new AdaptiveImage
+                                {
+                                    Source = (ImageAlbum.ImageSource as BitmapImage).UriSource.OriginalString
+                                },
+                                new AdaptiveProgressBar()
+                                {
+                                    Value = new BindableProgressBarValue("progressValue"),
+                                    ValueStringOverride = new BindableString("progressValueString"),
+                                    Title = new BindableString("progressTitle"),
+                                    Status = new BindableString("progressStatus")
+                                }
+                            }
+                        }
+                    },
+                    Launch = "",
+                    Scenario=ToastScenario.Reminder,
+                    Audio=new ToastAudio() { Silent=true}
+                    
+                
+                };
+                var toast = new ToastNotification(desktopLyrics.GetXml())
+                {
+                    Tag = "HyPlayerDesktopLyrics",
+                    Data = new NotificationData()
+                };
+                toast.Data.Values["progressTitle"] = item.TextBoxPureLyric.Text;
+                toast.Data.Values["progressValue"] = ((HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds / HyPlayList.NowPlayingItem.AudioInfo.LengthInMilliseconds)).ToString();
+                toast.Data.Values["progressValueString"] = Common.BarPlayBar.TextBlockTotalTime.Text;
+                toast.Data.Values["progressStatus"] = Common.BarPlayBar.TextBlockNowTime.Text;
+                toast.Data.SequenceNumber = 0;
+                ToastNotifier notifier = ToastNotificationManager.CreateToastNotifier();
+                notifier.Show(toast);
+            }
+            
         }
 
         public void LoadLyricsBox()

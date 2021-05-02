@@ -46,6 +46,8 @@ namespace HyPlayer.Pages
             }
             Common.BaseFrame = BaseFrame;
             NavMain.SelectedItem = NavMain.MenuItems[0];
+            //初始化桌面歌词
+            Common.BaseFrame.Navigate(typeof(ExpandedPlayer));
             Common.BaseFrame.Navigate(typeof(Home));
         }
         protected override void OnNavigatedTo(NavigationEventArgs e)

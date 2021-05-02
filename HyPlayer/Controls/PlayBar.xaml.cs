@@ -17,6 +17,10 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using NeteaseCloudMusicApi;
+using Windows.UI.WindowManagement;
+using Windows.ApplicationModel.Core;
+using Windows.UI.Core;
+using Windows.UI.ViewManagement;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -99,8 +103,8 @@ namespace HyPlayer.Controls
             else
             {
                 IconPrevious.Glyph = "\uE892";
-				switch (HyPlayList.NowPlayType)
-				{
+                switch (HyPlayList.NowPlayType)
+                {
                     case PlayMode.Shuffled:
                         //随机
                         IconPlayType.Glyph = "\uE14B";
@@ -113,7 +117,7 @@ namespace HyPlayer.Controls
                         //顺序
                         IconPlayType.Glyph = "\uE169";
                         break;
-				}
+                }
             }
 
             if (mpi == null)
@@ -403,6 +407,9 @@ namespace HyPlayer.Controls
             }
             catch { }
         }
+
+        //桌面歌词
+        public bool IsDesktopLyricsOn { get; private set; }
     }
 
 

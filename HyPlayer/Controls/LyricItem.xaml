@@ -18,6 +18,7 @@
         <controls:DockPanel
             LastChildFill="True">
             <TextBlock
+                x:FieldModifier="public"
                 controls:DockPanel.Dock="Top"
                 TextWrapping="WrapWholeWords"
                 Name="TextBoxPureLyric"
