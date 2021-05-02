@@ -19,6 +19,8 @@ using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
 using NavigationViewBackRequestedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewBackRequestedEventArgs;
 using NavigationViewItem = Microsoft.UI.Xaml.Controls.NavigationViewItem;
 using NavigationViewSelectionChangedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewSelectionChangedEventArgs;
+using Windows.UI.Xaml.Navigation;
+using Windows.UI.Xaml.Media;
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
 
@@ -46,7 +48,13 @@ namespace HyPlayer.Pages
             NavMain.SelectedItem = NavMain.MenuItems[0];
             Common.BaseFrame.Navigate(typeof(Home));
         }
-
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            bool IsFDOn = Common.Setting.FDOption;
+            if (IsFDOn)
+                this.Background = Application.Current.Resources["SystemControlAcrylicWindowBrush"] as Brush;
+            else this.Background = Application.Current.Resources["ApplicationPageBackgroundThemeBrush"] as Brush;
+        }
         private async void LoadLoginData()
         {
             try

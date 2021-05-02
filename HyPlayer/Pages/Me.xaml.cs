@@ -14,6 +14,7 @@ using Windows.UI.Xaml.Navigation;
 using HyPlayer.Controls;
 using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
 using NavigationViewSelectionChangedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewSelectionChangedEventArgs;
+using Windows.UI.Xaml.Media;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -29,7 +30,7 @@ namespace HyPlayer.Pages
         {
             InitializeComponent();
         }
-        
+
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
@@ -44,6 +45,10 @@ namespace HyPlayer.Pages
             }
             LoadInfo();
             LoadPlayList();
+            bool IsFDOn = Common.Setting.FDOption;
+            if (IsFDOn)
+                this.Background = Application.Current.Resources["SystemControlAcrylicWindowBrush"] as Brush;
+            else this.Background = Application.Current.Resources["ApplicationPageBackgroundThemeBrush"] as Brush;
         }
 
         public async void LoadPlayList()

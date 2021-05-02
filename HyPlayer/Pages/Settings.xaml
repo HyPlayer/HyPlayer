@@ -19,8 +19,13 @@
             FontSize="18">罗马音设置</TextBlock>
         <TextBlock x:Name="RomajiStatus" Text="获取中"></TextBlock>
         <Button Click="ButtonBase_OnClick" Content="获取罗马音资源文件"></Button>
-        
-        <TextBlock
+
+            <TextBlock FontSize="18" Text="界面个性化"/>
+            <controls:RadioButtons Header="界面背景" x:Name="RadioButtonsUISet">
+                <RadioButton x:Name="Acrylic"  Content="半透明" Tag="Yes" Checked="FDPicker_Checked"/>
+                <RadioButton x:Name="Opaque" Content="不透明" Tag="No" Checked="FDPicker_Checked"/>
+            </controls:RadioButtons>
+            <TextBlock
             FontSize="18"
             Text="音质设置" />
         <controls:RadioButtons

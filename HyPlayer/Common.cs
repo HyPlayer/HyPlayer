@@ -70,6 +70,19 @@ namespace HyPlayer
                 ApplicationData.Current.LocalSettings.Values["audioRate"] = value;
             }
         }
+        public bool FDOption
+        {
+            get
+            {
+                if (ApplicationData.Current.LocalSettings.Values.ContainsKey("IsFDOn"))
+                    return (bool)ApplicationData.Current.LocalSettings.Values["IsFDOn"];
+                return true;
+            }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["IsFDOn"] = value;
+            }
+        }
 
         public int Volume
         {

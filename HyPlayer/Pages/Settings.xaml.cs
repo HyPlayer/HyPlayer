@@ -9,6 +9,8 @@ using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Kawazu;
+using Windows.UI.Xaml.Navigation;
+using Windows.UI.Xaml.Media;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -25,13 +27,29 @@ namespace HyPlayer.Pages
             RomajiStatus.Text = "当前日语转罗马音状态: " + (Common.KawazuConv == null ? "无法转换 请尝试重新下载资源文件" : "可以转换");
             RadioButtonsSongBr.SelectedIndex =
                 RadioButtonsSongBr.Items.IndexOf(RadioButtonsSongBr.Items.First(t => ((RadioButton)t).Tag.ToString() == Common.Setting.audioRate));
+            bool IsFDOn = Common.Setting.FDOption;
+            Acrylic.IsChecked = IsFDOn;
+            Opaque.IsChecked = !Acrylic.IsChecked;
 
             //ToggleButtonDaylight.IsChecked = Application.Current.RequestedTheme == ApplicationTheme.Dark;
         }
-
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            bool IsFDOn = Common.Setting.FDOption;
+            if (IsFDOn)
+                this.Background = Application.Current.Resources["SystemControlAcrylicWindowBrush"] as Brush;
+            else this.Background = Application.Current.Resources["ApplicationPageBackgroundThemeBrush"] as Brush;
+        }
         private void RadioButton_Checked(object sender, RoutedEventArgs e)
         {
             Common.Setting.audioRate = ((RadioButton)sender).Tag.ToString();
+        }
+        private void FDPicker_Checked(object sender, RoutedEventArgs e)
+        {
+            string tmp = ((RadioButton)sender).Tag.ToString();
+            if (tmp == "No")
+                Common.Setting.FDOption = false;
+            else Common.Setting.FDOption = true;
         }
 
         private void GetRomaji()
@@ -107,5 +125,7 @@ namespace HyPlayer.Pages
         {
             GetRomaji();
         }
+
+
     }
 }

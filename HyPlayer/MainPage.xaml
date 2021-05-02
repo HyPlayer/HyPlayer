@@ -11,7 +11,8 @@
     xmlns:hyPlayer="using:HyPlayer"
     xmlns:triggers="using:Microsoft.Toolkit.Uwp.UI.Triggers"
     xmlns:hyPlayerPage="using:HyPlayer.Pages"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    >
     <Grid>
         <Frame
             x:FieldModifier="public"
@@ -27,9 +28,9 @@
         <Grid
             x:FieldModifier="public"
             Name="GridPlayBar"
-            Margin="16"
+            Margin="0"
             CornerRadius="4"
-            Background="{ThemeResource SystemControlAcrylicElementMediumHighBrush}"
+            Background="{ThemeResource SystemControlAccentAcrylicElementAccentMediumHighBrush}"
             VerticalAlignment="Bottom"
             Height="100">
             <controls2:PlayBar />

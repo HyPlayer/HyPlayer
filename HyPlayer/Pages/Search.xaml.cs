@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
@@ -82,6 +83,10 @@ namespace HyPlayer.Pages
             base.OnNavigatedTo(e);
             Text = (string) e.Parameter;
             LoadResult();
+            bool IsFDOn = Common.Setting.FDOption;
+            if (IsFDOn)
+                this.Background = Application.Current.Resources["SystemControlAcrylicWindowBrush"] as Brush;
+            else this.Background = Application.Current.Resources["ApplicationPageBackgroundThemeBrush"] as Brush;
         }
 
         private void PrevPage_OnClick(object sender, RoutedEventArgs e)

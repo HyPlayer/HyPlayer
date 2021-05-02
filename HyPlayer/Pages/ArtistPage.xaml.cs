@@ -58,7 +58,12 @@ namespace HyPlayer.Pages
                                      res["data"]["artist"]["albumSize"].ToString() + " | 视频数: " +
                                      res["data"]["artist"]["mvSize"].ToString();
                 LoadHotSongs();
+
             }
+            bool IsFDOn = Common.Setting.FDOption;
+            if (IsFDOn)
+                this.Background = Application.Current.Resources["SystemControlAcrylicWindowBrush"] as Brush;
+            else this.Background = Application.Current.Resources["ApplicationPageBackgroundThemeBrush"] as Brush;
         }
 
         private async void LoadHotSongs()
