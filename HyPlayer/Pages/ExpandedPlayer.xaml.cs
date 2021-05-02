@@ -210,7 +210,7 @@ namespace HyPlayer.Pages
                        if (mpi.ItemType == HyPlayItemType.Local)
                        {
                            BitmapImage img = new BitmapImage();
-                           await img.SetSourceAsync((await mpi.AudioInfo.LocalSongFile.GetThumbnailAsync(ThumbnailMode.MusicView, 9999)));
+                           await img.SetSourceAsync((await mpi.AudioInfo.LocalSongFile.GetThumbnailAsync(ThumbnailMode.SingleItem,9999)));
                            ImageAlbum.ImageSource = img;
                        }
                        else

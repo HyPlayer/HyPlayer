@@ -65,10 +65,7 @@ namespace HyPlayer
                     return ApplicationData.Current.LocalSettings.Values["audioRate"].ToString();
                 return "999000";
             }
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values["audioRate"] = value;
-            }
+            set => ApplicationData.Current.LocalSettings.Values["audioRate"] = value;
         }
 
         public int Volume
@@ -87,10 +84,18 @@ namespace HyPlayer
                 return 1;
             }
 
-            set
+            set => ApplicationData.Current.LocalSettings.Values["Volume"] = value;
+        }
+
+        public string downloadDir
+        {
+            get
             {
-                ApplicationData.Current.LocalSettings.Values["Volume"] = value;
+                if (ApplicationData.Current.LocalSettings.Values.ContainsKey("downloadDir"))
+                    return ApplicationData.Current.LocalSettings.Values["downloadDir"].ToString();
+                return ApplicationData.Current.LocalCacheFolder.Path;
             }
+            set => ApplicationData.Current.LocalSettings.Values["downloadDir"] = value;
         }
     }
 

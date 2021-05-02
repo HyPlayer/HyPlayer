@@ -23,7 +23,7 @@
             <ColumnDefinition Width="70"/>
             <ColumnDefinition Width="2*"/>
             <ColumnDefinition />
-            <ColumnDefinition  Width="50"/>
+            <ColumnDefinition  Width="100"/>
         </Grid.ColumnDefinitions>
         <TextBlock
             HorizontalAlignment="Center"
@@ -67,14 +67,27 @@
                 Text="歌手名"/>
 
         </controls:DockPanel>
-        <Button
-            x:Name="BtnPlay"
-            Click="ButtonBase_OnClick"
+        <controls:DockPanel
             Grid.Column="4">
-            <FontIcon
-                Name="PlayStateIcon"
-                FontFamily="{StaticResource SymbolThemeFontFamily}"
-                Glyph="&#xEDB5;"></FontIcon>
-        </Button>
+            <Button
+                controls:DockPanel.Dock="Right"
+                Margin="0,0,8,0"
+                x:Name="BtnPlay"
+                Click="ButtonBase_OnClick">
+                <FontIcon
+                    Name="PlayStateIcon"
+                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                    Glyph="&#xEDB5;"></FontIcon>
+            </Button>
+            <Button
+                controls:DockPanel.Dock="Left"
+                Click="BtnDownload_OnClick"
+                x:Name="BtnDownload">
+                <FontIcon
+                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                    Glyph="&#xE118;"></FontIcon>
+            </Button>
+        </controls:DockPanel>
+        
     </Grid>
 </UserControl>

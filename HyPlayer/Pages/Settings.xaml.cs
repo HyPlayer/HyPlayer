@@ -8,6 +8,7 @@ using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using HyPlayer.HyPlayControl;
 using Kawazu;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
@@ -25,7 +26,7 @@ namespace HyPlayer.Pages
             RomajiStatus.Text = "当前日语转罗马音状态: " + (Common.KawazuConv == null ? "无法转换 请尝试重新下载资源文件" : "可以转换");
             RadioButtonsSongBr.SelectedIndex =
                 RadioButtonsSongBr.Items.IndexOf(RadioButtonsSongBr.Items.First(t => ((RadioButton)t).Tag.ToString() == Common.Setting.audioRate));
-
+            TextBoxDownloadDir.Text = Common.Setting.downloadDir;
             //ToggleButtonDaylight.IsChecked = Application.Current.RequestedTheme == ApplicationTheme.Dark;
         }
 
@@ -106,6 +107,19 @@ namespace HyPlayer.Pages
         private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
         {
             GetRomaji();
+        }
+
+        private async void ButtonDownloadSelect_OnClick(object sender, RoutedEventArgs e)
+        {
+            var folderPicker = new Windows.Storage.Pickers.FolderPicker();
+            folderPicker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.Desktop;
+            folderPicker.FileTypeFilter.Add("*");
+            Windows.Storage.StorageFolder folder = await folderPicker.PickSingleFolderAsync();
+            if (folder != null)
+            {
+                Common.Setting.downloadDir = folder.Path;
+                TextBoxDownloadDir.Text = Common.Setting.downloadDir;
+            }
         }
     }
 }

@@ -3,6 +3,8 @@ using HyPlayer.HyPlayControl;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Windows.Storage;
+using Windows.Storage.Pickers;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -20,6 +22,7 @@ namespace HyPlayer.Controls
     {
         private NCSong ncsong;
         private readonly bool CanPlay;
+
         public SingleNCSong(NCSong song, int order, bool canplay = true)
         {
             InitializeComponent();
@@ -30,7 +33,9 @@ namespace HyPlayer.Controls
                 BtnPlay.Visibility = Visibility.Collapsed;
                 TextBlockSongname.Foreground = new SolidColorBrush(Color.FromArgb(255, 128, 128, 128));
             }
-            ImageRect.ImageSource = new BitmapImage(new Uri(song.Album.cover + "?param=" + StaticSource.PICSIZE_SINGLENCSONG_COVER));
+
+            ImageRect.ImageSource =
+                new BitmapImage(new Uri(song.Album.cover + "?param=" + StaticSource.PICSIZE_SINGLENCSONG_COVER));
             TextBlockSongname.Text = song.songname;
             TextBlockAlbum.Text = song.Album.name;
             OrderId.Text = (order + 1).ToString();
@@ -47,7 +52,7 @@ namespace HyPlayer.Controls
             await HyPlayList.AppendNCSong(ncsong);
             HyPlayList.SongAppendDone();
             //此处可以进行优化
-            HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t=>t.NcPlayItem.sid == ncsong.sid));
+            HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.NcPlayItem.sid == ncsong.sid));
             return true;
         }
 
@@ -66,7 +71,8 @@ namespace HyPlayer.Controls
         private void UIElement_OnPointerEntered(object sender, PointerRoutedEventArgs e)
         {
             Grid1.Background = Application.Current.Resources["SystemControlAltLowAcrylicElementBrush"] as Brush;
-            Grid1.BorderBrush = Application.Current.Resources["SystemControlBackgroundListMediumRevealBorderBrush"] as Brush;
+            Grid1.BorderBrush =
+                Application.Current.Resources["SystemControlBackgroundListMediumRevealBorderBrush"] as Brush;
         }
 
         private void Grid1_OnPointerExited(object sender, PointerRoutedEventArgs e)
@@ -77,7 +83,8 @@ namespace HyPlayer.Controls
 
         private void Grid1_OnTapped(object sender, TappedRoutedEventArgs e)
         {
-            Grid1.Background = Application.Current.Resources["SystemControlChromeMediumAcrylicElementMediumBrush"] as Brush;
+            Grid1.Background =
+                Application.Current.Resources["SystemControlChromeMediumAcrylicElementMediumBrush"] as Brush;
         }
 
         private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
@@ -87,7 +94,8 @@ namespace HyPlayer.Controls
 
         private void Grid1_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
-            Grid1.Background = Application.Current.Resources["SystemControlAccentAcrylicElementAccentMediumHighBrush"] as Brush;
+            Grid1.Background =
+                Application.Current.Resources["SystemControlAccentAcrylicElementAccentMediumHighBrush"] as Brush;
             _ = AppendMe();
         }
 
@@ -102,5 +110,11 @@ namespace HyPlayer.Controls
                 Common.BaseFrame.Navigate(typeof(ArtistPage), ncsong.Artist[0].id);
             }
         }
+
+        private void BtnDownload_OnClick(object sender, RoutedEventArgs e)
+        {
+            DownloadManager.AddDownload(ncsong);
+        }
     }
+
 }
