@@ -35,6 +35,7 @@ namespace HyPlayer.Classes
 
     public struct NCPlayItem
     {
+        public int bitrate;
         public string tag;
         public string sid;
         public string songname;

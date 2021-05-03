@@ -530,6 +530,7 @@ namespace HyPlayer.HyPlayControl
 
                     NCPlayItem ncp = new NCPlayItem()
                     {
+                        bitrate = json["data"][0]["br"].ToObject<int>(),
                         tag = tag,
                         Album = ncSong.Album,
                         Artist = ncSong.Artist,
