@@ -72,9 +72,51 @@ namespace HyPlayer.Classes
             }
             return true;
         }
+        
+        public static bool TryGetMusicInfo(Tag tag, out The163KeyStruct KeyStruct)
+        {
+            if (tag is null)
+                throw new ArgumentNullException(nameof(tag));
+
+            KeyStruct = new The163KeyStruct();
+            string the163Key = tag.Comment;
+            if (!Is163KeyCandidate(the163Key))
+                the163Key = tag.Description;
+            if (!Is163KeyCandidate(the163Key))
+                return false;
+            try
+            {
+                TryGetMusicInfo(the163Key, out KeyStruct);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public static bool TryGetMusicInfo(string the163Key, out The163KeyStruct KeyStruct)
+        {
+            if (string.IsNullOrEmpty(the163Key))
+                throw new ArgumentNullException(nameof(the163Key));
+            KeyStruct = new The163KeyStruct();
+            try
+            {
+                the163Key = the163Key.Substring(22);
+                byte[] byt163Key = Convert.FromBase64String(the163Key);
+                using (var cryptoTransform = _aes.CreateDecryptor())
+                    byt163Key = cryptoTransform.TransformFinalBlock(byt163Key, 0, byt163Key.Length);
+                KeyStruct = JsonConvert.DeserializeObject<The163KeyStruct>(Encoding.UTF8.GetString(byt163Key));
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
 
         /// <summary>
-        /// 尝试设置63音乐信息到文件
+        /// 尝试设置163音乐信息到文件
         /// </summary>
         /// <param name="tag"></param>
         /// <param name="trackId"></param>
@@ -113,6 +155,16 @@ namespace HyPlayer.Classes
                 return false;
             }
             return true;
+        }
+
+        public static string Get163Key(Tag tag)
+        {
+            string the163Key = tag.Comment;
+            if (!Is163KeyCandidate(the163Key))
+                the163Key = tag.Description;
+            if (!Is163KeyCandidate(the163Key))
+                return null;
+            return the163Key;
         }
 
         private static bool Is163KeyCandidate(string s)

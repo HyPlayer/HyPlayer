@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Windows.Storage;
 
 namespace HyPlayer.Classes
 {
@@ -35,6 +36,8 @@ namespace HyPlayer.Classes
 
     public struct NCPlayItem
     {
+        public bool hasLocalFile;
+        public StorageFile LocalStorageFile;
         public int bitrate;
         public string tag;
         public string sid;

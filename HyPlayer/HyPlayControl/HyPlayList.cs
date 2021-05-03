@@ -338,8 +338,16 @@ namespace HyPlayer.HyPlayControl
                     {
 
                     }*/
-                    ms =
-                        MediaSource.CreateFromUri(new Uri(NowPlayingItem.NcPlayItem.url));
+                    //本地文件的话尝试加载
+                    if (NowPlayingItem.NcPlayItem.hasLocalFile)
+                    {
+                        ms = MediaSource.CreateFromStorageFile(NowPlayingItem.NcPlayItem.LocalStorageFile);
+                    }
+                    else
+                    {
+                        ms = MediaSource.CreateFromUri(new Uri(NowPlayingItem.NcPlayItem.url));
+
+                    }
                 }
             }
             else
@@ -364,7 +372,7 @@ namespace HyPlayer.HyPlayControl
             Common.Invoke(() => OnPlayItemChange?.Invoke(NowPlayingItem));
             //加载歌词
             LoadLyrics(NowPlayingItem);
-            ControlsDisplayUpdater.Thumbnail = NowPlayingItem.isOnline ? RandomAccessStreamReference.CreateFromUri(new Uri(NowPlayingItem.NcPlayItem.Album.cover)) : RandomAccessStreamReference.CreateFromStream(await NowPlayingItem.AudioInfo.LocalSongFile.GetThumbnailAsync(ThumbnailMode.SingleItem,9999));
+            ControlsDisplayUpdater.Thumbnail = NowPlayingItem.isOnline ? RandomAccessStreamReference.CreateFromUri(new Uri(NowPlayingItem.NcPlayItem.Album.cover)) : RandomAccessStreamReference.CreateFromStream(await NowPlayingItem.AudioInfo.LocalSongFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999));
             ControlsDisplayUpdater.Update();
         }
 
@@ -575,6 +583,7 @@ namespace HyPlayer.HyPlayControl
                 SongName = ncp.songname,
                 tag = ncp.tag
             };
+
             HyPlayItem hpi = new HyPlayItem()
             {
                 AudioInfo = ai,
@@ -589,47 +598,81 @@ namespace HyPlayer.HyPlayControl
 
         public static async Task<bool> AppendFile(StorageFile sf)
         {
-            //TagLib.File afi = TagLib.File.Create(new UwpStorageFileAbstraction(sf), ReadStyle.Average);
-            var mdp = await sf.Properties.GetMusicPropertiesAsync();
-            string[] contributingArtistsKey = { "System.Music.Artist" };
-            IDictionary<string, object> contributingArtistsProperty =
-                await mdp.RetrievePropertiesAsync(contributingArtistsKey);
-            string[] contributingArtists = contributingArtistsProperty["System.Music.Artist"] as string[];
-            if (contributingArtists is null)
+            The163KeyStruct mi;
+            if (!The163KeyHelper.TryGetMusicInfo(TagLib.File.Create(new UwpStorageFileAbstraction(sf)).Tag, out mi))
             {
-                contributingArtists = new[] { "未知歌手" };
+                //TagLib.File afi = TagLib.File.Create(new UwpStorageFileAbstraction(sf), ReadStyle.Average);
+                var mdp = await sf.Properties.GetMusicPropertiesAsync();
+                string[] contributingArtistsKey = { "System.Music.Artist" };
+                IDictionary<string, object> contributingArtistsProperty =
+                    await mdp.RetrievePropertiesAsync(contributingArtistsKey);
+                string[] contributingArtists = contributingArtistsProperty["System.Music.Artist"] as string[];
+                if (contributingArtists is null)
+                {
+                    contributingArtists = new[] { "未知歌手" };
+                }
+
+                AudioInfo ai = new AudioInfo()
+                {
+                    tag = "本地",
+                    Album = string.IsNullOrEmpty(mdp.Album) ? "未知专辑" : mdp.Album,
+                    ArtistArr = contributingArtists,
+                    Artist = string.IsNullOrEmpty(string.Join('/', contributingArtists))
+                        ? "未知歌手"
+                        : string.Join('/', contributingArtists),
+                    LengthInMilliseconds = mdp.Duration.TotalMilliseconds,
+                    SongName = string.IsNullOrEmpty(mdp.Title) ? sf.DisplayName : mdp.Title,
+                    LocalSongFile = sf
+                };
+
+                //记载歌词
+                try
+                {
+                    StorageFile lrcfile =
+                        await (await sf.GetParentAsync()).GetFileAsync(Path.ChangeExtension(sf.Name, "lrc"));
+                    ai.Lyric = await FileIO.ReadTextAsync(lrcfile);
+                }
+                catch (Exception)
+                {
+                }
+
+                HyPlayItem hyPlayItem = new HyPlayItem()
+                {
+                    AudioInfo = ai,
+                    isOnline = false,
+                    ItemType = HyPlayItemType.Local,
+                    Name = ai.SongName,
+                    Path = sf.Path
+                };
+
+                List.Add(hyPlayItem);
+                return true;
             }
-            AudioInfo ai = new AudioInfo()
+            else
             {
-                tag = "本地",
-                Album = string.IsNullOrEmpty(mdp.Album) ? "未知专辑" : mdp.Album,
-                ArtistArr = contributingArtists,
-                Artist = string.IsNullOrEmpty(string.Join('/', contributingArtists)) ? "未知歌手" : string.Join('/', contributingArtists),
-                LengthInMilliseconds = mdp.Duration.TotalMilliseconds,
-                SongName = string.IsNullOrEmpty(mdp.Title) ? sf.DisplayName : mdp.Title,
-                LocalSongFile = sf
-            };
-
-            //记载歌词
-            try
-            {
-                StorageFile lrcfile = await (await sf.GetParentAsync()).GetFileAsync(Path.ChangeExtension(sf.Name, "lrc"));
-                ai.Lyric = await FileIO.ReadTextAsync(lrcfile);
+                NCPlayItem hpi = new NCPlayItem()
+                {
+                    Album = new NCAlbum()
+                    {
+                        name = mi.album,
+                        id = mi.albumId.ToString(),
+                        cover = mi.albumPic
+                    },
+                    bitrate = mi.bitrate,
+                    hasLocalFile = true,
+                    LocalStorageFile = sf,
+                    LengthInMilliseconds = mi.duration,
+                    sid = mi.musicId.ToString(),
+                    Artist = null,
+                    md5 = null,
+                    size = sf.GetBasicPropertiesAsync().GetAwaiter().GetResult().Size.ToString(),
+                    songname = mi.musicName,
+                    tag = "本地"
+                };
+                hpi.Artist = mi.artist.Select(t => new NCArtist() { name = t[0].ToString(), id = t[1].ToString() }).ToList();
+                AppendNCPlayItem(hpi);
+                return true;
             }
-            catch (Exception) { }
-
-            HyPlayItem hyPlayItem = new HyPlayItem()
-            {
-                AudioInfo = ai,
-                isOnline = false,
-                ItemType = HyPlayItemType.Local,
-                Name = ai.SongName,
-                Path = sf.Path
-            };
-
-            List.Add(hyPlayItem);
-            return true;
-
         }
     }
 

@@ -131,6 +131,7 @@ namespace HyPlayer.HyPlayControl
                     var st = (await cover.OpenAsync(FileAccessMode.ReadWrite));
                     RandomAccessStreamReference.CreateFromUri(new Uri(DownloadLists[obj].Album.cover)).OpenReadAsync().GetAwaiter().GetResult().AsStreamForRead().CopyTo(st.AsStreamForWrite());
                     file.Tag.Pictures = new IPicture[] { new Picture(ByteVector.FromFile(new UwpStorageFileAbstraction(cover))) };
+                    cover.DeleteAsync();
                     The163KeyHelper.TrySetMusicInfo(file.Tag, DownloadLists[obj]);
                     file.Save();
 
