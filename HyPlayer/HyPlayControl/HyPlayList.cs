@@ -73,6 +73,7 @@ namespace HyPlayer.HyPlayControl
 
         public static int lyricpos;
         public static int crashedTime = 0;
+        public static int lastsong;
 
         public static void InitializeHyPlaylist()
         {
@@ -399,7 +400,11 @@ namespace HyPlayer.HyPlayControl
 
             try
             {
-                if (lyricpos == 0) changed = true;
+                if (lyricpos == 0 && lastsong != NowPlayingItem.GetHashCode())
+                {
+                    changed = true;
+                    lastsong = NowPlayingItem.GetHashCode();
+                }
                 while ((Lyrics.Count > lyricpos + 1 && Lyrics[lyricpos + 1].LyricTime <= Player.PlaybackSession.Position)) //正常的滚歌词
                 {
                     lyricpos++;
