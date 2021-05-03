@@ -596,10 +596,11 @@ namespace HyPlayer.HyPlayControl
             return hpi;
         }
 
-        public static async Task<bool> AppendFile(StorageFile sf)
+        public static async Task<bool> AppendFile(StorageFile sf, bool nocheck163 = false)
         {
             The163KeyStruct mi;
-            if (!The163KeyHelper.TryGetMusicInfo(TagLib.File.Create(new UwpStorageFileAbstraction(sf)).Tag, out mi))
+            if (nocheck163 ||
+                !The163KeyHelper.TryGetMusicInfo(TagLib.File.Create(new UwpStorageFileAbstraction(sf)).Tag, out mi))
             {
                 //TagLib.File afi = TagLib.File.Create(new UwpStorageFileAbstraction(sf), ReadStyle.Average);
                 var mdp = await sf.Properties.GetMusicPropertiesAsync();
@@ -650,6 +651,11 @@ namespace HyPlayer.HyPlayControl
             }
             else
             {
+                if (string.IsNullOrEmpty(mi.musicName))
+                {
+                    return await AppendFile(sf, true);
+                }
+
                 NCPlayItem hpi = new NCPlayItem()
                 {
                     Album = new NCAlbum()
@@ -669,7 +675,8 @@ namespace HyPlayer.HyPlayControl
                     songname = mi.musicName,
                     tag = "本地"
                 };
-                hpi.Artist = mi.artist.Select(t => new NCArtist() { name = t[0].ToString(), id = t[1].ToString() }).ToList();
+                hpi.Artist = mi.artist.Select(t => new NCArtist() { name = t[0].ToString(), id = t[1].ToString() })
+                    .ToList();
                 AppendNCPlayItem(hpi);
                 return true;
             }

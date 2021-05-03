@@ -106,7 +106,7 @@ namespace HyPlayer.Classes
                 byte[] byt163Key = Convert.FromBase64String(the163Key);
                 using (var cryptoTransform = _aes.CreateDecryptor())
                     byt163Key = cryptoTransform.TransformFinalBlock(byt163Key, 0, byt163Key.Length);
-                KeyStruct = JsonConvert.DeserializeObject<The163KeyStruct>(Encoding.UTF8.GetString(byt163Key));
+                KeyStruct = JsonConvert.DeserializeObject<The163KeyStruct>(Encoding.UTF8.GetString(byt163Key).Substring(6));
             }
             catch
             {
