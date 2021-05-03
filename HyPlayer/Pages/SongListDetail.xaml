@@ -100,6 +100,9 @@
                                 x:Name="ButtonIntel"
                                 Content="心动模式"
                                 Click="ButtonHeartBeat_OnClick" />
+                            <Button
+                                Content="下载全部"
+                                Click="ButtonDownloadAll_OnClick" />
                         </StackPanel>
                         <TextBlock
 							Margin="0,5,0,0"

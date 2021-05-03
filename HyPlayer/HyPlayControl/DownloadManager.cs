@@ -67,26 +67,27 @@ namespace HyPlayer.HyPlayControl
                 int i = 0;
                 foreach (JToken jToken in json["data"])
                 {
-                    var song = songs[i];
-                    string FileName = string.Join(';', song.Artist.Select(t => t.name)) + " - " + song.songname + "." + json["data"][0]["type"].ToString().ToLowerInvariant();
-                    var dop = Downloader.CreateDownload(new Uri(json["data"][0]["url"].ToString()), await (await StorageFolder.GetFolderFromPathAsync(Common.Setting.downloadDir)).CreateFileAsync(FileName, CreationCollisionOption.ReplaceExisting));
+                    var song = songs.Find(t=>t.sid == jToken["id"].ToString());
+                    string FileName = string.Join(';', song.Artist.Select(t => t.name)) + " - " + song.songname + "." + jToken["type"].ToString().ToLowerInvariant();
+                    var dop = Downloader.CreateDownload(new Uri(jToken["url"].ToString()), await (await StorageFolder.GetFolderFromPathAsync(Common.Setting.downloadDir)).CreateFileAsync(FileName, CreationCollisionOption.ReplaceExisting));
                     NCPlayItem ncp = new NCPlayItem()
                     {
-                        bitrate = json["data"][0]["br"].ToObject<int>(),
+                        bitrate = jToken["br"].ToObject<int>(),
                         tag = "下载",
                         Album = song.Album,
                         Artist = song.Artist,
-                        subext = json["data"][0]["type"].ToString().ToLowerInvariant(),
+                        subext = jToken["type"].ToString().ToLowerInvariant(),
                         sid = song.sid,
                         songname = song.songname,
-                        url = json["data"][0]["url"].ToString(),
+                        url = jToken["url"].ToString(),
                         LengthInMilliseconds = song.LengthInMilliseconds,
-                        size = json["data"][0]["size"].ToString(),
-                        md5 = json["data"][0]["md5"].ToString()
+                        size = jToken["size"].ToString(),
+                        md5 = jToken["md5"].ToString()
                     };
                     DownloadLists[dop] = ncp;
                     var process = new Progress<DownloadOperation>(ProgressCallback);
                     _ = dop.StartAsync().AsTask(process);
+                    i++;
                 }
             }
         }

@@ -373,5 +373,10 @@ namespace HyPlayer.Pages
             }
 
         }
+
+        private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
+        {
+            DownloadManager.AddDownload(songs);
+        }
     }
 }
