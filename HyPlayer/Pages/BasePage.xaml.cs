@@ -19,6 +19,7 @@ using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
 using NavigationViewBackRequestedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewBackRequestedEventArgs;
 using NavigationViewItem = Microsoft.UI.Xaml.Controls.NavigationViewItem;
 using NavigationViewSelectionChangedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewSelectionChangedEventArgs;
+using System.Linq;
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
 
@@ -29,9 +30,12 @@ namespace HyPlayer.Pages
     /// </summary>
     public sealed partial class BasePage : Page
     {
+        private List<NavigationViewItem> selectionHistory;
+        private bool IsNavBack;
         public BasePage()
         {
             InitializeComponent();
+            selectionHistory = new List<NavigationViewItem>();
             CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
             ApplicationViewTitleBar titleBar = ApplicationView.GetForCurrentView().TitleBar;
             titleBar.ButtonBackgroundColor = Colors.Transparent;
@@ -184,6 +188,11 @@ namespace HyPlayer.Pages
         private async void NavMain_OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
         {
             var nowitem = sender.SelectedItem as NavigationViewItem;
+            if (!IsNavBack)
+                selectionHistory.Add(nowitem);
+            if (selectionHistory.Count > 1)
+                NavMain.IsBackEnabled = true;
+            IsNavBack = false;
             if (nowitem.Tag is null) return;
             if (nowitem.Tag.ToString() == "PersonalFM")
             {
@@ -224,6 +233,10 @@ namespace HyPlayer.Pages
             {
                 Common.BaseFrame.GoBack();
             }
+            selectionHistory.RemoveAt(selectionHistory.Count - 1);
+            NavMain.SelectedItem = selectionHistory.Last();
+            if (selectionHistory.Count <= 1)
+                NavMain.IsBackEnabled = false;
         }
 
         private void TextBoxAccount_OnKeyDown(object sender, KeyRoutedEventArgs e)
