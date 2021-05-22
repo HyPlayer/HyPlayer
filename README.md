@@ -23,7 +23,7 @@
 
 ## 下载
 
-目前已经上架 Mircrosoft Store,但是更新速度较为缓慢
+目前已经上架 Microsoft Store,但是更新速度较为缓慢
 
 Microsoft Store: [点击查看](https://www.microsoft.com/store/productId/9N5TD916686K)
 
