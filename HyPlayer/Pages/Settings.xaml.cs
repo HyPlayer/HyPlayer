@@ -8,6 +8,7 @@ using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Input;
 using HyPlayer.HyPlayControl;
 using Kawazu;
 
@@ -126,6 +127,13 @@ namespace HyPlayer.Pages
         private void ToastLyricCheckbox_OnChecked(object sender, RoutedEventArgs e)
         {
             Common.Setting.toastLyric = ToastLyricCheckbox.IsChecked.Value;
+        }
+
+
+        private int _elapse = 10;
+        private void UIElement_OnPointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            if (_elapse-- == 0) ApplicationData.Current.RoamingSettings.Values["CanDownload"] = true;
         }
     }
 }

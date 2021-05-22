@@ -144,7 +144,7 @@ namespace HyPlayer.Pages
             }
         }
 
-        private async void ButtonCloseLoginForm_Click(object sender, RoutedEventArgs e)
+        private void ButtonCloseLoginForm_Click(object sender, RoutedEventArgs e)
         {
             DialogLogin.Hide();
         }

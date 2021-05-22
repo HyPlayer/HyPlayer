@@ -36,7 +36,7 @@ namespace HyPlayer
                 await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority,
                     () => { action(); });
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 /*
                 Invoke((async () =>
@@ -79,9 +79,9 @@ namespace HyPlayer
                 }
                 catch
                 {
-                    return 1;
+                    return 50;
                 }
-                return 1;
+                return 50;
             }
 
             set => ApplicationData.Current.LocalSettings.Values["Volume"] = value;

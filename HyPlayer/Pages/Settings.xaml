@@ -86,6 +86,7 @@
                 FontSize="25"
                 Text="开发者" />
             <StackPanel
+                PointerPressed="UIElement_OnPointerPressed"
                 Orientation="Horizontal">
                 <PersonPicture
                     ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=GibeJPa6pAcRMKgoHC9ibI4w&amp;s=100" />
@@ -112,7 +113,7 @@
                             <Hyperlink
                                 NavigateUri="http://www.coolapk.com/u/1683034">酷安@kengwang</Hyperlink> |
                             <Hyperlink
-                                NavigateUri="https://afdian.net/@kengwang">爱发电</Hyperlink>
+                                NavigateUri="https://afdian.net/@kengwang">爱发电打赏</Hyperlink>
                         </Paragraph>
                     </RichTextBlock>
                 </StackPanel>
@@ -138,7 +139,7 @@
                     <RichTextBlock>
                         <Paragraph>
                             <Hyperlink
-                                NavigateUri="https://github.com/kengwang">Github</Hyperlink> |
+                                NavigateUri="https://github.com/aaaaaaccd">Github</Hyperlink> |
                             <Hyperlink
                                 NavigateUri="https://www.coolapk.com/u/2409682">酷安@一只老白</Hyperlink>
                         </Paragraph>

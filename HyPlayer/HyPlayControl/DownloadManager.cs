@@ -133,7 +133,7 @@ namespace HyPlayer.HyPlayControl
             }
         }
 
-        private static async void ProgressCallback(DownloadOperation obj)
+        private static void ProgressCallback(DownloadOperation obj)
         {
             if (obj.Progress.BytesReceived == obj.Progress.TotalBytesToReceive)
             {
@@ -168,12 +168,7 @@ namespace HyPlayer.HyPlayControl
                     file.Tag.Album = DownloadLists[obj].Album.name;
                     file.Tag.Performers = DownloadLists[obj].Artist.Select(t => t.name).ToArray();
                     file.Tag.Title = DownloadLists[obj].songname;
-                    var cover = await (await StorageFolder.GetFolderFromPathAsync(Common.Setting.downloadDir)).CreateFileAsync(
-                        Path.GetFileName(Path.ChangeExtension(obj.ResultFile.Path, "cover.jpg")), CreationCollisionOption.ReplaceExisting);
-                    var st = (await cover.OpenAsync(FileAccessMode.ReadWrite));
-                    RandomAccessStreamReference.CreateFromUri(new Uri(DownloadLists[obj].Album.cover)).OpenReadAsync().GetAwaiter().GetResult().AsStreamForRead().CopyTo(st.AsStreamForWrite());
-                    file.Tag.Pictures = new IPicture[] { new Picture(ByteVector.FromFile(new UwpStorageFileAbstraction(cover))) };
-                    cover.DeleteAsync();
+                    file.Tag.Pictures = new IPicture[] { new Picture(ByteVector.FromStream(RandomAccessStreamReference.CreateFromUri(new Uri(DownloadLists[obj].Album.cover)).OpenReadAsync().GetAwaiter().GetResult().AsStreamForRead())) };
                     The163KeyHelper.TrySetMusicInfo(file.Tag, DownloadLists[obj]);
                     file.Save();
 
