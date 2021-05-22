@@ -268,25 +268,17 @@ namespace HyPlayer.Pages
 
         private async void AutoSuggestBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
         {
-            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Search, new Dictionary<string, object>() { { "keywords", sender.Text }, });
-            List<string> songnames = new List<string>();
-            if (isOk)
+            if (string.IsNullOrEmpty(sender.Text))
             {
-                int index = 0;
-                foreach (JToken song in json["result"]["songs"].ToArray())
-                {
-                    if (index >= 6)
-                        break;
-                    String songname = song["name"].ToString();
-                    if (!songnames.Contains(songname))
-                    {
-                        index++;
-                        songnames.Add(songname);
-                    }
-
-                }
+                AutoSuggestBox_GotFocus(sender, null);
+                return;
             }
-            sender.ItemsSource = songnames;
+            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchSuggest, new Dictionary<string, object>() { { "keywords", sender.Text },{ "type","mobile" } });
+
+            if (isOk && json["result"]["allMatch"].HasValues)
+            {
+                sender.ItemsSource = json["result"]["allMatch"].ToArray().ToList().Select(t => t["keyword"].ToString()).ToList();
+            }
         }
 
         private void AutoSuggestBox_SuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
@@ -297,28 +289,13 @@ namespace HyPlayer.Pages
 
         private async void AutoSuggestBox_GotFocus(object sender, RoutedEventArgs e)
         {
-            if (String.IsNullOrWhiteSpace((sender as AutoSuggestBox).Text))
+            if (String.IsNullOrWhiteSpace((sender as AutoSuggestBox)?.Text))
             {
-                (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchHot, new Dictionary<string, object>() { });
-                List<string> hotsearch = new List<string>();
+                (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchHot);
                 if (isOk)
                 {
-                    int index = 0;
-                    foreach (JToken hotsearchres in json["result"]["hots"].ToArray())
-                    {
-                        if (index >= 6)
-                            break;
-                        String result = hotsearchres["first"].ToString();
-                        if (!hotsearch.Contains(result))
-                        {
-                            index++;
-                            hotsearch.Add(result);
-                        }
-
-                    }
+                    ((AutoSuggestBox) sender).ItemsSource = json["result"]["hots"].ToArray().ToList().Select(t=>t["first"].ToString());
                 }
-                (sender as AutoSuggestBox).ItemsSource = hotsearch;
-
             }
         }
     }
