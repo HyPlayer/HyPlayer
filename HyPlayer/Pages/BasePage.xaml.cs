@@ -144,6 +144,12 @@ namespace HyPlayer.Pages
             }
         }
 
+        private async void ButtonCloseLoginForm_Click(object sender, RoutedEventArgs e)
+        {
+            DialogLogin.Hide();
+        }
+
+
         private async void LoginDone()
         {
             //加载我喜欢的歌

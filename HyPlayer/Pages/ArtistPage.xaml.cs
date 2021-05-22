@@ -46,11 +46,12 @@ namespace HyPlayer.Pages
             {
                 artist = new NCArtist()
                 { id = res["data"]["artist"]["id"].ToString(), name = res["data"]["artist"]["name"].ToString() };
-                ImageRect.ImageSource =
-                    new BitmapImage(new Uri(res["data"]["artist"]["cover"].ToString() + "?param=" + StaticSource.PICSIZE_ARTIST_DETAIL_COVER));
+                if (res["data"]["artist"]["cover"].ToString().StartsWith("http"))
+                    ImageRect.ImageSource =
+                        new BitmapImage(new Uri(res["data"]["artist"]["cover"].ToString() + "?param=" + StaticSource.PICSIZE_ARTIST_DETAIL_COVER));
                 TextBoxArtistName.Text = res["data"]["artist"]["name"].ToString();
                 if (res["data"]["artist"]["transNames"].HasValues)
-                    TextboxArtistNameTranslated.Text = "译名: "+string.Join(",",res["data"]["artist"]["transNames"].ToObject<string[]>());
+                    TextboxArtistNameTranslated.Text = "译名: " + string.Join(",", res["data"]["artist"]["transNames"].ToObject<string[]>());
                 else
                     TextboxArtistNameTranslated.Visibility = Visibility.Collapsed;
                 TextBlockDesc.Text = res["data"]["artist"]["briefDesc"].ToString();

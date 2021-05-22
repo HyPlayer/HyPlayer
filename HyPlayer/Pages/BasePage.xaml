@@ -84,6 +84,16 @@
             Width="400">
             <StackPanel
                 Orientation="Vertical">
+                <Button
+                    x:Name="ButtonCloseLoginForm"
+                    Click="ButtonCloseLoginForm_Click"
+                    HorizontalAlignment="Right"
+                    Background="Transparent">
+                    <FontIcon
+                        FontSize="15"
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        Glyph="&#xE106;"></FontIcon>
+                </Button>
                 <Image
                     Height="200"
                     Source="/Assets/icon.png" />
@@ -111,7 +121,7 @@
                     Style="{StaticResource AccentButtonStyle}" />
                 <controls1:InfoBar
                     x:Name="InfoBarLoginHint"
-                    CloseButtonClick="InfoBarLoginHint_OnCloseButtonClick"
+                    IsClosable="False"
                     Title="登录代表你同意相关条款"
                     IsOpen="True" />
             </StackPanel>
