@@ -22,9 +22,49 @@ namespace HyPlayer.HyPlayControl
 
         public static BackgroundDownloader Downloader = new BackgroundDownloader();
 
+        public static bool CheckDownloadAbilityAndToast()
+        {
+            if (ApplicationData.Current.RoamingSettings.Values.ContainsKey("CanDownload")) return true;
+            ToastContent downloadToastContent = new ToastContent()
+            {
+                Visual = new ToastVisual()
+                {
+                    BindingGeneric = new ToastBindingGeneric()
+                    {
+                        Children =
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = "下载功能已关闭",
+                                HintStyle = AdaptiveTextStyle.Header
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = "下载功能已关闭"
+
+                            }
+                        }
+                    }
+                },
+                Launch = "",
+                Scenario = ToastScenario.Reminder,
+                Audio = new ToastAudio() { Silent = true }
+            };
+            var toast = new ToastNotification(downloadToastContent.GetXml())
+            {
+                Tag = "HyPlayerDownloadClose",
+                Data = new NotificationData()
+            };
+
+            toast.Data.SequenceNumber = 0;
+            ToastNotifier notifier = ToastNotificationManager.CreateToastNotifier();
+            notifier.Show(toast);
+            return false;
+        }
 
         public static async void AddDownload(NCSong song)
         {
+            if (!CheckDownloadAbilityAndToast()) return;
             var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl, new Dictionary<string, object>() { { "id", song.sid } });
             if (isok)
             {
@@ -56,6 +96,7 @@ namespace HyPlayer.HyPlayControl
 
         public static async void AddDownload(List<NCSong> songs)
         {
+            if (!CheckDownloadAbilityAndToast()) return;
             var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl, new Dictionary<string, object>() { { "id", string.Join(',', songs.Select(t => t.sid)) } });
             if (isok)
             {
