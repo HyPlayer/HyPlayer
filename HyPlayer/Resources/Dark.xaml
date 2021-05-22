@@ -5,7 +5,7 @@
         Stretch="UniformToFill"
         AlignmentY="Top"
         x:Key="WindowBackground"
-        AlignmentX="Right"
+        AlignmentX="Center"
         ImageSource="/Assets/Background_Dark.jpg">
     </ImageBrush>
 </ResourceDictionary>

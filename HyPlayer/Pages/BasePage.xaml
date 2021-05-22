@@ -17,15 +17,8 @@
             IsBackButtonVisible="Visible"
             IsBackEnabled="True"
             IsSettingsVisible="False"
+            Background="{ThemeResource WindowBackground}"
             SelectionChanged="NavMain_OnSelectionChanged">
-            <controls1:NavigationView.Background>
-                <ImageBrush
-                    Stretch="UniformToFill"
-                    AlignmentY="Top"
-                    AlignmentX="Center"
-                    ImageSource="/Assets/Background_Dark.jpg">
-                </ImageBrush>
-            </controls1:NavigationView.Background>
             <controls1:NavigationView.AutoSuggestBox>
                 <AutoSuggestBox
                     QueryIcon="Find"
