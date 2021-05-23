@@ -1,0 +1,21 @@
+﻿<UserControl
+    x:Class="HyPlayer.Controls.SingleComment"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:HyPlayer.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    d:DesignHeight="70"
+    d:DesignWidth="800">
+
+    <Grid>
+        <StackPanel Orientation="Horizontal">
+            <PersonPicture x:Name="UserAvatar" VerticalAlignment="Stretch" MaxWidth="70" ProfilePicture="{x:Bind AvatarSource}"/>
+            <StackPanel Orientation="Vertical">
+                <TextBlock x:Name="Nickname" FontSize="12" Text="{x:Bind comment.Nickname}"/>
+                <TextBlock x:Name="CommentContent" Text="{x:Bind comment.content}"/>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</UserControl>

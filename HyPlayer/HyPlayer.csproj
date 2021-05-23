@@ -129,6 +129,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Classes\Api.cs" />
+    <Compile Include="Classes\Comment.cs" />
     <Compile Include="Classes\NCSong.cs" />
     <Compile Include="Classes\PersonalFM.cs" />
     <Compile Include="Classes\StaticSource.cs" />
@@ -142,6 +143,9 @@
     </Compile>
     <Compile Include="Controls\PlaylistItem.xaml.cs">
       <DependentUpon>PlaylistItem.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\SingleComment.xaml.cs">
+      <DependentUpon>SingleComment.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\SingleNCSong.xaml.cs">
       <DependentUpon>SingleNCSong.xaml</DependentUpon>
@@ -160,6 +164,9 @@
     </Compile>
     <Compile Include="Pages\BlankPage.xaml.cs">
       <DependentUpon>BlankPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\Comments.xaml.cs">
+      <DependentUpon>Comments.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\ExpandedPlayer.xaml.cs">
       <DependentUpon>ExpandedPlayer.xaml</DependentUpon>
@@ -271,6 +278,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\SingleComment.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\SingleNCSong.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -288,6 +299,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Pages\BlankPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\Comments.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

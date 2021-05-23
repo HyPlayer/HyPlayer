@@ -283,6 +283,7 @@
                     Click="ToggleButtonSound_OnClick"
                     Name="ToggleButtonSound"
                     Content="音" />
+                
             </StackPanel>
             <ScrollViewer
                 Margin="0,5"

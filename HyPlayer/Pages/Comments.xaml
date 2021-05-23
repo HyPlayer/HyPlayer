@@ -1,0 +1,43 @@
+﻿<Page
+    x:Class="HyPlayer.Pages.Comments"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:HyPlayer.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+>
+
+
+
+        <ScrollViewer VerticalScrollMode="Enabled" VerticalScrollBarVisibility="Visible">
+
+            <StackPanel
+                    Orientation="Vertical"
+                    HorizontalAlignment="Stretch">
+                <TextBlock Text="评论" FontSize="54" Margin="15"/>
+                <StackPanel x:Name="CommentList" Orientation="Vertical" Spacing="15">
+
+
+                </StackPanel>
+                <Button
+                        Visibility="Collapsed"
+                        Content="上一页"
+                        x:Name="PrevPage"
+                        Click="PrevPage_Click" />
+                <TextBlock
+                        x:Name="PageIndicator" />
+                <Button
+                        Visibility="Collapsed"
+                        Content="下一页"
+                        x:Name="NextPage"
+                        Click="NextPage_Click" />
+                <Grid
+                    Height="150" />
+            </StackPanel>
+        </ScrollViewer>
+
+
+</Page>
+
+
