@@ -36,8 +36,31 @@ namespace HyPlayer.Pages
         {
             base.OnNavigatedTo(e);
             Song = (NCSong)e.Parameter;
+            LoadHotComments();
             LoadComments();
         }
+
+        private async void LoadHotComments()
+        {
+            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentMusic, new Dictionary<string, object>() { { "id", Song.sid }, { "offset", page * 20 } });
+
+            if (isOk)
+            {
+                int index = 0;
+                foreach (JToken comment in json["hotComments"].ToArray())
+                {
+                    Comment cmt = new Comment();
+
+                    cmt.AvatarUri = comment["user"]["avatarUrl"] is null ? new Uri("ms-appx:///Assets/icon.png") : new Uri(comment["user"]["avatarUrl"].ToString());
+                    cmt.Nickname = comment["user"]["nickname"] is null ? comment["user"]["userId"].ToString() : comment["user"]["nickname"].ToString();
+                    cmt.content = comment["content"].ToString();
+
+                    SingleComment curcomment = new SingleComment(cmt);
+                    HotCommentList.Children.Add(curcomment);
+                }
+            }
+        }
+
         private async void LoadComments()
         {
             (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentMusic, new Dictionary<string, object>() { { "id", Song.sid }, { "offset", page * 20 } });
@@ -84,6 +107,21 @@ namespace HyPlayer.Pages
         private void PrevPage_Click(object sender, RoutedEventArgs e)
         {
             page--;
+            LoadComments();
+        }
+
+        private async void SendComment_Click(object sender, RoutedEventArgs e)
+        {
+            if(!String.IsNullOrWhiteSpace(CommentEdit.Text))
+                try
+                {
+                    await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment, new Dictionary<string, object>() { { "id", Song.sid }, { "type", '0' }, { "t", "1" } ,{ "content", CommentEdit.Text } });
+                }
+                catch(Exception ex)
+                {
+                    
+                }
+            CommentEdit.Text = String.Empty;
             LoadComments();
         }
     }

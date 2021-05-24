@@ -15,8 +15,23 @@
             <StackPanel
                     Orientation="Vertical"
                     HorizontalAlignment="Stretch">
-                <TextBlock Text="评论" FontSize="54" Margin="15"/>
-                <StackPanel x:Name="CommentList" Orientation="Vertical" Spacing="15">
+            <Grid >
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="100"/>
+                </Grid.ColumnDefinitions>
+                <TextBox PlaceholderText="发表评论" Margin="15" x:Name="CommentEdit"  HorizontalAlignment="Stretch" MaxLength="140" TextWrapping="Wrap" Grid.Column="0"/>
+                <Button Content="发表" Margin="15" MaxWidth="100" Grid.Column="1" HorizontalAlignment="Right" x:Name="SendComment"  Click="SendComment_Click"/>
+            </Grid>
+            <TextBlock Text="热评" FontSize="40" Margin="15"/>
+            <StackPanel x:Name="HotCommentList" Orientation="Vertical" Margin="10" Spacing="15">
+
+
+            </StackPanel>
+            <StackPanel Margin="15" Height="2" Background="Black"/>
+
+            <TextBlock Text="所有评论" FontSize="40" Margin="15"/>
+                <StackPanel x:Name="CommentList" Orientation="Vertical" Margin="10" Spacing="15">
 
 
                 </StackPanel>

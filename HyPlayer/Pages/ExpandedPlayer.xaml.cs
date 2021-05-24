@@ -410,5 +410,10 @@ namespace HyPlayer.Pages
             catch { }
 
         }
+
+        private void ShowContent_Click()
+        {
+
+        }
     }
 }
