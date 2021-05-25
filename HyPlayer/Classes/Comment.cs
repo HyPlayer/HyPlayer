@@ -8,8 +8,11 @@ namespace HyPlayer.Classes
 {
     public struct Comment
     {
+        public NCSong song;
+        public string cid;
         public Uri AvatarUri;
         public string Nickname;
         public string content;
+        public bool HasLiked;
     }
 }

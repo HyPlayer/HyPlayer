@@ -15,6 +15,14 @@
             <StackPanel Orientation="Vertical">
                 <TextBlock x:Name="Nickname" FontSize="12" Text="{x:Bind comment.Nickname}"/>
                 <TextBlock x:Name="CommentContent" Text="{x:Bind comment.content}"/>
+                <RelativePanel Height="25" >
+                    <ToggleButton x:Name="Like" IsChecked="{x:Bind comment.HasLiked}"  ToolTipService.ToolTip="点赞" Click="Like_Click" RelativePanel.AlignRightWithPanel="True" Height="15" Margin="5">
+                        <SymbolIcon Symbol="Like"/>
+                    </ToggleButton>
+                    <Button x:Name="Copy" ToolTipService.ToolTip="复制评论" Click="Copy_Click" RelativePanel.LeftOf="Delete" Height="15" Margin="5">
+                        <SymbolIcon Symbol="Copy"/>
+                    </Button>
+                </RelativePanel>
             </StackPanel>
         </StackPanel>
     </Grid>

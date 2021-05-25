@@ -32,53 +32,48 @@ namespace HyPlayer.Pages
         {
             this.InitializeComponent();
         }
-        protected async override void OnNavigatedTo(NavigationEventArgs e)
+        protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
             Song = (NCSong)e.Parameter;
-            LoadHotComments();
-            LoadComments();
+            LoadComments(true);
+            LoadComments(false);
         }
-
-        private async void LoadHotComments()
+        private async void LoadComments(bool IsHot)
         {
             (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentMusic, new Dictionary<string, object>() { { "id", Song.sid }, { "offset", page * 20 } });
-
             if (isOk)
             {
                 int index = 0;
-                foreach (JToken comment in json["hotComments"].ToArray())
+                string CommentsType;
+                if (IsHot)
+                    CommentsType = "hotComments";
+                else
                 {
-                    Comment cmt = new Comment();
-
-                    cmt.AvatarUri = comment["user"]["avatarUrl"] is null ? new Uri("ms-appx:///Assets/icon.png") : new Uri(comment["user"]["avatarUrl"].ToString());
-                    cmt.Nickname = comment["user"]["nickname"] is null ? comment["user"]["userId"].ToString() : comment["user"]["nickname"].ToString();
-                    cmt.content = comment["content"].ToString();
-
-                    SingleComment curcomment = new SingleComment(cmt);
-                    HotCommentList.Children.Add(curcomment);
+                    CommentsType = "comments";
+                    CommentList.Children.Clear();
                 }
-            }
-        }
-
-        private async void LoadComments()
-        {
-            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentMusic, new Dictionary<string, object>() { { "id", Song.sid }, { "offset", page * 20 } });
-
-            if (isOk)
-            {
-                CommentList.Children.Clear();
-                int index = 0;
-                foreach (JToken comment in json["comments"].ToArray())
+                foreach (JToken comment in json[CommentsType].ToArray())
                 {
                     Comment cmt = new Comment();
-
+                    cmt.song = Song;
+                    cmt.cid = comment["commentId"].ToString();
                     cmt.AvatarUri = comment["user"]["avatarUrl"] is null ? new Uri("ms-appx:///Assets/icon.png") : new Uri(comment["user"]["avatarUrl"].ToString());
                     cmt.Nickname = comment["user"]["nickname"] is null ? comment["user"]["userId"].ToString() : comment["user"]["nickname"].ToString();
                     cmt.content = comment["content"].ToString();
-
+                    if (comment["liked"].ToString() == "False")
+                        cmt.HasLiked = false;
+                    else cmt.HasLiked = true;
                     SingleComment curcomment = new SingleComment(cmt);
-                    CommentList.Children.Add(curcomment);
+                    if(IsHot)
+                    {
+                        HotCommentList.Children.Add(curcomment);
+                        return;
+                    }
+                    else
+                    {
+                        CommentList.Children.Add(curcomment);
+                    }
                 }
                 if ((json["more"].ToString()) == "True")
                 {
@@ -98,31 +93,45 @@ namespace HyPlayer.Pages
                 }
             }
         }
+
+        
         private void NextPage_Click(object sender, RoutedEventArgs e)
         {
             page++;
-            LoadComments();
+            LoadComments(false);
         }
 
         private void PrevPage_Click(object sender, RoutedEventArgs e)
         {
             page--;
-            LoadComments();
+            LoadComments(false);
         }
 
         private async void SendComment_Click(object sender, RoutedEventArgs e)
         {
-            if(!String.IsNullOrWhiteSpace(CommentEdit.Text))
+            if(!String.IsNullOrWhiteSpace(CommentEdit.Text)&&Common.Logined)
                 try
                 {
                     await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment, new Dictionary<string, object>() { { "id", Song.sid }, { "type", '0' }, { "t", "1" } ,{ "content", CommentEdit.Text } });
+                    CommentEdit.Text = String.Empty;
+                    await System.Threading.Tasks.Task.Delay(1000);
+                    LoadComments(false);
                 }
                 catch(Exception ex)
                 {
-                    
+                    Windows.UI.Popups.MessageDialog dlg = new Windows.UI.Popups.MessageDialog(ex.Message,"出现问题，评论失败");
+                    await dlg.ShowAsync();
                 }
-            CommentEdit.Text = String.Empty;
-            LoadComments();
+            else if(String.IsNullOrWhiteSpace(CommentEdit.Text))
+            {
+                Windows.UI.Popups.MessageDialog dlg = new Windows.UI.Popups.MessageDialog("评论不能为空");
+                await dlg.ShowAsync();
+            }
+            else
+            {
+                Windows.UI.Popups.MessageDialog dlg = new Windows.UI.Popups.MessageDialog("请先登录");
+                await dlg.ShowAsync();
+            }
         }
     }
 }
