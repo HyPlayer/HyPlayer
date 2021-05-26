@@ -14,5 +14,6 @@ namespace HyPlayer.Classes
         public string Nickname;
         public string content;
         public bool HasLiked;
+        public bool IsByMyself;
     }
 }

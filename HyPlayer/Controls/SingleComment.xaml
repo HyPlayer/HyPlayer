@@ -12,14 +12,17 @@
     <Grid>
         <StackPanel Orientation="Horizontal">
             <PersonPicture x:Name="UserAvatar" VerticalAlignment="Stretch" MaxWidth="70" ProfilePicture="{x:Bind AvatarSource}"/>
-            <StackPanel Orientation="Vertical">
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch" >
                 <TextBlock x:Name="Nickname" FontSize="12" Text="{x:Bind comment.Nickname}"/>
                 <TextBlock x:Name="CommentContent" Text="{x:Bind comment.content}"/>
-                <RelativePanel Height="25" >
-                    <ToggleButton x:Name="Like" IsChecked="{x:Bind comment.HasLiked}"  ToolTipService.ToolTip="点赞" Click="Like_Click" RelativePanel.AlignRightWithPanel="True" Height="15" Margin="5">
+                <RelativePanel Height="45" HorizontalAlignment="Right">
+                    <ToggleButton x:Name="Like" IsChecked="{x:Bind comment.HasLiked}"  ToolTipService.ToolTip="点赞" Click="Like_Click" RelativePanel.AlignRightWithPanel="True" Height="35" Margin="5">
                         <SymbolIcon Symbol="Like"/>
                     </ToggleButton>
-                    <Button x:Name="Copy" ToolTipService.ToolTip="复制评论" Click="Copy_Click" RelativePanel.LeftOf="Delete" Height="15" Margin="5">
+                    <Button x:Name="Delete" ToolTipService.ToolTip="删除" Visibility="{x:Bind comment.IsByMyself}" Click="Delete_Click" RelativePanel.LeftOf="Like" Height="35" Margin="5">
+                        <SymbolIcon Symbol="Delete"/>
+                    </Button>
+                    <Button x:Name="Copy" ToolTipService.ToolTip="复制评论" Click="Copy_Click" RelativePanel.LeftOf="Delete" Height="35" Margin="5">
                         <SymbolIcon Symbol="Copy"/>
                     </Button>
                 </RelativePanel>

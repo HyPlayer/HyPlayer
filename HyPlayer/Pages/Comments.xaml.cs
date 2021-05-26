@@ -64,6 +64,9 @@ namespace HyPlayer.Pages
                     if (comment["liked"].ToString() == "False")
                         cmt.HasLiked = false;
                     else cmt.HasLiked = true;
+                    if (comment["user"]["userId"].ToString() == Common.LoginedUser.id)
+                        cmt.IsByMyself = true;
+                    else cmt.IsByMyself = false;
                     SingleComment curcomment = new SingleComment(cmt);
                     if(IsHot)
                     {
