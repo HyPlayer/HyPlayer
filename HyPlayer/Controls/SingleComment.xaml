@@ -6,16 +6,20 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    d:DesignHeight="70"
+    d:DesignHeight="120"
     d:DesignWidth="800">
 
     <Grid>
-        <StackPanel Orientation="Horizontal">
-            <PersonPicture x:Name="UserAvatar" VerticalAlignment="Stretch" MaxWidth="70" ProfilePicture="{x:Bind AvatarSource}"/>
-            <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch" >
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
+            <Button x:Name="NavToUser" Click="NavToUser_Click" Height="70" Width="70">
+                <Button.Content>
+                    <PersonPicture x:Name="UserAvatar" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="70" MaxHeight="70" ProfilePicture="{x:Bind AvatarSource}" />
+                </Button.Content>
+            </Button>
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <TextBlock x:Name="Nickname" FontSize="12" Text="{x:Bind comment.Nickname}"/>
-                <TextBlock x:Name="CommentContent" Text="{x:Bind comment.content}"/>
-                <RelativePanel Height="45" HorizontalAlignment="Right">
+                <TextBlock x:Name="CommentContent" Text="{x:Bind comment.content}" MaxHeight="70" TextWrapping="Wrap"/>
+                <RelativePanel Height="45" HorizontalAlignment="Left" >
                     <ToggleButton x:Name="Like" IsChecked="{x:Bind comment.HasLiked}"  ToolTipService.ToolTip="点赞" Click="Like_Click" RelativePanel.AlignRightWithPanel="True" Height="35" Margin="5">
                         <SymbolIcon Symbol="Like"/>
                     </ToggleButton>

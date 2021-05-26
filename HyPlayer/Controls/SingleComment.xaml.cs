@@ -1,4 +1,5 @@
 ﻿using HyPlayer.Classes;
+using HyPlayer.Pages;
 using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
@@ -52,6 +53,11 @@ namespace HyPlayer.Controls
         {
             await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment, new Dictionary<string, object>() { { "id", comment.song.sid }, { "type", '0' }, { "t", "0" }, { "commentId", comment.cid } });
             (this.Parent as StackPanel).Children.Remove(this);
+        }
+
+        private void NavToUser_Click(object sender, RoutedEventArgs e)
+        {
+            Common.BaseFrame.Navigate(typeof(Me), comment.uid);
         }
     }
 }

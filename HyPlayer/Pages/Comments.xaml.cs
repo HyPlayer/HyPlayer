@@ -60,15 +60,13 @@ namespace HyPlayer.Pages
                     cmt.cid = comment["commentId"].ToString();
                     cmt.AvatarUri = comment["user"]["avatarUrl"] is null ? new Uri("ms-appx:///Assets/icon.png") : new Uri(comment["user"]["avatarUrl"].ToString());
                     cmt.Nickname = comment["user"]["nickname"] is null ? comment["user"]["userId"].ToString() : comment["user"]["nickname"].ToString();
+                    cmt.uid = comment["user"]["userId"].ToString();
                     cmt.content = comment["content"].ToString();
                     if (comment["liked"].ToString() == "False")
                         cmt.HasLiked = false;
                     else cmt.HasLiked = true;
-                    if (comment["user"]["userId"].ToString() == Common.LoginedUser.id)
-                        cmt.IsByMyself = true;
-                    else cmt.IsByMyself = false;
                     SingleComment curcomment = new SingleComment(cmt);
-                    if(IsHot)
+                    if (IsHot)
                     {
                         HotCommentList.Children.Add(curcomment);
                         return;
@@ -97,7 +95,7 @@ namespace HyPlayer.Pages
             }
         }
 
-        
+
         private void NextPage_Click(object sender, RoutedEventArgs e)
         {
             page++;
@@ -112,20 +110,20 @@ namespace HyPlayer.Pages
 
         private async void SendComment_Click(object sender, RoutedEventArgs e)
         {
-            if(!String.IsNullOrWhiteSpace(CommentEdit.Text)&&Common.Logined)
+            if (!String.IsNullOrWhiteSpace(CommentEdit.Text) && Common.Logined)
                 try
                 {
-                    await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment, new Dictionary<string, object>() { { "id", Song.sid }, { "type", '0' }, { "t", "1" } ,{ "content", CommentEdit.Text } });
+                    await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment, new Dictionary<string, object>() { { "id", Song.sid }, { "type", '0' }, { "t", "1" }, { "content", CommentEdit.Text } });
                     CommentEdit.Text = String.Empty;
                     await System.Threading.Tasks.Task.Delay(1000);
                     LoadComments(false);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
-                    Windows.UI.Popups.MessageDialog dlg = new Windows.UI.Popups.MessageDialog(ex.Message,"出现问题，评论失败");
+                    Windows.UI.Popups.MessageDialog dlg = new Windows.UI.Popups.MessageDialog(ex.Message, "出现问题，评论失败");
                     await dlg.ShowAsync();
                 }
-            else if(String.IsNullOrWhiteSpace(CommentEdit.Text))
+            else if (String.IsNullOrWhiteSpace(CommentEdit.Text))
             {
                 Windows.UI.Popups.MessageDialog dlg = new Windows.UI.Popups.MessageDialog("评论不能为空");
                 await dlg.ShowAsync();
