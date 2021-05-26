@@ -296,7 +296,9 @@
                         PointerWheelChanged="LyricBoxContainer_OnPointerWheelChanged"
                         Name="LyricBox"
                         Orientation="Vertical"
-                        ScrollViewer.VerticalScrollBarVisibility="Auto" />
+                        ScrollViewer.VerticalScrollBarVisibility="Auto" >
+                        <TextBlock Text="当前暂未播放歌曲" HorizontalAlignment="Center" />
+                    </StackPanel>
                 </ScrollViewer.Content>
             </ScrollViewer>
         </controls:DockPanel>

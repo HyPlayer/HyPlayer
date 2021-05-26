@@ -20,6 +20,7 @@ using NavigationViewBackRequestedEventArgs = Microsoft.UI.Xaml.Controls.Navigati
 using NavigationViewItem = Microsoft.UI.Xaml.Controls.NavigationViewItem;
 using NavigationViewSelectionChangedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewSelectionChangedEventArgs;
 using System.Linq;
+using System.Threading.Tasks;
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
 
@@ -85,6 +86,12 @@ namespace HyPlayer.Pages
 
         private async void ButtonLogin_OnClick(object sender, RoutedEventArgs e)
         {
+            if(String.IsNullOrWhiteSpace(TextBoxAccount.Text)|| String.IsNullOrWhiteSpace(TextBoxPassword.Password))
+            {
+                InfoBarLoginHint.IsOpen = true;
+                InfoBarLoginHint.Message = "用户名或密码不能为空";
+                return;
+            }
             ButtonLogin.IsEnabled = false;
             ButtonLogin.Content = "登录中......";
             bool isOk;
@@ -183,13 +190,10 @@ namespace HyPlayer.Pages
                     }
                 }
             }
-        }
-
-
-        private void InfoBarLoginHint_OnCloseButtonClick(InfoBar sender, object args)
-        {
             DialogLogin.Hide();
         }
+
+
 
         private async void NavMain_OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
         {
