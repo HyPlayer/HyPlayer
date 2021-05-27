@@ -48,6 +48,7 @@ namespace HyPlayer.Controls
             //用toast实现桌面歌词 - 参考自 https://github.com/HyPlayer/HyPlayer/pull/16/commits/53b9c1cc49b86db75bc1da7aea65783e044870be
             if (Common.Setting.toastLyric)
             {
+                AudioInfo info = HyPlayList.NowPlayingItem.AudioInfo;
                 ToastContent desktopLyrics = new ToastContent()
                 {
                     Visual = new ToastVisual()
@@ -69,12 +70,18 @@ namespace HyPlayer.Controls
                                 {
                                     Text = HyPlayList.Lyrics[HyPlayList.lyricpos].Translation
                                 },
+                                new AdaptiveProgressBar()
+                                {
+                                    ValueStringOverride = TimeSpan.FromMilliseconds(info.LengthInMilliseconds).ToString(@"hh\:mm\:ss"),
+                                    Status = HyPlayList.Player.PlaybackSession.Position.ToString(@"hh\:mm\:ss"),
+                                    Value = HyPlayList.Player.PlaybackSession.Position / TimeSpan.FromMilliseconds(info.LengthInMilliseconds)
+                                },
                             }
                         }
                     },
                     Launch = "",
                     Scenario = ToastScenario.Reminder,
-                    Audio = new ToastAudio() { Silent = true }
+                    Audio = new ToastAudio() { Silent = true },
 
 
                 };
@@ -176,7 +183,7 @@ namespace HyPlayer.Controls
                if (mpi.ItemType == HyPlayItemType.Local)
                {
                    BitmapImage img = new BitmapImage();
-                   await img.SetSourceAsync((await mpi.AudioInfo.LocalSongFile.GetThumbnailAsync(ThumbnailMode.SingleItem,9999)));
+                   await img.SetSourceAsync((await mpi.AudioInfo.LocalSongFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999)));
                    AlbumImage.Source = img;
                }
                else
