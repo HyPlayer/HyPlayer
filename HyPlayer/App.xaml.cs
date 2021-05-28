@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Microsoft.Toolkit.Uwp.Notifications;
+using System;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.UI.Notifications;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -25,6 +27,62 @@ namespace HyPlayer
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         }
 
+        public void InitializeToastLyrics()
+        {
+            ToastContent desktopLyrics = new ToastContent()
+            {
+                Visual = new ToastVisual()
+                {
+                    BindingGeneric = new ToastBindingGeneric()
+                    {
+                        Children =
+                            {
+                                new AdaptiveText()
+                                {
+                                    Text = new BindableString("Title"),
+                                    HintStyle = AdaptiveTextStyle.Header
+                                },
+                                new AdaptiveText()
+                                {
+                                    Text = new BindableString("PureLyric"),
+                                },
+                                new AdaptiveText()
+                                {
+                                    Text = new BindableString("Translation"),
+                                },
+                                new AdaptiveProgressBar()
+                                {
+                                    ValueStringOverride=new BindableString("TotalValueString"),
+
+                                    Status=new BindableString("CurrentValueString"),
+
+                                    Value=new BindableProgressBarValue("CurrentValue"),
+
+                                },
+                            }
+                    }
+                },
+                Launch = "",
+                Scenario = ToastScenario.IncomingCall,
+                Audio = new ToastAudio() { Silent = true },
+
+
+            };
+            var toast = new ToastNotification(desktopLyrics.GetXml())
+            {
+                Tag = "HyPlayerDesktopLyrics",
+                Data = new NotificationData()
+            };
+            toast.Data.Values["Title"] = "当前无音乐播放";
+            toast.Data.Values["PureLyric"] = "当前无歌词";
+            toast.Data.Values["TotalValueString"] = "0:00:00";
+            toast.Data.Values["CurrentValueString"] = "0:00:00";
+            toast.Data.Values["CurrentValue"] = "0";
+
+            toast.Data.SequenceNumber = 0;
+            ToastNotifier notifier = ToastNotificationManager.CreateToastNotifier();
+            notifier.Show(toast);
+        }
         private void CurrentDomain_UnhandledException(object sender, System.UnhandledExceptionEventArgs e)
         {
             Common.Invoke((async () =>
@@ -93,6 +151,10 @@ namespace HyPlayer
                 }
                 // 确保当前窗口处于活动状态
                 Window.Current.Activate();
+            }
+            if (Common.Setting.toastLyric)
+            {
+                InitializeToastLyrics();
             }
         }
 
