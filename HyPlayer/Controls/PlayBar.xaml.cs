@@ -37,64 +37,12 @@ namespace HyPlayer.Controls
             HyPlayList.Player.Volume = (double)Common.Setting.Volume / 100;
             SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
             HyPlayList.OnPlayItemChange += LoadPlayingFile;
-            HyPlayList.OnLyricChange += HyPlayList_OnLyricChange;
             HyPlayList.OnPlayPositionChange += OnPlayPositionChange;
             HyPlayList.OnPlayListAddDone += HyPlayList_OnPlayListAdd;
             AlbumImage.Source = new BitmapImage(new Uri("ms-appx:Assets/icon.png"));
         }
 
-        private void HyPlayList_OnLyricChange()
-        {
-            //用toast实现桌面歌词 - 参考自 https://github.com/HyPlayer/HyPlayer/pull/16/commits/53b9c1cc49b86db75bc1da7aea65783e044870be
-            if (Common.Setting.toastLyric)
-            {
-                AudioInfo info = HyPlayList.NowPlayingItem.AudioInfo;
-                ToastContent desktopLyrics = new ToastContent()
-                {
-                    Visual = new ToastVisual()
-                    {
-                        BindingGeneric = new ToastBindingGeneric()
-                        {
-                            Children =
-                            {
-                                new AdaptiveText()
-                                {
-                                    Text = HyPlayList.NowPlayingItem.Name,
-                                    HintStyle = AdaptiveTextStyle.Header
-                                },
-                                new AdaptiveText()
-                                {
-                                    Text = HyPlayList.Lyrics[HyPlayList.lyricpos].PureLyric
-                                },
-                                new AdaptiveText()
-                                {
-                                    Text = HyPlayList.Lyrics[HyPlayList.lyricpos].Translation
-                                },
-                                new AdaptiveProgressBar()
-                                {
-                                    ValueStringOverride = TimeSpan.FromMilliseconds(info.LengthInMilliseconds).ToString(@"hh\:mm\:ss"),
-                                    Status = HyPlayList.Player.PlaybackSession.Position.ToString(@"hh\:mm\:ss"),
-                                    Value = HyPlayList.Player.PlaybackSession.Position / TimeSpan.FromMilliseconds(info.LengthInMilliseconds)
-                                },
-                            }
-                        }
-                    },
-                    Launch = "",
-                    Scenario = ToastScenario.Reminder,
-                    Audio = new ToastAudio() { Silent = true },
-
-
-                };
-                var toast = new ToastNotification(desktopLyrics.GetXml())
-                {
-                    Tag = "HyPlayerDesktopLyrics",
-                    Data = new NotificationData()
-                };
-                toast.Data.SequenceNumber = 0;
-                ToastNotifier notifier = ToastNotificationManager.CreateToastNotifier();
-                notifier.Show(toast);
-            }
-        }
+        
 
         private void HyPlayList_OnPlayListAdd()
         {
@@ -125,6 +73,20 @@ namespace HyPlayer.Controls
                 try
                 {
                     AudioInfo tai = HyPlayList.NowPlayingItem.AudioInfo;
+                    if(Common.Setting.toastLyric)
+                    {
+                        NotificationData data = new NotificationData()
+                        {
+                            SequenceNumber = 0
+                        };
+                        data.Values["Title"] = HyPlayList.NowPlayingItem.Name;
+                        data.Values["PureLyric"] = HyPlayList.Lyrics[HyPlayList.lyricpos].PureLyric;
+                        data.Values["Translation"] = HyPlayList.Lyrics[HyPlayList.lyricpos].Translation is null ? " " : HyPlayList.Lyrics[HyPlayList.lyricpos].Translation;
+                        data.Values["TotalValueString"] = TimeSpan.FromMilliseconds(tai.LengthInMilliseconds).ToString(@"hh\:mm\:ss");
+                        data.Values["CurrentValueString"] = HyPlayList.Player.PlaybackSession.Position.ToString(@"hh\:mm\:ss");
+                        data.Values["CurrentValue"] = (HyPlayList.Player.PlaybackSession.Position / TimeSpan.FromMilliseconds(tai.LengthInMilliseconds)).ToString();
+                        NotificationUpdateResult res = ToastNotificationManager.CreateToastNotifier().Update(data, "HyPlayerDesktopLyrics");
+                    }
                     TbSingerName.Text = tai.Artist;
                     TbSongName.Text = tai.SongName;
                     SliderProgress.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;

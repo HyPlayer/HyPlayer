@@ -127,6 +127,8 @@ namespace HyPlayer.Pages
         private void ToastLyricCheckbox_OnChecked(object sender, RoutedEventArgs e)
         {
             Common.Setting.toastLyric = ToastLyricCheckbox.IsChecked.Value;
+            if (ToastLyricCheckbox.IsChecked.Value)
+                (App.Current as App).InitializeToastLyrics();
         }
 
 
