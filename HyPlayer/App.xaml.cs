@@ -26,7 +26,12 @@ namespace HyPlayer
             UnhandledException += App_UnhandledException;
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         }
-
+        protected override void OnActivated(IActivatedEventArgs args)
+        {
+            base.OnActivated(args);
+            if (args.Kind == ActivationKind.ToastNotification)//如果用户点击了桌面歌词通知，则代表通知已经关闭，需要重新初始化推送
+                InitializeToastLyrics();
+        }
         public void InitializeToastLyrics()
         {
             ToastContent desktopLyrics = new ToastContent()
