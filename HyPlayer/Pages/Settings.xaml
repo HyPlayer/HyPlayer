@@ -152,6 +152,32 @@
                 </StackPanel>
             </StackPanel>
             <StackPanel
+                Orientation="Horizontal">
+                <PersonPicture
+                    ProfilePicture="https://himg.bdimg.com/sys/portraitn/item/0fd16570303132303134g930801000000" />
+                <StackPanel
+                    Margin="15,0,0,0"
+                    Orientation="Vertical">
+                    <TextBlock
+                        FontSize="18"
+                        FontWeight="Medium">EP012014</TextBlock>
+                    <TextBlock
+                        Foreground="Gray"
+                        FontSize="15"
+                        FontWeight="Medium">Developer</TextBlock>
+                    <TextBlock
+                        Foreground="Gray"
+                        FontSize="15"
+                        FontWeight="Light">UWP大胜利！</TextBlock>
+                    <RichTextBlock>
+                        <Paragraph>
+                            <Hyperlink
+                                NavigateUri="https://github.com/EP012014">Github</Hyperlink> |
+                        </Paragraph>
+                    </RichTextBlock>
+                </StackPanel>
+            </StackPanel>
+            <StackPanel
                 Height="150" />
         </StackPanel>
     </ScrollViewer>
