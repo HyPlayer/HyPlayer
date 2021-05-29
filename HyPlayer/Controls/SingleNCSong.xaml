@@ -23,7 +23,7 @@
             <ColumnDefinition Width="70"/>
             <ColumnDefinition Width="2*"/>
             <ColumnDefinition />
-            <ColumnDefinition  Width="100"/>
+            <ColumnDefinition  Width="150"/>
         </Grid.ColumnDefinitions>
         <TextBlock
             HorizontalAlignment="Center"
@@ -67,10 +67,10 @@
                 Text="歌手名"/>
 
         </controls:DockPanel>
-        <controls:DockPanel
+        <StackPanel Orientation="Horizontal"
             Grid.Column="4">
+            <Button x:Name="Comments" Margin="8,0,8,0" Content="评" Click="Comments_Click"/>
             <Button
-                controls:DockPanel.Dock="Right"
                 Margin="0,0,8,0"
                 x:Name="BtnPlay"
                 Click="ButtonBase_OnClick">
@@ -80,14 +80,14 @@
                     Glyph="&#xEDB5;"></FontIcon>
             </Button>
             <Button
-                controls:DockPanel.Dock="Left"
                 Click="BtnDownload_OnClick"
                 x:Name="BtnDownload">
                 <FontIcon
                     FontFamily="{StaticResource SymbolThemeFontFamily}"
                     Glyph="&#xE118;"></FontIcon>
             </Button>
-        </controls:DockPanel>
+
+        </StackPanel>
         
     </Grid>
 </UserControl>

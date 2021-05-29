@@ -88,7 +88,7 @@ namespace HyPlayer.Pages
            {
                Common.Invoke(async () =>
                {
-                   (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserAccount);
+                   (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserDetail, new Dictionary<string, object> { ["uid"] = uid });
                    if (isok)
                    {
                        TextBoxUserName.Text = json["profile"]["nickname"].ToString();
