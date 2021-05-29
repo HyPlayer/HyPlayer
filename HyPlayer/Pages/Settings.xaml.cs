@@ -29,6 +29,7 @@ namespace HyPlayer.Pages
                 RadioButtonsSongBr.Items.IndexOf(RadioButtonsSongBr.Items.First(t => ((RadioButton)t).Tag.ToString() == Common.Setting.audioRate));
             TextBoxDownloadDir.Text = Common.Setting.downloadDir;
             ToastLyricCheckbox.IsChecked = Common.Setting.toastLyric;
+            AnimationCheckbox.IsChecked = Common.Setting.expandAnimation;
             //ToggleButtonDaylight.IsChecked = Application.Current.RequestedTheme == ApplicationTheme.Dark;
         }
 
@@ -127,6 +128,7 @@ namespace HyPlayer.Pages
         private void ToastLyricCheckbox_OnChecked(object sender, RoutedEventArgs e)
         {
             Common.Setting.toastLyric = ToastLyricCheckbox.IsChecked.Value;
+            Common.Setting.expandAnimation = AnimationCheckbox.IsChecked.Value;
             if (ToastLyricCheckbox.IsChecked.Value)
                 (App.Current as App).InitializeToastLyrics();
         }

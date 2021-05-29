@@ -61,6 +61,11 @@
                 Content="是否开启 Toast 歌词"
                 Checked="ToastLyricCheckbox_OnChecked"
                 Unchecked="ToastLyricCheckbox_OnChecked" />
+            <CheckBox
+                x:Name="AnimationCheckbox"
+                Content="是否开启可选动效"
+                Checked="ToastLyricCheckbox_OnChecked"
+                Unchecked="ToastLyricCheckbox_OnChecked" />
             <TextBlock
                 FontSize="40"
                 Text="关于" />

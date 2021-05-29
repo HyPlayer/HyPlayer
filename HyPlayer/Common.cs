@@ -107,10 +107,18 @@ namespace HyPlayer
                     return ApplicationData.Current.LocalSettings.Values["toastLyric"].ToString() == "true";
                 return false;
             }
-            set
+            set => ApplicationData.Current.LocalSettings.Values["toastLyric"] = value ? "true" : "false";
+        }
+        
+        public bool expandAnimation
+        {
+            get
             {
-                ApplicationData.Current.LocalSettings.Values["toastLyric"] = value ? "true" : "false";
+                if (ApplicationData.Current.LocalSettings.Values.ContainsKey("expandAnimation"))
+                    return ApplicationData.Current.LocalSettings.Values["expandAnimation"].ToString() != "false";
+                return true;
             }
+            set => ApplicationData.Current.LocalSettings.Values["expandAnimation"] = value ? "true" : "false";
         }
     }
 

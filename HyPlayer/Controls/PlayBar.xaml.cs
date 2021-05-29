@@ -243,16 +243,18 @@ namespace HyPlayer.Controls
             Common.PageMain.ExpandedPlayer.Visibility = Visibility.Visible;
             Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer), null,
                 new EntranceNavigationTransitionInfo());
-            /*
-            ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TbSongName);
-            if (GridSongInfoContainer.Visibility == Visibility.Visible)
+            if (Common.Setting.expandAnimation)
             {
-                ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", AlbumImage);
+                ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TbSongName);
+                if (GridSongInfoContainer.Visibility == Visibility.Visible)
+                {
+                    ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", AlbumImage);
+                }
+
+                ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TbSingerName);
+                Common.PageExpandedPlayer.StartExpandAnimation();
             }
 
-            ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TbSingerName);
-            Common.PageExpandedPlayer.StartExpandAnimation();
-            */
             GridSongInfo.Visibility = Visibility.Collapsed;
             GridSongAdvancedOperation.Visibility = Visibility.Visible;
         }
@@ -262,31 +264,32 @@ namespace HyPlayer.Controls
             Common.PageExpandedPlayer.StartCollapseAnimation();
             GridSongAdvancedOperation.Visibility = Visibility.Collapsed;
             GridSongInfo.Visibility = Visibility.Visible;
+            if (Common.Setting.expandAnimation)
+            {
+                ConnectedAnimation anim1 = null;
+                ConnectedAnimation anim2 = null;
+                ConnectedAnimation anim3 = null;
+                anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
+                anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
+                anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
+                anim3.Configuration = new DirectConnectedAnimationConfiguration();
+                if (anim2 != null)
+                {
+                    anim2.Configuration = new DirectConnectedAnimationConfiguration();
+                }
 
-            ConnectedAnimation anim1 = null;
-            ConnectedAnimation anim2 = null;
-            ConnectedAnimation anim3 = null;
-            //anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
-            //anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
-            //anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
-            //anim3.Configuration = new DirectConnectedAnimationConfiguration();
-            if (anim2 != null)
-            {
-                anim2.Configuration = new DirectConnectedAnimationConfiguration();
+                anim1.Configuration = new DirectConnectedAnimationConfiguration();
+                try
+                {
+                    anim3?.TryStart(TbSingerName);
+                    anim1?.TryStart(TbSongName);
+                    anim2?.TryStart(AlbumImage);
+                }
+                catch
+                {
+                    //ignore
+                }
             }
-
-            //anim1.Configuration = new DirectConnectedAnimationConfiguration();
-            try
-            {
-                anim3?.TryStart(TbSingerName);
-                anim1?.TryStart(TbSongName);
-                anim2?.TryStart(AlbumImage);
-            }
-            catch
-            {
-                //ignore
-            }
-            
             ButtonExpand.Visibility = Visibility.Visible;
             ButtonCollapse.Visibility = Visibility.Collapsed;
             Common.PageExpandedPlayer.Dispose();

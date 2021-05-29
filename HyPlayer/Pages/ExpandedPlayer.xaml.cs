@@ -122,9 +122,7 @@ namespace HyPlayer.Pages
         {
             base.OnNavigatedTo(e);
             Common.PageExpandedPlayer = this;
-            ImageAlbumContainer.Visibility = Visibility.Collapsed;
-            TextBlockSinger.Visibility = Visibility.Collapsed;
-            TextBlockSongTitle.Visibility = Visibility.Collapsed;
+            //ImageAlbumContainer.Visibility = Visibility.Collapsed;
             try
             {
                 OnSongChange(HyPlayList.List[HyPlayList.NowPlaying]);
