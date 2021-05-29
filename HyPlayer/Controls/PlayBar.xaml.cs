@@ -4,6 +4,7 @@ using HyPlayer.Pages;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Media.Playback;
 using Windows.Storage;
@@ -162,6 +163,7 @@ namespace HyPlayer.Controls
                }
                ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
                TbSongTag.Text = HyPlayList.NowPlayingItem.AudioInfo.tag;
+               Btn_Share.IsEnabled = HyPlayList.NowPlayingItem.isOnline;
            }));
         }
 
@@ -458,10 +460,22 @@ namespace HyPlayer.Controls
 
         private void Btn_Share_OnClick(object sender, RoutedEventArgs e)
         {
-            DataPackage dpg = new DataPackage();
-            dpg.SetText("https://music.163.com/#/song?id="+HyPlayList.NowPlayingItem.NcPlayItem.sid);
-            Clipboard.SetContent(dpg);
-            
+            if (!HyPlayList.NowPlayingItem.isOnline) return;
+            DataTransferManager dataTransferManager = DataTransferManager.GetForCurrentView();
+
+            dataTransferManager.DataRequested += ((manager, args) =>
+            {
+                DataPackage dataPackage = new DataPackage();
+                dataPackage.SetWebLink(new Uri("https://music.163.com/#/song?id=" + HyPlayList.NowPlayingItem.NcPlayItem.sid));
+                dataPackage.Properties.Title = HyPlayList.NowPlayingItem.Name;
+                dataPackage.Properties.Description = string.Join(';', HyPlayList.NowPlayingItem.NcPlayItem.Artist.Select(t => t.name)) + "   -- 分享歌曲 来自 HyPlayer" ;
+                DataRequest request = args.Request;
+                request.Data = dataPackage;
+            });
+
+            //展示系统的共享ui
+            DataTransferManager.ShowShareUI();
+
         }
     }
 

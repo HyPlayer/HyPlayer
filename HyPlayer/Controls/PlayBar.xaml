@@ -239,11 +239,6 @@
                     <FontIcon
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
                         Glyph="&#xE72D;"></FontIcon>
-                    <Button.Flyout>
-                        <Flyout>
-                            <TextBlock Text="链接已复制"/>
-                        </Flyout>
-                    </Button.Flyout>
                 </Button>
             </StackPanel>
             <StackPanel Orientation="Horizontal" x:Name="GridSongInfo">
