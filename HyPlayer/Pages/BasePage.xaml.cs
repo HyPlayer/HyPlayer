@@ -239,14 +239,22 @@ namespace HyPlayer.Pages
 
         private void OnNavigateBack(NavigationView sender, NavigationViewBackRequestedEventArgs args)
         {
-            if (Common.BaseFrame.CanGoBack)
+            try
             {
-                Common.BaseFrame.GoBack();
+                if (Common.BaseFrame.CanGoBack)
+                {
+                    Common.BaseFrame.GoBack();
+                }
+                selectionHistory.RemoveAt(selectionHistory.Count - 1);
+                NavMain.SelectedItem = selectionHistory.Last();
+                if (selectionHistory.Count <= 1)
+                    NavMain.IsBackEnabled = false;
             }
-            selectionHistory.RemoveAt(selectionHistory.Count - 1);
-            NavMain.SelectedItem = selectionHistory.Last();
-            if (selectionHistory.Count <= 1)
-                NavMain.IsBackEnabled = false;
+            catch (Exception)
+            {
+                //ignore
+            }
+            
         }
 
         private void TextBoxAccount_OnKeyDown(object sender, KeyRoutedEventArgs e)

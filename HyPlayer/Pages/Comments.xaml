@@ -5,54 +5,47 @@
     xmlns:local="using:HyPlayer.Pages"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
->
+    mc:Ignorable="d">
 
 
+    <ScrollViewer VerticalScrollMode="Enabled" VerticalScrollBarVisibility="Visible">
 
-        <ScrollViewer VerticalScrollMode="Enabled" VerticalScrollBarVisibility="Visible">
-
-            <StackPanel
-                    Orientation="Vertical"
-                    HorizontalAlignment="Stretch">
-            <Grid >
+        <StackPanel
+            Orientation="Vertical">
+            <Grid x:Name="SongInfoContainer" Margin="0,0,0,15" />
+            <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition />
+                    <ColumnDefinition Width="100" />
                 </Grid.ColumnDefinitions>
-                <TextBox PlaceholderText="发表评论" Margin="15" x:Name="CommentEdit"  HorizontalAlignment="Stretch" MaxLength="140" TextWrapping="Wrap" Grid.Column="0"/>
-                <Button Content="发表" Margin="15" MaxWidth="100" Grid.Column="1" HorizontalAlignment="Right" x:Name="SendComment"  Click="SendComment_Click"/>
+                <TextBox PlaceholderText="发表评论" Margin="15" x:Name="CommentEdit" HorizontalAlignment="Stretch"
+                         MaxLength="140" TextWrapping="Wrap" Grid.Column="0" />
+                <Button Content="发表" Margin="15" MaxWidth="100" Grid.Column="1" HorizontalAlignment="Right"
+                        x:Name="SendComment" Click="SendComment_Click" />
             </Grid>
-            <TextBlock Text="热评" FontSize="40" Margin="15"/>
-            <StackPanel x:Name="HotCommentList" Orientation="Vertical" Margin="10" Spacing="15">
-
-
-            </StackPanel>
-            <StackPanel Margin="15" Height="2" Background="Black"/>
-
-            <TextBlock Text="所有评论" FontSize="40" Margin="15"/>
-                <StackPanel x:Name="CommentList" Orientation="Vertical" Margin="10" Spacing="15">
-
-
-                </StackPanel>
-                <Button
-                        Visibility="Collapsed"
-                        Content="上一页"
-                        x:Name="PrevPage"
-                        Click="PrevPage_Click" />
-                <TextBlock
-                        x:Name="PageIndicator" />
-                <Button
-                        Visibility="Collapsed"
-                        Content="下一页"
-                        x:Name="NextPage"
-                        Click="NextPage_Click" />
-                <Grid
-                    Height="150" />
-            </StackPanel>
-        </ScrollViewer>
+            <!--
+            <TextBlock Text="热评" FontSize="40" Margin="15" />
+            <StackPanel x:Name="HotCommentList" Orientation="Vertical" Margin="10" Spacing="30" />
+            <StackPanel Margin="15" Height="2" Background="Black" />
+-->
+            <TextBlock Text="所有评论" FontSize="40" Margin="15" />
+            <StackPanel x:Name="CommentList" Orientation="Vertical" Margin="10" Spacing="30" />
+            <Button
+                Visibility="Collapsed"
+                Content="上一页"
+                x:Name="PrevPage"
+                Click="PrevPage_Click" />
+            <TextBlock
+                x:Name="PageIndicator" />
+            <Button
+                Visibility="Collapsed"
+                Content="下一页"
+                x:Name="NextPage"
+                Click="NextPage_Click" />
+            <Grid
+                Height="150" />
+        </StackPanel>
+    </ScrollViewer>
 
 
 </Page>
-
-

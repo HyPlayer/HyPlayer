@@ -26,57 +26,54 @@ namespace HyPlayer.Pages
     /// </summary>
     public sealed partial class Comments : Page
     {
-        private int page = 0;
+        private int page = 1;
         private NCSong Song;
+
         public Comments()
         {
             this.InitializeComponent();
         }
+
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
             Song = (NCSong)e.Parameter;
-            LoadComments(true);
-            LoadComments(false);
+            SongInfoContainer.Children.Add(new SingleNCSong(Song,0));
+            LoadComments(1);
         }
-        private async void LoadComments(bool IsHot)
+
+        private async void LoadComments(int type)
         {
-            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentMusic, new Dictionary<string, object>() { { "id", Song.sid }, { "offset", page * 20 } });
+            // type 1:按推荐排序,2:按热度排序,3:按时间排序
+            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentNew,
+                new Dictionary<string, object>() { { "id", Song.sid }, { "type", 0 }, { "pageNo", page }, { "pageSize", 20 }, { "sortType", type } });
             if (isOk)
             {
-                int index = 0;
-                string CommentsType;
-                if (IsHot)
-                    CommentsType = "hotComments";
-                else
-                {
-                    CommentsType = "comments";
-                    CommentList.Children.Clear();
-                }
-                foreach (JToken comment in json[CommentsType].ToArray())
+                CommentList.Children.Clear();
+                foreach (JToken comment in json["data"]["comments"].ToArray())
                 {
                     Comment cmt = new Comment();
-                    cmt.song = Song;
+                    cmt.songid = Song.sid;
                     cmt.cid = comment["commentId"].ToString();
-                    cmt.AvatarUri = comment["user"]["avatarUrl"] is null ? new Uri("ms-appx:///Assets/icon.png") : new Uri(comment["user"]["avatarUrl"].ToString());
-                    cmt.Nickname = comment["user"]["nickname"] is null ? comment["user"]["userId"].ToString() : comment["user"]["nickname"].ToString();
+                    cmt.SendTime =
+                        new DateTime((Convert.ToInt64(comment["time"].ToString()) * 10000) + 621355968000000000);
+                    cmt.AvatarUri = comment["user"]["avatarUrl"] is null
+                        ? new Uri("ms-appx:///Assets/icon.png")
+                        : new Uri(comment["user"]["avatarUrl"].ToString() + "?param=" +
+                                  StaticSource.PICSIZE_COMMENTUSER_AVATAR);
+                    cmt.Nickname = comment["user"]["nickname"] is null
+                        ? comment["user"]["userId"].ToString()
+                        : comment["user"]["nickname"].ToString();
                     cmt.uid = comment["user"]["userId"].ToString();
                     cmt.content = comment["content"].ToString();
+                    cmt.likedCount = comment["likedCount"].ToObject<int>();
                     if (comment["liked"].ToString() == "False")
                         cmt.HasLiked = false;
                     else cmt.HasLiked = true;
-                    SingleComment curcomment = new SingleComment(cmt);
-                    if (IsHot)
-                    {
-                        HotCommentList.Children.Add(curcomment);
-                        return;
-                    }
-                    else
-                    {
-                        CommentList.Children.Add(curcomment);
-                    }
+                    CommentList.Children.Add(new SingleComment(cmt));
                 }
-                if ((json["more"].ToString()) == "True")
+
+                if ((json["data"]["hasMore"].ToString()) == "True")
                 {
                     NextPage.Visibility = Visibility.Visible;
                 }
@@ -84,7 +81,8 @@ namespace HyPlayer.Pages
                 {
                     NextPage.Visibility = Visibility.Collapsed;
                 }
-                if (page > 0)
+
+                if (page > 1)
                 {
                     PrevPage.Visibility = Visibility.Visible;
                 }
@@ -99,13 +97,13 @@ namespace HyPlayer.Pages
         private void NextPage_Click(object sender, RoutedEventArgs e)
         {
             page++;
-            LoadComments(false);
+            LoadComments(1);
         }
 
         private void PrevPage_Click(object sender, RoutedEventArgs e)
         {
             page--;
-            LoadComments(false);
+            LoadComments(1);
         }
 
         private async void SendComment_Click(object sender, RoutedEventArgs e)
@@ -113,10 +111,12 @@ namespace HyPlayer.Pages
             if (!String.IsNullOrWhiteSpace(CommentEdit.Text) && Common.Logined)
                 try
                 {
-                    await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment, new Dictionary<string, object>() { { "id", Song.sid }, { "type", '0' }, { "t", "1" }, { "content", CommentEdit.Text } });
+                    await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment,
+                        new Dictionary<string, object>()
+                            {{"id", Song.sid}, {"type", '0'}, {"t", "1"}, {"content", CommentEdit.Text}});
                     CommentEdit.Text = String.Empty;
                     await System.Threading.Tasks.Task.Delay(1000);
-                    LoadComments(false);
+                    LoadComments(1);
                 }
                 catch (Exception ex)
                 {

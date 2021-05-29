@@ -10,26 +10,36 @@
     d:DesignWidth="800">
 
     <Grid>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch">
-            <Button x:Name="NavToUser" Click="NavToUser_Click" Height="70" Width="70">
-                <Button.Content>
-                    <PersonPicture x:Name="UserAvatar" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="70" MaxHeight="70" ProfilePicture="{x:Bind AvatarSource}" />
-                </Button.Content>
-            </Button>
-            <StackPanel Orientation="Vertical" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <TextBlock x:Name="Nickname" FontSize="12" Text="{x:Bind comment.Nickname}"/>
-                <TextBlock x:Name="CommentContent" Text="{x:Bind comment.content}" MaxHeight="70" TextWrapping="Wrap"/>
-                <RelativePanel Height="45" HorizontalAlignment="Left" >
-                    <ToggleButton x:Name="Like" IsChecked="{x:Bind comment.HasLiked}"  ToolTipService.ToolTip="点赞" Click="Like_Click" RelativePanel.AlignRightWithPanel="True" Height="35" Margin="5">
-                        <SymbolIcon Symbol="Like"/>
-                    </ToggleButton>
-                    <Button x:Name="Delete" ToolTipService.ToolTip="删除" Visibility="{x:Bind comment.IsByMyself}" Click="Delete_Click" RelativePanel.LeftOf="Like" Height="35" Margin="5">
-                        <SymbolIcon Symbol="Delete"/>
-                    </Button>
-                    <Button x:Name="Copy" ToolTipService.ToolTip="复制评论" Click="Copy_Click" RelativePanel.LeftOf="Delete" Height="35" Margin="5">
-                        <SymbolIcon Symbol="Copy"/>
-                    </Button>
-                </RelativePanel>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="70" />
+            <ColumnDefinition Width="10"/> <!-- White Space-->
+            <ColumnDefinition Width="*"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <PersonPicture Grid.Column="0" x:Name="UserAvatar" PointerPressed="NavToUser_Click" Height="70" Width="70"
+                       VerticalAlignment="Top" HorizontalAlignment="Center" MaxWidth="70"
+                       MaxHeight="70" ProfilePicture="{x:Bind AvatarSource}" />
+        <StackPanel Grid.Column="2" Orientation="Vertical">
+            <TextBlock x:Name="Nickname" Text="{x:Bind comment.Nickname}"
+                       PointerPressed="NavToUser_Click" />
+            <TextBlock Foreground="Gray" Text="{x:Bind comment.SendTime}" />
+            <TextBlock Margin="0,10,0,0" x:Name="CommentContent" Text="{x:Bind comment.content}" FontSize="15"
+                       TextWrapping="Wrap" />
+            <StackPanel HorizontalAlignment="Left" Orientation="Horizontal" Spacing="10" Margin="0,10,0,0">
+                <ToggleButton x:Name="Like" IsChecked="{x:Bind comment.HasLiked}" ToolTipService.ToolTip="点赞"
+                              Click="Like_Click" Height="35">
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                        <SymbolIcon Symbol="Like" />
+                        <TextBlock Text="{x:Bind comment.likedCount}" />
+                    </StackPanel>
+                </ToggleButton>
+                <Button x:Name="Delete" ToolTipService.ToolTip="删除" Visibility="{x:Bind comment.IsByMyself}"
+                        Click="Delete_Click" Height="35">
+                    <SymbolIcon Symbol="Delete" />
+                </Button>
+                <Button x:Name="Copy" ToolTipService.ToolTip="复制评论" Click="Copy_Click"
+                        RelativePanel.LeftOf="Delete" Height="35">
+                    <SymbolIcon Symbol="Copy" />
+                </Button>
             </StackPanel>
         </StackPanel>
     </Grid>

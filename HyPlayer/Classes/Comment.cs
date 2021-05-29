@@ -9,13 +9,15 @@ namespace HyPlayer.Classes
 {
     public struct Comment
     {
-        public NCSong song;
+        public string songid;
         public string cid;
         public string uid;
         public Uri AvatarUri;
         public string Nickname;
         public string content;
         public bool HasLiked;
+        public DateTime SendTime;
+        public int likedCount;
         public bool IsByMyself => this.uid == Common.LoginedUser.id;
     }
 }
