@@ -150,6 +150,9 @@
     <Compile Include="Controls\SingleNCSong.xaml.cs">
       <DependentUpon>SingleNCSong.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\SongListSelect.cs">
+      <DependentUpon>SongListSelect.xaml</DependentUpon>
+    </Compile>
     <Compile Include="HyPlayControl\DownloadManager.cs" />
     <Compile Include="HyPlayControl\HyPlayItem.cs" />
     <Compile Include="HyPlayControl\HyPlayList.cs" />
@@ -250,6 +253,9 @@
     <Content Include="Assets\Wide310x150Logo.scale-125.png" />
     <Content Include="Assets\Wide310x150Logo.scale-150.png" />
     <Content Include="Assets\Wide310x150Logo.scale-400.png" />
+    <Page Include="Controls\SongListSelect.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Content Include="Resources\Dark.xaml" />
     <Content Include="Resources\Light.xaml" />
     <Content Include="Resources\Theme.xaml" />

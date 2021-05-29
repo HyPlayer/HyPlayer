@@ -243,38 +243,50 @@ namespace HyPlayer.Controls
             Common.PageMain.ExpandedPlayer.Visibility = Visibility.Visible;
             Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer), null,
                 new EntranceNavigationTransitionInfo());
+            /*
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TbSongName);
-            if (AlbumImage.Visibility == Visibility.Visible)
+            if (GridSongInfoContainer.Visibility == Visibility.Visible)
             {
                 ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", AlbumImage);
             }
 
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TbSingerName);
             Common.PageExpandedPlayer.StartExpandAnimation();
+            */
             GridSongInfo.Visibility = Visibility.Collapsed;
+            GridSongAdvancedOperation.Visibility = Visibility.Visible;
         }
 
         public void ButtonCollapse_OnClick(object sender, RoutedEventArgs e)
         {
             Common.PageExpandedPlayer.StartCollapseAnimation();
+            GridSongAdvancedOperation.Visibility = Visibility.Collapsed;
             GridSongInfo.Visibility = Visibility.Visible;
-            ConnectedAnimation anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
-            ConnectedAnimation anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
-            ConnectedAnimation anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
-            anim3.Configuration = new DirectConnectedAnimationConfiguration();
+
+            ConnectedAnimation anim1 = null;
+            ConnectedAnimation anim2 = null;
+            ConnectedAnimation anim3 = null;
+            //anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
+            //anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
+            //anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
+            //anim3.Configuration = new DirectConnectedAnimationConfiguration();
             if (anim2 != null)
             {
                 anim2.Configuration = new DirectConnectedAnimationConfiguration();
             }
 
-            anim1.Configuration = new DirectConnectedAnimationConfiguration();
-            anim3?.TryStart(TbSingerName);
-            anim1?.TryStart(TbSongName);
-            if (AlbumImage.Visibility == Visibility.Visible)
+            //anim1.Configuration = new DirectConnectedAnimationConfiguration();
+            try
             {
+                anim3?.TryStart(TbSingerName);
+                anim1?.TryStart(TbSongName);
                 anim2?.TryStart(AlbumImage);
             }
-
+            catch
+            {
+                //ignore
+            }
+            
             ButtonExpand.Visibility = Visibility.Visible;
             ButtonCollapse.Visibility = Visibility.Collapsed;
             Common.PageExpandedPlayer.Dispose();
@@ -419,6 +431,25 @@ namespace HyPlayer.Controls
                 }
             }
             catch { }
+        }
+
+        private async void Btn_Sub_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (HyPlayList.NowPlayingItem.isOnline)
+            {
+                await new SongListSelect(HyPlayList.NowPlayingItem.NcPlayItem.sid).ShowAsync();
+            }
+        }
+
+        private void Btn_Down_OnClick(object sender, RoutedEventArgs e)
+        {
+            DownloadManager.AddDownload(HyPlayList.NowPlayingItem.ToNCSong());
+        }
+
+        private void Btn_Comment_OnClick(object sender, RoutedEventArgs e)
+        {
+            Common.BaseFrame.Navigate(typeof(Comments), (object)HyPlayList.NowPlayingItem.ToNCSong());
+            ButtonCollapse_OnClick(this, e);
         }
     }
 

@@ -14,6 +14,8 @@ namespace HyPlayer.HyPlayControl
         public bool isOnline;
         public AudioInfo AudioInfo;
         public NCPlayItem NcPlayItem;
+
+        public NCSong ToNCSong() => NcPlayItem.ToNCSong();
     }
 
     public struct AudioInfo

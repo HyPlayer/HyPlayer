@@ -62,6 +62,43 @@ namespace HyPlayer.HyPlayControl
             return false;
         }
 
+        public static void DownloadStartToast(string songname)
+        {
+            ToastContent downloadToastContent = new ToastContent()
+            {
+                Visual = new ToastVisual()
+                {
+                    BindingGeneric = new ToastBindingGeneric()
+                    {
+                        Children =
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = "下载开始",
+                                HintStyle = AdaptiveTextStyle.Header
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = songname
+                            }
+                        }
+                    }
+                },
+                Launch = "",
+                Scenario = ToastScenario.Reminder,
+                Audio = new ToastAudio() { Silent = true }
+            };
+            var toast = new ToastNotification(downloadToastContent.GetXml())
+            {
+                Tag = "HyPlayerDownloadStart",
+                Data = new NotificationData()
+            };
+
+            toast.Data.SequenceNumber = 0;
+            ToastNotifier notifier = ToastNotificationManager.CreateToastNotifier();
+            notifier.Show(toast);
+        }
+        
         public static async void AddDownload(NCSong song)
         {
             if (!CheckDownloadAbilityAndToast()) return;
@@ -91,6 +128,7 @@ namespace HyPlayer.HyPlayControl
                 DownloadLists[dop] = ncp;
                 var process = new Progress<DownloadOperation>(ProgressCallback);
                 _ = dop.StartAsync().AsTask(process);
+                DownloadStartToast(FileName);
             }
         }
 
@@ -106,10 +144,11 @@ namespace HyPlayer.HyPlayControl
                 }
 
                 int i = 0;
+                string FileName ="";
                 foreach (JToken jToken in json["data"])
                 {
                     var song = songs.Find(t=>t.sid == jToken["id"].ToString());
-                    string FileName = string.Join(';', song.Artist.Select(t => t.name)) + " - " + song.songname + "." + jToken["type"].ToString().ToLowerInvariant();
+                    FileName = string.Join(';', song.Artist.Select(t => t.name)) + " - " + song.songname + "." + jToken["type"].ToString().ToLowerInvariant();
                     var dop = Downloader.CreateDownload(new Uri(jToken["url"].ToString()), await (await StorageFolder.GetFolderFromPathAsync(Common.Setting.downloadDir)).CreateFileAsync(FileName, CreationCollisionOption.ReplaceExisting));
                     NCPlayItem ncp = new NCPlayItem()
                     {
@@ -130,6 +169,7 @@ namespace HyPlayer.HyPlayControl
                     _ = dop.StartAsync().AsTask(process);
                     i++;
                 }
+                DownloadStartToast(FileName +" 等 "+i.ToString()+" 个文件");
             }
         }
 

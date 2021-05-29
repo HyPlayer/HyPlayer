@@ -23,7 +23,7 @@
             <ColumnDefinition Width="70"/>
             <ColumnDefinition Width="2*"/>
             <ColumnDefinition />
-            <ColumnDefinition  Width="150"/>
+            <ColumnDefinition  Width="180"/>
         </Grid.ColumnDefinitions>
         <TextBlock
             HorizontalAlignment="Center"
@@ -68,10 +68,14 @@
 
         </controls:DockPanel>
         <StackPanel Orientation="Horizontal"
+                    Spacing="8"
             Grid.Column="4">
-            <Button x:Name="Comments" Margin="8,0,8,0" Content="评" Click="Comments_Click"/>
+            <Button x:Name="Comments"  Click="Comments_Click">
+                <FontIcon
+                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                    Glyph="&#xE8F2;"></FontIcon>
+            </Button>
             <Button
-                Margin="0,0,8,0"
                 x:Name="BtnPlay"
                 Click="ButtonBase_OnClick">
                 <FontIcon
@@ -85,6 +89,13 @@
                 <FontIcon
                     FontFamily="{StaticResource SymbolThemeFontFamily}"
                     Glyph="&#xE118;"></FontIcon>
+            </Button>
+            <Button
+                Click="Btn_Sub_OnClick"
+                x:Name="BtnSub">
+                <FontIcon
+                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                    Glyph="&#xE1DA;"></FontIcon>
             </Button>
 
         </StackPanel>

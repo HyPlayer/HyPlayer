@@ -253,6 +253,7 @@
             Grid.ColumnSpan="5"
             Grid.Column="6">
             <TextBlock
+                Visibility="Visible"
                 DoubleTapped="ToggleWindowShowMode"
                 controls:DockPanel.Dock="Top"
                 FontSize="30"
@@ -261,6 +262,7 @@
                 Name="TextBlockSongTitle"
                 Text="歌曲名" />
             <TextBlock
+                Visibility="Visible"
                 controls:DockPanel.Dock="Top"
                 x:FieldModifier="public"
                 TextAlignment="Center"

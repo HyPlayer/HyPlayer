@@ -49,6 +49,18 @@ namespace HyPlayer.Classes
         public string size;
         public string md5;
         public double LengthInMilliseconds;
+
+        public NCSong ToNCSong()
+        {
+            return new NCSong()
+            {
+                Album = Album,
+                Artist = Artist,
+                LengthInMilliseconds = LengthInMilliseconds,
+                sid = sid,
+                songname = songname
+            };
+        }
     }
 
     public struct NCPlayList

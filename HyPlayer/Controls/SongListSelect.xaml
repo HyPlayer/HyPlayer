@@ -1,20 +1,18 @@
-﻿<ContentDialog
-    x:Class="HyPlayer.Controls.ArtistSelectDialog"
+<ContentDialog
+    x:Class="HyPlayer.Controls.SongListSelect"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:HyPlayer.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Title="选择歌手"
+    Title="选择歌单"
     CloseButtonText="关闭">
     <StackPanel>
-        <ScrollViewer
-            VerticalScrollBarVisibility="Auto">
-            <ListView
-                x:Name="ListViewArtists"
-                SelectionChanged="ListViewArtists_OnSelectionChanged"
-                SelectionMode="Single" />
-        </ScrollViewer>
+        <ListView
+            MaxHeight="400"
+            x:Name="ListViewSongList"
+            SelectionChanged="ListViewSongList_OnSelectionChanged"
+            SelectionMode="Single" />
     </StackPanel>
 </ContentDialog>

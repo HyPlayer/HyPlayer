@@ -33,6 +33,7 @@ namespace HyPlayer.Pages
     {
         private List<NavigationViewItem> selectionHistory;
         private bool IsNavBack;
+
         public BasePage()
         {
             InitializeComponent();
@@ -47,6 +48,7 @@ namespace HyPlayer.Pages
                 TextBlockUserName.Text = Common.LoginedUser.name;
                 PersonPictureUser.ProfilePicture = new BitmapImage(new Uri(Common.LoginedUser.avatar));
             }
+
             Common.BaseFrame = BaseFrame;
             NavMain.SelectedItem = NavMain.MenuItems[0];
             Common.BaseFrame.Navigate(typeof(Home));
@@ -56,7 +58,8 @@ namespace HyPlayer.Pages
         {
             try
             {
-                StorageFile sf = await Windows.Storage.ApplicationData.Current.LocalFolder.GetFileAsync("Settings\\UserPassword");
+                StorageFile sf =
+                    await Windows.Storage.ApplicationData.Current.LocalFolder.GetFileAsync("Settings\\UserPassword");
                 string txt = await FileIO.ReadTextAsync(sf);
                 string[] arr = txt.Split("\r\n");
                 Dictionary<string, object> queries = new Dictionary<string, object>();
@@ -64,7 +67,8 @@ namespace HyPlayer.Pages
                 bool isPhone = Regex.Match(account, "^[0-9]+$").Success;
                 queries[isPhone ? "phone" : "email"] = account;
                 queries["md5_password"] = arr[1];
-                (bool isOk, JObject json) = await Common.ncapi.RequestAsync(isPhone ? CloudMusicApiProviders.LoginCellphone : CloudMusicApiProviders.Login, queries);
+                (bool isOk, JObject json) = await Common.ncapi.RequestAsync(
+                    isPhone ? CloudMusicApiProviders.LoginCellphone : CloudMusicApiProviders.Login, queries);
                 if (isOk && json["code"].ToString() == "200")
                 {
                     Common.Logined = true;
@@ -86,12 +90,13 @@ namespace HyPlayer.Pages
 
         private async void ButtonLogin_OnClick(object sender, RoutedEventArgs e)
         {
-            if(String.IsNullOrWhiteSpace(TextBoxAccount.Text)|| String.IsNullOrWhiteSpace(TextBoxPassword.Password))
+            if (String.IsNullOrWhiteSpace(TextBoxAccount.Text) || String.IsNullOrWhiteSpace(TextBoxPassword.Password))
             {
                 InfoBarLoginHint.IsOpen = true;
                 InfoBarLoginHint.Message = "用户名或密码不能为空";
                 return;
             }
+
             ButtonLogin.IsEnabled = false;
             ButtonLogin.Content = "登录中......";
             bool isOk;
@@ -160,20 +165,37 @@ namespace HyPlayer.Pages
         private async void LoginDone()
         {
             //加载我喜欢的歌
-            (bool isok, JObject js) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Likelist, new Dictionary<string, object>() { { "uid", Common.LoginedUser.id } });
+            (bool isok, JObject js) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Likelist,
+                new Dictionary<string, object>() {{"uid", Common.LoginedUser.id}});
             Common.LikedSongs = js["ids"].ToObject<List<string>>();
 
             //加载用户歌单
             Microsoft.UI.Xaml.Controls.NavigationViewItem nowitem = NavItemsMyList;
-            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist, new Dictionary<string, object>() { { "uid", Common.LoginedUser.id } });
+            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
+                new Dictionary<string, object>() {{"uid", Common.LoginedUser.id}});
             if (isok)
             {
                 NavItemsLikeList.Visibility = Visibility.Visible;
                 NavItemsMyList.Visibility = Visibility.Visible;
+                Common.MySongLists.Clear();
                 foreach (JToken jToken in json["playlist"])
                 {
                     if (jToken["subscribed"].ToString() == "True")
                     {
+                        Common.MySongLists.Add(new NCPlayList()
+                        {
+                            cover = jToken["coverImgUrl"].ToString(),
+                            creater = new NCUser()
+                            {
+                                avatar = jToken["creator"]["avatarUrl"].ToString(),
+                                id = jToken["creator"]["userId"].ToString(),
+                                name = jToken["creator"]["nickname"].ToString(),
+                                signature = jToken["creator"]["signature"].ToString()
+                            },
+                            plid = jToken["id"].ToString(),
+                            name = jToken["name"].ToString(),
+                            desc = jToken["description"].ToString()
+                        });
                         NavItemsLikeList.MenuItems.Add(new NavigationViewItem()
                         {
                             Content = jToken["name"].ToString(),
@@ -190,12 +212,13 @@ namespace HyPlayer.Pages
                     }
                 }
             }
+
             DialogLogin.Hide();
         }
 
 
-
-        private async void NavMain_OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+        private async void NavMain_OnSelectionChanged(NavigationView sender,
+            NavigationViewSelectionChangedEventArgs args)
         {
             var nowitem = sender.SelectedItem as NavigationViewItem;
             if (!IsNavBack)
@@ -219,7 +242,8 @@ namespace HyPlayer.Pages
 
             if (nowitem.Tag.ToString().StartsWith("Playlist"))
             {
-                Common.BaseFrame.Navigate(typeof(Pages.SongListDetail), nowitem.Tag.ToString().Substring(8), new EntranceNavigationTransitionInfo());
+                Common.BaseFrame.Navigate(typeof(Pages.SongListDetail), nowitem.Tag.ToString().Substring(8),
+                    new EntranceNavigationTransitionInfo());
             }
 
             switch (nowitem.Tag.ToString())
@@ -245,6 +269,7 @@ namespace HyPlayer.Pages
                 {
                     Common.BaseFrame.GoBack();
                 }
+
                 selectionHistory.RemoveAt(selectionHistory.Count - 1);
                 NavMain.SelectedItem = selectionHistory.Last();
                 if (selectionHistory.Count <= 1)
@@ -254,7 +279,6 @@ namespace HyPlayer.Pages
             {
                 //ignore
             }
-            
         }
 
         private void TextBoxAccount_OnKeyDown(object sender, KeyRoutedEventArgs e)
@@ -285,15 +309,19 @@ namespace HyPlayer.Pages
                 AutoSuggestBox_GotFocus(sender, null);
                 return;
             }
-            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchSuggest, new Dictionary<string, object>() { { "keywords", sender.Text },{ "type","mobile" } });
+
+            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchSuggest,
+                new Dictionary<string, object>() {{"keywords", sender.Text}, {"type", "mobile"}});
 
             if (isOk && json["result"]["allMatch"].HasValues)
             {
-                sender.ItemsSource = json["result"]["allMatch"].ToArray().ToList().Select(t => t["keyword"].ToString()).ToList();
+                sender.ItemsSource = json["result"]["allMatch"].ToArray().ToList().Select(t => t["keyword"].ToString())
+                    .ToList();
             }
         }
 
-        private void AutoSuggestBox_SuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+        private void AutoSuggestBox_SuggestionChosen(AutoSuggestBox sender,
+            AutoSuggestBoxSuggestionChosenEventArgs args)
         {
             sender.Text = args.SelectedItem.ToString();
         }
@@ -306,7 +334,8 @@ namespace HyPlayer.Pages
                 (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchHot);
                 if (isOk)
                 {
-                    ((AutoSuggestBox) sender).ItemsSource = json["result"]["hots"].ToArray().ToList().Select(t=>t["first"].ToString());
+                    ((AutoSuggestBox) sender).ItemsSource =
+                        json["result"]["hots"].ToArray().ToList().Select(t => t["first"].ToString());
                 }
             }
         }

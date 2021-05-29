@@ -28,6 +28,7 @@ namespace HyPlayer
         public static Dictionary<string, object> GLOBAL = new Dictionary<string, object>();
         public static List<string> LikedSongs = new List<string>();
         public static KawazuConverter KawazuConv = null;
+        public static List<NCPlayList> MySongLists = new List<NCPlayList>();
 
         public static async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)
         {

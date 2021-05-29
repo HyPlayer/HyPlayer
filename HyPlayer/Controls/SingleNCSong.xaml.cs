@@ -120,6 +120,11 @@ namespace HyPlayer.Controls
         {
             Common.BaseFrame.Navigate(typeof(Comments), ncsong);
         }
+
+        private async void Btn_Sub_OnClick(object sender, RoutedEventArgs e)
+        {
+            await new SongListSelect(ncsong.sid).ShowAsync();
+        }
     }
 
 }

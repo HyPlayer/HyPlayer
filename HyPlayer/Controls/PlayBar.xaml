@@ -141,7 +141,7 @@
                             Target="SubControlGrid.Visibility"
                             Value="Collapsed" />
                         <Setter
-                            Target="AlbumImage.Visibility"
+                            Target="GridSongInfoContainer.Visibility"
                             Value="Collapsed" />
 
                     </VisualState.Setters>
@@ -190,7 +190,7 @@
                             Target="MainControlGrid.(Grid.ColumnSpan)"
                             Value="4" />
                         <Setter
-                            Target="AlbumImage.Visibility"
+                            Target="GridSongInfoContainer.Visibility"
                             Value="Visible" />
                         <Setter
                             Target="ButtonCollapse.Margin"
@@ -215,12 +215,29 @@
             <ColumnDefinition
                 Width="*" />
         </Grid.ColumnDefinitions>
-        <StackPanel
-            Orientation="Horizontal"
+        <Grid
             Grid.ColumnSpan="2"
             Grid.Column="0"
-            Name="GridSongInfo">
-            <Grid
+            x:Name="GridSongInfoContainer">
+            <StackPanel x:Name="GridSongAdvancedOperation" Orientation="Horizontal" Visibility="Collapsed" Spacing="15" Margin="30,0,0,15">
+                <Button x:Name="Btn_Sub" Click="Btn_Sub_OnClick" >
+                    <FontIcon
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        Glyph="&#xE1DA;"></FontIcon>
+                </Button>
+                <Button x:Name="Btn_Down" Click="Btn_Down_OnClick" >
+                    <FontIcon
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        Glyph="&#xE118;"></FontIcon>
+                </Button>
+                <Button x:Name="Btn_Comment" Click="Btn_Comment_OnClick" >
+                    <FontIcon
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        Glyph="&#xE8F2;"></FontIcon>
+                </Button>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" x:Name="GridSongInfo">
+                <Grid
                 Margin="0"
                 x:Name="ImageContainer"
                 PointerPressed="ImageContainer_OnPointerPressed"
@@ -232,7 +249,7 @@
                     Stretch="UniformToFill"
                     x:Name="AlbumImage"/>
             </Grid>
-            <StackPanel
+                <StackPanel
                 VerticalAlignment="Center"
                 HorizontalAlignment="Stretch"
                 Spacing="10"
@@ -262,7 +279,8 @@
                     PointerPressed="TbSingerName_OnPointerPressed"
                     Name="TbSingerName" />
             </StackPanel>
-        </StackPanel>
+            </StackPanel>
+        </Grid>
         <Grid
             Margin="5"
             Name="MainControlGrid"
