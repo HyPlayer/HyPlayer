@@ -4,6 +4,7 @@ using HyPlayer.Pages;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Media.Playback;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
@@ -453,6 +454,14 @@ namespace HyPlayer.Controls
         {
             Common.BaseFrame.Navigate(typeof(Comments), (object)HyPlayList.NowPlayingItem.ToNCSong());
             ButtonCollapse_OnClick(this, e);
+        }
+
+        private void Btn_Share_OnClick(object sender, RoutedEventArgs e)
+        {
+            DataPackage dpg = new DataPackage();
+            dpg.SetText("https://music.163.com/#/song?id="+HyPlayList.NowPlayingItem.NcPlayItem.sid);
+            Clipboard.SetContent(dpg);
+            
         }
     }
 
