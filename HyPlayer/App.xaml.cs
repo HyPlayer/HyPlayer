@@ -6,6 +6,9 @@ using Windows.UI.Notifications;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using Microsoft.AppCenter;
+using Microsoft.AppCenter.Analytics;
+using Microsoft.AppCenter.Crashes;
 using UnhandledExceptionEventArgs = Windows.UI.Xaml.UnhandledExceptionEventArgs;
 
 namespace HyPlayer
@@ -25,6 +28,8 @@ namespace HyPlayer
             Suspending += OnSuspending;
             UnhandledException += App_UnhandledException;
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+            AppCenter.Start("8e88eab0-1627-4ff9-9ee7-7fd46d0629cf",
+                typeof(Analytics), typeof(Crashes));
         }
         protected override void OnActivated(IActivatedEventArgs args)
         {
@@ -90,6 +95,7 @@ namespace HyPlayer
         }
         private void CurrentDomain_UnhandledException(object sender, System.UnhandledExceptionEventArgs e)
         {
+            Crashes.TrackError((Exception)e.ExceptionObject);
             Common.Invoke((async () =>
             {
                 ContentDialog Dialog = new ContentDialog
@@ -106,6 +112,7 @@ namespace HyPlayer
 
         private void App_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
+            Crashes.TrackError(e.Exception);
             e.Handled = true;
             /*
             await new ContentDialog
