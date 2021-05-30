@@ -21,6 +21,7 @@ using NavigationViewItem = Microsoft.UI.Xaml.Controls.NavigationViewItem;
 using NavigationViewSelectionChangedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewSelectionChangedEventArgs;
 using System.Linq;
 using System.Threading.Tasks;
+using HyPlayer.HyPlayControl;
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
 
@@ -164,56 +165,95 @@ namespace HyPlayer.Pages
 
         private async void LoginDone()
         {
-            //加载我喜欢的歌
-            (bool isok, JObject js) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Likelist,
-                new Dictionary<string, object>() {{"uid", Common.LoginedUser.id}});
-            Common.LikedSongs = js["ids"].ToObject<List<string>>();
-
-            //加载用户歌单
-            Microsoft.UI.Xaml.Controls.NavigationViewItem nowitem = NavItemsMyList;
-            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
-                new Dictionary<string, object>() {{"uid", Common.LoginedUser.id}});
-            if (isok)
-            {
-                NavItemsLikeList.Visibility = Visibility.Visible;
-                NavItemsMyList.Visibility = Visibility.Visible;
-                Common.MySongLists.Clear();
-                foreach (JToken jToken in json["playlist"])
-                {
-                    if (jToken["subscribed"].ToString() == "True")
-                    {
-                        NavItemsLikeList.MenuItems.Add(new NavigationViewItem()
-                        {
-                            Content = jToken["name"].ToString(),
-                            Tag = "Playlist" + jToken["id"]
-                        });
-                    }
-                    else
-                    {
-                        Common.MySongLists.Add(new NCPlayList()
-                        {
-                            cover = jToken["coverImgUrl"].ToString(),
-                            creater = new NCUser()
-                            {
-                                avatar = jToken["creator"]["avatarUrl"].ToString(),
-                                id = jToken["creator"]["userId"].ToString(),
-                                name = jToken["creator"]["nickname"].ToString(),
-                                signature = jToken["creator"]["signature"].ToString()
-                            },
-                            plid = jToken["id"].ToString(),
-                            name = jToken["name"].ToString(),
-                            desc = jToken["description"].ToString()
-                        });
-                        NavItemsMyList.MenuItems.Add(new NavigationViewItem()
-                        {
-                            Content = jToken["name"].ToString(),
-                            Tag = "Playlist" + jToken["id"]
-                        });
-                    }
-                }
-            }
-
             DialogLogin.Hide();
+            //加载我喜欢的歌
+            _ = Task.Run((() =>
+            {
+                Common.Invoke(( async () =>
+                {
+                    (bool isok, JObject js) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Likelist,
+                        new Dictionary<string, object>() {{"uid", Common.LoginedUser.id}});
+                    Common.LikedSongs = js["ids"].ToObject<List<string>>();
+                }));
+            }));
+            
+            _ = Task.Run((() =>
+            {
+                Common.Invoke((async () =>
+                {
+                    //加载用户歌单
+                    Microsoft.UI.Xaml.Controls.NavigationViewItem nowitem = NavItemsMyList;
+                    (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
+                        new Dictionary<string, object>() {{"uid", Common.LoginedUser.id}});
+                    if (isOk)
+                    {
+                        NavItemsLikeList.Visibility = Visibility.Visible;
+                        NavItemsMyList.Visibility = Visibility.Visible;
+                        Common.MySongLists.Clear();
+                        foreach (JToken jToken in json["playlist"])
+                        {
+                            if (jToken["subscribed"].ToString() == "True")
+                            {
+                                NavItemsLikeList.MenuItems.Add(new NavigationViewItem()
+                                {
+                                    Content = jToken["name"].ToString(),
+                                    Tag = "Playlist" + jToken["id"]
+                                });
+                            }
+                            else
+                            {
+                                Common.MySongLists.Add(new NCPlayList()
+                                {
+                                    cover = jToken["coverImgUrl"].ToString(),
+                                    creater = new NCUser()
+                                    {
+                                        avatar = jToken["creator"]["avatarUrl"].ToString(),
+                                        id = jToken["creator"]["userId"].ToString(),
+                                        name = jToken["creator"]["nickname"].ToString(),
+                                        signature = jToken["creator"]["signature"].ToString()
+                                    },
+                                    plid = jToken["id"].ToString(),
+                                    name = jToken["name"].ToString(),
+                                    desc = jToken["description"].ToString()
+                                });
+                                NavItemsMyList.MenuItems.Add(new NavigationViewItem()
+                                {
+                                    Content = jToken["name"].ToString(),
+                                    Tag = "Playlist" + jToken["id"]
+                                });
+                            }
+                        }
+                    }
+                }));
+            }));
+            
+            // 执行签到操作
+            _ = Task.Run((() =>
+            {
+                Common.Invoke((() =>
+                {
+                    Common.ncapi.RequestAsync(CloudMusicApiProviders.DailySignin);
+                    Common.ncapi.RequestAsync(CloudMusicApiProviders.DailySignin,new Dictionary<string, object>(){{"type",1}});
+                    //刷播放量不?
+                }));
+            }));
+
+            HyPlayList.OnMediaEnd += (hpi =>
+            {
+                // 播放数据
+                _ = Task.Run((() =>
+                {
+                    Common.Invoke((() =>
+                    {
+                        if (!hpi.isOnline) return;
+                        Common.ncapi.RequestAsync(CloudMusicApiProviders.Scrobble,new Dictionary<string, object>()
+                        {
+                            {"id",hpi.NcPlayItem.sid},
+                            {"sourceid","-1"}
+                        });
+                    }));
+                }));
+            });
         }
 
 
