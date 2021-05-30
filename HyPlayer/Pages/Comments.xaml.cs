@@ -27,6 +27,7 @@ namespace HyPlayer.Pages
     public sealed partial class Comments : Page
     {
         private int page = 1;
+        private int sortType = 1;
         private NCSong Song;
 
         public Comments()
@@ -39,12 +40,13 @@ namespace HyPlayer.Pages
             base.OnNavigatedTo(e);
             Song = (NCSong)e.Parameter;
             SongInfoContainer.Children.Add(new SingleNCSong(Song,0));
-            LoadComments(1);
+            LoadComments(sortType);
         }
 
         private async void LoadComments(int type)
         {
             // type 1:按推荐排序,2:按热度排序,3:按时间排序
+            if (string.IsNullOrEmpty(Song.sid)) return;
             (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentNew,
                 new Dictionary<string, object>() { { "id", Song.sid }, { "type", 0 }, { "pageNo", page }, { "pageSize", 20 }, { "sortType", type } });
             if (isOk)
@@ -97,13 +99,13 @@ namespace HyPlayer.Pages
         private void NextPage_Click(object sender, RoutedEventArgs e)
         {
             page++;
-            LoadComments(1);
+            LoadComments(sortType);
         }
 
         private void PrevPage_Click(object sender, RoutedEventArgs e)
         {
             page--;
-            LoadComments(1);
+            LoadComments(sortType);
         }
 
         private async void SendComment_Click(object sender, RoutedEventArgs e)
@@ -133,6 +135,12 @@ namespace HyPlayer.Pages
                 Windows.UI.Popups.MessageDialog dlg = new Windows.UI.Popups.MessageDialog("请先登录");
                 await dlg.ShowAsync();
             }
+        }
+
+        private void ComboBoxSortType_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            sortType = ComboBoxSortType.SelectedIndex + 1;
+            LoadComments(sortType);
         }
     }
 }
