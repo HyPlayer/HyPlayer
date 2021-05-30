@@ -246,7 +246,7 @@ namespace HyPlayer.Controls
             Common.PageMain.ExpandedPlayer.Visibility = Visibility.Visible;
             Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer), null,
                 new EntranceNavigationTransitionInfo());
-            if (Common.Setting.expandAnimation)
+            if (Common.Setting.expandAnimation && GridSongInfoContainer.Visibility == Visibility.Visible)
             {
                 ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TbSongName);
                 if (GridSongInfoContainer.Visibility == Visibility.Visible)
@@ -267,7 +267,7 @@ namespace HyPlayer.Controls
             Common.PageExpandedPlayer.StartCollapseAnimation();
             GridSongAdvancedOperation.Visibility = Visibility.Collapsed;
             GridSongInfo.Visibility = Visibility.Visible;
-            if (Common.Setting.expandAnimation)
+            if (Common.Setting.expandAnimation && GridSongInfoContainer.Visibility == Visibility.Visible)
             {
                 ConnectedAnimation anim1 = null;
                 ConnectedAnimation anim2 = null;

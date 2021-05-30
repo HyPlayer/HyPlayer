@@ -40,12 +40,14 @@ namespace HyPlayer.Controls
 
         private void UIElement_OnPointerEntered(object sender, PointerRoutedEventArgs e)
         {
-            StoryboardOut.Begin();
+            if (Common.Setting.expandAnimation)
+                StoryboardOut.Begin();
         }
 
         private void UIElement_OnPointerExited(object sender, PointerRoutedEventArgs e)
         {
-            StoryboardIn.Begin();
+            if (Common.Setting.expandAnimation)
+                StoryboardOut.Begin();
         }
     }
 }
