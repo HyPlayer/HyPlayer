@@ -182,6 +182,14 @@ namespace HyPlayer.Pages
                 {
                     if (jToken["subscribed"].ToString() == "True")
                     {
+                        NavItemsLikeList.MenuItems.Add(new NavigationViewItem()
+                        {
+                            Content = jToken["name"].ToString(),
+                            Tag = "Playlist" + jToken["id"]
+                        });
+                    }
+                    else
+                    {
                         Common.MySongLists.Add(new NCPlayList()
                         {
                             cover = jToken["coverImgUrl"].ToString(),
@@ -196,14 +204,6 @@ namespace HyPlayer.Pages
                             name = jToken["name"].ToString(),
                             desc = jToken["description"].ToString()
                         });
-                        NavItemsLikeList.MenuItems.Add(new NavigationViewItem()
-                        {
-                            Content = jToken["name"].ToString(),
-                            Tag = "Playlist" + jToken["id"]
-                        });
-                    }
-                    else
-                    {
                         NavItemsMyList.MenuItems.Add(new NavigationViewItem()
                         {
                             Content = jToken["name"].ToString(),
