@@ -29,7 +29,7 @@
                               Click="Like_Click" Height="35">
                     <StackPanel Orientation="Horizontal" Spacing="5">
                         <SymbolIcon Symbol="Like" />
-                        <TextBlock Text="{x:Bind comment.likedCount}" />
+                        <TextBlock x:Name="LikeCountTB" Text="{x:Bind comment.likedCount}" />
                     </StackPanel>
                 </ToggleButton>
                 <Button x:Name="Delete" ToolTipService.ToolTip="删除" Visibility="{x:Bind comment.IsByMyself}"
