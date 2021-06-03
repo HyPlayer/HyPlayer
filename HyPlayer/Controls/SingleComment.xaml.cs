@@ -48,7 +48,7 @@ namespace HyPlayer.Controls
         {
             await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentLike, new Dictionary<string, object>() { { "id", comment.songid }, { "cid", comment.cid }, { "type", "0" },{ "t", (bool)comment.HasLiked ? "0" : "1" } });
             comment.likedCount += comment.HasLiked ? -1 : 1;
-            LikeCountTB.Text = comment.likedCount;
+            LikeCountTB.Text = comment.likedCount.ToString();
         }
 
         private async void Delete_Click(object sender, RoutedEventArgs e)
