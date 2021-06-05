@@ -163,7 +163,7 @@ namespace HyPlayer.Pages
         }
 
 
-        private async void LoginDone()
+        private void LoginDone()
         {
             DialogLogin.Hide();
             //加载我喜欢的歌

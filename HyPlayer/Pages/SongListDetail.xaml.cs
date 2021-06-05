@@ -290,88 +290,95 @@ namespace HyPlayer.Pages
             LoadSongListItem();
         }
 
-        private async void ButtonHeartBeat_OnClick(object sender, RoutedEventArgs e)
+        private void ButtonHeartBeat_OnClick(object sender, RoutedEventArgs e)
         {
-            HyPlayList.RemoveAllSong();
-            (bool isOk, JObject jsona) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaymodeIntelligenceList,
-                new Dictionary<string, object>() { { "pid", playList.plid }, { "id", intelsong } });
-            if (isOk)
+            _ = Task.Run(() =>
             {
-                List<NCSong> Songs = new List<NCSong>();
-                foreach (JToken token in jsona["data"])
+                Common.Invoke(async () =>
                 {
-                    NCSong ncSong = new NCSong()
+                    HyPlayList.RemoveAllSong();
+                    (bool isOk, JObject jsona) = await Common.ncapi.RequestAsync(
+                        CloudMusicApiProviders.PlaymodeIntelligenceList,
+                        new Dictionary<string, object>() {{"pid", playList.plid}, {"id", intelsong}});
+                    if (isOk)
                     {
-                        Album = new NCAlbum()
+                        List<NCSong> Songs = new List<NCSong>();
+                        foreach (JToken token in jsona["data"])
                         {
-                            cover = token["songInfo"]["al"]["picUrl"].ToString(),
-                            id = token["songInfo"]["al"]["id"].ToString(),
-                            name = token["songInfo"]["al"]["name"].ToString()
-                        },
-                        Artist = new List<NCArtist>(),
-                        LengthInMilliseconds = double.Parse(token["songInfo"]["dt"].ToString()),
-                        sid = token["songInfo"]["id"].ToString(),
-                        songname = token["songInfo"]["name"].ToString()
-                    };
-                    token["songInfo"]["ar"].ToList().ForEach(t =>
-                    {
-                        ncSong.Artist.Add(new NCArtist()
-                        {
-                            id = t["id"].ToString(),
-                            name = t["name"].ToString()
-                        });
-                    });
-                    Songs.Add(ncSong);
-                }
-
-                (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                    new Dictionary<string, object>() { { "id", string.Join(",", Songs.Select(t => t.sid)) }, { "br", Common.Setting.audioRate } });
-                ;
-                if (isok)
-                {
-                    List<JToken> arr = json["data"].ToList();
-                    for (int i = 0; i < Songs.Count; i++)
-                    {
-                        JToken token = arr.Find(jt => jt["id"].ToString() == Songs[i].sid);
-                        if (!token.HasValues)
-                        {
-                            continue;
+                            NCSong ncSong = new NCSong()
+                            {
+                                Album = new NCAlbum()
+                                {
+                                    cover = token["songInfo"]["al"]["picUrl"].ToString(),
+                                    id = token["songInfo"]["al"]["id"].ToString(),
+                                    name = token["songInfo"]["al"]["name"].ToString()
+                                },
+                                Artist = new List<NCArtist>(),
+                                LengthInMilliseconds = double.Parse(token["songInfo"]["dt"].ToString()),
+                                sid = token["songInfo"]["id"].ToString(),
+                                songname = token["songInfo"]["name"].ToString()
+                            };
+                            token["songInfo"]["ar"].ToList().ForEach(t =>
+                            {
+                                ncSong.Artist.Add(new NCArtist()
+                                {
+                                    id = t["id"].ToString(),
+                                    name = t["name"].ToString()
+                                });
+                            });
+                            Songs.Add(ncSong);
                         }
 
-                        NCSong ncSong = Songs[i];
+                        (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
+                            new Dictionary<string, object>()
+                                {{"id", string.Join(",", Songs.Select(t => t.sid))}, {"br", Common.Setting.audioRate}});
+                        ;
+                        if (isok)
+                        {
+                            List<JToken> arr = json["data"].ToList();
+                            for (int i = 0; i < Songs.Count; i++)
+                            {
+                                JToken token = arr.Find(jt => jt["id"].ToString() == Songs[i].sid);
+                                if (!token.HasValues)
+                                {
+                                    continue;
+                                }
 
-                        string tag = "";
-                        if (token["type"].ToString().ToLowerInvariant() == "flac")
-                        {
-                            tag = "SQ";
-                        }
-                        else
-                        {
-                            tag = (token["br"].ToObject<int>() / 1000).ToString() + "k";
-                        }
+                                NCSong ncSong = Songs[i];
 
-                        NCPlayItem ncp = new NCPlayItem()
-                        {
-                            tag = tag,
-                            Album = ncSong.Album,
-                            Artist = ncSong.Artist,
-                            subext = token["type"].ToString(),
-                            sid = ncSong.sid,
-                            songname = ncSong.songname,
-                            url = token["url"].ToString(),
-                            LengthInMilliseconds = ncSong.LengthInMilliseconds,
-                            size = token["size"].ToString(),
-                            md5 = token["md5"].ToString()
-                        };
-                        HyPlayList.AppendNCPlayItem(ncp);
+                                string tag = "";
+                                if (token["type"].ToString().ToLowerInvariant() == "flac")
+                                {
+                                    tag = "SQ";
+                                }
+                                else
+                                {
+                                    tag = (token["br"].ToObject<int>() / 1000).ToString() + "k";
+                                }
+
+                                NCPlayItem ncp = new NCPlayItem()
+                                {
+                                    tag = tag,
+                                    Album = ncSong.Album,
+                                    Artist = ncSong.Artist,
+                                    subext = token["type"].ToString(),
+                                    sid = ncSong.sid,
+                                    songname = ncSong.songname,
+                                    url = token["url"].ToString(),
+                                    LengthInMilliseconds = ncSong.LengthInMilliseconds,
+                                    size = token["size"].ToString(),
+                                    md5 = token["md5"].ToString()
+                                };
+                                HyPlayList.AppendNCPlayItem(ncp);
+                            }
+
+                            HyPlayList.SongAppendDone();
+
+                            HyPlayList.SongMoveTo(0);
+                        }
                     }
-
-                    HyPlayList.SongAppendDone();
-
-                    HyPlayList.SongMoveTo(0);
-                }
-            }
-
+                });
+            });
         }
 
         private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
