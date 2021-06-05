@@ -116,7 +116,7 @@ namespace HyPlayer.Pages
                                     });
                                 }
 
-                                stp.Children.Add(new SingleNCSong(NCSong, idx++));
+                                stp.Children.Add(new SingleNCSong(NCSong, idx++,song["privilege"]["st"].ToString()=="0"));
                             }
                         }
                     }

@@ -219,71 +219,93 @@
             Grid.ColumnSpan="2"
             Grid.Column="0"
             x:Name="GridSongInfoContainer">
-            <StackPanel x:Name="GridSongAdvancedOperation" Orientation="Horizontal" Visibility="Collapsed" Spacing="15" Margin="30,0,0,15">
-                <Button x:Name="Btn_Sub" Click="Btn_Sub_OnClick" >
+            <StackPanel
+                x:Name="GridSongAdvancedOperation"
+                Orientation="Horizontal"
+                Visibility="Collapsed"
+                Spacing="15"
+                Margin="30,0,0,15">
+                <Button
+                    Background="Transparent"
+                    x:Name="Btn_Sub"
+                    Click="Btn_Sub_OnClick">
                     <FontIcon
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
                         Glyph="&#xE1DA;"></FontIcon>
                 </Button>
-                <Button x:Name="Btn_Down" Click="Btn_Down_OnClick" >
+                <Button
+                    Background="Transparent"
+                    x:Name="Btn_Down"
+                    Click="Btn_Down_OnClick">
                     <FontIcon
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
                         Glyph="&#xE118;"></FontIcon>
                 </Button>
-                <Button x:Name="Btn_Comment" Click="Btn_Comment_OnClick" >
+                <Button
+                    x:Name="Btn_Comment"
+                    Click="Btn_Comment_OnClick"
+                    Background="Transparent">
                     <FontIcon
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
                         Glyph="&#xE8F2;"></FontIcon>
                 </Button>
-                <Button x:Name="Btn_Share" Click="Btn_Share_OnClick" >
+                <Button
+                    x:Name="Btn_Share"
+                    Click="Btn_Share_OnClick"
+                    Background="Transparent">
                     <FontIcon
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
                         Glyph="&#xE72D;"></FontIcon>
                 </Button>
             </StackPanel>
-            <StackPanel Orientation="Horizontal" x:Name="GridSongInfo">
+            <StackPanel
+                Orientation="Horizontal"
+                x:Name="GridSongInfo">
                 <Grid
-                Margin="0"
-                x:Name="ImageContainer"
-                PointerPressed="ImageContainer_OnPointerPressed"
-                PointerEntered="ImageContainer_OnPointerEntered"
-                PointerExited="ImageContainer_OnPointerExited"
-                HorizontalAlignment="Left"
-                BorderThickness="0">
-                <Image
-                    Stretch="UniformToFill"
-                    x:Name="AlbumImage"/>
-            </Grid>
+                    Margin="0"
+                    x:Name="ImageContainer"
+                    PointerPressed="ImageContainer_OnPointerPressed"
+                    PointerEntered="ImageContainer_OnPointerEntered"
+                    PointerExited="ImageContainer_OnPointerExited"
+                    HorizontalAlignment="Left"
+                    BorderThickness="0">
+                    <Image
+                        Stretch="UniformToFill"
+                        x:Name="AlbumImage" />
+                </Grid>
                 <StackPanel
-                VerticalAlignment="Center"
-                HorizontalAlignment="Stretch"
-                Spacing="10"
-                Margin="10,5,0,0">
-                <StackPanel
-                    Spacing="12"
-                    Orientation="Horizontal">
-                    <TextBlock
-                        VerticalAlignment="Bottom"
-                        HorizontalAlignment="Left"
-                        FontWeight="Light"
-                        Name="TbSongName"/>
-                    <Grid Padding="3,0,3,0" BorderThickness="1" BorderBrush="Red">
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Stretch"
+                    Spacing="10"
+                    Margin="10,5,0,0">
+                    <StackPanel
+                        Spacing="12"
+                        Orientation="Horizontal">
                         <TextBlock
-                            FontWeight="Medium"
-                            FontSize="12"
-                            Name="TbSongTag"
-                            Text="无歌曲"
-                            Foreground="Red"/>
-                    </Grid>
+                            VerticalAlignment="Bottom"
+                            HorizontalAlignment="Left"
+                            FontWeight="Light"
+                            Name="TbSongName" />
+                        <Grid
+                            Padding="3,0,3,0"
+                            BorderThickness="1"
+                            BorderBrush="Red">
+                            <TextBlock
+                                FontWeight="Medium"
+                                FontSize="12"
+                                Name="TbSongTag"
+                                Text="无歌曲"
+                                Foreground="Red" />
+                        </Grid>
 
+                    </StackPanel>
+
+                    <TextBlock
+                        VerticalAlignment="Top"
+                        Foreground="Gray"
+                        PointerPressed="TbSingerName_OnPointerPressed"
+                        Name="TbSingerName" />
                 </StackPanel>
-
-                <TextBlock
-                    VerticalAlignment="Top"
-                    Foreground="Gray"
-                    PointerPressed="TbSingerName_OnPointerPressed"
-                    Name="TbSingerName" />
-            </StackPanel>
             </StackPanel>
         </Grid>
         <Grid
@@ -510,8 +532,9 @@
                 </Flyout>
             </Button.Flyout>
         </Button>
-        <Button Grid.Column="3"
-                HorizontalAlignment="Right"
+        <Button
+            Grid.Column="3"
+            HorizontalAlignment="Right"
             Width="40"
             Height="40"
             Margin="10,10,10,10"
