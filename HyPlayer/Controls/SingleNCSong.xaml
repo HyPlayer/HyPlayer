@@ -52,6 +52,7 @@
             <TextBlock controls:DockPanel.Dock="Top" Name="TextBlockSongname" FontSize="20" Text="歌曲名"/>
             <TextBlock
                 Foreground="Gray"
+                PointerPressed="TextBlockAlbum_OnPointerPressed"
                 Name="TextBlockAlbum"
                 controls:DockPanel.Dock="Bottom"
                 Margin="0,7,0,0"

@@ -125,6 +125,11 @@ namespace HyPlayer.Controls
         {
             await new SongListSelect(ncsong.sid).ShowAsync();
         }
+
+        private void TextBlockAlbum_OnPointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            Common.BaseFrame.Navigate(typeof(AlbumPage), ncsong.Album);
+        }
     }
 
 }
