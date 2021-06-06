@@ -23,60 +23,112 @@ namespace HyPlayer.Pages
         public Search()
         {
             InitializeComponent();
+            NavigationViewSelector.SelectedItem = NavigationViewSelector.MenuItems[0];
         }
 
         private async void LoadResult()
         {
             SearchResultContainer.Children.Clear();
-            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Cloudsearch, new Dictionary<string, object>() { { "keywords", Text }, { "offset", page * 30 } });
+            var (isOk,json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Cloudsearch,
+                new Dictionary<string, object>()
+                {
+                    {"keywords", Text},
+                    {"type", ((NavigationViewItem) NavigationViewSelector.SelectedItem).Tag.ToString()},
+                    { "offset", page * 30 }
+                });
             if (isOk)
             {
-                int idx = 0;
-                foreach (JToken song in json["result"]["songs"].ToArray())
+                switch (((NavigationViewItem) NavigationViewSelector.SelectedItem).Tag.ToString())
                 {
-                    NCSong NCSong = new NCSong()
-                    {
-                        Album = new NCAlbum()
-                        {
-                            cover = song["al"]["picUrl"].ToString(),
-                            id = song["al"]["id"].ToString(),
-                            name = song["al"]["name"].ToString()
-                        },
-                        sid = song["id"].ToString(),
-                        songname = song["name"].ToString(),
-                        Artist = new List<NCArtist>(),
-                        LengthInMilliseconds = double.Parse(song["dt"].ToString())
-                    };
-                    song["ar"]?.ToList().ForEach(t =>
-                    {
-                        NCSong.Artist.Add(new NCArtist()
-                        {
-                            id = t["id"].ToString(),
-                            name = t["name"].ToString(),
-                        });
-                    });
-                    SearchResultContainer.Children.Add(new SingleNCSong(NCSong, idx++, song["privilege"]["st"].ToString() == "0"));
-                }
-
-                if (int.Parse(json["result"]["songCount"].ToString()) >= (page + 1) * 30)
-                {
-                    NextPage.Visibility = Visibility.Visible;
-                }
-                else
-                {
-                    NextPage.Visibility = Visibility.Collapsed;
-                }
-                if (page > 0)
-                {
-                    PrevPage.Visibility = Visibility.Visible;
-                }
-                else
-                {
-                    PrevPage.Visibility = Visibility.Collapsed;
+                    case "1":
+                        LoadSongResult(json);
+                        break;
+                    case "10":
+                        LoadAlbumResult(json);
+                        break;
+                    case "100":
+                        LoadArtistResult(json);
+                        break;
                 }
             }
         }
 
+        private void LoadArtistResult(JObject json)
+        {
+            foreach (var singerjson in json["result"]["artists"].ToArray())
+            {
+                SearchResultContainer.Children.Add(new SingleArtist(NCArtist.CreateFormJson(singerjson)));
+            }
+            if (int.Parse(json["result"]["artistCount"].ToString()) >= (page + 1) * 30)
+            {
+                NextPage.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                NextPage.Visibility = Visibility.Collapsed;
+            }
+            if (page > 0)
+            {
+                PrevPage.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                PrevPage.Visibility = Visibility.Collapsed;
+            }
+
+        }
+
+        private void LoadAlbumResult(JObject json)
+        {
+            foreach (var albumjson in json["result"]["albums"].ToArray())
+            {
+                SearchResultContainer.Children.Add(new SingleAlbum(NCAlbum.CreateFormJson(albumjson), albumjson["artists"].ToArray().Select(t=>NCArtist.CreateFormJson(t)).ToList()));
+            }
+            if (int.Parse(json["result"]["albumCount"].ToString()) >= (page + 1) * 30)
+            {
+                NextPage.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                NextPage.Visibility = Visibility.Collapsed;
+            }
+            if (page > 0)
+            {
+                PrevPage.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                PrevPage.Visibility = Visibility.Collapsed;
+            }
+        }
+        
+        private void LoadSongResult(JObject json)
+        {
+            int idx = 0;
+            foreach (JToken song in json["result"]["songs"].ToArray())
+            {
+                NCSong NCSong = NCSong.CreateFromJson(song);
+                SearchResultContainer.Children.Add(new SingleNCSong(NCSong, idx++, song["privilege"]["st"].ToString() == "0"));
+            }
+
+            if (int.Parse(json["result"]["songCount"].ToString()) >= (page + 1) * 30)
+            {
+                NextPage.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                NextPage.Visibility = Visibility.Collapsed;
+            }
+            if (page > 0)
+            {
+                PrevPage.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                PrevPage.Visibility = Visibility.Collapsed;
+            }
+        }
+        
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
@@ -93,6 +145,12 @@ namespace HyPlayer.Pages
         private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
         {
             page++;
+            LoadResult();
+        }
+
+        private void NavigationView_OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+        {
+            page = 0;
             LoadResult();
         }
     }

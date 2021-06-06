@@ -141,6 +141,12 @@
     <Compile Include="Controls\PlaylistItem.xaml.cs">
       <DependentUpon>PlaylistItem.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\SingleAlbum.xaml.cs">
+      <DependentUpon>SingleAlbum.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\SingleArtist.xaml.cs">
+      <DependentUpon>SingleArtist.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\SingleComment.xaml.cs">
       <DependentUpon>SingleComment.xaml</DependentUpon>
     </Compile>
@@ -253,6 +259,14 @@
     <Content Include="Assets\Wide310x150Logo.scale-125.png" />
     <Content Include="Assets\Wide310x150Logo.scale-150.png" />
     <Content Include="Assets\Wide310x150Logo.scale-400.png" />
+    <Page Include="Controls\SingleAlbum.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\SingleArtist.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\SongListSelect.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>

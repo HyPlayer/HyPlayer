@@ -11,32 +11,46 @@
     <ScrollViewer
         VerticalScrollBarVisibility="Auto">
         <ScrollViewer.Content>
-            <StackPanel
-                Orientation="Vertical">
+            <NavigationView x:Name="NavigationViewSelector" IsSettingsVisible="False" SelectionChanged="NavigationView_OnSelectionChanged" PaneDisplayMode="Top" IsBackButtonVisible="Collapsed">
+                <NavigationView.MenuItems>
+                    <NavigationViewItem Content="单曲" Tag="1"/>
+                    <NavigationViewItem Content="专辑" Tag="10"/>
+                    <NavigationViewItem Content="歌手" Tag="100"/>
+                    <NavigationViewItem Content="歌单" Tag="1000"/>
+                    <NavigationViewItem Content="用户" Tag="1002"/>
+                    <NavigationViewItem Content="MV" Tag="1004"/>
+                    <NavigationViewItem Content="歌词" Tag="1006"/>
+                    <NavigationViewItem Content="电台" Tag="1009"/>
+                    <NavigationViewItem Content="视频" Tag="1014"/>
+                    <NavigationViewItem Content="综合" Tag="1018"/>
+                </NavigationView.MenuItems>
                 <StackPanel
-                    Margin="30"
-                    Spacing="5"
-                    Orientation="Vertical"
-                    Name="SearchResultContainer" />
-                <StackPanel
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Center">
-                    <Button
-                        Visibility="Collapsed"
-                        Content="上一页"
-                        x:Name="PrevPage"
-                        Click="PrevPage_OnClick" />
-                    <TextBlock
-                        x:Name="PageIndicator" />
-                    <Button
-                        Visibility="Collapsed"
-                        Content="下一页"
-                        x:Name="NextPage"
-                        Click="NextPage_OnClickPage_OnClick" />
+                    Orientation="Vertical">
+                    <StackPanel
+                        Margin="30"
+                        Spacing="5"
+                        Orientation="Vertical"
+                        Name="SearchResultContainer" />
+                    <StackPanel
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Center">
+                        <Button
+                            Visibility="Collapsed"
+                            Content="上一页"
+                            x:Name="PrevPage"
+                            Click="PrevPage_OnClick" />
+                        <TextBlock
+                            x:Name="PageIndicator" />
+                        <Button
+                            Visibility="Collapsed"
+                            Content="下一页"
+                            x:Name="NextPage"
+                            Click="NextPage_OnClickPage_OnClick" />
+                    </StackPanel>
+                    <Grid
+                        Height="150" />
                 </StackPanel>
-                <Grid
-                    Height="150" />
-            </StackPanel>
+            </NavigationView>
         </ScrollViewer.Content>
     </ScrollViewer>
 
