@@ -849,10 +849,12 @@ namespace HyPlayer.HyPlayControl
                 }
 
                 string lrctxt = LyricTextLine.Substring(LyricTextLine.IndexOf(']') + 1);
+
                 while (lrctxt.Trim().StartsWith('['))
                 {
                     //一句双时间
                     ConvertTranslation(lrctxt, Lyrics);
+                    lrctxt = lrctxt.Substring(LyricTextLine.IndexOf(']') + 1);
                 }
 
                 for (int i = 0; i < Lyrics.Count; i++)
