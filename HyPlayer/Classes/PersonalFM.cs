@@ -38,29 +38,8 @@ namespace HyPlayer.Classes
             if (isOk)
             {
                 var song = json["data"][0];
-                NCSong NCSong = new NCSong()
-                {
-                    Album = new NCAlbum()
-                    {
-                        cover = song["album"]["picUrl"].ToString(),
-                        id = song["album"]["id"].ToString(),
-                        name = song["album"]["name"].ToString()
-                    },
-                    sid = song["id"].ToString(),
-                    songname = song["name"].ToString(),
-                    Artist = new List<NCArtist>(),
-                    LengthInMilliseconds = double.Parse(song["duration"].ToString())
-                };
-                song["artists"].ToList().ForEach(t =>
-                {
-                    NCSong.Artist.Add(new NCArtist()
-                    {
-                        id = t["id"].ToString(),
-                        name = t["name"].ToString()
-                    });
-                });
                 HyPlayList.RemoveAllSong();
-                _ = await HyPlayList.AppendNCSong(NCSong);
+                _ = await HyPlayList.AppendNCSong(NCSong.CreateFromJson(song));
                 HyPlayList.SongAppendDone();
                 HyPlayList.SongMoveTo(0);
             }
