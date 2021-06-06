@@ -10,7 +10,7 @@
     </ImageBrush>
     <AcrylicBrush x:Key="NavigationViewExpandedPaneBackground"
                   BackgroundSource="HostBackdrop"
-                  TintColor="SkyBlue"
+                  TintColor="#FF829BB9"
                   TintOpacity="0.6"
                   FallbackColor="White"/>
 </ResourceDictionary>
