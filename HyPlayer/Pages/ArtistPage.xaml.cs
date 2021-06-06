@@ -44,8 +44,7 @@ namespace HyPlayer.Pages
                 new Dictionary<string, object>() { { "id", (string)e.Parameter } });
             if (isOk)
             {
-                artist = new NCArtist()
-                { id = res["data"]["artist"]["id"].ToString(), name = res["data"]["artist"]["name"].ToString() };
+                artist = NCArtist.CreateFormJson(res["data"]["artist"]);
                 if (res["data"]["artist"]["cover"].ToString().StartsWith("http"))
                     ImageRect.ImageSource =
                         new BitmapImage(new Uri(res["data"]["artist"]["cover"].ToString() + "?param=" + StaticSource.PICSIZE_ARTIST_DETAIL_COVER));
@@ -73,30 +72,9 @@ namespace HyPlayer.Pages
                     new Dictionary<string, object> { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) });
                 foreach (JToken jToken in json["songs"])
                 {
-                    JObject song = (JObject)jToken;
-                    NCSong NCSong = new NCSong()
-                    {
-                        Album = new NCAlbum()
-                        {
-                            cover = song["al"]["picUrl"].ToString(),
-                            id = song["al"]["id"].ToString(),
-                            name = song["al"]["name"].ToString()
-                        },
-                        sid = song["id"].ToString(),
-                        songname = song["name"].ToString(),
-                        Artist = new List<NCArtist>(),
-                        LengthInMilliseconds = double.Parse(song["dt"].ToString())
-                    };
-                    song["ar"].ToList().ForEach(t =>
-                    {
-                        NCSong.Artist.Add(new NCArtist()
-                        {
-                            id = t["id"].ToString(),
-                            name = t["name"].ToString()
-                        });
-                    });
+                    NCSong NCSong = NCSong.CreateFromJson(jToken);
                     bool canplay =
-                        json["privileges"].ToList().Find(x => x["id"].ToString() == song["id"].ToString())[
+                        json["privileges"].ToList().Find(x => x["id"].ToString() == jToken["id"].ToString())[
                             "st"].ToString() == "0";
                     if (canplay)
                     {

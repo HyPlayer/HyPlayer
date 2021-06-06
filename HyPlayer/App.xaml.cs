@@ -124,7 +124,9 @@ namespace HyPlayer
         }
         private void CurrentDomain_UnhandledException(object sender, System.UnhandledExceptionEventArgs e)
         {
+#if RELEASE
             Crashes.TrackError((Exception)e.ExceptionObject);
+#endif
             Common.Invoke((async () =>
             {
                 ContentDialog Dialog = new ContentDialog
@@ -141,7 +143,9 @@ namespace HyPlayer
 
         private void App_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
+#if RELEASE
             Crashes.TrackError(e.Exception);
+#endif
             e.Handled = true;
             /*
             await new ContentDialog
