@@ -85,7 +85,8 @@
             <Button
                 Background="Transparent"
                 x:Name="Comments"
-                Click="Comments_Click">
+                Click="Comments_Click"
+                ToolTipService.ToolTip="评论">
                 <FontIcon
                     FontFamily="{StaticResource SymbolThemeFontFamily}"
                     Glyph="&#xE8F2;"></FontIcon>
@@ -93,7 +94,8 @@
             <Button
                 Background="Transparent"
                 x:Name="BtnPlay"
-                Click="ButtonBase_OnClick">
+                Click="ButtonBase_OnClick"
+                ToolTipService.ToolTip="播放">
                 <FontIcon
                     Name="PlayStateIcon"
                     FontFamily="{StaticResource SymbolThemeFontFamily}"
@@ -102,7 +104,8 @@
             <Button
                 Background="Transparent"
                 Click="BtnDownload_OnClick"
-                x:Name="BtnDownload">
+                x:Name="BtnDownload"
+                ToolTipService.ToolTip="下载">
                 <FontIcon
                     FontFamily="{StaticResource SymbolThemeFontFamily}"
                     Glyph="&#xE118;"></FontIcon>
@@ -110,7 +113,8 @@
             <Button
                 Background="Transparent"
                 Click="Btn_Sub_OnClick"
-                x:Name="BtnSub">
+                x:Name="BtnSub"
+                ToolTipService.ToolTip="添加到歌单">
                 <FontIcon
                     FontFamily="{StaticResource SymbolThemeFontFamily}"
                     Glyph="&#xE1DA;"></FontIcon>
