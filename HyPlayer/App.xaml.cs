@@ -39,6 +39,34 @@ namespace HyPlayer
         }
         public void InitializeToastLyrics()
         {
+            ToastContentBuilder desktopLyricsToast = new ToastContentBuilder();
+            desktopLyricsToast.SetToastScenario(ToastScenario.IncomingCall);
+            desktopLyricsToast.AddAudio(new ToastAudio() { Silent = true });
+            desktopLyricsToast.AddVisualChild(new AdaptiveText()
+            {
+                Text = new BindableString("Title"),
+                HintStyle = AdaptiveTextStyle.Header
+            });
+            desktopLyricsToast.AddVisualChild(new AdaptiveText()
+            {
+                Text = new BindableString("PureLyric"),
+            });
+            desktopLyricsToast.AddVisualChild(new AdaptiveText()
+            {
+                Text = new BindableString("Translation"),
+            });
+            desktopLyricsToast.AddVisualChild(new AdaptiveProgressBar()
+            {
+                ValueStringOverride = new BindableString("TotalValueString"),
+
+                Status = new BindableString("CurrentValueString"),
+
+                Value = new BindableProgressBarValue("CurrentValue"),
+
+            });
+
+
+            /*
             ToastContent desktopLyrics = new ToastContent()
             {
                 Visual = new ToastVisual()
@@ -78,7 +106,8 @@ namespace HyPlayer
 
 
             };
-            var toast = new ToastNotification(desktopLyrics.GetXml())
+            */
+            var toast = new ToastNotification(desktopLyricsToast.GetXml())
             {
                 Tag = "HyPlayerDesktopLyrics",
                 Data = new NotificationData()
