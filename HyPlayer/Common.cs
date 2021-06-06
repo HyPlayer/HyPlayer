@@ -104,8 +104,8 @@ namespace HyPlayer
             get
             {
                 if (ApplicationData.Current.LocalSettings.Values.ContainsKey("toastLyric"))
-                    return ApplicationData.Current.LocalSettings.Values["toastLyric"].ToString() == "true";
-                return false;
+                    return ApplicationData.Current.LocalSettings.Values["toastLyric"].ToString() != "false";
+                return true;
             }
             set => ApplicationData.Current.LocalSettings.Values["toastLyric"] = value ? "true" : "false";
         }

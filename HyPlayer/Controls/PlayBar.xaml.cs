@@ -88,6 +88,9 @@ namespace HyPlayer.Controls
                         data.Values["CurrentValueString"] = HyPlayList.Player.PlaybackSession.Position.ToString(@"hh\:mm\:ss");
                         data.Values["CurrentValue"] = (HyPlayList.Player.PlaybackSession.Position / TimeSpan.FromMilliseconds(tai.LengthInMilliseconds)).ToString();
                         NotificationUpdateResult res = ToastNotificationManager.CreateToastNotifier().Update(data, "HyPlayerDesktopLyrics");
+                        if (res == NotificationUpdateResult.NotificationNotFound)
+                            if (Common.Setting.toastLyric)
+                                ((App.Current) as App).InitializeToastLyrics();
                     }
                     TbSingerName.Text = tai.Artist;
                     TbSongName.Text = tai.SongName;
