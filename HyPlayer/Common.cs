@@ -10,6 +10,7 @@ using System.Text;
 using Windows.Storage;
 using Windows.UI.Xaml.Controls;
 using Kawazu;
+using Microsoft.AppCenter.Crashes;
 
 namespace HyPlayer
 {
@@ -37,8 +38,11 @@ namespace HyPlayer
                 await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority,
                     () => { action(); });
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                #if RELEASE
+                Crashes.TrackError(e);
+                #endif
                 /*
                 Invoke((async () =>
                 {

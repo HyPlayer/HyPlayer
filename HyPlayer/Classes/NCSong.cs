@@ -41,18 +41,21 @@ namespace HyPlayer.Classes
         public static NCSong CreateFromJson(JToken song)
         {
             string alpath = "album";
-            string arpath = "artist";
+            string arpath = "artists";
+            string dtpath = "duration";
             if (song[alpath] == null)
                 alpath = "al";
             if (song[arpath] == null)
                 arpath = "ar";
+            if (song[dtpath] == null)
+                dtpath="dt";
             NCSong NCSong = new NCSong()
             {
                 Album = NCAlbum.CreateFormJson(song[alpath]),
                 sid = song["id"].ToString(),
                 songname = song["name"].ToString(),
                 Artist = new List<NCArtist>(),
-                LengthInMilliseconds = double.Parse(song["dt"].ToString())
+                LengthInMilliseconds = double.Parse(song[dtpath].ToString())
             };
             song[arpath].ToList().ForEach(t => { NCSong.Artist.Add(NCArtist.CreateFormJson(t)); });
             return NCSong;
@@ -101,14 +104,20 @@ namespace HyPlayer.Classes
         {
             try
             {
+                string picpath = "picUrl";
+                string descpath = "description";
+                if (json[picpath] == null)
+                    picpath = "coverImgUrl";
+                if (json[descpath] == null)
+                    descpath = "copywriter";
                 return new NCPlayList()
                 {
-                    cover = json["coverImgUrl"].ToString(),
+                    cover = json[picpath].ToString(),
                     creater = NCUser.CreateFromJson(json["creator"]),
-                    desc = json["description"].ToString(),
+                    desc = json[descpath].ToString(),
                     name = json["name"].ToString(),
                     plid = json["id"].ToString(),
-                    subscribed = json["subscribed"] != null && json["subscribed"].ToString()=="True"
+                    subscribed = !(json["subscribed"] == null || json["subscribed"].ToString()=="False")
                 };
             }
             catch (Exception e)
