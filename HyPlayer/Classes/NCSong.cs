@@ -108,7 +108,7 @@ namespace HyPlayer.Classes
                     desc = json["description"].ToString(),
                     name = json["name"].ToString(),
                     plid = json["id"].ToString(),
-                    subscribed = json["subscribed"].ToString()=="True"
+                    subscribed = json["subscribed"] != null && json["subscribed"].ToString()=="True"
                 };
             }
             catch (Exception e)
