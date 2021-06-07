@@ -39,6 +39,34 @@ namespace HyPlayer
         }
         public void InitializeToastLyrics()
         {
+            ToastContentBuilder desktopLyricsToast = new ToastContentBuilder();
+            desktopLyricsToast.SetToastScenario(ToastScenario.IncomingCall);
+            desktopLyricsToast.AddAudio(new ToastAudio() { Silent = true });
+            desktopLyricsToast.AddVisualChild(new AdaptiveText()
+            {
+                Text = new BindableString("Title"),
+                HintStyle = AdaptiveTextStyle.Header
+            });
+            desktopLyricsToast.AddVisualChild(new AdaptiveText()
+            {
+                Text = new BindableString("PureLyric"),
+            });
+            desktopLyricsToast.AddVisualChild(new AdaptiveText()
+            {
+                Text = new BindableString("Translation"),
+            });
+            desktopLyricsToast.AddVisualChild(new AdaptiveProgressBar()
+            {
+                ValueStringOverride = new BindableString("TotalValueString"),
+
+                Status = new BindableString("CurrentValueString"),
+
+                Value = new BindableProgressBarValue("CurrentValue"),
+
+            });
+
+
+            /*
             ToastContent desktopLyrics = new ToastContent()
             {
                 Visual = new ToastVisual()
@@ -78,7 +106,8 @@ namespace HyPlayer
 
 
             };
-            var toast = new ToastNotification(desktopLyrics.GetXml())
+            */
+            var toast = new ToastNotification(desktopLyricsToast.GetXml())
             {
                 Tag = "HyPlayerDesktopLyrics",
                 Data = new NotificationData()
@@ -95,7 +124,9 @@ namespace HyPlayer
         }
         private void CurrentDomain_UnhandledException(object sender, System.UnhandledExceptionEventArgs e)
         {
+#if RELEASE
             Crashes.TrackError((Exception)e.ExceptionObject);
+#endif
             Common.Invoke((async () =>
             {
                 ContentDialog Dialog = new ContentDialog
@@ -112,7 +143,9 @@ namespace HyPlayer
 
         private void App_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
+#if RELEASE
             Crashes.TrackError(e.Exception);
+#endif
             e.Handled = true;
             /*
             await new ContentDialog

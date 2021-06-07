@@ -51,33 +51,29 @@
                 </ImageBrush>
             </Rectangle.Fill>
         </Rectangle>
-        <controls:DockPanel
-            Dock="Top"
+        <StackPanel
+            Orientation="Vertical"
             Padding="7,0,0,0"
             Grid.Column="2">
             <TextBlock
-                controls:DockPanel.Dock="Top"
                 Name="TextBlockSongname"
                 FontSize="20"
                 Text="歌曲名" />
             <TextBlock
-                Foreground="Gray"
-                PointerPressed="TextBlockAlbum_OnPointerPressed"
-                Name="TextBlockAlbum"
-                controls:DockPanel.Dock="Bottom"
-                Margin="0,7,0,0"
-                FontSize="13"
-                Text="专辑名" />
-            <TextBlock
                 Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                 PointerPressed="TextBlockArtist_OnPointerPressed"
                 Name="TextBlockArtist"
-                controls:DockPanel.Dock="Bottom"
                 Margin="0,7,0,-6"
                 FontSize="12"
                 Text="歌手名" />
-
-        </controls:DockPanel>
+            <TextBlock
+                Foreground="Gray"
+                PointerPressed="TextBlockAlbum_OnPointerPressed"
+                Name="TextBlockAlbum"
+                Margin="0,7,0,0"
+                FontSize="13"
+                Text="专辑名" />
+        </StackPanel>
         <StackPanel
             Orientation="Horizontal"
             Spacing="8"

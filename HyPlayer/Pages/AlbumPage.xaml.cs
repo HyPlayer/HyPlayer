@@ -74,27 +74,7 @@ namespace HyPlayer.Pages
                             int idx = 0;
                             foreach (var song in json["songs"].ToArray())
                             {
-                                NCSong NCSong = new NCSong()
-                                {
-                                    Album = new NCAlbum()
-                                    {
-                                        cover = song["al"]["picUrl"].ToString(),
-                                        id = song["al"]["id"].ToString(),
-                                        name = song["al"]["name"].ToString()
-                                    },
-                                    sid = song["id"].ToString(),
-                                    songname = song["name"].ToString(),
-                                    Artist = new List<NCArtist>(),
-                                    LengthInMilliseconds = double.Parse(song["dt"].ToString())
-                                };
-                                song["ar"].ToList().ForEach(t =>
-                                {
-                                    NCSong.Artist.Add(new NCArtist()
-                                    {
-                                        id = t["id"].ToString(),
-                                        name = t["name"].ToString()
-                                    });
-                                });
+                                NCSong NCSong = NCSong.CreateFromJson(song); 
                                 songs.Add(NCSong);
                                 if (song["cd"].ToString() != cdname)
                                 {

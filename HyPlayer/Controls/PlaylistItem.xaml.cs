@@ -47,7 +47,7 @@ namespace HyPlayer.Controls
         private void UIElement_OnPointerExited(object sender, PointerRoutedEventArgs e)
         {
             if (Common.Setting.expandAnimation)
-                StoryboardOut.Begin();
+                StoryboardIn.Begin();
         }
     }
 }

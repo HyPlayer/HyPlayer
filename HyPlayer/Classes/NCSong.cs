@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Windows.Storage;
+using Newtonsoft.Json.Linq;
 
 namespace HyPlayer.Classes
 {
@@ -32,6 +34,29 @@ namespace HyPlayer.Classes
         public List<NCArtist> Artist;
         public NCAlbum Album;
         public double LengthInMilliseconds;
+
+        public static NCSong CreateFromJson(JToken song)
+        {
+            string alpath = "album";
+            string arpath = "artist";
+            if (song[alpath] == null)
+                alpath = "al";
+            if (song[arpath] == null)
+                arpath = "ar";
+            NCSong NCSong = new NCSong()
+            {
+                Album = NCAlbum.CreateFormJson(song[alpath]),
+                sid = song["id"].ToString(),
+                songname = song["name"].ToString(),
+                Artist = new List<NCArtist>(),
+                LengthInMilliseconds = double.Parse(song["dt"].ToString())
+            };
+            song[arpath].ToList().ForEach(t =>
+            {
+                NCSong.Artist.Add(NCArtist.CreateFormJson(t));
+            });
+            return NCSong;
+        }
     }
 
     public struct NCPlayItem
@@ -83,10 +108,24 @@ namespace HyPlayer.Classes
     public struct NCArtist
     {
         public string id;
-        public object idobj => (object)id;
         public string name;
         public string avatar;
-        public Uri avatarUri => new Uri(this.avatar);
+        public string transname;
+        public string alias;
+            
+        public static NCArtist CreateFormJson(JToken artist)
+        {
+            //TODO: 歌手这里尽量再来点信息
+            var art = new NCArtist()
+            {
+                id = artist["id"].ToString(),
+                name = artist["name"].ToString()
+            };
+            if (artist["alias"] != null) art.alias = string.Join(" / ",artist["alias"].Select(t=>t.ToString()).ToArray());
+            if (artist["trans"] != null) art.transname = artist["trans"].ToString();
+            if (artist["picUrl"] != null) art.avatar = artist["picUrl"].ToString();
+            return art;
+        }
     }
 
     public struct NCAlbum
@@ -94,5 +133,19 @@ namespace HyPlayer.Classes
         public string id;
         public string name;
         public string cover;
+        public string alias;
+        public string description;
+
+        public static NCAlbum CreateFormJson(JToken album)
+        {
+            return new NCAlbum()
+            {
+                alias = album["alias"] != null ? string.Join(" / ", album["alias"].ToArray().Select(t => t.ToString())):"",
+                cover = album["picUrl"].ToString(),
+                description = album["description"] != null ? album["description"].ToString():"",
+                id = album["id"].ToString(),
+                name = album["name"].ToString()
+            };
+        }
     }
 }

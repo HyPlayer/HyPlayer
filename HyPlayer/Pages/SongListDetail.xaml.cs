@@ -80,27 +80,7 @@ namespace HyPlayer.Pages
                                 intelsong = song["id"].ToString();
                             }
 
-                            NCSong NCSong = new NCSong()
-                            {
-                                Album = new NCAlbum()
-                                {
-                                    cover = song["al"]["picUrl"].ToString(),
-                                    id = song["al"]["id"].ToString(),
-                                    name = song["al"]["name"].ToString()
-                                },
-                                sid = song["id"].ToString(),
-                                songname = song["name"].ToString(),
-                                Artist = new List<NCArtist>(),
-                                LengthInMilliseconds = double.Parse(song["dt"].ToString())
-                            };
-                            song["ar"].ToList().ForEach(t =>
-                            {
-                                NCSong.Artist.Add(new NCArtist()
-                                {
-                                    id = t["id"].ToString(),
-                                    name = t["name"].ToString()
-                                });
-                            });
+                            NCSong NCSong = NCSong.CreateFromJson(song);
                             bool canplay =
                                 json["privileges"].ToList().Find(x => x["id"].ToString() == song["id"].ToString())[
                                     "st"].ToString() == "0";
@@ -124,28 +104,7 @@ namespace HyPlayer.Pages
                     int idx = 0;
                     foreach (JToken song in json["data"]["dailySongs"])
                     {
-
-                        NCSong NCSong = new NCSong()
-                        {
-                            Album = new NCAlbum()
-                            {
-                                cover = song["al"]["picUrl"].ToString(),
-                                id = song["al"]["id"].ToString(),
-                                name = song["al"]["name"].ToString()
-                            },
-                            sid = song["id"].ToString(),
-                            songname = song["name"].ToString(),
-                            Artist = new List<NCArtist>(),
-                            LengthInMilliseconds = double.Parse(song["dt"].ToString())
-                        };
-                        song["ar"].ToList().ForEach(t =>
-                        {
-                            NCSong.Artist.Add(new NCArtist()
-                            {
-                                id = t["id"].ToString(),
-                                name = t["name"].ToString()
-                            });
-                        });
+                        NCSong NCSong = NCSong.CreateFromJson(song);
                         bool canplay = true;
                         if (canplay)
                         {
@@ -305,27 +264,7 @@ namespace HyPlayer.Pages
                         List<NCSong> Songs = new List<NCSong>();
                         foreach (JToken token in jsona["data"])
                         {
-                            NCSong ncSong = new NCSong()
-                            {
-                                Album = new NCAlbum()
-                                {
-                                    cover = token["songInfo"]["al"]["picUrl"].ToString(),
-                                    id = token["songInfo"]["al"]["id"].ToString(),
-                                    name = token["songInfo"]["al"]["name"].ToString()
-                                },
-                                Artist = new List<NCArtist>(),
-                                LengthInMilliseconds = double.Parse(token["songInfo"]["dt"].ToString()),
-                                sid = token["songInfo"]["id"].ToString(),
-                                songname = token["songInfo"]["name"].ToString()
-                            };
-                            token["songInfo"]["ar"].ToList().ForEach(t =>
-                            {
-                                ncSong.Artist.Add(new NCArtist()
-                                {
-                                    id = t["id"].ToString(),
-                                    name = t["name"].ToString()
-                                });
-                            });
+                            NCSong ncSong = NCSong.CreateFromJson(token["songInfo"]);
                             Songs.Add(ncSong);
                         }
 
