@@ -52,26 +52,14 @@ namespace HyPlayer.Pages
                                 signature = "网易云音乐官方账号 "
                             },
                             plid = "-666",
+                            subscribed = false,
                             name = "每日歌曲推荐",
                             desc = "根据你的口味生成，每天6:00更新"
                         };
                         RcmdSongList.Children.Add(new PlaylistItem(dayly));
                         foreach (JToken PlaylistItemJson in json["recommend"].ToArray())
                         {
-                            NCPlayList ncp = new NCPlayList()
-                            {
-                                cover = PlaylistItemJson["picUrl"].ToString(),
-                                creater = new NCUser()
-                                {
-                                    avatar = PlaylistItemJson["creator"]["avatarUrl"].ToString(),
-                                    id = PlaylistItemJson["creator"]["userId"].ToString(),
-                                    name = PlaylistItemJson["creator"]["nickname"].ToString(),
-                                    signature = PlaylistItemJson["creator"]["signature"].ToString()
-                                },
-                                plid = PlaylistItemJson["id"].ToString(),
-                                name = PlaylistItemJson["name"].ToString(),
-                                desc = PlaylistItemJson["copywriter"].ToString()
-                            };
+                            NCPlayList ncp = NCPlayList.CreateFromJson(PlaylistItemJson);
                             RcmdSongList.Children.Add(new PlaylistItem(ncp));
                         }
                     }
@@ -90,20 +78,7 @@ namespace HyPlayer.Pages
                      {
                          foreach (JToken PlaylistItemJson in json["list"].ToArray())
                          {
-                             NCPlayList ncp = new NCPlayList()
-                             {
-                                 cover = PlaylistItemJson["coverImgUrl"].ToString(),
-                                 creater = new NCUser()
-                                 {
-                                     avatar = "https://p1.music.126.net/KxePid7qTvt6V2iYVy-rYQ==/109951165050882728.jpg",
-                                     id = PlaylistItemJson["userId"].ToString(),
-                                     name = PlaylistItemJson["updateFrequency"].ToString(),
-                                     signature = "网易云音乐官方帐号"
-                                 },
-                                 plid = PlaylistItemJson["id"].ToString(),
-                                 name = PlaylistItemJson["name"].ToString(),
-                                 desc = PlaylistItemJson["description"].ToString()
-                             };
+                             NCPlayList ncp = NCPlayList.CreateFromJson(PlaylistItemJson);
                              RankList.Children.Add(new PlaylistItem(ncp));
                          }
                      }

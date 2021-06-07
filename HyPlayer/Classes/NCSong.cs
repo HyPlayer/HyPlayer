@@ -11,6 +11,7 @@ namespace HyPlayer.Classes
         public string PureLyrics;
         public string TrLyrics;
     }
+
     public struct SongLyric
     {
         public string PureLyric;
@@ -20,8 +21,10 @@ namespace HyPlayer.Classes
 
         public static SongLyric PureSong = new SongLyric()
         { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏" };
+
         public static SongLyric NoLyric = new SongLyric()
         { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏" };
+
         public static SongLyric LoadingLyric = new SongLyric()
         { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..." };
     }
@@ -51,10 +54,7 @@ namespace HyPlayer.Classes
                 Artist = new List<NCArtist>(),
                 LengthInMilliseconds = double.Parse(song["dt"].ToString())
             };
-            song[arpath].ToList().ForEach(t =>
-            {
-                NCSong.Artist.Add(NCArtist.CreateFormJson(t));
-            });
+            song[arpath].ToList().ForEach(t => { NCSong.Artist.Add(NCArtist.CreateFormJson(t)); });
             return NCSong;
         }
     }
@@ -95,6 +95,28 @@ namespace HyPlayer.Classes
         public string name;
         public string desc;
         public NCUser creater;
+        public bool subscribed;
+
+        public static NCPlayList CreateFromJson(JToken json)
+        {
+            try
+            {
+                return new NCPlayList()
+                {
+                    cover = json["coverImgUrl"].ToString(),
+                    creater = NCUser.CreateFromJson(json["creator"]),
+                    desc = json["description"].ToString(),
+                    name = json["name"].ToString(),
+                    plid = json["id"].ToString(),
+                    subscribed = json["subscribed"].ToString()=="True"
+                };
+            }
+            catch (Exception e)
+            {
+                return new NCPlayList();
+            }
+
+        }
     }
 
     public struct NCUser
@@ -103,6 +125,30 @@ namespace HyPlayer.Classes
         public string name;
         public string avatar;
         public string signature;
+
+        public static NCUser CreateFromJson(JToken user)
+        {
+            if (user != null && user.HasValues)
+            {
+                return new NCUser()
+                {
+                    avatar = user["avatarUrl"].ToString(),
+                    id = user["userId"].ToString(),
+                    name = user["nickname"].ToString(),
+                    signature = user["signature"].ToString()
+                };
+            }
+            else
+            {
+                return new NCUser()
+                {
+                    avatar = "https://p1.music.126.net/KxePid7qTvt6V2iYVy-rYQ==/109951165050882728.jpg",
+                    id = "1",
+                    name = "网易云音乐",
+                    signature = "网易云音乐官方帐号"
+                };
+            }
+        }
     }
 
     public struct NCArtist
@@ -112,7 +158,7 @@ namespace HyPlayer.Classes
         public string avatar;
         public string transname;
         public string alias;
-            
+
         public static NCArtist CreateFormJson(JToken artist)
         {
             //TODO: 歌手这里尽量再来点信息
@@ -121,7 +167,8 @@ namespace HyPlayer.Classes
                 id = artist["id"].ToString(),
                 name = artist["name"].ToString()
             };
-            if (artist["alias"] != null) art.alias = string.Join(" / ",artist["alias"].Select(t=>t.ToString()).ToArray());
+            if (artist["alias"] != null)
+                art.alias = string.Join(" / ", artist["alias"].Select(t => t.ToString()).ToArray());
             if (artist["trans"] != null) art.transname = artist["trans"].ToString();
             if (artist["picUrl"] != null) art.avatar = artist["picUrl"].ToString();
             return art;
@@ -140,9 +187,11 @@ namespace HyPlayer.Classes
         {
             return new NCAlbum()
             {
-                alias = album["alias"] != null ? string.Join(" / ", album["alias"].ToArray().Select(t => t.ToString())):"",
+                alias = album["alias"] != null
+                    ? string.Join(" / ", album["alias"].ToArray().Select(t => t.ToString()))
+                    : "",
                 cover = album["picUrl"].ToString(),
-                description = album["description"] != null ? album["description"].ToString():"",
+                description = album["description"] != null ? album["description"].ToString() : "",
                 id = album["id"].ToString(),
                 name = album["name"].ToString()
             };
