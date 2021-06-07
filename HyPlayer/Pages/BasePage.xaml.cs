@@ -202,20 +202,7 @@ namespace HyPlayer.Pages
                             }
                             else
                             {
-                                Common.MySongLists.Add(new NCPlayList()
-                                {
-                                    cover = jToken["coverImgUrl"].ToString(),
-                                    creater = new NCUser()
-                                    {
-                                        avatar = jToken["creator"]["avatarUrl"].ToString(),
-                                        id = jToken["creator"]["userId"].ToString(),
-                                        name = jToken["creator"]["nickname"].ToString(),
-                                        signature = jToken["creator"]["signature"].ToString()
-                                    },
-                                    plid = jToken["id"].ToString(),
-                                    name = jToken["name"].ToString(),
-                                    desc = jToken["description"].ToString()
-                                });
+                                Common.MySongLists.Add(NCPlayList.CreateFromJson(jToken));
                                 NavItemsMyList.MenuItems.Add(new NavigationViewItem()
                                 {
                                     Content = jToken["name"].ToString(),
