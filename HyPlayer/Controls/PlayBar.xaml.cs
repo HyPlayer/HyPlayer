@@ -74,6 +74,7 @@ namespace HyPlayer.Controls
             {
                 try
                 {
+                    if (HyPlayList.NowPlayingItem == null) return;
                     AudioInfo tai = HyPlayList.NowPlayingItem.AudioInfo;
                     if(Common.Setting.toastLyric)
                     {
@@ -102,8 +103,9 @@ namespace HyPlayer.Controls
                             : "\uEDB5";
                     //SliderAudioRate.Value = mp.Volume;
                 }
-                catch (Exception)
+                catch
                 {
+                    //ignore
                 }
             });
         }

@@ -160,6 +160,7 @@ namespace HyPlayer.Pages
 
         public void LoadLyricsBox()
         {
+            if (HyPlayList.NowPlayingItem == null) return;
             LyricBox.Children.Clear();
             double blanksize = (LyricBoxContainer.ViewportHeight / 2);
             if (double.IsNaN(blanksize) || blanksize == 0)
