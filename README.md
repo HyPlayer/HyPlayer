@@ -12,13 +12,13 @@
 	<img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/kengwang/HyPlayer">
 </p>
 <p align="center">
-主开发者: <a href="https://github.com/kengwang">@kengwang</a> | 界面设计: <a href="https://github.com/aaaaaaccd">@aaaaaaccd</a> | <a href="PREVIEW.md">界面预览</a>
+主开发者: <a href="https://github.com/kengwang">@kengwang</a> | 界面设计: <a href="https://github.com/aaaaaaccd">@aaaaaaccd</a> | 部分功能开发者: <a href="https://github.com/EP012014">@EP012014</a> | <a href="PREVIEW.md">界面预览</a>
 </p>
 
 
 **本软件仅供学习交流使用  请勿用于其他用途**
 
-用户交流 QQ 群: 1145646224   欢迎加入
+用户交流 QQ 群:  1145646224 欢迎加入
 
 
 
