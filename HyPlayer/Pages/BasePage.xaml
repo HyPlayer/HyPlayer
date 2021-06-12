@@ -9,26 +9,28 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:media="using:Windows.UI.Xaml.Media"
     mc:Ignorable="d">
-    <Grid>
+    <Grid x:Name="MainGrid">
+        <Border x:Name="AppTitleBar"
+                Margin="0,0,0,0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Top"
+                Height="40"
+                Canvas.ZIndex="0">
+        </Border>
         <controls1:NavigationView
             x:Name="NavMain"
-            Margin="0,0,0,0"
+            Margin="0,-1,0,0"
             BackRequested="OnNavigateBack"
             IsBackButtonVisible="Visible"
             IsBackEnabled="True"
             IsSettingsVisible="False"
             Background="{ThemeResource WindowBackground}"
             SelectionChanged="NavMain_OnSelectionChanged">
-            <controls1:NavigationView.AutoSuggestBox>
-                <AutoSuggestBox
-                    QueryIcon="Find"
-                    PlaceholderText="搜索歌曲......"
-                    GotFocus="AutoSuggestBox_GotFocus"
-                    QuerySubmitted="AutoSuggestBox_QuerySubmitted" 
-                    TextChanged="AutoSuggestBox_TextChanged"
-                    SuggestionChosen="AutoSuggestBox_SuggestionChosen"/>
-            </controls1:NavigationView.AutoSuggestBox>
             <controls1:NavigationView.MenuItems>
+                <controls1:NavigationViewItem
+                    Content="搜索"
+                    Icon="Find"
+                    Tag="PageSearch" />
                 <controls1:NavigationViewItem
                     Content="主页"
                     Icon="Home"

@@ -22,6 +22,7 @@ using NavigationViewSelectionChangedEventArgs = Microsoft.UI.Xaml.Controls.Navig
 using System.Linq;
 using System.Threading.Tasks;
 using HyPlayer.HyPlayControl;
+using Windows.UI.Xaml.Navigation;
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
 
@@ -39,10 +40,15 @@ namespace HyPlayer.Pages
         {
             InitializeComponent();
             selectionHistory = new List<NavigationViewItem>();
-            CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
-            ApplicationViewTitleBar titleBar = ApplicationView.GetForCurrentView().TitleBar;
-            titleBar.ButtonBackgroundColor = Colors.Transparent;
-            titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+            if (Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Desktop")
+            {
+
+                CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
+                ApplicationViewTitleBar titleBar = ApplicationView.GetForCurrentView().TitleBar;
+                titleBar.ButtonBackgroundColor = Colors.Transparent;
+                titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+                Window.Current.SetTitleBar(AppTitleBar);
+            }
             LoadLoginData();
             if (Common.Logined)
             {
@@ -51,7 +57,7 @@ namespace HyPlayer.Pages
             }
 
             Common.BaseFrame = BaseFrame;
-            NavMain.SelectedItem = NavMain.MenuItems[0];
+            NavMain.SelectedItem = NavMain.MenuItems[1];
             Common.BaseFrame.Navigate(typeof(Home));
         }
 
@@ -161,7 +167,6 @@ namespace HyPlayer.Pages
         {
             DialogLogin.Hide();
         }
-
 
         private void LoginDone()
         {
@@ -278,7 +283,9 @@ namespace HyPlayer.Pages
                 case "PageMe":
                     Common.BaseFrame.Navigate(typeof(Pages.Me), null, new EntranceNavigationTransitionInfo());
                     break;
-
+                case "PageSearch":
+                    Common.BaseFrame.Navigate(typeof(Pages.Search), null, new EntranceNavigationTransitionInfo());
+                    break;
                 case "PageHome":
                     Common.BaseFrame.Navigate(typeof(Pages.Home), null, new EntranceNavigationTransitionInfo());
                     break;
@@ -324,47 +331,6 @@ namespace HyPlayer.Pages
             }
         }
 
-        private void AutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
-        {
-            BaseFrame.Navigate(typeof(Search), args.QueryText);
-        }
-
-        private async void AutoSuggestBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
-        {
-            if (string.IsNullOrEmpty(sender.Text))
-            {
-                AutoSuggestBox_GotFocus(sender, null);
-                return;
-            }
-
-            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchSuggest,
-                new Dictionary<string, object>() {{"keywords", sender.Text}, {"type", "mobile"}});
-
-            if (isOk && json["result"]["allMatch"] != null && json["result"]["allMatch"].HasValues)
-            {
-                sender.ItemsSource = json["result"]["allMatch"].ToArray().ToList().Select(t => t["keyword"].ToString())
-                    .ToList();
-            }
-        }
-
-        private void AutoSuggestBox_SuggestionChosen(AutoSuggestBox sender,
-            AutoSuggestBoxSuggestionChosenEventArgs args)
-        {
-            sender.Text = args.SelectedItem.ToString();
-        }
-
-
-        private async void AutoSuggestBox_GotFocus(object sender, RoutedEventArgs e)
-        {
-            if (String.IsNullOrWhiteSpace((sender as AutoSuggestBox)?.Text))
-            {
-                (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchHot);
-                if (isOk)
-                {
-                    ((AutoSuggestBox) sender).ItemsSource =
-                        json["result"]["hots"].ToArray().ToList().Select(t => t["first"].ToString());
-                }
-            }
-        }
+        
     }
 }
