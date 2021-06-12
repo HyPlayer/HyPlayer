@@ -2,6 +2,7 @@
 using HyPlayer.Controls;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -129,13 +130,49 @@ namespace HyPlayer.Pages
             }
         }
         
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        private void AutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
         {
-            base.OnNavigatedTo(e);
-            Text = (string) e.Parameter;
+            Text = sender.Text;
             LoadResult();
         }
 
+        private async void AutoSuggestBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+        {
+            if (string.IsNullOrEmpty(sender.Text))
+            {
+                AutoSuggestBox_GotFocus(sender, null);
+                return;
+            }
+
+            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchSuggest,
+                new Dictionary<string, object>() { { "keywords", sender.Text }, { "type", "mobile" } });
+
+            if (isOk && json["result"]["allMatch"] != null && json["result"]["allMatch"].HasValues)
+            {
+                sender.ItemsSource = json["result"]["allMatch"].ToArray().ToList().Select(t => t["keyword"].ToString())
+                    .ToList();
+            }
+        }
+
+        private void AutoSuggestBox_SuggestionChosen(AutoSuggestBox sender,
+            AutoSuggestBoxSuggestionChosenEventArgs args)
+        {
+            sender.Text = args.SelectedItem.ToString();
+        }
+
+
+        private async void AutoSuggestBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            if (String.IsNullOrWhiteSpace((sender as AutoSuggestBox)?.Text))
+            {
+                (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchHot);
+                if (isOk)
+                {
+                    ((AutoSuggestBox)sender).ItemsSource =
+                        json["result"]["hots"].ToArray().ToList().Select(t => t["first"].ToString());
+                }
+            }
+        }
         private void PrevPage_OnClick(object sender, RoutedEventArgs e)
         {
             page--;
