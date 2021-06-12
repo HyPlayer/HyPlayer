@@ -784,16 +784,17 @@ namespace HyPlayer.HyPlayControl
                     Lyrics = Lyrics.Union(ConvertPureLyric(lrctxt)).ToList();
                     lrctxt = lrctxt.Substring(LyricTextLine.IndexOf(']') + 1);
                 }
-
-                //NLyric 的双语歌词 - 夹带私货
                 string translation = null;
+                /*
+                //NLyric 的双语歌词 - 夹带私货
+
                 if (LyricTextLine.IndexOf('「') != -1 && LyricTextLine.IndexOf('」') != -1)
                 {
                     translation = LyricTextLine.Substring(LyricTextLine.IndexOf('「') + 1,
                         LyricTextLine.IndexOf('」') - LyricTextLine.IndexOf('「') - 1);
                     lrctxt = lrctxt.Substring(0, lrctxt.IndexOf('「'));
                 }
-
+                */
                 bool HaveTranslation = !string.IsNullOrEmpty(translation);
                 Lyrics.Add(new SongLyric()
                 {
