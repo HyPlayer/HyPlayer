@@ -9,14 +9,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:media="using:Windows.UI.Xaml.Media"
     mc:Ignorable="d">
-    <Grid x:Name="MainGrid">
-        <Border x:Name="AppTitleBar"
-                Margin="0,0,0,0"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Top"
-                Height="40"
-                Canvas.ZIndex="0">
-        </Border>
+    <Grid
+        x:Name="MainGrid">
         <controls1:NavigationView
             x:Name="NavMain"
             Margin="0,-1,0,0"
@@ -37,7 +31,7 @@
                     Tag="PageHome" />
                 <controls1:NavigationViewItem
                     Content="私人FM"
-                    Tag="PersonalFM" >
+                    Tag="PersonalFM">
                     <controls1:NavigationViewItem.Icon>
                         <FontIcon
                             FontFamily="{StaticResource SymbolThemeFontFamily}"
@@ -77,11 +71,25 @@
                     x:Name="NavItemsLikeList" />
             </controls1:NavigationView.MenuItems>
             <controls1:NavigationView.PaneFooter>
-                <Grid Height="100"/>
+                <Grid
+                    Height="100" />
             </controls1:NavigationView.PaneFooter>
-            <Frame
-                Margin="0,40,0,0"
-                x:Name="BaseFrame" />
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid
+                    Grid.Row="0"
+                    x:Name="AppTitleBar"
+                    Background="Transparent"
+                    Canvas.ZIndex="0">
+                </Grid>
+                <Frame
+                    Grid.Row="1"
+                    Margin="0,40,0,0"
+                    x:Name="BaseFrame" />
+            </Grid>
         </controls1:NavigationView>
         <!--  登录弹窗  -->
         <ContentDialog
