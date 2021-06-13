@@ -17,20 +17,24 @@
                 FontSize="60"
                 Text="设置" />
             <TextBlock
-                FontSize="18">罗马音设置</TextBlock>
+                FontSize="24" Width="1413">罗马音设置</TextBlock>
             <TextBlock
                 x:Name="RomajiStatus"
-                Text="获取中"></TextBlock>
-            <Button
-                Click="ButtonBase_OnClick"
-                Content="获取罗马音资源文件"></Button>
+                Text="获取中" Width="1354"></TextBlock>
+            <Grid Height="28" Width="144">
+                <Button
+                    Click="ButtonBase_OnClick"
+                    Content="获取罗马音资源文件" Margin="-580,-7,0,0" VerticalAlignment="Top"/>
+
+            </Grid>
 
             <TextBlock
-                FontSize="18"
-                Text="音质设置" />
+                FontSize="24"
+                Text="音质设置" Height="39" Width="1407" />
             <controls:RadioButtons
                 Header="在线播放音质:"
-                x:Name="RadioButtonsSongBr">
+                x:Name="RadioButtonsSongBr"
+                MaxColumns="4" Width="1326">
                 <RadioButton
                     Content="标准 (128k)"
                     Tag="128000"
@@ -49,32 +53,33 @@
                     Checked="RadioButton_Checked" />
             </controls:RadioButtons>
             <TextBlock
-                FontSize="18"
-                Text="下载设置" />
-            <StackPanel Orientation="Horizontal" Spacing="5">
+                FontSize="24"
+                Text="下载设置" Height="45" Width="1401" />
+            <StackPanel Orientation="Horizontal" Spacing="5" Width="1315">
                 <TextBlock Text="下载路径" />
                 <TextBox Width="500" x:Name="TextBoxDownloadDir" />
                 <Button x:Name="ButtonDownloadSelect" Content="选择" Click="ButtonDownloadSelect_OnClick"></Button>
             </StackPanel>
-            <CheckBox
-                x:Name="ToastLyricCheckbox"
-                Content="是否开启 Toast 歌词"
-                Checked="ToastLyricCheckbox_OnChecked"
-                Unchecked="ToastLyricCheckbox_OnChecked" />
-            <CheckBox
-                x:Name="AnimationCheckbox"
-                Content="是否开启可选动效"
-                Checked="ToastLyricCheckbox_OnChecked"
-                Unchecked="ToastLyricCheckbox_OnChecked" />
+            <Grid Height="84" Width="1314">
+                <CheckBox
+                    x:Name="ToastLyricCheckbox"
+                    Content="是否开启 Toast 歌词"
+                    Checked="ToastLyricCheckbox_OnChecked"
+                    Unchecked="ToastLyricCheckbox_OnChecked" Width="162" VerticalAlignment="Top" />
+                <CheckBox
+                    x:Name="AnimationCheckbox"
+                    Content="是否开启可选动效"
+                    Checked="ToastLyricCheckbox_OnChecked"
+                    Unchecked="ToastLyricCheckbox_OnChecked" Margin="0,52,0,0" VerticalAlignment="Top" />
+            </Grid>
             <TextBlock
-                FontSize="40"
-                Text="关于" />
-            <Image
-                Width="100"
-                Height="100"
-                HorizontalAlignment="Left"
-                Source="/Assets/icon.png" />
-            <RichTextBlock>
+                FontSize="50"
+                Text="关于" Width="1453" />
+            <Grid Width="1488">
+                <Image
+                    Source="/Assets/icon.png" Margin="56,0,1329,0" />
+            </Grid>
+            <RichTextBlock Width="1357">
                 <Paragraph
                     FontSize="25">HyPlayer</Paragraph>
                 <Paragraph>This is an open-source project under GPL-v3 Licence</Paragraph>
@@ -89,12 +94,12 @@
             </RichTextBlock>
             <TextBlock
                 FontSize="25"
-                Text="开发者" />
+                Text="开发者" Width="1364" />
             <StackPanel
                 PointerPressed="UIElement_OnPointerPressed"
-                Orientation="Horizontal">
+                Orientation="Horizontal" Width="1390">
                 <PersonPicture
-                    ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=GibeJPa6pAcRMKgoHC9ibI4w&amp;s=100" />
+                    ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=GibeJPa6pAcRMKgoHC9ibI4w&amp;s=100" Width="101" />
                 <StackPanel
                     Margin="15,0,0,0"
                     Orientation="Vertical">
