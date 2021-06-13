@@ -18,7 +18,8 @@
                     GotFocus="AutoSuggestBox_GotFocus"
                     QuerySubmitted="AutoSuggestBox_QuerySubmitted" 
                     TextChanged="AutoSuggestBox_TextChanged"
-                    SuggestionChosen="AutoSuggestBox_SuggestionChosen"/>
+                    SuggestionChosen="AutoSuggestBox_SuggestionChosen"
+                    Margin="15"/>
                 <NavigationView x:Name="NavigationViewSelector" IsSettingsVisible="False" SelectionChanged="NavigationView_OnSelectionChanged" PaneDisplayMode="Top" IsBackButtonVisible="Collapsed">
                     <NavigationView.MenuItems>
                         <NavigationViewItem Content="单曲" Tag="1"/>
