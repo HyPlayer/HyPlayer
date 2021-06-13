@@ -39,7 +39,7 @@ namespace HyPlayer.Pages
         {
             base.OnNavigatedTo(e);
             Song = (NCSong)e.Parameter;
-            SongInfoContainer.Children.Add(new SingleNCSong(Song,0));
+            SongInfoContainer.Children.Add(new SingleNCSong(Song, 0));
             LoadComments(sortType);
         }
 
@@ -47,12 +47,20 @@ namespace HyPlayer.Pages
         {
             // type 1:按推荐排序,2:按热度排序,3:按时间排序
             if (string.IsNullOrEmpty(Song.sid)) return;
-            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentNew,
+            (bool isOk, JObject json) res;
+            if (type == 1 || type == 2)
+            {
+                res = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentNew,
                 new Dictionary<string, object>() { { "id", Song.sid }, { "type", 0 }, { "pageNo", page }, { "pageSize", 20 }, { "sortType", type } });
-            if (isOk)
+            }
+            else
+            {
+                res = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentMusic, new Dictionary<string, object>() { { "id", Song.sid }, { "offset", page * 20 } });
+            }
+            if (res.isOk)
             {
                 CommentList.Children.Clear();
-                foreach (JToken comment in json["data"]["comments"].ToArray())
+                foreach (JToken comment in type == 3 ? res.json["comments"].ToArray() : res.json["data"]["comments"].ToArray())
                 {
                     Comment cmt = new Comment();
                     cmt.songid = Song.sid;
@@ -75,7 +83,7 @@ namespace HyPlayer.Pages
                     CommentList.Children.Add(new SingleComment(cmt));
                 }
 
-                if ((json["data"]["hasMore"].ToString()) == "True")
+                if (type == 3 ? (res.json["more"].ToString()) == "True" : (res.json["data"]["hasMore"].ToString()) == "True")
                 {
                     NextPage.Visibility = Visibility.Visible;
                 }
