@@ -16,6 +16,7 @@
                     QueryIcon="Find"
                     PlaceholderText="搜索歌曲......"
                     GotFocus="AutoSuggestBox_GotFocus"
+                    LostFocus="AutoSuggestBox_LostFocus"
                     QuerySubmitted="AutoSuggestBox_QuerySubmitted" 
                     TextChanged="AutoSuggestBox_TextChanged"
                     SuggestionChosen="AutoSuggestBox_SuggestionChosen"/>

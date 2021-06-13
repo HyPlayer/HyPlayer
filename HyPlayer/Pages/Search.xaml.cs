@@ -190,5 +190,10 @@ namespace HyPlayer.Pages
             page = 0;
             LoadResult();
         }
+
+        private void AutoSuggestBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            ((AutoSuggestBox)sender).ItemsSource =null;
+        }
     }
 }
