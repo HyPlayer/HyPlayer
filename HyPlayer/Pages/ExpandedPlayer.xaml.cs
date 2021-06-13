@@ -116,13 +116,7 @@ namespace HyPlayer.Pages
                 }));
             }));
         }
-
-        protected override void OnNavigatedFrom(NavigationEventArgs e)
-        {
-            base.OnNavigatedFrom(e);
-            Window.Current.SetTitleBar(Common.PageBase.AppTitleBar);
-        }
-
+        
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
