@@ -299,10 +299,11 @@ namespace HyPlayer.Controls
             ButtonCollapse.Visibility = Visibility.Collapsed;
             Common.PageExpandedPlayer.Dispose();
             Common.PageExpandedPlayer = null;
-            Common.PageMain.ExpandedPlayer.Content = new BlankPage();
+            Common.PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));
             //Common.PageMain.MainFrame.Visibility = Visibility.Visible;
             Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
             Common.PageMain.GridPlayBar.Background = Application.Current.Resources["SystemControlAcrylicElementMediumHighBrush"] as Brush;
+            Window.Current.SetTitleBar(Common.PageBase.AppTitleBar);
         }
 
         private void ButtonCleanAll_OnClick(object sender, RoutedEventArgs e)

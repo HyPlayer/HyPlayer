@@ -39,6 +39,7 @@ namespace HyPlayer.Pages
         public BasePage()
         {
             InitializeComponent();
+            Common.PageBase = this;
             selectionHistory = new List<NavigationViewItem>();
             if (Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Desktop")
             {

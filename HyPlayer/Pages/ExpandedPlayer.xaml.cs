@@ -117,11 +117,17 @@ namespace HyPlayer.Pages
             }));
         }
 
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            base.OnNavigatedFrom(e);
+            ImageAlbumContainer.Visibility = Visibility.Collapsed;
+        }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
             Common.PageExpandedPlayer = this;
+            Window.Current.SetTitleBar(AppTitleBar);
             //ImageAlbumContainer.Visibility = Visibility.Collapsed;
             try
             {
@@ -131,6 +137,7 @@ namespace HyPlayer.Pages
             catch
             {
             }
+            
         }
 
         private void RefreshLyricTime()
@@ -216,17 +223,17 @@ namespace HyPlayer.Pages
                             BitmapImage img = new BitmapImage();
                             await img.SetSourceAsync(
                                 (await mpi.AudioInfo.LocalSongFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999)));
-                            ImageAlbum.ImageSource = img;
+                            ImageAlbum.Source = img;
                         }
                         else
                         {
-                            ImageAlbum.ImageSource = new BitmapImage(new Uri(mpi.AudioInfo.Picture));
+                            ImageAlbum.Source = new BitmapImage(new Uri(mpi.AudioInfo.Picture));
                         }
 
                         TextBlockSinger.Text = mpi.AudioInfo.Artist;
                         TextBlockSongTitle.Text = mpi.AudioInfo.SongName;
                         Background = new ImageBrush()
-                            {ImageSource = ImageAlbum.ImageSource, Stretch = Stretch.UniformToFill};
+                            {ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill};
                         ProgressBarPlayProg.Maximum = mpi.AudioInfo.LengthInMilliseconds;
                         SliderVolumn.Value = HyPlayList.Player.Volume * 100;
 
