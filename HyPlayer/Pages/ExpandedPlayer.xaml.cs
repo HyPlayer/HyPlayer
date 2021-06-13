@@ -116,7 +116,13 @@ namespace HyPlayer.Pages
                 }));
             }));
         }
-        
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            base.OnNavigatedFrom(e);
+            ImageAlbumContainer.Visibility = Visibility.Collapsed;
+        }
+
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
