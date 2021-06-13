@@ -36,7 +36,7 @@
                         Width="100" />
                 </Grid.ColumnDefinitions>
                 <TextBlock
-                    Text="所有评论"
+                    Text="热评"
                     FontSize="40"
                     Margin="15" />
                 <ComboBox SelectionChanged="ComboBoxSortType_OnSelectionChanged" x:Name="ComboBoxSortType" SelectedIndex="2" HorizontalAlignment="Right" Margin="0,25,15,0" Grid.Column="1">
@@ -45,8 +45,14 @@
                     <x:String>时间</x:String>
                 </ComboBox>
             </Grid>
-            
-            <StackPanel x:Name="CommentList" Orientation="Vertical" Margin="10" Spacing="30" />
+            <StackPanel Orientation="Vertical">
+                <StackPanel x:Name="HotCommentList" Orientation="Vertical" Margin="10" Spacing="30" />
+                <TextBlock
+                    Text="所有评论"
+                    FontSize="40"
+                    Margin="15" />
+                <StackPanel x:Name="CommentList" Orientation="Vertical" Margin="10" Spacing="30" />
+            </StackPanel>
             <Button
                 Visibility="Collapsed"
                 Content="上一页"

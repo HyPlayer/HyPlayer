@@ -40,9 +40,33 @@ namespace HyPlayer.Pages
             base.OnNavigatedTo(e);
             Song = (NCSong)e.Parameter;
             SongInfoContainer.Children.Add(new SingleNCSong(Song, 0));
+            LoadHotComments();
             LoadComments(sortType);
         }
-
+        private async void LoadHotComments()
+        {
+            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentNew,
+                new Dictionary<string, object>() { { "id", Song.sid }, { "type", 0 }, { "pageNo", page }, { "pageSize", 20 }, { "sortType", 2 } });
+            if (isOk)
+            {
+                foreach (JToken comment in json["data"]["comments"].ToArray())
+                {
+                    Comment cmt = new Comment();
+                    cmt.songid = Song.sid;
+                    cmt.cid = comment["commentId"].ToString();
+                    cmt.AvatarUri = comment["user"]["avatarUrl"] is null ? new Uri("ms-appx:///Assets/icon.png") : new Uri(comment["user"]["avatarUrl"].ToString());
+                    cmt.Nickname = comment["user"]["nickname"] is null ? comment["user"]["userId"].ToString() : comment["user"]["nickname"].ToString();
+                    cmt.uid = comment["user"]["userId"].ToString();
+                    cmt.content = comment["content"].ToString();
+                    cmt.likedCount = comment["likedCount"].ToObject<int>();
+                    if (comment["liked"].ToString() == "False")
+                        cmt.HasLiked = false;
+                    else cmt.HasLiked = true;
+                    SingleComment curcomment = new SingleComment(cmt);
+                    HotCommentList.Children.Add(curcomment);
+                }
+            }
+        }
         private async void LoadComments(int type)
         {
             // type 1:按推荐排序,2:按热度排序,3:按时间排序
