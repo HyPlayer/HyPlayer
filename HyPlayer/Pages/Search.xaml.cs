@@ -30,7 +30,7 @@ namespace HyPlayer.Pages
         private async void LoadResult()
         {
             SearchResultContainer.Children.Clear();
-            var (isOk,json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Cloudsearch,
+            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Cloudsearch,
                 new Dictionary<string, object>()
                 {
                     {"keywords", Text},
@@ -39,7 +39,7 @@ namespace HyPlayer.Pages
                 });
             if (isOk)
             {
-                switch (((NavigationViewItem) NavigationViewSelector.SelectedItem).Tag.ToString())
+                switch (((NavigationViewItem)NavigationViewSelector.SelectedItem).Tag.ToString())
                 {
                     case "1":
                         LoadSongResult(json);
@@ -50,7 +50,34 @@ namespace HyPlayer.Pages
                     case "100":
                         LoadArtistResult(json);
                         break;
+                    case "1000":
+                        LoadPlaylistResult(json);
+                        break;
                 }
+            }
+        }
+
+        private void LoadPlaylistResult(JObject json)
+        {
+            foreach (var pljs in json["result"]["playlists"].ToArray())
+            {
+                SearchResultContainer.Children.Add(new SinglePlaylistStack(NCPlayList.CreateFromJson(pljs)));
+            }
+            if (int.Parse(json["result"]["playlistCount"].ToString()) >= (page + 1) * 30)
+            {
+                NextPage.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                NextPage.Visibility = Visibility.Collapsed;
+            }
+            if (page > 0)
+            {
+                PrevPage.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                PrevPage.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -83,7 +110,7 @@ namespace HyPlayer.Pages
         {
             foreach (var albumjson in json["result"]["albums"].ToArray())
             {
-                SearchResultContainer.Children.Add(new SingleAlbum(NCAlbum.CreateFormJson(albumjson), albumjson["artists"].ToArray().Select(t=>NCArtist.CreateFormJson(t)).ToList()));
+                SearchResultContainer.Children.Add(new SingleAlbum(NCAlbum.CreateFormJson(albumjson), albumjson["artists"].ToArray().Select(t => NCArtist.CreateFormJson(t)).ToList()));
             }
             if (int.Parse(json["result"]["albumCount"].ToString()) >= (page + 1) * 30)
             {
@@ -102,7 +129,7 @@ namespace HyPlayer.Pages
                 PrevPage.Visibility = Visibility.Collapsed;
             }
         }
-        
+
         private void LoadSongResult(JObject json)
         {
             int idx = 0;
@@ -129,7 +156,7 @@ namespace HyPlayer.Pages
                 PrevPage.Visibility = Visibility.Collapsed;
             }
         }
-        
+
         private void AutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
         {
             Text = sender.Text;
@@ -193,7 +220,7 @@ namespace HyPlayer.Pages
 
         private void AutoSuggestBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            ((AutoSuggestBox)sender).ItemsSource =null;
+            ((AutoSuggestBox)sender).ItemsSource = null;
         }
     }
 }

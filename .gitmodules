@@ -1,6 +1,6 @@
 [submodule "NeteaseCloudMusicApi"]
 	path = NeteaseCloudMusicApi
-	url = https://github.com/kengwang/NeteaseCloudMusicApi.git
+	url = https://github.com/HyPlayer/NeteaseCloudMusicApi.git
 [submodule "Kawazu"]
 	path = Kawazu
 	url = https://github.com/HyPlayer/Kawazu.git

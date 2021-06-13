@@ -153,6 +153,9 @@
     <Compile Include="Controls\SingleNCSong.xaml.cs">
       <DependentUpon>SingleNCSong.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\SinglePlaylistStack.xaml.cs">
+      <DependentUpon>SinglePlaylistStack.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\SongListSelect.cs">
       <DependentUpon>SongListSelect.xaml</DependentUpon>
     </Compile>
@@ -264,6 +267,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\SingleArtist.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\SinglePlaylistStack.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -315,5 +315,10 @@ namespace HyPlayer.Pages
                 new Dictionary<string, object>() {{"id", playList.plid}, {"t", playList.subscribed ? "0" : "1"}});
             playList.subscribed = !playList.subscribed;
         }
+
+        private void TextBoxAuthor_PointerPressed(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+        {
+            Common.BaseFrame.Navigate(typeof(Me),playList.creater.id);
+        }
     }
 }

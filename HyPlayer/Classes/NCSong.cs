@@ -48,7 +48,7 @@ namespace HyPlayer.Classes
             if (song[arpath] == null)
                 arpath = "ar";
             if (song[dtpath] == null)
-                dtpath="dt";
+                dtpath = "dt";
             NCSong NCSong = new NCSong()
             {
                 Album = NCAlbum.CreateFormJson(song[alpath]),
@@ -99,6 +99,9 @@ namespace HyPlayer.Classes
         public string desc;
         public NCUser creater;
         public bool subscribed;
+        public long trackCount;
+        public long playCount;
+        public long bookCount;
 
         public static NCPlayList CreateFromJson(JToken json)
         {
@@ -106,19 +109,34 @@ namespace HyPlayer.Classes
             {
                 string picpath = "picUrl";
                 string descpath = "description";
+                string subcountpath = "subscribedCount";
+                string playcountpath = "playCount";
                 if (json[picpath] == null)
                     picpath = "coverImgUrl";
                 if (json[descpath] == null)
                     descpath = "copywriter";
-                return new NCPlayList()
+                if (json[subcountpath] == null)
+                    subcountpath = "bookCount";
+                if (json[playcountpath] == null)
+                {
+                    playcountpath = "playcount";
+                }
+                NCPlayList ncp = new NCPlayList()
                 {
                     cover = json[picpath].ToString(),
                     creater = NCUser.CreateFromJson(json["creator"]),
                     desc = json[descpath].ToString(),
                     name = json["name"].ToString(),
                     plid = json["id"].ToString(),
-                    subscribed = !(json["subscribed"] == null || json["subscribed"].ToString()=="False")
+                    subscribed = !(json["subscribed"] == null || json["subscribed"].ToString() == "False"),
+                    playCount = json[playcountpath].ToObject<long>(),
+                    trackCount = json["trackCount"].ToObject<long>(),
                 };
+                if (json[subcountpath] != null)
+                {
+                    ncp.bookCount = json[subcountpath].ToObject<long>();
+                }
+                return ncp;
             }
             catch (Exception e)
             {
@@ -139,13 +157,16 @@ namespace HyPlayer.Classes
         {
             if (user != null && user.HasValues)
             {
-                return new NCUser()
+                NCUser ncuser = new NCUser();
+                if (user["avatarUrl"] != null)
+                    ncuser.avatar = user["avatarUrl"].ToString();
+                if (user["signature"] != null)
                 {
-                    avatar = user["avatarUrl"].ToString(),
-                    id = user["userId"].ToString(),
-                    name = user["nickname"].ToString(),
-                    signature = user["signature"].ToString()
-                };
+                    ncuser.signature = user["signature"].ToString();
+                }
+                ncuser.id = user["userId"].ToString();
+                ncuser.name = user["nickname"].ToString();
+                return ncuser;
             }
             else
             {
