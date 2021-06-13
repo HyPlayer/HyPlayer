@@ -39,7 +39,7 @@
                     Text="所有评论"
                     FontSize="40"
                     Margin="15" />
-                <ComboBox SelectionChanged="ComboBoxSortType_OnSelectionChanged" x:Name="ComboBoxSortType" SelectedIndex="0" HorizontalAlignment="Right" Margin="0,25,15,0" Grid.Column="1">
+                <ComboBox SelectionChanged="ComboBoxSortType_OnSelectionChanged" x:Name="ComboBoxSortType" SelectedIndex="2" HorizontalAlignment="Right" Margin="0,25,15,0" Grid.Column="1">
                     <x:String>推荐</x:String>
                     <x:String>热度</x:String>
                     <x:String>时间</x:String>
