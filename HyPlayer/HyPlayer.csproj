@@ -393,7 +393,16 @@
       <Version>2.2.0</Version>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\Kawazu\Kawazu\Kawazu.csproj">
+      <Project>{2dc18999-32f2-40d4-ad9b-c5a09514e087}</Project>
+      <Name>Kawazu</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NeteaseCloudMusicApi\NeteaseCloudMusicApi\NeteaseCloudMusicApi.csproj">
+      <Project>{c20d7ea5-6db8-42b3-855d-75470cbe667f}</Project>
+      <Name>NeteaseCloudMusicApi</Name>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
