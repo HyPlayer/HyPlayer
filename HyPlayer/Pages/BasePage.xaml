@@ -81,6 +81,7 @@
                 </Grid.RowDefinitions>
                 <Grid
                     Grid.Row="0"
+                    x:FieldModifier="public"
                     x:Name="AppTitleBar"
                     Background="Transparent"
                     Canvas.ZIndex="0">

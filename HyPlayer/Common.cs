@@ -23,6 +23,7 @@ namespace HyPlayer
         public static MainPage PageMain;
         public static PlayBar BarPlayBar;
         public static Frame BaseFrame;
+        public static BasePage PageBase;
         public static Setting Setting;
         public static bool ShowLyricSound = true;
         public static bool ShowLyricTrans = true;
