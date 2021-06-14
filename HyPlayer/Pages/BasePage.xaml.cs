@@ -175,14 +175,14 @@ namespace HyPlayer.Pages
             //加载我喜欢的歌
             _ = Task.Run((() =>
             {
-                Common.Invoke(( async () =>
-                {
-                    (bool isok, JObject js) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Likelist,
-                        new Dictionary<string, object>() {{"uid", Common.LoginedUser.id}});
-                    Common.LikedSongs = js["ids"].ToObject<List<string>>();
-                }));
+                Common.Invoke((async () =>
+               {
+                   (bool isok, JObject js) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Likelist,
+                       new Dictionary<string, object>() { { "uid", Common.LoginedUser.id } });
+                   Common.LikedSongs = js["ids"].ToObject<List<string>>();
+               }));
             }));
-            
+
             _ = Task.Run((() =>
             {
                 Common.Invoke((async () =>
@@ -190,7 +190,7 @@ namespace HyPlayer.Pages
                     //加载用户歌单
                     Microsoft.UI.Xaml.Controls.NavigationViewItem nowitem = NavItemsMyList;
                     (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
-                        new Dictionary<string, object>() {{"uid", Common.LoginedUser.id}});
+                        new Dictionary<string, object>() { { "uid", Common.LoginedUser.id } });
                     if (isOk)
                     {
                         NavItemsLikeList.Visibility = Visibility.Visible;
@@ -219,14 +219,14 @@ namespace HyPlayer.Pages
                     }
                 }));
             }));
-            
+
             // 执行签到操作
             _ = Task.Run((() =>
             {
                 Common.Invoke((() =>
                 {
                     Common.ncapi.RequestAsync(CloudMusicApiProviders.DailySignin);
-                    Common.ncapi.RequestAsync(CloudMusicApiProviders.DailySignin,new Dictionary<string, object>(){{"type",1}});
+                    Common.ncapi.RequestAsync(CloudMusicApiProviders.DailySignin, new Dictionary<string, object>() { { "type", 1 } });
                     //刷播放量不?
                 }));
             }));
@@ -239,7 +239,7 @@ namespace HyPlayer.Pages
                     Common.Invoke((() =>
                     {
                         if (!hpi.isOnline) return;
-                        Common.ncapi.RequestAsync(CloudMusicApiProviders.Scrobble,new Dictionary<string, object>()
+                        Common.ncapi.RequestAsync(CloudMusicApiProviders.Scrobble, new Dictionary<string, object>()
                         {
                             {"id",hpi.NcPlayItem.sid},
                             {"sourceid","-1"}
@@ -293,6 +293,9 @@ namespace HyPlayer.Pages
                 case "PageSettings":
                     Common.BaseFrame.Navigate(typeof(Pages.Settings), null, new EntranceNavigationTransitionInfo());
                     break;
+                case "PageDownload":
+                    Common.BaseFrame.Navigate(typeof(Pages.DownloadPage), null, new EntranceNavigationTransitionInfo());
+                    break;
             }
         }
 
@@ -332,6 +335,6 @@ namespace HyPlayer.Pages
             }
         }
 
-        
+
     }
 }

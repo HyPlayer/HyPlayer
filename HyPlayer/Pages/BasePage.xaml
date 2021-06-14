@@ -22,13 +22,17 @@
             SelectionChanged="NavMain_OnSelectionChanged">
             <controls1:NavigationView.MenuItems>
                 <controls1:NavigationViewItem
-                    Content="搜索"
-                    Icon="Find"
-                    Tag="PageSearch" />
-                <controls1:NavigationViewItem
                     Content="主页"
                     Icon="Home"
                     Tag="PageHome" />
+                <controls1:NavigationViewItem
+                    Content="搜索"
+                    Icon="Find"
+                    Tag="PageSearch" />
+                  <controls1:NavigationViewItem
+                    Content="下载"
+                    Icon="Download"
+                    Tag="PageDownload" />
                 <controls1:NavigationViewItem
                     Content="私人FM"
                     Tag="PersonalFM">
@@ -76,8 +80,10 @@
             </controls1:NavigationView.PaneFooter>
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="30"/>
-                    <RowDefinition Height="*"/>
+                    <RowDefinition
+                        Height="30" />
+                    <RowDefinition
+                        Height="*" />
                 </Grid.RowDefinitions>
                 <Grid
                     Grid.Row="0"
