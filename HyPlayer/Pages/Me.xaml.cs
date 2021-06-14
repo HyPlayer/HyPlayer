@@ -29,7 +29,7 @@ namespace HyPlayer.Pages
         {
             InitializeComponent();
         }
-        
+
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
@@ -99,16 +99,15 @@ namespace HyPlayer.Pages
             });*/
 
         }
-        
+
         private async void Logout_OnClick(object sender, RoutedEventArgs e)
         {
             try
             {
-                Common.ncapi = new CloudMusicApi();
-                StorageFile sf = await Windows.Storage.ApplicationData.Current.LocalFolder.GetFileAsync("Settings\\UserPassword");
-                await sf.DeleteAsync();
+                await Common.ncapi.RequestAsync(CloudMusicApiProviders.Logout);
                 Common.Logined = false;
                 Common.LoginedUser = new NCUser();
+                ApplicationData.Current.LocalSettings.Values["cookie"] = "";
                 Common.PageMain.MainFrame.Navigate(typeof(BlankPage));
                 Common.PageMain.MainFrame.Navigate(typeof(BasePage));
             }

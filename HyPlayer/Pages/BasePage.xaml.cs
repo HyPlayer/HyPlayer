@@ -26,6 +26,8 @@ using Windows.UI.Xaml.Navigation;
 using System.Diagnostics;
 using QRCoder;
 using Windows.Storage.Streams;
+using Microsoft.AppCenter.Crashes;
+using System.Net;
 
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
@@ -66,31 +68,68 @@ namespace HyPlayer.Pages
             Common.BaseFrame.Navigate(typeof(Home));
         }
 
+        private void PhraseCookie(string cookielines)
+        {
+            try
+            {
+                foreach (string cookieHeader in cookielines.Split("\r\n"))
+                {
+                    if (string.IsNullOrEmpty(cookieHeader)) continue;
+                    var cookie = new Cookie();
+                    var CookieDic = new Dictionary<string, string>();
+                    var arr1 = cookieHeader.Split(';').ToList();
+                    var arr2 = arr1[0].Trim().Split('=');
+                    cookie.Name = arr2[0];
+                    cookie.Value = arr2[1];
+                    arr1.RemoveAt(0);
+                    foreach (string cookiediac in arr1)
+                    {
+                        try
+                        {
+                            string[] cookiesetarr = cookiediac.Trim().Split('=');
+                            switch (cookiesetarr[0].Trim().ToLower())
+                            {
+                                case "expires":
+                                    cookie.Expires = DateTime.Parse(cookiesetarr[1].Trim());
+                                    break;
+                                case "max-age":
+                                    cookie.Expires = DateTime.Now.AddSeconds(int.Parse(cookiesetarr[1]));
+                                    break;
+                                case "domain":
+                                    cookie.Domain = cookiesetarr[1].Trim();
+                                    break;
+                                case "path":
+                                    cookie.Path = cookiesetarr[1].Trim().Replace("%x2F", "/");
+                                    break;
+                                case "secure":
+                                    cookie.Secure = cookiesetarr[1].Trim().ToLower() == "true";
+                                    break;
+                            }
+                        }
+                        catch
+                        {
+                            continue;
+                        }
+                    }
+                    Common.ncapi.Cookies.Add(cookie);
+                }
+            }
+            catch (Exception)
+            {
+
+            }
+        }
+
         private async void LoadLoginData()
         {
             try
             {
-                StorageFile sf =
-                    await Windows.Storage.ApplicationData.Current.LocalFolder.GetFileAsync("Settings\\UserPassword");
-                string txt = await FileIO.ReadTextAsync(sf);
-                string[] arr = txt.Split("\r\n");
-                Dictionary<string, object> queries = new Dictionary<string, object>();
-                string account = arr[0];
-                bool isPhone = Regex.Match(account, "^[0-9]+$").Success;
-                queries[isPhone ? "phone" : "email"] = account;
-                queries["md5_password"] = arr[1];
-                (bool isOk, JObject json) = await Common.ncapi.RequestAsync(
-                    isPhone ? CloudMusicApiProviders.LoginCellphone : CloudMusicApiProviders.Login, queries);
-                if (isOk && json["code"].ToString() == "200")
+                if (ApplicationData.Current.LocalSettings.Values.ContainsKey("cookie") && string.IsNullOrEmpty(ApplicationData.Current.LocalSettings.Values["cookie"].ToString()))
+                    return;
+                PhraseCookie(ApplicationData.Current.LocalSettings.Values["cookie"].ToString());
+                var (retOk, LoginStatus) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginRefresh);
+                if (retOk && LoginStatus["account"].HasValues)
                 {
-                    Common.Logined = true;
-                    Common.LoginedUser.name = json["profile"]["nickname"].ToString();
-                    Common.LoginedUser.avatar = json["profile"]["avatarUrl"].ToString();
-                    Common.LoginedUser.id = json["account"]["id"].ToString();
-                    Common.LoginedUser.signature = json["profile"]["signature"].ToString();
-                    TextBlockUserName.Text = json["profile"]["nickname"].ToString();
-                    PersonPictureUser.ProfilePicture =
-                        new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
                     LoginDone();
                 }
             }
@@ -134,24 +173,6 @@ namespace HyPlayer.Pages
                 }
                 else
                 {
-                    Common.Logined = true;
-                    StorageFile sf = await Windows.Storage.ApplicationData.Current.LocalFolder.CreateFileAsync(
-                        "Settings\\UserPassword", Windows.Storage.CreationCollisionOption.ReplaceExisting);
-                    _ = FileIO.WriteTextAsync(sf,
-                        account + "\r\n" + TextBoxPassword.Password.ToString().ToByteArrayUtf8().ComputeMd5()
-                            .ToHexStringLower());
-                    Common.LoginedUser.name = json["profile"]["nickname"].ToString();
-                    Common.LoginedUser.avatar = json["profile"]["avatarUrl"].ToString();
-                    Common.LoginedUser.id = json["account"]["id"].ToString();
-                    Common.LoginedUser.signature = json["profile"]["signature"].ToString();
-                    InfoBarLoginHint.IsOpen = true;
-                    InfoBarLoginHint.Title = "登录成功";
-                    ButtonLogin.Content = "登录成功";
-                    TextBlockUserName.Text = json["profile"]["nickname"].ToString();
-                    PersonPictureUser.ProfilePicture =
-                        new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
-                    InfoBarLoginHint.Severity = InfoBarSeverity.Success;
-                    InfoBarLoginHint.Message = "欢迎 " + json["profile"]["nickname"].ToString();
                     LoginDone();
                 }
             }
@@ -160,11 +181,8 @@ namespace HyPlayer.Pages
                 ButtonLogin.IsEnabled = true;
                 InfoBarLoginHint.IsOpen = true;
                 InfoBarLoginHint.Severity = InfoBarSeverity.Error;
-                StorageFile sf = await Windows.Storage.ApplicationData.Current.LocalFolder.CreateFileAsync(
-                    "Settings\\Log", Windows.Storage.CreationCollisionOption.ReplaceExisting);
-                _ = FileIO.WriteTextAsync(sf,
-                    ex.ToString());
                 InfoBarLoginHint.Message = "登录失败 " + ex.ToString();
+                Crashes.TrackError(ex);
             }
         }
 
@@ -173,8 +191,37 @@ namespace HyPlayer.Pages
             DialogLogin.Hide();
         }
 
-        private void LoginDone()
+        private async void LoginDone()
         {
+            InfoBarLoginHint.IsOpen = true;
+            InfoBarLoginHint.Title = "登录成功";
+            ButtonLogin.Content = "登录成功";
+            //存储Cookie
+            string cookiestr = "";
+            foreach (Cookie cookie in Common.ncapi.Cookies)
+            {
+                string thiscookiestr = cookie.Name + "=" + cookie.Value;
+                if (!string.IsNullOrEmpty(cookie.Domain))
+                    thiscookiestr += "; Domain=" + cookie.Domain;
+                if (cookie.Expires != DateTime.MinValue)
+                    thiscookiestr += "; Expires=" + cookie.Expires.ToString("R");
+                if (!string.IsNullOrEmpty(cookie.Path))
+                    thiscookiestr += "; Path=" + cookie.Path;
+                if (!cookie.Secure)
+                    thiscookiestr += "; Secure";
+                if (cookie.HttpOnly)
+                    thiscookiestr += "; HttpOnly";
+                cookiestr += thiscookiestr + "\r\n";
+            }
+            ApplicationData.Current.LocalSettings.Values["cookie"] = cookiestr;
+            var (retOk, LoginStatus) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginStatus);
+            Common.LoginedUser = NCUser.CreateFromJson(LoginStatus["profile"]);
+            Common.Logined = true;
+            TextBlockUserName.Text = Common.LoginedUser.name;
+            PersonPictureUser.ProfilePicture =
+                new BitmapImage(new Uri(Common.LoginedUser.avatar));
+            InfoBarLoginHint.Severity = InfoBarSeverity.Success;
+            InfoBarLoginHint.Message = "欢迎 " + Common.LoginedUser.name;
             DialogLogin.Hide();
             //加载我喜欢的歌
             _ = Task.Run((() =>
@@ -360,21 +407,28 @@ namespace HyPlayer.Pages
                     }
                     else if (res["code"].ToString() == "801")
                     {
+                        InfoBarLoginHint.Title = "请扫描上方二维码登录";
                         //
                     }
                     else if (res["code"].ToString() == "803")
                     {
-                        Common.Logined = true;
                         InfoBarLoginHint.IsOpen = true;
                         InfoBarLoginHint.Title = "登录成功";
                         ButtonLogin.Content = "登录成功";
-                        
                         LoginDone();
                         break;
+                    }
+                    else if (res["code"].ToString() == "802")
+                    {
+                        InfoBarLoginHint.Title = "请在手机上授权登录";
                     }
 
                     await Task.Delay(2000);
                 }
+            }
+            else
+            {
+                InfoBarLoginHint.Title = "登录代表你同意相关条款";
             }
         }
         private async void ReFreshQr(JObject key)
@@ -398,8 +452,7 @@ namespace HyPlayer.Pages
                 await img.SetSourceAsync(stream);
                 QrContainer.Source = img;
             }
-
-
+            InfoBarLoginHint.Title = "请扫描上方二维码登录";
         }
     }
 }
