@@ -54,6 +54,8 @@ namespace HyPlayer.Pages
                     Comment cmt = new Comment();
                     cmt.songid = Song.sid;
                     cmt.cid = comment["commentId"].ToString();
+                    cmt.SendTime =
+                        new DateTime((Convert.ToInt64(comment["time"].ToString()) * 10000) + 621355968000000000);
                     cmt.AvatarUri = comment["user"]["avatarUrl"] is null ? new Uri("ms-appx:///Assets/icon.png") : new Uri(comment["user"]["avatarUrl"].ToString());
                     cmt.Nickname = comment["user"]["nickname"] is null ? comment["user"]["userId"].ToString() : comment["user"]["nickname"].ToString();
                     cmt.uid = comment["user"]["userId"].ToString();
