@@ -23,6 +23,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using HyPlayer.HyPlayControl;
 using Windows.UI.Xaml.Navigation;
+using System.Diagnostics;
+using QRCoder;
+using Windows.Storage.Streams;
+
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
 
@@ -175,14 +179,14 @@ namespace HyPlayer.Pages
             //加载我喜欢的歌
             _ = Task.Run((() =>
             {
-                Common.Invoke(( async () =>
-                {
-                    (bool isok, JObject js) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Likelist,
-                        new Dictionary<string, object>() {{"uid", Common.LoginedUser.id}});
-                    Common.LikedSongs = js["ids"].ToObject<List<string>>();
-                }));
+                Common.Invoke((async () =>
+               {
+                   (bool isok, JObject js) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Likelist,
+                       new Dictionary<string, object>() { { "uid", Common.LoginedUser.id } });
+                   Common.LikedSongs = js["ids"].ToObject<List<string>>();
+               }));
             }));
-            
+
             _ = Task.Run((() =>
             {
                 Common.Invoke((async () =>
@@ -190,7 +194,7 @@ namespace HyPlayer.Pages
                     //加载用户歌单
                     Microsoft.UI.Xaml.Controls.NavigationViewItem nowitem = NavItemsMyList;
                     (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
-                        new Dictionary<string, object>() {{"uid", Common.LoginedUser.id}});
+                        new Dictionary<string, object>() { { "uid", Common.LoginedUser.id } });
                     if (isOk)
                     {
                         NavItemsLikeList.Visibility = Visibility.Visible;
@@ -219,14 +223,14 @@ namespace HyPlayer.Pages
                     }
                 }));
             }));
-            
+
             // 执行签到操作
             _ = Task.Run((() =>
             {
                 Common.Invoke((() =>
                 {
                     Common.ncapi.RequestAsync(CloudMusicApiProviders.DailySignin);
-                    Common.ncapi.RequestAsync(CloudMusicApiProviders.DailySignin,new Dictionary<string, object>(){{"type",1}});
+                    Common.ncapi.RequestAsync(CloudMusicApiProviders.DailySignin, new Dictionary<string, object>() { { "type", 1 } });
                     //刷播放量不?
                 }));
             }));
@@ -239,7 +243,7 @@ namespace HyPlayer.Pages
                     Common.Invoke((() =>
                     {
                         if (!hpi.isOnline) return;
-                        Common.ncapi.RequestAsync(CloudMusicApiProviders.Scrobble,new Dictionary<string, object>()
+                        Common.ncapi.RequestAsync(CloudMusicApiProviders.Scrobble, new Dictionary<string, object>()
                         {
                             {"id",hpi.NcPlayItem.sid},
                             {"sourceid","-1"}
@@ -332,6 +336,67 @@ namespace HyPlayer.Pages
             }
         }
 
-        
+        private async void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if ((sender as Pivot).SelectedIndex == 1)
+            {
+                (bool isOk, JObject key) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginQrKey, new Dictionary<string, object>() { { "timestamp", (DateTime.Now.Ticks - 621356256000000000) / 10000 } });
+                if (isOk)
+                    ReFreshQr(key);
+
+
+                while (true)
+                {
+
+                    (bool a, JObject res) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginQrCheck, new Dictionary<string, object>() { { "key", key["unikey"].ToString() } });
+                    if (res["code"].ToString() == "800")
+                    {
+                        (isOk, key) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginQrKey, new Dictionary<string, object>() { { "timestamp", (DateTime.Now.Ticks - 621356256000000000) / 10000 } });
+                        if (isOk)
+                            ReFreshQr(key);
+                    }
+                    else if (res["code"].ToString() == "801")
+                    {
+                        //
+                    }
+                    else if (res["code"].ToString() == "803")
+                    {
+                        Common.Logined = true;
+                        InfoBarLoginHint.IsOpen = true;
+                        InfoBarLoginHint.Title = "登录成功";
+                        ButtonLogin.Content = "登录成功";
+                        
+                        LoginDone();
+                        break;
+                    }
+
+                    await Task.Delay(2000);
+                }
+            }
+        }
+        private async void ReFreshQr(JObject key)
+        {
+
+
+            Uri QrUri = new Uri("https://music.163.com/login?codekey=" + key["unikey"].ToString());
+            var img = new BitmapImage();
+
+            var qrGenerator = new QRCodeGenerator();
+            var qrData = qrGenerator.CreateQrCode(QrUri.ToString(), QRCodeGenerator.ECCLevel.M);
+            var qrCode = new BitmapByteQRCode(qrData);
+            var qrImage = qrCode.GetGraphic(20);
+            using (var stream = new InMemoryRandomAccessStream())
+            {
+                using (var writer = new DataWriter(stream.GetOutputStreamAt(0)))
+                {
+                    writer.WriteBytes(qrImage);
+                    await writer.StoreAsync();
+                }
+                await img.SetSourceAsync(stream);
+                QrContainer.Source = img;
+            }
+
+
+        }
     }
 }

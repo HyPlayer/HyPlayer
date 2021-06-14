@@ -108,31 +108,43 @@
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
                         Glyph="&#xE106;"></FontIcon>
                 </Button>
-                <Image
+                <Pivot Title="登录" SelectionChanged="Pivot_SelectionChanged">
+                    <PivotItem Header="密码登录">
+                        <StackPanel Orientation="Vertical">
+                            <Image
                     Height="200"
                     Source="/Assets/icon.png" />
-                <TextBlock
+                            <TextBlock
                     Padding="0,3,0,10"
                     HorizontalAlignment="Center"
                     FontSize="25"
                     Text="登录到网易云音乐" />
-                <TextBox
+                            <TextBox
                     x:Name="TextBoxAccount"
                     Margin="5"
                     KeyDown="TextBoxAccount_OnKeyDown"
                     PlaceholderText="手机 / 邮箱" />
-                <PasswordBox
+                            <PasswordBox
                     x:Name="TextBoxPassword"
                     Margin="5"
                     KeyDown="TextBoxPassword_OnKeyDown"
                     PlaceholderText="密码" />
-                <Button
+                            <Button
                     Name="ButtonLogin"
                     Margin="0,15,0,15"
                     HorizontalAlignment="Stretch"
                     Click="ButtonLogin_OnClick"
                     Content="登录"
                     Style="{StaticResource AccentButtonStyle}" />
+                        </StackPanel>
+                    </PivotItem>
+                    <PivotItem Header="扫码登录">
+                        <Image
+                            x:Name="QrContainer"
+                    Height="200"
+                    Source="/Assets/icon.png" />
+                    </PivotItem>
+                </Pivot>
                 <controls1:InfoBar
                     x:Name="InfoBarLoginHint"
                     IsClosable="False"
