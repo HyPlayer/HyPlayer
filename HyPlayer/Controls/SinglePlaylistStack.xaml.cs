@@ -31,7 +31,7 @@ namespace HyPlayer.Controls
             TextBlockPlaylistName.Text = Playlist.name;
             TextBlockUsername.Text = Playlist.creater.name;
             TextBlockDesc.Text = $"{Playlist.trackCount}首 , 播放{Playlist.playCount}次 , 收藏{Playlist.bookCount}次";
-            ImageRect.ImageSource =
+            ImageRect.Source =
                 new BitmapImage(new Uri(Playlist.cover + "?param=" + StaticSource.PICSIZE_SINGLENCPLAYLIST_COVER));
 
         }

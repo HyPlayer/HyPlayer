@@ -32,7 +32,7 @@ namespace HyPlayer.Controls
             TextBlockTransName.Text = artist.transname;
             TextBlockAlias.Text = artist.alias;
             if (artist.avatar != null)
-                ImageRect.ImageSource =
+                ImageRect.Source =
                     new BitmapImage(new Uri(artist.avatar + "?param=" + StaticSource.PICSIZE_SINGLENCSINGER_COVER));
         }
 

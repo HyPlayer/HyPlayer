@@ -34,7 +34,7 @@ namespace HyPlayer.Controls
                 TextBlockSongname.Foreground = new SolidColorBrush(Color.FromArgb(255, 128, 128, 128));
             }
 
-            ImageRect.ImageSource =
+            ImageRect.Source =
                 new BitmapImage(new Uri(song.Album.cover + "?param=" + StaticSource.PICSIZE_SINGLENCSONG_COVER));
             TextBlockSongname.Text = song.songname;
             TextBlockAlbum.Text = song.Album.name;

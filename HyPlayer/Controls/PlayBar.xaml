@@ -269,7 +269,8 @@
                     PointerExited="ImageContainer_OnPointerExited"
                     HorizontalAlignment="Left"
                     BorderThickness="0">
-                    <Image
+                    <controls:ImageEx
+                        EnableLazyLoading="True"
                         Stretch="UniformToFill"
                         x:Name="AlbumImage" />
                 </Grid>

@@ -33,7 +33,7 @@ namespace HyPlayer.Controls
             TextBlockAlbumName.Text = album.name;
             TextBlockArtistName.Text = string.Join(" / ",artists.Select(t=>t.name));
             TextBlockAlias.Text = album.alias;
-            ImageRect.ImageSource =
+            ImageRect.Source =
                 new BitmapImage(new Uri(album.cover + "?param=" + StaticSource.PICSIZE_SINGLENCALBUM_COVER));
 
         }

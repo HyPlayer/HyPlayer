@@ -5,7 +5,9 @@
     xmlns:local="using:HyPlayer.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"    d:DesignHeight="70"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    mc:Ignorable="d"
+    d:DesignHeight="70"
     d:DesignWidth="800">
 
     <Grid
@@ -16,31 +18,37 @@
         BorderThickness="1"
         PointerExited="Grid1_OnPointerExited">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="30" />
-            <ColumnDefinition Width="70" />
-            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition
+                Width="30" />
+            <ColumnDefinition
+                Width="70" />
+            <ColumnDefinition
+                Width="Auto" />
         </Grid.ColumnDefinitions>
-        <Rectangle
-            RadiusX="4"
-            RadiusY="4"
+<controls:ImageEx
+            EnableLazyLoading="True"
+            CornerRadius="4"
             Width="70"
             Height="70"
-            Grid.Column="1">
-            <Rectangle.Fill>
-                <ImageBrush
-                    x:Name="ImageRect"
-                    Stretch="UniformToFill">
-                    <ImageBrush.ImageSource>
-                        <BitmapImage
-                            UriSource="/Assets/icon.png" />
-                    </ImageBrush.ImageSource>
-                </ImageBrush>
-            </Rectangle.Fill>
-        </Rectangle>
-        <StackPanel Grid.Column="2" Orientation="Vertical" Spacing="5">
-            <TextBlock                 FontSize="20" x:Name="TextBlockSingerName" Text="歌手名称" />
-            <TextBlock x:Name="TextBlockTransName" Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}" Text="译名" />
-            <TextBlock x:Name="TextBlockAlias" Foreground="Gray"/>
+            Grid.Column="1"
+            x:Name="ImageRect"
+            Stretch="UniformToFill"
+            Source="/Assets/icon.png" />
+        <StackPanel
+            Grid.Column="2"
+            Orientation="Vertical"
+            Spacing="5">
+            <TextBlock
+                FontSize="20"
+                x:Name="TextBlockSingerName"
+                Text="歌手名称" />
+            <TextBlock
+                x:Name="TextBlockTransName"
+                Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
+                Text="译名" />
+            <TextBlock
+                x:Name="TextBlockAlias"
+                Foreground="Gray" />
         </StackPanel>
     </Grid>
 </UserControl>

@@ -34,23 +34,16 @@
             Grid.Column="0"
             Text="0"
             x:Name="OrderId" />
-        <Rectangle
-            RadiusX="4"
-            RadiusY="4"
+
+        <controls:ImageEx
+            EnableLazyLoading="True"
+            CornerRadius="4"
             Width="70"
             Height="70"
-            Grid.Column="1">
-            <Rectangle.Fill>
-                <ImageBrush
-                    x:Name="ImageRect"
-                    Stretch="UniformToFill">
-                    <ImageBrush.ImageSource>
-                        <BitmapImage
-                            UriSource="/Assets/icon.png" />
-                    </ImageBrush.ImageSource>
-                </ImageBrush>
-            </Rectangle.Fill>
-        </Rectangle>
+            Grid.Column="1"
+            x:Name="ImageRect"
+            Stretch="UniformToFill"
+            Source="/Assets/icon.png" />
         <StackPanel
             Orientation="Vertical"
             Padding="7,0,0,0"

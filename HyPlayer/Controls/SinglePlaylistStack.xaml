@@ -5,6 +5,7 @@
     xmlns:local="using:HyPlayer.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     mc:Ignorable="d"
     d:DesignHeight="70"
     d:DesignWidth="800">
@@ -26,23 +27,15 @@
             <ColumnDefinition
                 Width="Auto" />
         </Grid.ColumnDefinitions>
-        <Rectangle
-            RadiusX="4"
-            RadiusY="4"
+        <controls:ImageEx
+            EnableLazyLoading="True"
+            CornerRadius="4"
             Width="70"
             Height="70"
-            Grid.Column="1">
-            <Rectangle.Fill>
-                <ImageBrush
-                    x:Name="ImageRect"
-                    Stretch="UniformToFill">
-                    <ImageBrush.ImageSource>
-                        <BitmapImage
-                            UriSource="/Assets/icon.png" />
-                    </ImageBrush.ImageSource>
-                </ImageBrush>
-            </Rectangle.Fill>
-        </Rectangle>
+            Grid.Column="1"
+            x:Name="ImageRect"
+            Stretch="UniformToFill"
+            Source="/Assets/icon.png" />
         <StackPanel
             Grid.Column="3"
             Orientation="Vertical"

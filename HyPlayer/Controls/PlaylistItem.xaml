@@ -53,24 +53,18 @@
                     </DoubleAnimation>
                 </Storyboard>
             </Grid.Resources>
-                <Rectangle
+                <controls:ImageEx
+                    EnableLazyLoading="True"
                     x:Name="ImageContainer"
                     Grid.RowSpan="2"
 					Width="200"
 					Height="200"
-                    RadiusX="8"
-                    RadiusY="8">
-                    <Rectangle.RenderTransform>
+                    CornerRadius="8">
+                    <controls:ImageEx.RenderTransform>
                         <TranslateTransform
                         x:Name="Transform" />
-                    </Rectangle.RenderTransform>
-                <Rectangle.Fill>
-                        <ImageBrush
-                            x:Name="ImageRect"
-							Stretch="UniformToFill">
-                        </ImageBrush>
-                    </Rectangle.Fill>
-                </Rectangle>
+                    </controls:ImageEx.RenderTransform>
+                </controls:ImageEx>
             <Grid
 				Background="{ThemeResource PlayListItemLuminosity}"
 				x:Name="GridInfo"

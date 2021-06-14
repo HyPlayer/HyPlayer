@@ -30,7 +30,7 @@ namespace HyPlayer.HyPlayControl
         {
             get
             {
-                if (List.Count <= NowPlaying) return null;
+                if (List.Count <= NowPlaying) return new HyPlayItem{ isOnline = false };
                 return List[NowPlaying];
             }
         }
