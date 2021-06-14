@@ -297,6 +297,9 @@ namespace HyPlayer.Pages
                 case "PageSettings":
                     Common.BaseFrame.Navigate(typeof(Pages.Settings), null, new EntranceNavigationTransitionInfo());
                     break;
+                case "PageDownload":
+                    Common.BaseFrame.Navigate(typeof(Pages.DownloadPage), null, new EntranceNavigationTransitionInfo());
+                    break;
             }
         }
 

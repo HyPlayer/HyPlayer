@@ -20,15 +20,15 @@ namespace HyPlayer.HyPlayControl
 {
     class DownloadObject
     {
-        // 0 - 排队 1 - 下载中 2 - 下载完成
+        // 0 - 排队 1 - 下载中 2 - 下载完成  3 - 暂停
         public int Status = 0;
         public int progress;
         public ulong TotalSize;
         public ulong HavedSize;
-        DownloadOperation downloadOperation;
+        public DownloadOperation downloadOperation;
         public string filename;
         public string fullpath;
-        NCSong ncsong;
+        public NCSong ncsong;
 
         NCPlayItem dontuseme;
         public DownloadObject(NCSong song)
@@ -116,7 +116,7 @@ namespace HyPlayer.HyPlayControl
             }
             TotalSize = obj.Progress.TotalBytesToReceive;
             HavedSize = obj.Progress.BytesReceived;
-            progress = (int)(obj.Progress.TotalBytesToReceive * 100 / obj.Progress.BytesReceived);
+            progress = (int)(obj.Progress.BytesReceived * 100 / obj.Progress.TotalBytesToReceive);
             if (TotalSize == HavedSize)
                 Wc_DownloadFileCompleted();
         }
@@ -256,6 +256,15 @@ namespace HyPlayer.HyPlayControl
         {
             if (DownloadLists.Count == 0) return;
             if (DownloadLists[0].Status == 1) return;
+            if (DownloadLists[0].Status == 3)
+            {
+                for (int i = 0; i < DownloadLists.Count; i++)
+                {
+                    if (DownloadLists[i].Status == 2) DownloadLists.RemoveAt(i);
+                    if (DownloadLists[i].Status == 1) return;
+                    if (DownloadLists[i].Status == 0) { DownloadLists[i].StartDownload(); return; }
+                }
+            }
             if (DownloadLists[0].Status == 2)
             {
                 DownloadLists.RemoveAt(0);

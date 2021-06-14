@@ -434,7 +434,7 @@ namespace HyPlayer.HyPlayControl
 
             try
             {
-                if (lyricpos == 0) changed = true;
+                if (lyricpos == 0 && Lyrics.Count != 1) changed = true;
                 while ((Lyrics.Count > lyricpos + 1 &&
                         Lyrics[lyricpos + 1].LyricTime <= Player.PlaybackSession.Position)) //正常的滚歌词
                 {
