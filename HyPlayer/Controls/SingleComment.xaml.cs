@@ -46,14 +46,14 @@ namespace HyPlayer.Controls
 
         private async void Like_Click(object sender, RoutedEventArgs e)
         {
-            await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentLike, new Dictionary<string, object>() { { "id", comment.songid }, { "cid", comment.cid }, { "type", "0" },{ "t", (bool)comment.HasLiked ? "0" : "1" } });
+            await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentLike, new Dictionary<string, object>() { { "id", comment.resourceId }, { "cid", comment.cid }, { "type", comment.resourceType }, { "t", (bool)comment.HasLiked ? "0" : "1" } });
             comment.likedCount += comment.HasLiked ? -1 : 1;
             LikeCountTB.Text = comment.likedCount.ToString();
         }
 
         private async void Delete_Click(object sender, RoutedEventArgs e)
         {
-            await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment, new Dictionary<string, object>() { { "id", comment.songid }, { "type", '0' }, { "t", "0" }, { "commentId", comment.cid } });
+            await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment, new Dictionary<string, object>() { { "id", comment.resourceId }, { "type", '0' }, { "type", comment.resourceType }, { "commentId", comment.cid } });
             (this.Parent as StackPanel).Children.Remove(this);
         }
 

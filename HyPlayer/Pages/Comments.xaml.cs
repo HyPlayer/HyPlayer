@@ -28,7 +28,9 @@ namespace HyPlayer.Pages
     {
         private int page = 1;
         private int sortType = 1;
-        private NCSong Song;
+        private int resourcetype;
+        private string resourceid;
+        private string cursor;
 
         public Comments()
         {
@@ -38,21 +40,28 @@ namespace HyPlayer.Pages
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            Song = (NCSong)e.Parameter;
-            SongInfoContainer.Children.Add(new SingleNCSong(Song, 0));
+            if (e.Parameter is NCSong ncsong)
+            {
+                resourcetype = 0;
+                resourceid = ncsong.sid;
+                SongInfoContainer.Children.Add(new SingleNCSong(ncsong, 0));
+            }
             LoadHotComments();
             LoadComments(sortType);
         }
+
+
         private async void LoadHotComments()
         {
             (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentNew,
-                new Dictionary<string, object>() { { "id", Song.sid }, { "type", 0 }, { "pageNo", page }, { "pageSize", 20 }, { "sortType", 2 } });
+                new Dictionary<string, object>() { { "id", resourceid }, { "type", resourcetype }, { "pageNo", page }, { "pageSize", 20 }, { "sortType", 2 } });
             if (isOk)
             {
                 foreach (JToken comment in json["data"]["comments"].ToArray())
                 {
                     Comment cmt = new Comment();
-                    cmt.songid = Song.sid;
+                    cmt.resourceId = resourceid;
+                    cmt.resourceType = resourcetype;
                     cmt.cid = comment["commentId"].ToString();
                     cmt.SendTime =
                         new DateTime((Convert.ToInt64(comment["time"].ToString()) * 10000) + 621355968000000000);
@@ -72,24 +81,19 @@ namespace HyPlayer.Pages
         private async void LoadComments(int type)
         {
             // type 1:按推荐排序,2:按热度排序,3:按时间排序
-            if (string.IsNullOrEmpty(Song.sid)) return;
+            if (string.IsNullOrEmpty(resourceid)) return;
             (bool isOk, JObject json) res;
-            if (type == 1 || type == 2)
-            {
-                res = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentNew,
-                new Dictionary<string, object>() { { "id", Song.sid }, { "type", 0 }, { "pageNo", page }, { "pageSize", 20 }, { "sortType", type } });
-            }
-            else
-            {
-                res = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentMusic, new Dictionary<string, object>() { { "id", Song.sid }, { "offset", page * 20 } });
-            }
+
+            res = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentNew,
+            new Dictionary<string, object>() { { "cursor", cursor }, { "id", resourceid }, { "type", resourcetype }, { "pageNo", page }, { "pageSize", 20 }, { "sortType", type } });
             if (res.isOk)
             {
                 CommentList.Children.Clear();
-                foreach (JToken comment in type == 3 ? res.json["comments"].ToArray() : res.json["data"]["comments"].ToArray())
+                foreach (JToken comment in res.json["data"]["comments"].ToArray())
                 {
                     Comment cmt = new Comment();
-                    cmt.songid = Song.sid;
+                    cmt.resourceId = resourceid;
+                    cmt.resourceType = resourcetype;
                     cmt.cid = comment["commentId"].ToString();
                     cmt.SendTime =
                         new DateTime((Convert.ToInt64(comment["time"].ToString()) * 10000) + 621355968000000000);
@@ -107,25 +111,29 @@ namespace HyPlayer.Pages
                         cmt.HasLiked = false;
                     else cmt.HasLiked = true;
                     CommentList.Children.Add(new SingleComment(cmt));
-                }
 
-                if (type == 3 ? (res.json["more"].ToString()) == "True" : (res.json["data"]["hasMore"].ToString()) == "True")
+                }
+                if (type == 3)
+                    cursor = res.json["data"]["cursor"].ToString();
+                if (res.json["data"]["hasMore"].ToString() == "True")
                 {
-                    NextPage.Visibility = Visibility.Visible;
+                    NextPage.IsEnabled = true;
                 }
                 else
                 {
-                    NextPage.Visibility = Visibility.Collapsed;
+                    NextPage.IsEnabled = false;
                 }
 
                 if (page > 1)
                 {
-                    PrevPage.Visibility = Visibility.Visible;
+                    PrevPage.IsEnabled = true;
                 }
                 else
                 {
-                    PrevPage.Visibility = Visibility.Collapsed;
+                    PrevPage.IsEnabled = false;
                 }
+
+                PageIndicator.Text = $"第 {page} 页 / 共 {Math.Ceiling((decimal)res.json["data"]["totalCount"].ToObject<long>() / 20).ToString()} 页";
             }
         }
 
@@ -149,7 +157,7 @@ namespace HyPlayer.Pages
                 {
                     await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment,
                         new Dictionary<string, object>()
-                            {{"id", Song.sid}, {"type", '0'}, {"t", "1"}, {"content", CommentEdit.Text}});
+                            {{"id", resourceid}, {"type", resourcetype}, {"t", "1"}, {"content", CommentEdit.Text}});
                     CommentEdit.Text = String.Empty;
                     await System.Threading.Tasks.Task.Delay(1000);
                     LoadComments(1);

@@ -9,7 +9,8 @@ namespace HyPlayer.Classes
 {
     public struct Comment
     {
-        public string songid;
+        public string resourceId;
+        public int resourceType;
         public string cid;
         public string uid;
         public Uri AvatarUri;

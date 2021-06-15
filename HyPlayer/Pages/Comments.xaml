@@ -61,18 +61,20 @@
                 <StackPanel x:Name="CommentList" Orientation="Vertical" Margin="10" Spacing="30" />
                 
             </StackPanel>
+            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="15">
             <Button
-                Visibility="Collapsed"
+                IsEnabled="False"
                 Content="上一页"
                 x:Name="PrevPage"
                 Click="PrevPage_Click" />
             <TextBlock
                 x:Name="PageIndicator" />
             <Button
-                Visibility="Collapsed"
+                IsEnabled="False"
                 Content="下一页"
                 x:Name="NextPage"
                 Click="NextPage_Click" />
+            </StackPanel>
             <Grid
                 Height="150" />
         </StackPanel>
