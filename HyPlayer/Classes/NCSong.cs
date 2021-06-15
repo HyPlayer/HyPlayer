@@ -37,6 +37,7 @@ namespace HyPlayer.Classes
         public List<NCArtist> Artist;
         public NCAlbum Album;
         public double LengthInMilliseconds;
+        public int mvid;
 
         public static NCSong CreateFromJson(JToken song)
         {
@@ -58,6 +59,10 @@ namespace HyPlayer.Classes
                 LengthInMilliseconds = double.Parse(song[dtpath].ToString())
             };
             song[arpath].ToList().ForEach(t => { NCSong.Artist.Add(NCArtist.CreateFormJson(t)); });
+            if (song["mv"] != null)
+            {
+                NCSong.mvid = song["mv"].ToObject<int>();
+            }
             return NCSong;
         }
     }

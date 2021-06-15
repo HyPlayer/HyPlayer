@@ -22,11 +22,9 @@
                 Width="30" />
             <ColumnDefinition
                 Width="70" />
-            <ColumnDefinition
-                Width="2*" />
             <ColumnDefinition />
             <ColumnDefinition
-                Width="180" />
+                Width="120" />
         </Grid.ColumnDefinitions>
         <TextBlock
             HorizontalAlignment="Center"
@@ -34,7 +32,6 @@
             Grid.Column="0"
             Text="0"
             x:Name="OrderId" />
-
         <controls:ImageEx
             EnableLazyLoading="True"
             CornerRadius="4"
@@ -44,15 +41,24 @@
             x:Name="ImageRect"
             Stretch="UniformToFill"
             Source="/Assets/icon.png" />
-        <StackPanel
-            Orientation="Vertical"
+        <Grid
             Padding="7,0,0,0"
             Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
             <TextBlock
+                Grid.Row="0"
                 Name="TextBlockSongname"
                 FontSize="20"
                 Text="歌曲名" />
             <TextBlock
+                Grid.Row="1"
                 Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                 PointerPressed="TextBlockArtist_OnPointerPressed"
                 Name="TextBlockArtist"
@@ -60,26 +66,19 @@
                 FontSize="12"
                 Text="歌手名" />
             <TextBlock
+                Grid.Row="2"
                 Foreground="Gray"
                 PointerPressed="TextBlockAlbum_OnPointerPressed"
                 Name="TextBlockAlbum"
                 Margin="0,7,0,0"
                 FontSize="13"
                 Text="专辑名" />
-        </StackPanel>
+        </Grid>
+        <Grid Grid.Column="3" Background="Transparent" />
         <StackPanel
             Orientation="Horizontal"
             Spacing="8"
             Grid.Column="4">
-            <Button
-                Background="Transparent"
-                x:Name="Comments"
-                Click="Comments_Click"
-                ToolTipService.ToolTip="评论">
-                <FontIcon
-                    FontFamily="{StaticResource SymbolThemeFontFamily}"
-                    Glyph="&#xE8F2;"></FontIcon>
-            </Button>
             <Button
                 Background="Transparent"
                 x:Name="BtnPlay"
@@ -92,24 +91,54 @@
             </Button>
             <Button
                 Background="Transparent"
-                Click="BtnDownload_OnClick"
-                x:Name="BtnDownload"
-                ToolTipService.ToolTip="下载">
+                x:Name="More"
+                ToolTipService.ToolTip="更多">
                 <FontIcon
                     FontFamily="{StaticResource SymbolThemeFontFamily}"
-                    Glyph="&#xE118;"></FontIcon>
+                    Glyph="&#xE10C;" />
+                <Button.Flyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem
+                            Click="Comments_Click"
+                            Text="评论">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon
+                                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                    Glyph="&#xE8F2;" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem
+                            Click="BtnDownload_OnClick"
+                            Text="下载">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon
+                                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                    Glyph="&#xE118;" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem
+                            IsEnabled="False"
+                            x:Name="BtnMV"
+                            Click="BtnMV_OnClick"
+                            Text="MV">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon
+                                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                    Glyph="&#xE173;" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem
+                            Click="Btn_Sub_OnClick"
+                            Text="收藏">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon
+                                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                    Glyph="&#xE1DA;" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                    </MenuFlyout>
+                </Button.Flyout>
             </Button>
-            <Button
-                Background="Transparent"
-                Click="Btn_Sub_OnClick"
-                x:Name="BtnSub"
-                ToolTipService.ToolTip="添加到歌单">
-                <FontIcon
-                    FontFamily="{StaticResource SymbolThemeFontFamily}"
-                    Glyph="&#xE1DA;"></FontIcon>
-            </Button>
-
         </StackPanel>
-
     </Grid>
 </UserControl>

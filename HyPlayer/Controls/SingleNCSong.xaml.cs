@@ -40,6 +40,10 @@ namespace HyPlayer.Controls
             TextBlockAlbum.Text = song.Album.name;
             OrderId.Text = (order + 1).ToString();
             TextBlockArtist.Text = string.Join(" / ", song.Artist.Select(ar => ar.name));
+            if (song.mvid != 0)
+            {
+                BtnMV.IsEnabled = true;
+            }
         }
 
         public async Task<bool> AppendMe()
@@ -119,6 +123,11 @@ namespace HyPlayer.Controls
         private void Comments_Click(object sender, RoutedEventArgs e)
         {
             Common.BaseFrame.Navigate(typeof(Comments), ncsong);
+        }
+
+        private void BtnMV_OnClick(object sender, RoutedEventArgs e)
+        {
+            Common.BaseFrame.Navigate(typeof(Comments), ncsong.mvid);
         }
 
         private async void Btn_Sub_OnClick(object sender, RoutedEventArgs e)
