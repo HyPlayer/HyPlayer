@@ -1,0 +1,68 @@
+﻿<Page
+    x:Class="HyPlayer.Pages.MVPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:HyPlayer.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    mc:Ignorable="d">
+
+    <StackPanel
+        Orientation="Vertical">
+        <controls:Loading
+            x:Name="LoadingControl"
+            IsLoading="True">
+            <StackPanel
+                Orientation="Horizontal"
+                Padding="12">
+                <ProgressRing
+                    IsActive="True"
+                    Margin="0,0,12,0" />
+                <TextBlock
+                    Text="加载中"
+                    VerticalAlignment="Center"
+                    Foreground="White" />
+            </StackPanel>
+            <controls:Loading.Background>
+                <AcrylicBrush
+                    BackgroundSource="Backdrop"
+                    TintColor="Black"
+                    TintOpacity="0.4" />
+            </controls:Loading.Background>
+        </controls:Loading>
+        <controls:WrapPanel>
+            <MediaPlayerElement
+                MaxWidth="900"
+                HorizontalAlignment="Left"
+                Margin="15"
+                AreTransportControlsEnabled="True"
+                x:Name="MediaPlayerElement" />
+            <StackPanel
+                Margin="15"
+                Spacing="15"
+                Orientation="Vertical">
+                <TextBlock
+                    TextWrapping="Wrap"
+                    x:Name="TextBoxVideoName"
+                    FontWeight="Bold"
+                    FontSize="35" />
+                <TextBlock
+                    x:Name="TextBoxSinger"
+                    FontSize="18"
+                    Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}" />
+                <TextBlock
+                                        TextWrapping="Wrap"
+                    x:Name="TextBoxDesc"
+                    FontSize="15"
+                    Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}" />
+                <TextBlock
+                                        TextWrapping="Wrap"
+                    x:Name="TextBoxOtherInfo"
+                    FontSize="15"
+                    Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}" />
+            </StackPanel>
+        </controls:WrapPanel>
+
+    </StackPanel>
+</Page>

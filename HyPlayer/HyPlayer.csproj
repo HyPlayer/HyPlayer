@@ -198,6 +198,9 @@
     <Compile Include="Pages\Me.xaml.cs">
       <DependentUpon>Me.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\MVPage.xaml.cs">
+      <DependentUpon>MVPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Pages\Search.xaml.cs">
       <DependentUpon>Search.xaml</DependentUpon>
     </Compile>
@@ -364,6 +367,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Pages\Me.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\MVPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
