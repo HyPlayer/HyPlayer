@@ -8,6 +8,7 @@
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     mc:Ignorable="d">
 
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel
         Orientation="Vertical">
         <controls:Loading
@@ -63,6 +64,8 @@
                     Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}" />
             </StackPanel>
         </controls:WrapPanel>
-
+        <Frame x:Name="CommentFrame" />
+        <Grid Height="150"/>
     </StackPanel>
+    </ScrollViewer>
 </Page>

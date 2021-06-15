@@ -39,6 +39,12 @@ namespace HyPlayer.Pages
             HyPlayList.Player.Pause();
             LoadVideo();
             LoadVideoInfo();
+            LoadComment();
+        }
+
+        private void LoadComment()
+        {
+            CommentFrame.Navigate(typeof(Comments), "mv" + mvid);
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -67,7 +73,7 @@ namespace HyPlayer.Pages
                 TextBoxVideoName.Text = json["data"]["name"].ToString();
                 TextBoxSinger.Text = json["data"]["artistName"].ToString();
                 TextBoxDesc.Text = json["data"]["desc"].ToString();
-                TextBoxOtherInfo.Text = $"发布时间: {json["data"]["publishTime"]}    播放量: {json["data"]["playCount"]}次    收藏量: {json["data"]["subCount"]}次" ;
+                TextBoxOtherInfo.Text = $"发布时间: {json["data"]["publishTime"]}    播放量: {json["data"]["playCount"]}次    收藏量: {json["data"]["subCount"]}次";
             }
         }
     }

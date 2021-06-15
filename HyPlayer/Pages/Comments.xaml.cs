@@ -46,6 +46,14 @@ namespace HyPlayer.Pages
                 resourceid = ncsong.sid;
                 SongInfoContainer.Children.Add(new SingleNCSong(ncsong, 0));
             }
+            if (e.Parameter is string resstr)
+            {
+                if (resstr.StartsWith("mv"))
+                {
+                    resourcetype = 1;
+                    resourceid = resstr.Substring(2);
+                }
+            }
             LoadHotComments();
             LoadComments(sortType);
         }
