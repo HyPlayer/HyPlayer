@@ -64,7 +64,7 @@ namespace HyPlayer.Pages
             }
 
             Common.BaseFrame = BaseFrame;
-            NavMain.SelectedItem = NavMain.MenuItems[1];
+            NavMain.SelectedItem = NavMain.MenuItems[0];
             Common.BaseFrame.Navigate(typeof(Home));
         }
 
