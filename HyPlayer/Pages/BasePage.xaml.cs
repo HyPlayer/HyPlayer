@@ -128,7 +128,7 @@ namespace HyPlayer.Pages
                     return;
                 PhraseCookie(ApplicationData.Current.LocalSettings.Values["cookie"].ToString());
                 var (retOk, LoginStatus) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginRefresh);
-                if (retOk && LoginStatus["account"].HasValues)
+                if (retOk)
                 {
                     LoginDone();
                 }
