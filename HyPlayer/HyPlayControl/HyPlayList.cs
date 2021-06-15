@@ -30,7 +30,7 @@ namespace HyPlayer.HyPlayControl
         {
             get
             {
-                if (List.Count <= NowPlaying) return new HyPlayItem{ isOnline = false };
+                if (List.Count <= NowPlaying) return new HyPlayItem { isOnline = false };
                 return List[NowPlaying];
             }
         }
@@ -455,7 +455,7 @@ namespace HyPlayer.HyPlayControl
 
         private static void Player_VolumeChanged(MediaPlayer sender, object args)
         {
-            Common.Setting.Volume = (int) (Player.Volume * 100);
+            Common.Setting.Volume = (int)(Player.Volume * 100);
             Common.Invoke(() => OnVolumeChange?.Invoke(Player.Volume));
         }
 
@@ -498,7 +498,7 @@ namespace HyPlayer.HyPlayControl
             Lyrics = Utils.ConvertPureLyric(hpi.AudioInfo.Lyric);
             Utils.ConvertTranslation(hpi.AudioInfo.TrLyric, Lyrics);
             if (Lyrics.Count != 0 && Lyrics[0].LyricTime != TimeSpan.Zero)
-                Lyrics.Insert(0, new SongLyric() {HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = ""});
+                Lyrics.Insert(0, new SongLyric() { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "" });
             lyricpos = 0;
             Common.Invoke(() => OnLyricLoaded?.Invoke());
         }
@@ -507,7 +507,7 @@ namespace HyPlayer.HyPlayControl
         {
             (bool isOk, Newtonsoft.Json.Linq.JObject json) = await Common.ncapi.RequestAsync(
                 CloudMusicApiProviders.Lyric,
-                new Dictionary<string, object>() {{"id", ncp.NcPlayItem.sid}});
+                new Dictionary<string, object>() { { "id", ncp.NcPlayItem.sid } });
             if (isOk)
             {
                 if (json.ContainsKey("nolyric") && json["nolyric"].ToString().ToLower() == "true")
@@ -560,7 +560,7 @@ namespace HyPlayer.HyPlayControl
         {
             (bool isOk, Newtonsoft.Json.Linq.JObject json) = await Common.ncapi.RequestAsync(
                 CloudMusicApiProviders.SongUrl,
-                new Dictionary<string, object>() {{"id", ncSong.sid}, {"br", Common.Setting.audioRate}});
+                new Dictionary<string, object>() { { "id", ncSong.sid }, { "br", Common.Setting.audioRate } });
             if (isOk)
             {
                 try
@@ -636,6 +636,7 @@ namespace HyPlayer.HyPlayControl
                 NcPlayItem = ncp,
                 Path = ncp.url
             };
+            Common.GLOBAL["PERSONALFM"] = "false";
             return hpi;
         }
 
@@ -647,13 +648,13 @@ namespace HyPlayer.HyPlayControl
             {
                 //TagLib.File afi = TagLib.File.Create(new UwpStorageFileAbstraction(sf), ReadStyle.Average);
                 var mdp = await sf.Properties.GetMusicPropertiesAsync();
-                string[] contributingArtistsKey = {"System.Music.Artist"};
+                string[] contributingArtistsKey = { "System.Music.Artist" };
                 IDictionary<string, object> contributingArtistsProperty =
                     await mdp.RetrievePropertiesAsync(contributingArtistsKey);
                 string[] contributingArtists = contributingArtistsProperty["System.Music.Artist"] as string[];
                 if (contributingArtists is null)
                 {
-                    contributingArtists = new[] {"未知歌手"};
+                    contributingArtists = new[] { "未知歌手" };
                 }
 
                 AudioInfo ai = new AudioInfo()
@@ -718,7 +719,7 @@ namespace HyPlayer.HyPlayControl
                     songname = mi.musicName,
                     tag = "本地"
                 };
-                hpi.Artist = mi.artist.Select(t => new NCArtist() {name = t[0].ToString(), id = t[1].ToString()})
+                hpi.Artist = mi.artist.Select(t => new NCArtist() { name = t[0].ToString(), id = t[1].ToString() })
                     .ToList();
                 AppendNCPlayItem(hpi);
                 return true;
@@ -740,7 +741,7 @@ namespace HyPlayer.HyPlayControl
             List<SongLyric> Lyrics = new List<SongLyric>();
             if (string.IsNullOrEmpty(LyricAllText))
             {
-                return new List<SongLyric> {SongLyric.NoLyric};
+                return new List<SongLyric> { SongLyric.NoLyric };
             }
 
             string[] LyricsArr = LyricAllText.Replace("\r\n", "\n").Replace("\r", "\n").Split("\n");

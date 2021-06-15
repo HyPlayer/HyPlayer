@@ -40,6 +40,7 @@ namespace HyPlayer.Classes
                 var song = json["data"][0];
                 HyPlayList.RemoveAllSong();
                 _ = await HyPlayList.AppendNCSong(NCSong.CreateFromJson(song));
+                Common.GLOBAL["PERSONALFM"] = "true";
                 HyPlayList.SongAppendDone();
                 HyPlayList.SongMoveTo(0);
             }
@@ -47,7 +48,8 @@ namespace HyPlayer.Classes
 
         private static void HyPlayList_OnSongMoveNext()
         {
-            LoadNextFM();
+            if (Common.GLOBAL["PERSONALFM"] == "true")
+                LoadNextFM();
         }
     }
 }
