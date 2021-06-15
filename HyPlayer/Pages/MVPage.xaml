@@ -53,16 +53,17 @@
                     FontSize="18"
                     Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}" />
                 <TextBlock
-                                        TextWrapping="Wrap"
+                    TextWrapping="Wrap"
                     x:Name="TextBoxDesc"
                     FontSize="15"
                     Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}" />
                 <TextBlock
-                                        TextWrapping="Wrap"
+                    TextWrapping="Wrap"
                     x:Name="TextBoxOtherInfo"
                     FontSize="15"
                     Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}" />
-            </StackPanel>
+                <ComboBox Header="清晰度选择" x:Name="VideoQualityBox" SelectionChanged="VideoQualityBox_SelectionChanged" />
+                </StackPanel>
         </controls:WrapPanel>
         <Frame x:Name="CommentFrame" />
         <Grid Height="150"/>

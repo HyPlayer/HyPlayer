@@ -26,6 +26,7 @@ namespace HyPlayer.Pages
     public sealed partial class MVPage : Page
     {
         int mvid;
+        string mvquality = "1080";
         public MVPage()
         {
             this.InitializeComponent();
@@ -55,7 +56,7 @@ namespace HyPlayer.Pages
 
         private async void LoadVideo()
         {
-            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.MvUrl, new Dictionary<string, object> { { "id", mvid } });
+            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.MvUrl, new Dictionary<string, object> { { "id", mvid }, { "r", mvquality } });
             if (isOk)
             {
                 MediaPlayerElement.Source = MediaSource.CreateFromUri(new Uri(json["data"]["url"].ToString()));
@@ -74,7 +75,18 @@ namespace HyPlayer.Pages
                 TextBoxSinger.Text = json["data"]["artistName"].ToString();
                 TextBoxDesc.Text = json["data"]["desc"].ToString();
                 TextBoxOtherInfo.Text = $"发布时间: {json["data"]["publishTime"]}    播放量: {json["data"]["playCount"]}次    收藏量: {json["data"]["subCount"]}次";
+                foreach (var br in json["data"]["brs"].ToArray())
+                {
+                    VideoQualityBox.Items.Add(br["br"].ToString());
+                }
+
             }
+        }
+
+        private void VideoQualityBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            mvquality = VideoQualityBox.SelectedItem.ToString();
+            LoadVideo();
         }
     }
 }
