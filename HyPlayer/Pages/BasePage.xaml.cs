@@ -65,7 +65,7 @@ namespace HyPlayer.Pages
 
             Common.BaseFrame = BaseFrame;
             NavMain.SelectedItem = NavMain.MenuItems[0];
-            Common.BaseFrame.Navigate(typeof(Home));
+            //Common.BaseFrame.Navigate(typeof(Home));上一行代码会引发NavMain的SelectionChanged事件，不需要重复导航
         }
 
         private void PhraseCookie(string cookielines)
@@ -189,6 +189,8 @@ namespace HyPlayer.Pages
         private void ButtonCloseLoginForm_Click(object sender, RoutedEventArgs e)
         {
             DialogLogin.Hide();
+            selectionHistory.RemoveAt(selectionHistory.Count - 1);
+            NavMain.SelectedItem = selectionHistory.Last();
         }
 
         private async void LoginDone()
@@ -298,6 +300,7 @@ namespace HyPlayer.Pages
                     }));
                 }));
             });
+
         }
 
 
