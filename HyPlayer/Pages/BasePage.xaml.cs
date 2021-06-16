@@ -189,6 +189,11 @@ namespace HyPlayer.Pages
         private void ButtonCloseLoginForm_Click(object sender, RoutedEventArgs e)
         {
             DialogLogin.Hide();
+            NavViewBack();
+        }
+        
+        private void NavViewBack()
+        {
             selectionHistory.RemoveAt(selectionHistory.Count - 1);
             NavMain.SelectedItem = selectionHistory.Last();
         }
@@ -225,6 +230,7 @@ namespace HyPlayer.Pages
             InfoBarLoginHint.Severity = InfoBarSeverity.Success;
             InfoBarLoginHint.Message = "欢迎 " + Common.LoginedUser.name;
             DialogLogin.Hide();
+            NavViewBack();
             //加载我喜欢的歌
             _ = Task.Run((() =>
             {
@@ -362,8 +368,8 @@ namespace HyPlayer.Pages
                     Common.BaseFrame.GoBack();
                 }
 
-                selectionHistory.RemoveAt(selectionHistory.Count - 1);
-                NavMain.SelectedItem = selectionHistory.Last();
+                NavViewBack();
+                
                 if (selectionHistory.Count <= 1)
                     NavMain.IsBackEnabled = false;
             }
