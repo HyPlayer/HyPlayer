@@ -38,6 +38,8 @@ namespace HyPlayer.Classes
         public NCAlbum Album;
         public double LengthInMilliseconds;
         public int mvid;
+        public string alias;
+        public string transname;
 
         public static NCSong CreateFromJson(JToken song)
         {
@@ -63,6 +65,12 @@ namespace HyPlayer.Classes
             {
                 NCSong.mvid = song["mv"].ToObject<int>();
             }
+            if (song["alia"] != null)
+            {
+                NCSong.alias = string.Join(" / ", song["alia"].ToArray().Select(t => t.ToString()));
+            }
+            if (song["tns"] != null)
+                NCSong.transname = string.Join(" / ", song["tns"].ToArray().Select(t => t.ToString()));
             return NCSong;
         }
     }

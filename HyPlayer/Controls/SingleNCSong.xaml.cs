@@ -42,6 +42,7 @@ namespace HyPlayer.Controls
             ImageRect.Source =
                 new BitmapImage(new Uri(song.Album.cover + "?param=" + StaticSource.PICSIZE_SINGLENCSONG_COVER));
             TextBlockSongname.Text = song.songname;
+            TextBlockTransName.Text = string.IsNullOrEmpty(song.transname)?"":$"({song.transname})";
             TextBlockAlbum.Text = song.Album.name;
             OrderId.Text = (order + 1).ToString();
             TextBlockArtist.Text = string.Join(" / ", song.Artist.Select(ar => ar.name));

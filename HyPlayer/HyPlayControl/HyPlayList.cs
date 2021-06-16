@@ -328,6 +328,7 @@ namespace HyPlayer.HyPlayControl
                 //检测是否已经缓存且大小正常
                 try
                 {
+                    throw new Exception("NOCACHE");
                     StorageFile sf =
                         await ApplicationData.Current.LocalCacheFolder.GetFileAsync(NowPlayingItem.NcPlayItem.sid +
                             "." + NowPlayingItem.NcPlayItem.subext);

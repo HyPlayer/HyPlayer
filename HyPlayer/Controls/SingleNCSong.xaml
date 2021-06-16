@@ -21,7 +21,7 @@
             <ColumnDefinition
                 Width="30" />
             <ColumnDefinition
-                Width="70" />
+                Width="75" />
             <ColumnDefinition />
             <ColumnDefinition
                 Width="120" />
@@ -35,8 +35,8 @@
         <controls:ImageEx
             EnableLazyLoading="True"
             CornerRadius="4"
-            Width="70"
-            Height="70"
+            Width="75"
+            Height="75"
             Grid.Column="1"
             x:Name="ImageRect"
             Stretch="UniformToFill"
@@ -48,17 +48,35 @@
                 <RowDefinition />
                 <RowDefinition />
                 <RowDefinition />
+                <RowDefinition />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition
+                    Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBlock
+            <StackPanel
                 Grid.Row="0"
-                Name="TextBlockSongname"
-                FontSize="20"
-                Text="歌曲名" />
+                Orientation="Horizontal">
+                <TextBlock
+                    Name="TextBlockSongname"
+                    FontSize="20"
+                    Text="歌曲名" />
+                <TextBlock
+                    Margin="5,0,0,0"
+                    Name="TextBlockTransName"
+                    Foreground="Gray"
+                    FontSize="20"
+                    Text="译名" />
+            </StackPanel>
             <TextBlock
+                Visibility="Collapsed"
                 Grid.Row="1"
+                Foreground="{ThemeResource SystemBaseLowColor}"
+                Name="TextBlockAlia"
+                Margin="0,2,0,-6"
+                FontSize="12" />
+            <TextBlock
+                Grid.Row="2"
                 Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                 PointerPressed="TextBlockArtist_OnPointerPressed"
                 Name="TextBlockArtist"
@@ -66,7 +84,7 @@
                 FontSize="12"
                 Text="歌手名" />
             <TextBlock
-                Grid.Row="2"
+                Grid.Row="3"
                 Foreground="Gray"
                 PointerPressed="TextBlockAlbum_OnPointerPressed"
                 Name="TextBlockAlbum"
@@ -74,7 +92,9 @@
                 FontSize="13"
                 Text="专辑名" />
         </Grid>
-        <Grid Grid.Column="3" Background="Transparent" />
+        <Grid
+            Grid.Column="3"
+            Background="Transparent" />
         <StackPanel
             Orientation="Horizontal"
             Spacing="8"
