@@ -3,12 +3,15 @@ using HyPlayer.Controls;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using Newtonsoft.Json;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -25,6 +28,25 @@ namespace HyPlayer.Pages
         {
             InitializeComponent();
             NavigationViewSelector.SelectedItem = NavigationViewSelector.MenuItems[0];
+            if (ApplicationData.Current.LocalSettings.Values["searchHistory"] != null)
+            {
+                if (ApplicationData.Current.LocalSettings.Values["searchHistory"] == null)
+                {
+                    ApplicationData.Current.LocalSettings.Values["searchHistory"] = "[]";
+                }
+
+                var list = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings.Values["searchHistory"].ToString());
+                foreach (string item in list)
+                {
+                    var btn = new Button()
+                    {
+                        Content = item
+                    };
+                    btn.Click += Btn_Click;
+                    SearchHistory.Children.Add(btn);
+                }
+
+            }
         }
 
         private async void LoadResult()
@@ -55,6 +77,13 @@ namespace HyPlayer.Pages
                         break;
                 }
             }
+        }
+
+        private void Btn_Click(object sender, RoutedEventArgs e)
+        {
+            SearchKeywordBox.Text = ((Button)sender).Content.ToString();
+            Text = SearchKeywordBox.Text;
+            LoadResult();
         }
 
         private void LoadPlaylistResult(JObject json)
@@ -160,6 +189,24 @@ namespace HyPlayer.Pages
         private void AutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
         {
             Text = sender.Text;
+            var list = new List<string>();
+            if (ApplicationData.Current.LocalSettings.Values["searchHistory"] == null)
+            {
+                ApplicationData.Current.LocalSettings.Values["searchHistory"] = JsonConvert.SerializeObject(list);
+            }
+            else
+            {
+                list = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings.Values["searchHistory"].ToString());
+            }
+
+            list.Add(Text);
+            ApplicationData.Current.LocalSettings.Values["searchHistory"] = JsonConvert.SerializeObject(list);
+            var btn = new Button()
+            {
+                Content = Text
+            };
+            btn.Click += Btn_Click;
+            SearchHistory.Children.Add(btn);
             LoadResult();
         }
 
