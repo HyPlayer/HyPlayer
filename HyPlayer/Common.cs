@@ -31,6 +31,7 @@ namespace HyPlayer
         public static List<string> LikedSongs = new List<string>();
         public static KawazuConverter KawazuConv = null;
         public static List<NCPlayList> MySongLists = new List<NCPlayList>();
+        public static List<NCSong> ListedSongs = new List<NCSong>();
 
         public static async void Invoke(Action action, Windows.UI.Core.CoreDispatcherPriority Priority = Windows.UI.Core.CoreDispatcherPriority.Normal)
         {

@@ -27,7 +27,6 @@ namespace HyPlayer.Pages
     {
         private int page = 0;
         private string intelsong = "";
-        private readonly List<NCSong> songs = new List<NCSong>();
         private NCPlayList playList;
 
         public SongListDetail()
@@ -73,6 +72,7 @@ namespace HyPlayer.Pages
                         new Dictionary<string, object> {["ids"] = string.Join(",", trackIds)});
                     if (isOk)
                     {
+                        Common.ListedSongs = new List<NCSong>();
                         int idx = page * 500;
                         foreach (JToken jToken in json["songs"])
                         {
@@ -88,10 +88,10 @@ namespace HyPlayer.Pages
                                     "st"].ToString() == "0";
                             if (canplay)
                             {
-                                songs.Add(NCSong);
+                                Common.ListedSongs.Add(NCSong);
                             }
 
-                            SongContainer.Children.Add(new SingleNCSong(NCSong, idx++, canplay));
+                            SongContainer.Children.Add(new SingleNCSong(NCSong, idx++, canplay,true));
                         }
                     }
                 }
@@ -110,7 +110,7 @@ namespace HyPlayer.Pages
                         bool canplay = true;
                         if (canplay)
                         {
-                            songs.Add(NCSong);
+                            Common.ListedSongs.Add(NCSong);
                         }
 
                         SongContainer.Children.Add(new SingleNCSong(NCSong, idx++, canplay));
@@ -178,19 +178,19 @@ namespace HyPlayer.Pages
                     HyPlayList.RemoveAllSong();
                     (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
                         new Dictionary<string, object>()
-                            {{"id", string.Join(',', songs.Select(t => t.sid))}, {"br", Common.Setting.audioRate}});
+                            {{"id", string.Join(',', Common.ListedSongs.Select(t => t.sid))}, {"br", Common.Setting.audioRate}});
                     if (isok)
                     {
                         List<JToken> arr = json["data"].ToList();
-                        for (int i = 0; i < songs.Count; i++)
+                        for (int i = 0; i < Common.ListedSongs.Count; i++)
                         {
-                            JToken token = arr.Find(jt => jt["id"].ToString() == songs[i].sid);
+                            JToken token = arr.Find(jt => jt["id"].ToString() == Common.ListedSongs[i].sid);
                             if (!token.HasValues)
                             {
                                 continue;
                             }
 
-                            NCSong ncSong = songs[i];
+                            NCSong ncSong = Common.ListedSongs[i];
 
                             string tag = "";
                             if (token["type"].ToString().ToLowerInvariant() == "flac")
@@ -306,7 +306,7 @@ namespace HyPlayer.Pages
 
         private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
         {
-            DownloadManager.AddDownload(songs);
+            DownloadManager.AddDownload(Common.ListedSongs);
         }
 
         private void LikeBtnClick(object sender, RoutedEventArgs e)

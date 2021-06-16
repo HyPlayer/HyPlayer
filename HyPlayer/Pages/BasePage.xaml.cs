@@ -191,11 +191,13 @@ namespace HyPlayer.Pages
             DialogLogin.Hide();
             NavViewBack();
         }
-        
+
         private void NavViewBack()
         {
+            if (selectionHistory.Count == 0) return;
             selectionHistory.RemoveAt(selectionHistory.Count - 1);
-            NavMain.SelectedItem = selectionHistory.Last();
+            if (selectionHistory.Count != 0)
+                NavMain.SelectedItem = selectionHistory.Last();
         }
 
         private async void LoginDone()
@@ -369,7 +371,7 @@ namespace HyPlayer.Pages
                 }
 
                 NavViewBack();
-                
+
                 if (selectionHistory.Count <= 1)
                     NavMain.IsBackEnabled = false;
             }

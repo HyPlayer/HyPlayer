@@ -13,6 +13,9 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using HyPlayer.Pages;
 using AcrylicBackgroundSource = Windows.UI.Xaml.Media.AcrylicBackgroundSource;
+using Newtonsoft.Json.Linq;
+using NeteaseCloudMusicApi;
+using System.Collections.Generic;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -22,12 +25,14 @@ namespace HyPlayer.Controls
     {
         private NCSong ncsong;
         private readonly bool CanPlay;
+        private bool LoadList;
 
-        public SingleNCSong(NCSong song, int order, bool canplay = true)
+        public SingleNCSong(NCSong song, int order, bool canplay = true, bool loadlist = false)
         {
             InitializeComponent();
             ncsong = song;
             CanPlay = canplay;
+            LoadList = loadlist;
             if (!CanPlay)
             {
                 BtnPlay.Visibility = Visibility.Collapsed;
@@ -52,11 +57,70 @@ namespace HyPlayer.Controls
             {
                 return false;
             }
+            if (LoadList)
+            {
+                _ = Task.Run(() =>
+                    {
+                        Common.Invoke(async () =>
+                        {
+                            HyPlayList.RemoveAllSong();
+                            (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
+                                new Dictionary<string, object>()
+                                    {{"id", string.Join(',', Common.ListedSongs.Select(t => t.sid))}, {"br", Common.Setting.audioRate}});
+                            if (isok)
+                            {
+                                List<JToken> arr = json["data"].ToList();
+                                for (int i = 0; i < Common.ListedSongs.Count; i++)
+                                {
+                                    JToken token = arr.Find(jt => jt["id"].ToString() == Common.ListedSongs[i].sid);
+                                    if (!token.HasValues)
+                                    {
+                                        continue;
+                                    }
 
-            await HyPlayList.AppendNCSong(ncsong);
-            HyPlayList.SongAppendDone();
-            //此处可以进行优化
-            HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.NcPlayItem.sid == ncsong.sid));
+                                    NCSong ncSong = Common.ListedSongs[i];
+
+                                    string tag = "";
+                                    if (token["type"].ToString().ToLowerInvariant() == "flac")
+                                    {
+                                        tag = "SQ";
+                                    }
+                                    else
+                                    {
+                                        tag = (token["br"].ToObject<int>() / 1000).ToString() + "k";
+                                    }
+
+                                    NCPlayItem ncp = new NCPlayItem()
+                                    {
+                                        tag = tag,
+                                        Album = ncSong.Album,
+                                        Artist = ncSong.Artist,
+                                        subext = token["type"].ToString(),
+                                        sid = ncSong.sid,
+                                        songname = ncSong.songname,
+                                        url = token["url"].ToString(),
+                                        LengthInMilliseconds = ncSong.LengthInMilliseconds,
+                                        size = token["size"].ToString(),
+                                        md5 = token["md5"].ToString()
+                                    };
+                                    HyPlayList.AppendNCPlayItem(ncp);
+                                }
+
+                                HyPlayList.SongAppendDone();
+                                //此处可以进行优化
+                                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.NcPlayItem.sid == ncsong.sid));
+                            }
+                        });
+                    });
+            }
+            else
+            {
+                await HyPlayList.AppendNCSong(ncsong);
+                HyPlayList.SongAppendDone();
+                //此处可以进行优化
+                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.NcPlayItem.sid == ncsong.sid));
+            }
+
             return true;
         }
 
