@@ -193,7 +193,7 @@
                     <TextBlock
                         Foreground="Gray"
                         FontSize="15"
-                        FontWeight="Light">UWP大胜利！</TextBlock>
+                        FontWeight="Light">跨越，跨越，不择手段地跨越！</TextBlock>
                     <RichTextBlock>
                         <Paragraph>
                             <Hyperlink
