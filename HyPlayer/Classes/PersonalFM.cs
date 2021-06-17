@@ -28,7 +28,8 @@ namespace HyPlayer.Classes
 
         private static void HyPlayList_OnMediaEnd(HyPlayItem hpi)
         {
-            LoadNextFM();
+            if (Common.GLOBAL["PERSONALFM"].ToString() == "true")
+                LoadNextFM();
         }
 
         public static async void LoadNextFM()
@@ -48,7 +49,7 @@ namespace HyPlayer.Classes
 
         private static void HyPlayList_OnSongMoveNext()
         {
-            if (Common.GLOBAL["PERSONALFM"] == "true")
+            if (Common.GLOBAL["PERSONALFM"].ToString() == "true")
                 LoadNextFM();
         }
     }
