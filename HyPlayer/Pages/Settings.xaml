@@ -26,7 +26,7 @@
             <Button
                 Click="ButtonBase_OnClick"
                 Content="获取罗马音资源文件"></Button>
-
+            <Border BorderThickness="3" BorderBrush="Gray" />
             <TextBlock
                 FontSize="18"
                 Text="音质设置" />
@@ -75,6 +75,21 @@
                 Content="是否开启可选动效"
                 Checked="ToastLyricCheckbox_OnChecked"
                 Unchecked="ToastLyricCheckbox_OnChecked" />
+            <Border BorderThickness="3" BorderBrush="Gray" />
+            <TextBlock
+                FontSize="40"
+                Text="实验室"/>
+            <TextBlock
+                FontSize="20"
+                Text="以下功能仅供测试,如有问题欢迎反馈"/>
+            <TextBlock
+                FontSize="3"
+                Text="好用吗?好用就砍了吧"/>
+            <CheckBox
+                x:Name="LazySongUrlGetCheck"
+                Content="是否在播放时才获取播放链接"
+                Checked="LazySongUrlGetCheck_Checked"
+                Unchecked="LazySongUrlGetCheck_Unchecked"/>
             <TextBlock
                 FontSize="40"
                 Text="关于" />
@@ -96,6 +111,7 @@
                 <Paragraph>Copyright © HyPlayer Develop Team 2021</Paragraph>
                 <Paragraph>HyPlayer is licensed under the GNU General Public License v3.0</Paragraph>
             </RichTextBlock>
+            <TextBlock x:Name="VersionCode"/>
             <TextBlock
                 FontSize="25"
                 Text="开发者" />

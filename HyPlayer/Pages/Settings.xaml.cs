@@ -11,6 +11,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using HyPlayer.HyPlayControl;
 using Kawazu;
+using Windows.ApplicationModel;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -30,6 +31,18 @@ namespace HyPlayer.Pages
             TextBoxDownloadDir.Text = Common.Setting.downloadDir;
             ToastLyricCheckbox.IsChecked = Common.Setting.toastLyric;
             AnimationCheckbox.IsChecked = Common.Setting.expandAnimation;
+            LazySongUrlGetCheck.IsChecked = ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"] != null && ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"].ToString() != "false";
+            Package package = Package.Current;
+            PackageId packageId = package.Id;
+            PackageVersion version = packageId.Version;
+            VersionCode.Text = string.Format("Version {0}.{1}.{2}.{3}  (Package ID: {4})", version.Major, version.Minor, version.Build, version.Revision, packageId.Name);
+            if (version.Revision != 0)
+            {
+                VersionCode.Text += " Preview";
+            }
+#if DEBUG
+            VersionCode.Text += " Debug";
+#endif
             //ToggleButtonDaylight.IsChecked = Application.Current.RequestedTheme == ApplicationTheme.Dark;
         }
 
@@ -124,7 +137,7 @@ namespace HyPlayer.Pages
                 TextBoxDownloadDir.Text = Common.Setting.downloadDir;
             }
         }
-        
+
         private void ToastLyricCheckbox_OnChecked(object sender, RoutedEventArgs e)
         {
             Common.Setting.toastLyric = ToastLyricCheckbox.IsChecked.Value;
@@ -138,6 +151,16 @@ namespace HyPlayer.Pages
         private void UIElement_OnPointerPressed(object sender, PointerRoutedEventArgs e)
         {
             if (_elapse-- == 0) ApplicationData.Current.RoamingSettings.Values["CanDownload"] = true;
+        }
+
+        private void LazySongUrlGetCheck_Checked(object sender, RoutedEventArgs e)
+        {
+            ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"] = "true";
+        }
+
+        private void LazySongUrlGetCheck_Unchecked(object sender, RoutedEventArgs e)
+        {
+            ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"] = "false";
         }
     }
 }

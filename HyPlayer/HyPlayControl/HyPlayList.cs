@@ -1,5 +1,6 @@
 ﻿using HyPlayer.Classes;
 using NeteaseCloudMusicApi;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -116,7 +117,7 @@ namespace HyPlayer.HyPlayControl
             MediaSystemControls.IsEnabled = false;
             MediaSystemControls.ButtonPressed += SystemControls_ButtonPressed;
             MediaSystemControls.PlaybackStatus = MediaPlaybackStatus.Closed;
-            Player.SourceChanged += Player_SourceChanged;
+            //Player.SourceChanged += Player_SourceChanged;   //锚点修改
             Player.MediaEnded += Player_MediaEnded;
             Player.CurrentStateChanged += Player_CurrentStateChanged;
             Player.VolumeChanged += Player_VolumeChanged;
@@ -322,6 +323,7 @@ namespace HyPlayer.HyPlayControl
 
         private static async void LoadPlayerSong()
         {
+            Player_SourceChanged(null, null);
             MediaSource ms;
             if (NowPlayingItem.isOnline)
             {
@@ -377,7 +379,29 @@ namespace HyPlayer.HyPlayControl
                     }
                     else
                     {
-                        ms = MediaSource.CreateFromUri(new Uri(NowPlayingItem.NcPlayItem.url));
+                        if (NowPlayingItem.NcPlayItem.url == null || (ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"] != null && ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"].ToString() != "false"))
+                        {
+                            (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
+                                new Dictionary<string, object>()
+                                {
+                                    {"id", NowPlayingItem.NcPlayItem.sid},
+                                    {"br", Common.Setting.audioRate}
+                                });
+                            if (isok)
+                            {
+                                ms = MediaSource.CreateFromUri(new Uri(json["data"][0]["url"].ToString()));
+                            }
+                            else
+                            {
+                                PlayerOnMediaFailed(Player, null);//传一个播放失败\
+                                return;
+                            }
+                        }
+                        else
+                        {
+                            ms = MediaSource.CreateFromUri(new Uri(NowPlayingItem.NcPlayItem.url));
+                        }
+
                     }
                 }
             }
