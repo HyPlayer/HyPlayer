@@ -21,6 +21,7 @@ using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Microsoft.Toolkit.Uwp.Notifications;
 using NeteaseCloudMusicApi;
+using Windows.Media;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -40,9 +41,25 @@ namespace HyPlayer.Controls
             SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
             HyPlayList.OnPlayItemChange += LoadPlayingFile;
             HyPlayList.OnPlayPositionChange += OnPlayPositionChange;
+            HyPlayList.OnPlayPositionChange += UpdateMSTC;
             HyPlayList.OnPlayListAddDone += HyPlayList_OnPlayListAdd;
             AlbumImage.Source = new BitmapImage(new Uri("ms-appx:Assets/icon.png"));
             InitializeDesktopLyric();
+        }
+
+        private void UpdateMSTC(TimeSpan pos)
+        {
+            // Create our timeline properties object 
+            var timelineProperties = new SystemMediaTransportControlsTimelineProperties();
+
+            // Fill in the data, using the media elements properties 
+            timelineProperties.StartTime = TimeSpan.FromSeconds(0);
+            timelineProperties.MinSeekTime = TimeSpan.FromSeconds(0);
+            timelineProperties.Position = HyPlayList.Player.Position;
+            timelineProperties.MaxSeekTime = TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.AudioInfo.LengthInMilliseconds);
+            timelineProperties.EndTime = TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.AudioInfo.LengthInMilliseconds);
+            // Update the System Media transport Controls 
+            HyPlayList.MediaSystemControls.UpdateTimelineProperties(timelineProperties);
         }
 
         public void InitializeDesktopLyric()

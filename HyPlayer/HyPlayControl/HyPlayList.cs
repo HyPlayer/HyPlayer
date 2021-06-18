@@ -117,6 +117,7 @@ namespace HyPlayer.HyPlayControl
             MediaSystemControls.IsEnabled = false;
             MediaSystemControls.ButtonPressed += SystemControls_ButtonPressed;
             MediaSystemControls.PlaybackStatus = MediaPlaybackStatus.Closed;
+            MediaSystemControls.PlaybackPositionChangeRequested += MediaSystemControls_PlaybackPositionChangeRequested;
             //Player.SourceChanged += Player_SourceChanged;   //锚点修改
             Player.MediaEnded += Player_MediaEnded;
             Player.CurrentStateChanged += Player_CurrentStateChanged;
@@ -127,6 +128,11 @@ namespace HyPlayer.HyPlayControl
             Player.BufferingEnded += Player_BufferingEnded;
             ;
             Common.GLOBAL["PERSONALFM"] = "false";
+        }
+
+        private static void MediaSystemControls_PlaybackPositionChangeRequested(SystemMediaTransportControls sender, PlaybackPositionChangeRequestedEventArgs args)
+        {
+            Player.PlaybackSession.Position = args.RequestedPlaybackPosition;
         }
 
         private static void Player_BufferingEnded(MediaPlayer sender, object args)
