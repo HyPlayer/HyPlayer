@@ -142,8 +142,8 @@ namespace HyPlayer.Pages
         {
             Common.Setting.toastLyric = ToastLyricCheckbox.IsChecked.Value;
             Common.Setting.expandAnimation = AnimationCheckbox.IsChecked.Value;
-            if (ToastLyricCheckbox.IsChecked.Value)
-                (App.Current as App).InitializeToastLyrics();
+            Common.BarPlayBar.InitializeDesktopLyric();
+
         }
 
 

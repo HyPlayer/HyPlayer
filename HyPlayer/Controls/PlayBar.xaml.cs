@@ -42,9 +42,78 @@ namespace HyPlayer.Controls
             HyPlayList.OnPlayPositionChange += OnPlayPositionChange;
             HyPlayList.OnPlayListAddDone += HyPlayList_OnPlayListAdd;
             AlbumImage.Source = new BitmapImage(new Uri("ms-appx:Assets/icon.png"));
+            InitializeDesktopLyric();
         }
 
-        
+        public void InitializeDesktopLyric()
+        {
+            if (Common.Setting.toastLyric)
+            {
+                ToastContentBuilder desktopLyricsToast = new ToastContentBuilder();
+                desktopLyricsToast.SetToastScenario(ToastScenario.IncomingCall);
+                desktopLyricsToast.AddAudio(new ToastAudio() { Silent = true });
+                desktopLyricsToast.AddVisualChild(new AdaptiveText()
+                {
+                    Text = new BindableString("Title"),
+                    HintStyle = AdaptiveTextStyle.Header
+                });
+                desktopLyricsToast.AddVisualChild(new AdaptiveText()
+                {
+                    Text = new BindableString("PureLyric"),
+                });
+                desktopLyricsToast.AddVisualChild(new AdaptiveText()
+                {
+                    Text = new BindableString("Translation"),
+                });
+                desktopLyricsToast.AddVisualChild(new AdaptiveProgressBar()
+                {
+                    ValueStringOverride = new BindableString("TotalValueString"),
+
+                    Status = new BindableString("CurrentValueString"),
+
+                    Value = new BindableProgressBarValue("CurrentValue"),
+
+                });
+                var toast = new ToastNotification(desktopLyricsToast.GetXml())
+                {
+                    Tag = "HyPlayerDesktopLyrics",
+                    Data = new NotificationData()
+                };
+                toast.Data.Values["Title"] = "当前无音乐播放";
+                toast.Data.Values["PureLyric"] = "当前无歌词";
+                toast.Data.Values["TotalValueString"] = "0:00:00";
+                toast.Data.Values["CurrentValueString"] = "0:00:00";
+                toast.Data.Values["CurrentValue"] = "0";
+
+                toast.Data.SequenceNumber = 0;
+                ToastNotifier notifier = ToastNotificationManager.CreateToastNotifier();
+                notifier.Show(toast);
+                HyPlayList.OnPlayPositionChange += FreshDesktopLyric;
+            }
+            else
+            {
+                HyPlayList.OnPlayPositionChange -= FreshDesktopLyric;
+            }
+
+
+        }
+
+        private void FreshDesktopLyric(TimeSpan ts)
+        {
+            AudioInfo tai = HyPlayList.NowPlayingItem.AudioInfo;
+            NotificationData data = new NotificationData()
+            {
+                SequenceNumber = 0
+            };
+            data.Values["Title"] = HyPlayList.NowPlayingItem.Name;
+            data.Values["PureLyric"] = HyPlayList.Lyrics[HyPlayList.lyricpos].PureLyric;
+            data.Values["Translation"] = HyPlayList.Lyrics[HyPlayList.lyricpos].Translation is null ? " " : HyPlayList.Lyrics[HyPlayList.lyricpos].Translation;
+            data.Values["TotalValueString"] = TimeSpan.FromMilliseconds(tai.LengthInMilliseconds).ToString(@"hh\:mm\:ss");
+            data.Values["CurrentValueString"] = HyPlayList.Player.PlaybackSession.Position.ToString(@"hh\:mm\:ss");
+            data.Values["CurrentValue"] = (HyPlayList.Player.PlaybackSession.Position / TimeSpan.FromMilliseconds(tai.LengthInMilliseconds)).ToString();
+            NotificationUpdateResult res = ToastNotificationManager.CreateToastNotifier().Update(data, "HyPlayerDesktopLyrics");
+
+        }
 
         private void HyPlayList_OnPlayListAdd()
         {
@@ -76,20 +145,6 @@ namespace HyPlayer.Controls
                 {
                     if (HyPlayList.NowPlayingItem == null) return;
                     AudioInfo tai = HyPlayList.NowPlayingItem.AudioInfo;
-                    if(Common.Setting.toastLyric)
-                    {
-                        NotificationData data = new NotificationData()
-                        {
-                            SequenceNumber = 0
-                        };
-                        data.Values["Title"] = HyPlayList.NowPlayingItem.Name;
-                        data.Values["PureLyric"] = HyPlayList.Lyrics[HyPlayList.lyricpos].PureLyric;
-                        data.Values["Translation"] = HyPlayList.Lyrics[HyPlayList.lyricpos].Translation is null ? " " : HyPlayList.Lyrics[HyPlayList.lyricpos].Translation;
-                        data.Values["TotalValueString"] = TimeSpan.FromMilliseconds(tai.LengthInMilliseconds).ToString(@"hh\:mm\:ss");
-                        data.Values["CurrentValueString"] = HyPlayList.Player.PlaybackSession.Position.ToString(@"hh\:mm\:ss");
-                        data.Values["CurrentValue"] = (HyPlayList.Player.PlaybackSession.Position / TimeSpan.FromMilliseconds(tai.LengthInMilliseconds)).ToString();
-                        NotificationUpdateResult res = ToastNotificationManager.CreateToastNotifier().Update(data, "HyPlayerDesktopLyrics");
-                    }
                     TbSingerName.Text = tai.Artist;
                     TbSongName.Text = tai.SongName;
                     SliderProgress.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
@@ -471,7 +526,7 @@ namespace HyPlayer.Controls
                 DataPackage dataPackage = new DataPackage();
                 dataPackage.SetWebLink(new Uri("https://music.163.com/#/song?id=" + HyPlayList.NowPlayingItem.NcPlayItem.sid));
                 dataPackage.Properties.Title = HyPlayList.NowPlayingItem.Name;
-                dataPackage.Properties.Description = string.Join(';', HyPlayList.NowPlayingItem.NcPlayItem.Artist.Select(t => t.name)) + "   -- 分享歌曲 来自 HyPlayer" ;
+                dataPackage.Properties.Description = string.Join(';', HyPlayList.NowPlayingItem.NcPlayItem.Artist.Select(t => t.name)) + "   -- 分享歌曲 来自 HyPlayer";
                 DataRequest request = args.Request;
                 request.Data = dataPackage;
             });

@@ -35,93 +35,9 @@ namespace HyPlayer
         {
             base.OnActivated(args);
             if (args.Kind == ActivationKind.ToastNotification)//如果用户点击了桌面歌词通知，则代表通知已经关闭，需要重新初始化推送
-                InitializeToastLyrics();
+                if (Common.BarPlayBar != null) Common.BarPlayBar.InitializeDesktopLyric();
         }
-        public void InitializeToastLyrics()
-        {
-            ToastContentBuilder desktopLyricsToast = new ToastContentBuilder();
-            desktopLyricsToast.SetToastScenario(ToastScenario.IncomingCall);
-            desktopLyricsToast.AddAudio(new ToastAudio() { Silent = true });
-            desktopLyricsToast.AddVisualChild(new AdaptiveText()
-            {
-                Text = new BindableString("Title"),
-                HintStyle = AdaptiveTextStyle.Header
-            });
-            desktopLyricsToast.AddVisualChild(new AdaptiveText()
-            {
-                Text = new BindableString("PureLyric"),
-            });
-            desktopLyricsToast.AddVisualChild(new AdaptiveText()
-            {
-                Text = new BindableString("Translation"),
-            });
-            desktopLyricsToast.AddVisualChild(new AdaptiveProgressBar()
-            {
-                ValueStringOverride = new BindableString("TotalValueString"),
 
-                Status = new BindableString("CurrentValueString"),
-
-                Value = new BindableProgressBarValue("CurrentValue"),
-
-            });
-
-
-            /*
-            ToastContent desktopLyrics = new ToastContent()
-            {
-                Visual = new ToastVisual()
-                {
-                    BindingGeneric = new ToastBindingGeneric()
-                    {
-                        Children =
-                            {
-                                new AdaptiveText()
-                                {
-                                    Text = new BindableString("Title"),
-                                    HintStyle = AdaptiveTextStyle.Header
-                                },
-                                new AdaptiveText()
-                                {
-                                    Text = new BindableString("PureLyric"),
-                                },
-                                new AdaptiveText()
-                                {
-                                    Text = new BindableString("Translation"),
-                                },
-                                new AdaptiveProgressBar()
-                                {
-                                    ValueStringOverride=new BindableString("TotalValueString"),
-
-                                    Status=new BindableString("CurrentValueString"),
-
-                                    Value=new BindableProgressBarValue("CurrentValue"),
-
-                                },
-                            }
-                    }
-                },
-                Launch = "",
-                Scenario = ToastScenario.IncomingCall,
-                Audio = new ToastAudio() { Silent = true },
-
-
-            };
-            */
-            var toast = new ToastNotification(desktopLyricsToast.GetXml())
-            {
-                Tag = "HyPlayerDesktopLyrics",
-                Data = new NotificationData()
-            };
-            toast.Data.Values["Title"] = "当前无音乐播放";
-            toast.Data.Values["PureLyric"] = "当前无歌词";
-            toast.Data.Values["TotalValueString"] = "0:00:00";
-            toast.Data.Values["CurrentValueString"] = "0:00:00";
-            toast.Data.Values["CurrentValue"] = "0";
-
-            toast.Data.SequenceNumber = 0;
-            ToastNotifier notifier = ToastNotificationManager.CreateToastNotifier();
-            notifier.Show(toast);
-        }
         private void CurrentDomain_UnhandledException(object sender, System.UnhandledExceptionEventArgs e)
         {
 #if RELEASE
@@ -196,10 +112,6 @@ namespace HyPlayer
                 }
                 // 确保当前窗口处于活动状态
                 Window.Current.Activate();
-            }
-            if (Common.Setting.toastLyric)
-            {
-                InitializeToastLyrics();
             }
         }
 
