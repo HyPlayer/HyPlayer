@@ -23,11 +23,13 @@
                     Spacing="15" />
             </ScrollViewer>
             <TextBlock Text="最近播放歌曲" FontSize="30" Margin="30,0,30,0"/>
-            <StackPanel
+            <ScrollViewer VerticalScrollMode="Enabled">
+                <StackPanel
              Margin="30"
              Spacing="5"
              Orientation="Vertical"
              x:Name="SongHistory" />
+            </ScrollViewer>
         </StackPanel>
     </ScrollViewer>
 </Page>
