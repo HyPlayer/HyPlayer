@@ -16,7 +16,7 @@
                 HorizontalScrollBarVisibility="Auto"
                 HorizontalScrollMode="Enabled"
                 VerticalScrollMode="Disabled">
-                <StackPanel
+                <StackPanel Margin="15"
                     x:Name="SongListHistory"
                     Padding="0,0,0,15"
                     Orientation="Horizontal"
