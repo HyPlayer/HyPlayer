@@ -217,27 +217,24 @@ namespace HyPlayer.Pages
                                 size = token["size"].ToString(),
                                 md5 = token["md5"].ToString()
                             };
+                            try
+                            {
+                                HistoryManagement.AddNCSongHistory(ncSong);
+                            }
+                            catch
+                            {
+
+                            }
                             HyPlayList.AppendNCPlayItem(ncp);
                         }
-
+                        HistoryManagement.AddSonglistHistory(playList);
                         HyPlayList.SongAppendDone();
 
                         HyPlayList.SongMoveTo(0);
                     }
                 }));
             }));
-            var list = new List<NCPlayList>();
-            if (ApplicationData.Current.LocalSettings.Values["songlistHistory"] == null)
-            {
-                ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
-            }
-            else
-            {
-                list = JsonConvert.DeserializeObject<List<NCPlayList>>(ApplicationData.Current.LocalSettings.Values["songlistHistory"].ToString());
-            }
-            if(!list.Contains(playList))
-                list.Add(playList);
-            ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
+
         }
 
 

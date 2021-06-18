@@ -28,14 +28,9 @@ namespace HyPlayer.Pages
         {
             InitializeComponent();
             NavigationViewSelector.SelectedItem = NavigationViewSelector.MenuItems[0];
-            if (ApplicationData.Current.LocalSettings.Values["searchHistory"] != null)
-            {
-                if (ApplicationData.Current.LocalSettings.Values["searchHistory"] == null)
-                {
-                    ApplicationData.Current.LocalSettings.Values["searchHistory"] = "[]";
-                }
 
-                var list = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings.Values["searchHistory"].ToString());
+
+            var list = HistoryManagement.GetSearchHistory();
                 foreach (string item in list)
                 {
                     var btn = new Button()
@@ -46,7 +41,7 @@ namespace HyPlayer.Pages
                     SearchHistory.Children.Add(btn);
                 }
 
-            }
+            
         }
 
         private async void LoadResult()
@@ -189,18 +184,7 @@ namespace HyPlayer.Pages
         private void AutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
         {
             Text = sender.Text;
-            var list = new List<string>();
-            if (ApplicationData.Current.LocalSettings.Values["searchHistory"] == null)
-            {
-                ApplicationData.Current.LocalSettings.Values["searchHistory"] = JsonConvert.SerializeObject(list);
-            }
-            else
-            {
-                list = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings.Values["searchHistory"].ToString());
-            }
-
-            list.Add(Text);
-            ApplicationData.Current.LocalSettings.Values["searchHistory"] = JsonConvert.SerializeObject(list);
+            HistoryManagement.AddSearchHistory(Text);
             var btn = new Button()
             {
                 Content = Text

@@ -11,6 +11,7 @@ using Windows.Storage;
 using Windows.UI.Xaml.Controls;
 using Kawazu;
 using Microsoft.AppCenter.Crashes;
+using Newtonsoft.Json;
 
 namespace HyPlayer
 {
@@ -24,7 +25,7 @@ namespace HyPlayer
         public static PlayBar BarPlayBar;
         public static Frame BaseFrame;
         public static BasePage PageBase;
-        public static Setting Setting;
+        public static Setting Setting; 
         public static bool ShowLyricSound = true;
         public static bool ShowLyricTrans = true;
         public static Dictionary<string, object> GLOBAL = new Dictionary<string, object>();
@@ -42,9 +43,9 @@ namespace HyPlayer
             }
             catch (Exception e)
             {
-                #if RELEASE
+#if RELEASE
                 Crashes.TrackError(e);
-                #endif
+#endif
                 /*
                 Invoke((async () =>
                 {
@@ -115,7 +116,7 @@ namespace HyPlayer
             }
             set => ApplicationData.Current.LocalSettings.Values["toastLyric"] = value ? "true" : "false";
         }
-        
+
         public bool expandAnimation
         {
             get
@@ -127,7 +128,79 @@ namespace HyPlayer
             set => ApplicationData.Current.LocalSettings.Values["expandAnimation"] = value ? "true" : "false";
         }
     }
+    internal class HistoryManagement
+    {
 
+        public static void AddNCSongHistory(NCSong song)
+        {
+            var list = new List<NCSong>();
+            if (ApplicationData.Current.LocalSettings.Values["songHistory"] == null)
+            {
+                ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonConvert.SerializeObject(list);
+            }
+            else
+            {
+                list = JsonConvert.DeserializeObject<List<NCSong>>(ApplicationData.Current.LocalSettings.Values["songHistory"].ToString());
+            }
+            if (!list.Contains(song))
+                list.Add(song);
+            ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonConvert.SerializeObject(list);
+        }
+        public static void AddSearchHistory(String Text)
+        {
+            var list = new List<string>();
+            if (ApplicationData.Current.LocalSettings.Values["searchHistory"] == null)
+            {
+                ApplicationData.Current.LocalSettings.Values["searchHistory"] = JsonConvert.SerializeObject(list);
+            }
+            else
+            {
+                list = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings.Values["searchHistory"].ToString());
+            }
+
+            list.Add(Text);
+            ApplicationData.Current.LocalSettings.Values["searchHistory"] = JsonConvert.SerializeObject(list);
+        }
+        public static void AddSonglistHistory(NCPlayList playList)
+        {
+            var list = new List<NCPlayList>();
+            if (ApplicationData.Current.LocalSettings.Values["songlistHistory"] == null)
+            {
+                ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
+            }
+            else
+            {
+                list = JsonConvert.DeserializeObject<List<NCPlayList>>(ApplicationData.Current.LocalSettings.Values["songlistHistory"].ToString());
+            }
+            if (!list.Contains(playList))
+                list.Add(playList);
+            ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
+        }
+        public static void ClearHistory()
+        {
+            ApplicationData.Current.LocalSettings.Values["songlistHistory"] = null;
+            ApplicationData.Current.LocalSettings.Values["songHistory"] = null;
+            ApplicationData.Current.LocalSettings.Values["searchHistory"] = null;
+        }
+        public static List<NCSong> GetNCSongHistory()
+        {
+            if (ApplicationData.Current.LocalSettings.Values["songHistory"] != null)
+                return JsonConvert.DeserializeObject<List<NCSong>>(ApplicationData.Current.LocalSettings.Values["songHistory"].ToString());
+            else return new List<NCSong> { };
+        }
+        public static List<NCPlayList> GetSonglistHistory()
+        {
+            if (ApplicationData.Current.LocalSettings.Values["songlistHistory"] != null)
+                return JsonConvert.DeserializeObject<List<NCPlayList>>(ApplicationData.Current.LocalSettings.Values["songlistHistory"].ToString());
+            else return new List<NCPlayList> { };
+        }
+        public static List<String> GetSearchHistory()
+        {
+            if (ApplicationData.Current.LocalSettings.Values["searchHistory"] != null)
+                return JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings.Values["searchHistory"].ToString());
+            else return new List<String> { };
+        }
+    }
     internal static class Extensions
     {
         public static byte[] ToByteArrayUtf8(this string value)

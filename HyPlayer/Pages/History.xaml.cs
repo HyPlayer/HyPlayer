@@ -34,10 +34,10 @@ namespace HyPlayer.Pages
         {
             var PlayListlist = new List<NCPlayList>();
             var Songlist = new List<NCSong>();
-            if (ApplicationData.Current.LocalSettings.Values["songlistHistory"] != null)
-                PlayListlist = JsonConvert.DeserializeObject<List<NCPlayList>>(ApplicationData.Current.LocalSettings.Values["songlistHistory"].ToString());
-            if (ApplicationData.Current.LocalSettings.Values["songHistory"] != null)
-                Songlist = JsonConvert.DeserializeObject<List<NCSong>>(ApplicationData.Current.LocalSettings.Values["songHistory"].ToString());
+
+                PlayListlist = HistoryManagement.GetSonglistHistory();
+
+            Songlist = HistoryManagement.GetNCSongHistory();
             foreach (NCPlayList playList in PlayListlist)
             {
                 try

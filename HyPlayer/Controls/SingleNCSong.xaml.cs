@@ -81,7 +81,7 @@ namespace HyPlayer.Controls
                                     }
 
                                     NCSong ncSong = Common.ListedSongs[i];
-                                    AddNCSongHistory(ncSong);
+                                    HistoryManagement.AddNCSongHistory(ncSong);
                                     string tag = "";
                                     if (token["type"].ToString().ToLowerInvariant() == "flac")
                                     {
@@ -117,7 +117,7 @@ namespace HyPlayer.Controls
             }
             else
             {
-                AddNCSongHistory(ncsong);
+                HistoryManagement.AddNCSongHistory(ncsong);
                 await HyPlayList.AppendNCSong(ncsong);
                 HyPlayList.SongAppendDone();
                 //此处可以进行优化
@@ -206,21 +206,7 @@ namespace HyPlayer.Controls
         {
             Common.BaseFrame.Navigate(typeof(AlbumPage), ncsong.Album);
         }
-        private void AddNCSongHistory(NCSong song)
-        {
-            var list = new List<NCSong>();
-            if (ApplicationData.Current.LocalSettings.Values["songHistory"] == null)
-            {
-                ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonConvert.SerializeObject(list);
-            }
-            else
-            {
-                list = JsonConvert.DeserializeObject<List<NCSong>>(ApplicationData.Current.LocalSettings.Values["songHistory"].ToString());
-            }
-            if (!list.Contains(song))
-                list.Add(song);
-            ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonConvert.SerializeObject(list);
-        }
+        
     }
 
 }
