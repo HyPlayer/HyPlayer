@@ -211,15 +211,15 @@ namespace HyPlayer.Controls
             var list = new List<NCSong>();
             if (ApplicationData.Current.LocalSettings.Values["songHistory"] == null)
             {
-                ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
+                ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonConvert.SerializeObject(list);
             }
             else
             {
-                list = JsonConvert.DeserializeObject<List<NCSong>>(ApplicationData.Current.LocalSettings.Values["searchHistory"].ToString());
+                list = JsonConvert.DeserializeObject<List<NCSong>>(ApplicationData.Current.LocalSettings.Values["songHistory"].ToString());
             }
             if (!list.Contains(song))
                 list.Add(song);
-            ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
+            ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonConvert.SerializeObject(list);
         }
     }
 
