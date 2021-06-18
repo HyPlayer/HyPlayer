@@ -167,6 +167,7 @@ namespace HyPlayer.Pages
         {
             ApplicationData.Current.LocalSettings.Values["songlistHistory"] = null;
             ApplicationData.Current.LocalSettings.Values["songHistory"] = null;
+            ApplicationData.Current.LocalSettings.Values["searchHistory"] = null;
         }
     }
 }
