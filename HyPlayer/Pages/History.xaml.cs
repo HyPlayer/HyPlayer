@@ -40,12 +40,26 @@ namespace HyPlayer.Pages
                 Songlist = JsonConvert.DeserializeObject<List<NCSong>>(ApplicationData.Current.LocalSettings.Values["songHistory"].ToString());
             foreach (NCPlayList playList in PlayListlist)
             {
-                SongListHistory.Children.Add(new PlaylistItem(playList));
+                try
+                {
+                    SongListHistory.Children.Add(new PlaylistItem(playList));
+                }
+                catch
+                {
+                    //
+                }
             }
             int songorder = 0;
             foreach (NCSong song in Songlist)
             {
-                SongHistory.Children.Add(new SingleNCSong(song, songorder++));
+                try
+                {
+                    SongHistory.Children.Add(new SingleNCSong(song, songorder++));
+                }
+                catch
+                {
+
+                }
             }
         }
     }
