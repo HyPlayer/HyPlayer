@@ -55,7 +55,7 @@ namespace HyPlayer.Controls
             // Fill in the data, using the media elements properties 
             timelineProperties.StartTime = TimeSpan.FromSeconds(0);
             timelineProperties.MinSeekTime = TimeSpan.FromSeconds(0);
-            timelineProperties.Position = HyPlayList.Player.Position;
+            timelineProperties.Position = HyPlayList.Player.PlaybackSession.Position;
             timelineProperties.MaxSeekTime = TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.AudioInfo.LengthInMilliseconds);
             timelineProperties.EndTime = TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.AudioInfo.LengthInMilliseconds);
             // Update the System Media transport Controls 

@@ -92,6 +92,10 @@
                 Unchecked="LazySongUrlGetCheck_Unchecked"/>
             <TextBlock
                 FontSize="40"
+                Text="存储" />
+            <Button Content="清除历史记录" Click="ClearHistory_Click" x:Name="ClearHistory"/>
+            <TextBlock
+                FontSize="40"
                 Text="关于" />
             <Image
                 Width="100"

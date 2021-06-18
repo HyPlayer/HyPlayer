@@ -2,12 +2,14 @@
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using NeteaseCloudMusicApi;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
+using Windows.Storage;
 using Windows.UI.Input.Spatial;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -224,6 +226,18 @@ namespace HyPlayer.Pages
                     }
                 }));
             }));
+            var list = new List<NCPlayList>();
+            if (ApplicationData.Current.LocalSettings.Values["songlistHistory"] == null)
+            {
+                ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
+            }
+            else
+            {
+                list = JsonConvert.DeserializeObject<List<NCPlayList>>(ApplicationData.Current.LocalSettings.Values["songlistHistory"].ToString());
+            }
+            if(!list.Contains(playList))
+                list.Add(playList);
+            ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
         }
 
 

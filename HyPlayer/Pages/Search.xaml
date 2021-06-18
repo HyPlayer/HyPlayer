@@ -24,7 +24,9 @@
                     Margin="15"/>
                 <StackPanel Orientation="Horizontal" Margin="15" Spacing="5">
                     <TextBlock Text="搜索历史"/>
-                    <StackPanel Orientation="Horizontal" Spacing="5" x:Name="SearchHistory"/>
+                    <ScrollViewer HorizontalScrollMode="Enabled">
+                        <StackPanel Orientation="Horizontal" Spacing="5" x:Name="SearchHistory"/>
+                    </ScrollViewer>
                 </StackPanel>
                 <NavigationView x:Name="NavigationViewSelector" IsSettingsVisible="False" SelectionChanged="NavigationView_OnSelectionChanged" PaneDisplayMode="Top" IsBackButtonVisible="Collapsed">
                     <NavigationView.MenuItems>

@@ -1,0 +1,33 @@
+﻿<Page
+    x:Class="HyPlayer.Pages.History"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:HyPlayer.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    >
+
+    <ScrollViewer VerticalScrollMode="Enabled">
+        <StackPanel Spacing="15">
+            <TextBlock FontSize="60" Text="最近播放" Margin="30,0,30,0"/>
+            <TextBlock Text="最近歌单" FontSize="30" Margin="30,0,30,0"/>
+            <ScrollViewer
+                HorizontalScrollBarVisibility="Auto"
+                HorizontalScrollMode="Enabled"
+                VerticalScrollMode="Disabled">
+                <StackPanel
+                    x:Name="SongListHistory"
+                    Padding="0,0,0,15"
+                    Orientation="Horizontal"
+                    Spacing="15" />
+            </ScrollViewer>
+            <TextBlock Text="最近播放歌曲" FontSize="30" Margin="30,0,30,0"/>
+            <StackPanel
+             Margin="30"
+             Spacing="5"
+             Orientation="Vertical"
+             x:Name="SongHistory" />
+        </StackPanel>
+    </ScrollViewer>
+</Page>

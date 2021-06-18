@@ -69,7 +69,9 @@
                 Click="PrevPage_Click" />
             <TextBlock
                 x:Name="PageIndicator" />
-            <Button
+                <TextBox PlaceholderText="跳页" Header="跳页" x:DefaultBindMode="TwoWay" Text="{x:Bind page}" x:Name="PageSelect"/>
+                <Button x:Name="SkipPage" Content="跳转" Click="SkipPage_Click"/>
+                <Button
                 IsEnabled="False"
                 Content="下一页"
                 x:Name="NextPage"

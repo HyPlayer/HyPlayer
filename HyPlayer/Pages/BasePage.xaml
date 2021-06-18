@@ -63,6 +63,11 @@
                 </controls1:NavigationViewItem>
                 <controls1:NavigationViewItemSeparator />
                 <controls1:NavigationViewItem
+                    Icon="Clock"
+                    Content="播放历史"
+                    x:Name="PageHistory" 
+                    Tag="PageHistory"/>
+                <controls1:NavigationViewItem
                     Icon="List"
                     Content="我创建的歌单"
                     Visibility="Collapsed"

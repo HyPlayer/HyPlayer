@@ -192,5 +192,10 @@ namespace HyPlayer.Pages
             sortType = ComboBoxSortType.SelectedIndex + 1;
             LoadComments(sortType);
         }
+
+        private void SkipPage_Click(object sender, RoutedEventArgs e)
+        {
+            LoadComments(sortType);
+        }
     }
 }

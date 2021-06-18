@@ -162,5 +162,11 @@ namespace HyPlayer.Pages
         {
             ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"] = "false";
         }
+
+        private void ClearHistory_Click(object sender, RoutedEventArgs e)
+        {
+            ApplicationData.Current.LocalSettings.Values["songlistHistory"] = null;
+            ApplicationData.Current.LocalSettings.Values["songHistory"] = null;
+        }
     }
 }

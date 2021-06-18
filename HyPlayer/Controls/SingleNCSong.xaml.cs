@@ -16,6 +16,7 @@ using AcrylicBackgroundSource = Windows.UI.Xaml.Media.AcrylicBackgroundSource;
 using Newtonsoft.Json.Linq;
 using NeteaseCloudMusicApi;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -80,7 +81,7 @@ namespace HyPlayer.Controls
                                     }
 
                                     NCSong ncSong = Common.ListedSongs[i];
-
+                                    AddNCSongHistory(ncSong);
                                     string tag = "";
                                     if (token["type"].ToString().ToLowerInvariant() == "flac")
                                     {
@@ -116,6 +117,7 @@ namespace HyPlayer.Controls
             }
             else
             {
+                AddNCSongHistory(ncsong);
                 await HyPlayList.AppendNCSong(ncsong);
                 HyPlayList.SongAppendDone();
                 //此处可以进行优化
@@ -203,6 +205,21 @@ namespace HyPlayer.Controls
         private void TextBlockAlbum_OnPointerPressed(object sender, PointerRoutedEventArgs e)
         {
             Common.BaseFrame.Navigate(typeof(AlbumPage), ncsong.Album);
+        }
+        private void AddNCSongHistory(NCSong song)
+        {
+            var list = new List<NCSong>();
+            if (ApplicationData.Current.LocalSettings.Values["songHistory"] == null)
+            {
+                ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
+            }
+            else
+            {
+                list = JsonConvert.DeserializeObject<List<NCSong>>(ApplicationData.Current.LocalSettings.Values["searchHistory"].ToString());
+            }
+            if (!list.Contains(song))
+                list.Add(song);
+            ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
         }
     }
 
