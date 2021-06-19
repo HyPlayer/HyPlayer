@@ -40,7 +40,7 @@ namespace HyPlayer.Pages
                     btn.Click += Btn_Click;
                     SearchHistory.Children.Add(btn);
                 }
-
+            this.NavigationCacheMode = NavigationCacheMode.Required;
             
         }
 
