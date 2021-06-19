@@ -144,8 +144,8 @@ namespace HyPlayer
             }
             if (!list.Contains(song))
                 list.Insert(0,song);
-            if (list.Count >= 10)
-                list.RemoveRange(10, list.Count - 10);
+            if (list.Count >= 8)
+                list.RemoveRange(8, list.Count - 8);
             ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonConvert.SerializeObject(list);
         }
         public static void AddSearchHistory(String Text)
