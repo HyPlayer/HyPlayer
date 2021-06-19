@@ -143,7 +143,9 @@ namespace HyPlayer
                 list = JsonConvert.DeserializeObject<List<NCSong>>(ApplicationData.Current.LocalSettings.Values["songHistory"].ToString());
             }
             if (!list.Contains(song))
-                list.Add(song);
+                list.Insert(0,song);
+            if (list.Count >= 10)
+                list.RemoveRange(10, list.Count - 10);
             ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonConvert.SerializeObject(list);
         }
         public static void AddSearchHistory(String Text)
@@ -173,7 +175,9 @@ namespace HyPlayer
                 list = JsonConvert.DeserializeObject<List<NCPlayList>>(ApplicationData.Current.LocalSettings.Values["songlistHistory"].ToString());
             }
             if (!list.Contains(playList))
-                list.Add(playList);
+                list.Insert(0,playList);
+            if (list.Count >= 10)
+                list.RemoveRange(10, list.Count - 10);
             ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
         }
         public static void ClearHistory()

@@ -1,6 +1,8 @@
 ﻿using HyPlayer.Classes;
 using HyPlayer.Controls;
+using NeteaseCloudMusicApi;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -30,12 +32,12 @@ namespace HyPlayer.Pages
         {
             this.InitializeComponent();
         }
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             var PlayListlist = new List<NCPlayList>();
             var Songlist = new List<NCSong>();
 
-                PlayListlist = HistoryManagement.GetSonglistHistory();
+            PlayListlist = HistoryManagement.GetSonglistHistory();
 
             Songlist = HistoryManagement.GetNCSongHistory();
             foreach (NCPlayList playList in PlayListlist)
