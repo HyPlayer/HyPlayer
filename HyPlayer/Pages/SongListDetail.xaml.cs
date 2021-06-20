@@ -341,6 +341,8 @@ namespace HyPlayer.Pages
         {
 
             await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDescUpdate, new Dictionary<string, object> { { "id", playList.plid }, { "desc", NewDesc.Text } });
+            LoadSongListDetail();
+
         }
     }
 }
