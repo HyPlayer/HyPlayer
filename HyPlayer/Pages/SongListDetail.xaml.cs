@@ -340,7 +340,7 @@ namespace HyPlayer.Pages
         private async void Confirm_Click(object sender, RoutedEventArgs e)
         {
 
-            await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDescUpdate, new Dictionary<string, object> { { "id", playList.plid }, { "desc", NewDesc } });
+            await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDescUpdate, new Dictionary<string, object> { { "id", playList.plid }, { "desc", NewDesc.Text } });
         }
     }
 }
