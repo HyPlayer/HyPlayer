@@ -28,6 +28,7 @@ using QRCoder;
 using Windows.Storage.Streams;
 using Microsoft.AppCenter.Crashes;
 using System.Net;
+using HyPlayer.Controls;
 
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
@@ -277,6 +278,15 @@ namespace HyPlayer.Pages
                                 });
                             }
                         }
+                        NavItemsMyList.MenuItems.Add(new NavigationViewItem()
+                        {
+                            Content = "创建歌单",
+                            Tag = "SonglistCreate",
+                            Icon = new SymbolIcon
+                            {
+                                Symbol = Symbol.Add
+                            }
+                        }); 
                     }
                 }));
             }));
@@ -334,7 +344,57 @@ namespace HyPlayer.Pages
                 await DialogLogin.ShowAsync();
                 return;
             }
-
+            if(nowitem.Tag.ToString()== "SonglistCreate")
+            {
+                await new CreateSonglistDialog().ShowAsync();
+                _ = Task.Run((() =>
+                {
+                    Common.Invoke((async () =>
+                    {
+                        //加载用户歌单
+                        Microsoft.UI.Xaml.Controls.NavigationViewItem item = NavItemsMyList;
+                        (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
+                            new Dictionary<string, object>() { { "uid", Common.LoginedUser.id } });
+                        if (isOk)
+                        {
+                            NavItemsLikeList.Visibility = Visibility.Visible;
+                            NavItemsMyList.Visibility = Visibility.Visible;
+                            Common.MySongLists.Clear();
+                            NavItemsMyList.MenuItems.Clear();
+                            foreach (JToken jToken in json["playlist"])
+                            {
+                                if (jToken["subscribed"].ToString() == "True")
+                                {
+                                    NavItemsLikeList.MenuItems.Add(new NavigationViewItem()
+                                    {
+                                        Content = jToken["name"].ToString(),
+                                        Tag = "Playlist" + jToken["id"]
+                                    });
+                                }
+                                else
+                                {
+                                    Common.MySongLists.Add(NCPlayList.CreateFromJson(jToken));
+                                    NavItemsMyList.MenuItems.Add(new NavigationViewItem()
+                                    {
+                                        Content = jToken["name"].ToString(),
+                                        Tag = "Playlist" + jToken["id"]
+                                    });
+                                }
+                            }
+                            NavItemsMyList.MenuItems.Add(new NavigationViewItem()
+                            {
+                                Content = "创建歌单",
+                                Tag = "SonglistCreate",
+                                Icon = new SymbolIcon
+                                {
+                                    Symbol = Symbol.Add
+                                }
+                            });
+                        }
+                    }));
+                }));
+                return;
+            }
             if (nowitem.Tag.ToString().StartsWith("Playlist"))
             {
                 Common.BaseFrame.Navigate(typeof(Pages.SongListDetail), nowitem.Tag.ToString().Substring(8),

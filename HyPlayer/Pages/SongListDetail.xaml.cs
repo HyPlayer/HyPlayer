@@ -331,5 +331,16 @@ namespace HyPlayer.Pages
         {
             Common.BaseFrame.Navigate(typeof(Me),playList.creater.id);
         }
+
+        private void Edit_Click(object sender, RoutedEventArgs e)
+        {
+            FlyoutBase.ShowAttachedFlyout((FrameworkElement)TextBlockDesc);
+        }
+
+        private async void Confirm_Click(object sender, RoutedEventArgs e)
+        {
+
+            await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDescUpdate, new Dictionary<string, object> { { "id", playList.plid }, { "desc", NewDesc } });
+        }
     }
 }
