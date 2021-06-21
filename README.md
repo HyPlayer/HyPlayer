@@ -60,7 +60,7 @@ Microsoft Store: [点击查看](https://www.microsoft.com/store/productId/9N5TD9
 ## 使用
 
 * NeteaseCloudMusicApi
-  [wwh1004/NeteaseCloudMusicApi](https://github.com/wwh1004/NeteaseCloudMusicApi) => [kengwang/NeteaseCloudMusicApi](https://github.com/kengwang/NeteaseCloudMusicApi) (MIT Licence)
+  [wwh1004/NeteaseCloudMusicApi](https://github.com/wwh1004/NeteaseCloudMusicApi) => [HyPlayer/NeteaseCloudMusicApi](https://github.com/HyPlayer/NeteaseCloudMusicApi) (MIT Licence)
 
 * Kawazu [Cutano/Kawazu](https://github.com/Cutano/Kawazu) => [HyPlayer / Kawazu](https://github.com/HyPlayer/Kawazu) (MIT Licence)
 
