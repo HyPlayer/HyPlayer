@@ -81,6 +81,7 @@ namespace HyPlayer.Pages
                     if (comment["liked"].ToString() == "False")
                         cmt.HasLiked = false;
                     else cmt.HasLiked = true;
+                    cmt.IsMainComment = true;
                     SingleComment curcomment = new SingleComment(cmt);
                     HotCommentList.Children.Add(curcomment);
                 }
@@ -118,7 +119,7 @@ namespace HyPlayer.Pages
                     if (comment["liked"].ToString() == "False")
                         cmt.HasLiked = false;
                     else cmt.HasLiked = true;
-                    cmt.IsFloorComment = false;
+                    cmt.IsMainComment = true;
                     CommentList.Children.Add(new SingleComment(cmt));
 
                 }

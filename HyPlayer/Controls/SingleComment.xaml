@@ -6,7 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    d:DesignHeight="170"
+    d:DesignHeight="670"
     d:DesignWidth="800">
 
     <StackPanel Orientation="Vertical">
@@ -45,16 +45,18 @@
                 </StackPanel>
             </StackPanel>
         </Grid>
-        <Grid Visibility="{x:Bind comment.IsFloorComment}">
+        <Grid Visibility="{x:Bind comment.IsMainComment}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition Width="80"/>
             </Grid.ColumnDefinitions>
             <TextBox x:Name="ReplyText" Margin="10" Height="20" Grid.Column="0"/>
-            <Button x:Name="SendReply" Margin="10" Content="回复" Grid.Column="1"/>
+            <Button x:Name="SendReply" Margin="10" Content="回复" Grid.Column="1" Click="SendReply_Click"/>
         </Grid>
+       
+            <StackPanel x:Name="SubCmts" Margin="10" MaxWidth="1000" Visibility="{x:Bind comment.IsMainComment}"/>
 
-        <StackPanel x:Name="SubCmts" Margin="10" Visibility="{x:Bind comment.IsFloorComment}"/>
+        <Button x:Name="LoadMore" Content="加载更多" HorizontalAlignment="Stretch" CornerRadius="5" Click="LoadMore_Click" Visibility="Collapsed"/>
 
     </StackPanel>
 </UserControl>

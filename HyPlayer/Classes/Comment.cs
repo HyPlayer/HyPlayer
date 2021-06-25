@@ -20,6 +20,6 @@ namespace HyPlayer.Classes
         public DateTime SendTime;
         public int likedCount;
         public bool IsByMyself => this.uid == Common.LoginedUser.id;
-        public bool IsFloorComment { get; set; }
+        public bool IsMainComment { get; set; }
     }
 }
