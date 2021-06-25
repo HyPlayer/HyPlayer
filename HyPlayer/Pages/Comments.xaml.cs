@@ -118,6 +118,7 @@ namespace HyPlayer.Pages
                     if (comment["liked"].ToString() == "False")
                         cmt.HasLiked = false;
                     else cmt.HasLiked = true;
+                    cmt.IsFloorComment = false;
                     CommentList.Children.Add(new SingleComment(cmt));
 
                 }
