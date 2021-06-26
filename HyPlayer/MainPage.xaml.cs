@@ -18,7 +18,7 @@ namespace HyPlayer
         {
             Common.PageMain = this;
             HyPlayList.InitializeHyPlaylist();
-
+            HistoryManagement.InitializeHistoryTrack();
             Task.Run(() =>
             {
                 Common.Invoke((async () =>

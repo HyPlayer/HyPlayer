@@ -256,6 +256,7 @@ namespace HyPlayer.Pages
                     if (isOk)
                     {
                         NavItemsLikeList.Visibility = Visibility.Visible;
+                        NavItemsAddPlaylist.Visibility = Visibility.Visible;
                         NavItemsMyList.Visibility = Visibility.Visible;
                         Common.MySongLists.Clear();
                         foreach (JToken jToken in json["playlist"])
@@ -278,15 +279,6 @@ namespace HyPlayer.Pages
                                 });
                             }
                         }
-                        NavItemsMyList.MenuItems.Add(new NavigationViewItem()
-                        {
-                            Content = "创建歌单",
-                            Tag = "SonglistCreate",
-                            Icon = new SymbolIcon
-                            {
-                                Symbol = Symbol.Add
-                            }
-                        }); 
                     }
                 }));
             }));
@@ -381,15 +373,6 @@ namespace HyPlayer.Pages
                                     });
                                 }
                             }
-                            NavItemsMyList.MenuItems.Add(new NavigationViewItem()
-                            {
-                                Content = "创建歌单",
-                                Tag = "SonglistCreate",
-                                Icon = new SymbolIcon
-                                {
-                                    Symbol = Symbol.Add
-                                }
-                            });
                         }
                     }));
                 }));

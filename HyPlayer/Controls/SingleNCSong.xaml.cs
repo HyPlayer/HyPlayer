@@ -81,7 +81,6 @@ namespace HyPlayer.Controls
                                     }
 
                                     NCSong ncSong = Common.ListedSongs[i];
-                                    HistoryManagement.AddNCSongHistory(ncSong);
                                     string tag = "";
                                     if (token["type"].ToString().ToLowerInvariant() == "flac")
                                     {
@@ -117,7 +116,6 @@ namespace HyPlayer.Controls
             }
             else
             {
-                HistoryManagement.AddNCSongHistory(ncsong);
                 await HyPlayList.AppendNCSong(ncsong);
                 HyPlayList.SongAppendDone();
                 //此处可以进行优化

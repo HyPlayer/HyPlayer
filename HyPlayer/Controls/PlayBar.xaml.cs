@@ -234,6 +234,7 @@ namespace HyPlayer.Controls
                if (mpi.isOnline)
                {
                    BtnLike.IsChecked = Common.LikedSongs.Contains(mpi.NcPlayItem.sid);
+                   HistoryManagement.AddNCSongHistory(HyPlayList.NowPlayingItem.NcPlayItem.sid);
                }
                ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
                TbSongTag.Text = HyPlayList.NowPlayingItem.AudioInfo.tag;

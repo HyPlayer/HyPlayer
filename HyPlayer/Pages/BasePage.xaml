@@ -34,6 +34,11 @@
                     Icon="Download"
                     Tag="PageDownload" />
                 <controls1:NavigationViewItem
+                    Icon="Clock"
+                    Content="播放历史"
+                    x:Name="PageHistory"
+                    Tag="PageHistory" />
+                <controls1:NavigationViewItem
                     Content="私人FM"
                     Tag="PersonalFM">
                     <controls1:NavigationViewItem.Icon>
@@ -63,16 +68,15 @@
                 </controls1:NavigationViewItem>
                 <controls1:NavigationViewItemSeparator />
                 <controls1:NavigationViewItem
-                    Icon="Clock"
-                    Content="播放历史"
-                    x:Name="PageHistory" 
-                    Tag="PageHistory"/>
+                    x:Name="NavItemsAddPlaylist"
+                    Icon="Add"
+                    Content="创建歌单"
+                    Tag="SonglistCreate" />
                 <controls1:NavigationViewItem
                     Icon="List"
                     Content="我创建的歌单"
                     Visibility="Collapsed"
                     x:Name="NavItemsMyList" />
-
                 <controls1:NavigationViewItem
                     Icon="List"
                     Content="我收藏的歌单"

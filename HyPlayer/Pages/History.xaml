@@ -6,31 +6,42 @@
     xmlns:hy="using:HyPlayer"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
-    >
+    mc:Ignorable="d">
 
-    <ScrollViewer VerticalScrollMode="Enabled">
-        <StackPanel Spacing="15">
-            <TextBlock FontSize="60" Text="最近播放" Margin="30,0,30,0"/>
-            <TextBlock Text="最近歌单" FontSize="30" Margin="30,0,30,0"/>
-            <ScrollViewer
-                HorizontalScrollBarVisibility="Auto"
-                HorizontalScrollMode="Enabled"
-                VerticalScrollMode="Disabled">
-                <StackPanel Margin="15"
-                    x:Name="SongListHistory"
-                    Padding="0,0,0,15"
-                    Orientation="Horizontal"
-                    Spacing="15" />
-            </ScrollViewer>
-            <TextBlock Text="最近播放歌曲" FontSize="30" Margin="30,0,30,0"/>
-            <ScrollViewer VerticalScrollMode="Enabled">
-                <StackPanel
-             Margin="30"
-             Spacing="5"
-             Orientation="Vertical"
-             x:Name="SongHistory" />
-            </ScrollViewer>
+    <ScrollViewer
+        VerticalScrollMode="Enabled">
+        <StackPanel
+            Spacing="15">
+            <TextBlock
+                FontSize="60"
+                Text="最近播放"
+                Margin="30,0,30,0" />
+            <Pivot
+                x:Name="HistoryPivot"
+                SelectionChanged="Pivot_SelectionChanged"
+                >
+                <PivotItem
+                    Header="最近歌单">
+                    <StackPanel
+                        Margin="15"
+                        x:Name="SongListHistory"
+                        Padding="0,0,0,15"
+                        Orientation="Vertical"
+                        Spacing="15" />
+                </PivotItem>
+                <PivotItem
+                    Header="最近播放歌曲">
+                    <StackPanel
+                        Margin="30"
+                        Spacing="5"
+                        Orientation="Vertical"
+                        x:Name="SongHistory" />
+                </PivotItem>
+
+            </Pivot>
+            <Grid
+                Height="150" />
         </StackPanel>
+
     </ScrollViewer>
 </Page>

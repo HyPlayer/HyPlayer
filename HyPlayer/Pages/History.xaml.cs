@@ -32,36 +32,45 @@ namespace HyPlayer.Pages
         {
             this.InitializeComponent();
         }
-        protected override async void OnNavigatedTo(NavigationEventArgs e)
+
+        private async void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var PlayListlist = new List<NCPlayList>();
-            var Songlist = new List<NCSong>();
-
-            PlayListlist = HistoryManagement.GetSonglistHistory();
-
-            Songlist = HistoryManagement.GetNCSongHistory();
-            foreach (NCPlayList playList in PlayListlist)
+            switch (HistoryPivot.SelectedIndex)
             {
-                try
-                {
-                    SongListHistory.Children.Add(new PlaylistItem(playList));
-                }
-                catch
-                {
-                    //
-                }
-            }
-            int songorder = 0;
-            foreach (NCSong song in Songlist)
-            {
-                try
-                {
-                    SongHistory.Children.Add(new SingleNCSong(song, songorder++));
-                }
-                catch
-                {
+                case 0:
+                    SongListHistory.Children.Clear();
+                    var PlayListlist = new List<NCPlayList>();
+                    PlayListlist = await HistoryManagement.GetSonglistHistory();
+                    foreach (NCPlayList playList in PlayListlist)
+                    {
+                        try
+                        {
+                            SongListHistory.Children.Add(new SinglePlaylistStack(playList));
+                        }
+                        catch
+                        {
+                            //
+                        }
+                    }
+                    break;
+                case 1:
+                    SongHistory.Children.Clear();
+                    var Songlist = new List<NCSong>();
+                    Songlist = await HistoryManagement.GetNCSongHistory();
+                    Common.ListedSongs = Songlist;
+                    int songorder = 0;
+                    foreach (NCSong song in Songlist)
+                    {
+                        try
+                        {
+                            SongHistory.Children.Add(new SingleNCSong(song, songorder++));
+                        }
+                        catch
+                        {
 
-                }
+                        }
+                    }
+                    break;
             }
         }
     }
