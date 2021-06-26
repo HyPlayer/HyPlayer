@@ -67,7 +67,9 @@ namespace HyPlayer.HyPlayControl
             file.Tag.Album = ncsong.Album.name;
             file.Tag.Performers = ncsong.Artist.Select(t => t.name).ToArray();
             file.Tag.Title = ncsong.songname;
-            file.Tag.Pictures = new IPicture[] { new Picture(ByteVector.FromStream(RandomAccessStreamReference.CreateFromUri(new Uri(ncsong.Album.cover)).OpenReadAsync().GetAwaiter().GetResult().AsStreamForRead())) };
+            file.Tag.Pictures = new IPicture[] { new Picture(ByteVector.FromStream(RandomAccessStreamReference.CreateFromUri(new Uri(ncsong.Album.cover+"?param="+StaticSource.PICSIZE_DOWNLOAD_ALBUMCOVER)).OpenReadAsync().GetAwaiter().GetResult().AsStreamForRead())) };
+            file.Tag.Pictures[0].MimeType="image/jpeg";
+            file.Tag.Pictures[0].Description="cover.jpg";
             The163KeyHelper.TrySetMusicInfo(file.Tag, dontuseme);
             file.Save();
 

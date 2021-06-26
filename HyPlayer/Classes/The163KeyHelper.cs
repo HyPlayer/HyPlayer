@@ -147,7 +147,7 @@ namespace HyPlayer.Classes
                 {
                     resultArray = cryptoTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
                 }
-                tag.Comment = "163 key(Don't modify):" + Convert.ToBase64String(resultArray, 0, resultArray.Length);
+                tag.Description = "163 key(Don't modify):" + Convert.ToBase64String(resultArray, 0, resultArray.Length);
 
             }
             catch
