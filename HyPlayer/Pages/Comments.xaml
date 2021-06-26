@@ -70,7 +70,7 @@
                 <StackPanel Orientation="Vertical">
                     <TextBlock
                 x:Name="PageIndicator" />
-                    <TextBox PlaceholderText="跳页" Header="跳页" x:DefaultBindMode="TwoWay" Text="{x:Bind page}" x:Name="PageSelect"/>
+                    <TextBox PlaceholderText="跳页" Header="跳页" x:Name="PageSelect"/>
                     <Button x:Name="SkipPage" Content="跳转" Click="SkipPage_Click"/>
                 </StackPanel>
                 <Button

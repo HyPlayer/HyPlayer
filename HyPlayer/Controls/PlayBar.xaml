@@ -226,6 +226,10 @@
                 Spacing="15"
                 Margin="30,0,0,15">
                 <Button
+                    Height="40"
+                    Width="40"
+                    Padding="-5"
+                    CornerRadius="20"
                     Background="Transparent"
                     x:Name="Btn_Sub"
                     Click="Btn_Sub_OnClick">
@@ -234,6 +238,10 @@
                         Glyph="&#xE1DA;"></FontIcon>
                 </Button>
                 <Button
+                    Height="40"
+                    Width="40"
+                    Padding="-5"   
+                    CornerRadius="20"
                     Background="Transparent"
                     x:Name="Btn_Down"
                     Click="Btn_Down_OnClick">
@@ -242,6 +250,10 @@
                         Glyph="&#xE118;"></FontIcon>
                 </Button>
                 <Button
+                    Height="40"
+                    Width="40"
+                    Padding="-5"
+                    CornerRadius="20"
                     x:Name="Btn_Comment"
                     Click="Btn_Comment_OnClick"
                     Background="Transparent">
@@ -250,6 +262,10 @@
                         Glyph="&#xE8F2;"></FontIcon>
                 </Button>
                 <Button
+                    Height="40"
+                    Width="40"
+                    Padding="-5"
+                    CornerRadius="20"
                     x:Name="Btn_Share"
                     Click="Btn_Share_OnClick"
                     Background="Transparent">
@@ -447,6 +463,7 @@
                 Orientation="Horizontal"
                 Margin="10">
                 <Button
+                    Padding="-5"
                     Width="40"
                     Height="40"
                     Margin="0,0,3,0"
@@ -474,6 +491,7 @@
             Width="40"
             x:Name="ButtonPlayList"
             Height="40"
+            Padding="-5"
             Margin="10,10,55,10"
             CornerRadius="20"
             Background="Transparent">
@@ -514,6 +532,7 @@
                                                 Text="{x:Bind Artist}" />
                                         </StackPanel>
                                         <Button
+                                            Padding="-5"
                                             Width="30"
                                             Height="30"
                                             Background="Transparent"
@@ -542,6 +561,7 @@
             CornerRadius="20"
             Click="ButtonExpand_OnClick"
             Name="ButtonExpand"
+            Padding="-5"
             Background="Transparent">
             <FontIcon
                 FontFamily="{StaticResource SymbolThemeFontFamily}"
@@ -559,6 +579,7 @@
             Visibility="Collapsed"
             Background="Transparent">
             <FontIcon
+                FontSize="13"
                 FontFamily="{StaticResource SymbolThemeFontFamily}"
                 Glyph="&#xE972;" />
         </Button>

@@ -163,6 +163,18 @@ namespace HyPlayer.Pages
             ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"] = "false";
         }
 
+        private void ControlSoundChecked(object sender, RoutedEventArgs e)
+        {
+            ElementSoundPlayer.State = ElementSoundPlayerState.On;
+            ElementSoundPlayer.SpatialAudioMode = ElementSpatialAudioMode.On;
+        }
+
+        private void ControlSoundUnChecked(object sender, RoutedEventArgs e)
+        {
+            ElementSoundPlayer.State = ElementSoundPlayerState.Off;
+            ElementSoundPlayer.SpatialAudioMode = ElementSpatialAudioMode.Off;
+        }
+
         private void ClearHistory_Click(object sender, RoutedEventArgs e)
         {
             HistoryManagement.ClearHistory();

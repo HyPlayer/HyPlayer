@@ -36,41 +36,17 @@ namespace HyPlayer.Controls
             AvatarUri = comment.AvatarUri;
             AvatarSource = new BitmapImage();
             AvatarSource.UriSource = AvatarUri;
-            if (comment.IsMainComment)
-            {
-                ReplyBtn.Visibility = Visibility.Visible;
-            }
+            ReplyBtn.Visibility = Visibility.Visible;
         }
         private async void LoadFloorComments()
         {
+            SubCmts.Children.Clear();
             (bool IsOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentFloor, new Dictionary<string, object> { { "parentCommentId", comment.cid }, { "id", comment.resourceId }, { "type", comment.resourceType }, { "time", time } });
             if (IsOk)
             {
                 foreach (JToken floorcomment in json["data"]["comments"].ToArray())
                 {
-                    Comment cmt = new Comment();
-                    cmt.resourceId = comment.resourceId;
-                    cmt.resourceType = comment.resourceType;
-                    cmt.cid = floorcomment["commentId"].ToString();
-                    cmt.SendTime =
-                        new DateTime((Convert.ToInt64(floorcomment["time"].ToString()) * 10000) + 621355968000000000);
-                    cmt.AvatarUri = floorcomment["user"]["avatarUrl"] is null
-                        ? new Uri("ms-appx:///Assets/icon.png")
-                        : new Uri(floorcomment["user"]["avatarUrl"].ToString() + "?param=" +
-                                  StaticSource.PICSIZE_COMMENTUSER_AVATAR);
-                    cmt.Nickname = floorcomment["user"]["nickname"] is null
-                        ? floorcomment["user"]["userId"].ToString()
-                        : floorcomment["user"]["nickname"].ToString();
-                    cmt.uid = floorcomment["user"]["userId"].ToString();
-                    cmt.content = floorcomment["content"].ToString();
-                    cmt.likedCount = floorcomment["likedCount"].ToObject<int>();
-                    if (floorcomment["showFloorComment"].HasValues)
-                        cmt.ReplyCount = floorcomment["showFloorComment"]["replyCount"].ToObject<int>();
-                    if (floorcomment["liked"].ToString() == "False")
-                        cmt.HasLiked = false;
-                    else cmt.HasLiked = true;
-                    cmt.IsMainComment = false;
-                    SubCmts.Children.Add(new SingleComment(cmt) { Margin = new Thickness { Left = 5, Right = 5, Top = 5, Bottom = 5 } });
+                    SubCmts.Children.Add(new SingleComment(Comment.CreateFromJson(floorcomment, comment.resourceId, comment.resourceType)) { Margin = new Thickness { Left = 5, Right = 5, Top = 5, Bottom = 5 } });
                 }
                 time = json["data"]["time"].ToString();
                 if (json["data"]["hasMore"].ToString() == "True")

@@ -240,4 +240,46 @@ namespace HyPlayer.Classes
             };
         }
     }
+
+    public struct Comment
+    {
+        public string resourceId;
+        public int resourceType;
+        public string cid;
+        public string uid;
+        public Uri AvatarUri;
+        public string Nickname;
+        public string content;
+        public bool HasLiked;
+        public DateTime SendTime;
+        public int likedCount;
+        public bool IsByMyself => this.uid == Common.LoginedUser.id;
+        public int ReplyCount;
+
+        public static Comment CreateFromJson(JToken comment,string resourceId,int resourceType)
+        {
+            Comment cmt = new Comment();
+            cmt.resourceId = resourceId;
+            cmt.resourceType = resourceType;
+            cmt.cid = comment["commentId"].ToString();
+            cmt.SendTime =
+                new DateTime((Convert.ToInt64(comment["time"].ToString()) * 10000) + 621355968000000000);
+            cmt.AvatarUri = comment["user"]["avatarUrl"] is null
+                ? new Uri("ms-appx:///Assets/icon.png")
+                : new Uri(comment["user"]["avatarUrl"].ToString() + "?param=" +
+                          StaticSource.PICSIZE_COMMENTUSER_AVATAR);
+            cmt.Nickname = comment["user"]["nickname"] is null
+                ? comment["user"]["userId"].ToString()
+                : comment["user"]["nickname"].ToString();
+            cmt.uid = comment["user"]["userId"].ToString();
+            cmt.content = comment["content"].ToString();
+            cmt.likedCount = comment["likedCount"].ToObject<int>();
+            if (comment["showFloorComment"].HasValues)
+                cmt.ReplyCount = comment["showFloorComment"]["replyCount"].ToObject<int>();
+            if (comment["liked"].ToString() == "False")
+                cmt.HasLiked = false;
+            else cmt.HasLiked = true;
+            return cmt;
+        }
+    }
 }

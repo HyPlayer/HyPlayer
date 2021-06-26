@@ -110,10 +110,9 @@
 
         <Border
             x:Name="SubCmtsConainer"
-            Background="Gray"
+            Background="#29292950"
             Margin="5"
             CornerRadius="5"
-            MaxWidth="1020"
             Visibility="Collapsed">
             <StackPanel
                 Orientation="Vertical">
@@ -137,8 +136,7 @@
                 </Grid>
                 <StackPanel
                     x:Name="SubCmts"
-                    Margin="10"
-                    Visibility="{x:Bind comment.IsMainComment}" />
+                    Margin="10" />
                 <Button
                     x:Name="LoadMore"
                     Content="加载更多"

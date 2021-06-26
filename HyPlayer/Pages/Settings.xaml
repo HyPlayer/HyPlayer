@@ -26,7 +26,9 @@
             <Button
                 Click="ButtonBase_OnClick"
                 Content="获取罗马音资源文件"></Button>
-            <Border BorderThickness="3" BorderBrush="Gray" />
+            <Border
+                BorderThickness="3"
+                BorderBrush="Gray" />
             <TextBlock
                 FontSize="18"
                 Text="音质设置" />
@@ -54,15 +56,27 @@
             <TextBlock
                 FontSize="18"
                 Text="下载设置" />
-            <Grid MaxWidth="1000" >
+            <Grid
+                MaxWidth="1000">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="100"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="50"/>
+                    <ColumnDefinition
+                        Width="100" />
+                    <ColumnDefinition
+                        Width="*" />
+                    <ColumnDefinition
+                        Width="50" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="下载路径"/>
-                                <TextBox Grid.Column="1" x:Name="TextBoxDownloadDir" />
-                <Button Grid.Column="2" x:Name="ButtonDownloadSelect" Content="选择" Click="ButtonDownloadSelect_OnClick"></Button>
+                <TextBlock
+                    Grid.Column="0"
+                    Text="下载路径" />
+                <TextBox
+                    Grid.Column="1"
+                    x:Name="TextBoxDownloadDir" />
+                <Button
+                    Grid.Column="2"
+                    x:Name="ButtonDownloadSelect"
+                    Content="选择"
+                    Click="ButtonDownloadSelect_OnClick"></Button>
 
             </Grid>
             <CheckBox
@@ -75,25 +89,35 @@
                 Content="是否开启可选动效"
                 Checked="ToastLyricCheckbox_OnChecked"
                 Unchecked="ToastLyricCheckbox_OnChecked" />
-            <Border BorderThickness="3" BorderBrush="Gray" />
+            <Border
+                BorderThickness="3"
+                BorderBrush="Gray" />
             <TextBlock
                 FontSize="40"
-                Text="实验室"/>
+                Text="实验室" />
             <TextBlock
                 FontSize="20"
-                Text="以下功能仅供测试,如有问题欢迎反馈"/>
+                Text="以下功能仅供测试,如有问题欢迎反馈" />
             <TextBlock
                 FontSize="3"
-                Text="好用吗?好用就砍了吧"/>
+                Text="好用吗?好用就砍了吧" />
             <CheckBox
                 x:Name="LazySongUrlGetCheck"
                 Content="是否在播放时才获取播放链接"
                 Checked="LazySongUrlGetCheck_Checked"
-                Unchecked="LazySongUrlGetCheck_Unchecked"/>
+                Unchecked="LazySongUrlGetCheck_Unchecked" />
+            <CheckBox
+                x:Name="ControlSoundCheck"
+                Content="是否开启神奇音效"
+                Checked="ControlSoundChecked"
+                Unchecked="ControlSoundUnChecked" />
             <TextBlock
                 FontSize="40"
                 Text="存储" />
-            <Button Content="清除历史记录" Click="ClearHistory_Click" x:Name="ClearHistory"/>
+            <Button
+                Content="清除历史记录"
+                Click="ClearHistory_Click"
+                x:Name="ClearHistory" />
             <TextBlock
                 FontSize="40"
                 Text="关于" />
@@ -115,7 +139,8 @@
                 <Paragraph>Copyright © HyPlayer Develop Team 2021</Paragraph>
                 <Paragraph>HyPlayer is licensed under the GNU General Public License v3.0</Paragraph>
             </RichTextBlock>
-            <TextBlock x:Name="VersionCode"/>
+            <TextBlock
+                x:Name="VersionCode" />
             <TextBlock
                 FontSize="25"
                 Text="开发者" />

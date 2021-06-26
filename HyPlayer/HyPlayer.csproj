@@ -126,7 +126,6 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Classes\Api.cs" />
-    <Compile Include="Classes\Comment.cs" />
     <Compile Include="Classes\NCSong.cs" />
     <Compile Include="Classes\PersonalFM.cs" />
     <Compile Include="Classes\StaticSource.cs" />

@@ -76,29 +76,7 @@ namespace HyPlayer.Pages
                 addingPanel.Children.Clear();
                 foreach (JToken comment in res.json["data"]["comments"].ToArray())
                 {
-                    Comment cmt = new Comment();
-                    cmt.resourceId = resourceid;
-                    cmt.resourceType = resourcetype;
-                    cmt.cid = comment["commentId"].ToString();
-                    cmt.SendTime =
-                        new DateTime((Convert.ToInt64(comment["time"].ToString()) * 10000) + 621355968000000000);
-                    cmt.AvatarUri = comment["user"]["avatarUrl"] is null
-                        ? new Uri("ms-appx:///Assets/icon.png")
-                        : new Uri(comment["user"]["avatarUrl"].ToString() + "?param=" +
-                                  StaticSource.PICSIZE_COMMENTUSER_AVATAR);
-                    cmt.Nickname = comment["user"]["nickname"] is null
-                        ? comment["user"]["userId"].ToString()
-                        : comment["user"]["nickname"].ToString();
-                    cmt.uid = comment["user"]["userId"].ToString();
-                    cmt.content = comment["content"].ToString();
-                    cmt.likedCount = comment["likedCount"].ToObject<int>();
-                    if (comment["showFloorComment"].HasValues)
-                        cmt.ReplyCount = comment["showFloorComment"]["replyCount"].ToObject<int>();
-                    if (comment["liked"].ToString() == "False")
-                        cmt.HasLiked = false;
-                    else cmt.HasLiked = true;
-                    cmt.IsMainComment = true;
-                    addingPanel.Children.Add(new SingleComment(cmt));
+                    addingPanel.Children.Add(new SingleComment(Comment.CreateFromJson(comment, resourceid, resourcetype)));
                 }
                 if (type == 3)
                     cursor = res.json["data"]["cursor"].ToString();
@@ -174,7 +152,8 @@ namespace HyPlayer.Pages
 
         private void SkipPage_Click(object sender, RoutedEventArgs e)
         {
-            LoadComments(sortType);
+            if (int.TryParse(PageSelect.Text, out page))
+                LoadComments(sortType);
         }
     }
 }
