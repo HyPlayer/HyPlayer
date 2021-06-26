@@ -31,21 +31,29 @@ namespace HyPlayer.Pages
 
 
             var list = HistoryManagement.GetSearchHistory();
-                foreach (string item in list)
+            foreach (string item in list)
+            {
+                var btn = new Button()
                 {
-                    var btn = new Button()
-                    {
-                        Content = item
-                    };
-                    btn.Click += Btn_Click;
-                    SearchHistory.Children.Add(btn);
-                }
+                    Content = item
+                };
+                btn.Click += Btn_Click;
+                SearchHistory.Children.Add(btn);
+            }
             this.NavigationCacheMode = NavigationCacheMode.Required;
-            
+
         }
 
         private async void LoadResult()
         {
+            if (string.IsNullOrEmpty(Text)) return;
+            HistoryManagement.AddSearchHistory(Text);
+            var btn = new Button()
+            {
+                Content = Text
+            };
+            btn.Click += Btn_Click;
+            SearchHistory.Children.Add(btn);
             SearchResultContainer.Children.Clear();
             var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Cloudsearch,
                 new Dictionary<string, object>()
@@ -184,13 +192,6 @@ namespace HyPlayer.Pages
         private void AutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
         {
             Text = sender.Text;
-            HistoryManagement.AddSearchHistory(Text);
-            var btn = new Button()
-            {
-                Content = Text
-            };
-            btn.Click += Btn_Click;
-            SearchHistory.Children.Add(btn);
             LoadResult();
         }
 

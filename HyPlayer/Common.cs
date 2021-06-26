@@ -188,7 +188,6 @@ namespace HyPlayer
         }
         public static async Task<List<NCSong>> GetNCSongHistory()
         {
-
             var retsongs = new List<NCSong>();
             var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail, new Dictionary<string, object> { ["ids"] = string.Join(",", JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings.Values["songHistory"].ToString())) });
             if (isOk)
@@ -210,7 +209,7 @@ namespace HyPlayer
                     ["s"] = 8
                 });
             }
-
+            if (queries.Count == 0) return new List<NCPlayList>();
             var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Batch, queries);
             var ret = new List<NCPlayList>();
             for (int k = 0; k < json.Count; k++)

@@ -536,44 +536,50 @@ namespace HyPlayer.HyPlayControl
 
         public static async Task<PureLyricInfo> LoadNCLyric(HyPlayItem ncp)
         {
-            (bool isOk, Newtonsoft.Json.Linq.JObject json) = await Common.ncapi.RequestAsync(
+            try
+            {
+                (bool isOk, Newtonsoft.Json.Linq.JObject json) = await Common.ncapi.RequestAsync(
                 CloudMusicApiProviders.Lyric,
                 new Dictionary<string, object>() { { "id", ncp.NcPlayItem.sid } });
-            if (isOk)
-            {
-                if (json.ContainsKey("nolyric") && json["nolyric"].ToString().ToLower() == "true")
+                if (isOk)
                 {
-                    return new PureLyricInfo()
-                    {
-                        PureLyrics = "[00:00.000] 纯音乐 请欣赏",
-                        TrLyrics = null
-                    };
-                }
-                else if (json.ContainsKey("uncollected") && json["uncollected"].ToString().ToLower() == "true")
-                {
-                    return new PureLyricInfo()
-                    {
-                        PureLyrics = "[00:00.000] 无歌词 请欣赏",
-                        TrLyrics = null
-                    };
-                }
-                else
-                {
-                    try
+                    if (json.ContainsKey("nolyric") && json["nolyric"].ToString().ToLower() == "true")
                     {
                         return new PureLyricInfo()
                         {
-                            PureLyrics = json["lrc"]["lyric"].ToString(),
-                            TrLyrics = json["tlyric"]["lyric"].ToString()
+                            PureLyrics = "[00:00.000] 纯音乐 请欣赏",
+                            TrLyrics = null
                         };
                     }
-                    catch (Exception)
+                    else if (json.ContainsKey("uncollected") && json["uncollected"].ToString().ToLower() == "true")
                     {
-                        //DEBUG
+                        return new PureLyricInfo()
+                        {
+                            PureLyrics = "[00:00.000] 无歌词 请欣赏",
+                            TrLyrics = null
+                        };
+                    }
+                    else
+                    {
+                        try
+                        {
+                            return new PureLyricInfo()
+                            {
+                                PureLyrics = json["lrc"]["lyric"].ToString(),
+                                TrLyrics = json["tlyric"]["lyric"].ToString()
+                            };
+                        }
+                        catch (Exception)
+                        {
+                            //DEBUG
+                        }
                     }
                 }
             }
-
+            catch
+            {
+                return new PureLyricInfo();
+            }
             return new PureLyricInfo();
         }
 

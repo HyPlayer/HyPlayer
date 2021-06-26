@@ -109,26 +109,26 @@
                                 Content="心动模式"
                                 Click="ButtonHeartBeat_OnClick" />
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal">
+                        <StackPanel Orientation="Vertical">
                             <TextBlock
+                                HorizontalAlignment="Stretch"
 							Margin="0,5,0,0"
                             MaxLines="7"
 							x:Name="TextBlockDesc"
                             TextWrapping="WrapWholeWords"
 							Text="歌单简介"
-                            MaxWidth="150"
 							FontSize="13"
                             Foreground="{ThemeResource SystemControlForegroundChromeHighBrush}" >
                                 <FlyoutBase.AttachedFlyout>
                                     <Flyout>
                                         <StackPanel Orientation="Vertical">
-                                            <TextBox x:Name="NewDesc" Text="{x:Bind TextBlockDesc.Text}" x:DefaultBindMode="OneWay"/>
+                                            <TextBox MaxWidth="400" AcceptsReturn="True" TextWrapping="Wrap" x:Name="NewDesc" Text="{x:Bind TextBlockDesc.Text}" x:DefaultBindMode="OneWay"/>
                                             <Button x:Name="Confirm" Content="确认" Click="Confirm_Click"/>
                                         </StackPanel>
                                     </Flyout>
                                 </FlyoutBase.AttachedFlyout>
                             </TextBlock>
-                            <Button x:Name="Edit" Click="Edit_Click" Content="编辑简介" />
+                            <HyperlinkButton x:Name="Edit" Click="Edit_Click" Content="编辑简介" />
                         </StackPanel>
                     </StackPanel>
                 </controls:DockPanel>
