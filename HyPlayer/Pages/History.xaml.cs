@@ -63,7 +63,7 @@ namespace HyPlayer.Pages
                     {
                         try
                         {
-                            SongHistory.Children.Add(new SingleNCSong(song, songorder++));
+                            SongHistory.Children.Add(new SingleNCSong(song, songorder++, true, true));
                         }
                         catch
                         {
