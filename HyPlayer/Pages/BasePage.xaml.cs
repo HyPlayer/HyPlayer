@@ -133,7 +133,7 @@ namespace HyPlayer.Pages
                 if (ApplicationData.Current.LocalSettings.Values.ContainsKey("cookie") && string.IsNullOrEmpty(ApplicationData.Current.LocalSettings.Values["cookie"].ToString()))
                     return;
                 PhraseCookie(ApplicationData.Current.LocalSettings.Values["cookie"].ToString());
-                var (retOk, LoginStatus) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginRefresh);
+                var (retOk, LoginStatus) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginStatus);
                 if (retOk)
                 {
                     LoginDone();
@@ -206,7 +206,7 @@ namespace HyPlayer.Pages
                 NavMain.SelectedItem = selectionHistory.Last();
         }
 
-        private async void LoginDone()
+        public async void LoginDone()
         {
             InfoBarLoginHint.IsOpen = true;
             InfoBarLoginHint.Title = "登录成功";

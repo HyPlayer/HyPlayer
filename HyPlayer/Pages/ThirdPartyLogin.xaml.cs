@@ -66,8 +66,7 @@ namespace HyPlayer.Pages
                     rescookie.Path = cookie.Path;
                     Common.ncapi.Cookies.Add(rescookie);
                 }
-                Common.PageMain.MainFrame.Navigate(typeof(BlankPage));
-                Common.PageMain.MainFrame.Navigate(typeof(BasePage),string.Empty);
+                Common.PageBase.LoginDone();
             }
         }
     }

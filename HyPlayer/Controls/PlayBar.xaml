@@ -573,6 +573,7 @@
             Width="40"
             Height="40"
             Margin="10,10,10,10"
+            Padding="-5"
             CornerRadius="20"
             Click="ButtonCollapse_OnClick"
             Name="ButtonCollapse"
