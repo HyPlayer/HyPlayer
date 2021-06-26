@@ -216,6 +216,9 @@
     <Compile Include="Pages\SongListDetail.xaml.cs">
       <DependentUpon>SongListDetail.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\ThirdPartyLogin.xaml.cs">
+      <DependentUpon>ThirdPartyLogin.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -273,6 +276,9 @@
     <Content Include="Assets\StoreLogo.scale-150.png" />
     <Content Include="Assets\StoreLogo.scale-200.png" />
     <Content Include="Assets\StoreLogo.scale-400.png" />
+    <Content Include="Assets\ThirdPartyIcons\WX.png" />
+    <Content Include="Assets\ThirdPartyIcons\QQ.png" />
+    <Content Include="Assets\ThirdPartyIcons\SinaWB.png" />
     <Content Include="Assets\Wide310x150Logo.scale-100.png" />
     <Content Include="Assets\Wide310x150Logo.scale-125.png" />
     <Content Include="Assets\Wide310x150Logo.scale-150.png" />
@@ -397,6 +403,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Pages\SongListDetail.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\ThirdPartyLogin.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

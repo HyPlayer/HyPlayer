@@ -68,7 +68,12 @@ namespace HyPlayer.Pages
             NavMain.SelectedItem = NavMain.MenuItems[0];
             //Common.BaseFrame.Navigate(typeof(Home));上一行代码会引发NavMain的SelectionChanged事件，不需要重复导航
         }
-
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            if (e.Parameter is string)
+                LoginDone();
+        }
         private void PhraseCookie(string cookielines)
         {
             try
@@ -510,6 +515,13 @@ namespace HyPlayer.Pages
                 QrContainer.Source = img;
             }
             InfoBarLoginHint.Title = "请扫描上方二维码登录";
+        }
+
+        private async void ThirdPartyLogin_Click(object sender, RoutedEventArgs e)
+        {
+            DialogLogin.Hide();
+            BaseFrame.Navigate(typeof(ThirdPartyLogin), (sender as Button).Tag.ToString());
+
         }
     }
 }
