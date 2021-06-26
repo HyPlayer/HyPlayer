@@ -41,7 +41,7 @@ namespace HyPlayer.Controls
         }
         private async void LoadFloorComments()
         {
-            (bool IsOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentFloor, new Dictionary<string, object> { { "parentCommentId", comment.cid }, { "id", comment.resourceId }, { "type", comment.resourceType },{ "time", time } });
+            (bool IsOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentFloor, new Dictionary<string, object> { { "parentCommentId", comment.cid }, { "id", comment.resourceId }, { "type", comment.resourceType }, { "time", time } });
             if (IsOk)
             {
                 foreach (JToken floorcomment in json["data"]["comments"].ToArray())
@@ -73,7 +73,9 @@ namespace HyPlayer.Controls
                 {
                     LoadMore.Visibility = Visibility.Visible;
                 }
-                else LoadMore.Visibility = Visibility.Visible;
+                else LoadMore.Visibility = Visibility.Collapsed;
+                if(SubCmts.Children.Count!=0)
+                    SubCmtsBorder.Visibility = Visibility.Visible;
             }
         }
         private void Copy_Click(object sender, RoutedEventArgs e)
@@ -93,7 +95,7 @@ namespace HyPlayer.Controls
 
         private async void Delete_Click(object sender, RoutedEventArgs e)
         {
-            await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment, new Dictionary<string, object>() { { "id", comment.resourceId }, { "type", '0' }, { "type", comment.resourceType }, { "commentId", comment.cid } });
+            await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment, new Dictionary<string, object>() { { "id", comment.resourceId }, { "t", "0" }, { "type", comment.resourceType }, { "commentId", comment.cid } });
             (this.Parent as StackPanel).Children.Remove(this);
         }
 
@@ -109,7 +111,7 @@ namespace HyPlayer.Controls
                 {
                     (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment,
                         new Dictionary<string, object>()
-                            {{"id", comment.resourceId },{ "commentId",comment.cid}, {"type", comment.resourceType}, {"t", "1"}, {"content", ReplyText.Text}});
+                            {{"id", comment.resourceId },{ "commentId",comment.cid}, {"type", comment.resourceType}, {"t", "2"}, {"content", ReplyText.Text}});
                     ReplyText.Text = String.Empty;
                     await System.Threading.Tasks.Task.Delay(1000);
                     LoadFloorComments();
@@ -134,6 +136,11 @@ namespace HyPlayer.Controls
         private void LoadMore_Click(object sender, RoutedEventArgs e)
         {
             LoadFloorComments();
+        }
+
+        private void Reply_Click(object sender, RoutedEventArgs e)
+        {
+            FlyoutBase.ShowAttachedFlyout(SendIcon);
         }
     }
 }

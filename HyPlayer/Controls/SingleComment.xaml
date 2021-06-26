@@ -5,6 +5,7 @@
     xmlns:local="using:HyPlayer.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:hyplayer="using:HyPlayer" xmlns:media="using:Microsoft.UI.Xaml.Media"
     mc:Ignorable="d"
     d:DesignHeight="670"
     d:DesignWidth="800">
@@ -42,19 +43,30 @@
                         RelativePanel.LeftOf="Delete" Height="35">
                         <SymbolIcon Symbol="Copy" />
                     </Button>
+                    <Button x:Name="Reply" ToolTipService.ToolTip="回复" Click="Reply_Click" Height="35" Visibility="{x:Bind hyplayer:Common.Logined}">
+                        <SymbolIcon Symbol="Send" x:Name="SendIcon">
+                            <FlyoutBase.AttachedFlyout>
+                                <Flyout>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition/>
+                                            <ColumnDefinition Width="80"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox x:Name="ReplyText" Margin="10" Height="20" Grid.Column="0"/>
+                                        <Button x:Name="SendReply" Margin="10" Content="回复" Grid.Column="1" Click="SendReply_Click"/>
+                                    </Grid>
+                                </Flyout>
+                            </FlyoutBase.AttachedFlyout>
+                        </SymbolIcon>
+                    </Button>
                 </StackPanel>
             </StackPanel>
         </Grid>
-        <Grid Visibility="{x:Bind comment.IsMainComment}">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition Width="80"/>
-            </Grid.ColumnDefinitions>
-            <TextBox x:Name="ReplyText" Margin="10" Height="20" Grid.Column="0"/>
-            <Button x:Name="SendReply" Margin="10" Content="回复" Grid.Column="1" Click="SendReply_Click"/>
-        </Grid>
-       
-            <StackPanel x:Name="SubCmts" Margin="10" MaxWidth="1000" Visibility="{x:Bind comment.IsMainComment}"/>
+
+
+        <Border x:Name="SubCmtsBorder"  Background="Gray" Margin="5" CornerRadius="5" MaxWidth="1020" Visibility="Collapsed">
+            <StackPanel x:Name="SubCmts" Margin="10" Visibility="{x:Bind comment.IsMainComment}"/>
+        </Border>
 
         <Button x:Name="LoadMore" Content="加载更多" HorizontalAlignment="Stretch" CornerRadius="5" Click="LoadMore_Click" Visibility="Collapsed"/>
 
