@@ -84,7 +84,7 @@ namespace HyPlayer.Pages
 
         private void Current_SizeChanged(object sender, WindowSizeChangedEventArgs e)
         {
-            int nowwidth = e is null ? (int) Window.Current.Bounds.Width : (int) e.Size.Width;
+            int nowwidth = e is null ? (int)Window.Current.Bounds.Width : (int)e.Size.Width;
             if (lastwidth == nowwidth) return; //有些时候会莫名其妙不更改大小的情况引发这个
             lastwidth = nowwidth;
             if (nowwidth > 800)
@@ -137,7 +137,7 @@ namespace HyPlayer.Pages
             catch
             {
             }
-            
+
         }
 
         private void RefreshLyricTime()
@@ -160,7 +160,7 @@ namespace HyPlayer.Pages
                 return;
             }
 
-            GeneralTransform transform = item?.TransformToVisual((UIElement) LyricBoxContainer.Content);
+            GeneralTransform transform = item?.TransformToVisual((UIElement)LyricBoxContainer.Content);
             Point? position = transform?.TransformPoint(new Point(0, 0));
             LyricBoxContainer.ChangeView(null, position?.Y - (LyricBoxContainer.ViewportHeight / 3), null, false);
         }
@@ -175,7 +175,7 @@ namespace HyPlayer.Pages
                 blanksize = Window.Current.Bounds.Height / 3;
             }
 
-            LyricBox.Children.Add(new Grid() {Height = blanksize});
+            LyricBox.Children.Add(new Grid() { Height = blanksize });
             if (HyPlayList.Lyrics.Count == 0)
             {
                 LyricItem lrcitem = new LyricItem(SongLyric.PureSong)
@@ -196,7 +196,7 @@ namespace HyPlayer.Pages
                 }
             }
 
-            LyricBox.Children.Add(new Grid() {Height = blanksize});
+            LyricBox.Children.Add(new Grid() { Height = blanksize });
             LyricList = LyricBox.Children.OfType<LyricItem>().ToList();
             lastlrcid = HyPlayList.NowPlayingItem.GetHashCode();
             Task.Run((() =>
@@ -227,13 +227,14 @@ namespace HyPlayer.Pages
                         }
                         else
                         {
+                            ImageAlbum.PlaceholderSource = new BitmapImage(new Uri(mpi.AudioInfo.Picture + "?param=" + StaticSource.PICSIZE_EXPANDEDPLAYER_PREVIEWALBUMCOVER));
                             ImageAlbum.Source = new BitmapImage(new Uri(mpi.AudioInfo.Picture));
                         }
 
                         TextBlockSinger.Text = mpi.AudioInfo.Artist;
                         TextBlockSongTitle.Text = mpi.AudioInfo.SongName;
                         Background = new ImageBrush()
-                            {ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill};
+                        { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                         ProgressBarPlayProg.Maximum = mpi.AudioInfo.LengthInMilliseconds;
                         SliderVolumn.Value = HyPlayList.Player.Volume * 100;
 
@@ -247,14 +248,14 @@ namespace HyPlayer.Pages
                             }
 
                             LyricBox.Children.Clear();
-                            LyricBox.Children.Add(new Grid() {Height = blanksize});
+                            LyricBox.Children.Add(new Grid() { Height = blanksize });
                             LyricItem lrcitem = new LyricItem(SongLyric.LoadingLyric)
                             {
                                 Width = LyricWidth
                             };
-                            LyricList = new List<LyricItem>() {lrcitem};
+                            LyricList = new List<LyricItem>() { lrcitem };
                             LyricBox.Children.Add(lrcitem);
-                            LyricBox.Children.Add(new Grid() {Height = blanksize});
+                            LyricBox.Children.Add(new Grid() { Height = blanksize });
                         }
                     }
                     catch (Exception)

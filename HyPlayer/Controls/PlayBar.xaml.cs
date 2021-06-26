@@ -226,7 +226,7 @@ namespace HyPlayer.Controls
                }
                else
                {
-                   AlbumImage.Source = new BitmapImage(new Uri(mpi.AudioInfo.Picture));
+                   AlbumImage.Source = new BitmapImage(new Uri(mpi.AudioInfo.Picture + "?param=" + StaticSource.PICSIZE_PLAYBAR_ALBUMCOVER));
                }
                SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
                SliderProgress.Minimum = 0;

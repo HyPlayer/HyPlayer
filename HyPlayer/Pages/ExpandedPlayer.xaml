@@ -153,6 +153,7 @@
             <controls:ImageEx
                 x:Name="ImageAlbum"
                 x:FieldModifier="public"
+                PlaceholderStretch="Uniform"
                 Stretch="Uniform"
                 CornerRadius="5"
                 Source="/Assets/icon.png">
