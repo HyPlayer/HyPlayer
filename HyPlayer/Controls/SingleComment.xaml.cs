@@ -37,7 +37,9 @@ namespace HyPlayer.Controls
             AvatarSource = new BitmapImage();
             AvatarSource.UriSource = AvatarUri;
             if (comment.IsMainComment)
-                LoadFloorComments();
+            {
+                ReplyBtn.Visibility = Visibility.Visible;
+            }
         }
         private async void LoadFloorComments()
         {
@@ -62,6 +64,8 @@ namespace HyPlayer.Controls
                     cmt.uid = floorcomment["user"]["userId"].ToString();
                     cmt.content = floorcomment["content"].ToString();
                     cmt.likedCount = floorcomment["likedCount"].ToObject<int>();
+                    if (floorcomment["showFloorComment"].HasValues)
+                        cmt.ReplyCount = floorcomment["showFloorComment"]["replyCount"].ToObject<int>();
                     if (floorcomment["liked"].ToString() == "False")
                         cmt.HasLiked = false;
                     else cmt.HasLiked = true;
@@ -69,13 +73,11 @@ namespace HyPlayer.Controls
                     SubCmts.Children.Add(new SingleComment(cmt) { Margin = new Thickness { Left = 5, Right = 5, Top = 5, Bottom = 5 } });
                 }
                 time = json["data"]["time"].ToString();
-                if (json["data"]["hasMore"].ToString() == "true")
+                if (json["data"]["hasMore"].ToString() == "True")
                 {
                     LoadMore.Visibility = Visibility.Visible;
                 }
                 else LoadMore.Visibility = Visibility.Collapsed;
-                if(SubCmts.Children.Count!=0)
-                    SubCmtsBorder.Visibility = Visibility.Visible;
             }
         }
         private void Copy_Click(object sender, RoutedEventArgs e)
@@ -138,9 +140,18 @@ namespace HyPlayer.Controls
             LoadFloorComments();
         }
 
-        private void Reply_Click(object sender, RoutedEventArgs e)
+        private void ReplyBtn_Click(object sender, RoutedEventArgs e)
         {
-            FlyoutBase.ShowAttachedFlyout(SendIcon);
+            if (ReplyBtn.IsChecked.Value)
+            {
+                time = null;
+                SubCmtsConainer.Visibility = Visibility.Visible;
+                LoadFloorComments();
+            }
+            else
+            {
+                SubCmtsConainer.Visibility = Visibility.Collapsed;
+            }
         }
     }
 }

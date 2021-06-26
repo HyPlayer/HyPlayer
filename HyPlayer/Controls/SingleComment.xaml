@@ -5,70 +5,147 @@
     xmlns:local="using:HyPlayer.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:hyplayer="using:HyPlayer" xmlns:media="using:Microsoft.UI.Xaml.Media"
+    xmlns:hyplayer="using:HyPlayer"
+    xmlns:media="using:Microsoft.UI.Xaml.Media"
     mc:Ignorable="d"
     d:DesignHeight="670"
     d:DesignWidth="800">
 
-    <StackPanel Orientation="Vertical">
+    <StackPanel
+        Orientation="Vertical">
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="70" />
-                <ColumnDefinition Width="10"/>
+                <ColumnDefinition
+                    Width="70" />
+                <ColumnDefinition
+                    Width="10" />
                 <!-- White Space-->
-                <ColumnDefinition Width="*"></ColumnDefinition>
+                <ColumnDefinition
+                    Width="*"></ColumnDefinition>
             </Grid.ColumnDefinitions>
-            <PersonPicture Grid.Column="0" x:Name="UserAvatar" PointerPressed="NavToUser_Click" Height="70" Width="70"
-                       VerticalAlignment="Top" HorizontalAlignment="Center" MaxWidth="70"
-                       MaxHeight="70" ProfilePicture="{x:Bind AvatarSource}" />
-            <StackPanel Grid.Column="2" Orientation="Vertical">
-                <TextBlock x:Name="Nickname" Text="{x:Bind comment.Nickname}"
-                       PointerPressed="NavToUser_Click" />
-                <TextBlock Foreground="Gray" Text="{x:Bind comment.SendTime}" />
-                <TextBlock Margin="0,10,0,0" x:Name="CommentContent" Text="{x:Bind comment.content}" FontSize="15"
-                       TextWrapping="Wrap" />
-                <StackPanel HorizontalAlignment="Left" Orientation="Horizontal" Spacing="10" Margin="0,10,0,0">
-                    <ToggleButton x:Name="Like" IsChecked="{x:Bind comment.HasLiked}" ToolTipService.ToolTip="点赞"
-                              Click="Like_Click" Height="35">
-                        <StackPanel Orientation="Horizontal" Spacing="5">
-                            <SymbolIcon Symbol="Like" />
-                            <TextBlock x:Name="LikeCountTB" Text="{x:Bind comment.likedCount}" />
+            <PersonPicture
+                Grid.Column="0"
+                x:Name="UserAvatar"
+                PointerPressed="NavToUser_Click"
+                Height="70"
+                Width="70"
+                VerticalAlignment="Top"
+                HorizontalAlignment="Center"
+                MaxWidth="70"
+                MaxHeight="70"
+                ProfilePicture="{x:Bind AvatarSource}" />
+            <StackPanel
+                Grid.Column="2"
+                Orientation="Vertical">
+                <TextBlock
+                    x:Name="Nickname"
+                    Text="{x:Bind comment.Nickname}"
+                    PointerPressed="NavToUser_Click" />
+                <TextBlock
+                    Foreground="Gray"
+                    Text="{x:Bind comment.SendTime}" />
+                <TextBlock
+                    Margin="0,10,0,0"
+                    x:Name="CommentContent"
+                    Text="{x:Bind comment.content}"
+                    FontSize="15"
+                    TextWrapping="Wrap" />
+                <StackPanel
+                    HorizontalAlignment="Left"
+                    Orientation="Horizontal"
+                    Spacing="10"
+                    Margin="0,10,0,0">
+                    <ToggleButton
+                        x:Name="Like"
+                        IsChecked="{x:Bind comment.HasLiked}"
+                        ToolTipService.ToolTip="点赞"
+                        Click="Like_Click"
+                        Height="35">
+                        <StackPanel
+                            Orientation="Horizontal"
+                            Spacing="5">
+                            <SymbolIcon
+                                Symbol="Like" />
+                            <TextBlock
+                                x:Name="LikeCountTB"
+                                Text="{x:Bind comment.likedCount}" />
                         </StackPanel>
                     </ToggleButton>
-                    <Button x:Name="Delete" ToolTipService.ToolTip="删除" Visibility="{x:Bind comment.IsByMyself}"
-                        Click="Delete_Click" Height="35">
-                        <SymbolIcon Symbol="Delete" />
+                    <Button
+                        x:Name="Delete"
+                        ToolTipService.ToolTip="删除"
+                        Visibility="{x:Bind comment.IsByMyself}"
+                        Click="Delete_Click"
+                        Height="35">
+                        <SymbolIcon
+                            Symbol="Delete" />
                     </Button>
-                    <Button x:Name="Copy" ToolTipService.ToolTip="复制评论" Click="Copy_Click"
-                        RelativePanel.LeftOf="Delete" Height="35">
-                        <SymbolIcon Symbol="Copy" />
+                    <Button
+                        x:Name="Copy"
+                        ToolTipService.ToolTip="复制评论"
+                        Click="Copy_Click"
+                        RelativePanel.LeftOf="Delete"
+                        Height="35">
+                        <SymbolIcon
+                            Symbol="Copy" />
                     </Button>
-                    <Button x:Name="Reply" ToolTipService.ToolTip="回复" Click="Reply_Click" Height="35" Visibility="{x:Bind hyplayer:Common.Logined}">
-                        <SymbolIcon Symbol="Send" x:Name="SendIcon">
-                            <FlyoutBase.AttachedFlyout>
-                                <Flyout>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition/>
-                                            <ColumnDefinition Width="80"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBox x:Name="ReplyText" Margin="10" Height="20" Grid.Column="0"/>
-                                        <Button x:Name="SendReply" Margin="10" Content="回复" Grid.Column="1" Click="SendReply_Click"/>
-                                    </Grid>
-                                </Flyout>
-                            </FlyoutBase.AttachedFlyout>
-                        </SymbolIcon>
-                    </Button>
+                    <ToggleButton
+                        x:Name="ReplyBtn"
+                        ToolTipService.ToolTip="回复"
+                        Click="ReplyBtn_Click"
+                        Height="35">
+                        <StackPanel
+                            Orientation="Horizontal"
+                            Spacing="5">
+                            <SymbolIcon
+                                Symbol="Comment" />
+                            <TextBlock
+                                Text="{x:Bind comment.ReplyCount}" />
+                        </StackPanel>
+                    </ToggleButton>
                 </StackPanel>
             </StackPanel>
         </Grid>
 
 
-        <Border x:Name="SubCmtsBorder"  Background="Gray" Margin="5" CornerRadius="5" MaxWidth="1020" Visibility="Collapsed">
-            <StackPanel x:Name="SubCmts" Margin="10" Visibility="{x:Bind comment.IsMainComment}"/>
+        <Border
+            x:Name="SubCmtsConainer"
+            Background="Gray"
+            Margin="5"
+            CornerRadius="5"
+            MaxWidth="1020"
+            Visibility="Collapsed">
+            <StackPanel
+                Orientation="Vertical">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition
+                            Width="80" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox
+                        x:Name="ReplyText"
+                        Margin="10"
+                        Height="20"
+                        Grid.Column="0" />
+                    <Button
+                        x:Name="SendReply"
+                        Margin="10"
+                        Content="回复"
+                        Grid.Column="1"
+                        Click="SendReply_Click" />
+                </Grid>
+                <StackPanel
+                    x:Name="SubCmts"
+                    Margin="10"
+                    Visibility="{x:Bind comment.IsMainComment}" />
+                <Button
+                    x:Name="LoadMore"
+                    Content="加载更多"
+                    HorizontalAlignment="Stretch"
+                    CornerRadius="5"
+                    Click="LoadMore_Click" />
+            </StackPanel>
         </Border>
-
-        <Button x:Name="LoadMore" Content="加载更多" HorizontalAlignment="Stretch" CornerRadius="5" Click="LoadMore_Click" Visibility="Collapsed"/>
-
     </StackPanel>
 </UserControl>

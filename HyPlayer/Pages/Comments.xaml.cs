@@ -59,36 +59,12 @@ namespace HyPlayer.Pages
         }
 
 
-        private async void LoadHotComments()
+        private void LoadHotComments() => LoadComments(2, HotCommentList);
+
+        private async void LoadComments(int type, StackPanel addingPanel = null)
         {
-            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentNew,
-                new Dictionary<string, object>() { { "id", resourceid }, { "type", resourcetype }, { "pageNo", page }, { "pageSize", 20 }, { "sortType", 2 } });
-            if (isOk)
-            {
-                foreach (JToken comment in json["data"]["comments"].ToArray())
-                {
-                    Comment cmt = new Comment();
-                    cmt.resourceId = resourceid;
-                    cmt.resourceType = resourcetype;
-                    cmt.cid = comment["commentId"].ToString();
-                    cmt.SendTime =
-                        new DateTime((Convert.ToInt64(comment["time"].ToString()) * 10000) + 621355968000000000);
-                    cmt.AvatarUri = comment["user"]["avatarUrl"] is null ? new Uri("ms-appx:///Assets/icon.png") : new Uri(comment["user"]["avatarUrl"].ToString());
-                    cmt.Nickname = comment["user"]["nickname"] is null ? comment["user"]["userId"].ToString() : comment["user"]["nickname"].ToString();
-                    cmt.uid = comment["user"]["userId"].ToString();
-                    cmt.content = comment["content"].ToString();
-                    cmt.likedCount = comment["likedCount"].ToObject<int>();
-                    if (comment["liked"].ToString() == "False")
-                        cmt.HasLiked = false;
-                    else cmt.HasLiked = true;
-                    cmt.IsMainComment = true;
-                    SingleComment curcomment = new SingleComment(cmt);
-                    HotCommentList.Children.Add(curcomment);
-                }
-            }
-        }
-        private async void LoadComments(int type)
-        {
+            if (addingPanel == null)
+                addingPanel = CommentList;
             // type 1:按推荐排序,2:按热度排序,3:按时间排序
             if (string.IsNullOrEmpty(resourceid)) return;
             (bool isOk, JObject json) res;
@@ -97,7 +73,7 @@ namespace HyPlayer.Pages
             new Dictionary<string, object>() { { "cursor", cursor }, { "id", resourceid }, { "type", resourcetype }, { "pageNo", page }, { "pageSize", 20 }, { "sortType", type } });
             if (res.isOk)
             {
-                CommentList.Children.Clear();
+                addingPanel.Children.Clear();
                 foreach (JToken comment in res.json["data"]["comments"].ToArray())
                 {
                     Comment cmt = new Comment();
@@ -116,12 +92,13 @@ namespace HyPlayer.Pages
                     cmt.uid = comment["user"]["userId"].ToString();
                     cmt.content = comment["content"].ToString();
                     cmt.likedCount = comment["likedCount"].ToObject<int>();
+                    if (comment["showFloorComment"].HasValues)
+                        cmt.ReplyCount = comment["showFloorComment"]["replyCount"].ToObject<int>();
                     if (comment["liked"].ToString() == "False")
                         cmt.HasLiked = false;
                     else cmt.HasLiked = true;
                     cmt.IsMainComment = true;
-                    CommentList.Children.Add(new SingleComment(cmt));
-
+                    addingPanel.Children.Add(new SingleComment(cmt));
                 }
                 if (type == 3)
                     cursor = res.json["data"]["cursor"].ToString();

@@ -21,5 +21,6 @@ namespace HyPlayer.Classes
         public int likedCount;
         public bool IsByMyself => this.uid == Common.LoginedUser.id;
         public bool IsMainComment { get; set; }
+        public int ReplyCount;
     }
 }
