@@ -88,6 +88,8 @@ namespace HyPlayer.Pages
                     cookie.Name = arr2[0];
                     cookie.Value = arr2[1];
                     arr1.RemoveAt(0);
+                    if (string.IsNullOrEmpty(cookie.Value))
+                        continue;
                     foreach (string cookiediac in arr1)
                     {
                         try
@@ -230,6 +232,7 @@ namespace HyPlayer.Pages
             }
             ApplicationData.Current.LocalSettings.Values["cookie"] = cookiestr;
             var (retOk, LoginStatus) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginStatus);
+            if (!LoginStatus["account"].HasValues) return;
             Common.LoginedUser = NCUser.CreateFromJson(LoginStatus["profile"]);
             Common.Logined = true;
             TextBlockUserName.Text = Common.LoginedUser.name;
