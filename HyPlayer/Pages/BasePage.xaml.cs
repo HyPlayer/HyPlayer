@@ -210,9 +210,10 @@ namespace HyPlayer.Pages
 
         public async void LoginDone()
         {
+            var (retOk, LoginStatus) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginStatus);
+            if (!LoginStatus["account"].HasValues) return;
             InfoBarLoginHint.IsOpen = true;
             InfoBarLoginHint.Title = "登录成功";
-            ButtonLogin.Content = "登录成功";
             //存储Cookie
             string cookiestr = "";
             foreach (Cookie cookie in Common.ncapi.Cookies)
@@ -231,8 +232,6 @@ namespace HyPlayer.Pages
                 cookiestr += thiscookiestr + "\r\n";
             }
             ApplicationData.Current.LocalSettings.Values["cookie"] = cookiestr;
-            var (retOk, LoginStatus) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginStatus);
-            if (!LoginStatus["account"].HasValues) return;
             Common.LoginedUser = NCUser.CreateFromJson(LoginStatus["profile"]);
             Common.Logined = true;
             TextBlockUserName.Text = Common.LoginedUser.name;
@@ -344,7 +343,7 @@ namespace HyPlayer.Pages
                 await DialogLogin.ShowAsync();
                 return;
             }
-            if(nowitem.Tag.ToString()== "SonglistCreate")
+            if (nowitem.Tag.ToString() == "SonglistCreate")
             {
                 await new CreateSonglistDialog().ShowAsync();
                 _ = Task.Run((() =>

@@ -212,9 +212,9 @@ namespace HyPlayer
             if (queries.Count == 0) return new List<NCPlayList>();
             var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Batch, queries);
             var ret = new List<NCPlayList>();
-            for (int k = 0; k < json.Count; k++)
+            for (int k = 0; k < json.Count - 1; k++)
             {
-                ret.Add(NCPlayList.CreateFromJson(json["/api/v6/playlist/detail" + new string('/', k++)]["playlist"]));
+                ret.Add(NCPlayList.CreateFromJson(json["/api/v6/playlist/detail" + new string('/', k)]["playlist"]));
             }
             return ret;
         }
