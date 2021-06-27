@@ -18,6 +18,7 @@
             IsBackButtonVisible="Visible"
             PaneTitle="HyPlayer"
             IsBackEnabled="True"
+            Margin="0,-1,0,0"
             IsSettingsVisible="False"
             IsTitleBarAutoPaddingEnabled="True"
             Background="{ThemeResource WindowBackground}"
@@ -81,10 +82,25 @@
                     Tag="PageSettings" />
                 </StackPanel>
             </controls1:NavigationView.PaneFooter>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition
+                        Height="30" />
+                    <RowDefinition
+                        Height="*" />
+                </Grid.RowDefinitions>
+                <Grid
+                    Grid.Row="0"
+                    x:FieldModifier="public"
+                    x:Name="AppTitleBar"
+                    Background="Transparent"
+                    Canvas.ZIndex="0">
+                </Grid>
                 <Frame
                     Grid.Row="1"
                     Margin="0,40,0,0"
                     x:Name="BaseFrame" />
+            </Grid>
         </controls1:NavigationView>
         <!--  登录弹窗  -->
         <ContentDialog
