@@ -19,7 +19,6 @@
             PaneTitle="HyPlayer"
             IsBackEnabled="True"
             IsSettingsVisible="False"
-            IsTitleBarAutoPaddingEnabled="True"
             Background="{ThemeResource WindowBackground}"
             SelectionChanged="NavMain_OnSelectionChanged"
             ExpandedModeThresholdWidth="500"
@@ -69,7 +68,12 @@
                     x:Name="NavItemsLikeList" />
             </controls1:NavigationView.MenuItems>
             <controls1:NavigationView.PaneFooter>
-                <StackPanel x:Name="FooterStackPanel" Orientation="Vertical" Visibility="Visible">
+                <StackPanel 
+                    x:Name="FooterStackPanel" 
+                    Orientation="Vertical" 
+                    Visibility="Visible"
+                    Margin="0,0,0,150"
+                    >
                     <controls1:NavigationViewItem
                     x:Name="NavItemLogin"
                     Content="登录"
