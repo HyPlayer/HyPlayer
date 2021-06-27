@@ -14,5 +14,6 @@
         public static string PICSIZE_PLAYBAR_ALBUMCOVER="100y100";
         public static string PICSIZE_EXPANDEDPLAYER_PREVIEWALBUMCOVER="100y100";   //这个仅是为了快速加载防止空白期而加载的小图片
         public static string PICSIZE_DOWNLOAD_ALBUMCOVER = "640y640";
+        public static string PICSIZE_NAVITEM_USERAVATAR="30y30";
     }
 }

@@ -122,7 +122,7 @@
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="30" />
+            <RowDefinition />
             <RowDefinition />
             <RowDefinition />
             <RowDefinition />
@@ -136,7 +136,6 @@
             <RowDefinition />
             <RowDefinition />
         </Grid.RowDefinitions>
-        <Grid Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="12" x:Name="AppTitleBar" Background="Transparent" />
         <controls:DropShadowPanel
             BlurRadius="10"
             ShadowOpacity="1"

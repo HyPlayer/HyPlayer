@@ -48,6 +48,7 @@ namespace HyPlayer.Pages
             InitializeComponent();
             Common.PageBase = this;
             selectionHistory = new List<NavigationViewItem>();
+            /*
             if (Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Desktop")
             {
 
@@ -57,13 +58,8 @@ namespace HyPlayer.Pages
                 titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
                 Window.Current.SetTitleBar(AppTitleBar);
             }
+            */
             LoadLoginData();
-            if (Common.Logined)
-            {
-                TextBlockUserName.Text = Common.LoginedUser.name;
-                PersonPictureUser.ProfilePicture = new BitmapImage(new Uri(Common.LoginedUser.avatar));
-            }
-
             Common.BaseFrame = BaseFrame;
             NavMain.SelectedItem = NavMain.MenuItems[0];
             //Common.BaseFrame.Navigate(typeof(Home));上一行代码会引发NavMain的SelectionChanged事件，不需要重复导航
@@ -234,9 +230,8 @@ namespace HyPlayer.Pages
             ApplicationData.Current.LocalSettings.Values["cookie"] = cookiestr;
             Common.LoginedUser = NCUser.CreateFromJson(LoginStatus["profile"]);
             Common.Logined = true;
-            TextBlockUserName.Text = Common.LoginedUser.name;
-            PersonPictureUser.ProfilePicture =
-                new BitmapImage(new Uri(Common.LoginedUser.avatar));
+            NavItemLogin.Content = Common.LoginedUser.name;
+            NavItemLogin.Icon = new BitmapIcon() { UriSource = new Uri(Common.LoginedUser.avatar + "?param=" + StaticSource.PICSIZE_NAVITEM_USERAVATAR), ShowAsMonochrome = false };
             InfoBarLoginHint.Severity = InfoBarSeverity.Success;
             InfoBarLoginHint.Message = "欢迎 " + Common.LoginedUser.name;
             DialogLogin.Hide();
@@ -519,7 +514,7 @@ namespace HyPlayer.Pages
             InfoBarLoginHint.Title = "请扫描上方二维码登录";
         }
 
-        private async void ThirdPartyLogin_Click(object sender, RoutedEventArgs e)
+        private void ThirdPartyLogin_Click(object sender, RoutedEventArgs e)
         {
             DialogLogin.Hide();
             BaseFrame.Navigate(typeof(ThirdPartyLogin), (sender as Button).Tag.ToString());

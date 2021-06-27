@@ -46,7 +46,7 @@ namespace HyPlayer.Pages
             }
         }
 
-        private async void ThirdPartyLoginWebview_NavigationCompleted(WebView sender, WebViewNavigationCompletedEventArgs args)
+        private void ThirdPartyLoginWebview_NavigationCompleted(WebView sender, WebViewNavigationCompletedEventArgs args)
         {
             if (sender.Source.ToString().Contains("music.163.com/back/sns"))
             {

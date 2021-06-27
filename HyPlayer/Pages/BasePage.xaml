@@ -13,11 +13,11 @@
         x:Name="MainGrid">
         <controls1:NavigationView
             x:Name="NavMain"
-            Margin="0,-1,0,0"
             BackRequested="OnNavigateBack"
             IsBackButtonVisible="Visible"
             IsBackEnabled="True"
             IsSettingsVisible="False"
+            IsTitleBarAutoPaddingEnabled="True"
             Background="{ThemeResource WindowBackground}"
             SelectionChanged="NavMain_OnSelectionChanged">
             <controls1:NavigationView.MenuItems>
@@ -52,20 +52,10 @@
                     Icon="Setting"
                     Tag="PageSettings" />
                 <controls1:NavigationViewItem
-                    Tag="PageMe">
-                    <StackPanel
-                        Margin="-10,0,0,0"
-                        Orientation="Horizontal">
-                        <PersonPicture
-                            x:Name="PersonPictureUser"
-                            Width="20"
-                            Margin="5,0,0,0" />
-                        <TextBlock
-                            x:Name="TextBlockUserName"
-                            Margin="12,0,0,0"
-                            Text="登录" />
-                    </StackPanel>
-                </controls1:NavigationViewItem>
+                    x:Name="NavItemLogin"
+                    Content="登录"
+                    Icon="Contact"
+                    Tag="PageMe"/>
                 <controls1:NavigationViewItemSeparator />
                 <controls1:NavigationViewItem
                     x:Name="NavItemsAddPlaylist"
@@ -87,25 +77,10 @@
                 <Grid
                     Height="100" />
             </controls1:NavigationView.PaneFooter>
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition
-                        Height="30" />
-                    <RowDefinition
-                        Height="*" />
-                </Grid.RowDefinitions>
-                <Grid
-                    Grid.Row="0"
-                    x:FieldModifier="public"
-                    x:Name="AppTitleBar"
-                    Background="Transparent"
-                    Canvas.ZIndex="0">
-                </Grid>
                 <Frame
                     Grid.Row="1"
                     Margin="0,40,0,0"
                     x:Name="BaseFrame" />
-            </Grid>
         </controls1:NavigationView>
         <!--  登录弹窗  -->
         <ContentDialog

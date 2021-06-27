@@ -127,7 +127,7 @@ namespace HyPlayer.Pages
         {
             base.OnNavigatedTo(e);
             Common.PageExpandedPlayer = this;
-            Window.Current.SetTitleBar(AppTitleBar);
+            //Window.Current.SetTitleBar(AppTitleBar);
             //ImageAlbumContainer.Visibility = Visibility.Collapsed;
             try
             {

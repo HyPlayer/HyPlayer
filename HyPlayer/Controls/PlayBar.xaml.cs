@@ -376,7 +376,7 @@ namespace HyPlayer.Controls
             //Common.PageMain.MainFrame.Visibility = Visibility.Visible;
             Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
             Common.PageMain.GridPlayBar.Background = Application.Current.Resources["SystemControlAcrylicElementMediumHighBrush"] as Brush;
-            Window.Current.SetTitleBar(Common.PageBase.AppTitleBar);
+            //Window.Current.SetTitleBar(Common.PageBase.AppTitleBar);
         }
 
         private void ButtonCleanAll_OnClick(object sender, RoutedEventArgs e)
