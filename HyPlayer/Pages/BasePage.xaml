@@ -15,20 +15,20 @@
             x:Name="NavMain"
             BackRequested="OnNavigateBack"
             IsBackButtonVisible="Visible"
+            PaneTitle="HyPlayer"
             IsBackEnabled="True"
             IsSettingsVisible="False"
             IsTitleBarAutoPaddingEnabled="True"
             Background="{ThemeResource WindowBackground}"
             SelectionChanged="NavMain_OnSelectionChanged">
+            <controls1:NavigationView.AutoSuggestBox>
+                <AutoSuggestBox QueryIcon="Find" AutomationProperties.Name="Search" Tag="PageSearch"/>
+            </controls1:NavigationView.AutoSuggestBox>
             <controls1:NavigationView.MenuItems>
                 <controls1:NavigationViewItem
                     Content="主页"
                     Icon="Home"
                     Tag="PageHome" />
-                <controls1:NavigationViewItem
-                    Content="搜索"
-                    Icon="Find"
-                    Tag="PageSearch" />
                 <controls1:NavigationViewItem
                     Content="下载"
                     Icon="Download"
@@ -47,15 +47,6 @@
                             Glyph="&#xEFA9;" />
                     </controls1:NavigationViewItem.Icon>
                 </controls1:NavigationViewItem>
-                <controls1:NavigationViewItem
-                    Content="设置"
-                    Icon="Setting"
-                    Tag="PageSettings" />
-                <controls1:NavigationViewItem
-                    x:Name="NavItemLogin"
-                    Content="登录"
-                    Icon="Contact"
-                    Tag="PageMe"/>
                 <controls1:NavigationViewItemSeparator />
                 <controls1:NavigationViewItem
                     x:Name="NavItemsAddPlaylist"
@@ -74,8 +65,17 @@
                     x:Name="NavItemsLikeList" />
             </controls1:NavigationView.MenuItems>
             <controls1:NavigationView.PaneFooter>
-                <Grid
-                    Height="100" />
+                <StackPanel x:Name="FooterStackPanel" Orientation="Vertical" Visibility="Visible">
+                    <controls1:NavigationViewItem
+                    x:Name="NavItemLogin"
+                    Content="登录"
+                    Icon="Contact"
+                    Tag="PageMe"/>
+                    <controls1:NavigationViewItem
+                    Content="设置"
+                    Icon="Setting"
+                    Tag="PageSettings" />
+                </StackPanel>
             </controls1:NavigationView.PaneFooter>
                 <Frame
                     Grid.Row="1"
