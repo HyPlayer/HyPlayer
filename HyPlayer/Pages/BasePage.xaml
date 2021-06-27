@@ -13,6 +13,7 @@
         x:Name="MainGrid">
         <controls1:NavigationView
             x:Name="NavMain"
+            PaneDisplayMode="Left"
             BackRequested="OnNavigateBack"
             IsBackButtonVisible="Visible"
             PaneTitle="HyPlayer"
@@ -20,7 +21,10 @@
             IsSettingsVisible="False"
             IsTitleBarAutoPaddingEnabled="True"
             Background="{ThemeResource WindowBackground}"
-            SelectionChanged="NavMain_OnSelectionChanged">
+            SelectionChanged="NavMain_OnSelectionChanged"
+            ExpandedModeThresholdWidth="500"
+            SelectionFollowsFocus="Disabled"
+            IsTabStop="False">
             <controls1:NavigationView.AutoSuggestBox>
                 <AutoSuggestBox QueryIcon="Find" AutomationProperties.Name="Search" Tag="PageSearch"/>
             </controls1:NavigationView.AutoSuggestBox>
