@@ -7,8 +7,35 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hyPlayer="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:media="using:Windows.UI.Xaml.Media"
+    xmlns:media="using:Windows.UI.Xaml.Media" 
+    xmlns:local="using:TagLib.Ogg"
     mc:Ignorable="d">
+    <Page.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary>
+                    <ResourceDictionary.ThemeDictionaries>
+                        <ResourceDictionary x:Key="Light">
+                            <StaticResource x:Key="NavigationViewContentBackground" ResourceKey="LayerFillColorDefaultBrush"/>
+                            <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="Transparent"/>
+                        </ResourceDictionary>
+                        <ResourceDictionary x:Key="Dark">
+                            <StaticResource x:Key="NavigationViewContentBackground" ResourceKey="LayerFillColorDefaultBrush"/>
+                            <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="Transparent"/>
+                        </ResourceDictionary>
+                        <ResourceDictionary x:Key="HighContrast">
+                            <SolidColorBrush x:Key="NavigationViewContentBackground" Color="{ThemeResource SystemColorWindowColor}" />
+                            <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="{ThemeResource SystemColorWindowColor}" />
+                        </ResourceDictionary>
+                    </ResourceDictionary.ThemeDictionaries>
+                </ResourceDictionary>
+                <ResourceDictionary>
+                    <DataTemplate x:Key="NavigationViewHeaderTemplate">
+                    </DataTemplate>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Page.Resources>
     <Grid
         x:Name="MainGrid">
         <controls1:NavigationView
@@ -23,7 +50,18 @@
             SelectionChanged="NavMain_OnSelectionChanged"
             ExpandedModeThresholdWidth="500"
             SelectionFollowsFocus="Disabled"
-            IsTabStop="False">
+            IsTabStop="False"
+            Canvas.ZIndex="0"
+            Grid.Column="1"
+            AlwaysShowHeader="True"
+            Header=" "
+            HeaderTemplate="{StaticResource NavigationViewHeaderTemplate}"
+            IsTitleBarAutoPaddingEnabled="False"
+            PaneOpening="NavigationViewControl_PaneOpened"
+            PaneClosing="NavigationViewControl_PaneClosing"
+            DisplayModeChanged="NavigationViewControl_DisplayModeChanged"
+            ItemInvoked="OnNavigationViewItemInvoked"
+            Loaded="OnNavigationViewControlLoaded">
             <controls1:NavigationView.AutoSuggestBox>
                 <AutoSuggestBox QueryIcon="Find" AutomationProperties.Name="Search" Tag="PageSearch"/>
             </controls1:NavigationView.AutoSuggestBox>
@@ -72,7 +110,7 @@
                     x:Name="FooterStackPanel" 
                     Orientation="Vertical" 
                     Visibility="Visible"
-                    Margin="0,0,0,150"
+                    Margin="0,0,0,120"
                     >
                     <controls1:NavigationViewItem
                     x:Name="NavItemLogin"
@@ -87,7 +125,7 @@
             </controls1:NavigationView.PaneFooter>
                 <Frame
                     Grid.Row="1"
-                    Margin="0,40,0,0"
+                    Margin="20,40,0,0"
                     x:Name="BaseFrame" />
         </controls1:NavigationView>
         <!--  登录弹窗  -->
