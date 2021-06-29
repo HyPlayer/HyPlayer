@@ -48,7 +48,7 @@ namespace HyPlayer.Pages
             InitializeComponent();
             Common.PageBase = this;
             selectionHistory = new List<NavigationViewItem>();
-            /*
+
             if (Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Desktop")
             {
 
@@ -57,12 +57,12 @@ namespace HyPlayer.Pages
                 titleBar.ButtonBackgroundColor = Colors.Transparent;
                 titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
                 Window.Current.SetTitleBar(AppTitleBar);
+
+                LoadLoginData();
+                Common.BaseFrame = BaseFrame;
+                NavMain.SelectedItem = NavMain.MenuItems[0];
+                //Common.BaseFrame.Navigate(typeof(Home));上一行代码会引发NavMain的SelectionChanged事件，不需要重复导航
             }
-            */
-            LoadLoginData();
-            Common.BaseFrame = BaseFrame;
-            NavMain.SelectedItem = NavMain.MenuItems[0];
-            //Common.BaseFrame.Navigate(typeof(Home));上一行代码会引发NavMain的SelectionChanged事件，不需要重复导航
         }
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
