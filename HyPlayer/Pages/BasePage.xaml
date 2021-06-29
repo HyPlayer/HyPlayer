@@ -50,7 +50,6 @@
             Background="{ThemeResource WindowBackground}"
             SelectionChanged="NavMain_OnSelectionChanged"
             ExpandedModeThresholdWidth="500"
-            SelectionFollowsFocus="Disabled"
             IsTabStop="False"
             Canvas.ZIndex="0"
             Grid.Column="1"
