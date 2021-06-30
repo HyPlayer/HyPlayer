@@ -38,6 +38,21 @@
     </Page.Resources>
     <Grid
         x:Name="MainGrid">
+        <Border x:Name="AppTitleBar"
+                Grid.Column="1"
+                IsHitTestVisible="True"
+                VerticalAlignment="Top"
+                Background="Transparent"
+                Height="{Binding ElementName=NavigationViewControl, Path=CompactPaneLength}"
+                Canvas.ZIndex="1">
+            <TextBlock x:Name="AppTitle"
+                       Text="HyPlayer"
+                       VerticalAlignment="Center"
+                       Style="{StaticResource CaptionTextBlockStyle}" 
+                       Height="50" 
+                       Margin="48,0,0,0" />
+        </Border>
+
         <controls1:NavigationView
             x:Name="NavMain"
             PaneDisplayMode="Left"
@@ -125,13 +140,6 @@
                     <RowDefinition
                         Height="*" />
                 </Grid.RowDefinitions>
-                <Grid
-                    Grid.Row="0"
-                    x:FieldModifier="public"
-                    x:Name="AppTitleBar"
-                    Background="Transparent"
-                    Canvas.ZIndex="0">
-                </Grid>
                 <Frame
                     Grid.Row="1"
                     Margin="20,40,0,0"
