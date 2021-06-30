@@ -105,14 +105,7 @@ namespace HyPlayer.Pages
             {
                 Common.Invoke((() =>
                 {
-                    foreach (UIElement elm in LyricBox.Children)
-                    {
-                        if (elm is LyricItem li)
-                        {
-                            li.Width = LyricWidth;
-                            li.RefreshFontSize();
-                        }
-                    }
+                    LyricList.ForEach(t => { t.RefreshFontSize(); t.Width = LyricWidth; });
                 }));
             }));
         }

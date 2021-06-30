@@ -76,8 +76,7 @@
                     Grid.Column="2"
                     x:Name="ButtonDownloadSelect"
                     Content="选择"
-                    Click="ButtonDownloadSelect_OnClick"></Button>
-
+                    Click="ButtonDownloadSelect_OnClick" />
             </Grid>
             <CheckBox
                 x:Name="ToastLyricCheckbox"
@@ -92,6 +91,53 @@
             <Border
                 BorderThickness="3"
                 BorderBrush="Gray" />
+            <TextBlock
+                FontSize="40"
+                Text="高级设置" />
+            <Grid
+                MaxWidth="1000">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition
+                        Width="100" />
+                    <ColumnDefinition
+                        Width="*" />
+                    <ColumnDefinition
+                        Width="50" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    Grid.Column="0"
+                    Text="X-Real-IP" />
+                <TextBox
+                    Grid.Column="1"
+                    x:Name="TextBoxXREALIP" />
+                <Button
+                    Grid.Column="2"
+                    x:Name="ButtonXREALIPSave"
+                    Content="选择"
+                    Click="ButtonXREALIPSave_OnClick" />
+            </Grid>
+            <Grid
+                MaxWidth="1000">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition
+                        Width="100" />
+                    <ColumnDefinition
+                        Width="*" />
+                    <ColumnDefinition
+                        Width="50" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    Grid.Column="0"
+                    Text="代理服务器" />
+                <TextBox
+                    Grid.Column="1"
+                    x:Name="TextBoxPROXY" />
+                <Button
+                    Grid.Column="2"
+                    x:Name="ButtonPROXYSave"
+                    Content="选择"
+                    Click="ButtonPROXYSave_OnClick" />
+            </Grid>
             <TextBlock
                 FontSize="40"
                 Text="实验室" />

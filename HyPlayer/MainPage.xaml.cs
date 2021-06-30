@@ -19,6 +19,9 @@ namespace HyPlayer
             Common.PageMain = this;
             HyPlayList.InitializeHyPlaylist();
             HistoryManagement.InitializeHistoryTrack();
+            Common.ncapi.RealIP = (string)ApplicationData.Current.LocalSettings.Values["xRealIp"];
+            Common.ncapi.Proxy = new System.Net.WebProxy((string)ApplicationData.Current.LocalSettings.Values["neteaseProxy"]);
+            Common.ncapi.UseProxy = !(ApplicationData.Current.LocalSettings.Values["neteaseProxy"] is null);
             Task.Run(() =>
             {
                 Common.Invoke((async () =>
