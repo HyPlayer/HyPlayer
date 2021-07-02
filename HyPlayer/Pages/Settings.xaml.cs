@@ -32,6 +32,8 @@ namespace HyPlayer.Pages
             ToastLyricCheckbox.IsChecked = Common.Setting.toastLyric;
             AnimationCheckbox.IsChecked = Common.Setting.expandAnimation;
             LazySongUrlGetCheck.IsChecked = ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"] != null && ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"].ToString() != "false";
+            TextBoxXREALIP.Text = ApplicationData.Current.LocalSettings.Values["xRealIp"] != null ? ApplicationData.Current.LocalSettings.Values["xRealIp"].ToString() : "";
+            TextBoxPROXY.Text = ApplicationData.Current.LocalSettings.Values["neteaseProxy"] != null ? ApplicationData.Current.LocalSettings.Values["neteaseProxy"].ToString() : "";
             Package package = Package.Current;
             PackageId packageId = package.Id;
             PackageVersion version = packageId.Version;
@@ -123,6 +125,19 @@ namespace HyPlayer.Pages
         private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
         {
             GetRomaji();
+        }
+
+        private void ButtonXREALIPSave_OnClick(object sender, RoutedEventArgs e)
+        {
+            ApplicationData.Current.LocalSettings.Values["xRealIp"] = TextBoxXREALIP.Text == "" ? null : TextBoxXREALIP.Text;
+            Common.ncapi.RealIP = (string)ApplicationData.Current.LocalSettings.Values["xRealIp"];
+        }
+
+        private void ButtonPROXYSave_OnClick(object sender, RoutedEventArgs e)
+        {
+            ApplicationData.Current.LocalSettings.Values["neteaseProxy"] = TextBoxPROXY.Text == "" ? null : TextBoxPROXY.Text;
+            Common.ncapi.UseProxy = !(ApplicationData.Current.LocalSettings.Values["neteaseProxy"] is null);
+            Common.ncapi.Proxy = new System.Net.WebProxy((string)ApplicationData.Current.LocalSettings.Values["neteaseProxy"]);
         }
 
         private async void ButtonDownloadSelect_OnClick(object sender, RoutedEventArgs e)

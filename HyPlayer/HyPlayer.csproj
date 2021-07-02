@@ -130,6 +130,7 @@
     <Compile Include="Classes\PersonalFM.cs" />
     <Compile Include="Classes\StaticSource.cs" />
     <Compile Include="Classes\The163KeyHelper.cs" />
+    <Compile Include="Classes\UAHelper.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="Controls\ArtistSelectDialog.xaml.cs">
       <DependentUpon>ArtistSelectDialog.xaml</DependentUpon>

@@ -191,7 +191,7 @@
                             Value="4" />
                         <Setter
                             Target="GridSongInfoContainer.Visibility"
-                            Value="Visible" />
+                            Value="Collapsed" />
                         <Setter
                             Target="ButtonCollapse.Margin"
                             Value="10,10,10,40" />
