@@ -7,29 +7,80 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hyPlayer="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:media="using:Windows.UI.Xaml.Media"
-    mc:Ignorable="d">
+    xmlns:media="using:Windows.UI.Xaml.Media" 
+    xmlns:local="using:TagLib.Ogg"
+    mc:Ignorable="d"
+    controls1:BackdropMaterial.ApplyToRootOrPageBackground="True">
+    <Page.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary>
+                    <ResourceDictionary.ThemeDictionaries>
+                        <ResourceDictionary x:Key="Light">
+                            <StaticResource x:Key="NavigationViewContentBackground" ResourceKey="LayerFillColorDefaultBrush"/>
+                            <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="Transparent"/>
+                        </ResourceDictionary>
+                        <ResourceDictionary x:Key="Dark">
+                            <StaticResource x:Key="NavigationViewContentBackground" ResourceKey="LayerFillColorDefaultBrush"/>
+                            <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="Transparent"/>
+                        </ResourceDictionary>
+                        <ResourceDictionary x:Key="HighContrast">
+                            <SolidColorBrush x:Key="NavigationViewContentBackground" Color="{ThemeResource SystemColorWindowColor}" />
+                            <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="{ThemeResource SystemColorWindowColor}" />
+                        </ResourceDictionary>
+                    </ResourceDictionary.ThemeDictionaries>
+                </ResourceDictionary>
+                <ResourceDictionary>
+                    <DataTemplate x:Key="NavigationViewHeaderTemplate">
+                    </DataTemplate>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Page.Resources>
     <Grid
         x:Name="MainGrid">
+        <Border x:Name="AppTitleBar"
+                Grid.Column="1"
+                IsHitTestVisible="True"
+                VerticalAlignment="Top"
+                Background="Transparent"
+                Height="{Binding ElementName=NavigationViewControl, Path=CompactPaneLength}"
+                Canvas.ZIndex="1">
+            <TextBlock x:Name="AppTitle"
+                       Text="HyPlayer"
+                       VerticalAlignment="Center"
+                       Height="50" 
+                       Margin="48,0,0,0" />
+        </Border>
+
         <controls1:NavigationView
             x:Name="NavMain"
+            PaneDisplayMode="Left"
             BackRequested="OnNavigateBack"
             IsBackButtonVisible="Visible"
+            PaneTitle="HyPlayer"
             IsBackEnabled="True"
             Margin="0,-1,0,0"
             IsSettingsVisible="False"
-            IsTitleBarAutoPaddingEnabled="True"
             Background="{ThemeResource WindowBackground}"
-            SelectionChanged="NavMain_OnSelectionChanged">
+            SelectionChanged="NavMain_OnSelectionChanged"
+            ExpandedModeThresholdWidth="500"
+            IsTabStop="False"
+            Canvas.ZIndex="0"
+            Grid.Column="1"
+            AlwaysShowHeader="True"
+            Header=" " 
+            FlowDirection="LeftToRight" 
+            FontFamily="Microsoft Sans Serif"
+            IsTitleBarAutoPaddingEnabled="False">
+            <controls1:NavigationView.AutoSuggestBox>
+                <AutoSuggestBox QueryIcon="Find" AutomationProperties.Name="Search" Tag="PageSearch"/>
+            </controls1:NavigationView.AutoSuggestBox>
             <controls1:NavigationView.MenuItems>
                 <controls1:NavigationViewItem
                     Content="主页"
                     Icon="Home"
                     Tag="PageHome" />
-                <controls1:NavigationViewItem
-                    Content="搜索"
-                    Icon="Find"
-                    Tag="PageSearch" />
                 <controls1:NavigationViewItem
                     Content="下载"
                     Icon="Download"
@@ -48,15 +99,6 @@
                             Glyph="&#xEFA9;" />
                     </controls1:NavigationViewItem.Icon>
                 </controls1:NavigationViewItem>
-                <controls1:NavigationViewItem
-                    Content="设置"
-                    Icon="Setting"
-                    Tag="PageSettings" />
-                <controls1:NavigationViewItem
-                    x:Name="NavItemLogin"
-                    Content="登录"
-                    Icon="Contact"
-                    Tag="PageMe"/>
                 <controls1:NavigationViewItemSeparator />
                 <controls1:NavigationViewItem
                     x:Name="NavItemsAddPlaylist"
@@ -75,8 +117,22 @@
                     x:Name="NavItemsLikeList" />
             </controls1:NavigationView.MenuItems>
             <controls1:NavigationView.PaneFooter>
-                <Grid
-                    Height="100" />
+                <StackPanel 
+                    x:Name="FooterStackPanel" 
+                    Orientation="Vertical" 
+                    Visibility="Visible"
+                    Margin="0,0,0,120"
+                    >
+                    <controls1:NavigationViewItem
+                    x:Name="NavItemLogin"
+                    Content="登录"
+                    Icon="Contact"
+                    Tag="PageMe"/>
+                    <controls1:NavigationViewItem
+                    Content="设置"
+                    Icon="Setting"
+                    Tag="PageSettings" />
+                </StackPanel>
             </controls1:NavigationView.PaneFooter>
             <Grid>
                 <Grid.RowDefinitions>
@@ -85,16 +141,9 @@
                     <RowDefinition
                         Height="*" />
                 </Grid.RowDefinitions>
-                <Grid
-                    Grid.Row="0"
-                    x:FieldModifier="public"
-                    x:Name="AppTitleBar"
-                    Background="Transparent"
-                    Canvas.ZIndex="0">
-                </Grid>
                 <Frame
                     Grid.Row="1"
-                    Margin="0,40,0,0"
+                    Margin="20,40,0,0"
                     x:Name="BaseFrame" />
             </Grid>
         </controls1:NavigationView>
