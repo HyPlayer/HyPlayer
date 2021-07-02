@@ -165,7 +165,17 @@ namespace HyPlayer
         {
             var list = new List<string>();
             list = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings.Values["searchHistory"].ToString());
-            list.Add(Text);
+            if (!list.Contains(Text))
+                list.Insert(0, Text);
+            else
+            {
+                for(int i=0; i<list.Count;i++)
+                {
+                    if (list[i] == Text)
+                        list.Remove(list[i]);
+                }
+                list.Insert(0, Text);
+            }
             ApplicationData.Current.LocalSettings.Values["searchHistory"] = JsonConvert.SerializeObject(list);
         }
         public static void AddSonglistHistory(string playListid)

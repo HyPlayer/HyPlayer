@@ -30,6 +30,12 @@ namespace HyPlayer.Pages
             NavigationViewSelector.SelectedItem = NavigationViewSelector.MenuItems[0];
 
 
+
+            this.NavigationCacheMode = NavigationCacheMode.Required;
+
+        }
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
             var list = HistoryManagement.GetSearchHistory();
             foreach (string item in list)
             {
@@ -40,20 +46,22 @@ namespace HyPlayer.Pages
                 btn.Click += Btn_Click;
                 SearchHistory.Children.Add(btn);
             }
-            this.NavigationCacheMode = NavigationCacheMode.Required;
-
         }
-
         private async void LoadResult()
         {
             if (string.IsNullOrEmpty(Text)) return;
             HistoryManagement.AddSearchHistory(Text);
-            var btn = new Button()
+            var list = HistoryManagement.GetSearchHistory();
+            SearchHistory.Children.Clear();
+            foreach (string item in list)
             {
-                Content = Text
-            };
-            btn.Click += Btn_Click;
-            SearchHistory.Children.Add(btn);
+                var btn = new Button()
+                {
+                    Content = item
+                };
+                btn.Click += Btn_Click;
+                SearchHistory.Children.Add(btn);
+            }
             SearchResultContainer.Children.Clear();
             var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Cloudsearch,
                 new Dictionary<string, object>()
