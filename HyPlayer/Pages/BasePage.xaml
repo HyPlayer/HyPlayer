@@ -9,7 +9,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:media="using:Windows.UI.Xaml.Media" 
     xmlns:local="using:TagLib.Ogg"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    controls1:BackdropMaterial.ApplyToRootOrPageBackground="True">
     <Page.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -48,7 +49,6 @@
             <TextBlock x:Name="AppTitle"
                        Text="HyPlayer"
                        VerticalAlignment="Center"
-                       Style="{StaticResource CaptionTextBlockStyle}" 
                        Height="50" 
                        Margin="48,0,0,0" />
         </Border>
@@ -69,8 +69,9 @@
             Canvas.ZIndex="0"
             Grid.Column="1"
             AlwaysShowHeader="True"
-            Header=" "
-            HeaderTemplate="{StaticResource NavigationViewHeaderTemplate}"
+            Header=" " 
+            FlowDirection="LeftToRight" 
+            FontFamily="Microsoft Sans Serif"
             IsTitleBarAutoPaddingEnabled="False">
             <controls1:NavigationView.AutoSuggestBox>
                 <AutoSuggestBox QueryIcon="Find" AutomationProperties.Name="Search" Tag="PageSearch"/>
