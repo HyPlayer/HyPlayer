@@ -34,6 +34,7 @@ namespace HyPlayer.Pages
             this.NavigationCacheMode = NavigationCacheMode.Required;
 
         }
+
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             var list = HistoryManagement.GetSearchHistory();
@@ -46,6 +47,13 @@ namespace HyPlayer.Pages
                 btn.Click += Btn_Click;
                 SearchHistory.Children.Add(btn);
             }
+            if (e.Parameter != null)
+            {
+                SearchKeywordBox.Text = e.Parameter.ToString();
+                Text = SearchKeywordBox.Text;
+                LoadResult();
+            }
+
         }
         private async void LoadResult()
         {

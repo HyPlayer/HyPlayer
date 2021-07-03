@@ -67,7 +67,17 @@
             FontFamily="Microsoft Sans Serif"
             IsTitleBarAutoPaddingEnabled="False">
             <controls1:NavigationView.AutoSuggestBox>
-                <AutoSuggestBox QueryIcon="Find" AutomationProperties.Name="Search" Tag="PageSearch"/>
+                <AutoSuggestBox
+                    AutomationProperties.Name="Search"
+                    x:Name="SearchKeywordBox"
+                    QueryIcon="Find"
+                    PlaceholderText="搜索歌曲......"
+                    GotFocus="AutoSuggestBox_GotFocus"
+                    LostFocus="AutoSuggestBox_LostFocus"
+                    QuerySubmitted="AutoSuggestBox_QuerySubmitted" 
+                    TextChanged="AutoSuggestBox_TextChanged"
+                    SuggestionChosen="AutoSuggestBox_SuggestionChosen"
+                    Tag="PageSearch"/>
             </controls1:NavigationView.AutoSuggestBox>
             <controls1:NavigationView.MenuItems>
                 <controls1:NavigationViewItem

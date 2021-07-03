@@ -526,5 +526,53 @@ namespace HyPlayer.Pages
         {
             NavMain.SelectedItem = sender;
         }
+
+
+        private void AutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+        {
+            Common.BaseFrame.Navigate(typeof(Pages.Search), sender.Text, new EntranceNavigationTransitionInfo());
+        }
+
+        private async void AutoSuggestBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+        {
+            if (string.IsNullOrEmpty(sender.Text))
+            {
+                AutoSuggestBox_GotFocus(sender, null);
+                return;
+            }
+
+            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchSuggest,
+                new Dictionary<string, object>() { { "keywords", sender.Text }, { "type", "mobile" } });
+
+            if (isOk && json["result"]["allMatch"] != null && json["result"]["allMatch"].HasValues)
+            {
+                sender.ItemsSource = json["result"]["allMatch"].ToArray().ToList().Select(t => t["keyword"].ToString())
+                    .ToList();
+            }
+        }
+
+        private void AutoSuggestBox_SuggestionChosen(AutoSuggestBox sender,
+            AutoSuggestBoxSuggestionChosenEventArgs args)
+        {
+            sender.Text = args.SelectedItem.ToString();
+        }
+
+        private void AutoSuggestBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            ((AutoSuggestBox)sender).ItemsSource = null;
+        }
+
+        private async void AutoSuggestBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            if (String.IsNullOrWhiteSpace((sender as AutoSuggestBox)?.Text))
+            {
+                (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchHot);
+                if (isOk)
+                {
+                    ((AutoSuggestBox)sender).ItemsSource =
+                        json["result"]["hots"].ToArray().ToList().Select(t => t["first"].ToString());
+                }
+            }
+        }
     }
 }
