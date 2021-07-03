@@ -520,5 +520,10 @@ namespace HyPlayer.Pages
             BaseFrame.Navigate(typeof(ThirdPartyLogin), (sender as Button).Tag.ToString());
 
         }
+
+        private void NavigationViewItem_PointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            NavMain.SelectedItem = sender;
+        }
     }
 }

@@ -119,7 +119,7 @@ namespace HyPlayer.Pages
 
             }
 
-            if (sender.Source.ToString().StartsWith("https://y.music.163.com/m/login")&& !sender.Source.ToString().Contains("code=200"))
+            if (sender.Source.ToString().StartsWith("https://y.music.163.com/m/login") && !sender.Source.ToString().Contains("code=200"))
             {
                 await ThirdPartyLoginWebview.InvokeScriptAsync("eval", new[]{
                     "var x = document.getElementsByClassName('u-terms-checkbox');" +
@@ -140,11 +140,11 @@ namespace HyPlayer.Pages
     "var x = document.getElementsByClassName('item');" +
     "x[1].click();"
 });
-                   
+
                 }
             }
 
-            if (sender.Source.ToString().StartsWith("https://music.163.com")|| sender.Source.ToString().Contains("code=200"))
+            else if (sender.Source.ToString().StartsWith("https://music.163.com") || sender.Source.ToString().StartsWith("https://y.music.163.com"))
             {
 
                 var cookies = new Windows.Web.Http.Filters.HttpBaseProtocolFilter().CookieManager.GetCookies(new Uri("https://music.163.com"));
