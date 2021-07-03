@@ -435,7 +435,7 @@ namespace HyPlayer.HyPlayControl
             //加载歌词
             LoadLyrics(NowPlayingItem);
             ControlsDisplayUpdater.Thumbnail = NowPlayingItem.isOnline
-                ? RandomAccessStreamReference.CreateFromUri(new Uri(NowPlayingItem.NcPlayItem.Album.cover))
+                ? RandomAccessStreamReference.CreateFromUri(new Uri(NowPlayingItem.NcPlayItem.Album.cover + "?param=" + StaticSource.PICSIZE_AUDIO_PLAYER_COVER))
                 : RandomAccessStreamReference.CreateFromStream(
                     await NowPlayingItem.AudioInfo.LocalSongFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999));
             ControlsDisplayUpdater.Update();

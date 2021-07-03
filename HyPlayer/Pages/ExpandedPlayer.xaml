@@ -150,12 +150,18 @@
             x:Name="ImageAlbumContainer"
             Grid.RowSpan="8">
             <controls:ImageEx
+                RightTapped="ImageAlbum_RightTapped"
                 x:Name="ImageAlbum"
                 x:FieldModifier="public"
                 PlaceholderStretch="Uniform"
                 Stretch="Uniform"
                 CornerRadius="5"
                 Source="/Assets/icon.png">
+                <FlyoutBase.AttachedFlyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem Click="SaveAlbumImage_Click" Text="保存图片" Icon="Save" />
+                    </MenuFlyout>
+                </FlyoutBase.AttachedFlyout>
             </controls:ImageEx>
         </controls:DropShadowPanel>
 

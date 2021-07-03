@@ -164,7 +164,9 @@ namespace HyPlayer.Controls
                     AudioInfo tai = HyPlayList.NowPlayingItem.AudioInfo;
                     TbSingerName.Text = tai.Artist;
                     TbSongName.Text = tai.SongName;
+                    canslide = false;
                     SliderProgress.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
+                    canslide = true;
                     TextBlockTotalTime.Text =
                         TimeSpan.FromMilliseconds(tai.LengthInMilliseconds).ToString(@"hh\:mm\:ss");
                     TextBlockNowTime.Text =
@@ -396,16 +398,6 @@ namespace HyPlayer.Controls
             {
                 HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(SliderProgress.Value);
             }
-        }
-
-        private void SliderProgress_OnManipulationStarted(object sender, ManipulationStartedRoutedEventArgs e)
-        {
-            canslide = true;
-        }
-
-        private void SliderProgress_OnManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
-        {
-            canslide = false;
         }
 
         private void PlayListRemove_OnClick(object sender, RoutedEventArgs e)
