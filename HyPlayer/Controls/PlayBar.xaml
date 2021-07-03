@@ -436,9 +436,6 @@
                         x:Name="TextBlockNowTime" />
                     <Slider
                         controls:DockPanel.Dock="Bottom"
-                        ManipulationStarted="SliderProgress_OnManipulationStarted"
-                        ManipulationCompleted="SliderProgress_OnManipulationCompleted"
-                        ManipulationMode="All"
                         ValueChanged="SliderProgress_ValueChanged"
                         Name="SliderProgress">
                         <Slider.ThumbToolTipValueConverter>

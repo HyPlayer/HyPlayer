@@ -307,7 +307,8 @@ namespace HyPlayer.Pages
                         Common.ncapi.RequestAsync(CloudMusicApiProviders.Scrobble, new Dictionary<string, object>()
                         {
                             {"id",hpi.NcPlayItem.sid},
-                            {"sourceid","-1"}
+                            {"sourceId","-1"},
+                            {"time","60" }
                         });
                     }));
                 }));

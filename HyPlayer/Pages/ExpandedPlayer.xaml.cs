@@ -6,7 +6,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Foundation;
+using Windows.Storage;
 using Windows.Storage.FileProperties;
+using Windows.Storage.Streams;
 using Windows.UI.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
@@ -17,6 +19,7 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using Buffer = Windows.Storage.Streams.Buffer;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -30,9 +33,10 @@ namespace HyPlayer.Pages
         private int sclock = 0;
         private bool iscompact = false;
         private readonly bool loaded = false;
-        public double showsize;
+        public double showsize { get; set; }
         private int lastlrcid = 0;
         public double LyricWidth { get; set; }
+        public double lastChangedLyricWidth;
 
         private LyricItem lastitem;
         private int lastwidth;
@@ -75,6 +79,12 @@ namespace HyPlayer.Pages
             PlayStateIcon.Glyph = HyPlayList.isPlaying ? "\uEDB4" : "\uEDB5";
             //播放进度
             ProgressBarPlayProg.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
+            //歌词大小变更
+            if (lastChangedLyricWidth != LyricWidth)
+            {
+                lastChangedLyricWidth = LyricWidth;
+                LyricList.ForEach(t => { t.RefreshFontSize(); t.Width = LyricWidth; });
+            }
         }
 
         private void HyPlayList_OnLyricLoaded()
@@ -99,15 +109,6 @@ namespace HyPlayer.Pages
             ImageAlbumContainer.Visibility =
                 nowwidth >= 800 || nowwidth <= 300 ? Visibility.Visible : Visibility.Collapsed;
             showsize = Math.Max(nowwidth / 66, 16);
-
-
-            Task.Run((() =>
-            {
-                Common.Invoke((() =>
-                {
-                    LyricList.ForEach(t => { t.RefreshFontSize(); t.Width = LyricWidth; });
-                }));
-            }));
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -429,6 +430,27 @@ namespace HyPlayer.Pages
 
         private void ShowContent_Click()
         {
+        }
+
+        private void ImageAlbum_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            FlyoutBase.ShowAttachedFlyout((FrameworkElement)sender);
+        }
+
+        private async void SaveAlbumImage_Click(object sender, RoutedEventArgs e)
+        {
+            Windows.Storage.Pickers.FileSavePicker filepicker = new Windows.Storage.Pickers.FileSavePicker();
+            filepicker.SuggestedFileName = HyPlayList.NowPlayingItem.Name + "-cover.jpg";
+            filepicker.FileTypeChoices.Add("图片文件", new List<string>() { ".png", ".jpg" });
+            var file = await filepicker.PickSaveFileAsync();
+            var stream = (await (HyPlayList.NowPlayingItem.isOnline
+                            ? RandomAccessStreamReference.CreateFromUri(new Uri(HyPlayList.NowPlayingItem.NcPlayItem.Album.cover))
+                : RandomAccessStreamReference.CreateFromStream(
+                    await HyPlayList.NowPlayingItem.AudioInfo.LocalSongFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999)))
+                    .OpenReadAsync());
+            Buffer buffer = new Windows.Storage.Streams.Buffer((uint)stream.Size);
+            await stream.ReadAsync(buffer, (uint)stream.Size, InputStreamOptions.None);
+            await FileIO.WriteBufferAsync(file, buffer);
         }
     }
 }
