@@ -7,5 +7,10 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <WebView x:Name="ThirdPartyLoginWebview" NavigationCompleted="ThirdPartyLoginWebview_NavigationCompleted" Margin="0,0,0,120"/>
+    <Grid>
+        <WebView x:Name="ThirdPartyLoginWebview" NavigationCompleted="ThirdPartyLoginWebview_NavigationCompleted" NavigationStarting="ThirdPartyLoginWebview_NavigationStarting" Margin="0,0,0,120"/>
+        <Border Background="{ThemeResource SystemControlAcrylicElementBrush}" x:Name="LoadingRingContainer">
+            <ProgressRing x:Name="LoadingRing" IsActive="True" Width="100" Height="100"/>
+        </Border>
+    </Grid>
 </Page>

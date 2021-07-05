@@ -62,10 +62,11 @@ namespace HyPlayer.Pages
             return code;
 
         }
-        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        protected override async void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
             UAHelper.SetUserAgent(DefaultUA);
+            await WebView.ClearTemporaryWebDataAsync();
             ThirdPartyLoginWebview = null;
         }
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -103,7 +104,7 @@ namespace HyPlayer.Pages
                 {
                     UAHelper.SetUserAgent(DefaultUA);
                     ThirdPartyLoginWebview.Navigate(new Uri(QQLoginUri + "&" + match.Match(sender.Source.ToString())));
-
+                    LoadingRingContainer.Visibility = Visibility.Collapsed;
                 }
 
             }
@@ -115,7 +116,7 @@ namespace HyPlayer.Pages
 {
     "document.getElementById('jump_login_url_a').click();"
 });
-
+                LoadingRingContainer.Visibility = Visibility.Collapsed;
 
             }
 
@@ -146,7 +147,7 @@ namespace HyPlayer.Pages
 
             else if (sender.Source.ToString().StartsWith("https://music.163.com") || sender.Source.ToString().StartsWith("https://y.music.163.com"))
             {
-
+                LoadingRingContainer.Visibility = Visibility.Visible;
                 var cookies = new Windows.Web.Http.Filters.HttpBaseProtocolFilter().CookieManager.GetCookies(new Uri("https://music.163.com"));
                 string cookiestring = string.Empty;
                 foreach (Windows.Web.Http.HttpCookie cookie in cookies)
@@ -157,13 +158,19 @@ namespace HyPlayer.Pages
                     rescookie.HttpOnly = cookie.HttpOnly;
                     rescookie.Domain = cookie.Domain;
                     rescookie.Secure = cookie.Secure;
-
-                    rescookie.Expires = ((DateTimeOffset)cookie.Expires).DateTime;
+                    if (cookie.Expires != null)
+                        rescookie.Expires = ((DateTimeOffset)cookie.Expires).DateTime;
                     rescookie.Path = cookie.Path;
                     Common.ncapi.Cookies.Add(rescookie);
                 }
                 Common.PageBase.LoginDone();
             }
+        }
+
+        private void ThirdPartyLoginWebview_NavigationStarting(WebView sender, WebViewNavigationStartingEventArgs args)
+        {
+            if (sender.Source.ToString().StartsWith("https://music.163.com") || sender.Source.ToString().StartsWith("https://y.music.163.com"))
+                LoadingRingContainer.Visibility = Visibility.Visible;
         }
     }
 }
