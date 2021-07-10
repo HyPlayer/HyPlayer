@@ -335,6 +335,10 @@ namespace HyPlayer.Pages
 
             if (nowitem.Tag.ToString() == "PageMe" && !Common.Logined)
             {
+                foreach (Cookie ncapiCookie in Common.ncapi.Cookies)
+                {
+                    ncapiCookie.Expired = true;//清一遍Cookie防止出错
+                }
                 InfoBarLoginHint.IsOpen = true;
                 await DialogLogin.ShowAsync();
                 return;

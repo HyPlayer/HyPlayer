@@ -68,6 +68,7 @@
                     FontSize="20"
                     Text="译名" />
             </StackPanel>
+            <!-- ReSharper disable once Xaml.InvalidResourceType -->
             <TextBlock
                 Visibility="Collapsed"
                 Grid.Row="1"

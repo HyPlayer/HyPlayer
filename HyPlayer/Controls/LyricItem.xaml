@@ -15,7 +15,6 @@
     DoubleTapped="LyricItem_OnDoubleTapped">
 
     <controls:DockPanel
-        Width="{Binding Path=hyPlayer:Common.PageExpandedPlayer.LyricWidth,Mode=Oneway}"
         LastChildFill="True">
         <TextBlock
             FontSize="{x:Bind Path=hyPlayer:Common.PageExpandedPlayer.showsize,Mode=Oneway}"
