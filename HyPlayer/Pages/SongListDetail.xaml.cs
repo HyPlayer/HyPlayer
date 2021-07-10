@@ -14,6 +14,7 @@ using Windows.UI.Input.Spatial;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
@@ -319,7 +320,7 @@ namespace HyPlayer.Pages
             playList.subscribed = !playList.subscribed;
         }
 
-        private void TextBoxAuthor_PointerPressed(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+        private void TextBoxAuthor_Tapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
             Common.BaseFrame.Navigate(typeof(Me), playList.creater.id);
         }

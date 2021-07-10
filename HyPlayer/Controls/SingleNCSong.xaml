@@ -79,7 +79,7 @@
             <TextBlock
                 Grid.Row="2"
                 Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
-                PointerPressed="TextBlockArtist_OnPointerPressed"
+                Tapped="TextBlockArtist_OnTapped"
                 Name="TextBlockArtist"
                 Margin="0,7,0,-6"
                 FontSize="12"
@@ -87,7 +87,7 @@
             <TextBlock
                 Grid.Row="3"
                 Foreground="Gray"
-                PointerPressed="TextBlockAlbum_OnPointerPressed"
+                Tapped="TextBlockAlbum_OnTapped"
                 Name="TextBlockAlbum"
                 Margin="0,7,0,0"
                 FontSize="13"

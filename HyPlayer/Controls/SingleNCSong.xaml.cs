@@ -168,7 +168,7 @@ namespace HyPlayer.Controls
             _ = AppendMe();
         }
 
-        private async void TextBlockArtist_OnPointerPressed(object sender, PointerRoutedEventArgs e)
+        private async void TextBlockArtist_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
             if (ncsong.Artist.Count > 1)
             {
@@ -200,7 +200,7 @@ namespace HyPlayer.Controls
             await new SongListSelect(ncsong.sid).ShowAsync();
         }
 
-        private void TextBlockAlbum_OnPointerPressed(object sender, PointerRoutedEventArgs e)
+        private void TextBlockAlbum_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
             Common.BaseFrame.Navigate(typeof(AlbumPage), ncsong.Album);
         }

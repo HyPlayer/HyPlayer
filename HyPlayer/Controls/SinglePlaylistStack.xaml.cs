@@ -74,7 +74,7 @@ namespace HyPlayer.Controls
                 Application.Current.Resources["SystemControlChromeMediumAcrylicElementMediumBrush"] as Brush;
         }
 
-        private void TextBlockUsername_OnPointerPressed(object sender, PointerRoutedEventArgs e)
+        private void TextBlockUsername_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
             Common.BaseFrame.Navigate(typeof(Me),Playlist.creater.id);
         }

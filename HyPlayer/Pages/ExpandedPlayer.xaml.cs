@@ -404,7 +404,7 @@ namespace HyPlayer.Pages
             LoadLyricsBox();
         }
 
-        private async void TextBlockSinger_OnPointerPressed(object sender, PointerRoutedEventArgs e)
+        private async void TextBlockSinger_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
             try
             {
@@ -420,7 +420,7 @@ namespace HyPlayer.Pages
                             HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
                     }
 
-                    Common.BarPlayBar.ButtonCollapse_OnClick(this, e);
+                    Common.BarPlayBar.ButtonCollapse_OnClick(this, null);
                 }
             }
             catch

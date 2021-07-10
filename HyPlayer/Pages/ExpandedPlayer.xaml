@@ -263,7 +263,7 @@
                 x:FieldModifier="public"
                 TextAlignment="Center"
                 Name="TextBlockSinger"
-                PointerPressed="TextBlockSinger_OnPointerPressed"
+                Tapped="TextBlockSinger_OnTapped"
                 Foreground="Gray"
                 FontSize="20"
                 Text="歌手" />

@@ -26,7 +26,7 @@
             <PersonPicture
                 Grid.Column="0"
                 x:Name="UserAvatar"
-                PointerPressed="NavToUser_Click"
+                Tapped="NavToUser_Click"
                 Height="70"
                 Width="70"
                 VerticalAlignment="Top"
@@ -40,7 +40,7 @@
                 <TextBlock
                     x:Name="Nickname"
                     Text="{x:Bind comment.Nickname}"
-                    PointerPressed="NavToUser_Click" />
+                    Tapped="NavToUser_Click" />
                 <TextBlock
                     Foreground="Gray"
                     Text="{x:Bind comment.SendTime}" />

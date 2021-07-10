@@ -86,7 +86,7 @@
                         <TextBlock
 							Margin="0,2,0,0"
 							Name="TextBoxAuthor"
-                            PointerPressed="TextBoxAuthor_OnPointerPressed"
+                            Tapped="TextBoxAuthor_OnTapped"
 							Text="歌手"
 							FontSize="18"
                             Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"/>

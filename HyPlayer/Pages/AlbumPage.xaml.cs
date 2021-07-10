@@ -173,7 +173,7 @@ namespace HyPlayer.Pages
             DownloadManager.AddDownload(songs);
         }
 
-        private async void TextBoxAuthor_OnPointerPressed(object sender, PointerRoutedEventArgs e)
+        private async void TextBoxAuthor_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
             if (artists.Count > 1)
             {

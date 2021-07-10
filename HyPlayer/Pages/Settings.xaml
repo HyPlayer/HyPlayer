@@ -191,7 +191,7 @@
                 FontSize="25"
                 Text="开发者" />
             <StackPanel
-                PointerPressed="UIElement_OnPointerPressed"
+                Tapped="UIElement_OnTapped"
                 Orientation="Horizontal">
                 <PersonPicture
                     ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=GibeJPa6pAcRMKgoHC9ibI4w&amp;s=100" />
@@ -224,7 +224,7 @@
                 </StackPanel>
             </StackPanel>
             <StackPanel
-                PointerPressed="UIElement_OnPointerPressed"
+                Tapped="UIElement_OnTapped"
                 Orientation="Horizontal">
                 <PersonPicture
                     ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=eHh3SVVDUJKHf1I5XD7CPg&amp;s=100" />
@@ -253,7 +253,7 @@
                 </StackPanel>
             </StackPanel>
             <StackPanel
-                PointerPressed="UIElement_OnPointerPressed"
+                Tapped="UIElement_OnTapped"
                 Orientation="Horizontal">
                 <PersonPicture
                     ProfilePicture="https://himg.bdimg.com/sys/portraitn/item/0fd16570303132303134g930801000000" />

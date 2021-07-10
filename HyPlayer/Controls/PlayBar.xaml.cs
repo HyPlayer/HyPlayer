@@ -481,12 +481,12 @@ namespace HyPlayer.Controls
             ImageContainer.BorderBrush = null;
         }
 
-        private void ImageContainer_OnPointerPressed(object sender, PointerRoutedEventArgs e)
+        private void ImageContainer_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
-            ButtonExpand_OnClick(sender, e);
+            ButtonExpand_OnClick(sender, null);
         }
 
-        private async void TbSingerName_OnPointerPressed(object sender, PointerRoutedEventArgs e)
+        private async void TbSingerName_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
             try
             {
@@ -501,7 +501,7 @@ namespace HyPlayer.Controls
                         Common.BaseFrame.Navigate(typeof(ArtistPage), HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
                     }
 
-                    ButtonCollapse_OnClick(this, e);
+                    ButtonCollapse_OnClick(this, null);
                 }
             }
             catch { }

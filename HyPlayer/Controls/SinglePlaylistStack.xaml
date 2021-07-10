@@ -45,7 +45,7 @@
                 x:Name="TextBlockPlaylistName"
                 Text="歌单名" />
             <TextBlock
-                PointerPressed="TextBlockUsername_OnPointerPressed"
+                Tapped="TextBlockUsername_OnTapped"
                 x:Name="TextBlockUsername"
                 Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                 Text="用户" />

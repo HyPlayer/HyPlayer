@@ -280,7 +280,7 @@
                 <Grid
                     Margin="0"
                     x:Name="ImageContainer"
-                    PointerPressed="ImageContainer_OnPointerPressed"
+                    Tapped="ImageContainer_OnTapped"
                     PointerEntered="ImageContainer_OnPointerEntered"
                     PointerExited="ImageContainer_OnPointerExited"
                     HorizontalAlignment="Left"
@@ -320,7 +320,7 @@
                     <TextBlock
                         VerticalAlignment="Top"
                         Foreground="Gray"
-                        PointerPressed="TbSingerName_OnPointerPressed"
+                        Tapped="TbSingerName_OnTapped"
                         Name="TbSingerName" />
                 </StackPanel>
             </StackPanel>

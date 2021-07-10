@@ -76,7 +76,7 @@ namespace HyPlayer.Controls
                 Application.Current.Resources["SystemControlChromeMediumAcrylicElementMediumBrush"] as Brush;
         }
 
-        private async void TextBlockArtist_OnPointerPressed(object sender, PointerRoutedEventArgs e)
+        private async void TextBlockArtist_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
             if (Artists.Count > 1)
             {

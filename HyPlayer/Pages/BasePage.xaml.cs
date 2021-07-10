@@ -526,7 +526,7 @@ namespace HyPlayer.Pages
 
         }
 
-        private void NavigationViewItem_PointerPressed(object sender, PointerRoutedEventArgs e)
+        private void NavigationViewItem_Tapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
             NavMain.SelectedItem = sender;
         }

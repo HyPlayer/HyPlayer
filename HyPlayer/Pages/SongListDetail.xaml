@@ -87,7 +87,7 @@
 							FontSize="36"></TextBlock>
                         <TextBlock
 							Margin="0,2,0,0"
-                            PointerPressed="TextBoxAuthor_PointerPressed"
+                            Tapped="TextBoxAuthor_Tapped"
 							Name="TextBoxAuthor"
 							Text="歌单创建者"
 							FontSize="18"

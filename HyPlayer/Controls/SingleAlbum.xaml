@@ -45,7 +45,7 @@
                 x:Name="TextBlockAlbumName"
                 Text="专辑名称" />
             <TextBlock
-                PointerPressed="TextBlockArtist_OnPointerPressed"
+                Tapped="TextBlockArtist_OnTapped"
                 x:Name="TextBlockArtistName"
                 Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                 Text="艺术家" />

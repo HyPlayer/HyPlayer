@@ -163,7 +163,7 @@ namespace HyPlayer.Pages
 
 
         private int _elapse = 10;
-        private void UIElement_OnPointerPressed(object sender, PointerRoutedEventArgs e)
+        private void UIElement_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
             if (_elapse-- == 0) ApplicationData.Current.RoamingSettings.Values["CanDownload"] = true;
         }

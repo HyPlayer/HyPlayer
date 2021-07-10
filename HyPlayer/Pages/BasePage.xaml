@@ -128,13 +128,12 @@
                     >
                     <controls1:NavigationViewItem
                     x:Name="NavItemLogin"
-                    PointerPressed="NavigationViewItem_PointerPressed"
+                    Tapped="NavigationViewItem_Tapped"
                     Content="登录"
                     Icon="Contact"
                     Tag="PageMe"/>
                     <controls1:NavigationViewItem
                     Content="设置"
-                    PointerPressed="NavigationViewItem_PointerPressed"
                     Icon="Setting"
                     Tag="PageSettings" />
                 </StackPanel>
