@@ -22,54 +22,50 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter
-                            Target="SubControlGrid.Visibility"
-                            Value="Visible" />
-                        <Setter
                             Target="ButtonCollapse.Margin"
                             Value="10" />
                         <Setter
                             Target="ButtonExpand.Margin"
                             Value="10" />
                         <Setter
-                            Target="ButtonPlayList.Margin"
+                            Target="ButtonMoreFunc.Margin"
                             Value="10,10,55,10" />
                         <Setter
                             Target="MainControlGrid.(Grid.ColumnSpan)"
                             Value="1" />
                         <Setter
                             Target="BtnLike.Visibility"
-                            Value="Visible"></Setter>
+                            Value="Visible" />
                         <Setter
                             Target="BtnPlayRollType.Visibility"
-                            Value="Visible"></Setter>
+                            Value="Visible" />
                         <Setter
                             Target="BtnPreviousSong.(Grid.ColumnSpan)"
-                            Value="1"></Setter>
+                            Value="1" />
                         <Setter
                             Target="BtnPreviousSong.(Grid.Column)"
-                            Value="3"></Setter>
+                            Value="3" />
                         <Setter
                             Target="BtnPlayStateChange.(Grid.ColumnSpan)"
-                            Value="1"></Setter>
+                            Value="1" />
                         <Setter
                             Target="BtnPlayStateChange.(Grid.Column)"
-                            Value="4"></Setter>
+                            Value="4" />
                         <Setter
                             Target="BtnNextSong.(Grid.ColumnSpan)"
-                            Value="1"></Setter>
+                            Value="1" />
                         <Setter
                             Target="BtnNextSong.(Grid.Column)"
-                            Value="5"></Setter>
+                            Value="5" />
                         <Setter
                             Target="SliderProgress.Margin"
-                            Value="0,0,0,0"></Setter>
+                            Value="0,0,0,0" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState>
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger
-                            MinWindowWidth="0">
-                        </AdaptiveTrigger>
+                            MinWindowWidth="0" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter
@@ -80,7 +76,7 @@
                             Value="4" />
                         <Setter
                             Target="GridThis.Visibility"
-                            Value="Collapsed"></Setter>
+                            Value="Collapsed" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState>
@@ -96,14 +92,11 @@
                             Target="ButtonExpand.Margin"
                             Value="10,10,10,40" />
                         <Setter
-                            Target="ButtonPlayList.Margin"
+                            Target="ButtonMoreFunc.Margin"
                             Value="10,10,55,40" />
                         <Setter
-                            Target="SubControlGrid.Visibility"
-                            Value="Collapsed" />
-                        <Setter
                             Target="GridThis.Visibility"
-                            Value="Visible"></Setter>
+                            Value="Visible" />
                         <Setter
                             Target="MainControlGrid.(Grid.Column)"
                             Value="0" />
@@ -112,34 +105,31 @@
                             Value="4" />
                         <Setter
                             Target="BtnLike.Visibility"
-                            Value="Collapsed"></Setter>
+                            Value="Collapsed" />
                         <Setter
                             Target="BtnPlayRollType.Visibility"
-                            Value="Collapsed"></Setter>
+                            Value="Collapsed" />
                         <Setter
                             Target="BtnPreviousSong.(Grid.ColumnSpan)"
-                            Value="2"></Setter>
+                            Value="2" />
                         <Setter
                             Target="BtnPreviousSong.(Grid.Column)"
-                            Value="2"></Setter>
+                            Value="2" />
                         <Setter
                             Target="BtnPlayStateChange.(Grid.ColumnSpan)"
-                            Value="2"></Setter>
+                            Value="2" />
                         <Setter
                             Target="BtnPlayStateChange.(Grid.Column)"
-                            Value="4"></Setter>
+                            Value="4" />
                         <Setter
                             Target="BtnNextSong.(Grid.ColumnSpan)"
-                            Value="2"></Setter>
+                            Value="2" />
                         <Setter
                             Target="BtnNextSong.(Grid.Column)"
-                            Value="6"></Setter>
+                            Value="6" />
                         <Setter
                             Target="SliderProgress.Margin"
-                            Value="0,0,15,0"></Setter>
-                        <Setter
-                            Target="SubControlGrid.Visibility"
-                            Value="Collapsed" />
+                            Value="0,0,15,0" />
                         <Setter
                             Target="GridSongInfoContainer.Visibility"
                             Value="Collapsed" />
@@ -155,34 +145,31 @@
                     <VisualState.Setters>
                         <Setter
                             Target="BtnLike.Visibility"
-                            Value="Collapsed"></Setter>
+                            Value="Collapsed" />
                         <Setter
                             Target="BtnPlayRollType.Visibility"
-                            Value="Collapsed"></Setter>
+                            Value="Collapsed" />
                         <Setter
                             Target="BtnPreviousSong.(Grid.ColumnSpan)"
-                            Value="2"></Setter>
+                            Value="2" />
                         <Setter
                             Target="BtnPreviousSong.(Grid.Column)"
-                            Value="2"></Setter>
+                            Value="2" />
                         <Setter
                             Target="BtnPlayStateChange.(Grid.ColumnSpan)"
-                            Value="2"></Setter>
+                            Value="2" />
                         <Setter
                             Target="BtnPlayStateChange.(Grid.Column)"
-                            Value="4"></Setter>
+                            Value="4" />
                         <Setter
                             Target="BtnNextSong.(Grid.ColumnSpan)"
-                            Value="2"></Setter>
+                            Value="2" />
                         <Setter
                             Target="BtnNextSong.(Grid.Column)"
-                            Value="6"></Setter>
+                            Value="6" />
                         <Setter
                             Target="SliderProgress.Margin"
-                            Value="0,0,15,0"></Setter>
-                        <Setter
-                            Target="SubControlGrid.Visibility"
-                            Value="Collapsed" />
+                            Value="0,0,15,0" />
                         <Setter
                             Target="MainControlGrid.(Grid.Column)"
                             Value="0" />
@@ -199,7 +186,7 @@
                             Target="ButtonExpand.Margin"
                             Value="10,10,10,40" />
                         <Setter
-                            Target="ButtonPlayList.Margin"
+                            Target="ButtonMoreFunc.Margin"
                             Value="10,10,55,40" />
                     </VisualState.Setters>
                 </VisualState>
@@ -218,6 +205,7 @@
         <Grid
             Grid.ColumnSpan="2"
             Grid.Column="0"
+            x:FieldModifier="public"
             x:Name="GridSongInfoContainer">
             <StackPanel
                 x:Name="GridSongAdvancedOperation"
@@ -235,19 +223,19 @@
                     Click="Btn_Sub_OnClick">
                     <FontIcon
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        Glyph="&#xE1DA;"></FontIcon>
+                        Glyph="&#xE1DA;" />
                 </Button>
                 <Button
                     Height="40"
                     Width="40"
-                    Padding="-5"   
+                    Padding="-5"
                     CornerRadius="20"
                     Background="Transparent"
                     x:Name="Btn_Down"
                     Click="Btn_Down_OnClick">
                     <FontIcon
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        Glyph="&#xE118;"></FontIcon>
+                        Glyph="&#xE118;" />
                 </Button>
                 <Button
                     Height="40"
@@ -259,7 +247,7 @@
                     Background="Transparent">
                     <FontIcon
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        Glyph="&#xE8F2;"></FontIcon>
+                        Glyph="&#xE8F2;" />
                 </Button>
                 <Button
                     Height="40"
@@ -271,7 +259,7 @@
                     Background="Transparent">
                     <FontIcon
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        Glyph="&#xE72D;"></FontIcon>
+                        Glyph="&#xE72D;" />
                 </Button>
             </StackPanel>
             <StackPanel
@@ -361,7 +349,7 @@
                     <FontIcon
                         x:Name="IconPlayType"
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        Glyph="&#xE169;"></FontIcon>
+                        Glyph="&#xE169;" />
                 </Button>
                 <Button
                     Style="{StaticResource ButtonRevealStyle}"
@@ -376,7 +364,7 @@
                     <FontIcon
                         x:Name="IconPrevious"
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        Glyph="&#xE892;"></FontIcon>
+                        Glyph="&#xE892;" />
                 </Button>
                 <Button
                     Style="{StaticResource ButtonRevealStyle}"
@@ -390,7 +378,7 @@
                     <FontIcon
                         Name="PlayStateIcon"
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        Glyph="&#xEDB4;"></FontIcon>
+                        Glyph="&#xEDB4;" />
                     <!--EDB5 -->
                 </Button>
                 <Button
@@ -405,7 +393,7 @@
                     CornerRadius="30">
                     <FontIcon
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        Glyph="&#xE101;"></FontIcon>
+                        Glyph="&#xE101;" />
                 </Button>
                 <ToggleButton
                     Style="{StaticResource ToggleButtonRevealStyle}"
@@ -419,7 +407,7 @@
                     CornerRadius="30">
                     <FontIcon
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        Glyph="&#xE00B;"></FontIcon>
+                        Glyph="&#xE00B;" />
                 </ToggleButton>
             </Grid>
             <Grid
@@ -449,44 +437,11 @@
 
             </Grid>
         </Grid>
-        <StackPanel
-            Orientation="Horizontal"
-            Margin="0,0,110,0"
-            HorizontalAlignment="Right"
-            Name="SubControlGrid"
-            Grid.Column="3">
-            <StackPanel
-                Width="150"
-                Orientation="Horizontal"
-                Margin="10">
-                <Button
-                    Padding="-5"
-                    Width="40"
-                    Height="40"
-                    Margin="0,0,3,0"
-                    CornerRadius="20"
-                    Name="BtnMute"
-                    Click="BtnMute_OnCllick"
-                    Background="Transparent">
-                    <FontIcon
-                        Name="BtnMuteIcon"
-                        FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        Glyph="&#xE15D;" />
-                    <!--E198 -->
-                </Button>
-                <Slider
-                    x:FieldModifier="public"
-                    Name="SliderAudioRate"
-                    VerticalAlignment="Center"
-                    Width="100"
-                    ValueChanged="SliderAudioRate_ValueChanged" />
-            </StackPanel>
-        </StackPanel>
         <Button
             HorizontalAlignment="Right"
             Grid.Column="3"
             Width="40"
-            x:Name="ButtonPlayList"
+            x:Name="ButtonMoreFunc"
             Height="40"
             Padding="-5"
             Margin="10,10,55,10"
@@ -494,57 +449,108 @@
             Background="Transparent">
             <FontIcon
                 FontFamily="{StaticResource SymbolThemeFontFamily}"
-                Glyph="&#xE142;" />
+                Glyph="&#xE10C;" />
             <Button.Flyout>
                 <Flyout>
-                    <StackPanel
-                        Orientation="Vertical">
-                        <StackPanel
-                            Orientation="Horizontal">
-                            <Button
-                                Click="ButtonCleanAll_OnClick"
-                                Content="清除全部" />
-                            <Button
-                                Click="ButtonAddLocal_OnClick"
-                                Content="添加本地" />
-                        </StackPanel>
-                        <ListView
-                            SelectionMode="Single"
-                            Name="ListBoxPlayList"
-                            SelectionChanged="ListBoxPlayList_OnSelectionChanged"
-                            Height="500"
-                            Width="400">
-                            <ListView.ItemTemplate>
-                                <DataTemplate
-                                    x:DataType="local:ListViewPlayItem">
+                    <StackPanel Spacing="5" Orientation="Horizontal">
+                        <Button
+                            Width="40"
+                            Height="40"
+                            CornerRadius="20"
+                            Name="BtnVolume"
+                            Background="Transparent">
+                            <FontIcon
+                                FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                Glyph="&#xE15D;" />
+                            <!--E198 -->
+                            <Button.Flyout>
+                                <Flyout>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="40" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <FontIcon
+                                            Tapped="BtnMute_OnCllick"
+                                            Grid.Column="0"
+                                            Name="BtnMuteIcon"
+                                            FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                            Glyph="&#xE15D;" />
+                                        <Slider
+                                            Grid.Column="1"
+                                            x:FieldModifier="public"
+                                            Name="SliderAudioRate"
+                                            VerticalAlignment="Center"
+                                            Width="100"
+                                            ValueChanged="SliderAudioRate_ValueChanged" />
+                                    </Grid>
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
+                        <Button
+                            HorizontalAlignment="Center"
+                            Width="40"
+                            x:Name="ButtonPlayList"
+                            Height="40"
+                            CornerRadius="20"
+                            Background="Transparent">
+                            <FontIcon
+                                FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                Glyph="&#xE142;" />
+                            <Button.Flyout>
+                                <Flyout>
                                     <StackPanel
-                                        Orientation="Horizontal">
+                                        Orientation="Vertical">
                                         <StackPanel
-                                            Width="340"
-                                            Orientation="Vertical">
-                                            <TextBlock
-                                                Text="{x:Bind Name}" />
-                                            <TextBlock
-                                                Foreground="Gray"
-                                                Text="{x:Bind Artist}" />
+                                            Orientation="Horizontal">
+                                            <Button
+                                                Click="ButtonCleanAll_OnClick"
+                                                Content="清除全部" />
+                                            <Button
+                                                Click="ButtonAddLocal_OnClick"
+                                                Content="添加本地" />
                                         </StackPanel>
-                                        <Button
-                                            Padding="-5"
-                                            Width="30"
-                                            Height="30"
-                                            Background="Transparent"
-                                            Click="PlayListRemove_OnClick"
-                                            Tag="{x:Bind index}">
-                                            <FontIcon
-                                                Margin="-5,0,0,0"
-                                                HorizontalAlignment="Left"
-                                                FontFamily="{StaticResource SymbolThemeFontFamily}"
-                                                Glyph="&#xE10A;" />
-                                        </Button>
+                                        <ListView
+                                            SelectionMode="Single"
+                                            Name="ListBoxPlayList"
+                                            SelectionChanged="ListBoxPlayList_OnSelectionChanged"
+                                            Height="500"
+                                            Width="400">
+                                            <ListView.ItemTemplate>
+                                                <DataTemplate
+                                                    x:DataType="local:ListViewPlayItem">
+                                                    <StackPanel
+                                                        Orientation="Horizontal">
+                                                        <StackPanel
+                                                            Width="340"
+                                                            Orientation="Vertical">
+                                                            <TextBlock
+                                                                Text="{x:Bind Name}" />
+                                                            <TextBlock
+                                                                Foreground="Gray"
+                                                                Text="{x:Bind Artist}" />
+                                                        </StackPanel>
+                                                        <Button
+                                                            Padding="-5"
+                                                            Width="30"
+                                                            Height="30"
+                                                            Background="Transparent"
+                                                            Click="PlayListRemove_OnClick"
+                                                            Tag="{x:Bind index}">
+                                                            <FontIcon
+                                                                Margin="-5,0,0,0"
+                                                                HorizontalAlignment="Left"
+                                                                FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                                                Glyph="&#xE10A;" />
+                                                        </Button>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ListView.ItemTemplate>
+                                        </ListView>
                                     </StackPanel>
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
                     </StackPanel>
                 </Flyout>
             </Button.Flyout>

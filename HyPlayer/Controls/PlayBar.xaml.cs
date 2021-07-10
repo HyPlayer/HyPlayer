@@ -286,7 +286,7 @@ namespace HyPlayer.Controls
         {
             HyPlayList.Player.IsMuted = !HyPlayList.Player.IsMuted;
             BtnMuteIcon.Glyph = HyPlayList.Player.IsMuted ? "\uE198" : "\uE15D";
-            SliderAudioRate.Visibility = HyPlayList.Player.IsMuted ? Visibility.Collapsed : Visibility.Visible;
+            //SliderAudioRate.Visibility = HyPlayList.Player.IsMuted ? Visibility.Collapsed : Visibility.Visible;
         }
 
         private void BtnPreviousSong_OnClick(object sender, RoutedEventArgs e)
@@ -378,7 +378,7 @@ namespace HyPlayer.Controls
             //Common.PageMain.MainFrame.Visibility = Visibility.Visible;
             Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
             Common.PageMain.GridPlayBar.Background = Application.Current.Resources["SystemControlAcrylicElementMediumHighBrush"] as Brush;
-            //Window.Current.SetTitleBar(Common.PageBase.AppTitleBar);
+            Window.Current.SetTitleBar(Common.PageBase.AppTitleBar);
         }
 
         private void ButtonCleanAll_OnClick(object sender, RoutedEventArgs e)

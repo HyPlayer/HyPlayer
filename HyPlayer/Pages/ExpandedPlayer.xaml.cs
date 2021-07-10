@@ -121,7 +121,7 @@ namespace HyPlayer.Pages
         {
             base.OnNavigatedTo(e);
             Common.PageExpandedPlayer = this;
-            //Window.Current.SetTitleBar(AppTitleBar);
+            Window.Current.SetTitleBar(AppTitleBar);
             //ImageAlbumContainer.Visibility = Visibility.Collapsed;
             try
             {
@@ -298,13 +298,16 @@ namespace HyPlayer.Pages
         {
             try
             {
-                ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TextBlockSongTitle);
-                if (ImageAlbumContainer.Visibility == Visibility.Visible)
+                if (Common.Setting.expandAnimation && Common.BarPlayBar.GridSongInfoContainer.Visibility == Visibility.Visible)
                 {
-                    ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", ImageAlbumContainer);
-                }
+                    ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TextBlockSongTitle);
+                    if (ImageAlbumContainer.Visibility == Visibility.Visible)
+                    {
+                        ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", ImageAlbumContainer);
+                    }
 
-                ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TextBlockSinger);
+                    ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TextBlockSinger);
+                }
             }
             catch
             {

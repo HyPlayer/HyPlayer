@@ -13,8 +13,7 @@
     Background="{ThemeResource SystemControlAcrylicElementBrush}">
 
     <Grid
-        Background="{ThemeResource SystemControlAcrylicElementBrush}"
-        Margin="0,0,0,0">
+        Background="{ThemeResource SystemControlAcrylicElementBrush}">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState>
@@ -107,36 +106,49 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
-            <ColumnDefinition />
-            <ColumnDefinition />
-            <ColumnDefinition />
-            <ColumnDefinition />
-            <ColumnDefinition />
-            <ColumnDefinition />
-            <ColumnDefinition />
-            <ColumnDefinition />
-            <ColumnDefinition />
-            <ColumnDefinition />
-            <ColumnDefinition />
         </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-            <RowDefinition />
-        </Grid.RowDefinitions>
-        <controls:DropShadowPanel
+        <Grid x:Name="AppTitleBar" Grid.Column="0" Grid.Row="0" Background="Transparent"/>
+        <Grid
+            Grid.Column="0"
+        Grid.Row="0"
+        Grid.RowSpan="2"
+        Margin="0,0,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <controls:DropShadowPanel
             BlurRadius="10"
             ShadowOpacity="1"
             OffsetX="5"
@@ -149,7 +161,7 @@
             VerticalAlignment="Center"
             x:Name="ImageAlbumContainer"
             Grid.RowSpan="8">
-            <controls:ImageEx
+                <controls:ImageEx
                 RightTapped="ImageAlbum_RightTapped"
                 x:Name="ImageAlbum"
                 x:FieldModifier="public"
@@ -157,32 +169,31 @@
                 Stretch="Uniform"
                 CornerRadius="5"
                 Source="/Assets/icon.png">
-                <FlyoutBase.AttachedFlyout>
-                    <MenuFlyout>
-                        <MenuFlyoutItem Click="SaveAlbumImage_Click" Text="保存图片" Icon="Save" />
-                    </MenuFlyout>
-                </FlyoutBase.AttachedFlyout>
-            </controls:ImageEx>
-        </controls:DropShadowPanel>
-
-        <Grid
+                    <FlyoutBase.AttachedFlyout>
+                        <MenuFlyout>
+                            <MenuFlyoutItem Click="SaveAlbumImage_Click" Text="保存图片" Icon="Save" />
+                        </MenuFlyout>
+                    </FlyoutBase.AttachedFlyout>
+                </controls:ImageEx>
+            </controls:DropShadowPanel>
+            <Grid
             x:Name="StackPanelTiny"
             Visibility="Collapsed"
             Grid.Column="0"
             Grid.ColumnSpan="12"
             Grid.Row="0"
             Grid.RowSpan="12">
-            <Grid.RowDefinitions>
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-            </Grid.ColumnDefinitions>
-            <Button
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Button
                 Grid.Row="1"
                 Grid.Column="0"
                 Style="{StaticResource ButtonRevealStyle}"
@@ -194,11 +205,11 @@
                 Width="45"
                 Height="45"
                 CornerRadius="30">
-                <FontIcon
+                    <FontIcon
                     FontFamily="{StaticResource SymbolThemeFontFamily}"
                     Glyph="&#xE892;"></FontIcon>
-            </Button>
-            <Button
+                </Button>
+                <Button
                 Grid.Row="1"
                 Grid.Column="1"
                 Style="{StaticResource ButtonRevealStyle}"
@@ -209,13 +220,13 @@
                 VerticalAlignment="Center"
                 Click="BtnPlayStateChange_OnClick"
                 CornerRadius="30">
-                <FontIcon
+                    <FontIcon
                     Name="PlayStateIcon"
                     FontFamily="{StaticResource SymbolThemeFontFamily}"
                     Glyph="&#xEDB4;"></FontIcon>
-                <!--EDB5 -->
-            </Button>
-            <Button
+                    <!--EDB5 -->
+                </Button>
+                <Button
                 Grid.Row="1"
                 Grid.Column="2"
                 Style="{StaticResource ButtonRevealStyle}"
@@ -227,11 +238,11 @@
                 Width="45"
                 Height="45"
                 CornerRadius="30">
-                <FontIcon
+                    <FontIcon
                     FontFamily="{StaticResource SymbolThemeFontFamily}"
                     Glyph="&#xE101;"></FontIcon>
-            </Button>
-            <Slider
+                </Button>
+                <Slider
                 Grid.Column="0"
                 Grid.ColumnSpan="3"
                 Margin="20,0,20,0"
@@ -239,8 +250,8 @@
                 x:FieldModifier="public"
                 ValueChanged="SliderAudioRate_ValueChanged"
                 Name="SliderVolumn" />
-        </Grid>
-        <controls:DockPanel
+            </Grid>
+            <controls:DockPanel
             x:Name="DockPanelRight"
             LastChildFill="True"
             Grid.Row="1"
@@ -248,7 +259,7 @@
             Grid.RowSpan="12"
             Grid.ColumnSpan="5"
             Grid.Column="6">
-            <TextBlock
+                <TextBlock
                 Visibility="Visible"
                 DoubleTapped="ToggleWindowShowMode"
                 controls:DockPanel.Dock="Top"
@@ -257,7 +268,7 @@
                 TextAlignment="Center"
                 Name="TextBlockSongTitle"
                 Text="歌曲名" />
-            <TextBlock
+                <TextBlock
                 Visibility="Visible"
                 controls:DockPanel.Dock="Top"
                 x:FieldModifier="public"
@@ -267,48 +278,49 @@
                 Foreground="Gray"
                 FontSize="20"
                 Text="歌手" />
-            <StackPanel
+                <StackPanel
                 Margin="0,0,0,5"
                 Spacing="15"
                 HorizontalAlignment="Center"
                 controls:DockPanel.Dock="Bottom"
                 Orientation="Horizontal">
-                <ToggleButton
+                    <ToggleButton
                     Name="ToggleButtonTranslation"
                     Click="ToggleButtonTranslation_OnClick"
                     Content="译" />
-                <ToggleButton
+                    <ToggleButton
                     Click="ToggleButtonSound_OnClick"
                     Name="ToggleButtonSound"
                     Content="音" />
 
-            </StackPanel>
-            <ScrollViewer
+                </StackPanel>
+                <ScrollViewer
                 Margin="0,5"
                 x:FieldModifier="public"
                 x:Name="LyricBoxContainer"
                 VerticalScrollBarVisibility="Hidden"
                 HorizontalScrollBarVisibility="Hidden">
-                <ScrollViewer.Content>
-                    <StackPanel
+                    <ScrollViewer.Content>
+                        <StackPanel
                         Spacing="15"
                         PointerWheelChanged="LyricBoxContainer_OnPointerWheelChanged"
                         Name="LyricBox"
                         Orientation="Vertical"
                         ScrollViewer.VerticalScrollBarVisibility="Auto">
-                        <TextBlock
+                            <TextBlock
                             Text="当前暂未播放歌曲"
                             HorizontalAlignment="Center" />
-                    </StackPanel>
-                </ScrollViewer.Content>
-            </ScrollViewer>
-        </controls:DockPanel>
-        <ProgressBar
+                        </StackPanel>
+                    </ScrollViewer.Content>
+                </ScrollViewer>
+            </controls:DockPanel>
+            <ProgressBar
             Name="ProgressBarPlayProg"
             Visibility="Collapsed"
             Grid.Column="0"
             Grid.ColumnSpan="12"
             Grid.Row="12"
             Value="0" />
+        </Grid>
     </Grid>
 </Page>
