@@ -103,16 +103,32 @@ namespace HyPlayer.Controls
                 toast.Data.Values["CurrentValue"] = "0";
 
                 toast.Data.SequenceNumber = 0;
+                toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(60);
                 ToastNotifier notifier = ToastNotificationManager.CreateToastNotifier();
                 notifier.Show(toast);
+                toast.Dismissed += Toast_Dismissed;
                 HyPlayList.OnPlayPositionChange += FreshDesktopLyric;
             }
             else
             {
                 HyPlayList.OnPlayPositionChange -= FreshDesktopLyric;
+                ToastNotifier notifier = ToastNotificationManager.CreateToastNotifier();
+                ToastNotificationManagerCompat.History.Clear();
             }
 
 
+        }
+
+        private void Toast_Dismissed(ToastNotification sender, ToastDismissedEventArgs args)
+        {
+            if (args.Reason == ToastDismissalReason.TimedOut)
+            {
+                ToastNotifier notifier = ToastNotificationManager.CreateToastNotifier();
+                notifier.Show(sender);
+            }
+            else
+            if (Common.Setting.toastLyric)
+                Common.Setting.toastLyric = false;
         }
 
         private void FreshDesktopLyric(TimeSpan ts)
@@ -544,6 +560,11 @@ namespace HyPlayer.Controls
             //展示系统的共享ui
             DataTransferManager.ShowShareUI();
 
+        }
+
+        private void ToggleButton_Click(object sender, RoutedEventArgs e)
+        {
+            InitializeDesktopLyric();
         }
     }
 

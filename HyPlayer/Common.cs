@@ -15,6 +15,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Linq;
 using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace HyPlayer
 {
@@ -28,7 +30,7 @@ namespace HyPlayer
         public static PlayBar BarPlayBar;
         public static Frame BaseFrame;
         public static BasePage PageBase;
-        public static Setting Setting;
+        public static Setting Setting = new Setting();
         public static bool ShowLyricSound = true;
         public static bool ShowLyricTrans = true;
         public static Dictionary<string, object> GLOBAL = new Dictionary<string, object>();
@@ -66,7 +68,7 @@ namespace HyPlayer
         }
     }
 
-    internal struct Setting
+    internal class Setting : INotifyPropertyChanged
     {
         public string audioRate
         {
@@ -76,7 +78,11 @@ namespace HyPlayer
                     return ApplicationData.Current.LocalSettings.Values["audioRate"].ToString();
                 return "999000";
             }
-            set => ApplicationData.Current.LocalSettings.Values["audioRate"] = value;
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["audioRate"] = value;
+                OnPropertyChanged();
+            }
         }
 
         public int Volume
@@ -106,7 +112,11 @@ namespace HyPlayer
                     return ApplicationData.Current.LocalSettings.Values["downloadDir"].ToString();
                 return ApplicationData.Current.LocalCacheFolder.Path;
             }
-            set => ApplicationData.Current.LocalSettings.Values["downloadDir"] = value;
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["downloadDir"] = value;
+                OnPropertyChanged();
+            }
         }
 
         public bool toastLyric
@@ -117,7 +127,11 @@ namespace HyPlayer
                     return ApplicationData.Current.LocalSettings.Values["toastLyric"].ToString() == "true";
                 return false;
             }
-            set => ApplicationData.Current.LocalSettings.Values["toastLyric"] = value ? "true" : "false";
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["toastLyric"] = value ? "true" : "false";
+                OnPropertyChanged();
+            }
         }
 
         public bool expandAnimation
@@ -128,7 +142,21 @@ namespace HyPlayer
                     return ApplicationData.Current.LocalSettings.Values["expandAnimation"].ToString() != "false";
                 return true;
             }
-            set => ApplicationData.Current.LocalSettings.Values["expandAnimation"] = value ? "true" : "false";
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["expandAnimation"] = value ? "true" : "false";
+                OnPropertyChanged();
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        public async void OnPropertyChanged([CallerMemberName] string propertyName = "")
+        {
+            if (this.PropertyChanged != null)
+                await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                 {
+                     PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+                 });
         }
     }
     internal class HistoryManagement
@@ -169,7 +197,7 @@ namespace HyPlayer
                 list.Insert(0, Text);
             else
             {
-                for(int i=0; i<list.Count;i++)
+                for (int i = 0; i < list.Count; i++)
                 {
                     if (list[i] == Text)
                         list.Remove(list[i]);
