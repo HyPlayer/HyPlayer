@@ -128,7 +128,7 @@
                                     </Flyout>
                                 </FlyoutBase.AttachedFlyout>
                             </TextBlock>
-                            <HyperlinkButton x:Name="Edit" Click="Edit_Click" Content="编辑简介" />
+                            <HyperlinkButton x:Name="Edit" Click="Edit_Click" Content="编辑简介" Visibility="Collapsed"/>
                         </StackPanel>
                     </StackPanel>
                 </controls:DockPanel>

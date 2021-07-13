@@ -45,6 +45,8 @@ namespace HyPlayer.Pages
             TextBlockDesc.Text = playList.desc;
             TextBoxAuthor.Text = playList.creater.name;
             ToggleButtonLike.IsChecked = playList.subscribed;
+            if (playList.creater.id == Common.LoginedUser.id)
+                Edit.Visibility = Visibility.Visible;
         }
 
         public async void LoadSongListItem()
