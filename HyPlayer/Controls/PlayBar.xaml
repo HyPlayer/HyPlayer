@@ -96,6 +96,9 @@
                             Target="ButtonMoreFunc.Margin"
                             Value="10,10,55,40" />
                         <Setter
+                            Target="ButtonDesktopLyrics.Margin"
+                            Value="10,10,100,40" />
+                        <Setter
                             Target="GridThis.Visibility"
                             Value="Visible" />
                         <Setter
@@ -439,6 +442,7 @@
             </Grid>
         </Grid>
         <ToggleButton 
+            x:Name="ButtonDesktopLyrics"
             Grid.Column="3"
             Width="40"
             Height="40"
