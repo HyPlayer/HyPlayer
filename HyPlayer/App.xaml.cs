@@ -10,6 +10,7 @@ using Microsoft.AppCenter;
 using Microsoft.AppCenter.Analytics;
 using Microsoft.AppCenter.Crashes;
 using UnhandledExceptionEventArgs = Windows.UI.Xaml.UnhandledExceptionEventArgs;
+using HyPlayer.HyPlayControl;
 
 namespace HyPlayer
 {
@@ -74,6 +75,24 @@ namespace HyPlayer
             */
         }
 
+        protected override async void OnFileActivated(FileActivatedEventArgs args)
+        {
+            Frame rootFrame = Window.Current.Content as Frame;
+            if (rootFrame == null)
+            {
+                rootFrame = new Frame();
+                Window.Current.Content = rootFrame;
+            }
+            rootFrame.Navigate(typeof(MainPage));
+            Window.Current.Activate();
+            HyPlayList.RemoveAllSong();
+            foreach (Windows.Storage.StorageFile file in args.Files)
+            {
+                await HyPlayList.AppendFile(file);
+            }
+            HyPlayList.SongAppendDone();
+            HyPlayList.SongMoveTo(0);
+        }
         /// <summary>
         /// 在应用程序由最终用户正常启动时进行调用。
         /// 将在启动应用程序以打开特定文件等情况下使用。
