@@ -29,7 +29,6 @@ namespace HyPlayer.Pages
             RadioButtonsSongBr.SelectedIndex =
                 RadioButtonsSongBr.Items.IndexOf(RadioButtonsSongBr.Items.First(t => ((RadioButton)t).Tag.ToString() == Common.Setting.audioRate));
             TextBoxDownloadDir.Text = Common.Setting.downloadDir;
-            ToastLyricCheckbox.IsChecked = Common.Setting.toastLyric;
             AnimationCheckbox.IsChecked = Common.Setting.expandAnimation;
             LazySongUrlGetCheck.IsChecked = ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"] != null && ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"].ToString() != "false";
             TextBoxXREALIP.Text = ApplicationData.Current.LocalSettings.Values["xRealIp"] != null ? ApplicationData.Current.LocalSettings.Values["xRealIp"].ToString() : "";
@@ -152,15 +151,10 @@ namespace HyPlayer.Pages
                 TextBoxDownloadDir.Text = Common.Setting.downloadDir;
             }
         }
-
-        private void ToastLyricCheckbox_OnChecked(object sender, RoutedEventArgs e)
+        private void AnimationCheckbox_Checked(object sender, RoutedEventArgs e)
         {
-            Common.Setting.toastLyric = ToastLyricCheckbox.IsChecked.Value;
             Common.Setting.expandAnimation = AnimationCheckbox.IsChecked.Value;
-            Common.BarPlayBar.InitializeDesktopLyric();
-
         }
-
 
         private int _elapse = 10;
         private void UIElement_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)

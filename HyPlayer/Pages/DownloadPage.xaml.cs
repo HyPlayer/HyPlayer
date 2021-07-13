@@ -84,5 +84,10 @@ namespace HyPlayer.Pages
             });
             DownloadManager.DownloadLists = new List<DownloadObject>();
         }
+
+        private async void OpenDownloadFolder_Click(object sender, RoutedEventArgs e)
+        {
+            await Windows.System.Launcher.LaunchFolderPathAsync(Common.Setting.downloadDir);
+        }
     }
 }

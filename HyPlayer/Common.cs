@@ -108,9 +108,10 @@ namespace HyPlayer
         {
             get
             {
-                if (ApplicationData.Current.LocalSettings.Values.ContainsKey("downloadDir"))
-                    return ApplicationData.Current.LocalSettings.Values["downloadDir"].ToString();
-                return ApplicationData.Current.LocalCacheFolder.Path;
+                if (!ApplicationData.Current.LocalSettings.Values.ContainsKey("downloadDir"))
+                    ApplicationData.Current.LocalSettings.Values["downloadDir"] = KnownFolders.MusicLibrary.CreateFolderAsync("HyPlayer", CreationCollisionOption.OpenIfExists).AsTask().Result.Path;
+                return ApplicationData.Current.LocalSettings.Values["downloadDir"].ToString();
+
             }
             set
             {
