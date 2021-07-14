@@ -405,8 +405,8 @@ namespace HyPlayer.Pages
                 case "PageSettings":
                     Common.BaseFrame.Navigate(typeof(Pages.Settings), null, new EntranceNavigationTransitionInfo());
                     break;
-                case "PageDownload":
-                    Common.BaseFrame.Navigate(typeof(Pages.DownloadPage), null, new EntranceNavigationTransitionInfo());
+                case "PageLocal":
+                    Common.BaseFrame.Navigate(typeof(Pages.LocalMusicPage), null, new EntranceNavigationTransitionInfo());
                     break;
                 case "PageHistory":
                     Common.BaseFrame.Navigate(typeof(Pages.History), null, new EntranceNavigationTransitionInfo());

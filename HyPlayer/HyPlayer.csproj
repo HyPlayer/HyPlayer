@@ -201,6 +201,9 @@
     <Compile Include="Controls\PlayBar.xaml.cs">
       <DependentUpon>PlayBar.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\LocalMusicPage.xaml.cs">
+      <DependentUpon>LocalMusicPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Pages\Me.xaml.cs">
       <DependentUpon>Me.xaml</DependentUpon>
     </Compile>
@@ -383,6 +386,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\PlayBar.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\LocalMusicPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

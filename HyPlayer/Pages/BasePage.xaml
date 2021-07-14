@@ -86,9 +86,9 @@
                     Icon="Home"
                     Tag="PageHome" />
                 <controls1:NavigationViewItem
-                    Content="下载"
-                    Icon="Download"
-                    Tag="PageDownload" />
+                    Content="本地和下载"
+                    Icon="Folder"
+                    Tag="PageLocal" />
                 <controls1:NavigationViewItem
                     Icon="Clock"
                     Content="播放历史"

@@ -1,0 +1,49 @@
+﻿<Page
+    x:Class="HyPlayer.Pages.LocalMusicPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:HyPlayer.Pages"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:local1="using:HyPlayer.Controls"
+    mc:Ignorable="d">
+
+    <Pivot Title="本地和下载">
+        <PivotItem Header="本地歌曲">
+            <StackPanel Orientation="Vertical" Margin="0,0,0,150">
+                <StackPanel Padding="15" Orientation="Horizontal">
+                    <Button x:Name="Playall" Content="播放全部" ToolTipService.ToolTip="{x:Bind Content}" Click="Playall_Click"/>
+                    <Button x:Name="Refresh" Content="刷新" ToolTipService.ToolTip="{x:Bind Content}" Click="Refresh_Click"/>
+                </StackPanel>
+                <ListView
+                                            SelectionMode="Single"
+                                            Name="ListBoxLocalMusicContainer"
+                                            SelectionChanged="ListBoxLocalMusicContainer_SelectionChanged"
+                    ScrollViewer.VerticalScrollMode="Enabled"
+                    ScrollViewer.VerticalScrollBarVisibility="Visible"
+>
+                    <ListView.ItemTemplate>
+                        <DataTemplate
+                                                    x:DataType="local1:ListViewPlayItem">
+                            <StackPanel
+                                                        Orientation="Horizontal">
+                                <StackPanel
+                                                            Width="340"
+                                                            Orientation="Vertical">
+                                    <TextBlock
+                                                                Text="{x:Bind Name}" />
+                                    <TextBlock
+                                                                Foreground="Gray"
+                                                                Text="{x:Bind Artist}" />
+                                </StackPanel>
+                            
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </StackPanel>
+        </PivotItem>
+        <PivotItem Header="下载管理">
+            <Frame x:Name="DownloadPageFrame"/>
+        </PivotItem>
+    </Pivot>
+</Page>
