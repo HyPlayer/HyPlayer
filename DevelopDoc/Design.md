@@ -24,6 +24,10 @@
 
 ![BJC09076-Pano](Design.Assets\BJC09076-Pano.jpg)
 
+## 210714 - 新的主页设计
+
+![Design-Home](210717-HomePage-noexif.jpg)
+
 Design by aaaaaaccd
 
 Copyright © aaaaaaccd 2021
