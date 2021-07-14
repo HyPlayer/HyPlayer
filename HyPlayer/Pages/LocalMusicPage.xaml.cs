@@ -140,7 +140,7 @@ namespace HyPlayer.Pages
         {
             await HyPlayList.AppendFile(localMusicFiles[ListBoxLocalMusicContainer.SelectedIndex]);
             HyPlayList.SongAppendDone();
-            HyPlayList.SongMoveNext();
+            HyPlayList.SongMoveTo(HyPlayList.List.Count - 1);
         }
     }
 }
