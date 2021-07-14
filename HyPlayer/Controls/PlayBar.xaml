@@ -378,7 +378,8 @@
                     Grid.Column="4"
                     VerticalAlignment="Center"
                     Click="BtnPlayStateChange_OnClick"
-                    CornerRadius="30">
+                    CornerRadius="30"
+                    KeyUp="BtnPlayStateChange_KeyUp"  AutomationProperties.AcceleratorKey="Space">
                     <FontIcon
                         Name="PlayStateIcon"
                         FontFamily="{StaticResource SymbolThemeFontFamily}"

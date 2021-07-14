@@ -4,6 +4,7 @@ using Windows.Storage;
 using HyPlayer.HyPlayControl;
 using Windows.UI.Xaml.Controls;
 using Kawazu;
+using Windows.UI.Xaml.Navigation;
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
 
@@ -35,6 +36,23 @@ namespace HyPlayer
                 }));
             });
             InitializeComponent();
+        }
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            MainFrame.Navigate(typeof(Pages.BasePage));
+            switch (e.Parameter)
+            {
+                case "search":
+                    Common.BaseFrame.Navigate(typeof(Pages.Search));
+                    break;
+                case "account":
+                    Common.BaseFrame.Navigate(typeof(Pages.Me));
+                    break;
+                case "local":
+                    Common.BaseFrame.Navigate(typeof(Pages.LocalMusicPage));
+                    break;
+            }
         }
     }
 }

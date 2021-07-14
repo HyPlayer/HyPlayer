@@ -238,6 +238,10 @@
     <Content Include="Assets\BadgeLogo.scale-200.png" />
     <Content Include="Assets\BadgeLogo.scale-400.png" />
     <Content Include="Assets\icon.png" />
+    <Content Include="Assets\JumpListIcons\JumplistAccount.png" />
+    <Content Include="Assets\JumpListIcons\JumplistLikedSongs.png" />
+    <Content Include="Assets\JumpListIcons\JumplistLocal.png" />
+    <Content Include="Assets\JumpListIcons\JumplistSearch.png" />
     <Content Include="Assets\LargeTile.scale-100.png" />
     <Content Include="Assets\LargeTile.scale-125.png" />
     <Content Include="Assets\LargeTile.scale-150.png" />

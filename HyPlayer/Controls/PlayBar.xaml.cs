@@ -566,6 +566,11 @@ namespace HyPlayer.Controls
         {
             InitializeDesktopLyric();
         }
+
+        private void BtnPlayStateChange_KeyUp(object sender, KeyRoutedEventArgs e)
+        {
+            BtnPlayStateChange_OnClick(sender, e);
+        }
     }
 
 

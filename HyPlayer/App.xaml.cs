@@ -11,6 +11,7 @@ using Microsoft.AppCenter.Analytics;
 using Microsoft.AppCenter.Crashes;
 using UnhandledExceptionEventArgs = Windows.UI.Xaml.UnhandledExceptionEventArgs;
 using HyPlayer.HyPlayControl;
+using Windows.UI.StartScreen;
 
 namespace HyPlayer
 {
@@ -74,9 +75,26 @@ namespace HyPlayer
             }.ShowAsync();
             */
         }
+        private async void InitializeJumpList()
+        {
+            JumpList jumpList = await JumpList.LoadCurrentAsync();
+            jumpList.Items.Clear();
 
+            JumpListItem item1 = JumpListItem.CreateWithArguments("search", "搜索");
+            item1.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistSearch.png");
+            JumpListItem item2 = JumpListItem.CreateWithArguments("account", "账户");
+            item2.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistAccount.png");
+            JumpListItem item3 = JumpListItem.CreateWithArguments("local", "本地音乐");
+            item3.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistLocal.png");
+
+            jumpList.Items.Add(item1);
+            jumpList.Items.Add(item2);
+            jumpList.Items.Add(item3);
+            await jumpList.SaveAsync();
+        }
         protected override async void OnFileActivated(FileActivatedEventArgs args)
         {
+            InitializeJumpList();
             Frame rootFrame = Window.Current.Content as Frame;
             if (rootFrame == null)
             {
@@ -100,6 +118,7 @@ namespace HyPlayer
         /// <param name="e">有关启动请求和过程的详细信息。</param>
         protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
+            InitializeJumpList();
             Frame rootFrame = Window.Current.Content as Frame;
 
             // 不要在窗口已包含内容时重复应用程序初始化，
@@ -122,13 +141,9 @@ namespace HyPlayer
 
             if (e.PrelaunchActivated == false)
             {
-                if (rootFrame.Content == null)
-                {
-                    // 当导航堆栈尚未还原时，导航到第一页，
-                    // 并通过将所需信息作为导航参数传入来配置
-                    // 参数
-                    rootFrame.Navigate(typeof(MainPage), e.Arguments);
-                }
+
+                rootFrame.Navigate(typeof(MainPage), e.Arguments);
+
                 // 确保当前窗口处于活动状态
                 Window.Current.Activate();
             }
