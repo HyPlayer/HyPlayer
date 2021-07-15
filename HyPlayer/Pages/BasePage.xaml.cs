@@ -280,7 +280,7 @@ namespace HyPlayer.Pages
                                 {
                                     isliked = true;
                                     continue;
-                                }                                
+                                }
                                 NavItemsMyList.MenuItems.Add(new NavigationViewItem()
                                 {
                                     Content = jToken["name"].ToString(),
@@ -564,7 +564,7 @@ namespace HyPlayer.Pages
             (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchSuggest,
                 new Dictionary<string, object>() { { "keywords", sender.Text }, { "type", "mobile" } });
 
-            if (isOk && json["result"]["allMatch"] != null && json["result"]["allMatch"].HasValues)
+            if (isOk && json["result"] != null && json["result"]["allMatch"] != null && json["result"]["allMatch"].HasValues)
             {
                 sender.ItemsSource = json["result"]["allMatch"].ToArray().ToList().Select(t => t["keyword"].ToString())
                     .ToList();

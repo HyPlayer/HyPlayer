@@ -12,6 +12,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using Newtonsoft.Json;
+using Windows.System;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -58,6 +59,11 @@ namespace HyPlayer.Pages
         private async void LoadResult()
         {
             if (string.IsNullOrEmpty(Text)) return;
+            if (Convert.ToBase64String(Text.ToByteArrayUtf8()) == "6Ieq5p2A")
+            {
+                _ = Launcher.LaunchUriAsync(new Uri(@"http://music.163.com/m/topic/18926801"));
+                return;
+            }
             HistoryManagement.AddSearchHistory(Text);
             var list = HistoryManagement.GetSearchHistory();
             SearchHistory.Children.Clear();
@@ -222,7 +228,7 @@ namespace HyPlayer.Pages
             (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchSuggest,
                 new Dictionary<string, object>() { { "keywords", sender.Text }, { "type", "mobile" } });
 
-            if (isOk && json["result"]["allMatch"] != null && json["result"]["allMatch"].HasValues)
+            if (isOk && json["result"] != null && json["result"]["allMatch"] != null && json["result"]["allMatch"].HasValues)
             {
                 sender.ItemsSource = json["result"]["allMatch"].ToArray().ToList().Select(t => t["keyword"].ToString())
                     .ToList();
