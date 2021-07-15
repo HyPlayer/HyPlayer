@@ -107,8 +107,20 @@
                 <controls1:NavigationViewItem
                     x:Name="NavItemsAddPlaylist"
                     Icon="Add"
+                    Visibility="Collapsed"
                     Content="创建歌单"
                     Tag="SonglistCreate" />
+                <controls1:NavigationViewItem
+                    x:Name="NavItemsMyLovedPlaylist"
+                    Visibility="Collapsed"
+                    Content="我喜欢的音乐"
+                    Tag="SonglistMyLike" >
+                    <controls1:NavigationViewItem.Icon>
+                        <FontIcon
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        Glyph="&#xE00B;" />
+                    </controls1:NavigationViewItem.Icon>
+                </controls1:NavigationViewItem>
                 <controls1:NavigationViewItem
                     Icon="List"
                     Content="我创建的歌单"

@@ -260,7 +260,9 @@ namespace HyPlayer.Pages
                         NavItemsLikeList.Visibility = Visibility.Visible;
                         NavItemsAddPlaylist.Visibility = Visibility.Visible;
                         NavItemsMyList.Visibility = Visibility.Visible;
+                        NavItemsMyLovedPlaylist.Visibility = Visibility.Visible;
                         Common.MySongLists.Clear();
+                        bool isliked = false;
                         foreach (JToken jToken in json["playlist"])
                         {
                             if (jToken["subscribed"].ToString() == "True")
@@ -274,6 +276,11 @@ namespace HyPlayer.Pages
                             else
                             {
                                 Common.MySongLists.Add(NCPlayList.CreateFromJson(jToken));
+                                if (!isliked)
+                                {
+                                    isliked = true;
+                                    continue;
+                                }                                
                                 NavItemsMyList.MenuItems.Add(new NavigationViewItem()
                                 {
                                     Content = jToken["name"].ToString(),
@@ -314,7 +321,7 @@ namespace HyPlayer.Pages
                 }));
             });
 
-          HyPlayList.LoginDownCall();
+            HyPlayList.LoginDownCall();
 
         }
 
@@ -387,6 +394,13 @@ namespace HyPlayer.Pages
                 }));
                 return;
             }
+            if (nowitem.Tag.ToString() == "SonglistMyLike")
+            {
+                Common.BaseFrame.Navigate(typeof(Pages.SongListDetail), Common.MySongLists[0].plid,
+                    new EntranceNavigationTransitionInfo());
+                return;
+            }
+
             if (nowitem.Tag.ToString().StartsWith("Playlist"))
             {
                 Common.BaseFrame.Navigate(typeof(Pages.SongListDetail), nowitem.Tag.ToString().Substring(8),

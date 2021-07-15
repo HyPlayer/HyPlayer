@@ -204,7 +204,6 @@ namespace HyPlayer.HyPlayControl
             if (List.Count == 0) return;
             MoveSongPointer(true);
             LoadPlayerSong();
-            Player.Play();
         }
 
         public static void SongMovePrevious()
@@ -218,9 +217,7 @@ namespace HyPlayer.HyPlayControl
             {
                 NowPlaying--;
             }
-
             LoadPlayerSong();
-            Player.Play();
         }
 
         public static void SongMoveTo(int index)
@@ -228,7 +225,6 @@ namespace HyPlayer.HyPlayControl
             if (List.Count <= index) return;
             NowPlaying = index;
             LoadPlayerSong();
-            Player.Play();
         }
 
         public static void RemoveSong(int index)
