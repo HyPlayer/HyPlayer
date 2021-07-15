@@ -68,11 +68,10 @@
                     FontSize="20"
                     Text="译名" />
             </StackPanel>
-            <!-- ReSharper disable once Xaml.InvalidResourceType -->
             <TextBlock
-                Visibility="Collapsed"
+                Visibility="Visible"
                 Grid.Row="1"
-                Foreground="{ThemeResource SystemBaseLowColor}"
+                Foreground="{ThemeResource SystemColorGrayTextColor}"
                 Name="TextBlockAlia"
                 Margin="0,2,0,-6"
                 FontSize="12" />

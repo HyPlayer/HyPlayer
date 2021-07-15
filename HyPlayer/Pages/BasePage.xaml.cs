@@ -314,6 +314,8 @@ namespace HyPlayer.Pages
                 }));
             });
 
+          HyPlayList.LoginDownCall();
+
         }
 
 

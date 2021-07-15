@@ -17,11 +17,11 @@
                 <ResourceDictionary>
                     <ResourceDictionary.ThemeDictionaries>
                         <ResourceDictionary x:Key="Light">
-                            <StaticResource x:Key="NavigationViewContentBackground" ResourceKey="LayerFillColorDefaultBrush"/>
+                            <SolidColorBrush x:Key="NavigationViewContentBackground" Color="{ThemeResource SystemColorWindowColor}" Opacity="0.2"/>
                             <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="Transparent"/>
                         </ResourceDictionary>
                         <ResourceDictionary x:Key="Dark">
-                            <StaticResource x:Key="NavigationViewContentBackground" ResourceKey="LayerFillColorDefaultBrush"/>
+                            <SolidColorBrush x:Key="NavigationViewContentBackground" Color="{ThemeResource SystemChromeMediumColor}" Opacity="0.2"/>
                             <SolidColorBrush x:Key="NavigationViewExpandedPaneBackground" Color="Transparent"/>
                         </ResourceDictionary>
                         <ResourceDictionary x:Key="HighContrast">

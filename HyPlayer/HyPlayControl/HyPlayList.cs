@@ -91,6 +91,10 @@ namespace HyPlayer.HyPlayControl
 
         public static event LyricChangeEvent OnSongBufferEnd;
 
+        public delegate void LoginDoneEvent();
+
+        public static event LoginDoneEvent OnLoginDone;
+
         /********        API        ********/
         public static MediaPlayer Player;
         public static SystemMediaTransportControls MediaSystemControls;
@@ -128,6 +132,11 @@ namespace HyPlayer.HyPlayControl
             Player.BufferingEnded += Player_BufferingEnded;
             ;
             Common.GLOBAL["PERSONALFM"] = "false";
+        }
+
+        public static void LoginDownCall()
+        {
+            Common.Invoke(() => { HyPlayList.OnLoginDone?.Invoke(); });
         }
 
         private static void MediaSystemControls_PlaybackPositionChangeRequested(SystemMediaTransportControls sender, PlaybackPositionChangeRequestedEventArgs args)

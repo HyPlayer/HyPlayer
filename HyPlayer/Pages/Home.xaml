@@ -4,41 +4,129 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:HyPlayer.Pages"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     mc:Ignorable="d">
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Padding="15" Orientation="Vertical">
-            <TextBlock
-                Padding="15,0,0,0"
-                FontSize="40"
-                Text="推荐歌单" 
-                FontFamily="Microsoft YaHei UI" />
-            <ScrollViewer
-                HorizontalScrollBarVisibility="Auto"
-                HorizontalScrollMode="Enabled"
-                VerticalScrollMode="Disabled">
-                <StackPanel
-                    x:Name="RcmdSongList"
-                    Padding="0,0,0,15"
-                    Orientation="Horizontal"
-                    Spacing="15" />
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="NarrowState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="MainGrid.RowDefinitions[1].Height" Value="*"/>
+                        <Setter Target="MainGrid.ColumnDefinitions[1].Width" Value="auto"/>
+                        <Setter Target="SecondGrid.(Grid.Column)" Value="0"/>
+                        <Setter Target="SecondGrid.(Grid.Row)" Value="1"/>
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="WideState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="720" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="MainGrid.RowDefinitions[1].Height" Value="auto"/>
+                        <Setter Target="MainGrid.ColumnDefinitions[1].Width" Value="*"/>
+                        <Setter Target="SecondGrid.(Grid.Column)" Value="1"/>
+                        <Setter Target="SecondGrid.(Grid.Row)" Value="0"/>
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+        <StackPanel x:Name="MainContainer" Padding="15" Spacing="10" Orientation="Vertical">
+            <!-- 欢迎语 -->
+            <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock FontSize="35" Text="Hi~ "/>
+                    <TextBlock FontSize="35" x:Name="TbHelloUserName"/>
+                </StackPanel>
+                <TextBlock FontSize="15" x:Name="TbRamdomWelcome" Text="用音乐开启新的一天吧"/>
+            </StackPanel>
+
+            <!-- 每日推荐 -->
+            <StackPanel Orientation="Vertical" CornerRadius="8" Background="{ThemeResource CardStrokeColorDefaultBrush}">
+                <TextBlock Margin="5" FontSize="30" Text="每日推荐" />
+                <ScrollViewer
+                    VerticalScrollBarVisibility="Disabled"
+                    VerticalScrollMode="Disabled"
+                    HorizontalScrollBarVisibility="Auto"
+                    HorizontalScrollMode="Auto">
+                    <StackPanel x:Name="DailySongContainer" Orientation="Horizontal" Height="240" />
+                </ScrollViewer>
+            </StackPanel>
+
+            <!-- 功能按钮 -->
+            <ScrollViewer HorizontalScrollMode="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollMode="Disabled" VerticalScrollBarVisibility="Disabled" Height="100" Background="{ThemeResource CardStrokeColorDefaultBrush}" CornerRadius="8">
+                <Grid MinWidth="1000" Padding="1" ColumnSpacing="15">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition MinWidth="230"/>
+                        <ColumnDefinition MinWidth="230"/>
+                        <ColumnDefinition MinWidth="230"/>
+                        <ColumnDefinition MinWidth="230"/>
+                    </Grid.ColumnDefinitions>
+                    <Button HorizontalAlignment="Center" Click="Button_Click_1" Grid.Column="0" CornerRadius="8" Padding="15" Background="Purple">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <FontIcon FontSize="45" FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE93E;"/>
+                            <TextBlock VerticalAlignment="Center" FontSize="35" Text="私人 FM"/>
+                        </StackPanel>
+                    </Button>
+                    <Button HorizontalAlignment="Center" Click="Button_Click_2" Grid.Column="1" CornerRadius="8" Padding="15" Background="Red">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <FontIcon FontSize="45" FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE95E;"/>
+                            <TextBlock VerticalAlignment="Center" FontSize="35" Text="心动模式"/>
+                        </StackPanel>
+                    </Button>
+                    <Button HorizontalAlignment="Center" Grid.Column="2" CornerRadius="8" Padding="15" Background="Black">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <FontIcon FontSize="45" FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE25B;"/>
+                            <TextBlock VerticalAlignment="Center" FontSize="35" Text="敬请期待"/>
+                        </StackPanel>
+                    </Button>
+                    <Button HorizontalAlignment="Center" Grid.Column="3" CornerRadius="8" Padding="15" Background="Black">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <FontIcon FontSize="45" FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE25B;"/>
+                            <TextBlock VerticalAlignment="Center" FontSize="35" Text="敬请期待"/>
+                        </StackPanel>
+                    </Button>
+                </Grid>
             </ScrollViewer>
 
-            <TextBlock
-                Padding="15,0,0,0"
-                FontSize="40"
-                Text="排行榜" 
-                FontFamily="Microsoft YaHei UI" />
-            <ScrollViewer
-                HorizontalScrollBarVisibility="Auto"
-                HorizontalScrollMode="Enabled"
-                VerticalScrollMode="Disabled">
-                <StackPanel
-                    x:Name="RankList"
-                    Padding="0,0,0,15"
-                    Orientation="Horizontal"
-                    Spacing="15" />
-            </ScrollViewer>
+            <Grid ColumnSpacing="10" RowSpacing="10" x:Name="MainGrid">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <!-- 推荐歌单 -->
+                <StackPanel x:Name="FirstGrid" Grid.Column="0" Grid.Row="0" Orientation="Vertical" Background="{ThemeResource CardStrokeColorDefaultBrush}" CornerRadius="8">
+                    <TextBlock Margin="5" FontSize="30" Text="推荐歌单" />
+                    <ScrollViewer HorizontalScrollMode="Auto" VerticalScrollBarVisibility="Disabled" VerticalScrollMode="Disabled" HorizontalScrollBarVisibility="Auto" Height="250">
+                        <StackPanel x:Name="RecommendSongListContainer" Orientation="Horizontal" Spacing="15" />
+                    </ScrollViewer>
+                </StackPanel>
+                <!-- 最近常听 -->
+                <StackPanel x:Name="SecondGrid" Grid.Column="1" Grid.Row="0" Orientation="Vertical" CornerRadius="8" Background="{ThemeResource CardStrokeColorDefaultBrush}">
+                    <TextBlock Margin="5" FontSize="30" Text="听歌排行" />
+                    <ScrollViewer Height="260" HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto">
+                        <StackPanel x:Name="MySongHis" Orientation="Vertical" />
+                    </ScrollViewer>
+                </StackPanel>
+            </Grid>
+
+            <!-- 榜单 -->
+            <StackPanel Orientation="Vertical" Background="{ThemeResource CardStrokeColorDefaultBrush}" CornerRadius="8">
+                <TextBlock Margin="5" FontSize="30" Text="榜单" />
+                <ScrollViewer HorizontalScrollMode="Auto" VerticalScrollBarVisibility="Disabled" VerticalScrollMode="Disabled" HorizontalScrollBarVisibility="Auto" Height="250">
+                    <StackPanel x:Name="RankPlayList" Orientation="Horizontal" Spacing="15" />
+                </ScrollViewer>
+            </StackPanel>
+
+
+            <!-- 请在上方编辑代码 -->
+            <!-- 占位 -->
             <Grid Height="150" />
         </StackPanel>
     </ScrollViewer>

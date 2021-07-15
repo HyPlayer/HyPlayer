@@ -28,7 +28,7 @@ namespace HyPlayer.Controls
         private readonly bool CanPlay;
         private bool LoadList;
 
-        public SingleNCSong(NCSong song, int order, bool canplay = true, bool loadlist = false)
+        public SingleNCSong(NCSong song, int order, bool canplay = true, bool loadlist = false, string additionalInfo = null)
         {
             InitializeComponent();
             ncsong = song;
@@ -43,7 +43,8 @@ namespace HyPlayer.Controls
             ImageRect.Source =
                 new BitmapImage(new Uri(song.Album.cover + "?param=" + StaticSource.PICSIZE_SINGLENCSONG_COVER));
             TextBlockSongname.Text = song.songname;
-            TextBlockTransName.Text = string.IsNullOrEmpty(song.transname)?"":$"({song.transname})";
+            TextBlockTransName.Text = string.IsNullOrEmpty(song.transname) ? "" : $"({song.transname})";
+            TextBlockAlia.Text = additionalInfo == null ? (song.alias ?? "") : additionalInfo;
             TextBlockAlbum.Text = song.Album.name;
             OrderId.Text = (order + 1).ToString();
             TextBlockArtist.Text = string.Join(" / ", song.Artist.Select(ar => ar.name));
@@ -204,7 +205,7 @@ namespace HyPlayer.Controls
         {
             Common.BaseFrame.Navigate(typeof(AlbumPage), ncsong.Album);
         }
-        
+
     }
 
 }
