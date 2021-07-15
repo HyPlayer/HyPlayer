@@ -14,32 +14,37 @@
                     <Button x:Name="Playall" Content="播放全部" ToolTipService.ToolTip="{x:Bind Content}" Click="Playall_Click"/>
                     <Button x:Name="Refresh" Content="刷新" ToolTipService.ToolTip="{x:Bind Content}" Click="Refresh_Click"/>
                 </StackPanel>
-                <ListView
+                <Grid>
+                    <ScrollViewer VerticalScrollMode="Enabled">
+                        <ListView
                                             SelectionMode="Single"
                                             Name="ListBoxLocalMusicContainer"
                                             SelectionChanged="ListBoxLocalMusicContainer_SelectionChanged"
                     ScrollViewer.VerticalScrollMode="Enabled"
                     ScrollViewer.VerticalScrollBarVisibility="Visible"
 >
-                    <ListView.ItemTemplate>
-                        <DataTemplate
+                            <ListView.ItemTemplate>
+                                <DataTemplate
                                                     x:DataType="local1:ListViewPlayItem">
-                            <StackPanel
+                                    <StackPanel
                                                         Orientation="Horizontal">
-                                <StackPanel
+                                        <StackPanel
                                                             Width="340"
                                                             Orientation="Vertical">
-                                    <TextBlock
+                                            <TextBlock
                                                                 Text="{x:Bind Name}" />
-                                    <TextBlock
+                                            <TextBlock
                                                                 Foreground="Gray"
                                                                 Text="{x:Bind Artist}" />
-                                </StackPanel>
-                            
-                            </StackPanel>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
+                                        </StackPanel>
+
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </ScrollViewer>
+                    <ProgressRing x:Name="FileLoadingIndicateRing"  IsActive="False" Width="100" Height="100"/>
+                </Grid>
             </StackPanel>
         </PivotItem>
         <PivotItem Header="下载管理">

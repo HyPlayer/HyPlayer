@@ -68,71 +68,80 @@ namespace HyPlayer.Pages
             ListBoxLocalMusicContainer.SelectionChanged += ListBoxLocalMusicContainer_SelectionChanged;
         }
 
-        private void LoadLocalMusic()
+        private async void LoadLocalMusic()
         {
-            foreach (IStorageItem item in KnownFolders.MusicLibrary.GetItemsAsync().AsTask().Result)
+            FileLoadingIndicateRing.IsActive = true;
+            foreach (IStorageItem item in await KnownFolders.MusicLibrary.GetItemsAsync())
             {
                 GetSubFiles(item);
             }
-
+            FileLoadingIndicateRing.IsActive = false;
         }
         private async void GetSubFiles(IStorageItem item)
         {
-            if (item is StorageFile)
+            try
             {
-                StorageFile file = item as StorageFile;
-                if (file.FileType == ".mp3" || file.FileType == ".flac" || file.FileType == ".wav")
+                if (item is StorageFile)
                 {
-                    var mdp = await file.Properties.GetMusicPropertiesAsync();
-                    string[] contributingArtistsKey = { "System.Music.Artist" };
-                    IDictionary<string, object> contributingArtistsProperty =
-                        await mdp.RetrievePropertiesAsync(contributingArtistsKey);
-                    string[] contributingArtists = contributingArtistsProperty["System.Music.Artist"] as string[];
-                    if (contributingArtists is null)
+                    StorageFile file = item as StorageFile;
+                    if (file.FileType == ".mp3" || file.FileType == ".flac" || file.FileType == ".wav")
                     {
-                        contributingArtists = new[] { "未知歌手" };
-                    }
+                        var mdp = await file.Properties.GetMusicPropertiesAsync();
+                        string[] contributingArtistsKey = { "System.Music.Artist" };
+                        IDictionary<string, object> contributingArtistsProperty =
+                            await mdp.RetrievePropertiesAsync(contributingArtistsKey);
+                        string[] contributingArtists = contributingArtistsProperty["System.Music.Artist"] as string[];
+                        if (contributingArtists is null)
+                        {
+                            contributingArtists = new[] { "未知歌手" };
+                        }
 
-                    AudioInfo ai = new AudioInfo()
-                    {
-                        tag = "本地",
-                        Album = string.IsNullOrEmpty(mdp.Album) ? "未知专辑" : mdp.Album,
-                        ArtistArr = contributingArtists,
-                        Artist = string.IsNullOrEmpty(string.Join('/', contributingArtists))
-        ? "未知歌手"
-        : string.Join('/', contributingArtists),
-                        LengthInMilliseconds = mdp.Duration.TotalMilliseconds,
-                        SongName = string.IsNullOrEmpty(mdp.Title) ? file.DisplayName : mdp.Title,
-                        LocalSongFile = file
-                    };
-                    try
-                    {
-                        StorageFile lrcfile =
-                            await (await file.GetParentAsync()).GetFileAsync(Path.ChangeExtension(file.Name, "lrc"));
-                        ai.Lyric = await FileIO.ReadTextAsync(lrcfile);
+                        AudioInfo ai = new AudioInfo()
+                        {
+                            tag = "本地",
+                            Album = string.IsNullOrEmpty(mdp.Album) ? "未知专辑" : mdp.Album,
+                            ArtistArr = contributingArtists,
+                            Artist = string.IsNullOrEmpty(string.Join('/', contributingArtists))
+            ? "未知歌手"
+            : string.Join('/', contributingArtists),
+                            LengthInMilliseconds = mdp.Duration.TotalMilliseconds,
+                            SongName = string.IsNullOrEmpty(mdp.Title) ? file.DisplayName : mdp.Title,
+                            LocalSongFile = file
+                        };
+                        try
+                        {
+                            StorageFile lrcfile =
+                                await (await file.GetParentAsync()).GetFileAsync(Path.ChangeExtension(file.Name, "lrc"));
+                            ai.Lyric = await FileIO.ReadTextAsync(lrcfile);
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine(ex.Message);
+                        }
+                        HyPlayItem hyPlayItem = new HyPlayItem()
+                        {
+                            AudioInfo = ai,
+                            isOnline = false,
+                            ItemType = HyPlayItemType.Local,
+                            Name = ai.SongName,
+                            Path = file.Path
+                        };
+                        localMusicFiles.Add(file);
+                        localHyItems.Add(hyPlayItem);
+                        ListViewPlayItem listViewPlay = new ListViewPlayItem(hyPlayItem.Name, index++, hyPlayItem.AudioInfo.Artist);
+                        localItems.Add(listViewPlay);
+                        ListBoxLocalMusicContainer.Items.Add(listViewPlay);
                     }
-                    catch (Exception)
-                    {
-                    }
-                    HyPlayItem hyPlayItem = new HyPlayItem()
-                    {
-                        AudioInfo = ai,
-                        isOnline = false,
-                        ItemType = HyPlayItemType.Local,
-                        Name = ai.SongName,
-                        Path = file.Path
-                    };
-                    localMusicFiles.Add(file);
-                    localHyItems.Add(hyPlayItem);
-                    ListViewPlayItem listViewPlay = new ListViewPlayItem(hyPlayItem.Name, index++, hyPlayItem.AudioInfo.Artist);
-                    localItems.Add(listViewPlay);
-                    ListBoxLocalMusicContainer.Items.Add(listViewPlay);
+                }
+                else if (item is StorageFolder)
+                {
+                    foreach (IStorageItem subitems in await ((StorageFolder)item).GetItemsAsync())
+                        GetSubFiles(subitems);
                 }
             }
-            else if (item is StorageFolder)
+            catch (Exception ex)
             {
-                foreach (IStorageItem subitems in ((StorageFolder)item).GetItemsAsync().AsTask().Result)
-                    GetSubFiles(subitems);
+                System.Diagnostics.Debug.WriteLine(ex.Message);
             }
         }
 
