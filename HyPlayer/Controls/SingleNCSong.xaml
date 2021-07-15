@@ -71,7 +71,7 @@
             <TextBlock
                 Visibility="Visible"
                 Grid.Row="1"
-                Foreground="{ThemeResource SystemColorGrayTextColor}"
+                Foreground="{ThemeResource SystemControlDisabledListMediumBrush}"
                 Name="TextBlockAlia"
                 Margin="0,2,0,-6"
                 FontSize="12" />

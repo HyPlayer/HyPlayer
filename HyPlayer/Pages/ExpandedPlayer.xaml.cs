@@ -411,7 +411,7 @@ namespace HyPlayer.Pages
         {
             try
             {
-                if (HyPlayList.NowPlayingItem.isOnline)
+                if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
                 {
                     if (HyPlayList.NowPlayingItem.NcPlayItem.Artist.Count > 1)
                     {
@@ -446,7 +446,7 @@ namespace HyPlayer.Pages
             filepicker.SuggestedFileName = HyPlayList.NowPlayingItem.Name + "-cover.jpg";
             filepicker.FileTypeChoices.Add("图片文件", new List<string>() { ".png", ".jpg" });
             var file = await filepicker.PickSaveFileAsync();
-            var stream = (await (HyPlayList.NowPlayingItem.isOnline
+            var stream = (await (HyPlayList.NowPlayingItem.ItemType != HyPlayItemType.Local
                             ? RandomAccessStreamReference.CreateFromUri(new Uri(HyPlayList.NowPlayingItem.NcPlayItem.Album.cover))
                 : RandomAccessStreamReference.CreateFromStream(
                     await HyPlayList.NowPlayingItem.AudioInfo.LocalSongFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999)))

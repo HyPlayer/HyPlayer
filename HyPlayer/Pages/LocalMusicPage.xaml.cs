@@ -117,7 +117,6 @@ namespace HyPlayer.Pages
                     HyPlayItem hyPlayItem = new HyPlayItem()
                     {
                         AudioInfo = ai,
-                        isOnline = false,
                         ItemType = HyPlayItemType.Local,
                         Name = ai.SongName,
                         Path = file.Path

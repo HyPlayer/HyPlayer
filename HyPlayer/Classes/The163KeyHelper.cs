@@ -136,7 +136,7 @@ namespace HyPlayer.Classes
                     bitrate = pi.bitrate,
                     artist = null,
                     duration = pi.LengthInMilliseconds,
-                    musicId = int.Parse(pi.sid),
+                    musicId = int.Parse(pi.id),
                     musicName = pi.songname
                 };
                 key.artist = pi.Artist.Select(t => new List<object>() {t.name, int.Parse(t.id)}).ToList();

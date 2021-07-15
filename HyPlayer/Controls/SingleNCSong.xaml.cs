@@ -94,11 +94,12 @@ namespace HyPlayer.Controls
 
                                     NCPlayItem ncp = new NCPlayItem()
                                     {
+                                        Type = HyPlayItemType.Netease,
                                         tag = tag,
                                         Album = ncSong.Album,
                                         Artist = ncSong.Artist,
                                         subext = token["type"].ToString(),
-                                        sid = ncSong.sid,
+                                        id = ncSong.sid,
                                         songname = ncSong.songname,
                                         url = token["url"].ToString(),
                                         LengthInMilliseconds = ncSong.LengthInMilliseconds,
@@ -110,7 +111,7 @@ namespace HyPlayer.Controls
 
                                 HyPlayList.SongAppendDone();
                                 //此处可以进行优化
-                                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.NcPlayItem.sid == ncsong.sid));
+                                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.NcPlayItem.id == ncsong.sid));
                             }
                         });
                     });
@@ -120,7 +121,7 @@ namespace HyPlayer.Controls
                 await HyPlayList.AppendNCSong(ncsong);
                 HyPlayList.SongAppendDone();
                 //此处可以进行优化
-                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.NcPlayItem.sid == ncsong.sid));
+                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.NcPlayItem.id == ncsong.sid));
             }
 
             return true;

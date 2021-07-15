@@ -27,7 +27,6 @@ using Windows.Media;
 
 namespace HyPlayer.Controls
 {
-
     public sealed partial class PlayBar : UserControl
     {
         private bool canslide;
@@ -56,8 +55,10 @@ namespace HyPlayer.Controls
             timelineProperties.StartTime = TimeSpan.FromSeconds(0);
             timelineProperties.MinSeekTime = TimeSpan.FromSeconds(0);
             timelineProperties.Position = HyPlayList.Player.PlaybackSession.Position;
-            timelineProperties.MaxSeekTime = TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.AudioInfo.LengthInMilliseconds);
-            timelineProperties.EndTime = TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.AudioInfo.LengthInMilliseconds);
+            timelineProperties.MaxSeekTime =
+                TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.AudioInfo.LengthInMilliseconds);
+            timelineProperties.EndTime =
+                TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.AudioInfo.LengthInMilliseconds);
             // Update the System Media transport Controls 
             HyPlayList.MediaSystemControls.UpdateTimelineProperties(timelineProperties);
         }
@@ -89,7 +90,6 @@ namespace HyPlayer.Controls
                     Status = new BindableString("CurrentValueString"),
 
                     Value = new BindableProgressBarValue("CurrentValue"),
-
                 });
                 var toast = new ToastNotification(desktopLyricsToast.GetXml())
                 {
@@ -115,8 +115,6 @@ namespace HyPlayer.Controls
                 ToastNotifier notifier = ToastNotificationManager.CreateToastNotifier();
                 ToastNotificationManagerCompat.History.Clear();
             }
-
-
         }
 
         private void Toast_Dismissed(ToastNotification sender, ToastDismissedEventArgs args)
@@ -126,8 +124,7 @@ namespace HyPlayer.Controls
                 ToastNotifier notifier = ToastNotificationManager.CreateToastNotifier();
                 notifier.Show(sender);
             }
-            else
-            if (Common.Setting.toastLyric)
+            else if (Common.Setting.toastLyric)
                 Common.Setting.toastLyric = false;
         }
 
@@ -140,12 +137,16 @@ namespace HyPlayer.Controls
             };
             data.Values["Title"] = HyPlayList.NowPlayingItem.Name;
             data.Values["PureLyric"] = HyPlayList.Lyrics[HyPlayList.lyricpos].PureLyric;
-            data.Values["Translation"] = HyPlayList.Lyrics[HyPlayList.lyricpos].Translation is null ? " " : HyPlayList.Lyrics[HyPlayList.lyricpos].Translation;
-            data.Values["TotalValueString"] = TimeSpan.FromMilliseconds(tai.LengthInMilliseconds).ToString(@"hh\:mm\:ss");
+            data.Values["Translation"] = HyPlayList.Lyrics[HyPlayList.lyricpos].Translation is null
+                ? " "
+                : HyPlayList.Lyrics[HyPlayList.lyricpos].Translation;
+            data.Values["TotalValueString"] =
+                TimeSpan.FromMilliseconds(tai.LengthInMilliseconds).ToString(@"hh\:mm\:ss");
             data.Values["CurrentValueString"] = HyPlayList.Player.PlaybackSession.Position.ToString(@"hh\:mm\:ss");
-            data.Values["CurrentValue"] = (HyPlayList.Player.PlaybackSession.Position / TimeSpan.FromMilliseconds(tai.LengthInMilliseconds)).ToString();
-            NotificationUpdateResult res = ToastNotificationManager.CreateToastNotifier().Update(data, "HyPlayerDesktopLyrics");
-
+            data.Values["CurrentValue"] = (HyPlayList.Player.PlaybackSession.Position /
+                                           TimeSpan.FromMilliseconds(tai.LengthInMilliseconds)).ToString();
+            NotificationUpdateResult res = ToastNotificationManager.CreateToastNotifier()
+                .Update(data, "HyPlayerDesktopLyrics");
         }
 
         private void HyPlayList_OnPlayListAdd()
@@ -160,12 +161,14 @@ namespace HyPlayer.Controls
             fop.FileTypeFilter.Add(".mp3");
 
 
-            System.Collections.Generic.IReadOnlyList<Windows.Storage.StorageFile> files = await fop.PickMultipleFilesAsync();
+            System.Collections.Generic.IReadOnlyList<Windows.Storage.StorageFile> files =
+                await fop.PickMultipleFilesAsync();
             HyPlayList.RemoveAllSong();
             foreach (Windows.Storage.StorageFile file in files)
             {
                 await HyPlayList.AppendFile(file);
             }
+
             HyPlayList.SongAppendDone();
             HyPlayList.SongMoveTo(0);
         }
@@ -231,33 +234,39 @@ namespace HyPlayer.Controls
             {
                 return;
             }
+
             AudioInfo ai = mpi.AudioInfo;
             Common.Invoke((async () =>
-           {
-               TbSingerName.Text = ai.Artist;
-               TbSongName.Text = ai.SongName;
-               if (mpi.ItemType == HyPlayItemType.Local)
-               {
-                   BitmapImage img = new BitmapImage();
-                   await img.SetSourceAsync((await mpi.AudioInfo.LocalSongFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999)));
-                   AlbumImage.Source = img;
-               }
-               else
-               {
-                   AlbumImage.Source = new BitmapImage(new Uri(mpi.AudioInfo.Picture + "?param=" + StaticSource.PICSIZE_PLAYBAR_ALBUMCOVER));
-               }
-               SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
-               SliderProgress.Minimum = 0;
-               SliderProgress.Maximum = ai.LengthInMilliseconds;
-               if (mpi.isOnline)
-               {
-                   BtnLike.IsChecked = Common.LikedSongs.Contains(mpi.NcPlayItem.sid);
-                   HistoryManagement.AddNCSongHistory(HyPlayList.NowPlayingItem.NcPlayItem.sid);
-               }
-               ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
-               TbSongTag.Text = HyPlayList.NowPlayingItem.AudioInfo.tag;
-               Btn_Share.IsEnabled = HyPlayList.NowPlayingItem.isOnline;
-           }));
+            {
+                TbSingerName.Text = ai.Artist;
+                TbSongName.Text = ai.SongName;
+                if (mpi.ItemType == HyPlayItemType.Local)
+                {
+                    BitmapImage img = new BitmapImage();
+                    await img.SetSourceAsync(
+                        (await mpi.AudioInfo.LocalSongFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999)));
+                    AlbumImage.Source = img;
+                }
+                else
+                {
+                    AlbumImage.Source =
+                        new BitmapImage(new Uri(mpi.AudioInfo.Picture + "?param=" +
+                                                StaticSource.PICSIZE_PLAYBAR_ALBUMCOVER));
+                }
+
+                SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
+                SliderProgress.Minimum = 0;
+                SliderProgress.Maximum = ai.LengthInMilliseconds;
+                if (mpi.ItemType == HyPlayItemType.Netease)
+                {
+                    BtnLike.IsChecked = Common.LikedSongs.Contains(mpi.NcPlayItem.id);
+                    HistoryManagement.AddNCSongHistory(mpi.NcPlayItem.id);
+                }
+
+                ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
+                TbSongTag.Text = HyPlayList.NowPlayingItem.AudioInfo.tag;
+                Btn_Share.IsEnabled = HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease;
+            }));
         }
 
         public void RefreshSongList()
@@ -269,10 +278,13 @@ namespace HyPlayer.Controls
                 {
                     Contacts.Add(new ListViewPlayItem(HyPlayList.List[i].Name, i, HyPlayList.List[i].AudioInfo.Artist));
                 }
+
                 ListBoxPlayList.ItemsSource = Contacts;
                 ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
             }
-            catch { }
+            catch
+            {
+            }
         }
 
         private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
@@ -386,6 +398,7 @@ namespace HyPlayer.Controls
                     //ignore
                 }
             }
+
             ButtonExpand.Visibility = Visibility.Visible;
             ButtonCollapse.Visibility = Visibility.Collapsed;
             Common.PageExpandedPlayer.Dispose();
@@ -393,7 +406,8 @@ namespace HyPlayer.Controls
             Common.PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));
             //Common.PageMain.MainFrame.Visibility = Visibility.Visible;
             Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
-            Common.PageMain.GridPlayBar.Background = Application.Current.Resources["SystemControlAcrylicElementMediumHighBrush"] as Brush;
+            Common.PageMain.GridPlayBar.Background =
+                Application.Current.Resources["SystemControlAcrylicElementMediumHighBrush"] as Brush;
             Window.Current.SetTitleBar(Common.PageBase.AppTitleBar);
         }
 
@@ -426,8 +440,9 @@ namespace HyPlayer.Controls
                     RefreshSongList();
                 }
             }
-            catch { }
-
+            catch
+            {
+            }
         }
 
         private void BtnPlayRollType_OnClick(object sender, RoutedEventArgs e)
@@ -459,7 +474,7 @@ namespace HyPlayer.Controls
             else
             {
                 Common.ncapi.RequestAsync(CloudMusicApiProviders.FmTrash,
-                    new Dictionary<string, object>() { { "id", HyPlayList.NowPlayingItem.NcPlayItem.sid } });
+                    new Dictionary<string, object>() { { "id", HyPlayList.NowPlayingItem.NcPlayItem.id } });
                 PersonalFM.LoadNextFM();
             }
         }
@@ -468,18 +483,26 @@ namespace HyPlayer.Controls
 
         private void BtnLike_OnClick(object sender, RoutedEventArgs e)
         {
-            if (HyPlayList.NowPlayingItem.isOnline)
+            if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
             {
-                Api.LikeSong(HyPlayList.NowPlayingItem.NcPlayItem.sid, !Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.NcPlayItem.sid));
-                if (Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.NcPlayItem.sid))
+                Api.LikeSong(HyPlayList.NowPlayingItem.NcPlayItem.id,
+                    !Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.NcPlayItem.id));
+                if (Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.NcPlayItem.id))
                 {
-                    Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.NcPlayItem.sid);
+                    Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.NcPlayItem.id);
                 }
                 else
                 {
-                    Common.LikedSongs.Add(HyPlayList.NowPlayingItem.NcPlayItem.sid);
+                    Common.LikedSongs.Add(HyPlayList.NowPlayingItem.NcPlayItem.id);
                 }
-                BtnLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.NcPlayItem.sid);
+
+                BtnLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.NcPlayItem.id);
+            }
+            else if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.FM)
+            {
+                Common.ncapi.RequestAsync(CloudMusicApiProviders.ResourceLike,
+                    new Dictionary<string, object>()
+                        { { "type", "4" }, { "t", "1" }, { "id", HyPlayList.NowPlayingItem.NcPlayItem.id } });
             }
             else
             {
@@ -489,7 +512,8 @@ namespace HyPlayer.Controls
 
         private void ImageContainer_OnPointerEntered(object sender, PointerRoutedEventArgs e)
         {
-            ImageContainer.BorderBrush = Application.Current.Resources["SystemControlBackgroundListMediumRevealBorderBrush"] as Brush;
+            ImageContainer.BorderBrush =
+                Application.Current.Resources["SystemControlBackgroundListMediumRevealBorderBrush"] as Brush;
         }
 
         private void ImageContainer_OnPointerExited(object sender, PointerRoutedEventArgs e)
@@ -506,7 +530,7 @@ namespace HyPlayer.Controls
         {
             try
             {
-                if (HyPlayList.NowPlayingItem.isOnline)
+                if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
                 {
                     if (HyPlayList.NowPlayingItem.NcPlayItem.Artist.Count > 1)
                     {
@@ -514,52 +538,78 @@ namespace HyPlayer.Controls
                     }
                     else
                     {
-                        Common.BaseFrame.Navigate(typeof(ArtistPage), HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
+                        Common.BaseFrame.Navigate(typeof(ArtistPage),
+                            HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
                     }
 
                     ButtonCollapse_OnClick(this, null);
                 }
+                else
+                {
+                    //TODO: 增加跳转到电台
+                }
             }
-            catch { }
+            catch
+            {
+            }
         }
 
         private async void Btn_Sub_OnClick(object sender, RoutedEventArgs e)
         {
-            if (HyPlayList.NowPlayingItem.isOnline)
+            if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
             {
-                await new SongListSelect(HyPlayList.NowPlayingItem.NcPlayItem.sid).ShowAsync();
+                await new SongListSelect(HyPlayList.NowPlayingItem.NcPlayItem.id).ShowAsync();
             }
         }
 
         private void Btn_Down_OnClick(object sender, RoutedEventArgs e)
         {
-            DownloadManager.AddDownload(HyPlayList.NowPlayingItem.ToNCSong());
+            if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
+            {
+                DownloadManager.AddDownload(HyPlayList.NowPlayingItem.ToNCSong());
+            }
+            else if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.FM)
+            {
+                //TODO: 电台的下载操作
+            }
         }
 
         private void Btn_Comment_OnClick(object sender, RoutedEventArgs e)
         {
-            Common.BaseFrame.Navigate(typeof(Comments), (object)HyPlayList.NowPlayingItem.ToNCSong());
+            if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
+            {
+                Common.BaseFrame.Navigate(typeof(Comments), (object)HyPlayList.NowPlayingItem.ToNCSong());
+            }
+            else
+            {
+                Common.BaseFrame.Navigate(typeof(Comments), "fm" + HyPlayList.NowPlayingItem.NcPlayItem.id);
+            }
+
             ButtonCollapse_OnClick(this, e);
         }
 
         private void Btn_Share_OnClick(object sender, RoutedEventArgs e)
         {
-            if (!HyPlayList.NowPlayingItem.isOnline) return;
+            //TODO: 分享电台节目
+            if (HyPlayList.NowPlayingItem.ItemType != HyPlayItemType.Netease) return;
             DataTransferManager dataTransferManager = DataTransferManager.GetForCurrentView();
 
             dataTransferManager.DataRequested += ((manager, args) =>
             {
                 DataPackage dataPackage = new DataPackage();
-                dataPackage.SetWebLink(new Uri("https://music.163.com/#/song?id=" + HyPlayList.NowPlayingItem.NcPlayItem.sid));
+                dataPackage.SetWebLink(new Uri("https://music.163.com/#/song?id=" +
+                                               HyPlayList.NowPlayingItem.NcPlayItem.id));
                 dataPackage.Properties.Title = HyPlayList.NowPlayingItem.Name;
-                dataPackage.Properties.Description = string.Join(';', HyPlayList.NowPlayingItem.NcPlayItem.Artist.Select(t => t.name)) + "   -- 分享歌曲 来自 HyPlayer";
+                dataPackage.Properties.Description =
+                    "歌手: " + string.Join(';',
+                        HyPlayList.NowPlayingItem.NcPlayItem.Artist
+                            .Select(t => t.name));
                 DataRequest request = args.Request;
                 request.Data = dataPackage;
             });
 
             //展示系统的共享ui
             DataTransferManager.ShowShareUI();
-
         }
 
         private void ToggleButton_Click(object sender, RoutedEventArgs e)
@@ -572,7 +622,6 @@ namespace HyPlayer.Controls
             BtnPlayStateChange_OnClick(sender, e);
         }
     }
-
 
 
     public class ListViewPlayItem
@@ -606,7 +655,8 @@ namespace HyPlayer.Controls
 
         // Using a DependencyProperty as the backing store for SecondValue.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty SecondValueProperty =
-            DependencyProperty.Register("SecondValue", typeof(double), typeof(ThumbConverter), new PropertyMetadata(0d));
+            DependencyProperty.Register("SecondValue", typeof(double), typeof(ThumbConverter),
+                new PropertyMetadata(0d));
 
 
         public object Convert(object value, Type targetType, object parameter, string language)
@@ -621,6 +671,4 @@ namespace HyPlayer.Controls
             throw new NotImplementedException();
         }
     }
-
-
 }

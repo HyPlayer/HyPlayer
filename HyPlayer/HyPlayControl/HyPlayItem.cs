@@ -11,7 +11,6 @@ namespace HyPlayer.HyPlayControl
         public string Name;
         public HyPlayItemType ItemType;
         public string Path;
-        public bool isOnline;
         public AudioInfo AudioInfo;
         public NCPlayItem NcPlayItem;
 
@@ -35,6 +34,10 @@ namespace HyPlayer.HyPlayControl
 
     public enum HyPlayItemType
     {
-        Local, Netease, Pan, FM
+        None,
+        Local,
+        Netease,
+        Pan,
+        FM
     }
 }

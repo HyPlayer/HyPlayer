@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Linq;
+using Windows.Devices.Input;
 using Windows.Storage;
+using HyPlayer.HyPlayControl;
 using Newtonsoft.Json.Linq;
 
 namespace HyPlayer.Classes
@@ -30,8 +33,16 @@ namespace HyPlayer.Classes
     }
 
 
-    public struct NCSong
+    public class NCFmItem : NCSong
     {
+        public string fmId;
+        public string description;
+        public string Radio;
+    }
+   
+    public class NCSong
+    {
+        public HyPlayItemType Type;
         public string sid;
         public string songname;
         public List<NCArtist> Artist;
@@ -74,15 +85,16 @@ namespace HyPlayer.Classes
             return NCSong;
         }
     }
-
+    
     public struct NCPlayItem
     {
         public bool hasLocalFile;
         public StorageFile LocalStorageFile;
         public int bitrate;
         public string tag;
-        public string sid;
+        public string id;
         public string songname;
+        public HyPlayItemType Type;
         public List<NCArtist> Artist;
         public NCAlbum Album;
         public string url;
@@ -98,7 +110,7 @@ namespace HyPlayer.Classes
                 Album = Album,
                 Artist = Artist,
                 LengthInMilliseconds = LengthInMilliseconds,
-                sid = sid,
+                sid = id,
                 songname = songname
             };
         }
@@ -220,6 +232,7 @@ namespace HyPlayer.Classes
 
     public struct NCAlbum
     {
+        public bool isRealAlbum;
         public string id;
         public string name;
         public string cover;
@@ -230,6 +243,7 @@ namespace HyPlayer.Classes
         {
             return new NCAlbum()
             {
+                isRealAlbum = true,
                 alias = album["alias"] != null
                     ? string.Join(" / ", album["alias"].ToArray().Select(t => t.ToString()))
                     : "",

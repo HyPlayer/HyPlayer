@@ -310,10 +310,10 @@ namespace HyPlayer.Pages
                 {
                     Common.Invoke((() =>
                     {
-                        if (!hpi.isOnline) return;
+                        if (hpi.ItemType != HyPlayItemType.Netease) return;
                         Common.ncapi.RequestAsync(CloudMusicApiProviders.Scrobble, new Dictionary<string, object>()
                         {
-                            {"id",hpi.NcPlayItem.sid},
+                            {"id",hpi.NcPlayItem.id},
                             {"sourceId","-1"},
                             {"time","60" }
                         });
