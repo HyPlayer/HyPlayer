@@ -40,7 +40,6 @@ namespace HyPlayer.Controls
         }
         private async void LoadFloorComments()
         {
-            SubCmts.Children.Clear();
             (bool IsOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentFloor, new Dictionary<string, object> { { "parentCommentId", comment.cid }, { "id", comment.resourceId }, { "type", comment.resourceType }, { "time", time } });
             if (IsOk)
             {
