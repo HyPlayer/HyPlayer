@@ -40,19 +40,22 @@ namespace HyPlayer.Pages
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            if (e.Parameter is NCSong ncsong)
-            {
-                resourcetype = 0;
-                resourceid = ncsong.sid;
-                SongInfoContainer.Children.Add(new SingleNCSong(ncsong, 0));
-            }
             if (e.Parameter is string resstr)
             {
-                if (resstr.StartsWith("mv"))
+                resourceid = resstr.Substring(2);
+                switch (resstr.Substring(0, 2))
                 {
-                    resourcetype = 1;
-                    resourceid = resstr.Substring(2);
+                    case "sg":
+                        resourcetype = 0;
+                        break;
+                    case "mv":
+                        resourcetype = 1;
+                        break;
+                    case "fm":
+                        resourcetype = 4;
+                        break;
                 }
+                
             }
             LoadHotComments();
             LoadComments(sortType);

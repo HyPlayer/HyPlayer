@@ -28,7 +28,8 @@ namespace HyPlayer.Controls
         private readonly bool CanPlay;
         private bool LoadList;
 
-        public SingleNCSong(NCSong song, int order, bool canplay = true, bool loadlist = false, string additionalInfo = null)
+        public SingleNCSong(NCSong song, int order, bool canplay = true, bool loadlist = false,
+            string additionalInfo = null)
         {
             InitializeComponent();
             ncsong = song;
@@ -60,61 +61,65 @@ namespace HyPlayer.Controls
             {
                 return false;
             }
+
             if (LoadList)
             {
                 _ = Task.Run(() =>
+                {
+                    Common.Invoke(async () =>
                     {
-                        Common.Invoke(async () =>
-                        {
-                            HyPlayList.RemoveAllSong();
-                            (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                                new Dictionary<string, object>()
-                                    {{"id", string.Join(',', Common.ListedSongs.Select(t => t.sid))}, {"br", Common.Setting.audioRate}});
-                            if (isok)
+                        HyPlayList.RemoveAllSong();
+                        (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
+                            new Dictionary<string, object>()
                             {
-                                List<JToken> arr = json["data"].ToList();
-                                for (int i = 0; i < Common.ListedSongs.Count; i++)
+                                { "id", string.Join(',', Common.ListedSongs.Select(t => t.sid)) },
+                                { "br", Common.Setting.audioRate }
+                            });
+                        if (isok)
+                        {
+                            List<JToken> arr = json["data"].ToList();
+                            for (int i = 0; i < Common.ListedSongs.Count; i++)
+                            {
+                                JToken token = arr.Find(jt => jt["id"].ToString() == Common.ListedSongs[i].sid);
+                                if (!token.HasValues)
                                 {
-                                    JToken token = arr.Find(jt => jt["id"].ToString() == Common.ListedSongs[i].sid);
-                                    if (!token.HasValues)
-                                    {
-                                        continue;
-                                    }
-
-                                    NCSong ncSong = Common.ListedSongs[i];
-                                    string tag = "";
-                                    if (token["type"].ToString().ToLowerInvariant() == "flac")
-                                    {
-                                        tag = "SQ";
-                                    }
-                                    else
-                                    {
-                                        tag = (token["br"].ToObject<int>() / 1000).ToString() + "k";
-                                    }
-
-                                    NCPlayItem ncp = new NCPlayItem()
-                                    {
-                                        Type = HyPlayItemType.Netease,
-                                        tag = tag,
-                                        Album = ncSong.Album,
-                                        Artist = ncSong.Artist,
-                                        subext = token["type"].ToString(),
-                                        id = ncSong.sid,
-                                        songname = ncSong.songname,
-                                        url = token["url"].ToString(),
-                                        LengthInMilliseconds = ncSong.LengthInMilliseconds,
-                                        size = token["size"].ToString(),
-                                        md5 = token["md5"].ToString()
-                                    };
-                                    HyPlayList.AppendNCPlayItem(ncp);
+                                    continue;
                                 }
 
-                                HyPlayList.SongAppendDone();
-                                //此处可以进行优化
-                                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.NcPlayItem.id == ncsong.sid));
+                                NCSong ncSong = Common.ListedSongs[i];
+                                string tag = "";
+                                if (token["type"].ToString().ToLowerInvariant() == "flac")
+                                {
+                                    tag = "SQ";
+                                }
+                                else
+                                {
+                                    tag = (token["br"].ToObject<int>() / 1000).ToString() + "k";
+                                }
+
+                                NCPlayItem ncp = new NCPlayItem()
+                                {
+                                    Type = ncSong.Type,
+                                    tag = tag,
+                                    Album = ncSong.Album,
+                                    Artist = ncSong.Artist,
+                                    subext = token["type"].ToString(),
+                                    id = ncSong.sid,
+                                    songname = ncSong.songname,
+                                    url = token["url"].ToString(),
+                                    LengthInMilliseconds = ncSong.LengthInMilliseconds,
+                                    size = token["size"].ToString(),
+                                    md5 = token["md5"].ToString()
+                                };
+                                HyPlayList.AppendNCPlayItem(ncp);
                             }
-                        });
+
+                            HyPlayList.SongAppendDone();
+                            //此处可以进行优化
+                            HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.NcPlayItem.id == ncsong.sid));
+                        }
                     });
+                });
             }
             else
             {
@@ -125,18 +130,6 @@ namespace HyPlayer.Controls
             }
 
             return true;
-        }
-
-        private void UIElement_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
-        {
-            Grid1.Background = new Windows.UI.Xaml.Media.AcrylicBrush()
-            {
-                BackgroundSource = AcrylicBackgroundSource.Backdrop,
-                TintOpacity = 0.67500003206078,
-                TintLuminosityOpacity = 0.183000008692034,
-                TintColor = Windows.UI.Color.FromArgb(255, 0, 142, 230),
-                FallbackColor = Windows.UI.Color.FromArgb(255, 54, 54, 210)
-            };
         }
 
         private void UIElement_OnPointerEntered(object sender, PointerRoutedEventArgs e)
@@ -172,13 +165,20 @@ namespace HyPlayer.Controls
 
         private async void TextBlockArtist_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
-            if (ncsong.Artist.Count > 1)
+            if (ncsong.Artist[0].Type == HyPlayItemType.FM)
             {
-                await new ArtistSelectDialog(ncsong.Artist).ShowAsync();
+                Common.BaseFrame.Navigate(typeof(Me), ncsong.Artist[0].id);
             }
             else
             {
-                Common.BaseFrame.Navigate(typeof(ArtistPage), ncsong.Artist[0].id);
+                if (ncsong.Artist.Count > 1)
+                {
+                    await new ArtistSelectDialog(ncsong.Artist).ShowAsync();
+                }
+                else
+                {
+                    Common.BaseFrame.Navigate(typeof(ArtistPage), ncsong.Artist[0].id);
+                }
             }
         }
 
@@ -189,7 +189,7 @@ namespace HyPlayer.Controls
 
         private void Comments_Click(object sender, RoutedEventArgs e)
         {
-            Common.BaseFrame.Navigate(typeof(Comments), ncsong);
+            Common.BaseFrame.Navigate(typeof(Comments), "sg" + ncsong.sid);
         }
 
         private void BtnMV_OnClick(object sender, RoutedEventArgs e)
@@ -206,7 +206,5 @@ namespace HyPlayer.Controls
         {
             Common.BaseFrame.Navigate(typeof(AlbumPage), ncsong.Album);
         }
-
     }
-
 }

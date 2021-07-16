@@ -619,7 +619,7 @@ namespace HyPlayer.HyPlayControl
             return hpi;
         }
 
-        public static async Task<HyPlayItem> LoadNCSong(NCSong ncSong,HyPlayItemType Type = HyPlayItemType.Netease)
+        public static async Task<HyPlayItem> LoadNCSong(NCSong ncSong)
         {
             (bool isOk, Newtonsoft.Json.Linq.JObject json) = await Common.ncapi.RequestAsync(
                 CloudMusicApiProviders.SongUrl,
@@ -645,7 +645,7 @@ namespace HyPlayer.HyPlayControl
 
                     NCPlayItem ncp = new NCPlayItem()
                     {
-                        Type = Type,
+                        Type = ncSong.Type,
                         bitrate = json["data"][0]["br"].ToObject<int>(),
                         tag = tag,
                         Album = ncSong.Album,

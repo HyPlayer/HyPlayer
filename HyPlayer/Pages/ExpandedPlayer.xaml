@@ -19,7 +19,7 @@
                 <VisualState>
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger
-                            MinWindowWidth="0">
+                            MinWindowHeight="0">
                             <!--小窗模式 -->
                         </AdaptiveTrigger>
                     </VisualState.StateTriggers>
@@ -79,7 +79,7 @@
                 <VisualState>
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger
-                            MinWindowWidth="300">
+                            MinWindowHeight="300">
                             <!--正常模式 -->
                         </AdaptiveTrigger>
                     </VisualState.StateTriggers>

@@ -100,7 +100,35 @@ namespace HyPlayer.Pages
                     case "1000":
                         LoadPlaylistResult(json);
                         break;
+                    case "1009":
+                        LoadRadioResult(json);
+                        break;
+                        
                 }
+            }
+        }
+
+        private void LoadRadioResult(JObject json)
+        {
+            foreach (var pljs in json["result"]["djRadios"].ToArray())
+            {
+                SearchResultContainer.Children.Add(new SingleRadio(NCRadio.CreateFromJson(pljs)));
+            }
+            if (int.Parse(json["result"]["djRadiosCount"].ToString()) >= (page + 1) * 30)
+            {
+                NextPage.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                NextPage.Visibility = Visibility.Collapsed;
+            }
+            if (page > 0)
+            {
+                PrevPage.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                PrevPage.Visibility = Visibility.Collapsed;
             }
         }
 

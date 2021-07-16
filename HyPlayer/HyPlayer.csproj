@@ -168,6 +168,9 @@
     <Compile Include="HyPlayControl\DownloadManager.cs" />
     <Compile Include="HyPlayControl\HyPlayItem.cs" />
     <Compile Include="HyPlayControl\HyPlayList.cs" />
+    <Compile Include="Controls\SingleRadio.xaml.cs">
+      <DependentUpon>SingleRadio.xaml</DependentUpon>
+    </Compile>
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -209,6 +212,9 @@
     </Compile>
     <Compile Include="Pages\MVPage.xaml.cs">
       <DependentUpon>MVPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\RadioPage.xaml.cs">
+      <DependentUpon>RadioPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\Search.xaml.cs">
       <DependentUpon>Search.xaml</DependentUpon>
@@ -349,6 +355,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\SingleRadio.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -406,6 +416,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Pages\Search.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\RadioPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

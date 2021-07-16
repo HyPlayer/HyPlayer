@@ -95,6 +95,7 @@ namespace HyPlayer.Pages
         private void Current_SizeChanged(object sender, WindowSizeChangedEventArgs e)
         {
             int nowwidth = e is null ? (int)Window.Current.Bounds.Width : (int)e.Size.Width;
+            int nowheight = e is null ? (int)Window.Current.Bounds.Height : (int)e.Size.Height;
             if (lastwidth == nowwidth) return; //有些时候会莫名其妙不更改大小的情况引发这个
             lastwidth = nowwidth;
             if (nowwidth > 800)
@@ -107,7 +108,7 @@ namespace HyPlayer.Pages
             }
 
             ImageAlbumContainer.Visibility =
-                nowwidth >= 800 || nowwidth <= 300 ? Visibility.Visible : Visibility.Collapsed;
+                nowheight >= 800 || nowheight <= 300 ? Visibility.Visible : Visibility.Collapsed;
             showsize = Math.Max(nowwidth / 66, 16);
         }
 
@@ -377,7 +378,7 @@ namespace HyPlayer.Pages
 
         private void ExpandedPlayer_OnPointerEntered(object sender, PointerRoutedEventArgs e)
         {
-            if (Window.Current.Bounds.Width <= 300)
+            if (Window.Current.Bounds.Height <= 300)
             {
                 //小窗模式
                 ImageAlbumContainer.Visibility = Visibility.Collapsed;
@@ -387,7 +388,7 @@ namespace HyPlayer.Pages
 
         private void ExpandedPlayer_OnPointerExited(object sender, PointerRoutedEventArgs e)
         {
-            if (Window.Current.Bounds.Width <= 300)
+            if (Window.Current.Bounds.Height <= 300)
             {
                 //小窗模式
                 ImageAlbumContainer.Visibility = Visibility.Visible;
@@ -413,18 +414,27 @@ namespace HyPlayer.Pages
             {
                 if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
                 {
-                    if (HyPlayList.NowPlayingItem.NcPlayItem.Artist.Count > 1)
+                    if (HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].Type == HyPlayItemType.FM)
                     {
-                        await new ArtistSelectDialog(HyPlayList.NowPlayingItem.NcPlayItem.Artist).ShowAsync();
+                        Common.BaseFrame.Navigate(typeof(Me), HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
                     }
                     else
                     {
-                        Common.BaseFrame.Navigate(typeof(ArtistPage),
-                            HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
+                        if (HyPlayList.NowPlayingItem.NcPlayItem.Artist.Count > 1)
+                        {
+                            await new ArtistSelectDialog(HyPlayList.NowPlayingItem.NcPlayItem.Artist).ShowAsync();
+                        }
+                        else
+                        {
+                            Common.BaseFrame.Navigate(typeof(ArtistPage), HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
+                        }
                     }
+
 
                     Common.BarPlayBar.ButtonCollapse_OnClick(this, null);
                 }
+
+                
             }
             catch
             {

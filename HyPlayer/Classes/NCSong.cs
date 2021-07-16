@@ -33,13 +33,89 @@ namespace HyPlayer.Classes
     }
 
 
+    public struct NCRadio
+    {
+        public string name;
+        public string id;
+        public bool subed;
+        public string desc;
+        public string cover;
+        public NCUser DJ;
+        public string lastProgramName;
+
+        public static NCRadio CreateFromJson(JToken json)
+        {
+            return new NCRadio()
+            {
+                cover = json["picUrl"].ToString(),
+                desc = json["desc"].ToString(),
+                id = json["id"].ToString(),
+                name = json["name"].ToString(),
+                DJ = NCUser.CreateFromJson(json["dj"]),
+                lastProgramName = json["lastProgramName"].ToString()
+            };
+        }
+
+        public NCAlbum ConvertToNcAlbum()
+        {
+            return new NCAlbum
+            {
+                AlbumType = HyPlayItemType.FM,
+                id = "-1",
+                name = name,
+                cover = cover,
+                alias = name,
+                description = desc
+            };
+        }
+    }
+
     public class NCFmItem : NCSong
     {
         public string fmId;
         public string description;
-        public string Radio;
+        public string RadioId;
+        public string RadioName;
+
+        public static NCFmItem CreateFromJson(JToken song)
+        {
+            NCFmItem tmpsong = new NCFmItem
+            {
+                Type = HyPlayItemType.FM,
+                sid = song["mainTrackId"].ToString(),
+                songname = song["name"].ToString(),
+                Artist = new List<NCArtist>
+                {
+                    new NCArtist
+                    {
+                        Type = HyPlayItemType.FM,
+                        id = song["dj"]["userId"].ToString(),
+                        name = song["dj"]["nickname"].ToString(),
+                        avatar = song["dj"]["avatarUrl"].ToString()
+                    }
+                },
+                Album = new NCAlbum
+                {
+                    AlbumType = HyPlayItemType.FM,
+                    id = song["radio"]["id"].ToString(),
+                    name = song["radio"]["name"].ToString(),
+                    cover = song["coverUrl"].ToString(),
+                    alias = song["id"].ToString(), //咱放在这个奇怪的位置
+                    description = song["radio"]["desc"].ToString()
+                },
+                LengthInMilliseconds = song["duration"].ToObject<double>(),
+                mvid = -1,
+                alias = "",
+                transname = ""
+            };
+            tmpsong.fmId = song["id"].ToString();
+            tmpsong.description = song["description"].ToString();
+            tmpsong.RadioId = song["radio"]["id"].ToString();
+            tmpsong.RadioName = song["radio"]["name"].ToString();
+            return tmpsong;
+        }
     }
-   
+
     public class NCSong
     {
         public HyPlayItemType Type;
@@ -76,16 +152,18 @@ namespace HyPlayer.Classes
             {
                 NCSong.mvid = song["mv"].ToObject<int>();
             }
+
             if (song["alia"] != null)
             {
                 NCSong.alias = string.Join(" / ", song["alia"].ToArray().Select(t => t.ToString()));
             }
+
             if (song["tns"] != null)
                 NCSong.transname = string.Join(" / ", song["tns"].ToArray().Select(t => t.ToString()));
             return NCSong;
         }
     }
-    
+
     public struct NCPlayItem
     {
         public bool hasLocalFile;
@@ -107,6 +185,7 @@ namespace HyPlayer.Classes
         {
             return new NCSong()
             {
+                Type = Type,
                 Album = Album,
                 Artist = Artist,
                 LengthInMilliseconds = LengthInMilliseconds,
@@ -146,6 +225,7 @@ namespace HyPlayer.Classes
                 {
                     playcountpath = "playcount";
                 }
+
                 NCPlayList ncp = new NCPlayList()
                 {
                     cover = json[picpath].ToString(),
@@ -161,13 +241,13 @@ namespace HyPlayer.Classes
                 {
                     ncp.bookCount = json[subcountpath].ToObject<long>();
                 }
+
                 return ncp;
             }
             catch (Exception e)
             {
                 return new NCPlayList();
             }
-
         }
     }
 
@@ -189,6 +269,7 @@ namespace HyPlayer.Classes
                 {
                     ncuser.signature = user["signature"].ToString();
                 }
+
                 ncuser.id = user["userId"].ToString();
                 ncuser.name = user["nickname"].ToString();
                 return ncuser;
@@ -208,6 +289,7 @@ namespace HyPlayer.Classes
 
     public struct NCArtist
     {
+        public HyPlayItemType Type;
         public string id;
         public string name;
         public string avatar;
@@ -219,6 +301,7 @@ namespace HyPlayer.Classes
             //TODO: 歌手这里尽量再来点信息
             var art = new NCArtist()
             {
+                Type = HyPlayItemType.Netease,
                 id = artist["id"].ToString(),
                 name = artist["name"].ToString()
             };
@@ -232,7 +315,7 @@ namespace HyPlayer.Classes
 
     public struct NCAlbum
     {
-        public bool isRealAlbum;
+        public HyPlayItemType AlbumType;
         public string id;
         public string name;
         public string cover;
@@ -243,7 +326,7 @@ namespace HyPlayer.Classes
         {
             return new NCAlbum()
             {
-                isRealAlbum = true,
+                AlbumType = HyPlayItemType.Netease,
                 alias = album["alias"] != null
                     ? string.Join(" / ", album["alias"].ToArray().Select(t => t.ToString()))
                     : "",
@@ -270,7 +353,7 @@ namespace HyPlayer.Classes
         public bool IsByMyself => this.uid == Common.LoginedUser.id;
         public int ReplyCount;
 
-        public static Comment CreateFromJson(JToken comment,string resourceId,int resourceType)
+        public static Comment CreateFromJson(JToken comment, string resourceId, int resourceType)
         {
             Comment cmt = new Comment();
             cmt.resourceId = resourceId;

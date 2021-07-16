@@ -63,6 +63,7 @@ namespace HyPlayer.Pages
                 //每日推荐加载部分
                 var rcmdSongsJson = ret["/api/v3/discovery/recommend/songs"]["data"]["dailySongs"].ToArray();
                 Common.ListedSongs.Clear();
+                DailySongContainer.Children.Clear();
                 StackPanel NowSongPanel = new StackPanel();
                 for (int c = 0; c < rcmdSongsJson.Length; c++)
                 {
@@ -77,6 +78,7 @@ namespace HyPlayer.Pages
                 }
 
                 //榜单
+                RankPlayList.Children.Clear();
                 foreach (JToken bditem in ret["/api/toplist"]["list"])
                 {
                     RankPlayList.Children.Add(new PlaylistItem(NCPlayList.CreateFromJson(bditem)));
@@ -87,6 +89,7 @@ namespace HyPlayer.Pages
                 if (ok2)
                 {
                     var weekData = ret2["weekData"].ToArray();
+                    MySongHis.Children.Clear();
                     for (int i = 0; i < weekData.Length; i++)
                     {
                         MySongHis.Children.Add(new SingleNCSong(NCSong.CreateFromJson(weekData[i]["song"]), i, true, false, "最近一周播放 " + weekData[i]["playCount"].ToString() + " 次"));
@@ -95,10 +98,11 @@ namespace HyPlayer.Pages
                 }
                 //推荐歌单加载部分 - 优先级稍微靠后下
                 var (ok1, ret1) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendResource);
-                if (ok1)
+                if (ok1) {
+                    RecommendSongListContainer.Children.Clear();
                     foreach (JToken item in ret1["recommend"])
                         RecommendSongListContainer.Children.Add(new PlaylistItem(NCPlayList.CreateFromJson(item)));
-
+                }
             }
         }
 

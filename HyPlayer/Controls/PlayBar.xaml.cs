@@ -532,21 +532,24 @@ namespace HyPlayer.Controls
             {
                 if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
                 {
-                    if (HyPlayList.NowPlayingItem.NcPlayItem.Artist.Count > 1)
+                    if (HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].Type == HyPlayItemType.FM)
                     {
-                        await new ArtistSelectDialog(HyPlayList.NowPlayingItem.NcPlayItem.Artist).ShowAsync();
+                        Common.BaseFrame.Navigate(typeof(Me), HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
                     }
                     else
                     {
-                        Common.BaseFrame.Navigate(typeof(ArtistPage),
-                            HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
+                        if (HyPlayList.NowPlayingItem.NcPlayItem.Artist.Count > 1)
+                        {
+                            await new ArtistSelectDialog(HyPlayList.NowPlayingItem.NcPlayItem.Artist).ShowAsync();
+                        }
+                        else
+                        {
+                            Common.BaseFrame.Navigate(typeof(ArtistPage),
+                                HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
+                        }
                     }
 
                     ButtonCollapse_OnClick(this, null);
-                }
-                else
-                {
-                    //TODO: 增加跳转到电台
                 }
             }
             catch
@@ -578,11 +581,11 @@ namespace HyPlayer.Controls
         {
             if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
             {
-                Common.BaseFrame.Navigate(typeof(Comments), (object)HyPlayList.NowPlayingItem.ToNCSong());
+                Common.BaseFrame.Navigate(typeof(Comments), "sg" + HyPlayList.NowPlayingItem.NcPlayItem.id);
             }
             else
             {
-                Common.BaseFrame.Navigate(typeof(Comments), "fm" + HyPlayList.NowPlayingItem.NcPlayItem.id);
+                Common.BaseFrame.Navigate(typeof(Comments), "fm" + HyPlayList.NowPlayingItem.NcPlayItem.Album.alias);
             }
 
             ButtonCollapse_OnClick(this, e);
