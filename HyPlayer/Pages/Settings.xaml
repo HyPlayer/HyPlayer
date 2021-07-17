@@ -11,7 +11,7 @@
     <ScrollViewer
         HorizontalScrollMode="Auto">
         <Pivot Title="设置" Margin="0,0,0,150">
-            <PivotItem Header="歌词设置">
+            <PivotItem Header="歌词设置" FontFamily="Thick">
                 <StackPanel Orientation="Vertical">
                     <TextBlock
                         Text="罗马音设置"
@@ -24,11 +24,12 @@
                         Content="获取罗马音资源文件"/>
                 </StackPanel>
             </PivotItem>
-            <PivotItem Header="在线播放设置">
+            <PivotItem Header="在线播放设置" FontFamily="Thick">
                 <StackPanel Orientation="Vertical">
                     <controls:RadioButtons
                 MaxColumns="4"
                 Header="在线播放音质:"
+                FontSize="20"
                 x:Name="RadioButtonsSongBr">
                         <RadioButton
                     Content="标准 (128k)"
@@ -49,7 +50,7 @@
                     </controls:RadioButtons>
                 </StackPanel>
             </PivotItem>
-            <PivotItem Header="存储设置">
+            <PivotItem Header="存储设置" FontFamily="Thick">
                 <StackPanel Orientation="Vertical">
                     <Grid
                 MaxWidth="1000">
@@ -79,7 +80,7 @@
                 x:Name="ClearHistory" />
                 </StackPanel>
             </PivotItem>
-            <PivotItem Header="实验室">
+            <PivotItem Header="实验室" FontFamily="Thick">
                 <StackPanel Orientation="Vertical">
                     <CheckBox
                 x:Name="AnimationCheckbox"
@@ -142,7 +143,7 @@
                 Unchecked="ControlSoundUnChecked" />
                 </StackPanel>
             </PivotItem>
-            <PivotItem Header="关于">
+            <PivotItem Header="关于" FontFamily="Thick">
                 <StackPanel Orientation="Vertical">
                     <Image
                 Width="100"
@@ -151,7 +152,8 @@
                 Source="/Assets/icon.png" />
                     <RichTextBlock>
                         <Paragraph
-                    FontSize="25">HyPlayer</Paragraph>
+                    FontSize="25"
+                            FontFamily="Thick">HyPlayer</Paragraph>
                         <Paragraph>This is an open-source project under GPL-v3 Licence</Paragraph>
                         <Paragraph>
                             <Hyperlink
@@ -166,7 +168,8 @@
                 x:Name="VersionCode" />
                     <TextBlock
                 FontSize="25"
-                Text="开发者" />
+                Text="开发者" 
+                        FontFamily="Thick"/>
                     <StackPanel
                 Tapped="UIElement_OnTapped"
                 Orientation="Horizontal">
