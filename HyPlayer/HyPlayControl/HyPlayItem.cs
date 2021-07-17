@@ -34,10 +34,9 @@ namespace HyPlayer.HyPlayControl
 
     public enum HyPlayItemType
     {
-        None,
         Local,
         Netease,
         Pan,
-        FM
+        Radio
     }
 }

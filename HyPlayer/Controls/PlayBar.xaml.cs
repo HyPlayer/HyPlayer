@@ -498,7 +498,7 @@ namespace HyPlayer.Controls
 
                 BtnLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.NcPlayItem.id);
             }
-            else if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.FM)
+            else if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Radio)
             {
                 Common.ncapi.RequestAsync(CloudMusicApiProviders.ResourceLike,
                     new Dictionary<string, object>()
@@ -532,7 +532,7 @@ namespace HyPlayer.Controls
             {
                 if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
                 {
-                    if (HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].Type == HyPlayItemType.FM)
+                    if (HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].Type == HyPlayItemType.Radio)
                     {
                         Common.BaseFrame.Navigate(typeof(Me), HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
                     }
@@ -571,7 +571,7 @@ namespace HyPlayer.Controls
             {
                 DownloadManager.AddDownload(HyPlayList.NowPlayingItem.ToNCSong());
             }
-            else if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.FM)
+            else if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Radio)
             {
                 //TODO: 电台的下载操作
             }

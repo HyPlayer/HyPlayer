@@ -31,7 +31,7 @@ namespace HyPlayer.HyPlayControl
         {
             get
             {
-                if (List.Count <= NowPlaying) return new HyPlayItem { ItemType = HyPlayItemType.None };
+                if (List.Count <= NowPlaying) return new HyPlayItem { ItemType = HyPlayItemType.Netease };
                 return List[NowPlaying];
             }
         }
@@ -168,7 +168,7 @@ namespace HyPlayer.HyPlayControl
             else
             {
                 crashedTime = NowPlayingItem.GetHashCode();
-                if (NowPlayingItem.ItemType == HyPlayItemType.Netease || NowPlayingItem.ItemType == HyPlayItemType.FM)
+                if (NowPlayingItem.ItemType == HyPlayItemType.Netease || NowPlayingItem.ItemType == HyPlayItemType.Radio)
                 {//TODO FM和普通歌曲一起
                     Common.Invoke((async () =>
                     {
@@ -342,7 +342,7 @@ namespace HyPlayer.HyPlayControl
             switch (NowPlayingItem.ItemType)
             {
                 case HyPlayItemType.Netease:
-                case HyPlayItemType.FM: //TODO FM伪加载为普通歌曲
+                case HyPlayItemType.Radio: //TODO FM伪加载为普通歌曲
                     //检测是否已经缓存且大小正常
                     try
                     {

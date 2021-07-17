@@ -113,7 +113,7 @@ namespace HyPlayer.Pages
                                 Artist = ncSong.Artist,
                                 subext = token["type"].ToString(),
                                 id = ncSong.sid,
-                                Type = HyPlayItemType.FM,
+                                Type = HyPlayItemType.Radio,
                                 songname = ncSong.songname,
                                 url = token["url"].ToString(),
                                 LengthInMilliseconds = ncSong.LengthInMilliseconds,

@@ -60,7 +60,7 @@ namespace HyPlayer.Classes
         {
             return new NCAlbum
             {
-                AlbumType = HyPlayItemType.FM,
+                AlbumType = HyPlayItemType.Radio,
                 id = "-1",
                 name = name,
                 cover = cover,
@@ -79,16 +79,16 @@ namespace HyPlayer.Classes
 
         public static NCFmItem CreateFromJson(JToken song)
         {
-            NCFmItem tmpsong = new NCFmItem
+            return new NCFmItem
             {
-                Type = HyPlayItemType.FM,
+                Type = HyPlayItemType.Radio,
                 sid = song["mainTrackId"].ToString(),
                 songname = song["name"].ToString(),
                 Artist = new List<NCArtist>
                 {
                     new NCArtist
                     {
-                        Type = HyPlayItemType.FM,
+                        Type = HyPlayItemType.Radio,
                         id = song["dj"]["userId"].ToString(),
                         name = song["dj"]["nickname"].ToString(),
                         avatar = song["dj"]["avatarUrl"].ToString()
@@ -96,7 +96,7 @@ namespace HyPlayer.Classes
                 },
                 Album = new NCAlbum
                 {
-                    AlbumType = HyPlayItemType.FM,
+                    AlbumType = HyPlayItemType.Radio,
                     id = song["radio"]["id"].ToString(),
                     name = song["radio"]["name"].ToString(),
                     cover = song["coverUrl"].ToString(),
@@ -106,13 +106,12 @@ namespace HyPlayer.Classes
                 LengthInMilliseconds = song["duration"].ToObject<double>(),
                 mvid = -1,
                 alias = "",
-                transname = ""
+                transname = "",
+                fmId = song["id"].ToString(),
+                description = song["description"].ToString(),
+                RadioId = song["radio"]["id"].ToString(),
+                RadioName = song["radio"]["name"].ToString(),
             };
-            tmpsong.fmId = song["id"].ToString();
-            tmpsong.description = song["description"].ToString();
-            tmpsong.RadioId = song["radio"]["id"].ToString();
-            tmpsong.RadioName = song["radio"]["name"].ToString();
-            return tmpsong;
         }
     }
 
@@ -141,6 +140,7 @@ namespace HyPlayer.Classes
                 dtpath = "dt";
             NCSong NCSong = new NCSong()
             {
+                Type = HyPlayItemType.Netease,
                 Album = NCAlbum.CreateFormJson(song[alpath]),
                 sid = song["id"].ToString(),
                 songname = song["name"].ToString(),

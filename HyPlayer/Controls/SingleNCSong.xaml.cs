@@ -111,7 +111,7 @@ namespace HyPlayer.Controls
                                     size = token["size"].ToString(),
                                     md5 = token["md5"].ToString()
                                 };
-                                HyPlayList.AppendNCPlayItem(ncp);
+                                HyPlayItem item = HyPlayList.AppendNCPlayItem(ncp);
                             }
 
                             HyPlayList.SongAppendDone();
@@ -123,7 +123,7 @@ namespace HyPlayer.Controls
             }
             else
             {
-                await HyPlayList.AppendNCSong(ncsong);
+                HyPlayItem item = await HyPlayList.AppendNCSong(ncsong);
                 HyPlayList.SongAppendDone();
                 //此处可以进行优化
                 HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.NcPlayItem.id == ncsong.sid));
@@ -165,7 +165,7 @@ namespace HyPlayer.Controls
 
         private async void TextBlockArtist_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
-            if (ncsong.Artist[0].Type == HyPlayItemType.FM)
+            if (ncsong.Artist[0].Type == HyPlayItemType.Radio)
             {
                 Common.BaseFrame.Navigate(typeof(Me), ncsong.Artist[0].id);
             }
