@@ -167,7 +167,7 @@ namespace HyPlayer.Pages
         {
             foreach (var singerjson in json["result"]["artists"].ToArray())
             {
-                SearchResultContainer.Children.Add(new SingleArtist(NCArtist.CreateFormJson(singerjson)));
+                SearchResultContainer.Children.Add(new SingleArtist(NCArtist.CreateFromJson(singerjson)));
             }
             if (int.Parse(json["result"]["artistCount"].ToString()) >= (page + 1) * 30)
             {
@@ -192,7 +192,7 @@ namespace HyPlayer.Pages
         {
             foreach (var albumjson in json["result"]["albums"].ToArray())
             {
-                SearchResultContainer.Children.Add(new SingleAlbum(NCAlbum.CreateFormJson(albumjson), albumjson["artists"].ToArray().Select(t => NCArtist.CreateFormJson(t)).ToList()));
+                SearchResultContainer.Children.Add(new SingleAlbum(NCAlbum.CreateFromJson(albumjson), albumjson["artists"].ToArray().Select(t => NCArtist.CreateFromJson(t)).ToList()));
             }
             if (int.Parse(json["result"]["albumCount"].ToString()) >= (page + 1) * 30)
             {

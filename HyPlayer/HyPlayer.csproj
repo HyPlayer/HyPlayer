@@ -213,6 +213,9 @@
     <Compile Include="Pages\MVPage.xaml.cs">
       <DependentUpon>MVPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\PageFavorite.xaml.cs">
+      <DependentUpon>PageFavorite.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Pages\RadioPage.xaml.cs">
       <DependentUpon>RadioPage.xaml</DependentUpon>
     </Compile>
@@ -412,6 +415,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Pages\MVPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\PageFavorite.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

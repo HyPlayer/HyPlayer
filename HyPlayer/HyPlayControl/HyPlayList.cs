@@ -395,7 +395,7 @@ namespace HyPlayer.HyPlayControl
                         }
                         else
                         {
-                            if (NowPlayingItem.NcPlayItem.url == null ||
+                            if (string.IsNullOrEmpty(NowPlayingItem.NcPlayItem.url) ||
                                 (ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"] != null &&
                                  ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"].ToString() != "false"))
                             {

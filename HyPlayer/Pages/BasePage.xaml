@@ -95,6 +95,15 @@
                     x:Name="PageHistory"
                     Tag="PageHistory" />
                 <controls1:NavigationViewItem
+                    Content="我的收藏"
+                    Tag="PageFavorite">
+                    <controls1:NavigationViewItem.Icon>
+                        <FontIcon
+                            FontFamily="{StaticResource SymbolThemeFontFamily}"
+                            Glyph="&#xE734;"/>
+                    </controls1:NavigationViewItem.Icon>
+                </controls1:NavigationViewItem>
+                <controls1:NavigationViewItem
                     Content="私人FM"
                     Tag="PersonalFM">
                     <controls1:NavigationViewItem.Icon>

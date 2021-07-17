@@ -141,13 +141,13 @@ namespace HyPlayer.Classes
             NCSong NCSong = new NCSong()
             {
                 Type = HyPlayItemType.Netease,
-                Album = NCAlbum.CreateFormJson(song[alpath]),
+                Album = NCAlbum.CreateFromJson(song[alpath]),
                 sid = song["id"].ToString(),
                 songname = song["name"].ToString(),
                 Artist = new List<NCArtist>(),
                 LengthInMilliseconds = double.Parse(song[dtpath].ToString())
             };
-            song[arpath].ToList().ForEach(t => { NCSong.Artist.Add(NCArtist.CreateFormJson(t)); });
+            song[arpath].ToList().ForEach(t => { NCSong.Artist.Add(NCArtist.CreateFromJson(t)); });
             if (song["mv"] != null)
             {
                 NCSong.mvid = song["mv"].ToObject<int>();
@@ -296,7 +296,7 @@ namespace HyPlayer.Classes
         public string transname;
         public string alias;
 
-        public static NCArtist CreateFormJson(JToken artist)
+        public static NCArtist CreateFromJson(JToken artist)
         {
             //TODO: 歌手这里尽量再来点信息
             var art = new NCArtist()
@@ -322,7 +322,7 @@ namespace HyPlayer.Classes
         public string alias;
         public string description;
 
-        public static NCAlbum CreateFormJson(JToken album)
+        public static NCAlbum CreateFromJson(JToken album)
         {
             return new NCAlbum()
             {

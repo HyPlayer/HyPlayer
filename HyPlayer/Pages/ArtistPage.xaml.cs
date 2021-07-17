@@ -44,7 +44,7 @@ namespace HyPlayer.Pages
                 new Dictionary<string, object>() { { "id", (string)e.Parameter } });
             if (isOk)
             {
-                artist = NCArtist.CreateFormJson(res["data"]["artist"]);
+                artist = NCArtist.CreateFromJson(res["data"]["artist"]);
                 if (res["data"]["artist"]["cover"].ToString().StartsWith("http"))
                     ImageRect.ImageSource =
                         new BitmapImage(new Uri(res["data"]["artist"]["cover"].ToString() + "?param=" + StaticSource.PICSIZE_ARTIST_DETAIL_COVER));

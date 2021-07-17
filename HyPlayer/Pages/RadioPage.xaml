@@ -96,7 +96,7 @@
                                 Content="播放全部"
                                 Click="ButtonPlayAll_OnClick" />
                             <Button
-                                Content="由新到旧"
+                                Content="排序"
                                 Click="Button_Click"/>
                         </StackPanel>
                         <TextBlock

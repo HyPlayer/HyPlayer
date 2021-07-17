@@ -427,6 +427,9 @@ namespace HyPlayer.Pages
                 case "PageHistory":
                     Common.BaseFrame.Navigate(typeof(Pages.History), null, new EntranceNavigationTransitionInfo());
                     break;
+                case "PageFavorite":
+                    Common.BaseFrame.Navigate(typeof(Pages.PageFavorite), null, new EntranceNavigationTransitionInfo());
+                    break;
             }
         }
 
