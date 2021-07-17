@@ -54,6 +54,9 @@ namespace HyPlayer.Pages
                     case "fm":
                         resourcetype = 4;
                         break;
+                    case "mb":
+                        resourcetype = 7;
+                        break;
                 }
                 
             }

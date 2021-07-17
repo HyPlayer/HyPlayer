@@ -6,67 +6,129 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:classes="using:HyPlayer.Classes"
     mc:Ignorable="d">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <StackPanel
-        Orientation="Vertical">
-        <controls:Loading
-            x:Name="LoadingControl"
-            IsLoading="True">
-            <StackPanel
-                Orientation="Horizontal"
-                Padding="12">
-                <ProgressRing
-                    IsActive="True"
-                    Margin="0,0,12,0" />
-                <TextBlock
-                    Text="加载中"
-                    VerticalAlignment="Center"
-                    Foreground="White" />
-            </StackPanel>
-            <controls:Loading.Background>
-                <AcrylicBrush
-                    BackgroundSource="Backdrop"
-                    TintColor="Black"
-                    TintOpacity="0.4" />
-            </controls:Loading.Background>
-        </controls:Loading>
-        <controls:WrapPanel>
-            <MediaPlayerElement
-                MaxWidth="900"
-                HorizontalAlignment="Left"
-                Margin="15"
-                AreTransportControlsEnabled="True"
-                x:Name="MediaPlayerElement" />
-            <StackPanel
-                Margin="15"
-                Spacing="15"
-                Orientation="Vertical">
-                <TextBlock
-                    TextWrapping="Wrap"
-                    x:Name="TextBoxVideoName"
-                    FontWeight="Bold"
-                    FontSize="35" />
-                <TextBlock
-                    x:Name="TextBoxSinger"
-                    FontSize="18"
-                    Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}" />
-                <TextBlock
-                    TextWrapping="Wrap"
-                    x:Name="TextBoxDesc"
-                    FontSize="15"
-                    Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}" />
-                <TextBlock
-                    TextWrapping="Wrap"
-                    x:Name="TextBoxOtherInfo"
-                    FontSize="15"
-                    Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}" />
-                <ComboBox Header="清晰度选择" x:Name="VideoQualityBox" SelectionChanged="VideoQualityBox_SelectionChanged" />
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="NarrowState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="MainGrid.RowDefinitions[1].Height" Value="*" />
+                        <Setter Target="MainGrid.ColumnDefinitions[1].Width" Value="auto" />
+                        <Setter Target="SecondGrid.(Grid.Column)" Value="0" />
+                        <Setter Target="SecondGrid.(Grid.Row)" Value="1" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="WideState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="720" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="MainGrid.RowDefinitions[1].Height" Value="auto" />
+                        <Setter Target="MainGrid.ColumnDefinitions[1].Width" Value="*" />
+                        <Setter Target="SecondGrid.(Grid.Column)" Value="1" />
+                        <Setter Target="SecondGrid.(Grid.Row)" Value="0" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+        <ScrollViewer.Resources>
+            <DataTemplate x:Key="RelativeTemplate" x:DataType="classes:NCMlog">
+                <Grid Margin="0,12,0,12" Tag="{x:Bind id}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <controls:ImageEx Source="{x:Bind cover}" MaxHeight="100" Stretch="UniformToFill" />
+
+                    <StackPanel Margin="12,0,0,0" Grid.Column="1">
+                        <TextBlock Text="{x:Bind title}" FontSize="14" FontWeight="SemiBold"
+                                   Style="{ThemeResource BaseTextBlockStyle}"
+                                   HorizontalAlignment="Left" Margin="0,0,0,6" LineHeight="20" />
+                        <TextBlock Text="{x:Bind description}" FontFamily="Segoe UI" FontWeight="Normal"
+                                   Style="{ThemeResource BodyTextBlockStyle}"
+                                   TextTrimming="CharacterEllipsis" Width="350" MaxLines="1" />
+                    </StackPanel>
+                </Grid>
+            </DataTemplate>
+        </ScrollViewer.Resources>
+        <StackPanel
+            Orientation="Vertical">
+            <controls:Loading
+                x:Name="LoadingControl"
+                IsLoading="True">
+                <StackPanel
+                    Orientation="Horizontal"
+                    Padding="12">
+                    <ProgressRing
+                        IsActive="True"
+                        Margin="0,0,12,0" />
+                    <TextBlock
+                        Text="加载中"
+                        VerticalAlignment="Center"
+                        Foreground="White" />
                 </StackPanel>
-        </controls:WrapPanel>
-        <Frame x:Name="CommentFrame" />
-        <Grid Height="150"/>
-    </StackPanel>
+                <controls:Loading.Background>
+                    <AcrylicBrush
+                        BackgroundSource="Backdrop"
+                        TintColor="Black"
+                        TintOpacity="0.4" />
+                </controls:Loading.Background>
+            </controls:Loading>
+            <Grid ColumnSpacing="10" RowSpacing="10" x:Name="MainGrid">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <MediaPlayerElement
+                    Grid.Column="0"
+                    Grid.Row="0"
+                    HorizontalAlignment="Left"
+                    Margin="15"
+                    AreTransportControlsEnabled="True"
+                    x:Name="MediaPlayerElement" />
+                <StackPanel
+                    x:Name="SecondGrid" Grid.Column="1" Grid.Row="0"
+                    Margin="15"
+                    Spacing="15"
+                    Orientation="Vertical">
+                    <TextBlock
+                        TextWrapping="Wrap"
+                        x:Name="TextBoxVideoName"
+                        FontWeight="Bold"
+                        FontSize="35" />
+                    <TextBlock
+                        x:Name="TextBoxSinger"
+                        FontSize="18"
+                        Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}" />
+                    <TextBlock
+                        TextWrapping="Wrap"
+                        x:Name="TextBoxDesc"
+                        FontSize="15"
+                        Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}" />
+                    <TextBlock
+                        TextWrapping="Wrap"
+                        x:Name="TextBoxOtherInfo"
+                        FontSize="15"
+                        Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}" />
+                    <ComboBox Header="清晰度选择" x:Name="VideoQualityBox"
+                              SelectionChanged="VideoQualityBox_SelectionChanged" />
+                    <ListView SelectionChanged="RelativeList_OnSelectionChanged" MaxHeight="400"
+                              ItemTemplate="{StaticResource RelativeTemplate}" x:Name="RelativeList" />
+                </StackPanel>
+            </Grid>
+
+
+            <Frame x:Name="CommentFrame" />
+            <Grid Height="150" />
+        </StackPanel>
     </ScrollViewer>
 </Page>
