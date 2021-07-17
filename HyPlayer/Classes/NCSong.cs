@@ -287,6 +287,27 @@ namespace HyPlayer.Classes
         }
     }
 
+    public struct NCMlog
+    {
+        public string id;
+        public string title;
+        public string description;
+        public string cover;
+        public int duration;
+
+        public static NCMlog CreateFromJson(JToken json)
+        {
+            return new NCMlog
+            {
+                id = json["id"].ToString(),
+                title = json["text"].ToString(),
+                description = json["desc"].ToString(),
+                cover = json["coverUrl"].ToString(),
+                duration = json["duration"].ToObject<int>()
+            };
+        }
+    }
+    
     public struct NCArtist
     {
         public HyPlayItemType Type;

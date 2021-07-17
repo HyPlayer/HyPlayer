@@ -194,7 +194,7 @@ namespace HyPlayer.Controls
 
         private void BtnMV_OnClick(object sender, RoutedEventArgs e)
         {
-            Common.BaseFrame.Navigate(typeof(MVPage), ncsong.mvid);
+            Common.BaseFrame.Navigate(typeof(MVPage), ncsong);
         }
 
         private async void Btn_Sub_OnClick(object sender, RoutedEventArgs e)
