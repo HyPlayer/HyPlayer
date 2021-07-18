@@ -1,12 +1,11 @@
-﻿using HyPlayer.Classes;
-using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using Kawazu;
 
@@ -14,15 +13,13 @@ using Kawazu;
 
 namespace HyPlayer.Controls
 {
-
     public sealed partial class LyricItem : UserControl
     {
         public readonly SongLyric Lrc;
-        public double actualsize => Common.PageExpandedPlayer == null ? 18 : Common.PageExpandedPlayer.showsize;
-        private Brush originBrush => Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as Brush;
+        public bool hiding = false;
 
         public bool showing = true;
-        public bool hiding = false;
+
         public LyricItem(SongLyric lrc)
         {
             InitializeComponent();
@@ -31,39 +28,30 @@ namespace HyPlayer.Controls
             Lrc = lrc;
             TextBoxPureLyric.Text = Lrc.PureLyric;
             if (Lrc.HaveTranslation && Common.ShowLyricTrans)
-            {
                 TextBoxTranslation.Text = Lrc.Translation;
-            }
             else
-            {
                 TextBoxTranslation.Visibility = Visibility.Collapsed;
-            }
 
             if (Common.KawazuConv != null && Common.ShowLyricSound)
-            {
                 Task.Run(() =>
                 {
-                    Common.Invoke((async () =>
+                    Common.Invoke(async () =>
                     {
-                        if (Kawazu.Utilities.HasKana(Lrc.PureLyric))
-                        {
-                            TextBoxSound.Text = await Common.KawazuConv.Convert(Lrc.PureLyric, To.Romaji, Mode.Separated);
-                        }
+                        if (Utilities.HasKana(Lrc.PureLyric))
+                            TextBoxSound.Text =
+                                await Common.KawazuConv.Convert(Lrc.PureLyric, To.Romaji, Mode.Separated);
                         else
-                        {
                             TextBoxSound.Visibility = Visibility.Collapsed;
-                        }
-
-                    }));
+                    });
                 });
-            }
             else
-            {
                 TextBoxSound.Visibility = Visibility.Collapsed;
-            }
 
             OnHind();
         }
+
+        public double actualsize => Common.PageExpandedPlayer == null ? 18 : Common.PageExpandedPlayer.showsize;
+        private Brush originBrush => Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as Brush;
 
         public void RefreshFontSize()
         {
@@ -74,26 +62,21 @@ namespace HyPlayer.Controls
         public void OnShow()
         {
             if (showing)
-            {
                 //RefreshFontSize();
                 return;
-            }
             showing = true;
             TextBoxPureLyric.FontWeight = FontWeights.SemiBold;
             TextBoxTranslation.FontWeight = FontWeights.SemiBold;
             TextBoxPureLyric.Foreground = originBrush;
             TextBoxSound.Foreground = originBrush;
             TextBoxTranslation.Foreground = originBrush;
-
         }
 
         public void OnHind()
         {
             if (!showing)
-            {
                 //RefreshFontSize();
                 return;
-            }
             showing = false;
             TextBoxPureLyric.FontWeight = FontWeights.Normal;
             TextBoxTranslation.FontWeight = FontWeights.Normal;

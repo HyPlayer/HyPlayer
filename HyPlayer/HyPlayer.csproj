@@ -24,6 +24,9 @@
     <AppxBundlePlatforms>x86|x64|arm|arm64</AppxBundlePlatforms>
     <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
     <AppxPackageDir>D:\Workspace\Personal\HyPlayer\HyPlayer\HyPlayer\AppPackages\2</AppxPackageDir>
+    <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
+    <PackageCertificateThumbprint>FB3B5BDC69B8D855FB9FFBE9A2135BA33556BEF8</PackageCertificateThumbprint>
+    <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -130,7 +133,6 @@
     <Compile Include="Classes\PersonalFM.cs" />
     <Compile Include="Classes\StaticSource.cs" />
     <Compile Include="Classes\The163KeyHelper.cs" />
-    <Compile Include="Classes\UAHelper.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="Controls\ArtistSelectDialog.xaml.cs">
       <DependentUpon>ArtistSelectDialog.xaml</DependentUpon>
@@ -325,6 +327,7 @@
     <Content Include="Resources\Dark.xaml" />
     <Content Include="Resources\Light.xaml" />
     <Content Include="Resources\Theme.xaml" />
+    <None Include="HyPlayer_TemporaryKey.pfx" />
     <None Include="Package.StoreAssociation.xml" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\SplashScreen.scale-200.png" />

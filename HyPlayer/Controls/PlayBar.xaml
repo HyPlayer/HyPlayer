@@ -7,7 +7,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:hy="using:HyPlayer"
-    xmlns:hyPlayControl="using:HyPlayer.HyPlayControl"
     mc:Ignorable="d"
     Background="{ThemeResource SystemControlAcrylicElementMediumHighBrush}"
     d:DesignHeight="100"
@@ -380,7 +379,7 @@
                     VerticalAlignment="Center"
                     Click="BtnPlayStateChange_OnClick"
                     CornerRadius="30"
-                    KeyUp="BtnPlayStateChange_KeyUp"  AutomationProperties.AcceleratorKey="Space">
+                    KeyUp="BtnPlayStateChange_KeyUp" AutomationProperties.AcceleratorKey="Space">
                     <FontIcon
                         Name="PlayStateIcon"
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
@@ -443,7 +442,7 @@
 
             </Grid>
         </Grid>
-        <ToggleButton 
+        <ToggleButton
             x:Name="ButtonDesktopLyrics"
             Grid.Column="3"
             Width="40"
@@ -456,7 +455,7 @@
             IsThreeState="False"
             Click="ToggleButton_Click"
             Content="词"
-            ToolTipService.ToolTip="桌面歌词"/>
+            ToolTipService.ToolTip="桌面歌词" />
         <Button
             HorizontalAlignment="Right"
             Grid.Column="3"

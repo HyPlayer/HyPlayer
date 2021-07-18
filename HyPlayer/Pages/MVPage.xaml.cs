@@ -1,41 +1,31 @@
-﻿using HyPlayer.HyPlayControl;
-using NeteaseCloudMusicApi;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text.RegularExpressions;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.Media.Core;
-using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
-using Newtonsoft.Json.Linq;
+using HyPlayer.HyPlayControl;
+using NeteaseCloudMusicApi;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
 namespace HyPlayer.Pages
 {
     /// <summary>
-    /// 可用于自身或导航至 Frame 内部的空白页。
+    ///     可用于自身或导航至 Frame 内部的空白页。
     /// </summary>
     public sealed partial class MVPage : Page
     {
-        string mvid;
-        string mvquality = "1080";
+        private string mvid;
+        private string mvquality = "1080";
         private string songid;
-        private List<NCMlog> sources = new List<NCMlog>();
+        private readonly List<NCMlog> sources = new List<NCMlog>();
 
         public MVPage()
         {
-            this.InitializeComponent();
+            InitializeComponent();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -48,7 +38,7 @@ namespace HyPlayer.Pages
             LoadRelateive();
         }
 
-        void LoadThings()
+        private void LoadThings()
         {
             HyPlayList.Player.Pause();
             LoadVideo();
@@ -59,17 +49,15 @@ namespace HyPlayer.Pages
         private async void LoadRelateive()
         {
             var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.MlogRcmdFeedList,
-                new Dictionary<string, object>()
+                new Dictionary<string, object>
                 {
-                    { "id", mvid },
-                    { "songid", songid }
+                    {"id", mvid},
+                    {"songid", songid}
                 });
             if (isOk)
             {
-                foreach (JToken jToken in json["data"]["feeds"])
-                {
+                foreach (var jToken in json["data"]["feeds"])
                     sources.Add(NCMlog.CreateFromJson(jToken["resource"]["mlogBaseData"]));
-                }
 
                 RelativeList.ItemsSource = sources;
             }
@@ -78,13 +66,9 @@ namespace HyPlayer.Pages
         private void LoadComment()
         {
             if (Regex.IsMatch(mvid, "^[0-9]*$"))
-            {
                 CommentFrame.Navigate(typeof(Comments), "mv" + mvid);
-            }
             else
-            {
                 CommentFrame.Navigate(typeof(Comments), "mb" + mvid);
-            }
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -99,7 +83,7 @@ namespace HyPlayer.Pages
             {
                 //纯MV
                 var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.MvUrl,
-                    new Dictionary<string, object> { { "id", mvid }, { "r", mvquality } });
+                    new Dictionary<string, object> {{"id", mvid}, {"r", mvquality}});
                 if (isOk)
                 {
                     MediaPlayerElement.Source = MediaSource.CreateFromUri(new Uri(json["data"]["url"].ToString()));
@@ -111,10 +95,10 @@ namespace HyPlayer.Pages
             else
             {
                 var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.MlogUrl,
-                    new Dictionary<string, object>()
+                    new Dictionary<string, object>
                     {
-                        { "id", mvid },
-                        { "resolution", mvquality }
+                        {"id", mvid},
+                        {"resolution", mvquality}
                     });
                 if (isOk)
                 {
@@ -132,7 +116,7 @@ namespace HyPlayer.Pages
             if (Regex.IsMatch(mvid, "^[0-9]*$"))
             {
                 var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.MvDetail,
-                    new Dictionary<string, object> { { "mvid", mvid } });
+                    new Dictionary<string, object> {{"mvid", mvid}});
                 if (isok)
                 {
                     TextBoxVideoName.Text = json["data"]["name"].ToString();
@@ -140,10 +124,7 @@ namespace HyPlayer.Pages
                     TextBoxDesc.Text = json["data"]["desc"].ToString();
                     TextBoxOtherInfo.Text =
                         $"发布时间: {json["data"]["publishTime"]}    播放量: {json["data"]["playCount"]}次    收藏量: {json["data"]["subCount"]}次";
-                    foreach (var br in json["data"]["brs"].ToArray())
-                    {
-                        VideoQualityBox.Items.Add(br["br"].ToString());
-                    }
+                    foreach (var br in json["data"]["brs"].ToArray()) VideoQualityBox.Items.Add(br["br"].ToString());
                 }
             }
             else
@@ -164,7 +145,7 @@ namespace HyPlayer.Pages
 
         private void RelativeList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            mvid = (RelativeList.SelectedItem is NCMlog ? (NCMlog)RelativeList.SelectedItem : default).id;
+            mvid = (RelativeList.SelectedItem is NCMlog ? (NCMlog) RelativeList.SelectedItem : default).id;
             LoadThings();
         }
     }

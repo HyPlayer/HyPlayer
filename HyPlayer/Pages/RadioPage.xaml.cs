@@ -11,16 +11,15 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using NeteaseCloudMusicApi;
-using Newtonsoft.Json.Linq;
 
 namespace HyPlayer.Pages
 {
     public sealed partial class RadioPage : Page
     {
+        private bool asc;
+        private int i;
+        private int page;
         private NCRadio Radio;
-        private int page = 0;
-        private bool asc = false;
-        int i = 0;
 
         public RadioPage()
         {
@@ -30,11 +29,11 @@ namespace HyPlayer.Pages
         private async void LoadProgram()
         {
             var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.DjProgram,
-                new Dictionary<string, object>()
+                new Dictionary<string, object>
                 {
-                    { "rid", Radio.id },
-                    { "offset", page * 30 },
-                    { "asc", asc }
+                    {"rid", Radio.id},
+                    {"offset", page * 30},
+                    {"asc", asc}
                 });
             if (isok)
             {
@@ -72,41 +71,34 @@ namespace HyPlayer.Pages
 
         private void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
         {
-            Task.Run((() =>
+            Task.Run(() =>
             {
-                Common.Invoke((async () =>
+                Common.Invoke(async () =>
                 {
                     HyPlayList.RemoveAllSong();
-                    (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                        new Dictionary<string, object>()
+                    var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
+                        new Dictionary<string, object>
                         {
-                            { "id", string.Join(',', Common.ListedSongs.Select(t => t.sid)) },
-                            { "br", Common.Setting.audioRate }
+                            {"id", string.Join(',', Common.ListedSongs.Select(t => t.sid))},
+                            {"br", Common.Setting.audioRate}
                         });
                     if (isok)
                     {
-                        List<JToken> arr = json["data"].ToList();
-                        for (int i = 0; i < Common.ListedSongs.Count; i++)
+                        var arr = json["data"].ToList();
+                        for (var i = 0; i < Common.ListedSongs.Count; i++)
                         {
-                            JToken token = arr.Find(jt => jt["id"].ToString() == Common.ListedSongs[i].sid);
-                            if (!token.HasValues)
-                            {
-                                continue;
-                            }
+                            var token = arr.Find(jt => jt["id"].ToString() == Common.ListedSongs[i].sid);
+                            if (!token.HasValues) continue;
 
-                            NCSong ncSong = Common.ListedSongs[i];
+                            var ncSong = Common.ListedSongs[i];
 
-                            string tag = "";
+                            var tag = "";
                             if (token["type"].ToString().ToLowerInvariant() == "flac")
-                            {
                                 tag = "SQ";
-                            }
                             else
-                            {
-                                tag = (token["br"].ToObject<int>() / 1000).ToString() + "k";
-                            }
+                                tag = token["br"].ToObject<int>() / 1000 + "k";
 
-                            NCPlayItem ncp = new NCPlayItem()
+                            var ncp = new NCPlayItem
                             {
                                 tag = tag,
                                 Album = ncSong.Album,
@@ -127,8 +119,8 @@ namespace HyPlayer.Pages
 
                         HyPlayList.SongMoveTo(0);
                     }
-                }));
-            }));
+                });
+            });
         }
 
         private void TextBoxDJ_OnTapped(object sender, TappedRoutedEventArgs e)

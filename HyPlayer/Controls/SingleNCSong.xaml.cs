@@ -1,22 +1,17 @@
-﻿using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Windows.Storage;
-using Windows.Storage.Pickers;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
+using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
-using AcrylicBackgroundSource = Windows.UI.Xaml.Media.AcrylicBackgroundSource;
-using Newtonsoft.Json.Linq;
 using NeteaseCloudMusicApi;
-using System.Collections.Generic;
-using Newtonsoft.Json;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -24,9 +19,9 @@ namespace HyPlayer.Controls
 {
     public sealed partial class SingleNCSong : UserControl
     {
-        private NCSong ncsong;
         private readonly bool CanPlay;
-        private bool LoadList;
+        private readonly bool LoadList;
+        private readonly NCSong ncsong;
 
         public SingleNCSong(NCSong song, int order, bool canplay = true, bool loadlist = false,
             string additionalInfo = null)
@@ -45,22 +40,16 @@ namespace HyPlayer.Controls
                 new BitmapImage(new Uri(song.Album.cover + "?param=" + StaticSource.PICSIZE_SINGLENCSONG_COVER));
             TextBlockSongname.Text = song.songname;
             TextBlockTransName.Text = string.IsNullOrEmpty(song.transname) ? "" : $"({song.transname})";
-            TextBlockAlia.Text = additionalInfo == null ? (song.alias ?? "") : additionalInfo;
+            TextBlockAlia.Text = additionalInfo == null ? song.alias ?? "" : additionalInfo;
             TextBlockAlbum.Text = song.Album.name;
             OrderId.Text = (order + 1).ToString();
             TextBlockArtist.Text = string.Join(" / ", song.Artist.Select(ar => ar.name));
-            if (song.mvid != 0)
-            {
-                BtnMV.IsEnabled = true;
-            }
+            if (song.mvid != 0) BtnMV.IsEnabled = true;
         }
 
         public async Task<bool> AppendMe()
         {
-            if (!CanPlay)
-            {
-                return false;
-            }
+            if (!CanPlay) return false;
 
             if (LoadList)
             {
@@ -69,35 +58,28 @@ namespace HyPlayer.Controls
                     Common.Invoke(async () =>
                     {
                         HyPlayList.RemoveAllSong();
-                        (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                            new Dictionary<string, object>()
+                        var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
+                            new Dictionary<string, object>
                             {
-                                { "id", string.Join(',', Common.ListedSongs.Select(t => t.sid)) },
-                                { "br", Common.Setting.audioRate }
+                                {"id", string.Join(',', Common.ListedSongs.Select(t => t.sid))},
+                                {"br", Common.Setting.audioRate}
                             });
                         if (isok)
                         {
-                            List<JToken> arr = json["data"].ToList();
-                            for (int i = 0; i < Common.ListedSongs.Count; i++)
+                            var arr = json["data"].ToList();
+                            for (var i = 0; i < Common.ListedSongs.Count; i++)
                             {
-                                JToken token = arr.Find(jt => jt["id"].ToString() == Common.ListedSongs[i].sid);
-                                if (!token.HasValues)
-                                {
-                                    continue;
-                                }
+                                var token = arr.Find(jt => jt["id"].ToString() == Common.ListedSongs[i].sid);
+                                if (!token.HasValues) continue;
 
-                                NCSong ncSong = Common.ListedSongs[i];
-                                string tag = "";
+                                var ncSong = Common.ListedSongs[i];
+                                var tag = "";
                                 if (token["type"].ToString().ToLowerInvariant() == "flac")
-                                {
                                     tag = "SQ";
-                                }
                                 else
-                                {
-                                    tag = (token["br"].ToObject<int>() / 1000).ToString() + "k";
-                                }
+                                    tag = token["br"].ToObject<int>() / 1000 + "k";
 
-                                NCPlayItem ncp = new NCPlayItem()
+                                var ncp = new NCPlayItem
                                 {
                                     Type = ncSong.Type,
                                     tag = tag,
@@ -111,7 +93,7 @@ namespace HyPlayer.Controls
                                     size = token["size"].ToString(),
                                     md5 = token["md5"].ToString()
                                 };
-                                HyPlayItem item = HyPlayList.AppendNCPlayItem(ncp);
+                                var item = HyPlayList.AppendNCPlayItem(ncp);
                             }
 
                             HyPlayList.SongAppendDone();
@@ -123,7 +105,7 @@ namespace HyPlayer.Controls
             }
             else
             {
-                HyPlayItem item = await HyPlayList.AppendNCSong(ncsong);
+                var item = await HyPlayList.AppendNCSong(ncsong);
                 HyPlayList.SongAppendDone();
                 //此处可以进行优化
                 HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.NcPlayItem.id == ncsong.sid));
@@ -172,13 +154,9 @@ namespace HyPlayer.Controls
             else
             {
                 if (ncsong.Artist.Count > 1)
-                {
                     await new ArtistSelectDialog(ncsong.Artist).ShowAsync();
-                }
                 else
-                {
                     Common.BaseFrame.Navigate(typeof(ArtistPage), ncsong.Artist[0].id);
-                }
             }
         }
 

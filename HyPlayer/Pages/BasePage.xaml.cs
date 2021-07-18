@@ -1,12 +1,14 @@
-﻿using Microsoft.UI.Xaml.Controls;
-using NeteaseCloudMusicApi;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.Storage;
+using Windows.Storage.Streams;
 using Windows.System;
+using Windows.System.Profile;
 using Windows.UI;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
@@ -14,21 +16,19 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
+using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
+using HyPlayer.Controls;
+using HyPlayer.HyPlayControl;
+using Microsoft.AppCenter.Crashes;
+using Microsoft.UI.Xaml.Controls;
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json.Linq;
+using QRCoder;
 using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
 using NavigationViewBackRequestedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewBackRequestedEventArgs;
 using NavigationViewItem = Microsoft.UI.Xaml.Controls.NavigationViewItem;
 using NavigationViewSelectionChangedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewSelectionChangedEventArgs;
-using System.Linq;
-using System.Threading.Tasks;
-using HyPlayer.HyPlayControl;
-using Windows.UI.Xaml.Navigation;
-using System.Diagnostics;
-using QRCoder;
-using Windows.Storage.Streams;
-using Microsoft.AppCenter.Crashes;
-using System.Net;
-using HyPlayer.Controls;
 
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
@@ -36,12 +36,12 @@ using HyPlayer.Controls;
 namespace HyPlayer.Pages
 {
     /// <summary>
-    /// 可用于自身或导航至 Frame 内部的空白页。
+    ///     可用于自身或导航至 Frame 内部的空白页。
     /// </summary>
     public sealed partial class BasePage : Page
     {
-        private List<NavigationViewItem> selectionHistory;
         private bool IsNavBack;
+        private readonly List<NavigationViewItem> selectionHistory;
 
         public BasePage()
         {
@@ -49,11 +49,10 @@ namespace HyPlayer.Pages
             Common.PageBase = this;
             selectionHistory = new List<NavigationViewItem>();
 
-            if (Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Desktop")
+            if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Desktop")
             {
-
                 CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
-                ApplicationViewTitleBar titleBar = ApplicationView.GetForCurrentView().TitleBar;
+                var titleBar = ApplicationView.GetForCurrentView().TitleBar;
                 titleBar.ButtonBackgroundColor = Colors.Transparent;
                 titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
                 Window.Current.SetTitleBar(AppTitleBar);
@@ -64,17 +63,19 @@ namespace HyPlayer.Pages
                 //Common.BaseFrame.Navigate(typeof(Home));上一行代码会引发NavMain的SelectionChanged事件，不需要重复导航
             }
         }
+
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
             if (e.Parameter is string)
                 LoginDone();
         }
+
         private void PhraseCookie(string cookielines)
         {
             try
             {
-                foreach (string cookieHeader in cookielines.Split("\r\n"))
+                foreach (var cookieHeader in cookielines.Split("\r\n"))
                 {
                     if (string.IsNullOrEmpty(cookieHeader)) continue;
                     var cookie = new Cookie();
@@ -86,11 +87,10 @@ namespace HyPlayer.Pages
                     arr1.RemoveAt(0);
                     if (string.IsNullOrEmpty(cookie.Value))
                         continue;
-                    foreach (string cookiediac in arr1)
-                    {
+                    foreach (var cookiediac in arr1)
                         try
                         {
-                            string[] cookiesetarr = cookiediac.Trim().Split('=');
+                            var cookiesetarr = cookiediac.Trim().Split('=');
                             switch (cookiesetarr[0].Trim().ToLower())
                             {
                                 case "expires":
@@ -112,15 +112,13 @@ namespace HyPlayer.Pages
                         }
                         catch
                         {
-                            continue;
                         }
-                    }
+
                     Common.ncapi.Cookies.Add(cookie);
                 }
             }
             catch (Exception)
             {
-
             }
         }
 
@@ -128,14 +126,12 @@ namespace HyPlayer.Pages
         {
             try
             {
-                if (ApplicationData.Current.LocalSettings.Values.ContainsKey("cookie") && string.IsNullOrEmpty(ApplicationData.Current.LocalSettings.Values["cookie"].ToString()))
+                if (!ApplicationData.Current.LocalSettings.Values.ContainsKey("cookie") ||
+                    !string.IsNullOrEmpty(ApplicationData.Current.LocalSettings.Values["cookie"].ToString()))
                     return;
                 PhraseCookie(ApplicationData.Current.LocalSettings.Values["cookie"].ToString());
                 var (retOk, LoginStatus) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginStatus);
-                if (retOk)
-                {
-                    LoginDone();
-                }
+                if (retOk) LoginDone();
             }
             catch
             {
@@ -145,7 +141,7 @@ namespace HyPlayer.Pages
 
         private async void ButtonLogin_OnClick(object sender, RoutedEventArgs e)
         {
-            if (String.IsNullOrWhiteSpace(TextBoxAccount.Text) || String.IsNullOrWhiteSpace(TextBoxPassword.Password))
+            if (string.IsNullOrWhiteSpace(TextBoxAccount.Text) || string.IsNullOrWhiteSpace(TextBoxPassword.Password))
             {
                 InfoBarLoginHint.IsOpen = true;
                 InfoBarLoginHint.Message = "用户名或密码不能为空";
@@ -158,9 +154,9 @@ namespace HyPlayer.Pages
             JObject json;
             try
             {
-                Dictionary<string, object> queries = new Dictionary<string, object>();
-                string account = TextBoxAccount.Text;
-                bool isPhone = Regex.Match(account, "^[0-9]+$").Success;
+                var queries = new Dictionary<string, object>();
+                var account = TextBoxAccount.Text;
+                var isPhone = Regex.Match(account, "^[0-9]+$").Success;
                 queries[isPhone ? "phone" : "email"] = account;
                 queries["password"] = TextBoxPassword.Password;
                 (isOk, json) = await Common.ncapi.RequestAsync(
@@ -185,7 +181,7 @@ namespace HyPlayer.Pages
                 ButtonLogin.IsEnabled = true;
                 InfoBarLoginHint.IsOpen = true;
                 InfoBarLoginHint.Severity = InfoBarSeverity.Error;
-                InfoBarLoginHint.Message = "登录失败 " + ex.ToString();
+                InfoBarLoginHint.Message = "登录失败 " + ex;
                 Crashes.TrackError(ex);
             }
         }
@@ -211,10 +207,10 @@ namespace HyPlayer.Pages
             InfoBarLoginHint.IsOpen = true;
             InfoBarLoginHint.Title = "登录成功";
             //存储Cookie
-            string cookiestr = "";
+            var cookiestr = "";
             foreach (Cookie cookie in Common.ncapi.Cookies)
             {
-                string thiscookiestr = cookie.Name + "=" + cookie.Value;
+                var thiscookiestr = cookie.Name + "=" + cookie.Value;
                 if (!string.IsNullOrEmpty(cookie.Domain))
                     thiscookiestr += "; Domain=" + cookie.Domain;
                 if (cookie.Expires != DateTime.MinValue)
@@ -227,34 +223,39 @@ namespace HyPlayer.Pages
                     thiscookiestr += "; HttpOnly";
                 cookiestr += thiscookiestr + "\r\n";
             }
+
             ApplicationData.Current.LocalSettings.Values["cookie"] = cookiestr;
             Common.LoginedUser = NCUser.CreateFromJson(LoginStatus["profile"]);
             Common.Logined = true;
             NavItemLogin.Content = Common.LoginedUser.name;
-            NavItemLogin.Icon = new BitmapIcon() { UriSource = new Uri(Common.LoginedUser.avatar + "?param=" + StaticSource.PICSIZE_NAVITEM_USERAVATAR), ShowAsMonochrome = false };
+            NavItemLogin.Icon = new BitmapIcon
+            {
+                UriSource = new Uri(Common.LoginedUser.avatar + "?param=" + StaticSource.PICSIZE_NAVITEM_USERAVATAR),
+                ShowAsMonochrome = false
+            };
             InfoBarLoginHint.Severity = InfoBarSeverity.Success;
             InfoBarLoginHint.Message = "欢迎 " + Common.LoginedUser.name;
             DialogLogin.Hide();
             NavViewBack();
             //加载我喜欢的歌
-            _ = Task.Run((() =>
+            _ = Task.Run(() =>
             {
-                Common.Invoke((async () =>
-               {
-                   (bool isok, JObject js) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Likelist,
-                       new Dictionary<string, object>() { { "uid", Common.LoginedUser.id } });
-                   Common.LikedSongs = js["ids"].ToObject<List<string>>();
-               }));
-            }));
+                Common.Invoke(async () =>
+                {
+                    var (isok, js) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Likelist,
+                        new Dictionary<string, object> {{"uid", Common.LoginedUser.id}});
+                    Common.LikedSongs = js["ids"].ToObject<List<string>>();
+                });
+            });
 
-            _ = Task.Run((() =>
+            _ = Task.Run(() =>
             {
-                Common.Invoke((async () =>
+                Common.Invoke(async () =>
                 {
                     //加载用户歌单
-                    Microsoft.UI.Xaml.Controls.NavigationViewItem nowitem = NavItemsMyList;
-                    (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
-                        new Dictionary<string, object>() { { "uid", Common.LoginedUser.id } });
+                    var nowitem = NavItemsMyList;
+                    var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
+                        new Dictionary<string, object> {{"uid", Common.LoginedUser.id}});
                     if (isOk)
                     {
                         NavItemsLikeList.Visibility = Visibility.Visible;
@@ -262,12 +263,11 @@ namespace HyPlayer.Pages
                         NavItemsMyList.Visibility = Visibility.Visible;
                         NavItemsMyLovedPlaylist.Visibility = Visibility.Visible;
                         Common.MySongLists.Clear();
-                        bool isliked = false;
-                        foreach (JToken jToken in json["playlist"])
-                        {
+                        var isliked = false;
+                        foreach (var jToken in json["playlist"])
                             if (jToken["subscribed"].ToString() == "True")
                             {
-                                NavItemsLikeList.MenuItems.Add(new NavigationViewItem()
+                                NavItemsLikeList.MenuItems.Add(new NavigationViewItem
                                 {
                                     Content = jToken["name"].ToString(),
                                     Tag = "Playlist" + jToken["id"]
@@ -281,48 +281,48 @@ namespace HyPlayer.Pages
                                     isliked = true;
                                     continue;
                                 }
-                                NavItemsMyList.MenuItems.Add(new NavigationViewItem()
+
+                                NavItemsMyList.MenuItems.Add(new NavigationViewItem
                                 {
                                     Content = jToken["name"].ToString(),
                                     Tag = "Playlist" + jToken["id"]
                                 });
                             }
-                        }
                     }
-                }));
-            }));
-
-            // 执行签到操作
-            _ = Task.Run((() =>
-            {
-                Common.Invoke((() =>
-                {
-                    Common.ncapi.RequestAsync(CloudMusicApiProviders.DailySignin);
-                    Common.ncapi.RequestAsync(CloudMusicApiProviders.DailySignin, new Dictionary<string, object>() { { "type", 1 } });
-                    //刷播放量不?
-                }));
-            }));
-
-            HyPlayList.OnMediaEnd += (hpi =>
-            {
-                // 播放数据
-                _ = Task.Run((() =>
-                {
-                    Common.Invoke((() =>
-                    {
-                        if (hpi.ItemType != HyPlayItemType.Netease) return;
-                        Common.ncapi.RequestAsync(CloudMusicApiProviders.Scrobble, new Dictionary<string, object>()
-                        {
-                            {"id",hpi.NcPlayItem.id},
-                            {"sourceId","-1"},
-                            {"time","60" }
-                        });
-                    }));
-                }));
+                });
             });
 
-            HyPlayList.LoginDownCall();
+            // 执行签到操作
+            _ = Task.Run(() =>
+            {
+                Common.Invoke(() =>
+                {
+                    Common.ncapi.RequestAsync(CloudMusicApiProviders.DailySignin);
+                    Common.ncapi.RequestAsync(CloudMusicApiProviders.DailySignin,
+                        new Dictionary<string, object> {{"type", 1}});
+                    //刷播放量不?
+                });
+            });
 
+            HyPlayList.OnMediaEnd += hpi =>
+            {
+                // 播放数据
+                _ = Task.Run(() =>
+                {
+                    Common.Invoke(() =>
+                    {
+                        if (hpi.ItemType != HyPlayItemType.Netease) return;
+                        Common.ncapi.RequestAsync(CloudMusicApiProviders.Scrobble, new Dictionary<string, object>
+                        {
+                            {"id", hpi.NcPlayItem.id},
+                            {"sourceId", "-1"},
+                            {"time", "60"}
+                        });
+                    });
+                });
+            };
+
+            HyPlayList.LoginDownCall();
         }
 
 
@@ -344,36 +344,33 @@ namespace HyPlayer.Pages
 
             if (nowitem.Tag.ToString() == "PageMe" && !Common.Logined)
             {
-                foreach (Cookie ncapiCookie in Common.ncapi.Cookies)
-                {
-                    ncapiCookie.Expired = true;//清一遍Cookie防止出错
-                }
+                foreach (Cookie ncapiCookie in Common.ncapi.Cookies) ncapiCookie.Expired = true; //清一遍Cookie防止出错
                 InfoBarLoginHint.IsOpen = true;
                 await DialogLogin.ShowAsync();
                 return;
             }
+
             if (nowitem.Tag.ToString() == "SonglistCreate")
             {
                 await new CreateSonglistDialog().ShowAsync();
-                _ = Task.Run((() =>
+                _ = Task.Run(() =>
                 {
-                    Common.Invoke((async () =>
+                    Common.Invoke(async () =>
                     {
                         //加载用户歌单
-                        Microsoft.UI.Xaml.Controls.NavigationViewItem item = NavItemsMyList;
-                        (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
-                            new Dictionary<string, object>() { { "uid", Common.LoginedUser.id } });
+                        var item = NavItemsMyList;
+                        var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
+                            new Dictionary<string, object> {{"uid", Common.LoginedUser.id}});
                         if (isOk)
                         {
                             NavItemsLikeList.Visibility = Visibility.Visible;
                             NavItemsMyList.Visibility = Visibility.Visible;
                             Common.MySongLists.Clear();
                             NavItemsMyList.MenuItems.Clear();
-                            foreach (JToken jToken in json["playlist"])
-                            {
+                            foreach (var jToken in json["playlist"])
                                 if (jToken["subscribed"].ToString() == "True")
                                 {
-                                    NavItemsLikeList.MenuItems.Add(new NavigationViewItem()
+                                    NavItemsLikeList.MenuItems.Add(new NavigationViewItem
                                     {
                                         Content = jToken["name"].ToString(),
                                         Tag = "Playlist" + jToken["id"]
@@ -382,53 +379,51 @@ namespace HyPlayer.Pages
                                 else
                                 {
                                     Common.MySongLists.Add(NCPlayList.CreateFromJson(jToken));
-                                    NavItemsMyList.MenuItems.Add(new NavigationViewItem()
+                                    NavItemsMyList.MenuItems.Add(new NavigationViewItem
                                     {
                                         Content = jToken["name"].ToString(),
                                         Tag = "Playlist" + jToken["id"]
                                     });
                                 }
-                            }
                         }
-                    }));
-                }));
+                    });
+                });
                 return;
             }
+
             if (nowitem.Tag.ToString() == "SonglistMyLike")
             {
-                Common.BaseFrame.Navigate(typeof(Pages.SongListDetail), Common.MySongLists[0].plid,
+                Common.BaseFrame.Navigate(typeof(SongListDetail), Common.MySongLists[0].plid,
                     new EntranceNavigationTransitionInfo());
                 return;
             }
 
             if (nowitem.Tag.ToString().StartsWith("Playlist"))
-            {
-                Common.BaseFrame.Navigate(typeof(Pages.SongListDetail), nowitem.Tag.ToString().Substring(8),
+                Common.BaseFrame.Navigate(typeof(SongListDetail), nowitem.Tag.ToString().Substring(8),
                     new EntranceNavigationTransitionInfo());
-            }
 
             switch (nowitem.Tag.ToString())
             {
                 case "PageMe":
-                    Common.BaseFrame.Navigate(typeof(Pages.Me), null, new EntranceNavigationTransitionInfo());
+                    Common.BaseFrame.Navigate(typeof(Me), null, new EntranceNavigationTransitionInfo());
                     break;
                 case "PageSearch":
-                    Common.BaseFrame.Navigate(typeof(Pages.Search), null, new EntranceNavigationTransitionInfo());
+                    Common.BaseFrame.Navigate(typeof(Search), null, new EntranceNavigationTransitionInfo());
                     break;
                 case "PageHome":
-                    Common.BaseFrame.Navigate(typeof(Pages.Home), null, new EntranceNavigationTransitionInfo());
+                    Common.BaseFrame.Navigate(typeof(Home), null, new EntranceNavigationTransitionInfo());
                     break;
                 case "PageSettings":
-                    Common.BaseFrame.Navigate(typeof(Pages.Settings), null, new EntranceNavigationTransitionInfo());
+                    Common.BaseFrame.Navigate(typeof(Settings), null, new EntranceNavigationTransitionInfo());
                     break;
                 case "PageLocal":
-                    Common.BaseFrame.Navigate(typeof(Pages.LocalMusicPage), null, new EntranceNavigationTransitionInfo());
+                    Common.BaseFrame.Navigate(typeof(LocalMusicPage), null, new EntranceNavigationTransitionInfo());
                     break;
                 case "PageHistory":
-                    Common.BaseFrame.Navigate(typeof(Pages.History), null, new EntranceNavigationTransitionInfo());
+                    Common.BaseFrame.Navigate(typeof(History), null, new EntranceNavigationTransitionInfo());
                     break;
                 case "PageFavorite":
-                    Common.BaseFrame.Navigate(typeof(Pages.PageFavorite), null, new EntranceNavigationTransitionInfo());
+                    Common.BaseFrame.Navigate(typeof(PageFavorite), null, new EntranceNavigationTransitionInfo());
                     break;
             }
         }
@@ -437,10 +432,7 @@ namespace HyPlayer.Pages
         {
             try
             {
-                if (Common.BaseFrame.CanGoBack)
-                {
-                    Common.BaseFrame.GoBack();
-                }
+                if (Common.BaseFrame.CanGoBack) Common.BaseFrame.GoBack();
 
                 NavViewBack();
 
@@ -455,36 +447,33 @@ namespace HyPlayer.Pages
 
         private void TextBoxAccount_OnKeyDown(object sender, KeyRoutedEventArgs e)
         {
-            if (e.Key == VirtualKey.Enter)
-            {
-                TextBoxPassword.Focus(FocusState.Keyboard);
-            }
+            if (e.Key == VirtualKey.Enter) TextBoxPassword.Focus(FocusState.Keyboard);
         }
 
         private void TextBoxPassword_OnKeyDown(object sender, KeyRoutedEventArgs e)
         {
-            if (e.Key == VirtualKey.Enter)
-            {
-                ButtonLogin_OnClick(null, null);
-            }
+            if (e.Key == VirtualKey.Enter) ButtonLogin_OnClick(null, null);
         }
 
         private async void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if ((sender as Pivot).SelectedIndex == 1)
             {
-                (bool isOk, JObject key) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginQrKey, new Dictionary<string, object>() { { "timestamp", (DateTime.Now.Ticks - 621356256000000000) / 10000 } });
+                var (isOk, key) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginQrKey,
+                    new Dictionary<string, object> {{"timestamp", (DateTime.Now.Ticks - 621356256000000000) / 10000}});
                 if (isOk)
                     ReFreshQr(key);
 
 
                 while (true)
                 {
-
-                    (bool a, JObject res) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginQrCheck, new Dictionary<string, object>() { { "key", key["unikey"].ToString() } });
+                    var (a, res) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginQrCheck,
+                        new Dictionary<string, object> {{"key", key["unikey"].ToString()}});
                     if (res["code"].ToString() == "800")
                     {
-                        (isOk, key) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginQrKey, new Dictionary<string, object>() { { "timestamp", (DateTime.Now.Ticks - 621356256000000000) / 10000 } });
+                        (isOk, key) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginQrKey,
+                            new Dictionary<string, object>
+                                {{"timestamp", (DateTime.Now.Ticks - 621356256000000000) / 10000}});
                         if (isOk)
                             ReFreshQr(key);
                     }
@@ -514,11 +503,10 @@ namespace HyPlayer.Pages
                 InfoBarLoginHint.Title = "登录代表你同意相关条款";
             }
         }
+
         private async void ReFreshQr(JObject key)
         {
-
-
-            Uri QrUri = new Uri("https://music.163.com/login?codekey=" + key["unikey"].ToString());
+            var QrUri = new Uri("https://music.163.com/login?codekey=" + key["unikey"]);
             var img = new BitmapImage();
 
             var qrGenerator = new QRCodeGenerator();
@@ -532,9 +520,11 @@ namespace HyPlayer.Pages
                     writer.WriteBytes(qrImage);
                     await writer.StoreAsync();
                 }
+
                 await img.SetSourceAsync(stream);
                 QrContainer.Source = img;
             }
+
             InfoBarLoginHint.Title = "请扫描上方二维码登录";
         }
 
@@ -542,7 +532,6 @@ namespace HyPlayer.Pages
         {
             DialogLogin.Hide();
             BaseFrame.Navigate(typeof(ThirdPartyLogin), (sender as Button).Tag.ToString());
-
         }
 
         private void NavigationViewItem_Tapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
@@ -553,7 +542,7 @@ namespace HyPlayer.Pages
 
         private void AutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
         {
-            Common.BaseFrame.Navigate(typeof(Pages.Search), sender.Text, new EntranceNavigationTransitionInfo());
+            Common.BaseFrame.Navigate(typeof(Search), sender.Text, new EntranceNavigationTransitionInfo());
         }
 
         private async void AutoSuggestBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
@@ -564,14 +553,13 @@ namespace HyPlayer.Pages
                 return;
             }
 
-            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchSuggest,
-                new Dictionary<string, object>() { { "keywords", sender.Text }, { "type", "mobile" } });
+            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchSuggest,
+                new Dictionary<string, object> {{"keywords", sender.Text}, {"type", "mobile"}});
 
-            if (isOk && json["result"] != null && json["result"]["allMatch"] != null && json["result"]["allMatch"].HasValues)
-            {
+            if (isOk && json["result"] != null && json["result"]["allMatch"] != null &&
+                json["result"]["allMatch"].HasValues)
                 sender.ItemsSource = json["result"]["allMatch"].ToArray().ToList().Select(t => t["keyword"].ToString())
                     .ToList();
-            }
         }
 
         private void AutoSuggestBox_SuggestionChosen(AutoSuggestBox sender,
@@ -582,19 +570,17 @@ namespace HyPlayer.Pages
 
         private void AutoSuggestBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            ((AutoSuggestBox)sender).ItemsSource = null;
+            ((AutoSuggestBox) sender).ItemsSource = null;
         }
 
         private async void AutoSuggestBox_GotFocus(object sender, RoutedEventArgs e)
         {
-            if (String.IsNullOrWhiteSpace((sender as AutoSuggestBox)?.Text))
+            if (string.IsNullOrWhiteSpace((sender as AutoSuggestBox)?.Text))
             {
-                (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchHot);
+                var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchHot);
                 if (isOk)
-                {
-                    ((AutoSuggestBox)sender).ItemsSource =
+                    ((AutoSuggestBox) sender).ItemsSource =
                         json["result"]["hots"].ToArray().ToList().Select(t => t["first"].ToString());
-                }
             }
         }
     }

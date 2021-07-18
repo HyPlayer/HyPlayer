@@ -12,5 +12,5 @@
                   BackgroundSource="HostBackdrop"
                   TintColor="Gray"
                   TintOpacity="0.6"
-                  FallbackColor="Black"/>
+                  FallbackColor="Black" />
 </ResourceDictionary>

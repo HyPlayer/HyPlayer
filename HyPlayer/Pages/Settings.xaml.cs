@@ -4,43 +4,50 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Windows.ApplicationModel;
 using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
+using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
-using HyPlayer.HyPlayControl;
 using Kawazu;
-using Windows.ApplicationModel;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
 namespace HyPlayer.Pages
 {
     /// <summary>
-    /// 可用于自身或导航至 Frame 内部的空白页。
+    ///     可用于自身或导航至 Frame 内部的空白页。
     /// </summary>
     public sealed partial class Settings : Page
     {
+        private int _elapse = 10;
+
         public Settings()
         {
             InitializeComponent();
             RomajiStatus.Text = "当前日语转罗马音状态: " + (Common.KawazuConv == null ? "无法转换 请尝试重新下载资源文件" : "可以转换");
             RadioButtonsSongBr.SelectedIndex =
-                RadioButtonsSongBr.Items.IndexOf(RadioButtonsSongBr.Items.First(t => ((RadioButton)t).Tag.ToString() == Common.Setting.audioRate));
+                RadioButtonsSongBr.Items.IndexOf(RadioButtonsSongBr.Items.First(t =>
+                    ((RadioButton) t).Tag.ToString() == Common.Setting.audioRate));
             TextBoxDownloadDir.Text = Common.Setting.downloadDir;
             AnimationCheckbox.IsChecked = Common.Setting.expandAnimation;
-            LazySongUrlGetCheck.IsChecked = ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"] != null && ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"].ToString() != "false";
-            TextBoxXREALIP.Text = ApplicationData.Current.LocalSettings.Values["xRealIp"] != null ? ApplicationData.Current.LocalSettings.Values["xRealIp"].ToString() : "";
-            TextBoxPROXY.Text = ApplicationData.Current.LocalSettings.Values["neteaseProxy"] != null ? ApplicationData.Current.LocalSettings.Values["neteaseProxy"].ToString() : "";
-            Package package = Package.Current;
-            PackageId packageId = package.Id;
-            PackageVersion version = packageId.Version;
-            VersionCode.Text = string.Format("Version {0}.{1}.{2}.{3}  (Package ID: {4})", version.Major, version.Minor, version.Build, version.Revision, packageId.Name);
-            if (version.Revision != 0)
-            {
-                VersionCode.Text += " Preview";
-            }
+            LazySongUrlGetCheck.IsChecked = ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"] != null &&
+                                            ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"].ToString() !=
+                                            "false";
+            TextBoxXREALIP.Text = ApplicationData.Current.LocalSettings.Values["xRealIp"] != null
+                ? ApplicationData.Current.LocalSettings.Values["xRealIp"].ToString()
+                : "";
+            TextBoxPROXY.Text = ApplicationData.Current.LocalSettings.Values["neteaseProxy"] != null
+                ? ApplicationData.Current.LocalSettings.Values["neteaseProxy"].ToString()
+                : "";
+            var package = Package.Current;
+            var packageId = package.Id;
+            var version = packageId.Version;
+            VersionCode.Text = string.Format("Version {0}.{1}.{2}.{3}  (Package ID: {4})", version.Major, version.Minor,
+                version.Build, version.Revision, packageId.Name);
+            if (version.Revision != 0) VersionCode.Text += " Preview";
 #if DEBUG
             VersionCode.Text += " Debug";
 #endif
@@ -49,28 +56,31 @@ namespace HyPlayer.Pages
 
         private void RadioButton_Checked(object sender, RoutedEventArgs e)
         {
-            Common.Setting.audioRate = ((RadioButton)sender).Tag.ToString();
+            Common.Setting.audioRate = ((RadioButton) sender).Tag.ToString();
         }
 
         private void GetRomaji()
         {
-            Task.Run((() =>
+            Task.Run(() =>
             {
-                Common.Invoke((async () =>
+                Common.Invoke(async () =>
                 {
                     RomajiStatus.Text = "正在下载资源文件 请稍等";
                     try
                     {
-                        await (await ApplicationData.Current.LocalCacheFolder.GetFileAsync("RomajiData.zip")).DeleteAsync();
+                        await (await ApplicationData.Current.LocalCacheFolder.GetFileAsync("RomajiData.zip"))
+                            .DeleteAsync();
                     }
-                    catch { }
-                    StorageFile sf = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("RomajiData.zip");
+                    catch
+                    {
+                    }
+
+                    var sf = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("RomajiData.zip");
                     var downloader = new BackgroundDownloader();
                     var dl = downloader.CreateDownload(new Uri("https://api.kengwang.co/hyplayer/getromaji.php"), sf);
                     HandleDownloadAsync(dl, true);
-                }));
-
-            }));
+                });
+            });
         }
 
         private async void HandleDownloadAsync(DownloadOperation dl, bool b)
@@ -81,12 +91,11 @@ namespace HyPlayer.Pages
 
         private void ProgressCallback(DownloadOperation obj)
         {
-            RomajiStatus.Text = $"正在下载资源文件 ({((obj.Progress.BytesReceived * 100) / obj.Progress.TotalBytesToReceive):D}%)";
+            RomajiStatus.Text = $"正在下载资源文件 ({obj.Progress.BytesReceived * 100 / obj.Progress.TotalBytesToReceive:D}%)";
             if (obj.Progress.BytesReceived == obj.Progress.TotalBytesToReceive)
-            {
-                _ = Task.Run((() =>
+                _ = Task.Run(() =>
                 {
-                    Common.Invoke((async () =>
+                    Common.Invoke(async () =>
                     {
                         try
                         {
@@ -94,14 +103,14 @@ namespace HyPlayer.Pages
                             //unzip
                             RomajiStatus.Text = "正在解压,请稍等......";
                             await Task.Delay(1000);
-                            string path =
+                            var path =
                                 (await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("Romaji",
                                     CreationCollisionOption.OpenIfExists)).Path;
                             //Read the file stream
-                            Stream a = await obj.ResultFile.OpenStreamForReadAsync();
+                            var a = await obj.ResultFile.OpenStreamForReadAsync();
 
                             //unzip
-                            ZipArchive archive = new ZipArchive(a);
+                            var archive = new ZipArchive(a);
                             archive.ExtractToDirectory(path);
                             _ = obj.ResultFile.DeleteAsync();
 
@@ -113,12 +122,11 @@ namespace HyPlayer.Pages
                         }
                         finally
                         {
-                            RomajiStatus.Text = "当前日语转罗马音状态: " + (Common.KawazuConv == null ? "无法转换 请尝试重新下载资源文件" : "可以转换");
+                            RomajiStatus.Text =
+                                "当前日语转罗马音状态: " + (Common.KawazuConv == null ? "无法转换 请尝试重新下载资源文件" : "可以转换");
                         }
-                    }));
-                }));
-
-            }
+                    });
+                });
         }
 
         private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
@@ -128,35 +136,37 @@ namespace HyPlayer.Pages
 
         private void ButtonXREALIPSave_OnClick(object sender, RoutedEventArgs e)
         {
-            ApplicationData.Current.LocalSettings.Values["xRealIp"] = TextBoxXREALIP.Text == "" ? null : TextBoxXREALIP.Text;
-            Common.ncapi.RealIP = (string)ApplicationData.Current.LocalSettings.Values["xRealIp"];
+            ApplicationData.Current.LocalSettings.Values["xRealIp"] =
+                TextBoxXREALIP.Text == "" ? null : TextBoxXREALIP.Text;
+            Common.ncapi.RealIP = (string) ApplicationData.Current.LocalSettings.Values["xRealIp"];
         }
 
         private void ButtonPROXYSave_OnClick(object sender, RoutedEventArgs e)
         {
-            ApplicationData.Current.LocalSettings.Values["neteaseProxy"] = TextBoxPROXY.Text == "" ? null : TextBoxPROXY.Text;
+            ApplicationData.Current.LocalSettings.Values["neteaseProxy"] =
+                TextBoxPROXY.Text == "" ? null : TextBoxPROXY.Text;
             Common.ncapi.UseProxy = !(ApplicationData.Current.LocalSettings.Values["neteaseProxy"] is null);
-            Common.ncapi.Proxy = new System.Net.WebProxy((string)ApplicationData.Current.LocalSettings.Values["neteaseProxy"]);
+            Common.ncapi.Proxy = new WebProxy((string) ApplicationData.Current.LocalSettings.Values["neteaseProxy"]);
         }
 
         private async void ButtonDownloadSelect_OnClick(object sender, RoutedEventArgs e)
         {
-            var folderPicker = new Windows.Storage.Pickers.FolderPicker();
-            folderPicker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.Desktop;
+            var folderPicker = new FolderPicker();
+            folderPicker.SuggestedStartLocation = PickerLocationId.Desktop;
             folderPicker.FileTypeFilter.Add("*");
-            Windows.Storage.StorageFolder folder = await folderPicker.PickSingleFolderAsync();
+            var folder = await folderPicker.PickSingleFolderAsync();
             if (folder != null)
             {
                 Common.Setting.downloadDir = folder.Path;
                 TextBoxDownloadDir.Text = Common.Setting.downloadDir;
             }
         }
+
         private void AnimationCheckbox_Checked(object sender, RoutedEventArgs e)
         {
             Common.Setting.expandAnimation = AnimationCheckbox.IsChecked.Value;
         }
 
-        private int _elapse = 10;
         private void UIElement_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
             if (_elapse-- == 0) ApplicationData.Current.RoamingSettings.Values["CanDownload"] = true;

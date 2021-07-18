@@ -1,28 +1,27 @@
-﻿using Microsoft.Toolkit.Uwp.Notifications;
-using System;
+﻿using System;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
-using Windows.UI.Notifications;
+using Windows.Storage;
+using Windows.UI.StartScreen;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.HyPlayControl;
 using Microsoft.AppCenter;
 using Microsoft.AppCenter.Analytics;
 using Microsoft.AppCenter.Crashes;
-using UnhandledExceptionEventArgs = Windows.UI.Xaml.UnhandledExceptionEventArgs;
-using HyPlayer.HyPlayControl;
-using Windows.UI.StartScreen;
+using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
 
 namespace HyPlayer
 {
     /// <summary>
-    /// 提供特定于应用程序的行为，以补充默认的应用程序类。
+    ///     提供特定于应用程序的行为，以补充默认的应用程序类。
     /// </summary>
     sealed partial class App : Application
     {
         /// <summary>
-        /// 初始化单一实例应用程序对象。这是执行的创作代码的第一行，
-        /// 已执行，逻辑上等同于 main() 或 WinMain()。
+        ///     初始化单一实例应用程序对象。这是执行的创作代码的第一行，
+        ///     已执行，逻辑上等同于 main() 或 WinMain()。
         /// </summary>
         public App()
         {
@@ -33,33 +32,34 @@ namespace HyPlayer
             AppCenter.Start("8e88eab0-1627-4ff9-9ee7-7fd46d0629cf",
                 typeof(Analytics), typeof(Crashes));
         }
+
         protected override void OnActivated(IActivatedEventArgs args)
         {
             base.OnActivated(args);
-            if (args.Kind == ActivationKind.ToastNotification)//如果用户点击了桌面歌词通知，则代表通知已经关闭，需要重新初始化推送
-                if (Common.BarPlayBar != null) Common.BarPlayBar.InitializeDesktopLyric();
+            if (args.Kind == ActivationKind.ToastNotification) //如果用户点击了桌面歌词通知，则代表通知已经关闭，需要重新初始化推送
+                if (Common.BarPlayBar != null)
+                    Common.BarPlayBar.InitializeDesktopLyric();
         }
 
-        private void CurrentDomain_UnhandledException(object sender, System.UnhandledExceptionEventArgs e)
+        private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
 #if RELEASE
             Crashes.TrackError((Exception)e.ExceptionObject);
 #endif
-            Common.Invoke((async () =>
+            Common.Invoke(async () =>
             {
-                ContentDialog Dialog = new ContentDialog
+                var Dialog = new ContentDialog
                 {
                     Title = "遇到了错误",
                     Content = e.ExceptionObject.ToString(),
                     PrimaryButtonText = "退出"
                 };
-                ContentDialogResult result = await Dialog.ShowAsync();
+                var result = await Dialog.ShowAsync();
                 Environment.Exit(0);
-            }));
-
+            });
         }
 
-        private void App_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        private void App_UnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
         {
 #if RELEASE
             Crashes.TrackError(e.Exception);
@@ -75,16 +75,17 @@ namespace HyPlayer
             }.ShowAsync();
             */
         }
+
         private async void InitializeJumpList()
         {
-            JumpList jumpList = await JumpList.LoadCurrentAsync();
+            var jumpList = await JumpList.LoadCurrentAsync();
             jumpList.Items.Clear();
 
-            JumpListItem item1 = JumpListItem.CreateWithArguments("search", "搜索");
+            var item1 = JumpListItem.CreateWithArguments("search", "搜索");
             item1.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistSearch.png");
-            JumpListItem item2 = JumpListItem.CreateWithArguments("account", "账户");
+            var item2 = JumpListItem.CreateWithArguments("account", "账户");
             item2.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistAccount.png");
-            JumpListItem item3 = JumpListItem.CreateWithArguments("local", "本地音乐");
+            var item3 = JumpListItem.CreateWithArguments("local", "本地音乐");
             item3.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistLocal.png");
 
             jumpList.Items.Add(item1);
@@ -92,34 +93,34 @@ namespace HyPlayer
             jumpList.Items.Add(item3);
             await jumpList.SaveAsync();
         }
+
         protected override async void OnFileActivated(FileActivatedEventArgs args)
         {
             InitializeJumpList();
-            Frame rootFrame = Window.Current.Content as Frame;
+            var rootFrame = Window.Current.Content as Frame;
             if (rootFrame == null)
             {
                 rootFrame = new Frame();
                 Window.Current.Content = rootFrame;
             }
+
             rootFrame.Navigate(typeof(MainPage));
             Window.Current.Activate();
             HyPlayList.RemoveAllSong();
-            foreach (Windows.Storage.StorageFile file in args.Files)
-            {
-                await HyPlayList.AppendFile(file);
-            }
+            foreach (StorageFile file in args.Files) await HyPlayList.AppendFile(file);
             HyPlayList.SongAppendDone();
             HyPlayList.SongMoveTo(0);
         }
+
         /// <summary>
-        /// 在应用程序由最终用户正常启动时进行调用。
-        /// 将在启动应用程序以打开特定文件等情况下使用。
+        ///     在应用程序由最终用户正常启动时进行调用。
+        ///     将在启动应用程序以打开特定文件等情况下使用。
         /// </summary>
         /// <param name="e">有关启动请求和过程的详细信息。</param>
         protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
             InitializeJumpList();
-            Frame rootFrame = Window.Current.Content as Frame;
+            var rootFrame = Window.Current.Content as Frame;
 
             // 不要在窗口已包含内容时重复应用程序初始化，
             // 只需确保窗口处于活动状态
@@ -141,7 +142,6 @@ namespace HyPlayer
 
             if (e.PrelaunchActivated == false)
             {
-
                 rootFrame.Navigate(typeof(MainPage), e.Arguments);
 
                 // 确保当前窗口处于活动状态
@@ -150,25 +150,25 @@ namespace HyPlayer
         }
 
         /// <summary>
-        /// 导航到特定页失败时调用
+        ///     导航到特定页失败时调用
         /// </summary>
-        ///<param name="sender">导航失败的框架</param>
-        ///<param name="e">有关导航失败的详细信息</param>
+        /// <param name="sender">导航失败的框架</param>
+        /// <param name="e">有关导航失败的详细信息</param>
         private void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
         {
             throw new Exception("Failed to load Page " + e.SourcePageType.FullName);
         }
 
         /// <summary>
-        /// 在将要挂起应用程序执行时调用。  在不知道应用程序
-        /// 无需知道应用程序会被终止还是会恢复，
-        /// 并让内存内容保持不变。
+        ///     在将要挂起应用程序执行时调用。  在不知道应用程序
+        ///     无需知道应用程序会被终止还是会恢复，
+        ///     并让内存内容保持不变。
         /// </summary>
         /// <param name="sender">挂起的请求的源。</param>
         /// <param name="e">有关挂起请求的详细信息。</param>
         private void OnSuspending(object sender, SuspendingEventArgs e)
         {
-            SuspendingDeferral deferral = e.SuspendingOperation.GetDeferral();
+            var deferral = e.SuspendingOperation.GetDeferral();
             //TODO: 保存应用程序状态并停止任何后台活动
             deferral.Complete();
         }

@@ -1,18 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
-using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
 using HyPlayer.Pages;
 
@@ -22,29 +14,28 @@ namespace HyPlayer.Controls
 {
     public sealed partial class SinglePlaylistStack : UserControl
     {
-        private NCPlayList Playlist;
+        private readonly NCPlayList Playlist;
 
         public SinglePlaylistStack(NCPlayList pl)
         {
             Playlist = pl;
-            this.InitializeComponent();
+            InitializeComponent();
             TextBlockPlaylistName.Text = Playlist.name;
             TextBlockUsername.Text = Playlist.creater.name;
             TextBlockDesc.Text = $"{Playlist.trackCount}首 , 播放{Playlist.playCount}次 , 收藏{Playlist.bookCount}次";
             ImageRect.Source =
                 new BitmapImage(new Uri(Playlist.cover + "?param=" + StaticSource.PICSIZE_SINGLENCPLAYLIST_COVER));
-
         }
 
         private void UIElement_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
-            Grid1.Background = new Windows.UI.Xaml.Media.AcrylicBrush()
+            Grid1.Background = new AcrylicBrush
             {
                 BackgroundSource = AcrylicBackgroundSource.Backdrop,
                 TintOpacity = 0.67500003206078,
                 TintLuminosityOpacity = 0.183000008692034,
-                TintColor = Windows.UI.Color.FromArgb(255, 0, 142, 230),
-                FallbackColor = Windows.UI.Color.FromArgb(255, 54, 54, 210)
+                TintColor = Color.FromArgb(255, 0, 142, 230),
+                FallbackColor = Color.FromArgb(255, 54, 54, 210)
             };
         }
 
@@ -76,7 +67,7 @@ namespace HyPlayer.Controls
 
         private void TextBlockUsername_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
-            Common.BaseFrame.Navigate(typeof(Me),Playlist.creater.id);
+            Common.BaseFrame.Navigate(typeof(Me), Playlist.creater.id);
         }
     }
 }

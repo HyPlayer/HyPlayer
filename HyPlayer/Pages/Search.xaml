@@ -2,10 +2,8 @@
     x:Class="HyPlayer.Pages.Search"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:HyPlayer.Pages"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     mc:Ignorable="d">
 
     <ScrollViewer
@@ -18,54 +16,56 @@
                     PlaceholderText="搜索歌曲......"
                     GotFocus="AutoSuggestBox_GotFocus"
                     LostFocus="AutoSuggestBox_LostFocus"
-                    QuerySubmitted="AutoSuggestBox_QuerySubmitted" 
+                    QuerySubmitted="AutoSuggestBox_QuerySubmitted"
                     TextChanged="AutoSuggestBox_TextChanged"
                     SuggestionChosen="AutoSuggestBox_SuggestionChosen"
-                    Margin="15"/>
+                    Margin="15" />
                 <StackPanel Orientation="Horizontal" Margin="15" Spacing="5">
-                    <TextBlock Text="搜索历史"/>
+                    <TextBlock Text="搜索历史" />
                     <ScrollViewer HorizontalScrollMode="Enabled">
-                        <StackPanel Orientation="Horizontal" Spacing="5" x:Name="SearchHistory"/>
+                        <StackPanel Orientation="Horizontal" Spacing="5" x:Name="SearchHistory" />
                     </ScrollViewer>
                 </StackPanel>
-                <NavigationView x:Name="NavigationViewSelector" IsSettingsVisible="False" SelectionChanged="NavigationView_OnSelectionChanged" PaneDisplayMode="Top" IsBackButtonVisible="Collapsed">
+                <NavigationView x:Name="NavigationViewSelector" IsSettingsVisible="False"
+                                SelectionChanged="NavigationView_OnSelectionChanged" PaneDisplayMode="Top"
+                                IsBackButtonVisible="Collapsed">
                     <NavigationView.MenuItems>
-                        <NavigationViewItem Content="单曲" Tag="1"/>
-                        <NavigationViewItem Content="专辑" Tag="10"/>
-                        <NavigationViewItem Content="歌手" Tag="100"/>
-                        <NavigationViewItem Content="歌单" Tag="1000"/>
-                        <NavigationViewItem Content="用户" Tag="1002"/>
-                        <NavigationViewItem Content="MV" Tag="1004"/>
-                        <NavigationViewItem Content="歌词" Tag="1006"/>
-                        <NavigationViewItem Content="电台" Tag="1009"/>
-                        <NavigationViewItem Content="视频" Tag="1014"/>
-                        <NavigationViewItem Content="综合" Tag="1018"/>
+                        <NavigationViewItem Content="单曲" Tag="1" />
+                        <NavigationViewItem Content="专辑" Tag="10" />
+                        <NavigationViewItem Content="歌手" Tag="100" />
+                        <NavigationViewItem Content="歌单" Tag="1000" />
+                        <NavigationViewItem Content="用户" Tag="1002" />
+                        <NavigationViewItem Content="MV" Tag="1004" />
+                        <NavigationViewItem Content="歌词" Tag="1006" />
+                        <NavigationViewItem Content="电台" Tag="1009" />
+                        <NavigationViewItem Content="视频" Tag="1014" />
+                        <NavigationViewItem Content="综合" Tag="1018" />
                     </NavigationView.MenuItems>
                     <StackPanel
-                    Orientation="Vertical">
+                        Orientation="Vertical">
                         <StackPanel
-                        Margin="30"
-                        Spacing="5"
-                        Orientation="Vertical"
-                        Name="SearchResultContainer" />
+                            Margin="30"
+                            Spacing="5"
+                            Orientation="Vertical"
+                            Name="SearchResultContainer" />
                         <StackPanel
-                        Orientation="Horizontal"
-                        HorizontalAlignment="Center">
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Center">
                             <Button
-                            Visibility="Collapsed"
-                            Content="上一页"
-                            x:Name="PrevPage"
-                            Click="PrevPage_OnClick" />
+                                Visibility="Collapsed"
+                                Content="上一页"
+                                x:Name="PrevPage"
+                                Click="PrevPage_OnClick" />
                             <TextBlock
-                            x:Name="PageIndicator" />
+                                x:Name="PageIndicator" />
                             <Button
-                            Visibility="Collapsed"
-                            Content="下一页"
-                            x:Name="NextPage"
-                            Click="NextPage_OnClickPage_OnClick" />
+                                Visibility="Collapsed"
+                                Content="下一页"
+                                x:Name="NextPage"
+                                Click="NextPage_OnClickPage_OnClick" />
                         </StackPanel>
                         <Grid
-                        Height="150" />
+                            Height="150" />
                     </StackPanel>
                 </NavigationView>
             </StackPanel>

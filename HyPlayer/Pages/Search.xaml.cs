@@ -1,61 +1,57 @@
-﻿using HyPlayer.Classes;
-using HyPlayer.Controls;
-using NeteaseCloudMusicApi;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Threading.Tasks;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Storage;
+using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using Newtonsoft.Json;
-using Windows.System;
+using HyPlayer.Classes;
+using HyPlayer.Controls;
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json.Linq;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
 namespace HyPlayer.Pages
 {
     /// <summary>
-    /// 可用于自身或导航至 Frame 内部的空白页。
+    ///     可用于自身或导航至 Frame 内部的空白页。
     /// </summary>
     public sealed partial class Search : Page
     {
-        private int page = 0;
+        private int page;
         private string Text = "";
+
         public Search()
         {
             InitializeComponent();
             NavigationViewSelector.SelectedItem = NavigationViewSelector.MenuItems[0];
 
 
-
-            this.NavigationCacheMode = NavigationCacheMode.Required;
-
+            NavigationCacheMode = NavigationCacheMode.Required;
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             var list = HistoryManagement.GetSearchHistory();
-            foreach (string item in list)
+            foreach (var item in list)
             {
-                var btn = new Button()
+                var btn = new Button
                 {
                     Content = item
                 };
                 btn.Click += Btn_Click;
                 SearchHistory.Children.Add(btn);
             }
+
             if (e.Parameter != null)
             {
                 SearchKeywordBox.Text = e.Parameter.ToString();
                 Text = SearchKeywordBox.Text;
                 LoadResult();
             }
-
         }
+
         private async void LoadResult()
         {
             if (string.IsNullOrEmpty(Text)) return;
@@ -64,29 +60,30 @@ namespace HyPlayer.Pages
                 _ = Launcher.LaunchUriAsync(new Uri(@"http://music.163.com/m/topic/18926801"));
                 return;
             }
+
             HistoryManagement.AddSearchHistory(Text);
             var list = HistoryManagement.GetSearchHistory();
             SearchHistory.Children.Clear();
-            foreach (string item in list)
+            foreach (var item in list)
             {
-                var btn = new Button()
+                var btn = new Button
                 {
                     Content = item
                 };
                 btn.Click += Btn_Click;
                 SearchHistory.Children.Add(btn);
             }
+
             SearchResultContainer.Children.Clear();
             var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Cloudsearch,
-                new Dictionary<string, object>()
+                new Dictionary<string, object>
                 {
                     {"keywords", Text},
                     {"type", ((NavigationViewItem) NavigationViewSelector.SelectedItem).Tag.ToString()},
-                    { "offset", page * 30 }
+                    {"offset", page * 30}
                 });
             if (isOk)
-            {
-                switch (((NavigationViewItem)NavigationViewSelector.SelectedItem).Tag.ToString())
+                switch (((NavigationViewItem) NavigationViewSelector.SelectedItem).Tag.ToString())
                 {
                     case "1":
                         LoadSongResult(json);
@@ -103,38 +100,26 @@ namespace HyPlayer.Pages
                     case "1009":
                         LoadRadioResult(json);
                         break;
-                        
                 }
-            }
         }
 
         private void LoadRadioResult(JObject json)
         {
             foreach (var pljs in json["result"]["djRadios"].ToArray())
-            {
                 SearchResultContainer.Children.Add(new SingleRadio(NCRadio.CreateFromJson(pljs)));
-            }
             if (int.Parse(json["result"]["djRadiosCount"].ToString()) >= (page + 1) * 30)
-            {
                 NextPage.Visibility = Visibility.Visible;
-            }
             else
-            {
                 NextPage.Visibility = Visibility.Collapsed;
-            }
             if (page > 0)
-            {
                 PrevPage.Visibility = Visibility.Visible;
-            }
             else
-            {
                 PrevPage.Visibility = Visibility.Collapsed;
-            }
         }
 
         private void Btn_Click(object sender, RoutedEventArgs e)
         {
-            SearchKeywordBox.Text = ((Button)sender).Content.ToString();
+            SearchKeywordBox.Text = ((Button) sender).Content.ToString();
             Text = SearchKeywordBox.Text;
             LoadResult();
         }
@@ -142,101 +127,64 @@ namespace HyPlayer.Pages
         private void LoadPlaylistResult(JObject json)
         {
             foreach (var pljs in json["result"]["playlists"].ToArray())
-            {
                 SearchResultContainer.Children.Add(new SinglePlaylistStack(NCPlayList.CreateFromJson(pljs)));
-            }
             if (int.Parse(json["result"]["playlistCount"].ToString()) >= (page + 1) * 30)
-            {
                 NextPage.Visibility = Visibility.Visible;
-            }
             else
-            {
                 NextPage.Visibility = Visibility.Collapsed;
-            }
             if (page > 0)
-            {
                 PrevPage.Visibility = Visibility.Visible;
-            }
             else
-            {
                 PrevPage.Visibility = Visibility.Collapsed;
-            }
         }
 
         private void LoadArtistResult(JObject json)
         {
             foreach (var singerjson in json["result"]["artists"].ToArray())
-            {
                 SearchResultContainer.Children.Add(new SingleArtist(NCArtist.CreateFromJson(singerjson)));
-            }
             if (int.Parse(json["result"]["artistCount"].ToString()) >= (page + 1) * 30)
-            {
                 NextPage.Visibility = Visibility.Visible;
-            }
             else
-            {
                 NextPage.Visibility = Visibility.Collapsed;
-            }
             if (page > 0)
-            {
                 PrevPage.Visibility = Visibility.Visible;
-            }
             else
-            {
                 PrevPage.Visibility = Visibility.Collapsed;
-            }
-
         }
 
         private void LoadAlbumResult(JObject json)
         {
             foreach (var albumjson in json["result"]["albums"].ToArray())
-            {
-                SearchResultContainer.Children.Add(new SingleAlbum(NCAlbum.CreateFromJson(albumjson), albumjson["artists"].ToArray().Select(t => NCArtist.CreateFromJson(t)).ToList()));
-            }
+                SearchResultContainer.Children.Add(new SingleAlbum(NCAlbum.CreateFromJson(albumjson),
+                    albumjson["artists"].ToArray().Select(t => NCArtist.CreateFromJson(t)).ToList()));
             if (int.Parse(json["result"]["albumCount"].ToString()) >= (page + 1) * 30)
-            {
                 NextPage.Visibility = Visibility.Visible;
-            }
             else
-            {
                 NextPage.Visibility = Visibility.Collapsed;
-            }
             if (page > 0)
-            {
                 PrevPage.Visibility = Visibility.Visible;
-            }
             else
-            {
                 PrevPage.Visibility = Visibility.Collapsed;
-            }
         }
 
         private void LoadSongResult(JObject json)
         {
-            int idx = 0;
-            foreach (JToken song in json["result"]["songs"].ToArray())
+            var idx = 0;
+            foreach (var song in json["result"]["songs"].ToArray())
             {
-                NCSong NCSong = NCSong.CreateFromJson(song);
-                SearchResultContainer.Children.Add(new SingleNCSong(NCSong, idx++, song["privilege"]["st"].ToString() == "0"));
+                var ncSong = NCSong.CreateFromJson(song);
+                SearchResultContainer.Children.Add(new SingleNCSong(ncSong, idx++,
+                    song["privilege"]["st"].ToString() == "0"));
             }
 
             if (int.Parse(json["result"]["songCount"].ToString()) >= (page + 1) * 30)
-            {
                 NextPage.Visibility = Visibility.Visible;
-            }
             else
-            {
                 NextPage.Visibility = Visibility.Collapsed;
-            }
             if (page > 0)
-            {
                 PrevPage.Visibility = Visibility.Visible;
-            }
             else
-            {
                 PrevPage.Visibility = Visibility.Collapsed;
-            }
         }
 
         private void AutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
@@ -253,14 +201,13 @@ namespace HyPlayer.Pages
                 return;
             }
 
-            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchSuggest,
-                new Dictionary<string, object>() { { "keywords", sender.Text }, { "type", "mobile" } });
+            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchSuggest,
+                new Dictionary<string, object> {{"keywords", sender.Text}, {"type", "mobile"}});
 
-            if (isOk && json["result"] != null && json["result"]["allMatch"] != null && json["result"]["allMatch"].HasValues)
-            {
+            if (isOk && json["result"] != null && json["result"]["allMatch"] != null &&
+                json["result"]["allMatch"].HasValues)
                 sender.ItemsSource = json["result"]["allMatch"].ToArray().ToList().Select(t => t["keyword"].ToString())
                     .ToList();
-            }
         }
 
         private void AutoSuggestBox_SuggestionChosen(AutoSuggestBox sender,
@@ -272,16 +219,15 @@ namespace HyPlayer.Pages
 
         private async void AutoSuggestBox_GotFocus(object sender, RoutedEventArgs e)
         {
-            if (String.IsNullOrWhiteSpace((sender as AutoSuggestBox)?.Text))
+            if (string.IsNullOrWhiteSpace((sender as AutoSuggestBox)?.Text))
             {
-                (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchHot);
+                var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchHot);
                 if (isOk)
-                {
-                    ((AutoSuggestBox)sender).ItemsSource =
+                    ((AutoSuggestBox) sender).ItemsSource =
                         json["result"]["hots"].ToArray().ToList().Select(t => t["first"].ToString());
-                }
             }
         }
+
         private void PrevPage_OnClick(object sender, RoutedEventArgs e)
         {
             page--;
@@ -294,7 +240,8 @@ namespace HyPlayer.Pages
             LoadResult();
         }
 
-        private void NavigationView_OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+        private void NavigationView_OnSelectionChanged(NavigationView sender,
+            NavigationViewSelectionChangedEventArgs args)
         {
             page = 0;
             LoadResult();
@@ -302,7 +249,7 @@ namespace HyPlayer.Pages
 
         private void AutoSuggestBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            ((AutoSuggestBox)sender).ItemsSource = null;
+            ((AutoSuggestBox) sender).ItemsSource = null;
         }
     }
 }
