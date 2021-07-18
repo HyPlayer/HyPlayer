@@ -11,7 +11,7 @@ pool:
 
 variables:
   solution: 'HyPlayer.sln'
-  buildPlatform: 'x86|x64|ARM|ARM64'
+  buildPlatform: 'x64|x86|ARM|ARM64'
   buildConfiguration: 'Release'
   appxPackageDir: '$(build.artifactStagingDirectory)\AppxPackages\\'
 
@@ -34,15 +34,15 @@ steps:
  
 - task: VSBuild@1
   inputs:
-    platform: 'x86'
+    platform: '$(buildPlatform)'
     solution: '$(solution)'
     configuration: '$(buildConfiguration)'
     msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)" 
                   /p:AppxPackageDir="$(appxPackageDir)" 
                   /p:AppxBundle=Auto 
+                  /p:PackageCertificateThumbprint="" 
                   /p:UapAppxPackageBuildMode=SideloadOnly 
                   /p:AppxPackageSigningEnabled=true 
-                  /p:PackageCertificateThumbprint="FB3B5BDC69B8D855FB9FFBE9A2135BA33556BEF8" 
                   /p:PackageCertificateKeyFile="$(signingCert.secureFilePath)"'
 
 - task: CopyFiles@2
