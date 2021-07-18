@@ -44,7 +44,7 @@
 
             <!-- 每日推荐 -->
             <StackPanel Orientation="Vertical" CornerRadius="8"
-                        Background="{ThemeResource CardStrokeColorDefaultBrush}">
+                        Background="{ThemeResource SystemControlBackgroundListLowBrush}">
                 <TextBlock Margin="5" FontSize="30" Text="每日推荐" FontFamily="Black" />
                 <ScrollViewer
                     VerticalScrollBarVisibility="Disabled"
@@ -58,7 +58,7 @@
             <!-- 功能按钮 -->
             <ScrollViewer HorizontalScrollMode="Auto" HorizontalScrollBarVisibility="Auto"
                           VerticalScrollMode="Disabled" VerticalScrollBarVisibility="Disabled" Height="100"
-                          Background="{ThemeResource CardStrokeColorDefaultBrush}" CornerRadius="8">
+                          Background="{ThemeResource SystemControlBackgroundListLowBrush}" CornerRadius="8">
                 <Grid MinWidth="1000" Padding="1" ColumnSpacing="15">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition MinWidth="230" />
@@ -112,7 +112,7 @@
                 </Grid.RowDefinitions>
                 <!-- 推荐歌单 -->
                 <StackPanel x:Name="FirstGrid" Grid.Column="0" Grid.Row="0" Orientation="Vertical"
-                            Background="{ThemeResource CardStrokeColorDefaultBrush}" CornerRadius="8">
+                            Background="{ThemeResource SystemControlBackgroundListLowBrush}" CornerRadius="8">
                     <TextBlock Margin="5" FontSize="30" Text="推荐歌单" FontFamily="Black" />
                     <ScrollViewer HorizontalScrollMode="Auto" VerticalScrollBarVisibility="Disabled"
                                   VerticalScrollMode="Disabled" HorizontalScrollBarVisibility="Auto" Height="250">
@@ -121,7 +121,7 @@
                 </StackPanel>
                 <!-- 最近常听 -->
                 <StackPanel x:Name="SecondGrid" Grid.Column="1" Grid.Row="0" Orientation="Vertical" CornerRadius="8"
-                            Background="{ThemeResource CardStrokeColorDefaultBrush}">
+                            Background="{ThemeResource SystemControlBackgroundListLowBrush}">
                     <TextBlock Margin="5" FontSize="30" Text="听歌排行" FontFamily="Black" />
                     <ScrollViewer Height="260" HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled"
                                   VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto">
@@ -131,7 +131,7 @@
             </Grid>
 
             <!-- 榜单 -->
-            <StackPanel Orientation="Vertical" Background="{ThemeResource CardStrokeColorDefaultBrush}"
+            <StackPanel Orientation="Vertical" Background="{ThemeResource SystemControlBackgroundListLowBrush}"
                         CornerRadius="8">
                 <TextBlock Margin="5" FontSize="30" Text="榜单" />
                 <ScrollViewer HorizontalScrollMode="Auto" VerticalScrollBarVisibility="Disabled"
