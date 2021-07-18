@@ -39,10 +39,10 @@ steps:
     configuration: '$(buildConfiguration)'
     msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)" 
                   /p:AppxPackageDir="$(appxPackageDir)" 
-                  /p:AppxBundle=Always 
+                  /p:AppxBundle=Auto 
                   /p:UapAppxPackageBuildMode=SideloadOnly 
                   /p:AppxPackageSigningEnabled=true 
-                  /p:PackageCertificateThumbprint="" 
+                  /p:PackageCertificateThumbprint="FB3B5BDC69B8D855FB9FFBE9A2135BA33556BEF8" 
                   /p:PackageCertificateKeyFile="$(signingCert.secureFilePath)"'
 
 - task: CopyFiles@2
