@@ -8,9 +8,6 @@
     mc:Ignorable="d">
 
     <Grid>
-        <WebView x:Name="ThirdPartyLoginWebview" NavigationCompleted="ThirdPartyLoginWebview_NavigationCompleted" NavigationStarting="ThirdPartyLoginWebview_NavigationStarting" Margin="0,0,0,120"/>
-        <Border Background="{ThemeResource SystemControlAcrylicElementBrush}" x:Name="LoadingRingContainer">
-            <ProgressRing x:Name="LoadingRing" IsActive="True" Width="100" Height="100"/>
-        </Border>
+        <WebView LoadCompleted="ThirdPartyLoginWebview_OnLoadCompleted" Source="https://music.163.com" x:Name="ThirdPartyLoginWebview" NavigationCompleted="ThirdPartyLoginWebview_NavigationCompleted" Margin="0,0,0,120"/>
     </Grid>
 </Page>

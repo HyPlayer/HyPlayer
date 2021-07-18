@@ -264,7 +264,6 @@
                                 <Button
                                     Tag="WX"
                                     x:Name="WXLogin"
-                                    Visibility="Collapsed"
                                     CornerRadius="5"
                                     MinHeight="48"
                                     MinWidth="48"

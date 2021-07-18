@@ -108,6 +108,7 @@ namespace HyPlayer.Pages
                 Common.Logined = false;
                 Common.LoginedUser = new NCUser();
                 ApplicationData.Current.LocalSettings.Values["cookie"] = "";
+                Common.ncapi = new CloudMusicApi();
                 Common.PageMain.MainFrame.Navigate(typeof(BlankPage));
                 Common.PageMain.MainFrame.Navigate(typeof(BasePage));
             }
