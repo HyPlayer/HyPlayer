@@ -1,16 +1,7 @@
-﻿using HyPlayer.Classes;
-using HyPlayer.Controls;
-using HyPlayer.HyPlayControl;
-using NeteaseCloudMusicApi;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
-using Windows.Storage;
-using Windows.UI.Input.Spatial;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -18,18 +9,23 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.Classes;
+using HyPlayer.Controls;
+using HyPlayer.HyPlayControl;
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json.Linq;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
 namespace HyPlayer.Pages
 {
     /// <summary>
-    /// 可用于自身或导航至 Frame 内部的空白页。
+    ///     可用于自身或导航至 Frame 内部的空白页。
     /// </summary>
     public sealed partial class SongListDetail : Page
     {
-        private int page = 0;
         private string intelsong = "";
+        private int page;
         private NCPlayList playList;
 
         public SongListDetail()
@@ -53,50 +49,37 @@ namespace HyPlayer.Pages
         {
             if (playList.plid != "-666")
             {
-                (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
-                    new Dictionary<string, object>() { { "id", playList.plid }, });
+                var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
+                    new Dictionary<string, object> {{"id", playList.plid}});
                 if (isOk)
                 {
-                    int[] trackIds = json["playlist"]["trackIds"].Select(t => (int)t["id"]).Skip(page * 500).Take(500)
+                    var trackIds = json["playlist"]["trackIds"].Select(t => (int) t["id"]).Skip(page * 500).Take(500)
                         .ToArray();
                     if (trackIds.Length >= 500)
-                    {
                         NextPage.Visibility = Visibility.Visible;
-                    }
                     else
-                    {
                         NextPage.Visibility = Visibility.Collapsed;
-                    }
 
-                    if (json["playlist"]["specialType"].ToString() == "5")
-                    {
-                        ButtonIntel.Visibility = Visibility.Visible;
-                    }
+                    if (json["playlist"]["specialType"].ToString() == "5") ButtonIntel.Visibility = Visibility.Visible;
 
                     (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
-                        new Dictionary<string, object> { ["ids"] = string.Join(",", trackIds) });
+                        new Dictionary<string, object> {["ids"] = string.Join(",", trackIds)});
                     if (isOk)
                     {
                         Common.ListedSongs = new List<NCSong>();
-                        int idx = page * 500;
-                        int i = 0;
-                        foreach (JToken jToken in json["songs"])
+                        var idx = page * 500;
+                        var i = 0;
+                        foreach (var jToken in json["songs"])
                         {
-                            JObject song = (JObject)jToken;
-                            if (string.IsNullOrEmpty(intelsong))
-                            {
-                                intelsong = song["id"].ToString();
-                            }
+                            var song = (JObject) jToken;
+                            if (string.IsNullOrEmpty(intelsong)) intelsong = song["id"].ToString();
 
-                            NCSong NCSong = NCSong.CreateFromJson(song);
-                            bool canplay =
+                            var ncSong = NCSong.CreateFromJson(song);
+                            var canplay =
                                 json["privileges"].ToList()[i++]["st"].ToString() == "0";
-                            if (canplay)
-                            {
-                                Common.ListedSongs.Add(NCSong);
-                            }
+                            if (canplay) Common.ListedSongs.Add(ncSong);
 
-                            SongContainer.Children.Add(new SingleNCSong(NCSong, idx++, canplay, true));
+                            SongContainer.Children.Add(new SingleNCSong(ncSong, idx++, canplay, true));
                         }
                     }
                 }
@@ -105,20 +88,17 @@ namespace HyPlayer.Pages
             {
                 //每日推荐
                 ButtonIntel.Visibility = Visibility.Collapsed;
-                (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendSongs);
+                var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendSongs);
                 if (isOk)
                 {
-                    int idx = 0;
-                    foreach (JToken song in json["data"]["dailySongs"])
+                    var idx = 0;
+                    foreach (var song in json["data"]["dailySongs"])
                     {
-                        NCSong NCSong = NCSong.CreateFromJson(song);
-                        bool canplay = true;
-                        if (canplay)
-                        {
-                            Common.ListedSongs.Add(NCSong);
-                        }
+                        var ncSong = NCSong.CreateFromJson(song);
+                        var canplay = true;
+                        if (canplay) Common.ListedSongs.Add(ncSong);
 
-                        SongContainer.Children.Add(new SingleNCSong(NCSong, idx++, canplay));
+                        SongContainer.Children.Add(new SingleNCSong(ncSong, idx++, canplay));
                     }
                 }
             }
@@ -127,15 +107,15 @@ namespace HyPlayer.Pages
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            _ = Task.Run((() =>
+            _ = Task.Run(() =>
             {
                 Common.Invoke(() =>
                 {
                     try
                     {
-                        ConnectedAnimation anim = ConnectedAnimationService.GetForCurrentView()
+                        var anim = ConnectedAnimationService.GetForCurrentView()
                             .GetAnimation("SongListExpand");
-                        ConnectedAnimation anim1 = ConnectedAnimationService.GetForCurrentView()
+                        var anim1 = ConnectedAnimationService.GetForCurrentView()
                             .GetAnimation("SongListExpandAcrylic");
                         anim1?.TryStart(GridPersonalInformation);
                         anim?.TryStart(RectangleImage);
@@ -144,70 +124,65 @@ namespace HyPlayer.Pages
                     {
                     }
                 });
-            }));
-            await Task.Run((() =>
+            });
+            await Task.Run(() =>
             {
                 Common.Invoke(async () =>
                 {
                     if (e.Parameter != null)
                     {
                         if (e.Parameter is NCPlayList)
-                            playList = (NCPlayList)e.Parameter;
+                        {
+                            playList = (NCPlayList) e.Parameter;
+                        }
                         else
                         {
-                            string pid = e.Parameter.ToString();
+                            var pid = e.Parameter.ToString();
 
-                            (bool isok, var json) = await Common.ncapi.RequestAsync(
+                            var (isok, json) = await Common.ncapi.RequestAsync(
                                 CloudMusicApiProviders.PlaylistDetail,
-                                new Dictionary<string, object>() { { "id", pid } });
-                            if (isok)
-                            {
-                                playList = NCPlayList.CreateFromJson(json["playlist"]);
-                            }
+                                new Dictionary<string, object> {{"id", pid}});
+                            if (isok) playList = NCPlayList.CreateFromJson(json["playlist"]);
                         }
                     }
 
                     LoadSongListDetail();
                     LoadSongListItem();
                 });
-            }));
+            });
         }
 
 
         private void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
         {
-            Task.Run((() =>
+            Task.Run(() =>
             {
-                Common.Invoke((async () =>
+                Common.Invoke(async () =>
                 {
                     HyPlayList.RemoveAllSong();
-                    (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                        new Dictionary<string, object>()
-                            {{"id", string.Join(',', Common.ListedSongs.Select(t => t.sid))}, {"br", Common.Setting.audioRate}});
+                    var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
+                        new Dictionary<string, object>
+                        {
+                            {"id", string.Join(',', Common.ListedSongs.Select(t => t.sid))},
+                            {"br", Common.Setting.audioRate}
+                        });
                     if (isok)
                     {
-                        List<JToken> arr = json["data"].ToList();
-                        for (int i = 0; i < Common.ListedSongs.Count; i++)
+                        var arr = json["data"].ToList();
+                        for (var i = 0; i < Common.ListedSongs.Count; i++)
                         {
-                            JToken token = arr.Find(jt => jt["id"].ToString() == Common.ListedSongs[i].sid);
-                            if (!token.HasValues)
-                            {
-                                continue;
-                            }
+                            var token = arr.Find(jt => jt["id"].ToString() == Common.ListedSongs[i].sid);
+                            if (!token.HasValues) continue;
 
-                            NCSong ncSong = Common.ListedSongs[i];
+                            var ncSong = Common.ListedSongs[i];
 
-                            string tag = "";
+                            var tag = "";
                             if (token["type"].ToString().ToLowerInvariant() == "flac")
-                            {
                                 tag = "SQ";
-                            }
                             else
-                            {
-                                tag = (token["br"].ToObject<int>() / 1000).ToString() + "k";
-                            }
+                                tag = token["br"].ToObject<int>() / 1000 + "k";
 
-                            NCPlayItem ncp = new NCPlayItem()
+                            var ncp = new NCPlayItem
                             {
                                 tag = tag,
                                 Album = ncSong.Album,
@@ -223,14 +198,14 @@ namespace HyPlayer.Pages
                             };
                             HyPlayList.AppendNCPlayItem(ncp);
                         }
+
                         HistoryManagement.AddSonglistHistory(playList.plid);
                         HyPlayList.SongAppendDone();
 
                         HyPlayList.SongMoveTo(0);
                     }
-                }));
-            }));
-
+                });
+            });
         }
 
 
@@ -247,46 +222,39 @@ namespace HyPlayer.Pages
                 Common.Invoke(async () =>
                 {
                     HyPlayList.RemoveAllSong();
-                    (bool isOk, JObject jsona) = await Common.ncapi.RequestAsync(
+                    var (isOk, jsona) = await Common.ncapi.RequestAsync(
                         CloudMusicApiProviders.PlaymodeIntelligenceList,
-                        new Dictionary<string, object>() { { "pid", playList.plid }, { "id", intelsong } });
+                        new Dictionary<string, object> {{"pid", playList.plid}, {"id", intelsong}});
                     if (isOk)
                     {
-                        List<NCSong> Songs = new List<NCSong>();
-                        foreach (JToken token in jsona["data"])
+                        var Songs = new List<NCSong>();
+                        foreach (var token in jsona["data"])
                         {
-                            NCSong ncSong = NCSong.CreateFromJson(token["songInfo"]);
+                            var ncSong = NCSong.CreateFromJson(token["songInfo"]);
                             Songs.Add(ncSong);
                         }
 
-                        (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                            new Dictionary<string, object>()
+                        var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
+                            new Dictionary<string, object>
                                 {{"id", string.Join(",", Songs.Select(t => t.sid))}, {"br", Common.Setting.audioRate}});
                         ;
                         if (isok)
                         {
-                            List<JToken> arr = json["data"].ToList();
-                            for (int i = 0; i < Songs.Count; i++)
+                            var arr = json["data"].ToList();
+                            for (var i = 0; i < Songs.Count; i++)
                             {
-                                JToken token = arr.Find(jt => jt["id"].ToString() == Songs[i].sid);
-                                if (!token.HasValues)
-                                {
-                                    continue;
-                                }
+                                var token = arr.Find(jt => jt["id"].ToString() == Songs[i].sid);
+                                if (!token.HasValues) continue;
 
-                                NCSong ncSong = Songs[i];
+                                var ncSong = Songs[i];
 
-                                string tag = "";
+                                var tag = "";
                                 if (token["type"].ToString().ToLowerInvariant() == "flac")
-                                {
                                     tag = "SQ";
-                                }
                                 else
-                                {
-                                    tag = (token["br"].ToObject<int>() / 1000).ToString() + "k";
-                                }
+                                    tag = token["br"].ToObject<int>() / 1000 + "k";
 
-                                NCPlayItem ncp = new NCPlayItem()
+                                var ncp = new NCPlayItem
                                 {
                                     tag = tag,
                                     Album = ncSong.Album,
@@ -320,7 +288,7 @@ namespace HyPlayer.Pages
         private void LikeBtnClick(object sender, RoutedEventArgs e)
         {
             _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistSubscribe,
-                new Dictionary<string, object>() { { "id", playList.plid }, { "t", playList.subscribed ? "0" : "1" } });
+                new Dictionary<string, object> {{"id", playList.plid}, {"t", playList.subscribed ? "0" : "1"}});
             playList.subscribed = !playList.subscribed;
         }
 
@@ -331,16 +299,15 @@ namespace HyPlayer.Pages
 
         private void Edit_Click(object sender, RoutedEventArgs e)
         {
-            FlyoutBase.ShowAttachedFlyout((FrameworkElement)TextBlockDesc);
+            FlyoutBase.ShowAttachedFlyout(TextBlockDesc);
         }
 
         private async void Confirm_Click(object sender, RoutedEventArgs e)
         {
-
-            await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDescUpdate, new Dictionary<string, object> { { "id", playList.plid }, { "desc", NewDesc.Text } });
+            await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDescUpdate,
+                new Dictionary<string, object> {{"id", playList.plid}, {"desc", NewDesc.Text}});
             playList.desc = NewDesc.Text;
             LoadSongListDetail();
-
         }
     }
 }

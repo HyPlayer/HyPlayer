@@ -1,18 +1,6 @@
-﻿using HyPlayer.HyPlayControl;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.UI.Xaml;
+﻿using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
+using HyPlayer.HyPlayControl;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -20,13 +8,15 @@ namespace HyPlayer.Controls
 {
     public sealed partial class SingleDownload : UserControl
     {
-        int order = 0;
-        DownloadObject dobj => DownloadManager.DownloadLists[order];
+        private readonly int order;
+
         public SingleDownload(int ord)
         {
-            this.InitializeComponent();
+            InitializeComponent();
             order = ord;
         }
+
+        private DownloadObject dobj => DownloadManager.DownloadLists[order];
 
         public void UpdateUI()
         {
@@ -34,17 +24,10 @@ namespace HyPlayer.Controls
             DName.Text = dobj.ncsong.songname;
             DProg.Value = dobj.progress;
             if (dobj.Status == 1)
-            {
                 DProgText.Text = $"{dobj.HavedSize} / {dobj.TotalSize}";
-            }
             else if (dobj.Status == 0)
-            {
                 DProgText.Text = "排队中";
-            }
-            else if (dobj.Status == 3)
-            {
-                DProgText.Text = "暂停中";
-            }
+            else if (dobj.Status == 3) DProgText.Text = "暂停中";
         }
 
         private void ButtonStop_Click(object sender, RoutedEventArgs e)
@@ -68,7 +51,6 @@ namespace HyPlayer.Controls
                 dobj.downloadOperation?.Pause();
                 dobj.Status = 3;
             }
-
         }
     }
 }

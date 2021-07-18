@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
 using System.Linq;
-using Windows.Devices.Input;
 using Windows.Storage;
 using HyPlayer.HyPlayControl;
 using Newtonsoft.Json.Linq;
@@ -22,14 +20,14 @@ namespace HyPlayer.Classes
         public bool HaveTranslation;
         public TimeSpan LyricTime;
 
-        public static SongLyric PureSong = new SongLyric()
-        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏" };
+        public static SongLyric PureSong = new SongLyric
+            {HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏"};
 
-        public static SongLyric NoLyric = new SongLyric()
-        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏" };
+        public static SongLyric NoLyric = new SongLyric
+            {HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏"};
 
-        public static SongLyric LoadingLyric = new SongLyric()
-        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..." };
+        public static SongLyric LoadingLyric = new SongLyric
+            {HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..."};
     }
 
 
@@ -45,7 +43,7 @@ namespace HyPlayer.Classes
 
         public static NCRadio CreateFromJson(JToken json)
         {
-            return new NCRadio()
+            return new NCRadio
             {
                 cover = json["picUrl"].ToString(),
                 desc = json["desc"].ToString(),
@@ -72,8 +70,8 @@ namespace HyPlayer.Classes
 
     public class NCFmItem : NCSong
     {
-        public string fmId;
         public string description;
+        public string fmId;
         public string RadioId;
         public string RadioName;
 
@@ -110,35 +108,35 @@ namespace HyPlayer.Classes
                 fmId = song["id"].ToString(),
                 description = song["description"].ToString(),
                 RadioId = song["radio"]["id"].ToString(),
-                RadioName = song["radio"]["name"].ToString(),
+                RadioName = song["radio"]["name"].ToString()
             };
         }
     }
 
     public class NCSong
     {
-        public HyPlayItemType Type;
-        public string sid;
-        public string songname;
-        public List<NCArtist> Artist;
         public NCAlbum Album;
+        public string alias;
+        public List<NCArtist> Artist;
         public double LengthInMilliseconds;
         public int mvid;
-        public string alias;
+        public string sid;
+        public string songname;
         public string transname;
+        public HyPlayItemType Type;
 
         public static NCSong CreateFromJson(JToken song)
         {
-            string alpath = "album";
-            string arpath = "artists";
-            string dtpath = "duration";
+            var alpath = "album";
+            var arpath = "artists";
+            var dtpath = "duration";
             if (song[alpath] == null)
                 alpath = "al";
             if (song[arpath] == null)
                 arpath = "ar";
             if (song[dtpath] == null)
                 dtpath = "dt";
-            NCSong NCSong = new NCSong()
+            var NCSong = new NCSong
             {
                 Type = HyPlayItemType.Netease,
                 Album = NCAlbum.CreateFromJson(song[alpath]),
@@ -148,15 +146,10 @@ namespace HyPlayer.Classes
                 LengthInMilliseconds = double.Parse(song[dtpath].ToString())
             };
             song[arpath].ToList().ForEach(t => { NCSong.Artist.Add(NCArtist.CreateFromJson(t)); });
-            if (song["mv"] != null)
-            {
-                NCSong.mvid = song["mv"].ToObject<int>();
-            }
+            if (song["mv"] != null) NCSong.mvid = song["mv"].ToObject<int>();
 
             if (song["alia"] != null)
-            {
                 NCSong.alias = string.Join(" / ", song["alia"].ToArray().Select(t => t.ToString()));
-            }
 
             if (song["tns"] != null)
                 NCSong.transname = string.Join(" / ", song["tns"].ToArray().Select(t => t.ToString()));
@@ -183,7 +176,7 @@ namespace HyPlayer.Classes
 
         public NCSong ToNCSong()
         {
-            return new NCSong()
+            return new NCSong
             {
                 Type = Type,
                 Album = Album,
@@ -211,22 +204,19 @@ namespace HyPlayer.Classes
         {
             try
             {
-                string picpath = "picUrl";
-                string descpath = "description";
-                string subcountpath = "subscribedCount";
-                string playcountpath = "playCount";
+                var picpath = "picUrl";
+                var descpath = "description";
+                var subcountpath = "subscribedCount";
+                var playcountpath = "playCount";
                 if (json[picpath] == null)
                     picpath = "coverImgUrl";
                 if (json[descpath] == null)
                     descpath = "copywriter";
                 if (json[subcountpath] == null)
                     subcountpath = "bookCount";
-                if (json[playcountpath] == null)
-                {
-                    playcountpath = "playcount";
-                }
+                if (json[playcountpath] == null) playcountpath = "playcount";
 
-                NCPlayList ncp = new NCPlayList()
+                var ncp = new NCPlayList
                 {
                     cover = json[picpath].ToString(),
                     creater = NCUser.CreateFromJson(json["creator"]),
@@ -235,12 +225,9 @@ namespace HyPlayer.Classes
                     plid = json["id"].ToString(),
                     subscribed = !(json["subscribed"] == null || json["subscribed"].ToString() == "False"),
                     playCount = json[playcountpath].ToObject<long>(),
-                    trackCount = json["trackCount"].ToObject<long>(),
+                    trackCount = json["trackCount"].ToObject<long>()
                 };
-                if (json[subcountpath] != null)
-                {
-                    ncp.bookCount = json[subcountpath].ToObject<long>();
-                }
+                if (json[subcountpath] != null) ncp.bookCount = json[subcountpath].ToObject<long>();
 
                 return ncp;
             }
@@ -262,28 +249,23 @@ namespace HyPlayer.Classes
         {
             if (user != null && user.HasValues)
             {
-                NCUser ncuser = new NCUser();
+                var ncuser = new NCUser();
                 if (user["avatarUrl"] != null)
                     ncuser.avatar = user["avatarUrl"].ToString();
-                if (user["signature"] != null)
-                {
-                    ncuser.signature = user["signature"].ToString();
-                }
+                if (user["signature"] != null) ncuser.signature = user["signature"].ToString();
 
                 ncuser.id = user["userId"].ToString();
                 ncuser.name = user["nickname"].ToString();
                 return ncuser;
             }
-            else
+
+            return new NCUser
             {
-                return new NCUser()
-                {
-                    avatar = "https://p1.music.126.net/KxePid7qTvt6V2iYVy-rYQ==/109951165050882728.jpg",
-                    id = "1",
-                    name = "网易云音乐",
-                    signature = "网易云音乐官方帐号"
-                };
-            }
+                avatar = "https://p1.music.126.net/KxePid7qTvt6V2iYVy-rYQ==/109951165050882728.jpg",
+                id = "1",
+                name = "网易云音乐",
+                signature = "网易云音乐官方帐号"
+            };
         }
     }
 
@@ -307,7 +289,7 @@ namespace HyPlayer.Classes
             };
         }
     }
-    
+
     public struct NCArtist
     {
         public HyPlayItemType Type;
@@ -320,7 +302,7 @@ namespace HyPlayer.Classes
         public static NCArtist CreateFromJson(JToken artist)
         {
             //TODO: 歌手这里尽量再来点信息
-            var art = new NCArtist()
+            var art = new NCArtist
             {
                 Type = HyPlayItemType.Netease,
                 id = artist["id"].ToString(),
@@ -345,7 +327,7 @@ namespace HyPlayer.Classes
 
         public static NCAlbum CreateFromJson(JToken album)
         {
-            return new NCAlbum()
+            return new NCAlbum
             {
                 AlbumType = HyPlayItemType.Netease,
                 alias = album["alias"] != null
@@ -371,20 +353,20 @@ namespace HyPlayer.Classes
         public bool HasLiked;
         public DateTime SendTime;
         public int likedCount;
-        public bool IsByMyself => this.uid == Common.LoginedUser.id;
+        public bool IsByMyself => uid == Common.LoginedUser.id;
         public int ReplyCount;
 
         public static Comment CreateFromJson(JToken comment, string resourceId, int resourceType)
         {
-            Comment cmt = new Comment();
+            var cmt = new Comment();
             cmt.resourceId = resourceId;
             cmt.resourceType = resourceType;
             cmt.cid = comment["commentId"].ToString();
             cmt.SendTime =
-                new DateTime((Convert.ToInt64(comment["time"].ToString()) * 10000) + 621355968000000000);
+                new DateTime(Convert.ToInt64(comment["time"].ToString()) * 10000 + 621355968000000000);
             cmt.AvatarUri = comment["user"]["avatarUrl"] is null
                 ? new Uri("ms-appx:///Assets/icon.png")
-                : new Uri(comment["user"]["avatarUrl"].ToString() + "?param=" +
+                : new Uri(comment["user"]["avatarUrl"] + "?param=" +
                           StaticSource.PICSIZE_COMMENTUSER_AVATAR);
             cmt.Nickname = comment["user"]["nickname"] is null
                 ? comment["user"]["userId"].ToString()

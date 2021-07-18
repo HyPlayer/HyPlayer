@@ -2,50 +2,48 @@
     x:Class="HyPlayer.Pages.Me"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:HyPlayer.Pages"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     mc:Ignorable="d">
 
     <Grid>
 
-            <VisualStateManager.VisualStateGroups>
-                <VisualStateGroup>
-                    <VisualState>
-                        <VisualState.StateTriggers>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState>
+                    <VisualState.StateTriggers>
                         <AdaptiveTrigger
-                            MinWindowWidth="0"></AdaptiveTrigger>
-                        </VisualState.StateTriggers>
-                        <VisualState.Setters>
+                            MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
                         <Setter
                             Target="RectangleImage.Visibility"
-                            Value="Collapsed"/>
+                            Value="Collapsed" />
                         <Setter
-                            Target="StackPanelUserInfo.(Grid.Column)" Value="1"/>
-                            <Setter
-                            Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="10"/>
-                        </VisualState.Setters>
-                    </VisualState>
-                    <VisualState>
-                        <VisualState.StateTriggers>
-                        <AdaptiveTrigger
-                            MinWindowWidth="1024"></AdaptiveTrigger>
-                        </VisualState.StateTriggers>
-                        <VisualState.Setters>
+                            Target="StackPanelUserInfo.(Grid.Column)" Value="1" />
                         <Setter
-                            Target="RectangleImage.Visibility" Value="Visible"/>
-                            <Setter
-                                Target="StackPanelUserInfo.(Grid.Column)"
-                                Value="5" />
-                            <Setter
-                                Target="StackPanelUserInfo.(Grid.ColumnSpan)"
-                                Value="6" />
+                            Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="10" />
                     </VisualState.Setters>
-                    </VisualState>
-                </VisualStateGroup>
-            </VisualStateManager.VisualStateGroups>
+                </VisualState>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger
+                            MinWindowWidth="1024" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter
+                            Target="RectangleImage.Visibility" Value="Visible" />
+                        <Setter
+                            Target="StackPanelUserInfo.(Grid.Column)"
+                            Value="5" />
+                        <Setter
+                            Target="StackPanelUserInfo.(Grid.ColumnSpan)"
+                            Value="6" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <ScrollViewer.Content>
                 <StackPanel
@@ -84,7 +82,7 @@
                             <TextBlock
                                 Name="TextBoxSignature"
                                 Text="签名"
-                                FontSize="18"/>
+                                FontSize="18" />
                             <Button
                                 Margin="0,10,0,0"
                                 x:Name="ButtonLogout"

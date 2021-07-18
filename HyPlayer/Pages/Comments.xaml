@@ -2,10 +2,8 @@
     x:Class="HyPlayer.Pages.Comments"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:HyPlayer.Pages"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     mc:Ignorable="d">
 
 
@@ -45,39 +43,40 @@
                 <StackPanel x:Name="HotCommentList" Orientation="Vertical" Margin="10" Spacing="30" />
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition/>
-                        <ColumnDefinition/>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
                     </Grid.ColumnDefinitions>
                     <TextBlock
-                    Text="所有评论"
-                    FontSize="40"
-                    Margin="15" />
-                    <ComboBox SelectionChanged="ComboBoxSortType_OnSelectionChanged" x:Name="ComboBoxSortType" SelectedIndex="2" HorizontalAlignment="Right" Margin="0,25,15,0" Grid.Column="1">
+                        Text="所有评论"
+                        FontSize="40"
+                        Margin="15" />
+                    <ComboBox SelectionChanged="ComboBoxSortType_OnSelectionChanged" x:Name="ComboBoxSortType"
+                              SelectedIndex="2" HorizontalAlignment="Right" Margin="0,25,15,0" Grid.Column="1">
                         <x:String>推荐</x:String>
                         <x:String>热度</x:String>
                         <x:String>时间</x:String>
                     </ComboBox>
                 </Grid>
                 <StackPanel x:Name="CommentList" Orientation="Vertical" Margin="10" Spacing="30" />
-                
+
             </StackPanel>
             <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="15">
-            <Button
-                IsEnabled="False"
-                Content="上一页"
-                x:Name="PrevPage"
-                Click="PrevPage_Click" />
+                <Button
+                    IsEnabled="False"
+                    Content="上一页"
+                    x:Name="PrevPage"
+                    Click="PrevPage_Click" />
                 <StackPanel Orientation="Vertical">
                     <TextBlock
-                x:Name="PageIndicator" />
-                    <TextBox PlaceholderText="跳页" Header="跳页" x:Name="PageSelect"/>
-                    <Button x:Name="SkipPage" Content="跳转" Click="SkipPage_Click"/>
+                        x:Name="PageIndicator" />
+                    <TextBox PlaceholderText="跳页" Header="跳页" x:Name="PageSelect" />
+                    <Button x:Name="SkipPage" Content="跳转" Click="SkipPage_Click" />
                 </StackPanel>
                 <Button
-                IsEnabled="False"
-                Content="下一页"
-                x:Name="NextPage"
-                Click="NextPage_Click" />
+                    IsEnabled="False"
+                    Content="下一页"
+                    x:Name="NextPage"
+                    Click="NextPage_Click" />
             </StackPanel>
             <Grid
                 Height="150" />

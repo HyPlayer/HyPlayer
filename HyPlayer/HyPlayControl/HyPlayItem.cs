@@ -1,20 +1,20 @@
-﻿using HyPlayer.Classes;
-using Windows.Media.Playback;
-using Windows.Storage;
-using Windows.Storage.Streams;
-using Windows.UI.Xaml.Media.Imaging;
+﻿using Windows.Storage;
+using HyPlayer.Classes;
 
 namespace HyPlayer.HyPlayControl
 {
     public class HyPlayItem
     {
-        public string Name;
-        public HyPlayItemType ItemType;
-        public string Path;
         public AudioInfo AudioInfo;
+        public HyPlayItemType ItemType;
+        public string Name;
         public NCPlayItem NcPlayItem;
+        public string Path;
 
-        public NCSong ToNCSong() => NcPlayItem.ToNCSong();
+        public NCSong ToNCSong()
+        {
+            return NcPlayItem.ToNCSong();
+        }
     }
 
     public struct AudioInfo

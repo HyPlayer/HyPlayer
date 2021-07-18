@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using HyPlayer.HyPlayControl;
+﻿using HyPlayer.HyPlayControl;
 using NeteaseCloudMusicApi;
 
 namespace HyPlayer.Classes
 {
-    static class PersonalFM
+    internal static class PersonalFM
     {
         public static void InitPersonalFM()
         {
@@ -34,13 +29,12 @@ namespace HyPlayer.Classes
 
         public static async void LoadNextFM()
         {
-
             var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PersonalFm);
             if (isOk)
             {
                 var song = json["data"][0];
                 HyPlayList.RemoveAllSong();
-                HyPlayItem item = await HyPlayList.AppendNCSong(NCSong.CreateFromJson(song));
+                var item = await HyPlayList.AppendNCSong(NCSong.CreateFromJson(song));
                 item.ItemType = HyPlayItemType.Radio;
                 Common.GLOBAL["PERSONALFM"] = "true";
                 HyPlayList.SongAppendDone();
