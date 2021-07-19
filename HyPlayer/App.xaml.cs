@@ -76,21 +76,28 @@ namespace HyPlayer
             */
         }
 
-        private async void InitializeJumpList()
+        public async void InitializeJumpList()
         {
             var jumpList = await JumpList.LoadCurrentAsync();
             jumpList.Items.Clear();
 
             var item1 = JumpListItem.CreateWithArguments("search", "搜索");
             item1.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistSearch.png");
-            var item2 = JumpListItem.CreateWithArguments("account", "账户");
-            item2.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistAccount.png");
-            var item3 = JumpListItem.CreateWithArguments("local", "本地音乐");
-            item3.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistLocal.png");
+            if (Common.Logined)
+            {
+                var item2 = JumpListItem.CreateWithArguments("account", "账户");
+                item2.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistAccount.png");
+                var item3 = JumpListItem.CreateWithArguments("likedsongs", "我喜欢的音乐");
+                item3.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistLikedSongs.png");
+                jumpList.Items.Add(item2);
+                jumpList.Items.Add(item3);
+            }
+            var item4 = JumpListItem.CreateWithArguments("local", "本地音乐");
+            item4.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistLocal.png");
 
             jumpList.Items.Add(item1);
-            jumpList.Items.Add(item2);
-            jumpList.Items.Add(item3);
+
+            jumpList.Items.Add(item4);
             await jumpList.SaveAsync();
         }
 

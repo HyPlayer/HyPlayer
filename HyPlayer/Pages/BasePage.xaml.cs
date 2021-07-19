@@ -323,6 +323,7 @@ namespace HyPlayer.Pages
             };
 
             HyPlayList.LoginDownCall();
+            ((App)App.Current).InitializeJumpList();
         }
 
 

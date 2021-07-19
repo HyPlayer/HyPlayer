@@ -105,6 +105,7 @@ namespace HyPlayer.Pages
                 Common.ncapi = new CloudMusicApi();
                 Common.PageMain.MainFrame.Navigate(typeof(BlankPage));
                 Common.PageMain.MainFrame.Navigate(typeof(BasePage));
+                ((App)App.Current).InitializeJumpList();
             }
             catch
             {

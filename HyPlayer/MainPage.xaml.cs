@@ -54,6 +54,9 @@ namespace HyPlayer
                 case "account":
                     Common.BaseFrame.Navigate(typeof(Me));
                     break;
+                case "likedsongs":
+                    Common.BaseFrame.Navigate(typeof(SongListDetail), Common.MySongLists[0].plid);
+                    break;
                 case "local":
                     Common.BaseFrame.Navigate(typeof(LocalMusicPage));
                     break;
