@@ -46,13 +46,13 @@ namespace HyPlayer.Controls
                 });
             else
                 TextBoxSound.Visibility = Visibility.Collapsed;
-
+            RefreshFontSize();
             OnHind();
         }
 
 
         public double actualsize => Common.PageExpandedPlayer == null
-            ? Common.Setting.lyricSize == 0 ? 18 : Common.Setting.lyricSize
+            ? Common.Setting.lyricSize <= 0 ? 18 : Common.Setting.lyricSize
             : Common.PageExpandedPlayer.showsize;
 
         public TextAlignment LyricAlignment => Common.Setting.lyricAlignment ? TextAlignment.Left : TextAlignment.Center;

@@ -110,8 +110,9 @@ namespace HyPlayer.Pages
                 LyricWidth = nowwidth;
 
             ImageAlbumContainer.Visibility =
-                nowheight >= 800 || nowheight <= 300 ? Visibility.Visible : Visibility.Collapsed;
-            showsize = Common.Setting.lyricSize == 0 ? Math.Max(nowwidth / 66, 16) : Common.Setting.lyricSize;
+                nowwidth >= 800 || nowheight <= 300 ? Visibility.Visible : Visibility.Collapsed;
+            LyricBox.Margin = nowwidth >= 800 ? new Thickness(0) : new Thickness(15);
+            showsize = Common.Setting.lyricSize <= 0 ? Math.Max(nowwidth / 66, 16) : Common.Setting.lyricSize;
 
         }
 

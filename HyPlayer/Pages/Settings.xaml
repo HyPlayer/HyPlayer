@@ -31,7 +31,7 @@
                         Margin="0,10,0,0"
                         ValueChanged="LyricSize_OnValueChanged"
                         Width="100"
-                        Header="0 为 自动"
+                        Header="负数为自动"
                         Value="1"
                         SpinButtonPlacementMode="Compact"
                         SmallChange="1"
