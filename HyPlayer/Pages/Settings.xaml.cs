@@ -11,7 +11,10 @@ using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
+using HyPlayer.Classes;
+using HyPlayer.Controls;
 using Kawazu;
+using Microsoft.UI.Xaml.Controls;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -24,13 +27,14 @@ namespace HyPlayer.Pages
     {
         private int _elapse = 10;
 
+        private LyricItem _lyricItem;
         public Settings()
         {
             InitializeComponent();
             RomajiStatus.Text = "当前日语转罗马音状态: " + (Common.KawazuConv == null ? "无法转换 请尝试重新下载资源文件" : "可以转换");
             RadioButtonsSongBr.SelectedIndex =
                 RadioButtonsSongBr.Items.IndexOf(RadioButtonsSongBr.Items.First(t =>
-                    ((RadioButton) t).Tag.ToString() == Common.Setting.audioRate));
+                    ((RadioButton)t).Tag.ToString() == Common.Setting.audioRate));
             TextBoxDownloadDir.Text = Common.Setting.downloadDir;
             AnimationCheckbox.IsChecked = Common.Setting.expandAnimation;
             LazySongUrlGetCheck.IsChecked = ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"] != null &&
@@ -48,6 +52,15 @@ namespace HyPlayer.Pages
             VersionCode.Text = string.Format("Version {0}.{1}.{2}.{3}  (Package ID: {4})", version.Major, version.Minor,
                 version.Build, version.Revision, packageId.Name);
             if (version.Revision != 0) VersionCode.Text += " Preview";
+            _lyricItem = new LyricItem(new SongLyric
+            {
+                PureLyric = "歌词大小示例 AaBbCcDd 約束の言葉",
+                Translation = "翻译大小示例",
+                HaveTranslation = true
+            });
+            _lyricItem.OnShow();
+            CheckBoxAlignment.IsChecked = Common.Setting.lyricAlignment;
+            StackPanelLyricSet.Children.Add(_lyricItem);
 #if DEBUG
             VersionCode.Text += " Debug";
 #endif
@@ -56,7 +69,7 @@ namespace HyPlayer.Pages
 
         private void RadioButton_Checked(object sender, RoutedEventArgs e)
         {
-            Common.Setting.audioRate = ((RadioButton) sender).Tag.ToString();
+            Common.Setting.audioRate = ((RadioButton)sender).Tag.ToString();
         }
 
         private void GetRomaji()
@@ -138,7 +151,7 @@ namespace HyPlayer.Pages
         {
             ApplicationData.Current.LocalSettings.Values["xRealIp"] =
                 TextBoxXREALIP.Text == "" ? null : TextBoxXREALIP.Text;
-            Common.ncapi.RealIP = (string) ApplicationData.Current.LocalSettings.Values["xRealIp"];
+            Common.ncapi.RealIP = (string)ApplicationData.Current.LocalSettings.Values["xRealIp"];
         }
 
         private void ButtonPROXYSave_OnClick(object sender, RoutedEventArgs e)
@@ -146,7 +159,7 @@ namespace HyPlayer.Pages
             ApplicationData.Current.LocalSettings.Values["neteaseProxy"] =
                 TextBoxPROXY.Text == "" ? null : TextBoxPROXY.Text;
             Common.ncapi.UseProxy = !(ApplicationData.Current.LocalSettings.Values["neteaseProxy"] is null);
-            Common.ncapi.Proxy = new WebProxy((string) ApplicationData.Current.LocalSettings.Values["neteaseProxy"]);
+            Common.ncapi.Proxy = new WebProxy((string)ApplicationData.Current.LocalSettings.Values["neteaseProxy"]);
         }
 
         private async void ButtonDownloadSelect_OnClick(object sender, RoutedEventArgs e)
@@ -197,6 +210,22 @@ namespace HyPlayer.Pages
         private void ClearHistory_Click(object sender, RoutedEventArgs e)
         {
             HistoryManagement.ClearHistory();
+        }
+
+        private void LyricSize_OnValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
+        {
+            int size = 18;
+            if (int.TryParse(LyricSize.Text, out size))
+            {
+                Common.Setting.lyricSize = size;
+                _lyricItem.RefreshFontSize();
+            }
+        }
+
+        private void CheckBoxAlignment_OnChecked(object sender, RoutedEventArgs e)
+        {
+            Common.Setting.lyricAlignment = CheckBoxAlignment.IsChecked != null && CheckBoxAlignment.IsChecked.Value;
+            _lyricItem.RefreshFontSize();
         }
     }
 }

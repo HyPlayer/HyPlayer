@@ -50,11 +50,20 @@ namespace HyPlayer.Controls
             OnHind();
         }
 
-        public double actualsize => Common.PageExpandedPlayer == null ? 18 : Common.PageExpandedPlayer.showsize;
+
+        public double actualsize => Common.PageExpandedPlayer == null
+            ? Common.Setting.lyricSize == 0 ? 18 : Common.Setting.lyricSize
+            : Common.PageExpandedPlayer.showsize;
+
+        public TextAlignment LyricAlignment => Common.Setting.lyricAlignment ? TextAlignment.Left : TextAlignment.Center;
+
         private Brush originBrush => Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as Brush;
 
         public void RefreshFontSize()
         {
+            TextBoxPureLyric.TextAlignment = LyricAlignment;
+            TextBoxTranslation.TextAlignment = LyricAlignment;
+            TextBoxSound.TextAlignment = LyricAlignment;
             TextBoxPureLyric.FontSize = actualsize;
             TextBoxTranslation.FontSize = actualsize;
         }

@@ -5,12 +5,13 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:Microsoft.UI.Xaml.Controls"
+    xmlns:controls1="using:HyPlayer.Controls"
     mc:Ignorable="d">
     <ScrollViewer
         HorizontalScrollMode="Auto">
         <Pivot Title="设置" FontFamily="Black" Margin="0,0,0,150">
             <PivotItem Header="歌词设置" FontFamily="Thick" Margin="30,10,0,0">
-                <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Vertical" x:Name="StackPanelLyricSet">
                     <TextBlock
                         Text="罗马音设置"
                         FontSize="36" />
@@ -22,6 +23,23 @@
                         Margin="0,10,0,0"
                         Click="ButtonBase_OnClick"
                         Content="获取罗马音资源文件" />
+                    <TextBlock
+                        Text="歌词大小设置"
+                        FontSize="36" />
+                    <controls:NumberBox
+                        x:Name="LyricSize"
+                        Margin="0,10,0,0"
+                        ValueChanged="LyricSize_OnValueChanged"
+                        Width="100"
+                        Header="0 为 自动"
+                        Value="1"
+                        SpinButtonPlacementMode="Compact"
+                        SmallChange="1"
+                        LargeChange="5" />
+                    <CheckBox Content="是否左对齐"
+                              x:Name="CheckBoxAlignment"
+                              Checked="CheckBoxAlignment_OnChecked"
+                              Unchecked="CheckBoxAlignment_OnChecked" />
                 </StackPanel>
             </PivotItem>
             <PivotItem Header="在线播放设置" FontFamily="Thick">

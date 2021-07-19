@@ -82,7 +82,7 @@ namespace HyPlayer.Pages
             //播放进度
             ProgressBarPlayProg.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
             //歌词大小变更
-            if (lastChangedLyricWidth != LyricWidth)
+            if (Math.Abs(lastChangedLyricWidth - LyricWidth) > 1)
             {
                 lastChangedLyricWidth = LyricWidth;
                 LyricList.ForEach(t =>
@@ -111,7 +111,8 @@ namespace HyPlayer.Pages
 
             ImageAlbumContainer.Visibility =
                 nowheight >= 800 || nowheight <= 300 ? Visibility.Visible : Visibility.Collapsed;
-            showsize = Math.Max(nowwidth / 66, 16);
+            showsize = Common.Setting.lyricSize == 0 ? Math.Max(nowwidth / 66, 16) : Common.Setting.lyricSize;
+
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)

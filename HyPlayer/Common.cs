@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
 using Windows.Storage;
 using Windows.UI.Core;
@@ -69,6 +70,39 @@ namespace HyPlayer
 
     internal class Setting : INotifyPropertyChanged
     {
+        public int lyricSize
+        {
+            get
+            {
+                int ret = 0;
+                if (ApplicationData.Current.LocalSettings.Values.ContainsKey("lyricSize"))
+                    if (int.TryParse(ApplicationData.Current.LocalSettings.Values["lyricSize"].ToString(), out ret))
+                        return ret;
+                return ret;
+            }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["lyricSize"] = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool lyricAlignment
+        {
+            get
+            {
+                int ret = 0;
+                if (ApplicationData.Current.LocalSettings.Values.ContainsKey("lyricAlignment"))
+                    int.TryParse(ApplicationData.Current.LocalSettings.Values["lyricAlignment"].ToString(), out ret);
+                return ret == 1;
+            }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["lyricAlignment"] = value ? "1" : "0";
+                OnPropertyChanged();
+            }
+        }
+
         public string audioRate
         {
             get
