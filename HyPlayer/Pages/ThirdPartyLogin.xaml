@@ -10,5 +10,8 @@
         <WebView LoadCompleted="ThirdPartyLoginWebview_OnLoadCompleted" Source="https://music.163.com"
                  x:Name="ThirdPartyLoginWebview" NavigationCompleted="ThirdPartyLoginWebview_NavigationCompleted"
                  Margin="0,0,0,120" />
+        <Border x:Name="LoadingRingContainer" Background="{StaticResource SystemControlAcrylicElementBrush}" Margin="0,0,0,120">
+            <ProgressRing x:Name="LoadingRing" Height="100" Width="100" IsActive="True"/>
+        </Border>
     </Grid>
 </Page>

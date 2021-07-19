@@ -34,7 +34,7 @@ steps:
  
 - task: VSBuild@1
   inputs:
-    platform: '$(buildPlatform)'
+    platform: 'x64'
     solution: '$(solution)'
     configuration: '$(buildConfiguration)'
     msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)" 

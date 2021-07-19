@@ -57,6 +57,7 @@ namespace HyPlayer.Pages
         {
             if (sender.Source.ToString().StartsWith("https://music.163.com/back/sns"))
             {
+                LoadingRingContainer.Visibility = Windows.UI.Xaml.Visibility.Visible;
                 var cookies =
                     new HttpBaseProtocolFilter().CookieManager.GetCookies(
                         new Uri("https://music.163.com"));
@@ -87,6 +88,7 @@ namespace HyPlayer.Pages
                 ThirdPartyLoginWebview.Navigate(new Uri("http://music.163.com/api/sns/authorize?snsType=" + LoginType +
                                                         "&clientType=mobile&callbackType=Login"));
                 Navigated = true;
+                LoadingRingContainer.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
             }
         }
     }
