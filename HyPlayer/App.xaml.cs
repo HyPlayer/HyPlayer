@@ -40,16 +40,7 @@ namespace HyPlayer
         private void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)
         {
             ClearExtendedExecution(executionSession);
-            var rootFrame = Window.Current.Content as Frame;
-            if (rootFrame == null)
-            {
-
-                rootFrame = new Frame();
-
-                rootFrame.NavigationFailed += OnNavigationFailed;
-                Window.Current.Content = rootFrame;
-                rootFrame.Navigate(typeof(MainPage));
-            }
+            Window.Current.Content = Common.PageMain;
         }
 
         private async void App_EnteredBackground(object sender, EnteredBackgroundEventArgs e)

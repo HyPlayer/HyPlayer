@@ -39,6 +39,7 @@ namespace HyPlayer
                     }
                 });
             });
+            NavigationCacheMode = NavigationCacheMode.Required;
             InitializeComponent();
         }
 
