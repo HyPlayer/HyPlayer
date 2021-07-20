@@ -11,6 +11,7 @@ using Microsoft.AppCenter;
 using Microsoft.AppCenter.Analytics;
 using Microsoft.AppCenter.Crashes;
 using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
+using Windows.ApplicationModel.ExtendedExecution;
 
 namespace HyPlayer
 {
@@ -23,14 +24,83 @@ namespace HyPlayer
         ///     初始化单一实例应用程序对象。这是执行的创作代码的第一行，
         ///     已执行，逻辑上等同于 main() 或 WinMain()。
         /// </summary>
+        ExtendedExecutionSession executionSession = null;
         public App()
         {
             InitializeComponent();
             Suspending += OnSuspending;
             UnhandledException += App_UnhandledException;
+            EnteredBackground += App_EnteredBackground;
+            LeavingBackground += App_LeavingBackground;
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             AppCenter.Start("8e88eab0-1627-4ff9-9ee7-7fd46d0629cf",
                 typeof(Analytics), typeof(Crashes));
+        }
+
+        private void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)
+        {
+            ClearExtendedExecution(executionSession);
+            var rootFrame = Window.Current.Content as Frame;
+            if (rootFrame == null)
+            {
+
+                rootFrame = new Frame();
+
+                rootFrame.NavigationFailed += OnNavigationFailed;
+                Window.Current.Content = rootFrame;
+                rootFrame.Navigate(typeof(MainPage));
+            }
+        }
+
+        private async void App_EnteredBackground(object sender, EnteredBackgroundEventArgs e)
+        {
+            Window.Current.Content = null;
+            GC.Collect();
+            var delaySession = new ExtendedExecutionSession();
+            delaySession.Reason = ExtendedExecutionReason.Unspecified;
+            delaySession.Revoked += SessionRevoked;
+            ExtendedExecutionResult result = await delaySession.RequestExtensionAsync();
+            switch (result)
+            {
+                case ExtendedExecutionResult.Allowed:
+                    executionSession = delaySession;
+                    break;
+                case ExtendedExecutionResult.Denied:
+                    var toast = new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder();
+                    toast.AddText("应用程序进入后台，有可能关闭");
+                    toast.Show();
+                    break;
+            }
+        }
+        private void ClearExtendedExecution(ExtendedExecutionSession session)
+        {
+            if (session != null)
+            {
+                session.Revoked -= SessionRevoked;
+                session.Dispose();
+                session = null;
+            }
+        }
+        private async void SessionRevoked(object sender, ExtendedExecutionRevokedEventArgs args)
+        {
+            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+           {
+               switch (args.Reason)
+               {
+                   case ExtendedExecutionRevokedReason.Resumed:
+                       executionSession.Revoked -= SessionRevoked;
+                       executionSession.Dispose();
+                       executionSession = null;
+                       break;
+
+                   case ExtendedExecutionRevokedReason.SystemPolicy:
+                       var toast = new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder();
+                       toast.AddText("应用程序进入后台，有可能关闭");
+                       toast.Show();
+                       break;
+               }
+
+           });
         }
 
         protected override void OnActivated(IActivatedEventArgs args)
@@ -179,5 +249,6 @@ namespace HyPlayer
             //TODO: 保存应用程序状态并停止任何后台活动
             deferral.Complete();
         }
+
     }
 }
