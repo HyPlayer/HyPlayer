@@ -40,13 +40,10 @@ namespace HyPlayer
         private void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)
         {
             ClearExtendedExecution(executionSession);
-            Window.Current.Content = Common.PageMain;
         }
 
         private async void App_EnteredBackground(object sender, EnteredBackgroundEventArgs e)
         {
-            Window.Current.Content = null;
-            GC.Collect();
             var delaySession = new ExtendedExecutionSession();
             delaySession.Reason = ExtendedExecutionReason.Unspecified;
             delaySession.Revoked += SessionRevoked;
