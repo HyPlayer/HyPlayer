@@ -183,6 +183,7 @@ namespace HyPlayer.Controls
                     if (HyPlayList.NowPlayingItem == null) return;
                     var tai = HyPlayList.NowPlayingItem.AudioInfo;
                     TbSingerName.Text = tai.Artist;
+                    TbAlbumName.Text = tai.Album;
                     TbSongName.Text = tai.SongName;
                     canslide = false;
                     SliderProgress.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
@@ -238,6 +239,7 @@ namespace HyPlayer.Controls
             {
                 TbSingerName.Text = ai.Artist;
                 TbSongName.Text = ai.SongName;
+                TbAlbumName.Text =ai.Album;
                 if (mpi.ItemType == HyPlayItemType.Local)
                 {
                     var img = new BitmapImage();

@@ -35,7 +35,7 @@ namespace HyPlayer.Pages
         {
             base.OnNavigatedTo(e);
             DownloadPageFrame.Navigate(typeof(DownloadPage));
-            LoadLocalMusic();
+            //LoadLocalMusic();
         }
 
         private async void Playall_Click(object sender, RoutedEventArgs e)

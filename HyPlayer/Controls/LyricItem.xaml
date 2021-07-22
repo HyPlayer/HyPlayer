@@ -15,14 +15,12 @@
     <controls:DockPanel
         LastChildFill="True">
         <TextBlock
-            FontSize="{x:Bind Path=hyPlayer:Common.PageExpandedPlayer.showsize,Mode=Oneway}"
             controls:DockPanel.Dock="Top"
             TextWrapping="WrapWholeWords"
             Name="TextBoxPureLyric"
             Text="原句"
             TextAlignment="Center" />
         <TextBlock
-            FontSize="{x:Bind Path=hyPlayer:Common.PageExpandedPlayer.showsize,Mode=Oneway}"
             controls:DockPanel.Dock="Top"
             TextWrapping="WrapWholeWords"
             Name="TextBoxTranslation"

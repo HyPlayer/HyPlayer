@@ -285,17 +285,19 @@
                 <StackPanel
                     VerticalAlignment="Center"
                     HorizontalAlignment="Stretch"
-                    Spacing="10"
-                    Margin="10,5,0,0">
+                    Spacing="12"
+                    Margin="12,0,0,0">
                     <StackPanel
                         Spacing="12"
                         Orientation="Horizontal">
                         <TextBlock
+                            FontWeight="Bold"
                             VerticalAlignment="Bottom"
                             HorizontalAlignment="Left"
-                            FontWeight="Light"
+                            FontSize="18"
                             Name="TbSongName" />
                         <Grid
+                            MaxHeight="20"
                             Padding="3,0,3,0"
                             BorderThickness="1"
                             BorderBrush="Red">
@@ -312,8 +314,15 @@
                     <TextBlock
                         VerticalAlignment="Top"
                         Foreground="Gray"
+                        FontSize="12"
                         Tapped="TbSingerName_OnTapped"
                         Name="TbSingerName" />
+                    <TextBlock
+                        FontSize="12"
+                        VerticalAlignment="Top"
+                        Foreground="Gray"
+                        Tapped="TbSingerName_OnTapped"
+                        Name="TbAlbumName" />
                 </StackPanel>
             </StackPanel>
         </Grid>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Timers;
 using Windows.Media;
 using Windows.Media.Core;
 using Windows.Media.Playback;
@@ -18,6 +19,8 @@ namespace HyPlayer.HyPlayControl
 {
     public static class HyPlayList
     {
+        public delegate void TimerTicked();
+
         public delegate void LoginDoneEvent();
 
         public delegate void LyricChangeEvent();
@@ -51,7 +54,7 @@ namespace HyPlayer.HyPlayControl
         /*********        基本       ********/
         public static PlayMode NowPlayType = PlayMode.DefaultRoll;
         public static int NowPlaying;
-
+        public static Timer SecTimer = new Timer(1000); // 公用秒表
         public static readonly List<HyPlayItem> List = new List<HyPlayItem>();
         public static List<SongLyric> Lyrics = new List<SongLyric>();
 
@@ -100,6 +103,8 @@ namespace HyPlayer.HyPlayControl
 
         public static event LoginDoneEvent OnLoginDone;
 
+        public static event TimerTicked OnTimerTicked;
+
         public static void InitializeHyPlaylist()
         {
             Player = new MediaPlayer
@@ -126,7 +131,8 @@ namespace HyPlayer.HyPlayControl
             Player.MediaFailed += PlayerOnMediaFailed;
             Player.BufferingStarted += Player_BufferingStarted;
             Player.BufferingEnded += Player_BufferingEnded;
-            ;
+            SecTimer.Elapsed += (sender, args) => Common.Invoke(() => OnTimerTicked?.Invoke());
+            SecTimer.Start();
             Common.GLOBAL["PERSONALFM"] = "false";
         }
 

@@ -91,14 +91,11 @@ namespace HyPlayer
         {
             get
             {
-                int ret = 0;
-                if (ApplicationData.Current.LocalSettings.Values.ContainsKey("lyricAlignment"))
-                    int.TryParse(ApplicationData.Current.LocalSettings.Values["lyricAlignment"].ToString(), out ret);
-                return ret == 1;
+                return GetSettings<bool>("lyricAlignment", false);
             }
             set
             {
-                ApplicationData.Current.LocalSettings.Values["lyricAlignment"] = value ? "1" : "0";
+                ApplicationData.Current.LocalSettings.Values["lyricAlignment"] = value;
                 OnPropertyChanged();
             }
         }
@@ -107,9 +104,7 @@ namespace HyPlayer
         {
             get
             {
-                if (ApplicationData.Current.LocalSettings.Values.ContainsKey("audioRate"))
-                    return ApplicationData.Current.LocalSettings.Values["audioRate"].ToString();
-                return "999000";
+               return GetSettings<string>("audioRate","999000");
             }
             set
             {
@@ -124,15 +119,12 @@ namespace HyPlayer
             {
                 try
                 {
-                    if (ApplicationData.Current.LocalSettings.Values.ContainsKey("Volume"))
-                        return int.Parse(ApplicationData.Current.LocalSettings.Values["Volume"].ToString());
+                    return GetSettings<int>("Volume", 50);
                 }
                 catch
                 {
                     return 50;
                 }
-
-                return 50;
             }
 
             set => ApplicationData.Current.LocalSettings.Values["Volume"] = value;
@@ -142,10 +134,15 @@ namespace HyPlayer
         {
             get
             {
-                if (!ApplicationData.Current.LocalSettings.Values.ContainsKey("downloadDir"))
-                    ApplicationData.Current.LocalSettings.Values["downloadDir"] = KnownFolders.MusicLibrary
-                        .CreateFolderAsync("HyPlayer", CreationCollisionOption.OpenIfExists).AsTask().Result.Path;
-                return ApplicationData.Current.LocalSettings.Values["downloadDir"].ToString();
+                try
+                {
+                    return GetSettings<string>("downloadDir", KnownFolders.MusicLibrary
+                        .CreateFolderAsync("HyPlayer", CreationCollisionOption.OpenIfExists).AsTask().Result.Path);
+                }
+                catch
+                {
+                    return ApplicationData.Current.LocalCacheFolder.Path;
+                }
             }
             set
             {
@@ -158,9 +155,7 @@ namespace HyPlayer
         {
             get
             {
-                if (ApplicationData.Current.LocalSettings.Values.ContainsKey("toastLyric"))
-                    return ApplicationData.Current.LocalSettings.Values["toastLyric"].ToString() == "true";
-                return false;
+                return GetSettings<bool>("toastLyric", false);
             }
             set
             {
@@ -173,9 +168,7 @@ namespace HyPlayer
         {
             get
             {
-                if (ApplicationData.Current.LocalSettings.Values.ContainsKey("expandAnimation"))
-                    return ApplicationData.Current.LocalSettings.Values["expandAnimation"].ToString() != "false";
-                return true;
+                return GetSettings<bool>("expandAnimation", true);
             }
             set
             {
@@ -191,6 +184,29 @@ namespace HyPlayer
             if (PropertyChanged != null)
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                     () => { PropertyChanged(this, new PropertyChangedEventArgs(propertyName)); });
+        }
+
+        public static T GetSettings<T>(string propertyName, T defaultValue)
+        {
+            try
+            {
+                if (ApplicationData.Current.LocalSettings.Values.ContainsKey(propertyName) && ApplicationData.Current.LocalSettings.Values[propertyName] != null && !string.IsNullOrEmpty(ApplicationData.Current.LocalSettings.Values[propertyName].ToString()))
+                {
+                    //超长的IF
+                    return (T)ApplicationData.Current.LocalSettings.Values[propertyName];
+                }
+                else
+                {
+                    return defaultValue;
+                }
+            }
+            catch
+            {
+                return defaultValue;
+            }
+
+
+
         }
     }
 
