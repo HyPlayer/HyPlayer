@@ -45,6 +45,8 @@ namespace HyPlayer.Pages
 
         private async void LoadLoginedContent()
         {
+            UnLoginedContent.Visibility = Visibility.Collapsed;
+            LoginedContent.Visibility = Visibility.Visible;
             TbHelloUserName.Text = Common.LoginedUser.name;
             //我们直接Batch吧
             var (isok, ret) = await Common.ncapi.RequestAsync(
@@ -68,7 +70,7 @@ namespace HyPlayer.Pages
                     if (c % 3 == 0)
                     {
                         NowSongPanel = new StackPanel
-                            {Orientation = Orientation.Vertical, Height = DailySongContainer.Height, Width = 600};
+                        { Orientation = Orientation.Vertical, Height = DailySongContainer.Height, Width = 600 };
                         DailySongContainer.Children.Add(NowSongPanel);
                     }
 
@@ -85,7 +87,7 @@ namespace HyPlayer.Pages
 
                 //听歌排行加载部分 - 优先级靠下
                 var (ok2, ret2) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserRecord,
-                    new Dictionary<string, object> {{"uid", Common.LoginedUser.id}, {"type", "1"}});
+                    new Dictionary<string, object> { { "uid", Common.LoginedUser.id }, { "type", "1" } });
                 if (ok2)
                 {
                     var weekData = ret2["weekData"].ToArray();
@@ -119,7 +121,7 @@ namespace HyPlayer.Pages
                 {
                     HyPlayList.RemoveAllSong();
                     var (isojbk, jsoon) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
-                        new Dictionary<string, object> {{"id", Common.MySongLists[0].plid}});
+                        new Dictionary<string, object> { { "id", Common.MySongLists[0].plid } });
                     var (isOk, jsona) = await Common.ncapi.RequestAsync(
                         CloudMusicApiProviders.PlaymodeIntelligenceList,
                         new Dictionary<string, object>

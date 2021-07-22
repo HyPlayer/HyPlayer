@@ -210,9 +210,9 @@ namespace HyPlayer.HyPlayControl
 
     internal static class DownloadManager
     {
+        private static bool Timered = false;
         public static List<DownloadObject> DownloadLists = new List<DownloadObject>();
         public static BackgroundDownloader Downloader = new BackgroundDownloader();
-        public static Timer timer;
 
         public static bool CheckDownloadAbilityAndToast()
         {
@@ -256,17 +256,12 @@ namespace HyPlayer.HyPlayControl
         public static void AddDownload(NCSong song)
         {
             if (!CheckDownloadAbilityAndToast()) return;
-            if (timer == null)
-            {
-                timer = new Timer(1000);
-                timer.Elapsed += Timer_Elapsed;
-                timer.Start();
-            }
-
+            if (!Timered)
+                HyPlayList.OnTimerTicked += Timer_Elapsed;
             DownloadLists.Add(new DownloadObject(song));
         }
 
-        private static void Timer_Elapsed(object sender, ElapsedEventArgs e)
+        private static void Timer_Elapsed()
         {
             if (DownloadLists.Count == 0) return;
             if (DownloadLists[0].Status == 1) return;
@@ -326,13 +321,8 @@ namespace HyPlayer.HyPlayControl
         public static void AddDownload(List<NCSong> songs)
         {
             if (!CheckDownloadAbilityAndToast()) return;
-            if (timer == null)
-            {
-                timer = new Timer(1000);
-                timer.Elapsed += Timer_Elapsed;
-                timer.Start();
-            }
-
+            if (!Timered)
+                HyPlayList.OnTimerTicked += Timer_Elapsed;
             songs.ForEach(t => { DownloadLists.Add(new DownloadObject(t)); });
         }
     }

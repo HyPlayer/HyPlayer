@@ -5,8 +5,7 @@
     xmlns:controls1="using:Microsoft.UI.Xaml.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
-    controls1:BackdropMaterial.ApplyToRootOrPageBackground="True">
+    mc:Ignorable="d">
     <Page.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -29,21 +28,18 @@
                 IsHitTestVisible="True"
                 VerticalAlignment="Top"
                 Background="Transparent"
-                Margin="48,0,0,0"
+                Margin="80,0,0,0"
                 Canvas.ZIndex="1" />
-
         <controls1:NavigationView
             x:Name="NavMain"
-            PaneDisplayMode="Left"
+            PaneDisplayMode="Auto"
             BackRequested="OnNavigateBack"
             IsBackButtonVisible="Visible"
             PaneTitle="HyPlayer"
             IsBackEnabled="True"
-            Margin="0,-1,0,0"
-            IsSettingsVisible="False"
+            IsSettingsVisible="False"            
             Background="{ThemeResource WindowBackground}"
             SelectionChanged="NavMain_OnSelectionChanged"
-            ExpandedModeThresholdWidth="500"
             IsTabStop="False"
             Canvas.ZIndex="0"
             Grid.Column="1"
