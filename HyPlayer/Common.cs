@@ -143,8 +143,17 @@ namespace HyPlayer
             get
             {
                 if (!ApplicationData.Current.LocalSettings.Values.ContainsKey("downloadDir"))
-                    ApplicationData.Current.LocalSettings.Values["downloadDir"] = KnownFolders.MusicLibrary
-                        .CreateFolderAsync("HyPlayer", CreationCollisionOption.OpenIfExists).AsTask().Result.Path;
+                {
+                    try
+                    {
+                        ApplicationData.Current.LocalSettings.Values["downloadDir"] = KnownFolders.MusicLibrary
+                     .CreateFolderAsync("HyPlayer", CreationCollisionOption.OpenIfExists).AsTask().Result.Path;
+                    }
+                    catch
+                    {
+                        ApplicationData.Current.LocalSettings.Values["downloadDir"] = ApplicationData.Current.LocalCacheFolder.Path;
+                    }
+                }
                 return ApplicationData.Current.LocalSettings.Values["downloadDir"].ToString();
             }
             set

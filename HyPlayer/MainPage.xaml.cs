@@ -20,7 +20,6 @@ namespace HyPlayer
         public MainPage()
         {
             Common.PageMain = this;
-            HyPlayList.InitializeHyPlaylist();
             HistoryManagement.InitializeHistoryTrack();
             Common.ncapi.RealIP = (string) ApplicationData.Current.LocalSettings.Values["xRealIp"];
             Common.ncapi.Proxy = new WebProxy((string) ApplicationData.Current.LocalSettings.Values["neteaseProxy"]);

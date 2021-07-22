@@ -31,6 +31,9 @@
                             Target="ButtonMoreFunc.Margin"
                             Value="10,10,55,10" />
                         <Setter
+                            Target="ButtonDesktopLyrics.Margin"
+                            Value="10,10,100,10" />
+                        <Setter
                             Target="MainControlGrid.(Grid.ColumnSpan)"
                             Value="1" />
                         <Setter
@@ -158,7 +161,7 @@
                             Value="2" />
                         <Setter
                             Target="BtnPreviousSong.(Grid.Column)"
-                            Value="2" />
+                            Value="3" />
                         <Setter
                             Target="BtnPlayStateChange.(Grid.ColumnSpan)"
                             Value="2" />
@@ -170,7 +173,7 @@
                             Value="2" />
                         <Setter
                             Target="BtnNextSong.(Grid.Column)"
-                            Value="6" />
+                            Value="5" />
                         <Setter
                             Target="SliderProgress.Margin"
                             Value="0,0,15,0" />
@@ -181,8 +184,14 @@
                             Target="MainControlGrid.(Grid.ColumnSpan)"
                             Value="4" />
                         <Setter
-                            Target="GridSongInfoContainer.Visibility"
-                            Value="Collapsed" />
+                            Target="GridSongInfoContainer.Width"
+                            Value="500" />
+                        <Setter
+                            Target="GridSongInfoContainer.Height"
+                            Value="50" />
+                        <Setter
+                            Target="GridSongInfoContainer.Margin"
+                            Value="0,0,-70,30" />
                         <Setter
                             Target="ButtonCollapse.Margin"
                             Value="10,10,10,40" />
@@ -192,6 +201,9 @@
                         <Setter
                             Target="ButtonMoreFunc.Margin"
                             Value="10,10,55,40" />
+                        <Setter
+                            Target="ButtonDesktopLyrics.Margin"
+                            Value="10,10,100,40" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
@@ -286,6 +298,7 @@
                     VerticalAlignment="Center"
                     HorizontalAlignment="Stretch"
                     Spacing="10"
+                    x:Name="SongInfoContainer"
                     Margin="10,5,0,0">
                     <StackPanel
                         Spacing="12"

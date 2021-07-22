@@ -31,19 +31,29 @@ namespace HyPlayer.Controls
         private bool canslide;
 
         public PlayMode NowPlayType = PlayMode.DefaultRoll;
+        private double playPosValue;
 
         public PlayBar()
         {
             Common.BarPlayBar = this;
             InitializeComponent();
-            HyPlayList.Player.Volume = (double) Common.Setting.Volume / 100;
+            HyPlayList.Player.Volume = (double)Common.Setting.Volume / 100;
             SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
             HyPlayList.OnPlayItemChange += LoadPlayingFile;
             HyPlayList.OnPlayPositionChange += OnPlayPositionChange;
             HyPlayList.OnPlayPositionChange += UpdateMSTC;
             HyPlayList.OnPlayListAddDone += HyPlayList_OnPlayListAdd;
             AlbumImage.Source = new BitmapImage(new Uri("ms-appx:Assets/icon.png"));
+            if (Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
+                ButtonDesktopLyrics.Visibility = Visibility.Collapsed;
             InitializeDesktopLyric();
+            if (HyPlayList.isPlaying)
+            {
+                var tai = HyPlayList.NowPlayingItem.AudioInfo;
+                playPosValue = HyPlayList.Player.PlaybackSession.Position /
+                                               TimeSpan.FromMilliseconds(tai.LengthInMilliseconds);
+                SliderProgress.Value = playPosValue;
+            }
         }
 
         public TimeSpan nowtime => HyPlayList.Player.PlaybackSession.Position;
@@ -71,7 +81,7 @@ namespace HyPlayer.Controls
             {
                 var desktopLyricsToast = new ToastContentBuilder();
                 desktopLyricsToast.SetToastScenario(ToastScenario.IncomingCall);
-                desktopLyricsToast.AddAudio(new ToastAudio {Silent = true});
+                desktopLyricsToast.AddAudio(new ToastAudio { Silent = true });
                 desktopLyricsToast.AddVisualChild(new AdaptiveText
                 {
                     Text = new BindableString("Title"),
@@ -195,6 +205,8 @@ namespace HyPlayer.Controls
                         HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
                             ? "\uEDB4"
                             : "\uEDB5";
+                    playPosValue = HyPlayList.Player.PlaybackSession.Position /
+                                           TimeSpan.FromMilliseconds(tai.LengthInMilliseconds);
                     //SliderAudioRate.Value = mp.Volume;
                 }
                 catch
@@ -448,7 +460,7 @@ namespace HyPlayer.Controls
             else
             {
                 Common.ncapi.RequestAsync(CloudMusicApiProviders.FmTrash,
-                    new Dictionary<string, object> {{"id", HyPlayList.NowPlayingItem.NcPlayItem.id}});
+                    new Dictionary<string, object> { { "id", HyPlayList.NowPlayingItem.NcPlayItem.id } });
                 PersonalFM.LoadNextFM();
             }
         }
@@ -615,7 +627,7 @@ namespace HyPlayer.Controls
 
         public double SecondValue
         {
-            get => (double) GetValue(SecondValueProperty);
+            get => (double)GetValue(SecondValueProperty);
             set => SetValue(SecondValueProperty, value);
         }
 

@@ -40,6 +40,13 @@ namespace HyPlayer
         private void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)
         {
             ClearExtendedExecution(executionSession);
+            Frame rootFrame = Window.Current.Content as Frame;
+            if (rootFrame==null)
+            {
+                rootFrame = new Frame();
+                Window.Current.Content = rootFrame;
+            }
+            rootFrame.Navigate(typeof(MainPage));
         }
 
         private async void App_EnteredBackground(object sender, EnteredBackgroundEventArgs e)
@@ -52,6 +59,13 @@ namespace HyPlayer
             {
                 case ExtendedExecutionResult.Allowed:
                     executionSession = delaySession;
+                    Window.Current.Content = null;
+                    Common.PageBase = null;
+                    Common.PageMain = null;
+                    Common.PageExpandedPlayer = null;
+                    Common.BaseFrame = null;
+                    Common.KawazuConv = null;
+                    GC.Collect();
                     break;
                 case ExtendedExecutionResult.Denied:
                     var toast = new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder();
@@ -168,7 +182,7 @@ namespace HyPlayer
                 rootFrame = new Frame();
                 Window.Current.Content = rootFrame;
             }
-
+            HyPlayList.InitializeHyPlaylist();
             rootFrame.Navigate(typeof(MainPage));
             Window.Current.Activate();
             HyPlayList.RemoveAllSong();
@@ -207,6 +221,7 @@ namespace HyPlayer
 
             if (e.PrelaunchActivated == false)
             {
+                HyPlayList.InitializeHyPlaylist();
                 rootFrame.Navigate(typeof(MainPage), e.Arguments);
 
                 // 确保当前窗口处于活动状态
