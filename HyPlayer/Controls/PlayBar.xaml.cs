@@ -57,7 +57,6 @@ namespace HyPlayer.Controls
         }
 
         public TimeSpan nowtime => HyPlayList.Player.PlaybackSession.Position;
-
         private void UpdateMSTC(TimeSpan pos)
         {
             // Create our timeline properties object 
@@ -186,7 +185,7 @@ namespace HyPlayer.Controls
 
         public void OnPlayPositionChange(TimeSpan ts)
         {
-            Common.Invoke(() =>
+            Common.Invoke((Action)(() =>
             {
                 try
                 {
@@ -214,8 +213,9 @@ namespace HyPlayer.Controls
                 {
                     //ignore
                 }
-            });
+            }));
         }
+
 
         public void LoadPlayingFile(HyPlayItem mpi)
         {
