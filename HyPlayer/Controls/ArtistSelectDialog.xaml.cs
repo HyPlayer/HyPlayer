@@ -22,7 +22,7 @@ namespace HyPlayer.Controls
 
         private void ListViewArtists_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            Common.BaseFrame.Navigate(typeof(ArtistPage), aartists[ListViewArtists.SelectedIndex].id);
+            Common.NavigatePage(typeof(ArtistPage), aartists[ListViewArtists.SelectedIndex].id);
             Hide();
         }
     }

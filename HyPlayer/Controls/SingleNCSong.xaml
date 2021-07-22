@@ -31,7 +31,7 @@
             Grid.Column="0"
             Text="0"
             x:Name="OrderId" />
-        <controls:ImageEx
+        <controls:ImageEx IsCacheEnabled="False"
             EnableLazyLoading="True"
             CornerRadius="4"
             Width="75"

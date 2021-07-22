@@ -86,7 +86,7 @@ namespace HyPlayer.Controls
 
         private void NavToUser_Click(object sender, RoutedEventArgs e)
         {
-            Common.BaseFrame.Navigate(typeof(Me), comment.uid);
+            Common.NavigatePage(typeof(Me), comment.uid);
         }
 
         private async void SendReply_Click(object sender, RoutedEventArgs e)

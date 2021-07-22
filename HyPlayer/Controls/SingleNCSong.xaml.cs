@@ -149,14 +149,14 @@ namespace HyPlayer.Controls
         {
             if (ncsong.Artist[0].Type == HyPlayItemType.Radio)
             {
-                Common.BaseFrame.Navigate(typeof(Me), ncsong.Artist[0].id);
+                Common.NavigatePage(typeof(Me), ncsong.Artist[0].id);
             }
             else
             {
                 if (ncsong.Artist.Count > 1)
                     await new ArtistSelectDialog(ncsong.Artist).ShowAsync();
                 else
-                    Common.BaseFrame.Navigate(typeof(ArtistPage), ncsong.Artist[0].id);
+                    Common.NavigatePage(typeof(ArtistPage), ncsong.Artist[0].id);
             }
         }
 
@@ -167,12 +167,12 @@ namespace HyPlayer.Controls
 
         private void Comments_Click(object sender, RoutedEventArgs e)
         {
-            Common.BaseFrame.Navigate(typeof(Comments), "sg" + ncsong.sid);
+            Common.NavigatePage(typeof(Comments), "sg" + ncsong.sid);
         }
 
         private void BtnMV_OnClick(object sender, RoutedEventArgs e)
         {
-            Common.BaseFrame.Navigate(typeof(MVPage), ncsong);
+            Common.NavigatePage(typeof(MVPage), ncsong);
         }
 
         private async void Btn_Sub_OnClick(object sender, RoutedEventArgs e)
@@ -182,7 +182,7 @@ namespace HyPlayer.Controls
 
         private void TextBlockAlbum_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
-            Common.BaseFrame.Navigate(typeof(AlbumPage), ncsong.Album);
+            Common.NavigatePage(typeof(AlbumPage), ncsong.Album);
         }
     }
 }

@@ -356,7 +356,8 @@ namespace HyPlayer.Controls
                 ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TbSingerName);
                 Common.PageExpandedPlayer.StartExpandAnimation();
             }
-
+            Common.NavigatePage(typeof(BlankPage));
+            Common.isExpanded = true;
             GridSongInfo.Visibility = Visibility.Collapsed;
             GridSongAdvancedOperation.Visibility = Visibility.Visible;
         }
@@ -389,7 +390,7 @@ namespace HyPlayer.Controls
                     //ignore
                 }
             }
-
+            Common.NavigateBack();
             ButtonExpand.Visibility = Visibility.Visible;
             ButtonCollapse.Visibility = Visibility.Collapsed;
             Common.PageExpandedPlayer.Dispose();
@@ -400,6 +401,7 @@ namespace HyPlayer.Controls
             Common.PageMain.GridPlayBar.Background =
                 Application.Current.Resources["SystemControlAcrylicElementMediumHighBrush"] as Brush;
             Window.Current.SetTitleBar(Common.PageBase.AppTitleBar);
+            Common.isExpanded = false;
         }
 
         private void ButtonCleanAll_OnClick(object sender, RoutedEventArgs e)
@@ -516,14 +518,14 @@ namespace HyPlayer.Controls
                 {
                     if (HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].Type == HyPlayItemType.Radio)
                     {
-                        Common.BaseFrame.Navigate(typeof(Me), HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
+                        Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
                     }
                     else
                     {
                         if (HyPlayList.NowPlayingItem.NcPlayItem.Artist.Count > 1)
                             await new ArtistSelectDialog(HyPlayList.NowPlayingItem.NcPlayItem.Artist).ShowAsync();
                         else
-                            Common.BaseFrame.Navigate(typeof(ArtistPage),
+                            Common.NavigatePage(typeof(ArtistPage),
                                 HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
                     }
 
@@ -556,9 +558,9 @@ namespace HyPlayer.Controls
         private void Btn_Comment_OnClick(object sender, RoutedEventArgs e)
         {
             if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
-                Common.BaseFrame.Navigate(typeof(Comments), "sg" + HyPlayList.NowPlayingItem.NcPlayItem.id);
+                Common.NavigatePage(typeof(Comments), "sg" + HyPlayList.NowPlayingItem.NcPlayItem.id);
             else
-                Common.BaseFrame.Navigate(typeof(Comments), "fm" + HyPlayList.NowPlayingItem.NcPlayItem.Album.alias);
+                Common.NavigatePage(typeof(Comments), "fm" + HyPlayList.NowPlayingItem.NcPlayItem.Album.alias);
 
             ButtonCollapse_OnClick(this, e);
         }

@@ -289,7 +289,7 @@
                     PointerExited="ImageContainer_OnPointerExited"
                     HorizontalAlignment="Left"
                     BorderThickness="0">
-                    <controls:ImageEx
+                    <controls:ImageEx IsCacheEnabled="False"
                         EnableLazyLoading="True"
                         Stretch="UniformToFill"
                         x:Name="AlbumImage" />

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Net;
+using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.Storage;
@@ -12,6 +14,8 @@ using Microsoft.AppCenter.Analytics;
 using Microsoft.AppCenter.Crashes;
 using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
 using Windows.ApplicationModel.ExtendedExecution;
+using HyPlayer.Pages;
+using Kawazu;
 
 namespace HyPlayer
 {
@@ -25,6 +29,7 @@ namespace HyPlayer
         ///     已执行，逻辑上等同于 main() 或 WinMain()。
         /// </summary>
         ExtendedExecutionSession executionSession = null;
+
         public App()
         {
             InitializeComponent();
@@ -35,18 +40,33 @@ namespace HyPlayer
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             AppCenter.Start("8e88eab0-1627-4ff9-9ee7-7fd46d0629cf",
                 typeof(Analytics), typeof(Crashes));
+            InitializeThings();
         }
 
+        private void InitializeThings()
+        {
+            Task.Run(() =>
+            {
+                Common.Invoke(async () =>
+                {
+                    try
+                    {
+                        var sf = await ApplicationData.Current.LocalCacheFolder.GetFolderAsync("Romaji");
+                        Common.KawazuConv = new KawazuConverter(sf.Path);
+                    }
+                    catch
+                    {
+                    }
+                });
+            });
+            if (Common.isExpanded)
+                Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer));
+        }
         private void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)
         {
             ClearExtendedExecution(executionSession);
-            Frame rootFrame = Window.Current.Content as Frame;
-            if (rootFrame==null)
-            {
-                rootFrame = new Frame();
-                Window.Current.Content = rootFrame;
-            }
-            rootFrame.Navigate(typeof(MainPage));
+            InitializeThings();
+            Common.NavigateBack();
         }
 
         private async void App_EnteredBackground(object sender, EnteredBackgroundEventArgs e)
@@ -59,13 +79,13 @@ namespace HyPlayer
             {
                 case ExtendedExecutionResult.Allowed:
                     executionSession = delaySession;
-                    Window.Current.Content = null;
-                    Common.PageBase = null;
-                    Common.PageMain = null;
-                    Common.PageExpandedPlayer = null;
-                    Common.BaseFrame = null;
-                    Common.KawazuConv = null;
-                    GC.Collect();
+                    Common.CollectGarbage();
+                    _ = Task.Run(() => Common.Invoke(async () =>
+                     {
+                         await Task.Delay(3000);
+                         GC.Collect();
+                     }));
+
                     break;
                 case ExtendedExecutionResult.Denied:
                     var toast = new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder();
@@ -74,6 +94,7 @@ namespace HyPlayer
                     break;
             }
         }
+
         private void ClearExtendedExecution(ExtendedExecutionSession session)
         {
             if (session != null)
@@ -83,26 +104,27 @@ namespace HyPlayer
                 session = null;
             }
         }
+
         private async void SessionRevoked(object sender, ExtendedExecutionRevokedEventArgs args)
         {
-            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-           {
-               switch (args.Reason)
-               {
-                   case ExtendedExecutionRevokedReason.Resumed:
-                       executionSession.Revoked -= SessionRevoked;
-                       executionSession.Dispose();
-                       executionSession = null;
-                       break;
+            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
+                Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    switch (args.Reason)
+                    {
+                        case ExtendedExecutionRevokedReason.Resumed:
+                            executionSession.Revoked -= SessionRevoked;
+                            executionSession.Dispose();
+                            executionSession = null;
+                            break;
 
-                   case ExtendedExecutionRevokedReason.SystemPolicy:
-                       var toast = new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder();
-                       toast.AddText("应用程序进入后台，有可能关闭");
-                       toast.Show();
-                       break;
-               }
-
-           });
+                        case ExtendedExecutionRevokedReason.SystemPolicy:
+                            var toast = new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder();
+                            toast.AddText("应用程序进入后台，有可能关闭");
+                            toast.Show();
+                            break;
+                    }
+                });
         }
 
         protected override void OnActivated(IActivatedEventArgs args)
@@ -164,6 +186,7 @@ namespace HyPlayer
                 jumpList.Items.Add(item2);
                 jumpList.Items.Add(item3);
             }
+
             var item4 = JumpListItem.CreateWithArguments("local", "本地音乐");
             item4.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistLocal.png");
 
@@ -182,7 +205,7 @@ namespace HyPlayer
                 rootFrame = new Frame();
                 Window.Current.Content = rootFrame;
             }
-            HyPlayList.InitializeHyPlaylist();
+
             rootFrame.Navigate(typeof(MainPage));
             Window.Current.Activate();
             HyPlayList.RemoveAllSong();
@@ -221,7 +244,6 @@ namespace HyPlayer
 
             if (e.PrelaunchActivated == false)
             {
-                HyPlayList.InitializeHyPlaylist();
                 rootFrame.Navigate(typeof(MainPage), e.Arguments);
 
                 // 确保当前窗口处于活动状态
@@ -252,6 +274,5 @@ namespace HyPlayer
             //TODO: 保存应用程序状态并停止任何后台活动
             deferral.Complete();
         }
-
     }
 }

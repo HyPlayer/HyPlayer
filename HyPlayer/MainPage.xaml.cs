@@ -19,25 +19,11 @@ namespace HyPlayer
     {
         public MainPage()
         {
-            Common.PageMain = this;
+            Common.PageMain = this;            
             HistoryManagement.InitializeHistoryTrack();
-            Common.ncapi.RealIP = (string) ApplicationData.Current.LocalSettings.Values["xRealIp"];
-            Common.ncapi.Proxy = new WebProxy((string) ApplicationData.Current.LocalSettings.Values["neteaseProxy"]);
+            Common.ncapi.RealIP = Setting.GetSettings<string>("xRealIp", null);
+            Common.ncapi.Proxy = new WebProxy(Setting.GetSettings<string>("neteaseProxy", null));
             Common.ncapi.UseProxy = !(ApplicationData.Current.LocalSettings.Values["neteaseProxy"] is null);
-            Task.Run(() =>
-            {
-                Common.Invoke(async () =>
-                {
-                    try
-                    {
-                        var sf = await ApplicationData.Current.LocalCacheFolder.GetFolderAsync("Romaji");
-                        Common.KawazuConv = new KawazuConverter(sf.Path);
-                    }
-                    catch
-                    {
-                    }
-                });
-            });
             NavigationCacheMode = NavigationCacheMode.Required;
             InitializeComponent();
         }
@@ -49,16 +35,16 @@ namespace HyPlayer
             switch (e.Parameter)
             {
                 case "search":
-                    Common.BaseFrame.Navigate(typeof(Search));
+                    Common.NavigatePage(typeof(Search));
                     break;
                 case "account":
-                    Common.BaseFrame.Navigate(typeof(Me));
+                    Common.NavigatePage(typeof(Me));
                     break;
                 case "likedsongs":
-                    Common.BaseFrame.Navigate(typeof(SongListDetail), Common.MySongLists[0].plid);
+                    Common.NavigatePage(typeof(SongListDetail), Common.MySongLists[0].plid);
                     break;
                 case "local":
-                    Common.BaseFrame.Navigate(typeof(LocalMusicPage));
+                    Common.NavigatePage(typeof(LocalMusicPage));
                     break;
             }
         }

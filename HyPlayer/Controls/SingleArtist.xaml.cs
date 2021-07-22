@@ -44,7 +44,7 @@ namespace HyPlayer.Controls
         {
             Grid1.Background =
                 Application.Current.Resources["SystemControlAccentAcrylicElementAccentMediumHighBrush"] as Brush;
-            Common.BaseFrame.Navigate(typeof(ArtistPage), Artist.id);
+            Common.NavigatePage(typeof(ArtistPage), Artist.id);
         }
 
         private void UIElement_OnPointerEntered(object sender, PointerRoutedEventArgs e)

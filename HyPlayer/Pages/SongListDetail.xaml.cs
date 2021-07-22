@@ -104,6 +104,12 @@ namespace HyPlayer.Pages
             }
         }
 
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            base.OnNavigatedFrom(e);
+            SongContainer.Children.Clear();
+        }
+
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
@@ -294,7 +300,7 @@ namespace HyPlayer.Pages
 
         private void TextBoxAuthor_Tapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
-            Common.BaseFrame.Navigate(typeof(Me), playList.creater.id);
+            Common.NavigatePage(typeof(Me), playList.creater.id);
         }
 
         private void Edit_Click(object sender, RoutedEventArgs e)

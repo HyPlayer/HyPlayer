@@ -26,7 +26,7 @@
             <ColumnDefinition
                 Width="Auto" />
         </Grid.ColumnDefinitions>
-        <controls:ImageEx
+        <controls:ImageEx IsCacheEnabled="False"
             EnableLazyLoading="True"
             CornerRadius="4"
             Width="70"

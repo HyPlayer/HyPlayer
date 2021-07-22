@@ -42,7 +42,7 @@
                         <ColumnDefinition Width="150" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <controls:ImageEx Source="{x:Bind cover}" MaxHeight="100" Stretch="UniformToFill" />
+                    <controls:ImageEx IsCacheEnabled="False" Source="{x:Bind cover}" MaxHeight="100" Stretch="UniformToFill" />
 
                     <StackPanel Margin="12,0,0,0" Grid.Column="1">
                         <TextBlock Text="{x:Bind title}" FontSize="14" FontWeight="SemiBold"

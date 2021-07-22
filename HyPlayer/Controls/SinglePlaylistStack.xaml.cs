@@ -43,7 +43,7 @@ namespace HyPlayer.Controls
         {
             Grid1.Background =
                 Application.Current.Resources["SystemControlAccentAcrylicElementAccentMediumHighBrush"] as Brush;
-            Common.BaseFrame.Navigate(typeof(SongListDetail), Playlist);
+            Common.NavigatePage(typeof(SongListDetail), Playlist);
         }
 
         private void UIElement_OnPointerEntered(object sender, PointerRoutedEventArgs e)
@@ -67,7 +67,7 @@ namespace HyPlayer.Controls
 
         private void TextBlockUsername_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
-            Common.BaseFrame.Navigate(typeof(Me), Playlist.creater.id);
+            Common.NavigatePage(typeof(Me), Playlist.creater.id);
         }
     }
 }

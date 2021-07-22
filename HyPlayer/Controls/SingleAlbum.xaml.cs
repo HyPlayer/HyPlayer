@@ -47,7 +47,7 @@ namespace HyPlayer.Controls
         {
             Grid1.Background =
                 Application.Current.Resources["SystemControlAccentAcrylicElementAccentMediumHighBrush"] as Brush;
-            Common.BaseFrame.Navigate(typeof(AlbumPage), Album);
+            Common.NavigatePage(typeof(AlbumPage), Album);
         }
 
         private void UIElement_OnPointerEntered(object sender, PointerRoutedEventArgs e)
@@ -74,7 +74,7 @@ namespace HyPlayer.Controls
             if (Artists.Count > 1)
                 await new ArtistSelectDialog(Artists).ShowAsync();
             else
-                Common.BaseFrame.Navigate(typeof(ArtistPage), Artists[0].id);
+                Common.NavigatePage(typeof(ArtistPage), Artists[0].id);
         }
     }
 }

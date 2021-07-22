@@ -125,7 +125,7 @@ namespace HyPlayer.Pages
 
         private void TextBoxDJ_OnTapped(object sender, TappedRoutedEventArgs e)
         {
-            Common.BaseFrame.Navigate(typeof(Me), Radio.DJ.id);
+            Common.NavigatePage(typeof(Me), Radio.DJ.id);
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)

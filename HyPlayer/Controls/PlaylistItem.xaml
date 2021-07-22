@@ -52,7 +52,7 @@
                     </DoubleAnimation>
                 </Storyboard>
             </Grid.Resources>
-            <controls:ImageEx
+            <controls:ImageEx IsCacheEnabled="False"
                 EnableLazyLoading="True"
                 x:Name="ImageContainer"
                 Grid.RowSpan="2"

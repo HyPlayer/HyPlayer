@@ -8,9 +8,4 @@
         AlignmentX="Center"
         ImageSource="/Assets/Background_Dark.jpg">
     </ImageBrush>
-    <AcrylicBrush x:Key="NavigationViewExpandedPaneBackground"
-                  BackgroundSource="HostBackdrop"
-                  TintColor="Gray"
-                  TintOpacity="0.6"
-                  FallbackColor="Black" />
 </ResourceDictionary>

@@ -5,6 +5,8 @@
     xmlns:controls1="using:Microsoft.UI.Xaml.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
     mc:Ignorable="d">
     <Page.Resources>
         <ResourceDictionary>
@@ -32,17 +34,16 @@
                 Canvas.ZIndex="1" />
         <controls1:NavigationView
             x:Name="NavMain"
+            x:FieldModifier="public"
             PaneDisplayMode="Auto"
             BackRequested="OnNavigateBack"
             IsBackButtonVisible="Visible"
             PaneTitle="HyPlayer"
             IsBackEnabled="True"
             IsSettingsVisible="False"            
-            Background="{ThemeResource WindowBackground}"
             SelectionChanged="NavMain_OnSelectionChanged"
             IsTabStop="False"
             Canvas.ZIndex="0"
-            Grid.Column="1"
             FlowDirection="LeftToRight"
             FontFamily="Microsoft Sans Serif"
             IsTitleBarAutoPaddingEnabled="False">
@@ -148,7 +149,7 @@
                 </Grid.RowDefinitions>
                 <Frame
                     Grid.Row="1"
-                    Margin="0,-30,0,0"
+                    Margin="20,40,0,0"
                     x:Name="BaseFrame" />
             </Grid>
         </controls1:NavigationView>
@@ -176,12 +177,12 @@
                         <StackPanel
                             Orientation="Vertical">
                             <Image
-                                Height="100"
+                                Height="200"
                                 Source="/Assets/icon.png" />
                             <TextBlock
                                 Padding="0,3,0,10"
                                 HorizontalAlignment="Center"
-                                FontSize="20"
+                                FontSize="25"
                                 Text="登录到网易云音乐" />
                             <TextBox
                                 x:Name="TextBoxAccount"
@@ -207,7 +208,7 @@
                         <Image
                             Margin="0,46,0,46"
                             x:Name="QrContainer"
-                            Height="200"
+                            Height="300"
                             Source="/Assets/icon.png" />
                     </PivotItem>
                 </Pivot>

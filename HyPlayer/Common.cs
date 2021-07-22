@@ -18,6 +18,7 @@ using HyPlayer.Pages;
 using Kawazu;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json;
+using Windows.UI.Xaml;
 
 namespace HyPlayer
 {
@@ -39,6 +40,15 @@ namespace HyPlayer
         public static KawazuConverter KawazuConv = null;
         public static List<NCPlayList> MySongLists = new List<NCPlayList>();
         public static List<NCSong> ListedSongs = new List<NCSong>();
+        public static readonly Stack<NavigationHistoryItem> NavigationHistory = new Stack<NavigationHistoryItem>();
+        public static bool isExpanded = false;
+
+        public struct NavigationHistoryItem
+        {
+            public Type PageType;
+            public object Paratmers;
+            public object Item;
+        }
 
         public static async void Invoke(Action action, CoreDispatcherPriority Priority = CoreDispatcherPriority.Normal)
         {
@@ -66,6 +76,49 @@ namespace HyPlayer
                 */
             }
         }
+
+        public static void NavigatePage(Type SourcePageType, object paratmer = null, object ignore = null)
+        {
+            NavigationHistory.Push(new NavigationHistoryItem
+            {
+                PageType = SourcePageType,
+                Paratmers = paratmer,
+                Item = PageBase.NavMain.SelectedItem
+            });
+            BaseFrame?.Navigate(SourcePageType, paratmer);
+            GC.Collect();
+        }
+
+        public static void CollectGarbage()
+        {
+            NavigatePage(typeof(BlankPage));
+            BaseFrame.Content = null;
+            PageExpandedPlayer?.Dispose();
+            PageExpandedPlayer = null;
+            PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));
+            KawazuConv = null;
+            ListedSongs.Clear();
+        }
+
+        public static void NavigateBack()
+        {
+            if (NavigationHistory.Count > 1)
+                NavigationHistory.Pop();
+            try
+            {
+                var bak = NavigationHistory.Peek();
+                Common.BaseFrame?.Navigate(bak.PageType, bak.Paratmers);
+                NavigatingBack = true;
+                Common.PageBase.NavMain.SelectedItem = bak.Item;
+                NavigatingBack = false;
+                GC.Collect();
+            }
+            catch
+            {
+            }
+        }
+
+        public static bool NavigatingBack = false;
     }
 
     internal class Setting : INotifyPropertyChanged
@@ -89,10 +142,7 @@ namespace HyPlayer
 
         public bool lyricAlignment
         {
-            get
-            {
-                return GetSettings<bool>("lyricAlignment", false);
-            }
+            get { return GetSettings<bool>("lyricAlignment", false); }
             set
             {
                 ApplicationData.Current.LocalSettings.Values["lyricAlignment"] = value;
@@ -102,10 +152,7 @@ namespace HyPlayer
 
         public string audioRate
         {
-            get
-            {
-               return GetSettings<string>("audioRate","999000");
-            }
+            get { return GetSettings<string>("audioRate", "999000"); }
             set
             {
                 ApplicationData.Current.LocalSettings.Values["audioRate"] = value;
@@ -153,10 +200,7 @@ namespace HyPlayer
 
         public bool toastLyric
         {
-            get
-            {
-                return GetSettings<bool>("toastLyric", false);
-            }
+            get { return GetSettings<bool>("toastLyric", false); }
             set
             {
                 ApplicationData.Current.LocalSettings.Values["toastLyric"] = value ? "true" : "false";
@@ -166,10 +210,7 @@ namespace HyPlayer
 
         public bool expandAnimation
         {
-            get
-            {
-                return GetSettings<bool>("expandAnimation", true);
-            }
+            get { return GetSettings<bool>("expandAnimation", true); }
             set
             {
                 ApplicationData.Current.LocalSettings.Values["expandAnimation"] = value ? "true" : "false";
@@ -190,10 +231,12 @@ namespace HyPlayer
         {
             try
             {
-                if (ApplicationData.Current.LocalSettings.Values.ContainsKey(propertyName) && ApplicationData.Current.LocalSettings.Values[propertyName] != null && !string.IsNullOrEmpty(ApplicationData.Current.LocalSettings.Values[propertyName].ToString()))
+                if (ApplicationData.Current.LocalSettings.Values.ContainsKey(propertyName) &&
+                    ApplicationData.Current.LocalSettings.Values[propertyName] != null &&
+                    !string.IsNullOrEmpty(ApplicationData.Current.LocalSettings.Values[propertyName].ToString()))
                 {
                     //超长的IF
-                    return (T)ApplicationData.Current.LocalSettings.Values[propertyName];
+                    return (T) ApplicationData.Current.LocalSettings.Values[propertyName];
                 }
                 else
                 {
@@ -204,9 +247,6 @@ namespace HyPlayer
             {
                 return defaultValue;
             }
-
-
-
         }
     }
 

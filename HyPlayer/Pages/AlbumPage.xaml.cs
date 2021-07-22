@@ -169,7 +169,7 @@ namespace HyPlayer.Pages
             if (artists.Count > 1)
                 await new ArtistSelectDialog(artists).ShowAsync();
             else
-                Common.BaseFrame.Navigate(typeof(ArtistPage), artists[0].id);
+                Common.NavigatePage(typeof(ArtistPage), artists[0].id);
         }
     }
 }

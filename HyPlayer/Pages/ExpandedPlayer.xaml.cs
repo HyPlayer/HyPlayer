@@ -52,13 +52,24 @@ namespace HyPlayer.Pages
             HyPlayList.OnLyricLoaded += HyPlayList_OnLyricLoaded;
             HyPlayList.OnPlayPositionChange += HyPlayList_OnPlayPositionChange;
             Window.Current.SizeChanged += Current_SizeChanged;
+            HyPlayList.OnTimerTicked += HyPlayList_OnTimerTicked;
             Current_SizeChanged(null, null);
             ToggleButtonSound.IsChecked = Common.ShowLyricSound;
             ToggleButtonTranslation.IsChecked = Common.ShowLyricTrans;
         }
 
+        private void HyPlayList_OnTimerTicked()
+        {
+            if (sclock > 0)
+            {
+                sclock--;
+            }
+        }
+
         public double showsize { get; set; }
         public double LyricWidth { get; set; }
+
+
 
         public void Dispose()
         {
@@ -66,6 +77,7 @@ namespace HyPlayer.Pages
             HyPlayList.OnPlayItemChange -= OnSongChange;
             HyPlayList.OnLyricLoaded -= HyPlayList_OnLyricLoaded;
             HyPlayList.OnPlayPositionChange -= HyPlayList_OnPlayPositionChange;
+            HyPlayList.OnTimerTicked -= HyPlayList_OnTimerTicked;
             if (Window.Current != null)
                 Window.Current.SizeChanged -= Current_SizeChanged;
         }
@@ -100,8 +112,8 @@ namespace HyPlayer.Pages
 
         private void Current_SizeChanged(object sender, WindowSizeChangedEventArgs e)
         {
-            var nowwidth = e is null ? (int) Window.Current.Bounds.Width : (int) e.Size.Width;
-            var nowheight = e is null ? (int) Window.Current.Bounds.Height : (int) e.Size.Height;
+            var nowwidth = e is null ? (int)Window.Current.Bounds.Width : (int)e.Size.Width;
+            var nowheight = e is null ? (int)Window.Current.Bounds.Height : (int)e.Size.Height;
             if (lastwidth == nowwidth) return; //有些时候会莫名其妙不更改大小的情况引发这个
             lastwidth = nowwidth;
             if (nowwidth > 800)
@@ -153,12 +165,8 @@ namespace HyPlayer.Pages
             item?.OnShow();
             lastitem = item;
             if (sclock > 0)
-            {
-                sclock--;
                 return;
-            }
-
-            var transform = item?.TransformToVisual((UIElement) LyricBoxContainer.Content);
+            var transform = item?.TransformToVisual((UIElement)LyricBoxContainer.Content);
             var position = transform?.TransformPoint(new Point(0, 0));
             LyricBoxContainer.ChangeView(null, position?.Y - LyricBoxContainer.ViewportHeight / 3, null, false);
         }
@@ -170,7 +178,7 @@ namespace HyPlayer.Pages
             var blanksize = LyricBoxContainer.ViewportHeight / 2;
             if (double.IsNaN(blanksize) || blanksize == 0) blanksize = Window.Current.Bounds.Height / 3;
 
-            LyricBox.Children.Add(new Grid {Height = blanksize});
+            LyricBox.Children.Add(new Grid { Height = blanksize });
             if (HyPlayList.Lyrics.Count == 0)
             {
                 var lrcitem = new LyricItem(SongLyric.PureSong)
@@ -191,7 +199,7 @@ namespace HyPlayer.Pages
                 }
             }
 
-            LyricBox.Children.Add(new Grid {Height = blanksize});
+            LyricBox.Children.Add(new Grid { Height = blanksize });
             LyricList = LyricBox.Children.OfType<LyricItem>().ToList();
             lastlrcid = HyPlayList.NowPlayingItem.GetHashCode();
             Task.Run(() =>
@@ -229,7 +237,7 @@ namespace HyPlayer.Pages
                         TextBlockSinger.Text = mpi.AudioInfo.Artist;
                         TextBlockSongTitle.Text = mpi.AudioInfo.SongName;
                         Background = new ImageBrush
-                            {ImageSource = (ImageSource) ImageAlbum.Source, Stretch = Stretch.UniformToFill};
+                        { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                         ProgressBarPlayProg.Maximum = mpi.AudioInfo.LengthInMilliseconds;
                         SliderVolumn.Value = HyPlayList.Player.Volume * 100;
 
@@ -240,14 +248,14 @@ namespace HyPlayer.Pages
                             if (double.IsNaN(blanksize) || blanksize == 0) blanksize = Window.Current.Bounds.Height / 3;
 
                             LyricBox.Children.Clear();
-                            LyricBox.Children.Add(new Grid {Height = blanksize});
+                            LyricBox.Children.Add(new Grid { Height = blanksize });
                             var lrcitem = new LyricItem(SongLyric.LoadingLyric)
                             {
                                 Width = LyricWidth
                             };
-                            LyricList = new List<LyricItem> {lrcitem};
+                            LyricList = new List<LyricItem> { lrcitem };
                             LyricBox.Children.Add(lrcitem);
-                            LyricBox.Children.Add(new Grid {Height = blanksize});
+                            LyricBox.Children.Add(new Grid { Height = blanksize });
                         }
                     }
                     catch (Exception)
@@ -404,14 +412,14 @@ namespace HyPlayer.Pages
                 {
                     if (HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].Type == HyPlayItemType.Radio)
                     {
-                        Common.BaseFrame.Navigate(typeof(Me), HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
+                        Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
                     }
                     else
                     {
                         if (HyPlayList.NowPlayingItem.NcPlayItem.Artist.Count > 1)
                             await new ArtistSelectDialog(HyPlayList.NowPlayingItem.NcPlayItem.Artist).ShowAsync();
                         else
-                            Common.BaseFrame.Navigate(typeof(ArtistPage),
+                            Common.NavigatePage(typeof(ArtistPage),
                                 HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
                     }
 
@@ -430,14 +438,14 @@ namespace HyPlayer.Pages
 
         private void ImageAlbum_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
-            FlyoutBase.ShowAttachedFlyout((FrameworkElement) sender);
+            FlyoutBase.ShowAttachedFlyout((FrameworkElement)sender);
         }
 
         private async void SaveAlbumImage_Click(object sender, RoutedEventArgs e)
         {
             var filepicker = new FileSavePicker();
             filepicker.SuggestedFileName = HyPlayList.NowPlayingItem.Name + "-cover.jpg";
-            filepicker.FileTypeChoices.Add("图片文件", new List<string> {".png", ".jpg"});
+            filepicker.FileTypeChoices.Add("图片文件", new List<string> { ".png", ".jpg" });
             var file = await filepicker.PickSaveFileAsync();
             var stream = await (HyPlayList.NowPlayingItem.ItemType != HyPlayItemType.Local
                     ? RandomAccessStreamReference.CreateFromUri(
@@ -446,8 +454,8 @@ namespace HyPlayer.Pages
                         await HyPlayList.NowPlayingItem.AudioInfo.LocalSongFile.GetThumbnailAsync(
                             ThumbnailMode.SingleItem, 9999)))
                 .OpenReadAsync();
-            var buffer = new Buffer((uint) stream.Size);
-            await stream.ReadAsync(buffer, (uint) stream.Size, InputStreamOptions.None);
+            var buffer = new Buffer((uint)stream.Size);
+            await stream.ReadAsync(buffer, (uint)stream.Size, InputStreamOptions.None);
             await FileIO.WriteBufferAsync(file, buffer);
         }
     }

@@ -30,7 +30,7 @@ namespace HyPlayer.Controls
         {
             Grid1.Background =
                 Application.Current.Resources["SystemControlAccentAcrylicElementAccentMediumHighBrush"] as Brush;
-            Common.BaseFrame.Navigate(typeof(RadioPage), Radio);
+            Common.NavigatePage(typeof(RadioPage), Radio);
         }
 
         private void UIElement_OnPointerEntered(object sender, PointerRoutedEventArgs e)

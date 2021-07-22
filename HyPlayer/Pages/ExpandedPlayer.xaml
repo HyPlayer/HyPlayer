@@ -158,6 +158,7 @@
                 x:Name="ImageAlbumContainer"
                 Grid.RowSpan="8">
                 <controls:ImageEx
+                    IsCacheEnabled="False"
                     RightTapped="ImageAlbum_RightTapped"
                     x:Name="ImageAlbum"
                     x:FieldModifier="public"
