@@ -51,7 +51,11 @@ namespace HyPlayer.Pages
                 LoadResult();
             }
         }
-
+        protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
+        {
+            SearchResultContainer.Children.Clear();
+            GC.Collect();
+        }
         private async void LoadResult()
         {
             if (string.IsNullOrEmpty(Text)) return;
