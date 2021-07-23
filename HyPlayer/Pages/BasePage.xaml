@@ -177,12 +177,12 @@
                         <StackPanel
                             Orientation="Vertical">
                             <Image
-                                Height="200"
+                                Height="100"
                                 Source="/Assets/icon.png" />
                             <TextBlock
                                 Padding="0,3,0,10"
                                 HorizontalAlignment="Center"
-                                FontSize="25"
+                                FontSize="20"
                                 Text="登录到网易云音乐" />
                             <TextBox
                                 x:Name="TextBoxAccount"
@@ -208,7 +208,7 @@
                         <Image
                             Margin="0,46,0,46"
                             x:Name="QrContainer"
-                            Height="300"
+                            Height="200"
                             Source="/Assets/icon.png" />
                     </PivotItem>
                 </Pivot>
