@@ -69,13 +69,16 @@ steps:
 
 - task: FtpUpload@2
   inputs:
-    credentialsOption: 'serviceEndpoint'
-    serverEndpoint: 'FTP 4 HyPlayer'
+    credentialsOption: 'inputs'
+    serverUrl: 'ftp://124.156.147.133:21'
+    username: 'hyplayer_kengwang_co'
+    password: 'KLhkEDyaae7KdMiF'
     rootDirectory: '$(Build.ArtifactStagingDirectory)'
     filePatterns: 'drop.zip'
     remoteDirectory: '/release/'
+    enableUtf8: true
     clean: false
-    cleanContents: true
+    cleanContents: false
     preservePaths: false
     trustSSL: false
 
