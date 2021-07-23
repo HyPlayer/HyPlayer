@@ -62,7 +62,7 @@ steps:
     rootFolderOrFile: '$(build.artifactstagingdirectory)/AppxPackages'
     includeRootFolder: true
     archiveType: 'zip'
-    archiveFile: '$(Build.ArtifactStagingDirectory)/'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/drop.zip'
     replaceExistingArchive: true
     verbose: true
 
@@ -72,7 +72,7 @@ steps:
     credentialsOption: 'serviceEndpoint'
     serverEndpoint: 'FTP 4 HyPlayer'
     rootDirectory: '$(Build.ArtifactStagingDirectory)'
-    filePatterns: '$(Build.BuildId).zip'
+    filePatterns: 'drop.zip'
     remoteDirectory: '/release/'
     clean: false
     cleanContents: true
