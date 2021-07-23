@@ -8,6 +8,7 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using NeteaseCloudMusicApi;
+using Newtonsoft.Json.Linq;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -34,7 +35,13 @@ namespace HyPlayer.Pages
             base.OnNavigatedTo(e);
             if (Common.Logined)
                 LoadLoginedContent();
+            else LoadUnLoginedContent();
             HyPlayList.OnLoginDone += LoadLoginedContent;
+        }
+
+        private void LoadUnLoginedContent()
+        {
+            LoadRanklist();
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -107,7 +114,24 @@ namespace HyPlayer.Pages
                 }
             }
         }
-
+        public async void LoadRanklist()
+        {
+            await Task.Run((() =>
+            {
+                Common.Invoke((async () =>
+                {
+                    (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Toplist);
+                    if (isOk)
+                    {
+                        foreach (JToken PlaylistItemJson in json["list"].ToArray())
+                        {
+                            NCPlayList ncp = NCPlayList.CreateFromJson(PlaylistItemJson);
+                            RankList.Children.Add(new PlaylistItem(ncp));
+                        }
+                    }
+                }));
+            }));
+        }
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
             PersonalFM.InitPersonalFM();
