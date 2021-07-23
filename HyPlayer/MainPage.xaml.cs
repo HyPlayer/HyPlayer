@@ -31,7 +31,6 @@ namespace HyPlayer
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            MainFrame.Navigate(typeof(BasePage));
             switch (e.Parameter)
             {
                 case "search":

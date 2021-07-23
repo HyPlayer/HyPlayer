@@ -62,9 +62,13 @@
             </controls1:NavigationView.AutoSuggestBox>
             <controls1:NavigationView.MenuItems>
                 <controls1:NavigationViewItem
-                    Content="主页"
-                    Icon="Home"
-                    Tag="PageHome" />
+                    Content="探索"                    
+                    Tag="PageHome" >
+                    <controls1:NavigationViewItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                  Glyph="&#xE12B;" />
+                    </controls1:NavigationViewItem.Icon>
+                </controls1:NavigationViewItem>
                 <controls1:NavigationViewItem
                     Content="本地和下载"
                     Icon="Folder"
@@ -206,6 +210,7 @@
                     <PivotItem
                         Header="扫码登录">
                         <Image
+                            Tapped="LoadQr"
                             Margin="0,46,0,46"
                             x:Name="QrContainer"
                             Height="200"

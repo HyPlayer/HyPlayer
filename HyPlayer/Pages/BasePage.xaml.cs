@@ -29,6 +29,7 @@ using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
 using NavigationViewBackRequestedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewBackRequestedEventArgs;
 using NavigationViewItem = Microsoft.UI.Xaml.Controls.NavigationViewItem;
 using NavigationViewSelectionChangedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewSelectionChangedEventArgs;
+using Microsoft.Toolkit.Uwp.UI.Controls;
 
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
@@ -40,6 +41,8 @@ namespace HyPlayer.Pages
     /// </summary>
     public sealed partial class BasePage : Page
     {
+        private string nowqrkey;
+
         public BasePage()
         {
             InitializeComponent();
@@ -55,11 +58,8 @@ namespace HyPlayer.Pages
                 Window.Current.SetTitleBar(AppTitleBar);
 
             }
-            LoadLoginData();
             Common.BaseFrame = BaseFrame;
             BaseFrame.IsNavigationStackEnabled = false;
-            NavMain.SelectedItem = NavMain.MenuItems[0];
-
             //Common.NavigatePage(typeof(Home));上一行代码会引发NavMain的SelectionChanged事件，不需要重复导航
 
         }
@@ -67,8 +67,11 @@ namespace HyPlayer.Pages
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
+            LoadLoginData();
+            /*
             if (e.Parameter is string)
                 LoginDone();
+            */
         }
 
         private void PhraseCookie(string cookielines)
@@ -126,14 +129,19 @@ namespace HyPlayer.Pages
         {
             try
             {
-                if (!ApplicationData.Current.LocalSettings.Values.ContainsKey("cookie") ||
-                    string.IsNullOrEmpty(ApplicationData.Current.LocalSettings.Values["cookie"].ToString()))
-                    return;
-                PhraseCookie(ApplicationData.Current.LocalSettings.Values["cookie"].ToString());
-                var (retOk, LoginStatus) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginStatus);
-                if (retOk) LoginDone();
+                if (ApplicationData.Current.LocalSettings.Values.ContainsKey("cookie") &&
+                    !string.IsNullOrEmpty(ApplicationData.Current.LocalSettings.Values["cookie"].ToString()))
+                {
+                    PhraseCookie(ApplicationData.Current.LocalSettings.Values["cookie"].ToString());
+                    var (retOk, LoginStatus) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginStatus);
+                    if (retOk) await LoginDone();
+                }
+                else
+                {
+                    Common.NavigatePage(typeof(Welcome));
+                }
             }
-            catch
+            catch (Exception e)
             {
                 // ignored
             }
@@ -198,10 +206,10 @@ namespace HyPlayer.Pages
             Common.NavigateBack();
         }
 
-        public async void LoginDone()
+        public async Task<bool> LoginDone()
         {
             var (retOk, LoginStatus) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginStatus);
-            if (!LoginStatus["account"].HasValues) return;
+            if (!LoginStatus["account"].HasValues) return false;
             InfoBarLoginHint.IsOpen = true;
             InfoBarLoginHint.Title = "登录成功";
             //存储Cookie
@@ -318,9 +326,11 @@ namespace HyPlayer.Pages
                     });
                 });
             };
-
             HyPlayList.LoginDownCall();
             ((App)App.Current).InitializeJumpList();
+            NavMain.SelectedItem = NavItemLogin;
+            Common.NavigatePage(typeof(Me));
+            return true;
         }
 
 
@@ -446,52 +456,62 @@ namespace HyPlayer.Pages
             if (e.Key == VirtualKey.Enter) ButtonLogin_OnClick(null, null);
         }
 
-        private async void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if ((sender as Pivot).SelectedIndex == 1)
             {
-                var (isOk, key) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginQrKey,
-                    new Dictionary<string, object> { { "timestamp", (DateTime.Now.Ticks - 621356256000000000) / 10000 } });
-                if (isOk)
-                    ReFreshQr(key);
-
-
-                while (true)
-                {
-                    var (a, res) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginQrCheck,
-                        new Dictionary<string, object> { { "key", key["unikey"].ToString() } });
-                    if (res["code"].ToString() == "800")
-                    {
-                        (isOk, key) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginQrKey,
-                            new Dictionary<string, object>
-                                {{"timestamp", (DateTime.Now.Ticks - 621356256000000000) / 10000}});
-                        if (isOk)
-                            ReFreshQr(key);
-                    }
-                    else if (res["code"].ToString() == "801")
-                    {
-                        InfoBarLoginHint.Title = "请扫描上方二维码登录";
-                        //
-                    }
-                    else if (res["code"].ToString() == "803")
-                    {
-                        InfoBarLoginHint.IsOpen = true;
-                        InfoBarLoginHint.Title = "登录成功";
-                        ButtonLogin.Content = "登录成功";
-                        LoginDone();
-                        break;
-                    }
-                    else if (res["code"].ToString() == "802")
-                    {
-                        InfoBarLoginHint.Title = "请在手机上授权登录";
-                    }
-
-                    await Task.Delay(2000);
-                }
+                LoadQr(null, null);
             }
             else
             {
                 InfoBarLoginHint.Title = "登录代表你同意相关条款";
+            }
+        }
+
+        private async void LoadQr(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
+        {
+            var (isOk, key) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginQrKey,
+                    new Dictionary<string, object> { { "timestamp", (DateTime.Now.Ticks - 621356256000000000) / 10000 } });
+            if (isOk)
+                ReFreshQr(key);
+            else
+            {
+                InfoBarLoginHint.Title = "请点击二维码刷新";
+                return;
+            }
+
+            nowqrkey = key["unikey"].ToString();
+            while (!Common.Logined && nowqrkey == key["unikey"].ToString())
+            {
+                var (a, res) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginQrCheck,
+                    new Dictionary<string, object> { { "key", key["unikey"].ToString() } });
+                if (res["code"].ToString() == "800")
+                {
+                    (isOk, key) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginQrKey,
+                        new Dictionary<string, object>
+                            {{"timestamp", (DateTime.Now.Ticks - 621356256000000000) / 10000}});
+                    if (isOk)
+                        ReFreshQr(key);
+                }
+                else if (res["code"].ToString() == "801")
+                {
+                    InfoBarLoginHint.Title = "请扫描上方二维码登录";
+                    //
+                }
+                else if (res["code"].ToString() == "803")
+                {
+                    InfoBarLoginHint.IsOpen = true;
+                    InfoBarLoginHint.Title = "登录成功";
+                    ButtonLogin.Content = "登录成功";
+                    LoginDone();
+                    break;
+                }
+                else if (res["code"].ToString() == "802")
+                {
+                    InfoBarLoginHint.Title = "请在手机上授权登录";
+                }
+
+                await Task.Delay(2000);
             }
         }
 

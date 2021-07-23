@@ -35,7 +35,7 @@ namespace HyPlayer.Classes
                 var song = json["data"][0];
                 HyPlayList.RemoveAllSong();
                 var item = await HyPlayList.AppendNCSong(NCSong.CreateFromJson(song));
-                item.ItemType = HyPlayItemType.Radio;
+                item.ItemType = HyPlayItemType.Netease;
                 Common.GLOBAL["PERSONALFM"] = "true";
                 HyPlayList.SongAppendDone();
                 HyPlayList.SongMoveTo(0);

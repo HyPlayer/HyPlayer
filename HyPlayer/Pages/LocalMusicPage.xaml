@@ -8,15 +8,19 @@
 
     <Pivot Title="本地和下载">
         <PivotItem Header="本地歌曲">
-            <StackPanel Orientation="Vertical" Margin="0,0,0,150">
-                <StackPanel Padding="15" Orientation="Horizontal">
+            <Grid Margin="0,0,0,150">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="60"/>
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <StackPanel Grid.Row="0" Padding="15" Orientation="Horizontal">
                     <Button x:Name="Playall" Content="播放全部" ToolTipService.ToolTip="{x:Bind Content}"
                             Click="Playall_Click" />
                     <Button x:Name="Refresh" Content="刷新" ToolTipService.ToolTip="{x:Bind Content}"
                             Click="Refresh_Click" />
                 </StackPanel>
-                <Grid>
-                    <ScrollViewer VerticalScrollMode="Enabled">
+                <Grid Grid.Row="1">
+                    <ScrollViewer VerticalScrollMode="Enabled" VerticalScrollBarVisibility="Auto">
                         <ListView
                             SelectionMode="Single"
                             Name="ListBoxLocalMusicContainer"
@@ -45,7 +49,7 @@
                     </ScrollViewer>
                     <ProgressRing x:Name="FileLoadingIndicateRing" IsActive="False" Width="100" Height="100" />
                 </Grid>
-            </StackPanel>
+            </Grid>
         </PivotItem>
         <PivotItem Header="下载管理">
             <Frame x:Name="DownloadPageFrame" />

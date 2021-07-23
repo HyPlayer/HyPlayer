@@ -83,7 +83,7 @@ namespace HyPlayer
                     Common.CollectGarbage();
                     _ = Task.Run(() => Common.Invoke(async () =>
                      {
-                         await Task.Delay(3000);
+                         await Task.Delay(1000);
                          GC.Collect();
                      }));
 

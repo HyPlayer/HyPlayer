@@ -72,9 +72,8 @@ namespace HyPlayer.Pages
 
         protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
         {
-            Dispose();
             LyricBox.Children.Clear();
-            LyricBox = null;
+            Dispose();
         }
         public void Dispose()
         {
@@ -85,6 +84,10 @@ namespace HyPlayer.Pages
             HyPlayList.OnTimerTicked -= HyPlayList_OnTimerTicked;
             if (Window.Current != null)
                 Window.Current.SizeChanged -= Current_SizeChanged;
+            Common.Invoke(() =>
+            {
+                LyricList.Clear();
+            });
         }
 
         ~ExpandedPlayer()
