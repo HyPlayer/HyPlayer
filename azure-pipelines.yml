@@ -57,3 +57,26 @@ steps:
   inputs:
     PathtoPublish: '$(build.artifactstagingdirectory)'
 
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(build.artifactstagingdirectory)/AppxPackages'
+    includeRootFolder: true
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/'
+    replaceExistingArchive: true
+    verbose: true
+
+
+- task: FtpUpload@2
+  inputs:
+    credentialsOption: 'serviceEndpoint'
+    serverEndpoint: 'FTP 4 HyPlayer'
+    rootDirectory: '$(Build.ArtifactStagingDirectory)'
+    filePatterns: '$(Build.BuildId).zip'
+    remoteDirectory: '/release/'
+    clean: false
+    cleanContents: true
+    preservePaths: false
+    trustSSL: false
+
+
