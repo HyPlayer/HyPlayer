@@ -309,23 +309,6 @@ namespace HyPlayer.Pages
                 });
             });
 
-            HyPlayList.OnMediaEnd += hpi =>
-            {
-                // 播放数据
-                _ = Task.Run(() =>
-                {
-                    Common.Invoke(() =>
-                    {
-                        if (hpi.ItemType != HyPlayItemType.Netease) return;
-                        Common.ncapi.RequestAsync(CloudMusicApiProviders.Scrobble, new Dictionary<string, object>
-                        {
-                            {"id", hpi.NcPlayItem.id},
-                            {"sourceId", "-1"},
-                            {"time", "60"}
-                        });
-                    });
-                });
-            };
             HyPlayList.LoginDownCall();
             ((App)App.Current).InitializeJumpList();
             NavMain.SelectedItem = NavItemLogin;
