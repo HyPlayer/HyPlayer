@@ -16,7 +16,6 @@ using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
 using Windows.ApplicationModel.ExtendedExecution;
 using HyPlayer.Pages;
 using Kawazu;
-using Windows.System;
 
 namespace HyPlayer
 {
@@ -38,22 +37,12 @@ namespace HyPlayer
             UnhandledException += App_UnhandledException;
             EnteredBackground += App_EnteredBackground;
             LeavingBackground += App_LeavingBackground;
-            MemoryManager.AppMemoryUsageIncreased += MemoryManager_AppMemoryUsageIncreased;
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             AppCenter.Start("8e88eab0-1627-4ff9-9ee7-7fd46d0629cf",
                 typeof(Analytics), typeof(Crashes));
             InitializeThings();
         }
 
-
-        private void MemoryManager_AppMemoryUsageIncreased(object sender, object e)
-        {
-            var level = MemoryManager.AppMemoryUsageLevel;
-            if (level == AppMemoryUsageLevel.OverLimit || level == AppMemoryUsageLevel.High)
-            {
-
-            }
-        }
 
         private void InitializeThings()
         {
