@@ -70,7 +70,12 @@ namespace HyPlayer.Pages
         public double LyricWidth { get; set; }
 
 
-
+        protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
+        {
+            Dispose();
+            LyricBox.Children.Clear();
+            LyricBox = null;
+        }
         public void Dispose()
         {
             HyPlayList.OnLyricChange -= RefreshLyricTime;

@@ -48,6 +48,11 @@ namespace HyPlayer.Pages
         {
             base.OnNavigatedFrom(e);
             HyPlayList.OnLoginDone -= LoadLoginedContent;
+            UnLoginedContent.Children.Clear();
+            DailySongContainer.Children.Clear();
+            RankPlayList.Children.Clear();
+            MySongHis.Children.Clear();
+            RecommendSongListContainer.Children.Clear();
         }
 
         private async void LoadLoginedContent()

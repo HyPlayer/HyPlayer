@@ -108,18 +108,18 @@
                             <StackPanel x:Name="MySongHis" Orientation="Vertical" />
                         </ScrollViewer>
                     </StackPanel>
-                    <!-- 榜单 -->
-                    <StackPanel Orientation="Vertical" Background="{ThemeResource SystemControlBackgroundListLowBrush}"
-                        CornerRadius="8">
-                        <TextBlock Margin="5" FontSize="30" Text="榜单" />
-                        <ScrollViewer HorizontalScrollMode="Auto" VerticalScrollBarVisibility="Disabled"
-                              VerticalScrollMode="Disabled" HorizontalScrollBarVisibility="Auto" Height="250">
-                            <StackPanel x:Name="RankPlayList" Orientation="Horizontal" Spacing="15" />
-                        </ScrollViewer>
-                    </StackPanel>
+
                 </Grid>
 
-
+                <!-- 榜单 -->
+                <StackPanel Orientation="Vertical" Background="{ThemeResource SystemControlBackgroundListLowBrush}"
+                        CornerRadius="8">
+                    <TextBlock Margin="5" FontSize="30" Text="榜单" />
+                    <ScrollViewer HorizontalScrollMode="Auto" VerticalScrollBarVisibility="Disabled"
+                              VerticalScrollMode="Disabled" HorizontalScrollBarVisibility="Auto" Height="250">
+                        <StackPanel x:Name="RankPlayList" Orientation="Horizontal" Spacing="15" />
+                    </ScrollViewer>
+                </StackPanel>
             </StackPanel>
 
             <StackPanel x:Name="UnLoginedContent" Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
