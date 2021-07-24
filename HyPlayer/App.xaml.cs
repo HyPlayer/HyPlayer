@@ -46,29 +46,26 @@ namespace HyPlayer
         }
 
 
-        private void InitializeThings()
+        private async Task<bool> InitializeThings()
         {
-            Task.Run(() =>
+
+            try
             {
-                Common.Invoke(async () =>
-                {
-                    try
-                    {
-                        var sf = await ApplicationData.Current.LocalCacheFolder.GetFolderAsync("Romaji");
-                        Common.KawazuConv = new KawazuConverter(sf.Path);
-                    }
-                    catch
-                    {
-                    }
-                });
-            });
+                var sf = await ApplicationData.Current.LocalCacheFolder.GetFolderAsync("Romaji");
+                Common.KawazuConv = new KawazuConverter(sf.Path);
+            }
+            catch
+            {
+            }
+
             if (Common.isExpanded)
                 Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer));
+            return true;
         }
-        private void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)
+        private async void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)
         {
+            await InitializeThings();
             ClearExtendedExecution(executionSession);
-            InitializeThings();
             Common.NavigateBack();
         }
 

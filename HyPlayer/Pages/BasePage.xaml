@@ -2,10 +2,9 @@
     x:Class="HyPlayer.Pages.BasePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls1="using:Microsoft.UI.Xaml.Controls"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
     mc:Ignorable="d">
     <Page.Resources>
@@ -32,7 +31,7 @@
                 Background="Transparent"
                 Margin="80,0,0,0"
                 Canvas.ZIndex="1" />
-        <controls1:NavigationView
+        <muxc:NavigationView
             x:Name="NavMain"
             x:FieldModifier="public"
             PaneDisplayMode="Auto"
@@ -47,7 +46,7 @@
             FlowDirection="LeftToRight"
             FontFamily="Microsoft Sans Serif"
             IsTitleBarAutoPaddingEnabled="False">
-            <controls1:NavigationView.AutoSuggestBox>
+            <muxc:NavigationView.AutoSuggestBox>
                 <AutoSuggestBox
                     AutomationProperties.Name="Search"
                     x:Name="SearchKeywordBox"
@@ -59,91 +58,112 @@
                     TextChanged="AutoSuggestBox_TextChanged"
                     SuggestionChosen="AutoSuggestBox_SuggestionChosen"
                     Tag="PageSearch" />
-            </controls1:NavigationView.AutoSuggestBox>
-            <controls1:NavigationView.MenuItems>
-                <controls1:NavigationViewItem
-                    Content="探索"                    
-                    Tag="PageHome" >
-                    <controls1:NavigationViewItem.Icon>
+            </muxc:NavigationView.AutoSuggestBox>
+            <muxc:NavigationView.MenuItems>
+                <muxc:NavigationViewItem
+                    Content="探索"                     >
+                    <muxc:NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}"
                                   Glyph="&#xE12B;" />
-                    </controls1:NavigationViewItem.Icon>
-                </controls1:NavigationViewItem>
-                <controls1:NavigationViewItem
+                    </muxc:NavigationViewItem.Icon>
+                    <muxc:NavigationViewItem.MenuItems>
+                        <muxc:NavigationViewItem
+                            Content="主页"
+                            Tag="PageHome">
+                            <muxc:NavigationViewItem.Icon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE10F;" />
+                            </muxc:NavigationViewItem.Icon>
+                        </muxc:NavigationViewItem>
+                        <muxc:NavigationViewItem
+                            Content="每日推荐"
+                            Tag="DailyRcmd">
+                            <muxc:NavigationViewItem.Icon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE163;" />
+                            </muxc:NavigationViewItem.Icon>
+                        </muxc:NavigationViewItem>
+                        <muxc:NavigationViewItem
+                            Content="歌单推荐">
+                            <muxc:NavigationViewItem.Icon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE14C;" />
+                            </muxc:NavigationViewItem.Icon>
+                        </muxc:NavigationViewItem>
+                    </muxc:NavigationViewItem.MenuItems>
+                </muxc:NavigationViewItem>
+                <muxc:NavigationViewItem
                     Content="本地和下载"
                     Icon="Folder"
                     Tag="PageLocal" />
-                <controls1:NavigationViewItem
+                <muxc:NavigationViewItem
                     Icon="Clock"
                     Content="播放历史"
                     x:Name="PageHistory"
                     Tag="PageHistory" />
-                <controls1:NavigationViewItem
+                <muxc:NavigationViewItem
                     Content="我的收藏"
                     Tag="PageFavorite">
-                    <controls1:NavigationViewItem.Icon>
+                    <muxc:NavigationViewItem.Icon>
                         <FontIcon
                             FontFamily="{StaticResource SymbolThemeFontFamily}"
                             Glyph="&#xE734;" />
-                    </controls1:NavigationViewItem.Icon>
-                </controls1:NavigationViewItem>
-                <controls1:NavigationViewItem
+                    </muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
+                <muxc:NavigationViewItem
                     Content="私人FM"
                     Tag="PersonalFM">
-                    <controls1:NavigationViewItem.Icon>
+                    <muxc:NavigationViewItem.Icon>
                         <FontIcon
                             FontFamily="{StaticResource SymbolThemeFontFamily}"
                             Glyph="&#xEFA9;" />
-                    </controls1:NavigationViewItem.Icon>
-                </controls1:NavigationViewItem>
-                <controls1:NavigationViewItemSeparator />
-                <controls1:NavigationViewItem
+                    </muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
+                <muxc:NavigationViewItemSeparator />
+                <muxc:NavigationViewItem
                     x:Name="NavItemsAddPlaylist"
                     Icon="Add"
                     Visibility="Collapsed"
                     Content="创建歌单"
                     Tag="SonglistCreate" />
-                <controls1:NavigationViewItem
+                <muxc:NavigationViewItem
                     x:Name="NavItemsMyLovedPlaylist"
                     Visibility="Collapsed"
                     Content="我喜欢的音乐"
                     Tag="SonglistMyLike">
-                    <controls1:NavigationViewItem.Icon>
+                    <muxc:NavigationViewItem.Icon>
                         <FontIcon
                             FontFamily="{StaticResource SymbolThemeFontFamily}"
                             Glyph="&#xE00B;" />
-                    </controls1:NavigationViewItem.Icon>
-                </controls1:NavigationViewItem>
-                <controls1:NavigationViewItem
+                    </muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
+                <muxc:NavigationViewItem
                     Icon="List"
                     Content="我创建的歌单"
                     Visibility="Collapsed"
                     x:Name="NavItemsMyList" />
-                <controls1:NavigationViewItem
+                <muxc:NavigationViewItem
                     Icon="List"
                     Content="我收藏的歌单"
                     Visibility="Collapsed"
                     x:Name="NavItemsLikeList" />
-            </controls1:NavigationView.MenuItems>
-            <controls1:NavigationView.PaneFooter>
+            </muxc:NavigationView.MenuItems>
+            <muxc:NavigationView.PaneFooter>
                 <StackPanel
                     x:Name="FooterStackPanel"
                     Orientation="Vertical"
                     Visibility="Visible"
                     Margin="0,0,0,120">
-                    <controls1:NavigationViewItem
+                    <muxc:NavigationViewItem
                         x:Name="NavItemLogin"
                         Tapped="NavigationViewItem_Tapped"
                         Content="登录"
                         Icon="Contact"
                         Tag="PageMe" />
-                    <controls1:NavigationViewItem
+                    <muxc:NavigationViewItem
                         Tapped="NavigationViewItem_Tapped"
                         Content="设置"
                         Icon="Setting"
                         Tag="PageSettings" />
                 </StackPanel>
-            </controls1:NavigationView.PaneFooter>
+            </muxc:NavigationView.PaneFooter>
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition
@@ -156,7 +176,7 @@
                     Margin="20,40,0,0"
                     x:Name="BaseFrame" />
             </Grid>
-        </controls1:NavigationView>
+        </muxc:NavigationView>
         <!--  登录弹窗  -->
         <ContentDialog
             x:Name="DialogLogin"
@@ -217,7 +237,7 @@
                             Source="/Assets/icon.png" />
                     </PivotItem>
                 </Pivot>
-                <controls1:InfoBar
+                <muxc:InfoBar
                     x:Name="InfoBarLoginHint"
                     IsClosable="False"
                     Title="登录代表你同意相关条款"

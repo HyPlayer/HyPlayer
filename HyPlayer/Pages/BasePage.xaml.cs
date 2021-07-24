@@ -380,6 +380,25 @@ namespace HyPlayer.Pages
                 return;
             }
 
+            if (nowitem.Tag.ToString() == "DailyRcmd")
+            {
+                Common.NavigatePage(typeof(SongListDetail), new NCPlayList()
+                {
+                    cover = "ms-appx:/Assets/icon.png",
+                    creater = new NCUser()
+                    {
+                        avatar = "https://p1.music.126.net/KxePid7qTvt6V2iYVy-rYQ==/109951165050882728.jpg",
+                        id = "1",
+                        name = "网易云音乐",
+                        signature = "网易云音乐官方账号 "
+                    },
+                    plid = "-666",
+                    subscribed = false,
+                    name = "每日歌曲推荐",
+                    desc = "根据你的口味生成，每天6:00更新"
+                });
+            }
+
             if (nowitem.Tag.ToString() == "SonglistMyLike")
             {
                 Common.NavigatePage(typeof(SongListDetail), Common.MySongLists[0].plid,

@@ -89,9 +89,9 @@ namespace HyPlayer.Controls
             showing = false;
             TextBoxPureLyric.FontWeight = FontWeights.Normal;
             TextBoxTranslation.FontWeight = FontWeights.Normal;
-            TextBoxPureLyric.Foreground = new SolidColorBrush(Color.FromArgb(255, 155, 155, 155));
-            TextBoxTranslation.Foreground = new SolidColorBrush(Color.FromArgb(255, 155, 155, 155));
-            TextBoxSound.Foreground = new SolidColorBrush(Color.FromArgb(255, 155, 155, 155));
+            TextBoxPureLyric.Foreground =Application.Current.Resources["TextFillColorDisabledBrush"] as Brush;
+            TextBoxTranslation.Foreground = Application.Current.Resources["TextFillColorDisabledBrush"] as Brush;
+            TextBoxSound.Foreground = Application.Current.Resources["TextFillColorDisabledBrush"] as Brush;
         }
 
         private void LyricItem_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)

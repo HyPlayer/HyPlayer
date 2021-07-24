@@ -6,32 +6,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup>
-                <VisualState x:Name="NarrowState">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="0" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="MainGrid.RowDefinitions[1].Height" Value="*" />
-                        <Setter Target="MainGrid.ColumnDefinitions[1].Width" Value="auto" />
-                        <Setter Target="SecondGrid.(Grid.Column)" Value="0" />
-                        <Setter Target="SecondGrid.(Grid.Row)" Value="1" />
-                    </VisualState.Setters>
-                </VisualState>
-                <VisualState x:Name="WideState">
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="720" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="MainGrid.RowDefinitions[1].Height" Value="auto" />
-                        <Setter Target="MainGrid.ColumnDefinitions[1].Width" Value="*" />
-                        <Setter Target="SecondGrid.(Grid.Column)" Value="1" />
-                        <Setter Target="SecondGrid.(Grid.Row)" Value="0" />
-                    </VisualState.Setters>
-                </VisualState>
-            </VisualStateGroup>
-        </VisualStateManager.VisualStateGroups>
         <StackPanel x:Name="MainContainer" Padding="15" Spacing="10" Orientation="Vertical">
             <!-- 欢迎语 -->
             <StackPanel Orientation="Vertical">
@@ -43,6 +17,7 @@
             </StackPanel>
             <StackPanel x:Name="LoginedContent" Visibility="Collapsed">
                 <!-- 每日推荐 -->
+                <!-- 不加载日推
                 <StackPanel Orientation="Vertical" CornerRadius="8"
                         Background="{ThemeResource SystemControlBackgroundListLowBrush}">
                     <TextBlock Margin="5" FontSize="30" Text="每日推荐" FontFamily="Black" />
@@ -54,7 +29,7 @@
                         <StackPanel x:Name="DailySongContainer" Orientation="Horizontal" Height="240" />
                     </ScrollViewer>
                 </StackPanel>
-
+                -->
                 <!-- 功能按钮 -->
                 <Grid Height="100" Background="{ThemeResource SystemControlBackgroundListLowBrush}" CornerRadius="8">
                     <Grid Padding="1" ColumnSpacing="15">
@@ -81,15 +56,6 @@
                     </Grid>
                 </Grid>
 
-                <Grid ColumnSpacing="10" RowSpacing="10" x:Name="MainGrid">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition />
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition />
-                        <RowDefinition />
-                    </Grid.RowDefinitions>
                     <!-- 推荐歌单 -->
                     <StackPanel x:Name="FirstGrid" Grid.Column="0" Grid.Row="0" Orientation="Vertical"
                             Background="{ThemeResource SystemControlBackgroundListLowBrush}" CornerRadius="8">
@@ -99,19 +65,8 @@
                             <StackPanel x:Name="RecommendSongListContainer" Orientation="Horizontal" Spacing="15" />
                         </ScrollViewer>
                     </StackPanel>
-                    <!-- 最近常听 -->
-                    <StackPanel x:Name="SecondGrid" Grid.Column="1" Grid.Row="0" Orientation="Vertical" CornerRadius="8"
-                            Background="{ThemeResource SystemControlBackgroundListLowBrush}">
-                        <TextBlock Margin="5" FontSize="30" Text="听歌排行" FontFamily="Black" />
-                        <ScrollViewer Height="260" HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled"
-                                  VerticalScrollBarVisibility="Auto" VerticalScrollMode="Auto">
-                            <StackPanel x:Name="MySongHis" Orientation="Vertical" />
-                        </ScrollViewer>
-                    </StackPanel>
 
-                </Grid>
-
-                <!-- 榜单 -->
+                    <!-- 榜单 -->
                 <StackPanel Orientation="Vertical" Background="{ThemeResource SystemControlBackgroundListLowBrush}"
                         CornerRadius="8">
                     <TextBlock Margin="5" FontSize="30" Text="榜单" />

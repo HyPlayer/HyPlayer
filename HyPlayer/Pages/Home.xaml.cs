@@ -49,9 +49,9 @@ namespace HyPlayer.Pages
             base.OnNavigatedFrom(e);
             HyPlayList.OnLoginDone -= LoadLoginedContent;
             UnLoginedContent.Children.Clear();
-            DailySongContainer.Children.Clear();
+            //DailySongContainer.Children.Clear();
             RankPlayList.Children.Clear();
-            MySongHis.Children.Clear();
+            //MySongHis.Children.Clear();
             RecommendSongListContainer.Children.Clear();
         }
 
@@ -65,14 +65,14 @@ namespace HyPlayer.Pages
                 CloudMusicApiProviders.Batch,
                 new Dictionary<string, object>
                 {
-                    {"/api/v3/discovery/recommend/songs", "{}"},
                     {"/api/toplist", "{}"}
                     //{ "/weapi/v1/discovery/recommend/resource","{}" }   //这个走不了Batch
                 }
             );
             if (isok)
             {
-                //每日推荐加载部分
+                //每日推荐加载部分 - 日推不加载
+                /*
                 var rcmdSongsJson = ret["/api/v3/discovery/recommend/songs"]["data"]["dailySongs"].ToArray();
                 Common.ListedSongs.Clear();
                 DailySongContainer.Children.Clear();
@@ -91,23 +91,14 @@ namespace HyPlayer.Pages
                     NowSongPanel.Children.Add(new SingleNCSong(nownc, c, true, true,
                         rcmdSongsJson[c]["reason"].ToString()));
                 }
+                */
 
                 //榜单
                 RankPlayList.Children.Clear();
                 foreach (var bditem in ret["/api/toplist"]["list"])
                     RankPlayList.Children.Add(new PlaylistItem(NCPlayList.CreateFromJson(bditem)));
 
-                //听歌排行加载部分 - 优先级靠下
-                var (ok2, ret2) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserRecord,
-                    new Dictionary<string, object> { { "uid", Common.LoginedUser.id }, { "type", "1" } });
-                if (ok2)
-                {
-                    var weekData = ret2["weekData"].ToArray();
-                    MySongHis.Children.Clear();
-                    for (var i = 0; i < weekData.Length; i++)
-                        MySongHis.Children.Add(new SingleNCSong(NCSong.CreateFromJson(weekData[i]["song"]), i, true,
-                            false, "最近一周播放 " + weekData[i]["playCount"] + " 次"));
-                }
+                
 
                 //推荐歌单加载部分 - 优先级稍微靠后下
                 var (ok1, ret1) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendResource);
