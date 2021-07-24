@@ -10,22 +10,23 @@
 
     <Pivot Title="设置" FontFamily="Black" Margin="0,0,0,150">
         <PivotItem Header="歌词设置" FontFamily="Thick" Margin="30,10,0,0">
-            <StackPanel Orientation="Vertical" x:Name="StackPanelLyricSet">
-                <TextBlock
+            <ScrollViewer VerticalScrollMode="Enabled">
+                <StackPanel Orientation="Vertical" x:Name="StackPanelLyricSet">
+                    <TextBlock
                         Text="罗马音设置"
                         FontSize="36" />
-                <TextBlock
+                    <TextBlock
                         Margin="0,10,0,0"
                         x:Name="RomajiStatus"
                         Text="获取中" />
-                <Button
+                    <Button
                         Margin="0,10,0,0"
                         Click="ButtonBase_OnClick"
                         Content="获取罗马音资源文件" />
-                <TextBlock
+                    <TextBlock
                         Text="歌词大小设置"
                         FontSize="36" />
-                <controls:NumberBox
+                    <controls:NumberBox
                         x:Name="LyricSize"
                         Margin="0,10,0,0"
                         ValueChanged="LyricSize_OnValueChanged"
@@ -35,40 +36,44 @@
                         SpinButtonPlacementMode="Compact"
                         SmallChange="1"
                         LargeChange="5" />
-                <CheckBox Content="是否左对齐"
+                    <CheckBox Content="是否左对齐"
                               x:Name="CheckBoxAlignment"
                               Checked="CheckBoxAlignment_OnChecked"
                               Unchecked="CheckBoxAlignment_OnChecked" />
-            </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
         </PivotItem>
         <PivotItem Header="在线播放设置" FontFamily="Thick">
-            <StackPanel Orientation="Vertical">
-                <controls:RadioButtons
+            <ScrollViewer VerticalScrollMode="Enabled">
+                <StackPanel Orientation="Vertical">
+                    <controls:RadioButtons
                         MaxColumns="4"
                         Header="在线播放音质:"
                         FontSize="20"
                         x:Name="RadioButtonsSongBr">
-                    <RadioButton
+                        <RadioButton
                             Content="标准 (128k)"
                             Tag="128000"
                             Checked="RadioButton_Checked" />
-                    <RadioButton
+                        <RadioButton
                             Content="较高 (192k)"
                             Tag="192000"
                             Checked="RadioButton_Checked" />
-                    <RadioButton
+                        <RadioButton
                             Content="极高 (320k)"
                             Tag="320000"
                             Checked="RadioButton_Checked" />
-                    <RadioButton
+                        <RadioButton
                             Content="无损 (VIP)"
                             Tag="999000"
                             Checked="RadioButton_Checked" />
-                </controls:RadioButtons>
-            </StackPanel>
+                    </controls:RadioButtons>
+                </StackPanel>
+            </ScrollViewer>
         </PivotItem>
         <PivotItem Header="存储设置" FontFamily="Thick">
-            <StackPanel Orientation="Vertical">
+            <ScrollViewer VerticalScrollMode="Enabled">
+                <StackPanel Orientation="Vertical">
                 <Grid
                         MaxWidth="1000">
                     <Grid.ColumnDefinitions>
@@ -95,236 +100,241 @@
                         Content="清除历史记录"
                         Click="ClearHistory_Click"
                         x:Name="ClearHistory" />
-            </StackPanel>
+                </StackPanel>
+             </ScrollViewer>
         </PivotItem>
         <PivotItem Header="实验室" FontFamily="Thick">
-            <StackPanel Orientation="Vertical">
-                <CheckBox
+            <ScrollViewer VerticalScrollMode="Enabled">
+                <StackPanel Orientation="Vertical">
+                    <CheckBox
                         x:Name="AnimationCheckbox"
                         Content="是否开启可选动效"
                         Checked="AnimationCheckbox_Checked"
                         Unchecked="AnimationCheckbox_Checked" />
-                <Grid
+                    <Grid
                         MaxWidth="1000">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition
                                 Width="100" />
-                        <ColumnDefinition
+                            <ColumnDefinition
                                 Width="*" />
-                        <ColumnDefinition
+                            <ColumnDefinition
                                 Width="50" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
                             Grid.Column="0"
                             Text="X-Real-IP" />
-                    <TextBox
+                        <TextBox
                             Grid.Column="1"
                             x:Name="TextBoxXREALIP" />
-                    <Button
+                        <Button
                             Grid.Column="2"
                             x:Name="ButtonXREALIPSave"
                             Content="选择"
                             Click="ButtonXREALIPSave_OnClick" />
-                </Grid>
-                <Grid
+                    </Grid>
+                    <Grid
                         MaxWidth="1000">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition
                                 Width="100" />
-                        <ColumnDefinition
+                            <ColumnDefinition
                                 Width="*" />
-                        <ColumnDefinition
+                            <ColumnDefinition
                                 Width="50" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
                             Grid.Column="0"
                             Text="代理服务器" />
-                    <TextBox
+                        <TextBox
                             Grid.Column="1"
                             x:Name="TextBoxPROXY" />
-                    <Button
+                        <Button
                             Grid.Column="2"
                             x:Name="ButtonPROXYSave"
                             Content="选择"
                             Click="ButtonPROXYSave_OnClick" />
-                </Grid>
-                <CheckBox
+                    </Grid>
+                    <CheckBox
                         x:Name="LazySongUrlGetCheck"
                         Content="是否在播放时才获取播放链接"
                         Checked="LazySongUrlGetCheck_Checked"
                         Unchecked="LazySongUrlGetCheck_Unchecked" />
-                <CheckBox
+                    <CheckBox
                         x:Name="ControlSoundCheck"
                         Content="是否开启 UI 音效"
                         Checked="ControlSoundChecked"
                         Unchecked="ControlSoundUnChecked" />
-            </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
         </PivotItem>
         <PivotItem Header="关于" FontFamily="Thick">
-            <StackPanel Orientation="Vertical">
-                <Image
+            <ScrollViewer VerticalScrollMode="Enabled">
+                <StackPanel Orientation="Vertical">
+                    <Image
                         Width="100"
                         Height="100"
                         HorizontalAlignment="Left"
                         Source="/Assets/icon.png" />
-                <RichTextBlock>
-                    <Paragraph
+                    <RichTextBlock>
+                        <Paragraph
                             FontSize="25"
                             FontFamily="Thick"
                             Margin="0,10,0,0">
-                        HyPlayer
-                    </Paragraph>
-                    <Paragraph Margin="0,5,0,0">This is an open-source project under GPL-v3 Licence</Paragraph>
-                    <Paragraph Margin="0,5,0,0">
-                        <Hyperlink
+                            HyPlayer
+                        </Paragraph>
+                        <Paragraph Margin="0,5,0,0">This is an open-source project under GPL-v3 Licence</Paragraph>
+                        <Paragraph Margin="0,5,0,0">
+                            <Hyperlink
                                 NavigateUri="https://github.com/HyPlayer/HyPlayer">
-                            Github
-                        </Hyperlink>
-                        |
-                        <Hyperlink
+                                Github
+                            </Hyperlink>
+                            |
+                            <Hyperlink
                                 NavigateUri="https://gitee.com/kengwang/HyPlayer">
-                            Gitee
-                        </Hyperlink>
-                    </Paragraph>
-                    <Paragraph Margin="0,5,0,0">Copyright © HyPlayer Develop Team 2021</Paragraph>
-                    <Paragraph>HyPlayer is licensed under the GNU General Public License v3.0</Paragraph>
-                </RichTextBlock>
-                <TextBlock
+                                Gitee
+                            </Hyperlink>
+                        </Paragraph>
+                        <Paragraph Margin="0,5,0,0">Copyright © HyPlayer Develop Team 2021</Paragraph>
+                        <Paragraph>HyPlayer is licensed under the GNU General Public License v3.0</Paragraph>
+                    </RichTextBlock>
+                    <TextBlock
                         x:Name="VersionCode" />
-                <TextBlock
+                    <TextBlock
                         FontSize="25"
                         Text="开发者"
                         FontFamily="Thick" />
-                <StackPanel
+                    <StackPanel
                         Margin="10,20,0,0"
                         Tapped="UIElement_OnTapped"
                         Orientation="Horizontal">
-                    <PersonPicture
+                        <PersonPicture
                             ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=GibeJPa6pAcRMKgoHC9ibI4w&amp;s=100" />
-                    <StackPanel
+                        <StackPanel
                             Margin="15,0,0,0"
                             Orientation="Vertical">
-                        <TextBlock
+                            <TextBlock
                                 FontSize="18"
                                 FontWeight="Medium">
                                 Kengwang
-                        </TextBlock>
-                        <TextBlock
+                            </TextBlock>
+                            <TextBlock
                                 Foreground="Gray"
                                 FontSize="15"
                                 FontWeight="Medium">
                                 Developer
-                        </TextBlock>
-                        <TextBlock
+                            </TextBlock>
+                            <TextBlock
                                 Foreground="Gray"
                                 FontSize="15"
                                 FontWeight="Light">
                                 Stay Cool~
-                        </TextBlock>
-                        <RichTextBlock>
-                            <Paragraph>
-                                <Hyperlink
+                            </TextBlock>
+                            <RichTextBlock>
+                                <Paragraph>
+                                    <Hyperlink
                                         NavigateUri="https://github.com/kengwang">
-                                    Github
-                                </Hyperlink>
-                                |
-                                <Hyperlink
+                                        Github
+                                    </Hyperlink>
+                                    |
+                                    <Hyperlink
                                         NavigateUri="https://blog.kengwang.co">
-                                    博客
-                                </Hyperlink>
-                                |
-                                <Hyperlink
+                                        博客
+                                    </Hyperlink>
+                                    |
+                                    <Hyperlink
                                         NavigateUri="http://www.coolapk.com/u/1683034">
-                                    酷安@kengwang
-                                </Hyperlink>
-                                |
-                                <Hyperlink
+                                        酷安@kengwang
+                                    </Hyperlink>
+                                    |
+                                    <Hyperlink
                                         NavigateUri="https://afdian.net/@kengwang">
-                                    爱发电打赏
-                                </Hyperlink>
-                            </Paragraph>
-                        </RichTextBlock>
+                                        爱发电打赏
+                                    </Hyperlink>
+                                </Paragraph>
+                            </RichTextBlock>
+                        </StackPanel>
                     </StackPanel>
-                </StackPanel>
-                <StackPanel
+                    <StackPanel
                         Margin="10,20,0,0"
                         Tapped="UIElement_OnTapped"
                         Orientation="Horizontal">
-                    <PersonPicture
+                        <PersonPicture
                             ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=eHh3SVVDUJKHf1I5XD7CPg&amp;s=100" />
-                    <StackPanel
+                        <StackPanel
                             Margin="15,0,0,0"
                             Orientation="Vertical">
-                        <TextBlock
+                            <TextBlock
                                 FontSize="18"
                                 FontWeight="Medium">
                                 aaaaaaccd
-                        </TextBlock>
-                        <TextBlock
+                            </TextBlock>
+                            <TextBlock
                                 Foreground="Gray"
                                 FontSize="15"
                                 FontWeight="Medium">
                                 Design
-                        </TextBlock>
-                        <TextBlock
+                            </TextBlock>
+                            <TextBlock
                                 Foreground="Gray"
                                 FontSize="15"
                                 FontWeight="Light">
                                 HyPlayer Team EasyCraft Team Waifu2X4A
-                        </TextBlock>
-                        <RichTextBlock>
-                            <Paragraph>
-                                <Hyperlink
+                            </TextBlock>
+                            <RichTextBlock>
+                                <Paragraph>
+                                    <Hyperlink
                                         NavigateUri="https://github.com/aaaaaaccd">
-                                    Github
-                                </Hyperlink>
-                                |
-                                <Hyperlink
+                                        Github
+                                    </Hyperlink>
+                                    |
+                                    <Hyperlink
                                         NavigateUri="https://www.coolapk.com/u/2409682">
-                                    酷安@一只老白
-                                </Hyperlink>
-                            </Paragraph>
-                        </RichTextBlock>
+                                        酷安@一只老白
+                                    </Hyperlink>
+                                </Paragraph>
+                            </RichTextBlock>
+                        </StackPanel>
                     </StackPanel>
-                </StackPanel>
-                <StackPanel
+                    <StackPanel
                         Margin="10,20,0,0"
                         Tapped="UIElement_OnTapped"
                         Orientation="Horizontal">
-                    <PersonPicture
+                        <PersonPicture
                             ProfilePicture="https://himg.bdimg.com/sys/portraitn/item/0fd16570303132303134g930801000000" />
-                    <StackPanel
+                        <StackPanel
                             Margin="15,0,0,0"
                             Orientation="Vertical">
-                        <TextBlock
+                            <TextBlock
                                 FontSize="18"
                                 FontWeight="Medium">
                                 EP012014
-                        </TextBlock>
-                        <TextBlock
+                            </TextBlock>
+                            <TextBlock
                                 Foreground="Gray"
                                 FontSize="15"
                                 FontWeight="Medium">
                                 Developer
-                        </TextBlock>
-                        <TextBlock
+                            </TextBlock>
+                            <TextBlock
                                 Foreground="Gray"
                                 FontSize="15"
                                 FontWeight="Light">
                                 跨越，跨越，不择手段地跨越！
-                        </TextBlock>
-                        <RichTextBlock>
-                            <Paragraph>
-                                <Hyperlink
+                            </TextBlock>
+                            <RichTextBlock>
+                                <Paragraph>
+                                    <Hyperlink
                                         NavigateUri="https://github.com/EP012014">
-                                    Github
-                                </Hyperlink>
-                                |
-                            </Paragraph>
-                        </RichTextBlock>
+                                        Github
+                                    </Hyperlink>
+                                    |
+                                </Paragraph>
+                            </RichTextBlock>
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
-            </StackPanel>
+            </ScrollViewer>
         </PivotItem>
     </Pivot>
 </Page>
