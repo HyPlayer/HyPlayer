@@ -35,8 +35,14 @@ namespace HyPlayer.Pages
 
         public void LoadSongListDetail()
         {
-            ImageRect.ImageSource =
+            if (playList.cover.StartsWith("http"))
+                ImageRect.ImageSource =
                 new BitmapImage(new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
+            else
+                ImageRect.ImageSource =
+                new BitmapImage(new Uri(playList.cover));
+
+
             TextBoxPLName.Text = playList.name;
             TextBlockDesc.Text = playList.desc;
             TextBoxAuthor.Text = playList.creater.name;
@@ -50,10 +56,10 @@ namespace HyPlayer.Pages
             if (playList.plid != "-666")
             {
                 var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
-                    new Dictionary<string, object> {{"id", playList.plid}});
+                    new Dictionary<string, object> { { "id", playList.plid } });
                 if (isOk)
                 {
-                    var trackIds = json["playlist"]["trackIds"].Select(t => (int) t["id"]).Skip(page * 500).Take(500)
+                    var trackIds = json["playlist"]["trackIds"].Select(t => (int)t["id"]).Skip(page * 500).Take(500)
                         .ToArray();
                     if (trackIds.Length >= 500)
                         NextPage.Visibility = Visibility.Visible;
@@ -63,7 +69,7 @@ namespace HyPlayer.Pages
                     if (json["playlist"]["specialType"].ToString() == "5") ButtonIntel.Visibility = Visibility.Visible;
 
                     (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
-                        new Dictionary<string, object> {["ids"] = string.Join(",", trackIds)});
+                        new Dictionary<string, object> { ["ids"] = string.Join(",", trackIds) });
                     if (isOk)
                     {
                         Common.ListedSongs = new List<NCSong>();
@@ -71,7 +77,7 @@ namespace HyPlayer.Pages
                         var i = 0;
                         foreach (var jToken in json["songs"])
                         {
-                            var song = (JObject) jToken;
+                            var song = (JObject)jToken;
                             if (string.IsNullOrEmpty(intelsong)) intelsong = song["id"].ToString();
 
                             var ncSong = NCSong.CreateFromJson(song);
@@ -98,7 +104,7 @@ namespace HyPlayer.Pages
                         var canplay = true;
                         if (canplay) Common.ListedSongs.Add(ncSong);
 
-                        SongContainer.Children.Add(new SingleNCSong(ncSong, idx++, canplay));
+                        SongContainer.Children.Add(new SingleNCSong(ncSong, idx++, canplay, true));
                     }
                 }
             }
@@ -139,7 +145,7 @@ namespace HyPlayer.Pages
                     {
                         if (e.Parameter is NCPlayList)
                         {
-                            playList = (NCPlayList) e.Parameter;
+                            playList = (NCPlayList)e.Parameter;
                         }
                         else
                         {
@@ -147,7 +153,7 @@ namespace HyPlayer.Pages
 
                             var (isok, json) = await Common.ncapi.RequestAsync(
                                 CloudMusicApiProviders.PlaylistDetail,
-                                new Dictionary<string, object> {{"id", pid}});
+                                new Dictionary<string, object> { { "id", pid } });
                             if (isok) playList = NCPlayList.CreateFromJson(json["playlist"]);
                         }
                     }
@@ -230,7 +236,7 @@ namespace HyPlayer.Pages
                     HyPlayList.RemoveAllSong();
                     var (isOk, jsona) = await Common.ncapi.RequestAsync(
                         CloudMusicApiProviders.PlaymodeIntelligenceList,
-                        new Dictionary<string, object> {{"pid", playList.plid}, {"id", intelsong}});
+                        new Dictionary<string, object> { { "pid", playList.plid }, { "id", intelsong } });
                     if (isOk)
                     {
                         var Songs = new List<NCSong>();
@@ -294,7 +300,7 @@ namespace HyPlayer.Pages
         private void LikeBtnClick(object sender, RoutedEventArgs e)
         {
             _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistSubscribe,
-                new Dictionary<string, object> {{"id", playList.plid}, {"t", playList.subscribed ? "0" : "1"}});
+                new Dictionary<string, object> { { "id", playList.plid }, { "t", playList.subscribed ? "0" : "1" } });
             playList.subscribed = !playList.subscribed;
         }
 
@@ -311,7 +317,7 @@ namespace HyPlayer.Pages
         private async void Confirm_Click(object sender, RoutedEventArgs e)
         {
             await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDescUpdate,
-                new Dictionary<string, object> {{"id", playList.plid}, {"desc", NewDesc.Text}});
+                new Dictionary<string, object> { { "id", playList.plid }, { "desc", NewDesc.Text } });
             playList.desc = NewDesc.Text;
             LoadSongListDetail();
         }

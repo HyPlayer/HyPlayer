@@ -433,6 +433,8 @@ namespace HyPlayer.HyPlayControl
         private static async void Player_SourceChanged(MediaPlayer sender, object args)
         {
             if (List.Count <= NowPlaying) return;
+            //我们先把进度给放到最开始,免得炸
+            Player.PlaybackSession.Position = TimeSpan.Zero;
             //当加载一个新的播放文件时,此时你应当加载歌词和SMTC
             //加载SMTC
             ControlsDisplayUpdater.Type = MediaPlaybackType.Music;

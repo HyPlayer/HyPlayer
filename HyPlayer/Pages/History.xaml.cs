@@ -2,6 +2,8 @@
 using Windows.UI.Xaml.Controls;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
+using NeteaseCloudMusicApi;
+using System.Linq;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -52,6 +54,25 @@ namespace HyPlayer.Pages
                         }
 
                     break;
+                case 2:
+                    //听歌排行加载部分 - 优先级靠下
+                    MySongHis.Children.Clear();
+                    var (ok2, ret2) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserRecord,
+                        new Dictionary<string, object> { { "uid", Common.LoginedUser.id }, { "type", "1" } });
+                    if (ok2)
+                    {
+                        var weekData = ret2["weekData"].ToArray();
+                        MySongHis.Children.Clear();
+                        Common.ListedSongs.Clear();
+                        for (var i = 0; i < weekData.Length; i++) { 
+                            var song = NCSong.CreateFromJson(weekData[i]["song"]);
+                            Common.ListedSongs.Add(song);
+                            MySongHis.Children.Add(new SingleNCSong(song, i, true,
+                                true, "最近一周播放 " + weekData[i]["playCount"] + " 次"));
+                        }
+                    }
+                    break;
+
             }
         }
     }

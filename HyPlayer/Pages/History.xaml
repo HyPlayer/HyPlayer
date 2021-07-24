@@ -34,7 +34,10 @@
                         Orientation="Vertical"
                         x:Name="SongHistory" />
                 </PivotItem>
-
+                <PivotItem
+                    Header="听歌排行">
+                    <StackPanel x:Name="MySongHis" Orientation="Vertical" />
+                </PivotItem>
             </Pivot>
             <Grid
                 Height="150" />
