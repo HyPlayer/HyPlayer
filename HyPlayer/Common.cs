@@ -314,6 +314,12 @@ namespace HyPlayer
             ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
         }
 
+        public static void AddcurPlayingListHistory(List<string> songids)
+        {
+            if (songids.Count >= 100)
+                songids.RemoveRange(100, songids.Count - 100);
+            ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = JsonConvert.SerializeObject(songids);
+        }
         public static void ClearHistory()
         {
             var list = new List<string>();
@@ -361,6 +367,19 @@ namespace HyPlayer
         {
             return JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
                 .Values["searchHistory"].ToString());
+        }
+        public static async Task<List<NCSong>> GetcurPlayingListHistory()
+        {
+            var retsongs = new List<NCSong>();
+            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
+                new Dictionary<string, object>
+                {
+                    ["ids"] = string.Join(",",
+                        JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
+                            .Values["curPlayingListHistory"].ToString()))
+                });
+            if (isOk) return json["songs"].ToArray().Select(t => NCSong.CreateFromJson(t)).ToList();
+            return new List<NCSong>();
         }
     }
 

@@ -7,6 +7,7 @@ using Windows.UI.Xaml.Navigation;
 using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
 using Kawazu;
+using HyPlayer.Controls;
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
 
@@ -31,6 +32,7 @@ namespace HyPlayer
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
+            (GridPlayBar.Children[0] as PlayBar).RefreshSongList();
             switch (e.Parameter)
             {
                 case "search":
