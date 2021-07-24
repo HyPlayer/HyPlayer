@@ -31,7 +31,6 @@ namespace HyPlayer.Controls
         private bool canslide;
 
         public PlayMode NowPlayType = PlayMode.DefaultRoll;
-        private double playPosValue;
 
         public PlayBar()
         {
@@ -47,13 +46,6 @@ namespace HyPlayer.Controls
             if (Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
                 ButtonDesktopLyrics.Visibility = Visibility.Collapsed;
             InitializeDesktopLyric();
-            if (HyPlayList.isPlaying)
-            {
-                var tai = HyPlayList.NowPlayingItem.AudioInfo;
-                playPosValue = HyPlayList.Player.PlaybackSession.Position /
-                                               TimeSpan.FromMilliseconds(tai.LengthInMilliseconds);
-                SliderProgress.Value = playPosValue;
-            }
         }
 
         public TimeSpan nowtime => HyPlayList.Player.PlaybackSession.Position;
@@ -205,8 +197,6 @@ namespace HyPlayer.Controls
                         HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
                             ? "\uEDB4"
                             : "\uEDB5";
-                    playPosValue = HyPlayList.Player.PlaybackSession.Position /
-                                           TimeSpan.FromMilliseconds(tai.LengthInMilliseconds);
                     //SliderAudioRate.Value = mp.Volume;
                 }
                 catch
@@ -266,7 +256,7 @@ namespace HyPlayer.Controls
                                                 StaticSource.PICSIZE_PLAYBAR_ALBUMCOVER));
                 }
 
-                SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
+                //SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
                 SliderProgress.Minimum = 0;
                 SliderProgress.Maximum = ai.LengthInMilliseconds;
                 if (mpi.ItemType == HyPlayItemType.Netease)
@@ -561,7 +551,7 @@ namespace HyPlayer.Controls
                 Common.NavigatePage(typeof(Comments), "sg" + HyPlayList.NowPlayingItem.NcPlayItem.id);
             else
                 Common.NavigatePage(typeof(Comments), "fm" + HyPlayList.NowPlayingItem.NcPlayItem.Album.alias);
-
+            Common.NavigatePage(typeof(BlankPage));
             ButtonCollapse_OnClick(this, e);
         }
 
