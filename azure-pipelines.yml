@@ -62,24 +62,21 @@ steps:
     rootFolderOrFile: '$(build.artifactstagingdirectory)/AppxPackages'
     includeRootFolder: true
     archiveType: 'zip'
-    archiveFile: '$(Build.ArtifactStagingDirectory)/drop.zip'
+    archiveFile: '$(build.artifactstagingdirectory)/drop.zip'
     replaceExistingArchive: true
     verbose: true
 
-
-- task: FtpUpload@2
+- task: GitHubRelease@1
   inputs:
-    credentialsOption: 'inputs'
-    serverUrl: 'ftp://124.156.147.133:21'
-    username: 'hyplayer_kengwang_co'
-    password: 'KLhkEDyaae7KdMiF'
-    rootDirectory: '$(Build.ArtifactStagingDirectory)'
-    filePatterns: 'drop.zip'
-    remoteDirectory: '/release/'
-    enableUtf8: true
-    clean: false
-    cleanContents: false
-    preservePaths: false
-    trustSSL: false
-
-
+    gitHubConnection: 'github connection 1'
+    repositoryName: 'HyPlayer/HyPlayer'
+    action: 'edit'
+    target: '$(Build.SourceVersion)'
+    tag: 'azure-build'
+    title: 'Azure Build on$( Build.BuildNumber)'
+    releaseNotesSource: 'inline'
+    releaseNotesInline: '> 这是 Azure DevOps 的自动编译,将会在每次Commit之后进行编译. 内容可能稳定,如非特别需要,请使用商店版. 使用此版本出现的问题概不负责'
+    assets: '$(Build.ArtifactStagingDirectory)/drop.zip'
+    isPreRelease: true
+    changeLogCompareToRelease: 'lastFullRelease'
+    changeLogType: 'commitBased'
