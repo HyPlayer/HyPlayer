@@ -181,7 +181,7 @@ namespace HyPlayer.Pages
                 }
                 else
                 {
-                    LoginDone();
+                    await LoginDone();
                     Common.NavigatePage(typeof(Home));
                 }
             }
@@ -505,7 +505,7 @@ namespace HyPlayer.Pages
                     InfoBarLoginHint.IsOpen = true;
                     InfoBarLoginHint.Title = "登录成功";
                     ButtonLogin.Content = "登录成功";
-                    LoginDone();
+                    await LoginDone();
                     break;
                 }
                 else if (res["code"].ToString() == "802")

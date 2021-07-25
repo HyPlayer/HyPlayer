@@ -52,7 +52,7 @@ namespace HyPlayer.Pages
         }
 
 
-        private void ThirdPartyLoginWebview_NavigationCompleted(WebView sender,
+        private async void ThirdPartyLoginWebview_NavigationCompleted(WebView sender,
             WebViewNavigationCompletedEventArgs args)
         {
             if (sender.Source.ToString().StartsWith("https://music.163.com/back/sns"))
@@ -76,7 +76,7 @@ namespace HyPlayer.Pages
                     Common.ncapi.Cookies.Add(rescookie);
                 }
 
-                Common.PageBase.LoginDone();
+                await Common.PageBase.LoginDone();
             }
         }
 

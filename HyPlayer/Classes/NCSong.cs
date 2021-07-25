@@ -75,7 +75,7 @@ namespace HyPlayer.Classes
         public string RadioId;
         public string RadioName;
 
-        public static NCFmItem CreateFromJson(JToken song)
+        public static new NCFmItem CreateFromJson(JToken song)
         {
             return new NCFmItem
             {

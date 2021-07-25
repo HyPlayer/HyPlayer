@@ -334,6 +334,10 @@ namespace HyPlayer.HyPlayControl
 
         private static async void LoadPlayerSong()
         {
+            if (NowPlayingItem == null)
+            {
+                MoveSongPointer();
+            }
             Player_SourceChanged(null, null);
             MediaSource ms;
             switch (NowPlayingItem.ItemType)
@@ -399,7 +403,7 @@ namespace HyPlayer.HyPlayControl
                                         {"id", NowPlayingItem.NcPlayItem.id},
                                         {"br", Common.Setting.audioRate}
                                     });
-                                if (isok)
+                                if (isok && json["data"][0]["code"].ToString() == "200")
                                 {
                                     ms = MediaSource.CreateFromUri(new Uri(json["data"][0]["url"].ToString()));
                                 }

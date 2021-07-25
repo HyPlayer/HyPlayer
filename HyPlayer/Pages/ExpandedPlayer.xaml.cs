@@ -34,6 +34,7 @@ namespace HyPlayer.Pages
         private readonly bool loaded;
         private bool iscompact;
         public double lastChangedLyricWidth;
+        private ExpandedWindowMode WindowMode;
 
         private LyricItem lastitem;
         private int lastlrcid;
@@ -42,7 +43,7 @@ namespace HyPlayer.Pages
         private int sclock;
         private int nowwidth;
         private int nowheight;
-        private bool needRedesign = false;
+        private int needRedesign = 1;
         private int lastheight;
 
         public ExpandedPlayer()
@@ -68,9 +69,9 @@ namespace HyPlayer.Pages
             {
                 sclock--;
             }
-            if (needRedesign)
+            if (needRedesign > 0)
             {
-                needRedesign = false;
+                needRedesign--;
                 Redesign();
             }
         }
@@ -110,21 +111,12 @@ namespace HyPlayer.Pages
             PlayStateIcon.Glyph = HyPlayList.isPlaying ? "\uEDB4" : "\uEDB5";
             //播放进度
             ProgressBarPlayProg.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
-            //歌词大小变更
-            if (Math.Abs(lastChangedLyricWidth - LyricWidth) > 1)
-            {
-                lastChangedLyricWidth = LyricWidth;
-                LyricList.ForEach(t =>
-                {
-                    t.RefreshFontSize();
-                    t.Width = LyricWidth;
-                });
-            }
         }
 
         private void HyPlayList_OnLyricLoaded()
         {
             LoadLyricsBox();
+            needRedesign++;
         }
 
         private void Current_SizeChanged(object sender, WindowSizeChangedEventArgs e)
@@ -133,24 +125,83 @@ namespace HyPlayer.Pages
             nowheight = e is null ? (int)Window.Current.Bounds.Height : (int)e.Size.Height;
             if (lastwidth != nowwidth)
             {
-                lastwidth = nowwidth;
+                //这段不要放出去了
                 if (nowwidth > 800)
                     LyricWidth = nowwidth * 0.4;
                 else
                     LyricWidth = nowwidth;
 
-                LyricBox.Margin = nowwidth >= 800 ? new Thickness(0) : new Thickness(15);
                 showsize = Common.Setting.lyricSize <= 0 ? Math.Max(nowwidth / 66, 16) : Common.Setting.lyricSize;
-                needRedesign = true;
-            }else if (lastheight != nowheight){
+
+                lastwidth = nowwidth;
+                needRedesign += 2;
+            }
+            else if (lastheight != nowheight)
+            {
                 lastheight = nowheight;
-                needRedesign = true;
+                needRedesign += 2;
+            }
+        }
+
+        private void ChangeWindowMode()
+        {
+            switch (WindowMode)
+            {
+                case ExpandedWindowMode.Full:
+                    RightPanel.Visibility = Visibility.Visible;
+                    LeftPanel.Visibility = Visibility.Visible;
+                    LyricBox.Margin = new Thickness(0);
+                    LeftPanel.SetValue(Grid.ColumnProperty, 0);
+                    LeftPanel.SetValue(Grid.ColumnSpanProperty, 1);
+                    RightPanel.SetValue(Grid.ColumnProperty, 1);
+                    RightPanel.SetValue(Grid.ColumnSpanProperty, 1);
+                    break;
+                case ExpandedWindowMode.CoverOnly:
+                    LeftPanel.Visibility = Visibility.Visible;
+                    RightPanel.Visibility = Visibility.Collapsed;
+                    LeftPanel.SetValue(Grid.ColumnProperty, 0);
+                    LeftPanel.SetValue(Grid.ColumnSpanProperty, 2);
+                    break;
+                case ExpandedWindowMode.LyricOnly:
+                    RightPanel.Visibility = Visibility.Visible;
+                    LeftPanel.Visibility = Visibility.Collapsed;
+                    RightPanel.SetValue(Grid.ColumnProperty, 0);
+                    RightPanel.SetValue(Grid.ColumnSpanProperty, 2);
+                    LyricBox.Margin = new Thickness(15);
+                    break;
+                case ExpandedWindowMode.Tiny:
+                    break;
+                default:
+                    break;
             }
         }
 
         private void Redesign()
         {
+            // 这个函数里面放无法用XAML实现的页面布局方式
+            var lyricMargin = LyricBoxContainer.Margin;
+            lyricMargin.Top = AlbumDropShadow.ActualOffset.Y;
+            LyricBoxContainer.Margin = lyricMargin;
+            LyricBoxContainer.Height = AlbumDropShadow.ActualHeight + 170;
+            lastChangedLyricWidth = LyricWidth;
 
+            //歌词宽度
+            if (nowwidth <= 800 && WindowMode == ExpandedWindowMode.Full)
+            {
+                WindowMode = ExpandedWindowMode.CoverOnly;
+                ChangeWindowMode();
+            }
+            else if (nowwidth > 800 && WindowMode != ExpandedWindowMode.Full)
+            {
+                WindowMode = ExpandedWindowMode.Full;
+                ChangeWindowMode();
+            }
+
+            LyricList.ForEach(t =>
+            {
+                t.RefreshFontSize();
+                t.Width = LyricWidth;
+            });
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -168,6 +219,7 @@ namespace HyPlayer.Pages
             {
                 OnSongChange(HyPlayList.List[HyPlayList.NowPlaying]);
                 LoadLyricsBox();
+                needRedesign++;
             }
             catch
             {
@@ -282,12 +334,12 @@ namespace HyPlayer.Pages
                             LyricBox.Children.Add(lrcitem);
                             LyricBox.Children.Add(new Grid { Height = blanksize });
                         }
+
+                        needRedesign++;
                     }
                     catch (Exception)
                     {
                     }
-
-                    ;
                 });
         }
 
@@ -343,7 +395,7 @@ namespace HyPlayer.Pages
 
         private void LyricBoxContainer_OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
         {
-            sclock = 10;
+            sclock = 5;
         }
 
         private void ToggleWindowShowMode(object sender, DoubleTappedRoutedEventArgs e)
@@ -441,6 +493,7 @@ namespace HyPlayer.Pages
                     }
                     else
                     {
+                        if (HyPlayList.NowPlayingItem.NcPlayItem.Album.id != "0")
                             Common.NavigatePage(typeof(AlbumPage),
                                 HyPlayList.NowPlayingItem.NcPlayItem.Album.id);
                     }
@@ -481,9 +534,6 @@ namespace HyPlayer.Pages
             }
         }
 
-        private void ShowContent_Click()
-        {
-        }
 
         private void ImageAlbum_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
@@ -507,5 +557,13 @@ namespace HyPlayer.Pages
             await stream.ReadAsync(buffer, (uint)stream.Size, InputStreamOptions.None);
             await FileIO.WriteBufferAsync(file, buffer);
         }
+    }
+
+    enum ExpandedWindowMode
+    {
+        Full,
+        CoverOnly,
+        LyricOnly,
+        Tiny
     }
 }

@@ -42,7 +42,7 @@ namespace HyPlayer
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             AppCenter.Start("8e88eab0-1627-4ff9-9ee7-7fd46d0629cf",
                 typeof(Analytics), typeof(Crashes));
-            InitializeThings();
+            Common.Invoke(async () => await InitializeThings());
         }
 
 

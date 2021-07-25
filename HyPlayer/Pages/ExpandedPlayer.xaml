@@ -113,6 +113,7 @@
                     <RowDefinition Height="4*" />
                 </Grid.RowDefinitions>
                 <controls:DropShadowPanel
+                    x:Name="AlbumDropShadow"
                     Grid.Row="1"
                     MaxWidth="600"
                     MaxHeight="600"
@@ -206,6 +207,7 @@
                 <ScrollViewer
                     x:Name="LyricBoxContainer"
                     HorizontalAlignment="Stretch"
+                    VerticalAlignment="Top"
                     x:FieldModifier="public"
                     HorizontalScrollBarVisibility="Hidden"
                     VerticalScrollBarVisibility="Hidden">
