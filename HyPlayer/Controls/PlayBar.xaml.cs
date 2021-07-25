@@ -484,18 +484,7 @@ namespace HyPlayer.Controls
             }
         }
 
-        private void ImageContainer_OnPointerEntered(object sender, PointerRoutedEventArgs e)
-        {
-            ImageContainer.BorderBrush =
-                Application.Current.Resources["SystemControlBackgroundListMediumRevealBorderBrush"] as Brush;
-        }
-
-        private void ImageContainer_OnPointerExited(object sender, PointerRoutedEventArgs e)
-        {
-            ImageContainer.BorderBrush = null;
-        }
-
-        private void ImageContainer_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
+        private void ImageContainer_OnTapped(object sender, RoutedEventArgs tappedRoutedEventArgs)
         {
             ButtonExpand_OnClick(sender, null);
         }
