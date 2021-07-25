@@ -40,6 +40,10 @@ namespace HyPlayer.Pages
         private int lastwidth;
         private List<LyricItem> LyricList = new List<LyricItem>();
         private int sclock;
+        private int nowwidth;
+        private int nowheight;
+        private bool needRedesign = false;
+        private int lastheight;
 
         public ExpandedPlayer()
         {
@@ -63,6 +67,11 @@ namespace HyPlayer.Pages
             if (sclock > 0)
             {
                 sclock--;
+            }
+            if (needRedesign)
+            {
+                needRedesign = false;
+                Redesign();
             }
         }
 
@@ -120,26 +129,33 @@ namespace HyPlayer.Pages
 
         private void Current_SizeChanged(object sender, WindowSizeChangedEventArgs e)
         {
-            var nowwidth = e is null ? (int)Window.Current.Bounds.Width : (int)e.Size.Width;
-            var nowheight = e is null ? (int)Window.Current.Bounds.Height : (int)e.Size.Height;
-            if (lastwidth == nowwidth) return; //有些时候会莫名其妙不更改大小的情况引发这个
-            lastwidth = nowwidth;
-            if (nowwidth > 800)
-                LyricWidth = nowwidth * 0.4;
-            else
-                LyricWidth = nowwidth;
+            nowwidth = e is null ? (int)Window.Current.Bounds.Width : (int)e.Size.Width;
+            nowheight = e is null ? (int)Window.Current.Bounds.Height : (int)e.Size.Height;
+            if (lastwidth != nowwidth)
+            {
+                lastwidth = nowwidth;
+                if (nowwidth > 800)
+                    LyricWidth = nowwidth * 0.4;
+                else
+                    LyricWidth = nowwidth;
 
-            ImageAlbumContainer.Visibility =
-                nowwidth >= 800 || nowheight <= 300 ? Visibility.Visible : Visibility.Collapsed;
-            LyricBox.Margin = nowwidth >= 800 ? new Thickness(0) : new Thickness(15);
-            showsize = Common.Setting.lyricSize <= 0 ? Math.Max(nowwidth / 66, 16) : Common.Setting.lyricSize;
+                LyricBox.Margin = nowwidth >= 800 ? new Thickness(0) : new Thickness(15);
+                showsize = Common.Setting.lyricSize <= 0 ? Math.Max(nowwidth / 66, 16) : Common.Setting.lyricSize;
+                needRedesign = true;
+            }else if (lastheight != nowheight){
+                lastheight = nowheight;
+                needRedesign = true;
+            }
+        }
+
+        private void Redesign()
+        {
 
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
-            ImageAlbumContainer.Visibility = Visibility.Collapsed;
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -147,7 +163,7 @@ namespace HyPlayer.Pages
             base.OnNavigatedTo(e);
             Common.PageExpandedPlayer = this;
             Window.Current.SetTitleBar(AppTitleBar);
-            //ImageAlbumContainer.Visibility = Visibility.Collapsed;
+            //LeftPanel.Visibility = Visibility.Collapsed;
             try
             {
                 OnSongChange(HyPlayList.List[HyPlayList.NowPlaying]);
@@ -242,8 +258,9 @@ namespace HyPlayer.Pages
                             ImageAlbum.Source = new BitmapImage(new Uri(mpi.AudioInfo.Picture));
                         }
 
-                        TextBlockSinger.Text = mpi.AudioInfo.Artist;
+                        TextBlockSinger.Content = mpi.AudioInfo.Artist;
                         TextBlockSongTitle.Text = mpi.AudioInfo.SongName;
+                        TextBlockAlbum.Content = mpi.AudioInfo.Album;
                         Background = new ImageBrush
                         { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                         ProgressBarPlayProg.Maximum = mpi.AudioInfo.LengthInMilliseconds;
@@ -280,7 +297,7 @@ namespace HyPlayer.Pages
             {
                 Common.Invoke(() =>
                 {
-                    ImageAlbumContainer.Visibility = Visibility.Visible;
+                    ImageAlbum.Visibility = Visibility.Visible;
                     TextBlockSinger.Visibility = Visibility.Visible;
                     TextBlockSongTitle.Visibility = Visibility.Visible;
                     var anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
@@ -294,7 +311,7 @@ namespace HyPlayer.Pages
                     {
                         anim3?.TryStart(TextBlockSinger);
                         anim1?.TryStart(TextBlockSongTitle);
-                        anim2?.TryStart(ImageAlbumContainer);
+                        anim2?.TryStart(ImageAlbum);
                     }
                     catch
                     {
@@ -312,8 +329,8 @@ namespace HyPlayer.Pages
                     Common.BarPlayBar.GridSongInfoContainer.Visibility == Visibility.Visible)
                 {
                     ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TextBlockSongTitle);
-                    if (ImageAlbumContainer.Visibility == Visibility.Visible)
-                        ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", ImageAlbumContainer);
+                    if (ImageAlbum.Visibility == Visibility.Visible)
+                        ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", ImageAlbum);
 
                     ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TextBlockSinger);
                 }
@@ -343,7 +360,7 @@ namespace HyPlayer.Pages
             {
                 Task.Run(() => { Common.Invoke(() => { Current_SizeChanged(null, null); }); });
                 _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
-                ImageAlbumContainer.Visibility =
+                ImageAlbum.Visibility =
                     Window.Current.Bounds.Width >= 800 ? Visibility.Visible : Visibility.Collapsed;
                 ToggleButtonTranslation.Visibility = Visibility.Visible;
                 ToggleButtonSound.Visibility = Visibility.Visible;
@@ -385,7 +402,7 @@ namespace HyPlayer.Pages
             if (Window.Current.Bounds.Height <= 300)
             {
                 //小窗模式
-                ImageAlbumContainer.Visibility = Visibility.Collapsed;
+                ImageAlbum.Visibility = Visibility.Collapsed;
                 StackPanelTiny.Visibility = Visibility.Visible;
             }
         }
@@ -395,7 +412,7 @@ namespace HyPlayer.Pages
             if (Window.Current.Bounds.Height <= 300)
             {
                 //小窗模式
-                ImageAlbumContainer.Visibility = Visibility.Visible;
+                ImageAlbum.Visibility = Visibility.Visible;
                 StackPanelTiny.Visibility = Visibility.Collapsed;
             }
         }
@@ -412,7 +429,31 @@ namespace HyPlayer.Pages
             LoadLyricsBox();
         }
 
-        private async void TextBlockSinger_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
+        private void TextBlockAlbum_OnTapped(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
+                {
+                    if (HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].Type == HyPlayItemType.Radio)
+                    {
+                        Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
+                    }
+                    else
+                    {
+                            Common.NavigatePage(typeof(AlbumPage),
+                                HyPlayList.NowPlayingItem.NcPlayItem.Album.id);
+                    }
+                    Common.NavigatePage(typeof(BlankPage));
+                    Common.BarPlayBar.ButtonCollapse_OnClick(this, null);
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        private async void TextBlockSinger_OnTapped(object sender, RoutedEventArgs tappedRoutedEventArgs)
         {
             try
             {
@@ -431,7 +472,7 @@ namespace HyPlayer.Pages
                                 HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
                     }
 
-
+                    Common.NavigatePage(typeof(BlankPage));
                     Common.BarPlayBar.ButtonCollapse_OnClick(this, null);
                 }
             }

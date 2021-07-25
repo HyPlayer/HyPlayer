@@ -12,6 +12,7 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using NeteaseCloudMusicApi;
+using Newtonsoft.Json.Linq;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -39,48 +40,59 @@ namespace HyPlayer.Pages
             {
                 Common.Invoke(async () =>
                 {
-                    if (e.Parameter != null)
+                    bool isok;
+                    JObject json;
+                    string albumid = "";
+                    if (e.Parameter is NCAlbum)
                     {
-                        if (e.Parameter is NCAlbum)
-                            Album = (NCAlbum) e.Parameter;
-                        ImageRect.ImageSource =
-                            new BitmapImage(
-                                new Uri(Album.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
-                        TextBoxAlbumName.Text = Album.name;
-                        var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Album,
-                            new Dictionary<string, object> {{"id", Album.id}});
-                        if (isok)
+                        Album = (NCAlbum)e.Parameter;
+                        albumid = Album.id;
+                    }
+                    else if (e.Parameter is string)
+                    {
+                        albumid = e.Parameter.ToString();
+                    }
+
+                    (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Album,
+    new Dictionary<string, object> { { "id", albumid } });
+                    Album = NCAlbum.CreateFromJson(json["album"]);
+                    ImageRect.ImageSource =
+                        new BitmapImage(
+                            new Uri(Album.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
+                    TextBoxAlbumName.Text = Album.name;
+
+                    if (isok)
+                    {
+                        TextBoxAlbumName.Text = json["album"]["name"].ToString();
+                        artists = json["album"]["artists"].ToArray().Select(t => new NCArtist
                         {
-                            TextBoxAlbumName.Text = json["album"]["name"].ToString();
-                            artists = json["album"]["artists"].ToArray().Select(t => new NCArtist
+                            avatar = t["picUrl"].ToString(),
+                            id = t["id"].ToString(),
+                            name = t["name"].ToString()
+                        }).ToList();
+                        TextBoxAuthor.Text = string.Join(" / ", artists.Select(t => t.name));
+                        TextBlockDesc.Text = (json["album"]["alias"].HasValues
+                                                 ? string.Join(" / ",
+                                                       json["album"]["alias"].ToArray().Select(t => t.ToString())) +
+                                                   "\r\n"
+                                                 : "")
+                                             + json["album"]["description"];
+                        var cdname = "";
+                        StackPanel stp = null;
+                        var idx = 0;
+                        foreach (var song in json["songs"].ToArray())
+                        {
+                            var ncSong = NCSong.CreateFromJson(song);
+                            songs.Add(ncSong);
+                            if (song["cd"].ToString() != cdname)
                             {
-                                avatar = t["picUrl"].ToString(),
-                                id = t["id"].ToString(),
-                                name = t["name"].ToString()
-                            }).ToList();
-                            TextBoxAuthor.Text = string.Join(" / ", artists.Select(t => t.name));
-                            TextBlockDesc.Text = (json["album"]["alias"].HasValues
-                                                     ? string.Join(" / ",
-                                                           json["album"]["alias"].ToArray().Select(t => t.ToString())) +
-                                                       "\r\n"
-                                                     : "")
-                                                 + json["album"]["description"];
-                            var cdname = "";
-                            StackPanel stp = null;
-                            var idx = 0;
-                            foreach (var song in json["songs"].ToArray())
-                            {
-                                var ncSong = NCSong.CreateFromJson(song);
-                                songs.Add(ncSong);
-                                if (song["cd"].ToString() != cdname)
+                                idx = 0;
+                                cdname = song["cd"].ToString();
+                                stp = new StackPanel();
+                                SongContainer.Children.Add(new StackPanel
                                 {
-                                    idx = 0;
-                                    cdname = song["cd"].ToString();
-                                    stp = new StackPanel();
-                                    SongContainer.Children.Add(new StackPanel
-                                    {
-                                        Orientation = Orientation.Vertical,
-                                        Children =
+                                    Orientation = Orientation.Vertical,
+                                    Children =
                                         {
                                             new TextBlock
                                             {
@@ -89,12 +101,11 @@ namespace HyPlayer.Pages
                                             },
                                             stp
                                         }
-                                    });
-                                }
-
-                                stp.Children.Add(new SingleNCSong(ncSong, idx++,
-                                    song["privilege"]["st"].ToString() == "0"));
+                                });
                             }
+
+                            stp.Children.Add(new SingleNCSong(ncSong, idx++,
+                                song["privilege"]["st"].ToString() == "0"));
                         }
                     }
                 });

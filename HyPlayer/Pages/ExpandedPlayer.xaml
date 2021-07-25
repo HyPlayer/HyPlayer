@@ -2,322 +2,227 @@
     x:Class="HyPlayer.Pages.ExpandedPlayer"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
-    mc:Ignorable="d"
     NavigationCacheMode="Disabled"
     PointerEntered="ExpandedPlayer_OnPointerEntered"
-    PointerExited="ExpandedPlayer_OnPointerExited">
-
-    <Grid
-        Background="{ThemeResource SystemControlAcrylicElementBrush}">
-        <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup>
-                <VisualState>
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger
-                            MinWindowHeight="0">
-                            <!--小窗模式 -->
-                        </AdaptiveTrigger>
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter
-                            Target="ImageAlbumContainer.(Grid.Column)"
-                            Value="0" />
-                        <Setter
-                            Target="ImageAlbumContainer.(Grid.ColumnSpan)"
-                            Value="12" />
-                        <Setter
-                            Target="ImageAlbumContainer.(Grid.Row)"
-                            Value="0" />
-                        <Setter
-                            Target="ImageAlbumContainer.(Grid.RowSpan)"
-                            Value="13" />
-                        <Setter
-                            Target="DockPanelRight.Visibility"
-                            Value="Collapsed" />
-                        <Setter
-                            Target="ProgressBarPlayProg.Visibility"
-                            Value="Visible" />
-                    </VisualState.Setters>
-                </VisualState>
-                <VisualState>
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger
-                            MinWindowWidth="800">
-                            <!--宽屏模式 -->
-                        </AdaptiveTrigger>
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter
-                            Target="ImageAlbumContainer.(Grid.Column)"
-                            Value="1" />
-                        <Setter
-                            Target="ImageAlbumContainer.(Grid.ColumnSpan)"
-                            Value="4" />
-                        <Setter
-                            Target="ImageAlbumContainer.(Grid.Row)"
-                            Value="2" />
-                        <Setter
-                            Target="ImageAlbumContainer.(Grid.RowSpan)"
-                            Value="8" />
-
-                        <Setter
-                            Target="DockPanelRight.Visibility"
-                            Value="Visible" />
-                        <Setter
-                            Target="StackPanelTiny.Visibility"
-                            Value="Collapsed" />
-                        <Setter
-                            Target="ProgressBarPlayProg.Visibility"
-                            Value="Collapsed" />
-                    </VisualState.Setters>
-                </VisualState>
-                <VisualState>
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger
-                            MinWindowHeight="300">
-                            <!--正常模式 -->
-                        </AdaptiveTrigger>
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter
-                            Target="ImageAlbumContainer.Visibility"
-                            Value="Collapsed" />
-                        <Setter
-                            Target="DockPanelRight.(Grid.Column)"
-                            Value="0" />
-                        <Setter
-                            Target="DockPanelRight.(Grid.ColumnSpan)"
-                            Value="12" />
-                        <Setter
-                            Target="DockPanelRight.Visibility"
-                            Value="Visible" />
-                        <Setter
-                            Target="StackPanelTiny.Visibility"
-                            Value="Collapsed" />
-                        <Setter
-                            Target="ProgressBarPlayProg.Visibility"
-                            Value="Collapsed" />
-                    </VisualState.Setters>
-                </VisualState>
-            </VisualStateGroup>
-        </VisualStateManager.VisualStateGroups>
+    PointerExited="ExpandedPlayer_OnPointerExited"
+    mc:Ignorable="d">
+    <Grid Background="{ThemeResource ExpandedPlayerMask}">
         <Grid.RowDefinitions>
             <RowDefinition Height="30" />
+            <!--  Title Bar  -->
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <Grid x:Name="AppTitleBar" Grid.Column="0" Grid.Row="0" Background="Transparent" />
         <Grid
-            Grid.Column="0"
+            x:Name="AppTitleBar"
             Grid.Row="0"
-            Grid.RowSpan="2"
-            Margin="0,0,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-                <ColumnDefinition />
-            </Grid.ColumnDefinitions>
+            Grid.Column="0"
+            Background="Transparent" />
+        <!--  小窗  -->
+        <Grid
+            x:Name="StackPanelTiny"
+            Grid.Row="1"
+            Visibility="Collapsed">
             <Grid.RowDefinitions>
                 <RowDefinition />
                 <RowDefinition />
                 <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
-                <RowDefinition />
             </Grid.RowDefinitions>
-            <controls:DropShadowPanel
-                BlurRadius="10"
-                ShadowOpacity="1"
-                OffsetX="5"
-                OffsetY="5"
-                Color="Black"
-                IsMasked="True"
-                Grid.Column="1"
-                Grid.ColumnSpan="4"
-                Grid.Row="2"
-                VerticalAlignment="Center"
-                x:Name="ImageAlbumContainer"
-                Grid.RowSpan="8">
-                <controls:ImageEx
-                    IsCacheEnabled="False"
-                    RightTapped="ImageAlbum_RightTapped"
-                    x:Name="ImageAlbum"
-                    x:FieldModifier="public"
-                    PlaceholderStretch="Uniform"
-                    Stretch="Uniform"
-                    CornerRadius="5"
-                    Source="/Assets/icon.png">
-                    <FlyoutBase.AttachedFlyout>
-                        <MenuFlyout>
-                            <MenuFlyoutItem Click="SaveAlbumImage_Click" Text="保存图片" Icon="Save" />
-                        </MenuFlyout>
-                    </FlyoutBase.AttachedFlyout>
-                </controls:ImageEx>
-            </controls:DropShadowPanel>
-            <Grid
-                x:Name="StackPanelTiny"
-                Visibility="Collapsed"
-                Grid.Column="0"
-                Grid.ColumnSpan="12"
-                Grid.Row="0"
-                Grid.RowSpan="12">
-                <Grid.RowDefinitions>
-                    <RowDefinition />
-                    <RowDefinition />
-                    <RowDefinition />
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition />
-                    <ColumnDefinition />
-                    <ColumnDefinition />
-                </Grid.ColumnDefinitions>
-                <Button
-                    Grid.Row="1"
-                    Grid.Column="0"
-                    Style="{StaticResource ButtonRevealStyle}"
-                    HorizontalAlignment="Center"
-                    Name="BtnPreviousSong"
-                    Click="BtnPreSong_OnClick"
-                    VerticalAlignment="Center"
-                    Background="Transparent"
-                    Width="45"
-                    Height="45"
-                    CornerRadius="30">
-                    <FontIcon
-                        FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        Glyph="&#xE892;" />
-                </Button>
-                <Button
-                    Grid.Row="1"
-                    Grid.Column="1"
-                    Style="{StaticResource ButtonRevealStyle}"
-                    Name="BtnPlayStateChange"
-                    Width="50"
-                    Height="50"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Click="BtnPlayStateChange_OnClick"
-                    CornerRadius="30">
-                    <FontIcon
-                        Name="PlayStateIcon"
-                        FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        Glyph="&#xEDB4;" />
-                    <!--EDB5 -->
-                </Button>
-                <Button
-                    Grid.Row="1"
-                    Grid.Column="2"
-                    Style="{StaticResource ButtonRevealStyle}"
-                    Name="BtnNextSong"
-                    Click="BtnNextSong_OnClick"
-                    VerticalAlignment="Center"
-                    HorizontalAlignment="Center"
-                    Background="Transparent"
-                    Width="45"
-                    Height="45"
-                    CornerRadius="30">
-                    <FontIcon
-                        FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        Glyph="&#xE101;" />
-                </Button>
-                <Slider
-                    Grid.Column="0"
-                    Grid.ColumnSpan="3"
-                    Margin="20,0,20,0"
-                    Grid.Row="2"
-                    x:FieldModifier="public"
-                    ValueChanged="SliderAudioRate_ValueChanged"
-                    Name="SliderVolumn" />
-            </Grid>
-            <controls:DockPanel
-                x:Name="DockPanelRight"
-                LastChildFill="True"
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Button
+                Name="BtnPreviousSong"
                 Grid.Row="1"
-                Margin="0,0,0,110"
-                Grid.RowSpan="12"
-                Grid.ColumnSpan="5"
-                Grid.Column="6">
-                <TextBlock
-                    Visibility="Visible"
-                    DoubleTapped="ToggleWindowShowMode"
-                    controls:DockPanel.Dock="Top"
-                    FontSize="30"
-                    x:FieldModifier="public"
-                    TextAlignment="Center"
-                    Name="TextBlockSongTitle"
-                    Text="歌曲名" />
-                <TextBlock
-                    Visibility="Visible"
-                    controls:DockPanel.Dock="Top"
-                    x:FieldModifier="public"
-                    TextAlignment="Center"
-                    Name="TextBlockSinger"
-                    Tapped="TextBlockSinger_OnTapped"
-                    Foreground="Gray"
-                    FontSize="20"
-                    Text="歌手" />
+                Grid.Column="0"
+                Width="45"
+                Height="45"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Background="Transparent"
+                Click="BtnPreSong_OnClick"
+                CornerRadius="30"
+                Style="{StaticResource ButtonRevealStyle}">
+                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE892;" />
+            </Button>
+            <Button
+                Name="BtnPlayStateChange"
+                Grid.Row="1"
+                Grid.Column="1"
+                Width="50"
+                Height="50"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Click="BtnPlayStateChange_OnClick"
+                CornerRadius="30"
+                Style="{StaticResource ButtonRevealStyle}">
+                <FontIcon
+                    Name="PlayStateIcon"
+                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                    Glyph="&#xEDB4;" />
+                <!--  EDB5  -->
+            </Button>
+            <Button
+                Name="BtnNextSong"
+                Grid.Row="1"
+                Grid.Column="2"
+                Width="45"
+                Height="45"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Background="Transparent"
+                Click="BtnNextSong_OnClick"
+                CornerRadius="30"
+                Style="{StaticResource ButtonRevealStyle}">
+                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE101;" />
+            </Button>
+            <Slider
+                Name="SliderVolumn"
+                Grid.Row="2"
+                Grid.Column="0"
+                Grid.ColumnSpan="3"
+                Margin="20,0,20,0"
+                x:FieldModifier="public"
+                ValueChanged="SliderAudioRate_ValueChanged" />
+            <ProgressBar
+                Name="ProgressBarPlayProg"
+                Grid.Row="3"
+                Grid.Column="0"
+                Grid.ColumnSpan="3"
+                Visibility="Collapsed"
+                Value="50" />
+        </Grid>
+        <Grid
+            x:Name="MainGrid"
+            Grid.Row="1"
+            Margin="0,0,0,120"
+            Visibility="Visible">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Grid x:Name="LeftPanel" MaxWidth="600">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="4*" />
+                </Grid.RowDefinitions>
+                <controls:DropShadowPanel
+                    Grid.Row="1"
+                    MaxWidth="600"
+                    MaxHeight="600"
+                    Margin="20"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    BlurRadius="20"
+                    IsMasked="True"
+                    OffsetX="5"
+                    OffsetY="5"
+                    ShadowOpacity="0.8"
+                    Color="Black">
+                    <controls:ImageEx
+                        x:Name="ImageAlbum"
+                        x:FieldModifier="public"
+                        CornerRadius="12"
+                        IsCacheEnabled="False"
+                        PlaceholderStretch="Uniform"
+                        RightTapped="ImageAlbum_RightTapped"
+                        Stretch="Uniform">
+                        <FlyoutBase.AttachedFlyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem
+                                    Click="SaveAlbumImage_Click"
+                                    Icon="Save"
+                                    Text="保存图片" />
+                            </MenuFlyout>
+                        </FlyoutBase.AttachedFlyout>
+                    </controls:ImageEx>
+                </controls:DropShadowPanel>
                 <StackPanel
-                    Margin="0,0,0,5"
-                    Spacing="15"
+                    x:Name="SongInfo"
+                    Grid.Row="2"
+                    MaxWidth="600"
+                    Margin="20"
+                    HorizontalAlignment="Stretch"
+                    Orientation="Vertical"
+                    Spacing="10">
+                    <TextBlock
+                        Name="TextBlockSongTitle"
+                        x:FieldModifier="public"
+                        DoubleTapped="ToggleWindowShowMode"
+                        FontSize="35"
+                        FontWeight="Bold"
+                        Text="歌曲名"
+                        TextAlignment="Left" />
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                        <TextBlock
+                            Padding="0,6,0,6"
+                            FontSize="18"
+                            FontWeight="Bold"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="歌手: "
+                            TextAlignment="Center" />
+                        <HyperlinkButton
+                            Name="TextBlockSinger"
+                            Click="TextBlockSinger_OnTapped"
+                            FontSize="18" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="5">
+                        <TextBlock
+                            Padding="0,6,0,6"
+                            FontSize="18"
+                            FontWeight="Bold"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="专辑: "
+                            TextAlignment="Center" />
+                        <HyperlinkButton
+                            Name="TextBlockAlbum"
+                            Click="TextBlockAlbum_OnTapped"
+                            FontSize="18" />
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+            <Grid x:Name="RightPanel" Grid.Column="1">
+                <StackPanel
                     HorizontalAlignment="Center"
                     controls:DockPanel.Dock="Bottom"
-                    Orientation="Horizontal">
+                    Orientation="Horizontal"
+                    Spacing="15"
+                    Visibility="Collapsed">
                     <ToggleButton
                         Name="ToggleButtonTranslation"
                         Click="ToggleButtonTranslation_OnClick"
                         Content="译" />
                     <ToggleButton
-                        Click="ToggleButtonSound_OnClick"
                         Name="ToggleButtonSound"
+                        Click="ToggleButtonSound_OnClick"
                         Content="音" />
-
                 </StackPanel>
                 <ScrollViewer
-                    Margin="0,5"
-                    x:FieldModifier="public"
                     x:Name="LyricBoxContainer"
-                    VerticalScrollBarVisibility="Hidden"
-                    HorizontalScrollBarVisibility="Hidden">
+                    HorizontalAlignment="Stretch"
+                    x:FieldModifier="public"
+                    HorizontalScrollBarVisibility="Hidden"
+                    VerticalScrollBarVisibility="Hidden">
                     <ScrollViewer.Content>
                         <StackPanel
-                            Spacing="15"
-                            PointerWheelChanged="LyricBoxContainer_OnPointerWheelChanged"
                             Name="LyricBox"
                             Orientation="Vertical"
-                            ScrollViewer.VerticalScrollBarVisibility="Auto">
-                            <TextBlock
-                                Text="当前暂未播放歌曲"
-                                HorizontalAlignment="Center" />
+                            PointerWheelChanged="LyricBoxContainer_OnPointerWheelChanged"
+                            ScrollViewer.VerticalScrollBarVisibility="Auto"
+                            Spacing="15">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <TextBlock HorizontalAlignment="Center" Text="当前暂未播放歌曲" />
+                            </StackPanel>
                         </StackPanel>
                     </ScrollViewer.Content>
                 </ScrollViewer>
-            </controls:DockPanel>
-            <ProgressBar
-                Name="ProgressBarPlayProg"
-                Visibility="Collapsed"
-                Grid.Column="0"
-                Grid.ColumnSpan="12"
-                Grid.Row="12"
-                Value="0" />
+            </Grid>
         </Grid>
     </Grid>
 </Page>
