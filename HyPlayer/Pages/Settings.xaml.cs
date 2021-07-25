@@ -61,6 +61,7 @@ namespace HyPlayer.Pages
             _lyricItem.OnShow();
             CheckBoxAlignment.IsChecked = Common.Setting.lyricAlignment;
             StackPanelLyricSet.Children.Add(_lyricItem);
+            LyricSize.Value = Common.Setting.lyricSize;
 #if DEBUG
             VersionCode.Text += " Debug";
 #endif

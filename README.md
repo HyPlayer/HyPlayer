@@ -30,6 +30,8 @@ Microsoft Store: [点击查看](https://www.microsoft.com/store/productId/9N5TD9
 
 [Azure DevOps](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=29&branchName=master) : [![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/HyPlayer.HyPlayer?branchName=master)](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=29&branchName=master)
 
+Azure 编译包会编译 Commit 并发布 Release: [查看Release](https://github.com/HyPlayer/HyPlayer/releases/tag/azure-build)
+
 ## 界面预览
 
 
@@ -64,6 +66,9 @@ Microsoft Store: [点击查看](https://www.microsoft.com/store/productId/9N5TD9
 
 * Kawazu [Cutano/Kawazu](https://github.com/Cutano/Kawazu) => [HyPlayer / Kawazu](https://github.com/HyPlayer/Kawazu) (MIT Licence)
 
+* Windows UI Library [microsoft/microsoft-ui-xaml](https://github.com/microsoft/microsoft-ui-xaml)
+
+* Windows Community Toolkit [CommunityToolkit/WindowsCommunityToolkit](https://github.com/CommunityToolkit/WindowsCommunityToolkit)
 
 ## 捐助
 

@@ -30,6 +30,7 @@ using NavigationViewBackRequestedEventArgs = Microsoft.UI.Xaml.Controls.Navigati
 using NavigationViewItem = Microsoft.UI.Xaml.Controls.NavigationViewItem;
 using NavigationViewSelectionChangedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewSelectionChangedEventArgs;
 using Microsoft.Toolkit.Uwp.UI.Controls;
+using Windows.UI.Core;
 
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
@@ -60,8 +61,26 @@ namespace HyPlayer.Pages
             }
             Common.BaseFrame = BaseFrame;
             BaseFrame.IsNavigationStackEnabled = false;
+            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
+            Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
             //Common.NavigatePage(typeof(Home));上一行代码会引发NavMain的SelectionChanged事件，不需要重复导航
 
+        }
+
+        private void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs args)
+        {
+            if (args.CurrentPoint.Properties.IsXButton1Pressed)
+                Common.NavigateBack();
+        }
+
+        private void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
+        {
+            if (args.VirtualKey == VirtualKey.GamepadB)
+                Common.NavigateBack();
+            if (args.VirtualKey == VirtualKey.GamepadY)
+                if (HyPlayList.isPlaying)
+                    HyPlayList.Player.Pause();
+                else if (!HyPlayList.isPlaying) HyPlayList.Player.Play();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)

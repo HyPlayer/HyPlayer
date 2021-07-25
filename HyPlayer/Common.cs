@@ -203,7 +203,7 @@ namespace HyPlayer
             get { return GetSettings<bool>("toastLyric", false); }
             set
             {
-                ApplicationData.Current.LocalSettings.Values["toastLyric"] = value ? "true" : "false";
+                ApplicationData.Current.LocalSettings.Values["toastLyric"] = value;
                 OnPropertyChanged();
             }
         }
