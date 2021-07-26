@@ -8,6 +8,7 @@ using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
 using Kawazu;
 using HyPlayer.Controls;
+using HyPlayer.Classes;
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
 
@@ -21,7 +22,6 @@ namespace HyPlayer
         public MainPage()
         {
             Common.PageMain = this;            
-            HistoryManagement.InitializeHistoryTrack();
             Common.ncapi.RealIP = Setting.GetSettings<string>("xRealIp", null);
             Common.ncapi.Proxy = new WebProxy(Setting.GetSettings<string>("neteaseProxy", null));
             Common.ncapi.UseProxy = !(ApplicationData.Current.LocalSettings.Values["neteaseProxy"] is null);

@@ -114,13 +114,13 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="15*" />
+                    <RowDefinition Height="10*" />
                 </Grid.RowDefinitions>
                 <controls:DropShadowPanel
                     x:Name="AlbumDropShadow"
                     Grid.Row="1"
-                    MaxWidth="400"
-                    MaxHeight="400"
+                    MaxWidth="600"
+                    MaxHeight="600"
                     Margin="20"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"

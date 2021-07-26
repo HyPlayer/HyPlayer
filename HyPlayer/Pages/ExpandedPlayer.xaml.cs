@@ -220,6 +220,18 @@ namespace HyPlayer.Pages
             else
                 LyricBoxContainer.Height = RightPanel.ActualHeight;
 
+            if (LeftPanel.ActualHeight < AlbumDropShadow.ActualHeight + 250)
+            {//合并显示
+                SongInfo.SetValue(Grid.RowProperty, 1);
+                SongInfo.VerticalAlignment = VerticalAlignment.Bottom;
+                SongInfo.Background = Application.Current.Resources["ExpandedPlayerMask"] as Brush;
+            }
+            else
+            {
+                SongInfo.SetValue(Grid.RowProperty, 2);
+                SongInfo.VerticalAlignment = VerticalAlignment.Top;
+                SongInfo.Background = null;
+            }
             if (Common.Setting.lyricAlignment) LyricCtrlBtns.Width = LyricWidth;
             else LyricCtrlBtns.Width = 150;
 

@@ -253,10 +253,6 @@ namespace HyPlayer
 
             if (e.PrelaunchActivated == false)
             {
-                foreach (NCSong song in await HistoryManagement.GetNCSongHistory())
-                {
-                    await HyPlayList.AppendNCSong(song);
-                }
                 rootFrame.Navigate(typeof(MainPage), e.Arguments);
 
                 // 确保当前窗口处于活动状态
