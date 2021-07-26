@@ -151,11 +151,16 @@ namespace HyPlayer.Pages
         {
             realclick = false;
             needRedesign++;
-            if (WindowMode != ExpandedWindowMode.Tiny)
+            if (!iscompact)
             {
                 StackPanelTiny.Visibility = Visibility.Collapsed;
                 ImageAlbum.Visibility = Visibility.Visible;
             }
+            else
+            {
+                SongInfo.Visibility = Visibility.Collapsed;
+            }
+
             switch (WindowMode)
             {
                 case ExpandedWindowMode.Both:
@@ -193,9 +198,6 @@ namespace HyPlayer.Pages
                     ControlBtns.SetValue(Grid.ColumnSpanProperty, 2);
                     LyricBoxContainer.Height = AlbumDropShadow.ActualHeight + 170;
                     break;
-                case ExpandedWindowMode.Tiny:
-                    SongInfo.Visibility = Visibility.Collapsed;
-                    break;
                 default:
                     break;
             }
@@ -215,18 +217,18 @@ namespace HyPlayer.Pages
             lyricMargin.Top = AlbumDropShadow.ActualOffset.Y;
             LyricBoxContainer.Margin = lyricMargin;
             if (WindowMode == ExpandedWindowMode.Both)
-                LyricBoxContainer.Height = SongInfo.ActualOffset.Y + 140;
-            else if (WindowMode != ExpandedWindowMode.Tiny)
+                LyricBoxContainer.Height = SongInfo.ActualOffset.Y + 80;
+            else if (iscompact)
                 LyricBoxContainer.Height = Math.Max(RightPanel.ActualHeight, 101) - 100;
             else
                 LyricBoxContainer.Height = RightPanel.ActualHeight;
 
 
-            if (600 > LeftPanel.ActualHeight && WindowMode != ExpandedWindowMode.Tiny)
+            if (600 > Math.Min(LeftPanel.ActualHeight, MainGrid.ActualHeight) && !iscompact)
             {
                 ImageAlbum.Width = Math.Max(Math.Min(MainGrid.ActualHeight, LeftPanel.ActualWidth) - 80, 1);
                 ImageAlbum.Height = ImageAlbum.Width;
-                if (ImageAlbum.Width < 250)
+                if (ImageAlbum.Width < 250 || iscompact)
                     SongInfo.Visibility = Visibility.Collapsed;
                 else
                     SongInfo.Visibility = Visibility.Visible;
@@ -234,7 +236,8 @@ namespace HyPlayer.Pages
             }
             else
             {
-                SongInfo.Visibility = Visibility.Visible;
+                if (!iscompact)
+                    SongInfo.Visibility = Visibility.Visible;
                 ImageAlbum.Width = double.NaN;
                 ImageAlbum.Height = double.NaN;
                 SongInfo.Width = double.NaN;
@@ -668,12 +671,14 @@ namespace HyPlayer.Pages
 
             if (BtnToggleTinyMode.IsChecked.Value)
             {
-                WindowMode = ExpandedWindowMode.Tiny;
+                WindowMode = ExpandedWindowMode.CoverOnly;
+                iscompact = true;
                 _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.CompactOverlay);
                 ChangeWindowMode();
             }
             else if (ApplicationView.GetForCurrentView().ViewMode == ApplicationViewMode.CompactOverlay)
             {
+                iscompact = false;
                 WindowMode = ExpandedWindowMode.Both;
                 _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
                 ChangeWindowMode();
@@ -685,7 +690,6 @@ namespace HyPlayer.Pages
     {
         Both,
         CoverOnly,
-        LyricOnly,
-        Tiny
+        LyricOnly
     }
 }
