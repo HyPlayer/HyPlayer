@@ -449,14 +449,13 @@ namespace HyPlayer.Pages
                     var anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
                     var anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
                     var anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
-                    anim3.Configuration = new DirectConnectedAnimationConfiguration();
+                    if (anim2 != null) anim3.Configuration = new DirectConnectedAnimationConfiguration();
                     if (anim2 != null) anim2.Configuration = new DirectConnectedAnimationConfiguration();
-
-                    anim1.Configuration = new DirectConnectedAnimationConfiguration();
+                    if (anim2 != null) anim1.Configuration = new DirectConnectedAnimationConfiguration();
                     try
                     {
-                        anim3?.TryStart(TextBlockSinger);
-                        anim1?.TryStart(TextBlockSongTitle);
+                        //anim3?.TryStart(TextBlockSinger);
+                        //anim1?.TryStart(TextBlockSongTitle);
                         anim2?.TryStart(ImageAlbum);
                     }
                     catch
