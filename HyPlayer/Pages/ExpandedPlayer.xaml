@@ -137,6 +137,7 @@
                         IsCacheEnabled="False"
                         PlaceholderStretch="Uniform"
                         RightTapped="ImageAlbum_RightTapped"
+                        Source="/Assets/icon.png"
                         Stretch="Uniform">
                         <FlyoutBase.AttachedFlyout>
                             <MenuFlyout>

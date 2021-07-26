@@ -31,6 +31,7 @@ namespace HyPlayer.Controls
         private bool canslide;
 
         public PlayMode NowPlayType = PlayMode.DefaultRoll;
+        private bool realSelectSong;
 
         public PlayBar()
         {
@@ -241,7 +242,7 @@ namespace HyPlayer.Controls
             {
                 TbSingerName.Text = ai.Artist;
                 TbSongName.Text = ai.SongName;
-                TbAlbumName.Text =ai.Album;
+                TbAlbumName.Text = ai.Album;
                 if (mpi.ItemType == HyPlayItemType.Local)
                 {
                     var img = new BitmapImage();
@@ -267,8 +268,9 @@ namespace HyPlayer.Controls
                     BtnLike.IsChecked = Common.LikedSongs.Contains(mpi.NcPlayItem.id);
                     HistoryManagement.AddNCSongHistory(mpi.NcPlayItem.id);
                 }
-
+                realSelectSong = false;
                 ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
+                realSelectSong = true;
                 TbSongTag.Text = HyPlayList.NowPlayingItem.AudioInfo.tag;
                 Btn_Share.IsEnabled = HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease;
             });
@@ -282,8 +284,10 @@ namespace HyPlayer.Controls
                 for (var i = 0; i < HyPlayList.List.Count; i++)
                     Contacts.Add(new ListViewPlayItem(HyPlayList.List[i].Name, i, HyPlayList.List[i].AudioInfo.Artist));
 
+                realSelectSong = false;
                 ListBoxPlayList.ItemsSource = Contacts;
                 ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
+                realSelectSong=true;
             }
             catch
             {
@@ -327,7 +331,7 @@ namespace HyPlayer.Controls
 
         private void ListBoxPlayList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (ListBoxPlayList.SelectedIndex != -1 && ListBoxPlayList.SelectedIndex != HyPlayList.NowPlaying)
+            if (ListBoxPlayList.SelectedIndex != -1 && ListBoxPlayList.SelectedIndex != HyPlayList.NowPlaying && realSelectSong)
                 HyPlayList.SongMoveTo(ListBoxPlayList.SelectedIndex);
         }
 
