@@ -257,8 +257,11 @@ namespace HyPlayer.Controls
                 }
 
                 //SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
+                canslide = false;
                 SliderProgress.Minimum = 0;
                 SliderProgress.Maximum = ai.LengthInMilliseconds;
+                SliderProgress.Value = 0;
+                canslide = true;
                 if (mpi.ItemType == HyPlayItemType.Netease)
                 {
                     BtnLike.IsChecked = Common.LikedSongs.Contains(mpi.NcPlayItem.id);

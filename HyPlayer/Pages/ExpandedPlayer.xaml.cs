@@ -338,7 +338,7 @@ namespace HyPlayer.Pages
                 return;
             var transform = item?.TransformToVisual((UIElement)LyricBoxContainer.Content);
             var position = transform?.TransformPoint(new Point(0, 0));
-            LyricBoxContainer.ChangeView(null, position?.Y - LyricBoxContainer.ViewportHeight / 2, null, false);
+            LyricBoxContainer.ChangeView(null, position?.Y - LyricBoxContainer.ViewportHeight / 5, null, false);
         }
 
         public void LoadLyricsBox()

@@ -64,7 +64,8 @@ namespace HyPlayer.Pages
                         var weekData = ret2["weekData"].ToArray();
                         MySongHis.Children.Clear();
                         Common.ListedSongs.Clear();
-                        for (var i = 0; i < weekData.Length; i++) { 
+                        for (var i = 0; i < weekData.Length; i++)
+                        {
                             var song = NCSong.CreateFromJson(weekData[i]["song"]);
                             Common.ListedSongs.Add(song);
                             MySongHis.Children.Add(new SingleNCSong(song, i, true,
@@ -72,7 +73,25 @@ namespace HyPlayer.Pages
                         }
                     }
                     break;
-
+                case 3:
+                    //听歌排行加载部分 - 优先级靠下
+                    MySongHisAll.Children.Clear();
+                    var (ok3, ret3) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserRecord,
+                        new Dictionary<string, object> { { "uid", Common.LoginedUser.id }, { "type", "0" } });
+                    if (ok3)
+                    {
+                        var weekData = ret3["allData"].ToArray();
+                        MySongHisAll.Children.Clear();
+                        Common.ListedSongs.Clear();
+                        for (var i = 0; i < weekData.Length; i++)
+                        {
+                            var song = NCSong.CreateFromJson(weekData[i]["song"]);
+                            Common.ListedSongs.Add(song);
+                            MySongHisAll.Children.Add(new SingleNCSong(song, i, true,
+                                true, "共播放 " + weekData[i]["playCount"] + " 次"));
+                        }
+                    }
+                    break;
             }
         }
     }
