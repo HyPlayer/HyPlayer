@@ -194,6 +194,7 @@ namespace HyPlayer.Pages
                     LyricBoxContainer.Height = AlbumDropShadow.ActualHeight + 170;
                     break;
                 case ExpandedWindowMode.Tiny:
+                    SongInfo.Visibility = Visibility.Collapsed;
                     break;
                 default:
                     break;
@@ -214,13 +215,32 @@ namespace HyPlayer.Pages
             lyricMargin.Top = AlbumDropShadow.ActualOffset.Y;
             LyricBoxContainer.Margin = lyricMargin;
             if (WindowMode == ExpandedWindowMode.Both)
-                LyricBoxContainer.Height = AlbumDropShadow.ActualHeight + 170;
+                LyricBoxContainer.Height = SongInfo.ActualOffset.Y + 140;
             else if (WindowMode != ExpandedWindowMode.Tiny)
                 LyricBoxContainer.Height = Math.Max(RightPanel.ActualHeight, 101) - 100;
             else
                 LyricBoxContainer.Height = RightPanel.ActualHeight;
 
-            if (LeftPanel.ActualHeight < AlbumDropShadow.ActualHeight + 250)
+
+            if (600 > LeftPanel.ActualHeight && WindowMode != ExpandedWindowMode.Tiny)
+            {
+                ImageAlbum.Width = Math.Max(Math.Min(MainGrid.ActualHeight, LeftPanel.ActualWidth) - 80, 1);
+                ImageAlbum.Height = ImageAlbum.Width;
+                if (ImageAlbum.Width < 250)
+                    SongInfo.Visibility = Visibility.Collapsed;
+                else
+                    SongInfo.Visibility = Visibility.Visible;
+                SongInfo.Width = ImageAlbum.Width;
+            }
+            else
+            {
+                SongInfo.Visibility = Visibility.Visible;
+                ImageAlbum.Width = double.NaN;
+                ImageAlbum.Height = double.NaN;
+                SongInfo.Width = double.NaN;
+            }
+
+            if (AlbumDropShadow.ActualOffset.Y + AlbumDropShadow.ActualHeight + 190 > LeftPanel.ActualHeight)
             {//合并显示
                 SongInfo.SetValue(Grid.RowProperty, 1);
                 SongInfo.VerticalAlignment = VerticalAlignment.Bottom;
@@ -232,6 +252,9 @@ namespace HyPlayer.Pages
                 SongInfo.VerticalAlignment = VerticalAlignment.Top;
                 SongInfo.Background = null;
             }
+
+
+
             if (Common.Setting.lyricAlignment) LyricCtrlBtns.Width = LyricWidth;
             else LyricCtrlBtns.Width = 150;
 

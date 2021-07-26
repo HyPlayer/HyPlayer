@@ -154,6 +154,7 @@
                     MaxWidth="600"
                     Margin="20"
                     HorizontalAlignment="Stretch"
+                    CornerRadius="12"
                     Orientation="Vertical"
                     Spacing="10">
                     <TextBlock
