@@ -224,7 +224,7 @@ namespace HyPlayer.Pages
                 LyricBoxContainer.Height = RightPanel.ActualHeight;
 
 
-            if (600 > Math.Min(LeftPanel.ActualHeight, MainGrid.ActualHeight) && !iscompact)
+            if (600 > Math.Min(LeftPanel.ActualHeight, MainGrid.ActualHeight))
             {
                 ImageAlbum.Width = Math.Max(Math.Min(MainGrid.ActualHeight, LeftPanel.ActualWidth) - 80, 1);
                 ImageAlbum.Height = ImageAlbum.Width;
@@ -338,7 +338,7 @@ namespace HyPlayer.Pages
                 return;
             var transform = item?.TransformToVisual((UIElement)LyricBoxContainer.Content);
             var position = transform?.TransformPoint(new Point(0, 0));
-            LyricBoxContainer.ChangeView(null, position?.Y - LyricBoxContainer.ViewportHeight / 3, null, false);
+            LyricBoxContainer.ChangeView(null, position?.Y - LyricBoxContainer.ViewportHeight / 2, null, false);
         }
 
         public void LoadLyricsBox()
