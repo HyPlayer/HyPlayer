@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:local="using:HyPlayer"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
     mc:Ignorable="d">
     <Page.Resources>
@@ -17,6 +18,12 @@
                         <ResourceDictionary x:Key="HighContrast" />
                     </ResourceDictionary.ThemeDictionaries>
                 </ResourceDictionary>
+                <DataTemplate x:Key="NavigationViewHeaderTemplate">
+                    <local:PageHeader
+                            Title="{Binding}"
+                            Background="Transparent"
+                            BackgroundColorOpacity="1" />
+                </DataTemplate>
                 <ResourceDictionary />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
@@ -25,7 +32,7 @@
         <Border
             x:Name="AppTitleBar"
             Height="35"
-            Margin="80,0,0,0"
+            Margin="0,0,0,0"
             VerticalAlignment="Top"
             x:FieldModifier="public"
             Background="Transparent"
@@ -38,6 +45,8 @@
             Canvas.ZIndex="0"
             FlowDirection="LeftToRight"
             FontFamily="Microsoft Sans Serif"
+            Header=" "
+            HeaderTemplate="{StaticResource NavigationViewHeaderTemplate}"
             IsBackButtonVisible="Visible"
             IsBackEnabled="True"
             IsSettingsVisible="False"

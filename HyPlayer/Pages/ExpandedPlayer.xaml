@@ -126,9 +126,9 @@
                     VerticalAlignment="Center"
                     BlurRadius="20"
                     IsMasked="True"
-                    OffsetX="5"
-                    OffsetY="5"
-                    ShadowOpacity="0.8"
+                    OffsetX="0"
+                    OffsetY="4"
+                    ShadowOpacity="0.4"
                     Color="Black">
                     <controls:ImageEx
                         x:Name="ImageAlbum"
