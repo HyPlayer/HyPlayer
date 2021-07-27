@@ -59,6 +59,12 @@ namespace HyPlayer.Pages
                 Window.Current.SetTitleBar(AppTitleBar);
 
             }
+            else if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
+            {
+                //if is fucking xbox, fuck xbox develop!
+                bool result = Windows.UI.ViewManagement.ApplicationViewScaling.TrySetDisableLayoutScaling(true);
+                Windows.UI.ViewManagement.ApplicationView.GetForCurrentView().SetDesiredBoundsMode(Windows.UI.ViewManagement.ApplicationViewBoundsMode.UseCoreWindow);
+            }
             Common.BaseFrame = BaseFrame;
             BaseFrame.IsNavigationStackEnabled = false;
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;

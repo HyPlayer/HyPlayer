@@ -144,13 +144,13 @@ namespace HyPlayer.HyPlayControl
                 }
             };
             HistoryManagement.InitializeHistoryTrack();
-            Common.Invoke(async () =>
-            {
-                foreach (NCSong song in await HistoryManagement.GetNCSongHistory())
-                {
-                    await HyPlayList.AppendNCSong(song);
-                }
-            });
+            //Common.Invoke(async () =>
+            //{
+            //    foreach (NCSong song in await HistoryManagement.GetNCSongHistory())
+            //    {
+            //        await HyPlayList.AppendNCSong(song);
+            //    }
+            //});
             Common.GLOBAL["PERSONALFM"] = "false";
         }
 
