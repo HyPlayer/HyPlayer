@@ -10,6 +10,6 @@
         x:Key="ExpandedPlayerMask"
         BackgroundSource="Backdrop"
         FallbackColor="{StaticResource SystemChromeMediumColor}"
-        TintColor="#525252"
-        TintOpacity="0.44" />
+        TintColor="#FF585858"
+        TintOpacity="0.5" />
 </ResourceDictionary>
