@@ -10,5 +10,6 @@
         BackgroundSource="Backdrop"
         FallbackColor="{StaticResource SystemChromeMediumColor}"
         TintColor="#FFAAAAAA"
-        TintOpacity="0.5" />
+        TintOpacity="0.6"
+        TintLuminosityOpacity="0.4"/>
 </ResourceDictionary>

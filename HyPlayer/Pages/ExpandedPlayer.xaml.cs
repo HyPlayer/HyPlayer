@@ -243,18 +243,18 @@ namespace HyPlayer.Pages
                 SongInfo.Width = double.NaN;
             }
 
-            if (AlbumDropShadow.ActualOffset.Y + AlbumDropShadow.ActualHeight + 190 > LeftPanel.ActualHeight)
-            {//合并显示
-                SongInfo.SetValue(Grid.RowProperty, 1);
-                SongInfo.VerticalAlignment = VerticalAlignment.Bottom;
-                SongInfo.Background = Application.Current.Resources["ExpandedPlayerMask"] as Brush;
-            }
-            else
-            {
-                SongInfo.SetValue(Grid.RowProperty, 2);
-                SongInfo.VerticalAlignment = VerticalAlignment.Top;
-                SongInfo.Background = null;
-            }
+            //if (AlbumDropShadow.ActualOffset.Y + AlbumDropShadow.ActualHeight + 190 > LeftPanel.ActualHeight)
+            //{//合并显示
+            //    SongInfo.SetValue(Grid.RowProperty, 1);
+            //    SongInfo.VerticalAlignment = VerticalAlignment.Bottom;
+            //    SongInfo.Background = Application.Current.Resources["ExpandedPlayerMask"] as Brush;
+            //}
+            //else
+            //{
+            //    SongInfo.SetValue(Grid.RowProperty, 2);
+            //    SongInfo.VerticalAlignment = VerticalAlignment.Top;
+            //    SongInfo.Background = null;
+            //}
 
 
 
