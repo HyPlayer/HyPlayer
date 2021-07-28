@@ -87,9 +87,11 @@ namespace HyPlayer
 
                     break;
                 case ExtendedExecutionResult.Denied:
+                    /*
                     var toast = new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder();
                     toast.AddText("应用程序进入后台，有可能关闭");
                     toast.Show();
+                    */
                     break;
             }
         }
@@ -118,9 +120,11 @@ namespace HyPlayer
                             break;
 
                         case ExtendedExecutionRevokedReason.SystemPolicy:
+                            /*
                             var toast = new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder();
                             toast.AddText("应用程序进入后台，有可能关闭");
                             toast.Show();
+                            */
                             break;
                     }
                 });
