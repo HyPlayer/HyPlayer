@@ -16,8 +16,6 @@ using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
 using Windows.ApplicationModel.ExtendedExecution;
 using HyPlayer.Pages;
 using Kawazu;
-using System.Collections.Generic;
-using HyPlayer.Classes;
 
 namespace HyPlayer
 {
@@ -42,29 +40,30 @@ namespace HyPlayer
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             AppCenter.Start("8e88eab0-1627-4ff9-9ee7-7fd46d0629cf",
                 typeof(Analytics), typeof(Crashes));
-            Common.Invoke(async () => await InitializeThings());
+            InitializeThings();
         }
 
 
-        private async Task<bool> InitializeThings()
+        private void InitializeThings()
         {
-
-            try
+            Common.Invoke(async () =>
             {
-                var sf = await ApplicationData.Current.LocalCacheFolder.GetFolderAsync("Romaji");
-                Common.KawazuConv = new KawazuConverter(sf.Path);
-            }
-            catch
-            {
-            }
-
-            if (Common.isExpanded)
-                Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer));
-            return true;
+                try
+                {
+                    var sf = await ApplicationData.Current.LocalCacheFolder.GetFolderAsync("Romaji");
+                    Common.KawazuConv = new KawazuConverter(sf.Path);
+                }
+                catch
+                {
+                }
+                if (Common.isExpanded)
+                    Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer));
+            });
         }
+
         private async void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)
         {
-            await InitializeThings();
+            InitializeThings();
             ClearExtendedExecution(executionSession);
             Common.NavigateBack();
         }
@@ -88,18 +87,11 @@ namespace HyPlayer
 
                     break;
                 case ExtendedExecutionResult.Denied:
+                    /*
                     var toast = new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder();
                     toast.AddText("应用程序进入后台，有可能关闭");
                     toast.Show();
-                    List<string> ids = new List<string>();
-                    foreach (var item in HyPlayList.List)
-                    {
-                        if (item.ItemType == HyPlayItemType.Netease)
-                        {
-                            ids.Add(item.NcPlayItem.id);
-                        }
-                    }
-                    HistoryManagement.AddcurPlayingListHistory(ids);
+                    */
                     break;
             }
         }
@@ -128,9 +120,11 @@ namespace HyPlayer
                             break;
 
                         case ExtendedExecutionRevokedReason.SystemPolicy:
+                            /*
                             var toast = new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder();
                             toast.AddText("应用程序进入后台，有可能关闭");
                             toast.Show();
+                            */
                             break;
                     }
                 });
@@ -228,7 +222,7 @@ namespace HyPlayer
         ///     将在启动应用程序以打开特定文件等情况下使用。
         /// </summary>
         /// <param name="e">有关启动请求和过程的详细信息。</param>
-        protected override async void OnLaunched(LaunchActivatedEventArgs e)
+        protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
             InitializeJumpList();
             var rootFrame = Window.Current.Content as Frame;

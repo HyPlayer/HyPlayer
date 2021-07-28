@@ -83,7 +83,7 @@ namespace HyPlayer.Pages
                         foreach (var song in json["songs"].ToArray())
                         {
                             var ncSong = NCSong.CreateFromJson(song);
-                            songs.Add(ncSong);
+                            Common.ListedSongs.Add(ncSong);
                             if (song["cd"].ToString() != cdname)
                             {
                                 idx = 0;
@@ -105,7 +105,7 @@ namespace HyPlayer.Pages
                             }
 
                             stp.Children.Add(new SingleNCSong(ncSong, idx++,
-                                song["privilege"]["st"].ToString() == "0"));
+                                song["privilege"]["st"].ToString() == "0", true));
                         }
                     }
                 });

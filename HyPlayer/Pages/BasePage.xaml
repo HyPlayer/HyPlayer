@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:local="using:HyPlayer"
@@ -18,13 +19,6 @@
                         <ResourceDictionary x:Key="HighContrast" />
                     </ResourceDictionary.ThemeDictionaries>
                 </ResourceDictionary>
-                <DataTemplate x:Key="NavigationViewHeaderTemplate">
-                    <local:PageHeader
-                            Title="{Binding}"
-                            Background="Transparent"
-                            BackgroundColorOpacity="1" />
-                </DataTemplate>
-                <ResourceDictionary />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Page.Resources>
@@ -45,8 +39,7 @@
             Canvas.ZIndex="0"
             FlowDirection="LeftToRight"
             FontFamily="Microsoft Sans Serif"
-            Header=" "
-            HeaderTemplate="{StaticResource NavigationViewHeaderTemplate}"
+            Header=""
             IsBackButtonVisible="Visible"
             IsBackEnabled="True"
             IsSettingsVisible="False"
