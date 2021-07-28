@@ -36,7 +36,6 @@
             Canvas.ZIndex="0"
             FlowDirection="LeftToRight"
             FontFamily="Microsoft Sans Serif"
-            Header=""
             IsBackButtonVisible="Visible"
             IsBackEnabled="True"
             IsSettingsVisible="False"

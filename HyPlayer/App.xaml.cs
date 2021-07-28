@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
@@ -14,6 +15,8 @@ using Microsoft.AppCenter.Analytics;
 using Microsoft.AppCenter.Crashes;
 using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
 using Windows.ApplicationModel.ExtendedExecution;
+using Windows.System;
+using Windows.System.Profile;
 using HyPlayer.Pages;
 using Kawazu;
 
@@ -30,6 +33,8 @@ namespace HyPlayer
         /// </summary>
         ExtendedExecutionSession executionSession = null;
 
+        private bool isInBackground = false;
+
         public App()
         {
             InitializeComponent();
@@ -40,7 +45,56 @@ namespace HyPlayer
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             AppCenter.Start("8e88eab0-1627-4ff9-9ee7-7fd46d0629cf",
                 typeof(Analytics), typeof(Crashes));
+            MemoryManager.AppMemoryUsageIncreased += MemoryManagerOnAppMemoryUsageIncreased;
+            MemoryManager.AppMemoryUsageLimitChanging += MemoryManagerOnAppMemoryUsageLimitChanging;
             InitializeThings();
+        }
+
+        private void MemoryManagerOnAppMemoryUsageLimitChanging(object sender, AppMemoryUsageLimitChangingEventArgs e)
+        {
+            // Xbox 求你行行好,别杀我~ QAQ
+            if (isInBackground)
+            {
+                // 内存占用达到某个值
+                Common.CollectGarbage();
+                GC.Collect();
+            }
+
+            // 追踪代码
+            Analytics.TrackEvent("MemoryUsageLimitChanging", new Dictionary<string, string>()
+            {
+                {"ListCount", HyPlayList.List.Count.ToString()},
+                {"NowMemory", MemoryManager.AppMemoryUsage.ToString()},
+                {"DesireMemory", MemoryManager.AppMemoryUsageLimit.ToString()},
+                {"TotalCommitLimit", MemoryManager.GetAppMemoryReport().TotalCommitLimit.ToString()},
+                {"IsInBackground", isInBackground.ToString()},
+                {"OldSize", e.OldLimit.ToString()},
+                {"NewSize", e.NewLimit.ToString()},
+                {"DeviceFamily",AnalyticsInfo.VersionInfo.DeviceFamily},
+                {"DeviceFamilyVersion",AnalyticsInfo.VersionInfo.DeviceFamilyVersion}
+            });
+        }
+
+        private void MemoryManagerOnAppMemoryUsageIncreased(object sender, object e)
+        {
+            if (isInBackground)
+            {
+                // 内存占用达到某个值
+                Common.CollectGarbage();
+                GC.Collect();
+            }
+
+            // 追踪代码
+            Analytics.TrackEvent("MemoryUsageLimitChanging", new Dictionary<string, string>()
+            {
+                {"ListCount", HyPlayList.List.Count.ToString()},
+                {"NowMemory", MemoryManager.AppMemoryUsage.ToString()},
+                {"DesireMemory", MemoryManager.AppMemoryUsageLimit.ToString()},
+                {"TotalCommitLimit", MemoryManager.GetAppMemoryReport().TotalCommitLimit.ToString()},
+                {"IsInBackground", isInBackground.ToString()},
+                {"DeviceFamily",AnalyticsInfo.VersionInfo.DeviceFamily},
+                {"DeviceFamilyVersion",AnalyticsInfo.VersionInfo.DeviceFamilyVersion}
+            });
         }
 
 
@@ -56,6 +110,7 @@ namespace HyPlayer
                 catch
                 {
                 }
+
                 if (Common.isExpanded)
                     Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer));
             });
@@ -63,6 +118,7 @@ namespace HyPlayer
 
         private async void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)
         {
+            isInBackground = false;
             InitializeThings();
             ClearExtendedExecution(executionSession);
             Common.NavigateBack();
@@ -70,6 +126,7 @@ namespace HyPlayer
 
         private async void App_EnteredBackground(object sender, EnteredBackgroundEventArgs e)
         {
+            isInBackground = true;
             var delaySession = new ExtendedExecutionSession();
             delaySession.Reason = ExtendedExecutionReason.Unspecified;
             delaySession.Revoked += SessionRevoked;
@@ -80,10 +137,10 @@ namespace HyPlayer
                     executionSession = delaySession;
                     Common.CollectGarbage();
                     _ = Task.Run(() => Common.Invoke(async () =>
-                     {
-                         await Task.Delay(1000);
-                         GC.Collect();
-                     }));
+                    {
+                        await Task.Delay(1000);
+                        GC.Collect();
+                    }));
 
                     break;
                 case ExtendedExecutionResult.Denied:
