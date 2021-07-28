@@ -227,6 +227,9 @@
     <Compile Include="Pages\Settings.xaml.cs">
       <DependentUpon>Settings.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\MusicCloudPage.xaml.cs">
+      <DependentUpon>MusicCloudPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Pages\SongListDetail.xaml.cs">
       <DependentUpon>SongListDetail.xaml</DependentUpon>
     </Compile>
@@ -237,9 +240,6 @@
       <DependentUpon>Welcome.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Resources\PageHeader.xaml.cs">
-      <DependentUpon>PageHeader.xaml</DependentUpon>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
@@ -341,10 +341,6 @@
     <Content Include="Assets\Square44x44Logo.scale-200.png" />
     <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
-    <Page Include="Resources\PageHeader.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
@@ -446,6 +442,10 @@
     <Page Include="Pages\Settings.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\MusicCloudPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Pages\SongListDetail.xaml">
       <SubType>Designer</SubType>

@@ -74,7 +74,7 @@ namespace HyPlayer.HyPlayControl
         {
             get
             {
-                if (List.Count <= NowPlaying) return new HyPlayItem { ItemType = HyPlayItemType.Netease };
+                if (List.Count <= NowPlaying) return new HyPlayItem {ItemType = HyPlayItemType.Netease};
                 return List[NowPlaying];
             }
         }
@@ -140,7 +140,7 @@ namespace HyPlayer.HyPlayControl
                 if (GCCountDown-- < 0)
                 {
                     GCCountDown = 10;
-                    GC.Collect(0,GCCollectionMode.Forced);
+                    GC.Collect(0, GCCollectionMode.Forced);
                 }
             };
             HistoryManagement.InitializeHistoryTrack();
@@ -346,12 +346,14 @@ namespace HyPlayer.HyPlayControl
             {
                 MoveSongPointer();
             }
+
             Player_SourceChanged(null, null);
             MediaSource ms;
             switch (NowPlayingItem.ItemType)
             {
                 case HyPlayItemType.Netease:
-                case HyPlayItemType.Radio: //TODO FM伪加载为普通歌曲
+                case HyPlayItemType.Radio: //FM伪加载为普通歌曲
+                case HyPlayItemType.Pan: //云盘接口也是这个
                     //检测是否已经缓存且大小正常
                     try
                     {
@@ -504,7 +506,7 @@ namespace HyPlayer.HyPlayControl
 
         private static void Player_VolumeChanged(MediaPlayer sender, object args)
         {
-            Common.Setting.Volume = (int)(Player.Volume * 100);
+            Common.Setting.Volume = (int) (Player.Volume * 100);
             Common.Invoke(() => OnVolumeChange?.Invoke(Player.Volume));
         }
 
@@ -542,7 +544,7 @@ namespace HyPlayer.HyPlayControl
             Utils.ConvertTranslation(hpi.AudioInfo.TrLyric, Lyrics);
             if (Lyrics.Count != 0 && Lyrics[0].LyricTime != TimeSpan.Zero)
                 Lyrics.Insert(0,
-                    new SongLyric { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "" });
+                    new SongLyric {HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = ""});
             lyricpos = 0;
             Common.Invoke(() => OnLyricLoaded?.Invoke());
         }
@@ -560,7 +562,7 @@ namespace HyPlayer.HyPlayControl
 
                 var (isOk, json) = await Common.ncapi.RequestAsync(
                     CloudMusicApiProviders.Lyric,
-                    new Dictionary<string, object> { { "id", ncp.NcPlayItem.id } });
+                    new Dictionary<string, object> {{"id", ncp.NcPlayItem.id}});
                 if (isOk)
                 {
                     if (json.ContainsKey("nolyric") && json["nolyric"].ToString().ToLower() == "true")
@@ -611,7 +613,7 @@ namespace HyPlayer.HyPlayControl
         {
             var (isOk, json) = await Common.ncapi.RequestAsync(
                 CloudMusicApiProviders.SongUrl,
-                new Dictionary<string, object> { { "id", ncSong.sid }, { "br", Common.Setting.audioRate } });
+                new Dictionary<string, object> {{"id", ncSong.sid}, {"br", Common.Setting.audioRate}});
             if (isOk)
                 try
                 {
@@ -688,11 +690,11 @@ namespace HyPlayer.HyPlayControl
             {
                 //TagLib.File afi = TagLib.File.Create(new UwpStorageFileAbstraction(sf), ReadStyle.Average);
                 var mdp = await sf.Properties.GetMusicPropertiesAsync();
-                string[] contributingArtistsKey = { "System.Music.Artist" };
+                string[] contributingArtistsKey = {"System.Music.Artist"};
                 var contributingArtistsProperty =
                     await mdp.RetrievePropertiesAsync(contributingArtistsKey);
                 var contributingArtists = contributingArtistsProperty["System.Music.Artist"] as string[];
-                if (contributingArtists is null) contributingArtists = new[] { "未知歌手" };
+                if (contributingArtists is null) contributingArtists = new[] {"未知歌手"};
 
                 var ai = new AudioInfo
                 {
@@ -752,7 +754,7 @@ namespace HyPlayer.HyPlayControl
                 songname = mi.musicName,
                 tag = "本地"
             };
-            hpi.Artist = mi.artist.Select(t => new NCArtist { name = t[0].ToString(), id = t[1].ToString() })
+            hpi.Artist = mi.artist.Select(t => new NCArtist {name = t[0].ToString(), id = t[1].ToString()})
                 .ToList();
             AppendNCPlayItem(hpi);
             return true;
@@ -771,7 +773,7 @@ namespace HyPlayer.HyPlayControl
         public static List<SongLyric> ConvertPureLyric(string LyricAllText)
         {
             var Lyrics = new List<SongLyric>();
-            if (string.IsNullOrEmpty(LyricAllText)) return new List<SongLyric> { SongLyric.NoLyric };
+            if (string.IsNullOrEmpty(LyricAllText)) return new List<SongLyric> {SongLyric.NoLyric};
 
             var LyricsArr = LyricAllText.Replace("\r\n", "\n").Replace("\r", "\n").Split("\n");
             var offset = TimeSpan.Zero;

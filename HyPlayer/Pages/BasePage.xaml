@@ -1,13 +1,13 @@
 ﻿<Page
+    mc:Ignorable="d"
+    muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
     x:Class="HyPlayer.Pages.BasePage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
-    muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
-    mc:Ignorable="d">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Page.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -23,17 +23,15 @@
     </Page.Resources>
     <Grid x:Name="MainGrid">
         <Border
-            x:Name="AppTitleBar"
+            Background="Transparent"
+            Canvas.ZIndex="1"
             Height="35"
+            IsHitTestVisible="True"
             Margin="0,0,0,0"
             VerticalAlignment="Top"
             x:FieldModifier="public"
-            Background="Transparent"
-            Canvas.ZIndex="1"
-            IsHitTestVisible="True" />
+            x:Name="AppTitleBar" />
         <muxc:NavigationView
-            x:Name="NavMain"
-            x:FieldModifier="public"
             BackRequested="OnNavigateBack"
             Canvas.ZIndex="0"
             FlowDirection="LeftToRight"
@@ -46,10 +44,11 @@
             IsTitleBarAutoPaddingEnabled="False"
             PaneDisplayMode="Auto"
             PaneTitle="HyPlayer"
-            SelectionChanged="NavMain_OnSelectionChanged">
+            SelectionChanged="NavMain_OnSelectionChanged"
+            x:FieldModifier="public"
+            x:Name="NavMain">
             <muxc:NavigationView.AutoSuggestBox>
                 <AutoSuggestBox
-                    x:Name="SearchKeywordBox"
                     AutomationProperties.Name="Search"
                     GotFocus="AutoSuggestBox_GotFocus"
                     LostFocus="AutoSuggestBox_LostFocus"
@@ -58,7 +57,8 @@
                     QuerySubmitted="AutoSuggestBox_QuerySubmitted"
                     SuggestionChosen="AutoSuggestBox_SuggestionChosen"
                     Tag="PageSearch"
-                    TextChanged="AutoSuggestBox_TextChanged" />
+                    TextChanged="AutoSuggestBox_TextChanged"
+                    x:Name="SearchKeywordBox" />
             </muxc:NavigationView.AutoSuggestBox>
             <muxc:NavigationView.MenuItems>
                 <muxc:NavigationViewItem Content="探索">
@@ -78,15 +78,16 @@
                         </muxc:NavigationViewItem>
                     </muxc:NavigationViewItem.MenuItems>
                 </muxc:NavigationViewItem>
+                <muxc:NavigationViewItem Content="本地和下载" Tag="PageLocal">
+                    <muxc:NavigationViewItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8B7;" />
+                    </muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
                 <muxc:NavigationViewItem
-                    Content="本地和下载"
-                    Icon="Folder"
-                    Tag="PageLocal" />
-                <muxc:NavigationViewItem
-                    x:Name="PageHistory"
                     Content="播放历史"
                     Icon="Clock"
-                    Tag="PageHistory" />
+                    Tag="PageHistory"
+                    x:Name="PageHistory" />
                 <muxc:NavigationViewItem Content="我的收藏" Tag="PageFavorite">
                     <muxc:NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE734;" />
@@ -97,45 +98,50 @@
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xEFA9;" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
+                <muxc:NavigationViewItem Content="我的云盘" Tag="MusicCloud">
+                    <muxc:NavigationViewItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE753;;" />
+                    </muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
                 <muxc:NavigationViewItemSeparator />
                 <muxc:NavigationViewItem
-                    x:Name="NavItemsAddPlaylist"
                     Content="创建歌单"
                     Icon="Add"
                     Tag="SonglistCreate"
-                    Visibility="Collapsed" />
+                    Visibility="Collapsed"
+                    x:Name="NavItemsAddPlaylist" />
                 <muxc:NavigationViewItem
-                    x:Name="NavItemsMyLovedPlaylist"
                     Content="我喜欢的音乐"
                     Tag="SonglistMyLike"
-                    Visibility="Collapsed">
+                    Visibility="Collapsed"
+                    x:Name="NavItemsMyLovedPlaylist">
                     <muxc:NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE00B;" />
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE006;" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
                 <muxc:NavigationViewItem
-                    x:Name="NavItemsMyList"
                     Content="我创建的歌单"
                     Icon="List"
-                    Visibility="Collapsed" />
+                    Visibility="Collapsed"
+                    x:Name="NavItemsMyList" />
                 <muxc:NavigationViewItem
-                    x:Name="NavItemsLikeList"
                     Content="我收藏的歌单"
                     Icon="List"
-                    Visibility="Collapsed" />
+                    Visibility="Collapsed"
+                    x:Name="NavItemsLikeList" />
             </muxc:NavigationView.MenuItems>
             <muxc:NavigationView.PaneFooter>
                 <StackPanel
-                    x:Name="FooterStackPanel"
                     Margin="0,0,0,120"
                     Orientation="Vertical"
-                    Visibility="Visible">
+                    Visibility="Visible"
+                    x:Name="FooterStackPanel">
                     <muxc:NavigationViewItem
-                        x:Name="NavItemLogin"
                         Content="登录"
                         Icon="Contact"
                         Tag="PageMe"
-                        Tapped="NavigationViewItem_Tapped" />
+                        Tapped="NavigationViewItem_Tapped"
+                        x:Name="NavItemLogin" />
                     <muxc:NavigationViewItem
                         Content="设置"
                         Icon="Setting"
@@ -149,70 +155,70 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Frame
-                    x:Name="BaseFrame"
                     Grid.Row="1"
-                    Margin="20,40,0,0" />
+                    Margin="20,40,0,0"
+                    x:Name="BaseFrame" />
             </Grid>
         </muxc:NavigationView>
         <!--  登录弹窗  -->
-        <ContentDialog x:Name="DialogLogin" Width="400">
+        <ContentDialog Width="400" x:Name="DialogLogin">
             <StackPanel Orientation="Vertical">
                 <Button
-                    x:Name="ButtonCloseLoginForm"
-                    HorizontalAlignment="Right"
                     Background="Transparent"
-                    Click="ButtonCloseLoginForm_Click">
+                    Click="ButtonCloseLoginForm_Click"
+                    HorizontalAlignment="Right"
+                    x:Name="ButtonCloseLoginForm">
                     <FontIcon
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
                         FontSize="15"
                         Glyph="&#xE106;" />
                 </Button>
-                <Pivot Width="300" SelectionChanged="Pivot_SelectionChanged">
+                <Pivot SelectionChanged="Pivot_SelectionChanged" Width="300">
                     <PivotItem Header="密码登录">
                         <StackPanel Orientation="Vertical">
                             <Image Height="100" Source="/Assets/icon.png" />
                             <TextBlock
-                                Padding="0,3,0,10"
-                                HorizontalAlignment="Center"
                                 FontSize="20"
+                                HorizontalAlignment="Center"
+                                Padding="0,3,0,10"
                                 Text="登录到网易云音乐" />
                             <TextBox
-                                x:Name="TextBoxAccount"
-                                Margin="5"
                                 KeyDown="TextBoxAccount_OnKeyDown"
-                                PlaceholderText="手机 / 邮箱" />
-                            <PasswordBox
-                                x:Name="TextBoxPassword"
                                 Margin="5"
+                                PlaceholderText="手机 / 邮箱"
+                                x:Name="TextBoxAccount" />
+                            <PasswordBox
                                 KeyDown="TextBoxPassword_OnKeyDown"
-                                PlaceholderText="密码" />
+                                Margin="5"
+                                PlaceholderText="密码"
+                                x:Name="TextBoxPassword" />
                             <Button
-                                Name="ButtonLogin"
-                                Margin="0,15,0,15"
-                                HorizontalAlignment="Stretch"
                                 Click="ButtonLogin_OnClick"
                                 Content="登录"
+                                HorizontalAlignment="Stretch"
+                                Margin="0,15,0,15"
+                                Name="ButtonLogin"
                                 Style="{StaticResource AccentButtonStyle}" />
                         </StackPanel>
                     </PivotItem>
                     <PivotItem Header="扫码登录">
                         <Image
-                            x:Name="QrContainer"
                             Height="200"
                             Margin="0,46,0,46"
                             Source="/Assets/icon.png"
-                            Tapped="LoadQr" />
+                            Tapped="LoadQr"
+                            x:Name="QrContainer" />
                     </PivotItem>
                 </Pivot>
                 <muxc:InfoBar
-                    x:Name="InfoBarLoginHint"
-                    Title="登录代表你同意相关条款"
                     IsClosable="False"
-                    IsOpen="True" />
+                    IsOpen="True"
+                    Title="登录代表你同意相关条款"
+                    x:Name="InfoBarLoginHint" />
                 <Button
-                    HorizontalAlignment="Center"
                     Background="Transparent"
-                    Content="第三方账号登录">
+                    Content="第三方账号登录"
+                    HorizontalAlignment="Center">
                     <Button.Flyout>
                         <Flyout>
                             <StackPanel
@@ -220,34 +226,34 @@
                                 Orientation="Horizontal"
                                 Spacing="10">
                                 <Button
-                                    x:Name="QQLogin"
-                                    MinWidth="48"
-                                    MinHeight="48"
                                     Click="ThirdPartyLogin_Click"
                                     CornerRadius="5"
-                                    Tag="QQ">
+                                    MinHeight="48"
+                                    MinWidth="48"
+                                    Tag="QQ"
+                                    x:Name="QQLogin">
                                     <Button.Content>
                                         <Image Source="/Assets/ThirdPartyIcons/QQ.png" Stretch="Fill" />
                                     </Button.Content>
                                 </Button>
                                 <Button
-                                    x:Name="WXLogin"
-                                    MinWidth="48"
-                                    MinHeight="48"
                                     Click="ThirdPartyLogin_Click"
                                     CornerRadius="5"
-                                    Tag="WX">
+                                    MinHeight="48"
+                                    MinWidth="48"
+                                    Tag="WX"
+                                    x:Name="WXLogin">
                                     <Button.Content>
                                         <Image Source="/Assets/ThirdPartyIcons/WX.png" Stretch="Fill" />
                                     </Button.Content>
                                 </Button>
                                 <Button
-                                    x:Name="WBLogin"
-                                    MinWidth="48"
-                                    MinHeight="48"
                                     Click="ThirdPartyLogin_Click"
                                     CornerRadius="5"
-                                    Tag="WB">
+                                    MinHeight="48"
+                                    MinWidth="48"
+                                    Tag="WB"
+                                    x:Name="WBLogin">
                                     <Button.Content>
                                         <Image Source="/Assets/ThirdPartyIcons/SinaWB.png" Stretch="Fill" />
                                     </Button.Content>

@@ -82,7 +82,11 @@ namespace HyPlayer.Pages
         private void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
         {
             if (args.VirtualKey == VirtualKey.GamepadB)
+            {
                 Common.NavigateBack();
+                args.Handled = true;
+            }
+
             if (args.VirtualKey == VirtualKey.GamepadY)
                 if (HyPlayList.isPlaying)
                     HyPlayList.Player.Pause();
@@ -362,6 +366,11 @@ namespace HyPlayer.Pages
                 InfoBarLoginHint.IsOpen = true;
                 await DialogLogin.ShowAsync();
                 return;
+            }
+
+            if (nowitem.Tag.ToString() == "MusicCloud")
+            {
+                Common.NavigatePage(typeof(MusicCloudPage));
             }
 
             if (nowitem.Tag.ToString() == "SonglistCreate")
