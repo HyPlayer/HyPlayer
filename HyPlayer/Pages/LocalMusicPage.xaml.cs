@@ -62,7 +62,7 @@ namespace HyPlayer.Pages
         private async void LoadLocalMusic()
         {
             FileLoadingIndicateRing.IsActive = true;
-            foreach (var item in await KnownFolders.MusicLibrary.GetItemsAsync()) GetSubFiles(item);
+            foreach (var item in (await (await StorageFolder.GetFolderFromPathAsync(Common.Setting.downloadDir)).GetItemsAsync())) GetSubFiles(item);
             FileLoadingIndicateRing.IsActive = false;
         }
 
@@ -76,11 +76,11 @@ namespace HyPlayer.Pages
                     if (file.FileType == ".mp3" || file.FileType == ".flac" || file.FileType == ".wav")
                     {
                         var mdp = await file.Properties.GetMusicPropertiesAsync();
-                        string[] contributingArtistsKey = {"System.Music.Artist"};
+                        string[] contributingArtistsKey = { "System.Music.Artist" };
                         var contributingArtistsProperty =
                             await mdp.RetrievePropertiesAsync(contributingArtistsKey);
                         var contributingArtists = contributingArtistsProperty["System.Music.Artist"] as string[];
-                        if (contributingArtists is null) contributingArtists = new[] {"未知歌手"};
+                        if (contributingArtists is null) contributingArtists = new[] { "未知歌手" };
 
                         var ai = new AudioInfo
                         {
@@ -122,7 +122,7 @@ namespace HyPlayer.Pages
                 }
                 else if (item is StorageFolder)
                 {
-                    foreach (var subitems in await ((StorageFolder) item).GetItemsAsync())
+                    foreach (var subitems in await ((StorageFolder)item).GetItemsAsync())
                         GetSubFiles(subitems);
                 }
             }
@@ -132,11 +132,12 @@ namespace HyPlayer.Pages
             }
         }
 
-        private async void ListBoxLocalMusicContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void ListBoxLocalMusicContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            await HyPlayList.AppendFile(localMusicFiles[ListBoxLocalMusicContainer.SelectedIndex]);
+            HyPlayList.List.Clear();
+            localHyItems.ForEach(t => HyPlayList.List.Add(t));
             HyPlayList.SongAppendDone();
-            HyPlayList.SongMoveTo(HyPlayList.List.Count - 1);
+            HyPlayList.SongMoveTo(ListBoxLocalMusicContainer.SelectedIndex);
         }
     }
 }
