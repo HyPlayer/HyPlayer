@@ -12,6 +12,7 @@ using Microsoft.Toolkit.Uwp.Notifications;
 using NeteaseCloudMusicApi;
 using TagLib;
 using File = TagLib.File;
+using System.Threading.Tasks;
 
 namespace HyPlayer.HyPlayControl
 {
@@ -19,7 +20,15 @@ namespace HyPlayer.HyPlayControl
     {
         private NCPlayItem dontuseme;
         public DownloadOperation downloadOperation;
-        public string filename;
+        private string _filename;
+        public string filename
+        {
+            set
+            {
+                _filename = value.Replace("\\", "＼").Replace("/", "／").Replace(":", "：").Replace("?", "？").Replace("\"", "＂").Replace("<", "＜").Replace(">", "＞").Replace("|", "｜");
+            }
+            get => _filename;
+        }
         public string fullpath;
         public ulong HavedSize;
         public NCSong ncsong;
@@ -35,57 +44,61 @@ namespace HyPlayer.HyPlayControl
             ncsong = song;
         }
 
-        private async void Wc_DownloadFileCompleted()
+        private void Wc_DownloadFileCompleted()
         {
             Status = 2;
-            //下载歌词
-            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Lyric,
-                new Dictionary<string, object> {{"id", ncsong.sid}});
-            if (isOk)
-                if (!(json.ContainsKey("nolyric") && json["nolyric"].ToString().ToLower() == "true") &&
-                    !(json.ContainsKey("uncollected") && json["uncollected"].ToString().ToLower() == "true"))
-                {
-                    var sf = await (await StorageFolder.GetFolderFromPathAsync(Common.Setting.downloadDir))
-                        .CreateFileAsync(
-                            Path.GetFileName(Path.ChangeExtension(fullpath, "lrc")),
-                            CreationCollisionOption.ReplaceExisting);
-                    var lrc = Utils.ConvertPureLyric(json["lrc"]["lyric"].ToString());
-                    Utils.ConvertTranslation(json["tlyric"]["lyric"].ToString(), lrc);
-                    var lrctxt = string.Join("\r\n", lrc.Select(t =>
-                    {
-                        if (t.HaveTranslation && !string.IsNullOrEmpty(t.Translation))
-                            return "[" + t.LyricTime.ToString(@"mm\:ss\.ff") + "]" + t.PureLyric + " 「" +
-                                   t.Translation + "」";
-                        return "[" + t.LyricTime.ToString(@"mm\:ss\.ff") + "]" + t.PureLyric;
-                    }));
-                    await FileIO.WriteTextAsync(sf, lrctxt);
-                }
+            _ = Task.Run(() =>
+              {
+                  Common.Invoke(async () =>
+                  {
+                    //下载歌词
+                    var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Lyric,
+                          new Dictionary<string, object> { { "id", ncsong.sid } });
+                      if (isOk)
+                          if (!(json.ContainsKey("nolyric") && json["nolyric"].ToString().ToLower() == "true") &&
+                              !(json.ContainsKey("uncollected") && json["uncollected"].ToString().ToLower() == "true"))
+                          {
+                              var sf = await (await StorageFolder.GetFolderFromPathAsync(Common.Setting.downloadDir))
+                                  .CreateFileAsync(
+                                      Path.GetFileName(Path.ChangeExtension(fullpath, "lrc")),
+                                      CreationCollisionOption.ReplaceExisting);
+                              var lrc = Utils.ConvertPureLyric(json["lrc"]["lyric"].ToString());
+                              Utils.ConvertTranslation(json["tlyric"]["lyric"].ToString(), lrc);
+                              var lrctxt = string.Join("\r\n", lrc.Select(t =>
+                              {
+                                  if (t.HaveTranslation && !string.IsNullOrEmpty(t.Translation))
+                                      return "[" + t.LyricTime.ToString(@"mm\:ss\.ff") + "]" + t.PureLyric + " 「" +
+                                             t.Translation + "」";
+                                  return "[" + t.LyricTime.ToString(@"mm\:ss\.ff") + "]" + t.PureLyric;
+                              }));
+                              await FileIO.WriteTextAsync(sf, lrctxt);
+                          }
 
 
-            //写相关信息
-            var file = File.Create(new UwpStorageFileAbstraction(await StorageFile.GetFileFromPathAsync(fullpath)));
-            file.Tag.Album = ncsong.Album.name;
-            file.Tag.Performers = ncsong.Artist.Select(t => t.name).ToArray();
-            file.Tag.Title = ncsong.songname;
-            file.Tag.Pictures = new IPicture[]
-            {
+                    //写相关信息
+                    var file = File.Create(new UwpStorageFileAbstraction(await StorageFile.GetFileFromPathAsync(fullpath)));
+                      file.Tag.Album = ncsong.Album.name;
+                      file.Tag.Performers = ncsong.Artist.Select(t => t.name).ToArray();
+                      file.Tag.Title = ncsong.songname;
+                      file.Tag.Pictures = new IPicture[]
+                      {
                 new Picture(ByteVector.FromStream(RandomAccessStreamReference
                     .CreateFromUri(new Uri(ncsong.Album.cover + "?param=" + StaticSource.PICSIZE_DOWNLOAD_ALBUMCOVER))
                     .OpenReadAsync().GetAwaiter().GetResult().AsStreamForRead()))
-            };
-            file.Tag.Pictures[0].MimeType = "image/jpeg";
-            file.Tag.Pictures[0].Description = "cover.jpg";
-            The163KeyHelper.TrySetMusicInfo(file.Tag, dontuseme);
-            file.Save();
+                      };
+                      file.Tag.Pictures[0].MimeType = "image/jpeg";
+                      file.Tag.Pictures[0].Description = "cover.jpg";
+                      The163KeyHelper.TrySetMusicInfo(file.Tag, dontuseme);
+                      file.Save();
 
-            var downloadToastContent = new ToastContent
-            {
-                Visual = new ToastVisual
-                {
-                    BindingGeneric = new ToastBindingGeneric
-                    {
-                        Children =
-                        {
+                      var downloadToastContent = new ToastContent
+                      {
+                          Visual = new ToastVisual
+                          {
+                              BindingGeneric = new ToastBindingGeneric
+                              {
+                                  Children =
+                          {
                             new AdaptiveText
                             {
                                 Text = "下载完成",
@@ -95,21 +108,23 @@ namespace HyPlayer.HyPlayControl
                             {
                                 Text = filename
                             }
-                        }
-                    }
-                },
-                Launch = "",
-                Scenario = ToastScenario.Reminder,
-                Audio = new ToastAudio {Silent = true}
-            };
-            var toast = new ToastNotification(downloadToastContent.GetXml())
-            {
-                Tag = "HyPlayerDownloadDone",
-                Data = new NotificationData()
-            };
-            toast.Data.SequenceNumber = 0;
-            var notifier = ToastNotificationManager.CreateToastNotifier();
-            notifier.Show(toast);
+                          }
+                              }
+                          },
+                          Launch = "",
+                          Scenario = ToastScenario.Reminder,
+                          Audio = new ToastAudio { Silent = true }
+                      };
+                      var toast = new ToastNotification(downloadToastContent.GetXml())
+                      {
+                          Tag = "HyPlayerDownloadDone",
+                          Data = new NotificationData()
+                      };
+                      toast.Data.SequenceNumber = 0;
+                      var notifier = ToastNotificationManager.CreateToastNotifier();
+                      notifier.Show(toast);
+                  });
+              });
         }
 
         private void Wc_DownloadProgressChanged(DownloadOperation obj)
@@ -123,7 +138,7 @@ namespace HyPlayer.HyPlayControl
 
             TotalSize = obj.Progress.TotalBytesToReceive;
             HavedSize = obj.Progress.BytesReceived;
-            progress = (int) (obj.Progress.BytesReceived * 100 / obj.Progress.TotalBytesToReceive);
+            progress = (int)(obj.Progress.BytesReceived * 100 / obj.Progress.TotalBytesToReceive);
             if (TotalSize == HavedSize)
                 Wc_DownloadFileCompleted();
         }
@@ -152,7 +167,7 @@ namespace HyPlayer.HyPlayControl
                 },
                 Launch = "",
                 Scenario = ToastScenario.Reminder,
-                Audio = new ToastAudio {Silent = true}
+                Audio = new ToastAudio { Silent = true }
             };
             var toast = new ToastNotification(downloadToastContent.GetXml())
             {
@@ -170,7 +185,7 @@ namespace HyPlayer.HyPlayControl
             if (downloadOperation != null || Status == 1) return;
             Status = 1;
             var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                new Dictionary<string, object> {{"id", ncsong.sid}});
+                new Dictionary<string, object> { { "id", ncsong.sid } });
             if (isok)
             {
                 if (json["data"][0]["code"].ToString() != "200")
@@ -239,7 +254,7 @@ namespace HyPlayer.HyPlayControl
                 },
                 Launch = "",
                 Scenario = ToastScenario.Reminder,
-                Audio = new ToastAudio {Silent = true}
+                Audio = new ToastAudio { Silent = true }
             };
             var toast = new ToastNotification(downloadToastContent.GetXml())
             {
@@ -300,7 +315,7 @@ namespace HyPlayer.HyPlayControl
                         },
                         Launch = "",
                         Scenario = ToastScenario.Reminder,
-                        Audio = new ToastAudio {Silent = true}
+                        Audio = new ToastAudio { Silent = true }
                     };
                     var toast = new ToastNotification(downloadToastContent.GetXml())
                     {
