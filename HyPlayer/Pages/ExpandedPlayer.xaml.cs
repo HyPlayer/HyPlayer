@@ -47,6 +47,7 @@ namespace HyPlayer.Pages
         private int needRedesign = 1;
         private int lastheight;
         private bool realclick = false;
+        private bool programClick = false;
 
         public ExpandedPlayer()
         {
@@ -228,10 +229,22 @@ namespace HyPlayer.Pages
             {
                 ImageAlbum.Width = Math.Max(Math.Min(MainGrid.ActualHeight, LeftPanel.ActualWidth) - 80, 1);
                 ImageAlbum.Height = ImageAlbum.Width;
+                /*
                 if (ImageAlbum.Width < 250 || iscompact)
                     SongInfo.Visibility = Visibility.Collapsed;
                 else
                     SongInfo.Visibility = Visibility.Visible;
+                */
+                if (ImageAlbum.Width < 150 && iscompact)
+                {
+                    ImageAlbum.Visibility = Visibility.Collapsed;
+                    PageContainer.Background = null;
+                }
+                else
+                {
+                    ImageAlbum.Visibility = Visibility.Visible;
+                    PageContainer.Background = Application.Current.Resources["ExpandedPlayerMask"] as AcrylicBrush;
+                }
                 SongInfo.Width = ImageAlbum.Width;
             }
             else
@@ -308,6 +321,10 @@ namespace HyPlayer.Pages
                 ToggleButtonSound.HorizontalAlignment = HorizontalAlignment.Left;
             }
             //LeftPanel.Visibility = Visibility.Collapsed;
+            programClick = true;
+            BtnToggleFullScreen.IsChecked = ApplicationView.GetForCurrentView().IsFullScreenMode;
+            BtnToggleTinyMode.IsChecked = ApplicationView.GetForCurrentView().ViewMode == ApplicationViewMode.CompactOverlay;
+            programClick = false;
             try
             {
                 OnSongChange(HyPlayList.List[HyPlayList.NowPlaying]);
@@ -520,23 +537,25 @@ namespace HyPlayer.Pages
             }
         }
 
-        private void ExpandedPlayer_OnPointerEntered(object sender, PointerRoutedEventArgs e)
+        public void ExpandedPlayer_OnPointerEntered(object sender, PointerRoutedEventArgs e)
         {
-            if (Window.Current.Bounds.Height <= 300)
+            if (Window.Current.Bounds.Height <= 300 && iscompact)
             {
                 //小窗模式
-                ImageAlbum.Visibility = Visibility.Collapsed;
                 StackPanelTiny.Visibility = Visibility.Visible;
+                PageContainer.Background = Application.Current.Resources["ExpandedPlayerMask"] as AcrylicBrush;
+
             }
         }
 
-        private void ExpandedPlayer_OnPointerExited(object sender, PointerRoutedEventArgs e)
+        public void ExpandedPlayer_OnPointerExited(object sender, PointerRoutedEventArgs e)
         {
-            if (Window.Current.Bounds.Height <= 300)
+            if (Window.Current.Bounds.Height <= 300 && iscompact)
             {
                 //小窗模式
-                ImageAlbum.Visibility = Visibility.Visible;
                 StackPanelTiny.Visibility = Visibility.Collapsed;
+                PageContainer.Background = null;
+
             }
         }
 
@@ -650,6 +669,7 @@ namespace HyPlayer.Pages
 
         private void BtnToggleFullScreen_Checked(object sender, RoutedEventArgs e)
         {
+            if (programClick) return;
             if (BtnToggleFullScreen.IsChecked.Value)
             {
                 if (BtnToggleTinyMode.IsChecked.Value)

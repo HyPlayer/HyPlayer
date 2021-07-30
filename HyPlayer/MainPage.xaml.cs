@@ -49,5 +49,17 @@ namespace HyPlayer
                     break;
             }
         }
+
+        private void Page_PointerEntered(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+        {
+            if (Common.PageExpandedPlayer != null)
+                Common.PageExpandedPlayer.ExpandedPlayer_OnPointerEntered(sender,e);
+        }
+
+        private void Page_PointerExited(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+        {
+            if (Common.PageExpandedPlayer != null)
+                Common.PageExpandedPlayer.ExpandedPlayer_OnPointerExited(sender, e);
+        }
     }
 }
