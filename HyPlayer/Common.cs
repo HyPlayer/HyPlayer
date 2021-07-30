@@ -218,6 +218,16 @@ namespace HyPlayer
             }
         }
 
+        public int songRollType
+        {
+            get { return GetSettings<int>("songRollType", 0); }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["songRollType"] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         public async void OnPropertyChanged([CallerMemberName] string propertyName = "")
