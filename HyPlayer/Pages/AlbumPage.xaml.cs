@@ -175,6 +175,11 @@ namespace HyPlayer.Pages
             DownloadManager.AddDownload(songs);
         }
 
+        private void ButtonComment_OnClick(object sender, RoutedEventArgs e)
+        {
+            Common.NavigatePage(typeof(Comments), "al" + Album.id);
+        }
+
         private async void TextBoxAuthor_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
             if (artists.Count > 1)

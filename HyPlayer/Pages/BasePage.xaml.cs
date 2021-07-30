@@ -76,14 +76,20 @@ namespace HyPlayer.Pages
         private void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs args)
         {
             if (args.CurrentPoint.Properties.IsXButton1Pressed)
-                Common.NavigateBack();
+                if (Common.isExpanded)
+                    Common.BarPlayBar.ButtonCollapse_OnClick(null, null);
+                else
+                    Common.NavigateBack();
         }
 
         private void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
         {
             if (args.VirtualKey == VirtualKey.GamepadB)
             {
-                Common.NavigateBack();
+                if (Common.isExpanded)
+                    Common.BarPlayBar.ButtonCollapse_OnClick(null, null);
+                else
+                    Common.NavigateBack();
                 args.Handled = true;
             }
 

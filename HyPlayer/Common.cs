@@ -89,6 +89,13 @@ namespace HyPlayer
             GC.Collect();
         }
 
+        public static void NavigateRefresh()
+        {
+            var peek = NavigationHistory.Peek();
+            BaseFrame?.Navigate(peek.PageType, peek.Paratmers);
+            GC.Collect();
+        }
+
         public static void CollectGarbage()
         {
             NavigatePage(typeof(BlankPage));
@@ -136,6 +143,19 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values["lyricSize"] = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public int romajiSize
+        {
+            get
+            {
+                return GetSettings<int>("romajiSize", 15);
+            }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["romajiSize"] = value;
                 OnPropertyChanged();
             }
         }
@@ -246,7 +266,7 @@ namespace HyPlayer
                     !string.IsNullOrEmpty(ApplicationData.Current.LocalSettings.Values[propertyName].ToString()))
                 {
                     //超长的IF
-                    return (T) ApplicationData.Current.LocalSettings.Values[propertyName];
+                    return (T)ApplicationData.Current.LocalSettings.Values[propertyName];
                 }
                 else
                 {

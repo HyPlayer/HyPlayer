@@ -23,6 +23,11 @@ namespace HyPlayer.Controls
         private void ListViewArtists_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             Common.NavigatePage(typeof(ArtistPage), aartists[ListViewArtists.SelectedIndex].id);
+            if (Common.isExpanded)
+            {
+                Common.NavigatePage(typeof(BlankPage));
+                Common.BarPlayBar.ButtonCollapse_OnClick(this, null);
+            }
             Hide();
         }
     }

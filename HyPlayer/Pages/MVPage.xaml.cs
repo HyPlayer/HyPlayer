@@ -34,7 +34,6 @@ namespace HyPlayer.Pages
             var input = e.Parameter as NCSong;
             mvid = input.mvid.ToString();
             songid = input.sid;
-            LoadThings();
             LoadRelateive();
         }
 
@@ -61,6 +60,7 @@ namespace HyPlayer.Pages
 
                 RelativeList.ItemsSource = sources;
             }
+            RelativeList.SelectedIndex = 0;
         }
 
         private void LoadComment()
@@ -74,7 +74,7 @@ namespace HyPlayer.Pages
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
-            MediaPlayerElement.MediaPlayer.Pause();
+            MediaPlayerElement.MediaPlayer?.Pause();
         }
 
         private async void LoadVideo()

@@ -28,8 +28,11 @@ namespace HyPlayer.Pages
         private int _elapse = 10;
 
         private LyricItem _lyricItem;
+        private bool isbyprogram;
+
         public Settings()
         {
+            isbyprogram = true;
             InitializeComponent();
             RomajiStatus.Text = "当前日语转罗马音状态: " + (Common.KawazuConv == null ? "无法转换 请尝试重新下载资源文件" : "可以转换");
             RadioButtonsSongBr.SelectedIndex =
@@ -62,6 +65,8 @@ namespace HyPlayer.Pages
             CheckBoxAlignment.IsChecked = Common.Setting.lyricAlignment;
             StackPanelLyricSet.Children.Add(_lyricItem);
             LyricSize.Value = Common.Setting.lyricSize;
+            RomajiSize.Value = Common.Setting.romajiSize;
+            isbyprogram = false;
 #if DEBUG
             VersionCode.Text += " Debug";
 #endif
@@ -215,10 +220,18 @@ namespace HyPlayer.Pages
 
         private void LyricSize_OnValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
         {
+            if (isbyprogram) return;
             int size = 18;
             if (int.TryParse(LyricSize.Text, out size))
             {
                 Common.Setting.lyricSize = size;
+                _lyricItem.RefreshFontSize();
+            }
+
+            size = 15;
+            if (int.TryParse(RomajiSize?.Text, out size))
+            {
+                Common.Setting.romajiSize = size;
                 _lyricItem.RefreshFontSize();
             }
         }

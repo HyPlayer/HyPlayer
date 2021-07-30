@@ -51,6 +51,12 @@ namespace HyPlayer.Pages
                     case "mb":
                         resourcetype = 7;
                         break;
+                    case "al":
+                        resourcetype = 3;
+                        break;
+                    case "pl":
+                        resourcetype = 2;
+                        break;
                 }
             }
 
@@ -97,7 +103,7 @@ namespace HyPlayer.Pages
                     PrevPage.IsEnabled = false;
 
                 PageIndicator.Text =
-                    $"第 {page} 页 / 共 {Math.Ceiling((decimal) res.json["data"]["totalCount"].ToObject<long>() / 20).ToString()} 页";
+                    $"第 {page} 页 / 共 {Math.Ceiling((decimal)res.json["data"]["totalCount"].ToObject<long>() / 20).ToString()} 页";
             }
         }
 

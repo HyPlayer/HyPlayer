@@ -85,7 +85,7 @@ namespace HyPlayer.Pages
                                 json["privileges"].ToList()[i++]["st"].ToString() == "0";
                             if (canplay) Common.ListedSongs.Add(ncSong);
 
-                            SongContainer.Children.Add(new SingleNCSong(ncSong, idx++, canplay, true));
+                            SongContainer.Children.Add(new SingleNCSong(ncSong, idx++, canplay, true, null, playList.creater.id == Common.LoginedUser.id ? playList.plid : null));
                         }
                     }
                 }
@@ -104,7 +104,7 @@ namespace HyPlayer.Pages
                         var canplay = true;
                         if (canplay) Common.ListedSongs.Add(ncSong);
 
-                        SongContainer.Children.Add(new SingleNCSong(ncSong, idx++, canplay, true));
+                        SongContainer.Children.Add(new SingleNCSong(ncSong, idx++, canplay, true, null, playList.creater.id == Common.LoginedUser.id ? playList.plid : null));
                     }
                 }
             }
@@ -225,6 +225,11 @@ namespace HyPlayer.Pages
         {
             page++;
             LoadSongListItem();
+        }
+
+        private void ButtonComment_OnClick(object sender, RoutedEventArgs e)
+        {
+            Common.NavigatePage(typeof(Comments), "pl" + playList.plid);
         }
 
         private void ButtonHeartBeat_OnClick(object sender, RoutedEventArgs e)

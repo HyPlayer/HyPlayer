@@ -287,7 +287,7 @@ namespace HyPlayer.Controls
                 realSelectSong = false;
                 ListBoxPlayList.ItemsSource = Contacts;
                 ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
-                realSelectSong=true;
+                realSelectSong = true;
             }
             catch
             {
@@ -515,7 +515,7 @@ namespace HyPlayer.Controls
                                 HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
                     }
 
-                    ButtonCollapse_OnClick(this, null);
+                    //ButtonCollapse_OnClick(this, null);
                 }
             }
             catch
@@ -583,6 +583,11 @@ namespace HyPlayer.Controls
         private void BtnPlayStateChange_KeyUp(object sender, KeyRoutedEventArgs e)
         {
             BtnPlayStateChange_OnClick(sender, e);
+        }
+
+        private void ImageContainer_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            ButtonExpand_OnClick(sender, e);
         }
     }
 

@@ -66,6 +66,7 @@ namespace HyPlayer.Controls
             TextBoxSound.TextAlignment = LyricAlignment;
             TextBoxPureLyric.FontSize = actualsize;
             TextBoxTranslation.FontSize = actualsize;
+            TextBoxSound.FontSize = Common.Setting.romajiSize;
         }
 
         public void OnShow()

@@ -64,8 +64,6 @@ namespace HyPlayer.Pages
             Current_SizeChanged(null, null);
             ToggleButtonSound.IsChecked = Common.ShowLyricSound;
             ToggleButtonTranslation.IsChecked = Common.ShowLyricTrans;
-            if (!Common.Setting.lyricAlignment)
-                LyricCtrlBtns.Width = 150;
         }
 
         private void HyPlayList_OnTimerTicked()
@@ -135,7 +133,6 @@ namespace HyPlayer.Pages
                     LyricWidth = nowwidth * 0.4;
                 else
                     LyricWidth = nowwidth - 15;
-                LyricCtrlBtns.Width = LyricWidth;
                 showsize = Common.Setting.lyricSize <= 0 ? Math.Max(nowwidth / 66, 16) : Common.Setting.lyricSize;
 
                 lastwidth = nowwidth;
@@ -174,8 +171,6 @@ namespace HyPlayer.Pages
                     LeftPanel.SetValue(Grid.ColumnSpanProperty, 1);
                     RightPanel.SetValue(Grid.ColumnProperty, 1);
                     RightPanel.SetValue(Grid.ColumnSpanProperty, 1);
-                    ControlBtns.SetValue(Grid.ColumnProperty, 0);
-                    ControlBtns.SetValue(Grid.ColumnSpanProperty, 1);
                     break;
                 case ExpandedWindowMode.CoverOnly:
                     BtnToggleAlbum.IsChecked = true;
@@ -184,8 +179,6 @@ namespace HyPlayer.Pages
                     RightPanel.Visibility = Visibility.Collapsed;
                     LeftPanel.SetValue(Grid.ColumnProperty, 0);
                     LeftPanel.SetValue(Grid.ColumnSpanProperty, 2);
-                    ControlBtns.SetValue(Grid.ColumnProperty, 0);
-                    ControlBtns.SetValue(Grid.ColumnSpanProperty, 2);
                     break;
                 case ExpandedWindowMode.LyricOnly:
                     BtnToggleAlbum.IsChecked = false;
@@ -195,17 +188,10 @@ namespace HyPlayer.Pages
                     RightPanel.SetValue(Grid.ColumnProperty, 0);
                     RightPanel.SetValue(Grid.ColumnSpanProperty, 2);
                     LyricBox.Margin = new Thickness(15);
-                    ControlBtns.SetValue(Grid.ColumnProperty, 0);
-                    ControlBtns.SetValue(Grid.ColumnSpanProperty, 2);
                     LyricBoxContainer.Height = AlbumDropShadow.ActualHeight + 170;
                     break;
                 default:
                     break;
-            }
-            if (nowwidth <= 800)
-            {
-                ControlBtns.SetValue(Grid.ColumnProperty, 0);
-                ControlBtns.SetValue(Grid.ColumnSpanProperty, 2);
             }
             realclick = true;
         }
@@ -235,16 +221,6 @@ namespace HyPlayer.Pages
                 else
                     SongInfo.Visibility = Visibility.Visible;
                 */
-                if (ImageAlbum.Width < 150 && iscompact)
-                {
-                    ImageAlbum.Visibility = Visibility.Collapsed;
-                    PageContainer.Background = null;
-                }
-                else
-                {
-                    ImageAlbum.Visibility = Visibility.Visible;
-                    PageContainer.Background = Application.Current.Resources["ExpandedPlayerMask"] as AcrylicBrush;
-                }
                 SongInfo.Width = ImageAlbum.Width;
             }
             else
@@ -269,10 +245,16 @@ namespace HyPlayer.Pages
             //    SongInfo.Background = null;
             //}
 
-
-
-            if (Common.Setting.lyricAlignment) LyricCtrlBtns.Width = LyricWidth;
-            else LyricCtrlBtns.Width = 150;
+            if ((nowwidth <= 300 || nowheight <= 300) && iscompact)
+            {
+                ImageAlbum.Visibility = Visibility.Collapsed;
+                PageContainer.Background = null;
+            }
+            else
+            {
+                ImageAlbum.Visibility = Visibility.Visible;
+                PageContainer.Background = Application.Current.Resources["ExpandedPlayerMask"] as AcrylicBrush;
+            }
 
             lastChangedLyricWidth = LyricWidth;
 
@@ -284,8 +266,6 @@ namespace HyPlayer.Pages
                     WindowMode = ExpandedWindowMode.CoverOnly;
                     ChangeWindowMode();
                 }
-                ControlBtns.SetValue(Grid.ColumnProperty, 0);
-                ControlBtns.SetValue(Grid.ColumnSpanProperty, 2);
             }
             else if (nowwidth > 800)
             {
@@ -355,7 +335,7 @@ namespace HyPlayer.Pages
                 return;
             var transform = item?.TransformToVisual((UIElement)LyricBoxContainer.Content);
             var position = transform?.TransformPoint(new Point(0, 0));
-            LyricBoxContainer.ChangeView(null, position?.Y - LyricBoxContainer.ViewportHeight / 5, null, false);
+            LyricBoxContainer.ChangeView(null, position?.Y - LyricBoxContainer.ViewportHeight / 3, null, false);
         }
 
         public void LoadLyricsBox()
@@ -539,7 +519,7 @@ namespace HyPlayer.Pages
 
         public void ExpandedPlayer_OnPointerEntered(object sender, PointerRoutedEventArgs e)
         {
-            if (Window.Current.Bounds.Height <= 300 && iscompact)
+            if ((nowwidth <= 300 || nowheight <= 300) && iscompact)
             {
                 //小窗模式
                 StackPanelTiny.Visibility = Visibility.Visible;
@@ -550,7 +530,7 @@ namespace HyPlayer.Pages
 
         public void ExpandedPlayer_OnPointerExited(object sender, PointerRoutedEventArgs e)
         {
-            if (Window.Current.Bounds.Height <= 300 && iscompact)
+            if ((nowwidth <= 250 || nowheight <= 250) && iscompact)
             {
                 //小窗模式
                 StackPanelTiny.Visibility = Visibility.Collapsed;
@@ -561,13 +541,13 @@ namespace HyPlayer.Pages
 
         private void ToggleButtonTranslation_OnClick(object sender, RoutedEventArgs e)
         {
-            Common.ShowLyricTrans = ToggleButtonTranslation.IsChecked.Value;
+            Common.ShowLyricTrans = ToggleButtonTranslation.IsChecked;
             LoadLyricsBox();
         }
 
         private void ToggleButtonSound_OnClick(object sender, RoutedEventArgs e)
         {
-            Common.ShowLyricSound = ToggleButtonSound.IsChecked.Value;
+            Common.ShowLyricSound = ToggleButtonSound.IsChecked;
             LoadLyricsBox();
         }
 
@@ -609,12 +589,13 @@ namespace HyPlayer.Pages
                     else
                     {
                         if (HyPlayList.NowPlayingItem.NcPlayItem.Artist.Count > 1)
-                            await new ArtistSelectDialog(HyPlayList.NowPlayingItem.NcPlayItem.Artist).ShowAsync();
+                        {
+                            await new ArtistSelectDialog(HyPlayList.NowPlayingItem.NcPlayItem.Artist).ShowAsync(); return;
+                        }
                         else
                             Common.NavigatePage(typeof(ArtistPage),
                                 HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
                     }
-
                     Common.NavigatePage(typeof(BlankPage));
                     Common.BarPlayBar.ButtonCollapse_OnClick(this, null);
                 }
@@ -652,15 +633,15 @@ namespace HyPlayer.Pages
         {
             if (!realclick) return;
             HandChangeMode = true;
-            if (BtnToggleAlbum.IsChecked.Value && BtnToggleLyric.IsChecked.Value)
+            if (BtnToggleAlbum.IsChecked && BtnToggleLyric.IsChecked)
             {
                 WindowMode = ExpandedWindowMode.Both;
             }
-            else if (BtnToggleAlbum.IsChecked.Value)
+            else if (BtnToggleAlbum.IsChecked)
             {
                 WindowMode = ExpandedWindowMode.CoverOnly;
             }
-            else if (BtnToggleLyric.IsChecked.Value)
+            else if (BtnToggleLyric.IsChecked)
             {
                 WindowMode = ExpandedWindowMode.LyricOnly;
             }
@@ -670,9 +651,9 @@ namespace HyPlayer.Pages
         private void BtnToggleFullScreen_Checked(object sender, RoutedEventArgs e)
         {
             if (programClick) return;
-            if (BtnToggleFullScreen.IsChecked.Value)
+            if (BtnToggleFullScreen.IsChecked)
             {
-                if (BtnToggleTinyMode.IsChecked.Value)
+                if (BtnToggleTinyMode.IsChecked)
                 {
                     BtnToggleTinyMode.IsChecked = false;
                     WindowMode = ExpandedWindowMode.Both;
@@ -688,7 +669,7 @@ namespace HyPlayer.Pages
                 ChangeWindowMode();
             }
 
-            if (BtnToggleTinyMode.IsChecked.Value)
+            if (BtnToggleTinyMode.IsChecked)
             {
                 WindowMode = ExpandedWindowMode.CoverOnly;
                 iscompact = true;

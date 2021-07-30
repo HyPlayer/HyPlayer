@@ -8,11 +8,13 @@
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
+    <!--  Grid Beam~  -->
     <Grid x:Name="PageContainer" Background="{ThemeResource ExpandedPlayerMask}">
         <Grid.RowDefinitions>
             <RowDefinition Height="30" />
             <!--  Title Bar  -->
             <RowDefinition Height="*" />
+            <RowDefinition Height="30" />
         </Grid.RowDefinitions>
         <Grid
             x:Name="AppTitleBar"
@@ -98,16 +100,12 @@
         <Grid
             x:Name="MainGrid"
             Grid.Row="1"
-            Margin="0,0,0,120"
+            Margin="0,0,0,30"
             Visibility="Visible">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="50" />
-            </Grid.RowDefinitions>
             <Grid x:Name="LeftPanel" MaxWidth="600">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
@@ -216,77 +214,87 @@
                         </StackPanel>
                     </ScrollViewer.Content>
                 </ScrollViewer>
-                <StackPanel
-                    x:Name="LyricCtrlBtns"
-                    Grid.Row="1"
-                    Height="100"
-                    VerticalAlignment="Center"
-                    Orientation="Horizontal"
-                    Spacing="50"
-                    Visibility="Visible">
-                    <ToggleButton
-                        Name="ToggleButtonTranslation"
-                        Click="ToggleButtonTranslation_OnClick"
-                        Content="译" />
-                    <ToggleButton
-                        Name="ToggleButtonSound"
-                        Click="ToggleButtonSound_OnClick"
-                        Content="音" />
-                </StackPanel>
             </Grid>
-            <Grid
-                x:Name="ControlBtns"
+            <Button
                 Grid.Row="1"
                 Grid.Column="0"
-                MaxWidth="600"
-                Margin="15,0,15,0">
-                <controls:UniformGrid
-                    Columns="4"
-                    FirstColumn="0"
-                    Orientation="Horizontal"
-                    Rows="1">
-                    <ToggleButton
-                        x:Name="BtnToggleAlbum"
-                        HorizontalAlignment="Left"
-                        Background="Transparent"
-                        Checked="BtnToggleWindowsMode_Checked"
-                        Unchecked="BtnToggleWindowsMode_Checked">
-                        <ToggleButton.Content>
-                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE15A;" />
-                        </ToggleButton.Content>
-                    </ToggleButton>
-                    <ToggleButton
-                        x:Name="BtnToggleFullScreen"
-                        HorizontalAlignment="Center"
-                        Background="Transparent"
-                        Checked="BtnToggleFullScreen_Checked"
-                        Unchecked="BtnToggleFullScreen_Checked">
-                        <ToggleButton.Content>
-                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE1D9;" />
-                        </ToggleButton.Content>
-                    </ToggleButton>
-                    <ToggleButton
-                        x:Name="BtnToggleTinyMode"
-                        HorizontalAlignment="Center"
-                        Background="Transparent"
-                        Checked="BtnToggleFullScreen_Checked"
-                        Unchecked="BtnToggleFullScreen_Checked">
-                        <ToggleButton.Content>
-                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE2B3;" />
-                        </ToggleButton.Content>
-                    </ToggleButton>
-                    <ToggleButton
-                        x:Name="BtnToggleLyric"
-                        HorizontalAlignment="Right"
-                        Background="Transparent"
-                        Checked="BtnToggleWindowsMode_Checked"
-                        Unchecked="BtnToggleWindowsMode_Checked">
-                        <ToggleButton.Content>
-                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE1A1;" />
-                        </ToggleButton.Content>
-                    </ToggleButton>
-                </controls:UniformGrid>
-            </Grid>
+                Grid.ColumnSpan="2"
+                Width="40"
+                Height="40"
+                Margin="0,0,27,50"
+                Padding="-5"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Background="Transparent"
+                BorderThickness="0"
+                CornerRadius="30">
+                <Button.Flyout>
+                    <MenuFlyout>
+                        <ToggleMenuFlyoutItem
+                            Name="ToggleButtonTranslation"
+                            Click="ToggleButtonTranslation_OnClick"
+                            Text="显示翻译">
+                            <ToggleMenuFlyoutItem.Icon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE982;" />
+                            </ToggleMenuFlyoutItem.Icon>
+                        </ToggleMenuFlyoutItem>
+                        <ToggleMenuFlyoutItem
+                            Name="ToggleButtonSound"
+                            Click="ToggleButtonSound_OnClick"
+                            Text="转罗马音">
+                            <ToggleMenuFlyoutItem.Icon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE986;" />
+                            </ToggleMenuFlyoutItem.Icon>
+                        </ToggleMenuFlyoutItem>
+                        <MenuFlyoutSeparator />
+                        <ToggleMenuFlyoutItem
+                            x:Name="BtnToggleFullScreen"
+                            HorizontalAlignment="Center"
+                            Background="Transparent"
+                            Click="BtnToggleFullScreen_Checked"
+                            Text="全屏模式">
+                            <ToggleMenuFlyoutItem.Icon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE1D9;" />
+                            </ToggleMenuFlyoutItem.Icon>
+                        </ToggleMenuFlyoutItem>
+                        <ToggleMenuFlyoutItem
+                            x:Name="BtnToggleTinyMode"
+                            HorizontalAlignment="Center"
+                            Background="Transparent"
+                            Click="BtnToggleFullScreen_Checked"
+                            Text="小窗模式">
+                            <ToggleMenuFlyoutItem.Icon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE2B3;" />
+                            </ToggleMenuFlyoutItem.Icon>
+                        </ToggleMenuFlyoutItem>
+                        <MenuFlyoutSeparator />
+                        <ToggleMenuFlyoutItem
+                            x:Name="BtnToggleAlbum"
+                            HorizontalAlignment="Left"
+                            Background="Transparent"
+                            Click="BtnToggleWindowsMode_Checked"
+                            Text="专辑封面">
+                            <ToggleMenuFlyoutItem.Icon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE15A;" />
+                            </ToggleMenuFlyoutItem.Icon>
+                        </ToggleMenuFlyoutItem>
+                        <ToggleMenuFlyoutItem
+                            x:Name="BtnToggleLyric"
+                            HorizontalAlignment="Right"
+                            Background="Transparent"
+                            Click="BtnToggleWindowsMode_Checked"
+                            Text="歌词界面">
+                            <ToggleMenuFlyoutItem.Icon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE1A1;" />
+                            </ToggleMenuFlyoutItem.Icon>
+                        </ToggleMenuFlyoutItem>
+                    </MenuFlyout>
+                </Button.Flyout>
+                <Button.Content>
+                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xEDE3;" />
+                </Button.Content>
+            </Button>
         </Grid>
+
     </Grid>
 </Page>

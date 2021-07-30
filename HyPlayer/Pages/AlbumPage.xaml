@@ -2,126 +2,105 @@
     x:Class="HyPlayer.Pages.AlbumPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     mc:Ignorable="d">
-    <ScrollViewer
-        VerticalScrollBarVisibility="Auto">
-
-        <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup>
-                <VisualState>
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger
-                            MinWindowWidth="0" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter
-                            Target="RectangleImage.Visibility"
-                            Value="Collapsed" />
-                        <Setter
-                            Target="StackPanelUserInfo.(Grid.Column)"
-                            Value="1" />
-                        <Setter
-                            Target="StackPanelUserInfo.(Grid.ColumnSpan)"
-                            Value="10" />
-                    </VisualState.Setters>
-                </VisualState>
-                <VisualState>
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger
-                            MinWindowWidth="1024" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter
-                            Target="RectangleImage.Visibility"
-                            Value="Visible" />
-                        <Setter
-                            Target="StackPanelUserInfo.(Grid.Column)"
-                            Value="5" />
-                        <Setter
-                            Target="StackPanelUserInfo.(Grid.ColumnSpan)"
-                            Value="6" />
-                    </VisualState.Setters>
-                </VisualState>
-            </VisualStateGroup>
-        </VisualStateManager.VisualStateGroups>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
         <ScrollViewer.Content>
-            <StackPanel
-                Orientation="Vertical">
-                <controls:DockPanel
-                    LastChildFill="True"
-                    x:Name="GridPersonalInformation">
+            <StackPanel Orientation="Vertical">
+                <controls:DockPanel x:Name="GridPersonalInformation" LastChildFill="True">
                     <Rectangle
                         x:Name="RectangleImage"
-                        RadiusX="10"
-                        RadiusY="10"
                         Width="250"
                         Height="250"
                         Margin="15"
-                        controls:DockPanel.Dock="Left">
+                        controls:DockPanel.Dock="Left"
+                        RadiusX="10"
+                        RadiusY="10">
                         <Rectangle.Fill>
-                            <ImageBrush
-                                x:Name="ImageRect"
-                                Stretch="UniformToFill">
+                            <ImageBrush x:Name="ImageRect" Stretch="UniformToFill">
                                 <ImageBrush.ImageSource>
-                                    <BitmapImage
-                                        UriSource="/Assets/icon.png" />
+                                    <BitmapImage UriSource="/Assets/icon.png" />
                                 </ImageBrush.ImageSource>
                             </ImageBrush>
                         </Rectangle.Fill>
                     </Rectangle>
                     <StackPanel
                         Name="StackPanelUserInfo"
-                        Orientation="Vertical" Margin="15,15,144,0">
+                        Margin="15,15,144,0"
+                        Orientation="Vertical">
                         <TextBlock
-                            Margin="0,0,0,0"
                             Name="TextBoxAlbumName"
+                            Margin="0,0,0,0"
+                            FontSize="36"
                             FontWeight="Medium"
-                            TextWrapping="Wrap"
                             Text="专辑名"
-                            FontSize="36" />
+                            TextWrapping="Wrap" />
                         <TextBlock
-                            Margin="0,2,0,0"
                             Name="TextBoxAuthor"
-                            Tapped="TextBoxAuthor_OnTapped"
-                            Text="歌手"
+                            Margin="0,2,0,0"
                             FontSize="18"
-                            Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}" />
-                        <StackPanel Spacing="15" Margin="0,10,0,0" Orientation="Horizontal">
-                            <Button
-                                Content="播放全部"
-                                Click="ButtonPlayAll_OnClick" />
-                            <Button
-                                Content="下载全部"
-                                Click="ButtonDownloadAll_OnClick" />
+                            Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
+                            Tapped="TextBoxAuthor_OnTapped"
+                            Text="歌手" />
+                        <StackPanel
+                            Margin="0,10,0,0"
+                            Orientation="Horizontal"
+                            Spacing="15">
+                            <Button Click="ButtonPlayAll_OnClick" Content="播放全部" />
+                            <Button Click="ButtonDownloadAll_OnClick" Content="下载全部" />
+                            <Button Click="ButtonComment_OnClick" Content="评论" />
                         </StackPanel>
                         <TextBlock
-                            Margin="0,5,0,0"
-                            MaxLines="7"
                             x:Name="TextBlockDesc"
-                            TextWrapping="WrapWholeWords"
-                            Text="专辑简介"
+                            Margin="0,5,0,0"
                             FontSize="13"
-                            Foreground="{ThemeResource SystemControlForegroundChromeHighBrush}" />
+                            Foreground="{ThemeResource SystemControlForegroundChromeHighBrush}"
+                            MaxLines="7"
+                            Text="专辑简介"
+                            TextWrapping="WrapWholeWords" />
                     </StackPanel>
                 </controls:DockPanel>
                 <StackPanel
-                    Margin="20,30,0,0"
-                    Spacing="10"
                     Name="SongContainer"
-                    Orientation="Vertical" />
+                    Margin="20,30,0,0"
+                    Orientation="Vertical"
+                    Spacing="10" />
                 <Button
-                    HorizontalAlignment="Center"
-                    Visibility="Collapsed"
-                    Content="加载更多"
                     x:Name="NextPage"
-                    Click="NextPage_OnClickPage_OnClick" />
-                <Grid
-                    Height="150" />
+                    HorizontalAlignment="Center"
+                    Click="NextPage_OnClickPage_OnClick"
+                    Content="加载更多"
+                    Visibility="Collapsed" />
+                <Grid Height="150" />
             </StackPanel>
 
         </ScrollViewer.Content>
+
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="RectangleImage.Visibility" Value="Collapsed" />
+                        <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="1" />
+                        <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="10" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1024" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="RectangleImage.Visibility" Value="Visible" />
+                        <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="5" />
+                        <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="6" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
     </ScrollViewer>
 </Page>

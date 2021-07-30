@@ -164,7 +164,9 @@
                     x:Name="ImageContainer"
                     Margin="0"
                     HorizontalAlignment="Left"
-                    BorderThickness="0">
+                    BorderThickness="0"
+                    IsTapEnabled="True"
+                    Tapped="ImageContainer_Tapped">
                     <controls:ImageEx
                         x:Name="AlbumImage"
                         EnableLazyLoading="True"

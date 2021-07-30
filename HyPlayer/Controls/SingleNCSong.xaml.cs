@@ -21,10 +21,11 @@ namespace HyPlayer.Controls
     {
         private readonly bool CanPlay;
         private readonly bool LoadList;
-        private readonly NCSong ncsong;
+        public readonly NCSong ncsong;
+        public readonly string plId;
 
         public SingleNCSong(NCSong song, int order, bool canplay = true, bool loadlist = false,
-            string additionalInfo = null)
+            string additionalInfo = null, string songlistId = null)
         {
             InitializeComponent();
             ncsong = song;
@@ -42,9 +43,19 @@ namespace HyPlayer.Controls
             TextBlockTransName.Text = string.IsNullOrEmpty(song.transname) ? "" : $"({song.transname})";
             TextBlockAlia.Text = additionalInfo == null ? song.alias ?? "" : additionalInfo;
             TextBlockAlbum.Text = song.Album.name;
+            FlyoutItemAlbum.Text = "专辑: " + TextBlockAlbum.Text;
             OrderId.Text = (order + 1).ToString();
             TextBlockArtist.Text = string.Join(" / ", song.Artist.Select(ar => ar.name));
-            if (song.mvid != 0) BtnMV.IsEnabled = true;
+            FlyoutItemSinger.Text = "歌手: " + TextBlockArtist.Text;
+            //if (song.mvid != 0) BtnMV.IsEnabled = true;
+            if (string.IsNullOrEmpty(songlistId))
+            {
+                Btn_Del.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                plId = songlistId;
+            }
         }
 
         public async Task<bool> AppendMe()
@@ -145,7 +156,7 @@ namespace HyPlayer.Controls
             _ = AppendMe();
         }
 
-        private async void TextBlockArtist_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
+        private async void TextBlockArtist_OnTapped(object sender, RoutedEventArgs routedEventArgs)
         {
             if (ncsong.Artist[0].Type == HyPlayItemType.Radio)
             {
@@ -180,9 +191,20 @@ namespace HyPlayer.Controls
             await new SongListSelect(ncsong.sid).ShowAsync();
         }
 
-        private void TextBlockAlbum_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
+        private void TextBlockAlbum_OnTapped(object sender, RoutedEventArgs routedEventArgs)
         {
             Common.NavigatePage(typeof(AlbumPage), ncsong.Album);
+        }
+
+        private async void Btn_Del_Click(object sender, RoutedEventArgs e)
+        {
+            var ret = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistTracks, new Dictionary<string, object>()
+            {
+                { "op" , "del" },
+                {"pid",plId },
+                {"tracks" , ncsong.sid }
+            });
+            Common.NavigateRefresh();
         }
     }
 }
