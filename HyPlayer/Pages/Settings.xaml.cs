@@ -231,6 +231,7 @@ namespace HyPlayer.Pages
             size = 15;
             if (int.TryParse(RomajiSize?.Text, out size))
             {
+                size = Math.Max(size, 1);
                 Common.Setting.romajiSize = size;
                 _lyricItem.RefreshFontSize();
             }

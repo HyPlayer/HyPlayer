@@ -134,7 +134,6 @@
                         <MenuFlyoutItem
                             x:Name="BtnMV"
                             Click="BtnMV_OnClick"
-                            IsEnabled="False"
                             Text="视频">
                             <MenuFlyoutItem.Icon>
                                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE173;" />
