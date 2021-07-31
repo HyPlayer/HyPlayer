@@ -21,6 +21,7 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using Buffer = Windows.Storage.Streams.Buffer;
+using Windows.ApplicationModel.DataTransfer;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -245,7 +246,7 @@ namespace HyPlayer.Pages
             //    SongInfo.Background = null;
             //}
 
-            if ((nowwidth <= 300 || nowheight <= 300) && iscompact)
+            if ((nowwidth <= 300 || nowheight <= 300) && iscompact && StackPanelTiny.Visibility == Visibility.Collapsed)
             {
                 ImageAlbum.Visibility = Visibility.Collapsed;
                 PageContainer.Background = null;
@@ -335,7 +336,7 @@ namespace HyPlayer.Pages
                 return;
             var transform = item?.TransformToVisual((UIElement)LyricBoxContainer.Content);
             var position = transform?.TransformPoint(new Point(0, 0));
-            LyricBoxContainer.ChangeView(null, position?.Y - LyricBoxContainer.ViewportHeight / 3, null, false);
+            LyricBoxContainer.ChangeView(null, position?.Y - LyricBoxContainer.ActualHeight / 3, null, false);
         }
 
         public void LoadLyricsBox()
@@ -683,6 +684,13 @@ namespace HyPlayer.Pages
                 _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
                 ChangeWindowMode();
             }
+        }
+
+        private void CopySongName_Click(object sender, RoutedEventArgs e)
+        {
+            DataPackage dataPackage = new DataPackage();
+            dataPackage.SetText(TextBlockSongTitle.Text);
+            Clipboard.SetContent(dataPackage);
         }
     }
 

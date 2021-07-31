@@ -13,6 +13,13 @@
                 FontSize="60"
                 Text="最近播放" />
             <Pivot x:Name="HistoryPivot" SelectionChanged="Pivot_SelectionChanged">
+                <PivotItem Header="最近播放歌曲">
+                    <StackPanel
+                        x:Name="SongHistory"
+                        Margin="30"
+                        Orientation="Vertical"
+                        Spacing="5" />
+                </PivotItem>
                 <PivotItem Header="最近歌单">
                     <StackPanel
                         x:Name="SongListHistory"
@@ -20,13 +27,6 @@
                         Padding="0,0,0,15"
                         Orientation="Vertical"
                         Spacing="15" />
-                </PivotItem>
-                <PivotItem Header="最近播放歌曲">
-                    <StackPanel
-                        x:Name="SongHistory"
-                        Margin="30"
-                        Orientation="Vertical"
-                        Spacing="5" />
                 </PivotItem>
                 <PivotItem Header="听歌排行 (本周)">
                     <StackPanel x:Name="MySongHis" Orientation="Vertical" />

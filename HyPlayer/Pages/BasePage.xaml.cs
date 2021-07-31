@@ -97,6 +97,10 @@ namespace HyPlayer.Pages
                 if (HyPlayList.isPlaying)
                     HyPlayList.Player.Pause();
                 else if (!HyPlayList.isPlaying) HyPlayList.Player.Play();
+
+            if (args.VirtualKey == VirtualKey.Escape)
+                if (Common.isExpanded)
+                    Common.BarPlayBar.ButtonCollapse_OnClick(null, null);
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)

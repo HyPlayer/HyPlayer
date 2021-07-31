@@ -169,6 +169,16 @@
                         Checked="ControlSoundChecked"
                         Content="是否开启 UI 音效"
                         Unchecked="ControlSoundUnChecked" />
+                    <controls:RadioButtons
+                        x:Name="RadioButtonsTheme"
+                        FontSize="20"
+                        Header="颜色模式: (修改将在重启 HyPlayer 后生效)"
+                        MaxColumns="3"
+                        SelectionChanged="RadioButtonsTheme_SelectionChanged">
+                        <RadioButton Content="跟随系统" />
+                        <RadioButton Content="亮色" />
+                        <RadioButton Content="暗色" />
+                    </controls:RadioButtons>
                 </StackPanel>
             </ScrollViewer>
         </PivotItem>

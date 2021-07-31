@@ -155,10 +155,7 @@
                     <RowDefinition Height="30" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <Frame
-                    x:Name="BaseFrame"
-                    Grid.Row="1"
-                    Margin="20,40,0,0" />
+                <Frame x:Name="BaseFrame" Grid.Row="1" />
             </Grid>
         </muxc:NavigationView>
         <!--  登录弹窗  -->

@@ -68,56 +68,16 @@ namespace HyPlayer.Controls
                 {
                     Common.Invoke(async () =>
                     {
-                        HyPlayList.RemoveAllSong();
-                        var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                            new Dictionary<string, object>
-                            {
-                                {"id", string.Join(',', Common.ListedSongs.Select(t => t.sid))},
-                                {"br", Common.Setting.audioRate}
-                            });
-                        if (isok)
-                        {
-                            var arr = json["data"].ToList();
-                            for (var i = 0; i < Common.ListedSongs.Count; i++)
-                            {
-                                var token = arr.Find(jt => jt["id"].ToString() == Common.ListedSongs[i].sid);
-                                if (!token.HasValues) continue;
+                        await HyPlayList.LoadNCSongs();
+                        //此处可以进行优化
+                        HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.NcPlayItem.id == ncsong.sid));
 
-                                var ncSong = Common.ListedSongs[i];
-                                var tag = "";
-                                if (token["type"].ToString().ToLowerInvariant() == "flac")
-                                    tag = "SQ";
-                                else
-                                    tag = token["br"].ToObject<int>() / 1000 + "k";
-
-                                var ncp = new NCPlayItem
-                                {
-                                    Type = ncSong.Type,
-                                    tag = tag,
-                                    Album = ncSong.Album,
-                                    Artist = ncSong.Artist,
-                                    subext = token["type"].ToString(),
-                                    id = ncSong.sid,
-                                    songname = ncSong.songname,
-                                    url = token["url"].ToString(),
-                                    LengthInMilliseconds = ncSong.LengthInMilliseconds,
-                                    size = token["size"].ToString(),
-                                    md5 = token["md5"].ToString()
-                                };
-                                var item = HyPlayList.AppendNCPlayItem(ncp);
-                            }
-
-                            HyPlayList.SongAppendDone();
-                            //此处可以进行优化
-                            HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.NcPlayItem.id == ncsong.sid));
-                        }
                     });
                 });
             }
             else
             {
                 var item = await HyPlayList.AppendNCSong(ncsong);
-                HyPlayList.SongAppendDone();
                 //此处可以进行优化
                 HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.NcPlayItem.id == ncsong.sid));
             }

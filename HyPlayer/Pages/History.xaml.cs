@@ -23,7 +23,7 @@ namespace HyPlayer.Pages
         {
             switch (HistoryPivot.SelectedIndex)
             {
-                case 0:
+                case 1:
                     SongListHistory.Children.Clear();
                     var PlayListlist = new List<NCPlayList>();
                     PlayListlist = await HistoryManagement.GetSonglistHistory();
@@ -38,7 +38,7 @@ namespace HyPlayer.Pages
                         }
 
                     break;
-                case 1:
+                case 0:
                     SongHistory.Children.Clear();
                     var Songlist = new List<NCSong>();
                     Songlist = await HistoryManagement.GetNCSongHistory();

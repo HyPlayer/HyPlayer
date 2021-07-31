@@ -100,7 +100,7 @@
         <Grid
             x:Name="MainGrid"
             Grid.Row="1"
-            Margin="0,0,0,30"
+            Margin="0,0,0,80"
             Visibility="Visible">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />
@@ -141,6 +141,10 @@
                                     Click="SaveAlbumImage_Click"
                                     Icon="Save"
                                     Text="保存图片" />
+                                <MenuFlyoutItem
+                                    Click="CopySongName_Click"
+                                    Icon="Copy"
+                                    Text="复制歌名" />
                             </MenuFlyout>
                         </FlyoutBase.AttachedFlyout>
                     </controls:ImageEx>
@@ -153,7 +157,7 @@
                     HorizontalAlignment="Stretch"
                     CornerRadius="12"
                     Orientation="Vertical"
-                    Spacing="10">
+                    Spacing="5">
                     <TextBlock
                         Name="TextBlockSongTitle"
                         x:FieldModifier="public"

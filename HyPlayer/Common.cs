@@ -248,6 +248,27 @@ namespace HyPlayer
             }
         }
 
+        public bool songUrlLazyGet
+        {
+            get { return GetSettings<bool>("songUrlLazyGet", true); }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"] = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        public int themeRequest
+        {
+            // 0 - 未设置   1 - 浅色  2 - 深色
+            get { return GetSettings<int>("themeRequest", 0); }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["themeRequest"] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         public async void OnPropertyChanged([CallerMemberName] string propertyName = "")

@@ -457,10 +457,7 @@
             Click="ButtonCollapse_OnClick"
             CornerRadius="20"
             Visibility="Collapsed">
-            <FontIcon
-                FontFamily="{StaticResource SymbolThemeFontFamily}"
-                FontSize="13"
-                Glyph="&#xE972;" />
+            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE972;" />
         </Button>
     </Grid>
 </UserControl>

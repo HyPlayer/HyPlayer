@@ -414,8 +414,7 @@ namespace HyPlayer.HyPlayControl
                         else
                         {
                             if (string.IsNullOrEmpty(NowPlayingItem.NcPlayItem.url) ||
-                                ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"] != null &&
-                                ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"].ToString() != "false")
+                                Common.Setting.songUrlLazyGet)
                             {
                                 var (isok, json) = await Common.ncapi.RequestAsync(
                                     CloudMusicApiProviders.SongUrl,
@@ -617,6 +616,7 @@ namespace HyPlayer.HyPlayControl
             var hpi = await LoadNCSong(ncSong);
             if (hpi != null)
                 List.Add(hpi);
+            SongAppendDone();
             return hpi;
         }
 
@@ -691,6 +691,53 @@ namespace HyPlayer.HyPlayControl
             };
             Common.GLOBAL["PERSONALFM"] = "false";
             return hpi;
+        }
+
+        public static async Task<bool> LoadNCSongs(HyPlayItemType itemType = HyPlayItemType.Netease, List<NCSong> NCSongs = null)
+        {
+            if (NCSongs == null)
+                NCSongs = Common.ListedSongs;
+            HyPlayList.RemoveAllSong();
+            var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
+                new Dictionary<string, object>
+                {
+                                {"id", string.Join(',', NCSongs.Select(t => t.sid))},
+                                {"br", Common.Setting.audioRate}
+                });
+            if (isok)
+            {
+                var arr = json["data"].ToList();
+                for (var i = 0; i < NCSongs.Count; i++)
+                {
+                    var token = arr.Find(jt => jt["id"].ToString() == NCSongs[i].sid);
+                    if (!token.HasValues) continue;
+
+                    var ncSong = NCSongs[i];
+                    var tag = "";
+                    if (token["type"].ToString().ToLowerInvariant() == "flac")
+                        tag = "SQ";
+                    else
+                        tag = token["br"].ToObject<int>() / 1000 + "k";
+
+                    var ncp = new NCPlayItem
+                    {
+                        Type = itemType,
+                        tag = tag,
+                        Album = ncSong.Album,
+                        Artist = ncSong.Artist,
+                        subext = token["type"].ToString(),
+                        id = ncSong.sid,
+                        songname = ncSong.songname,
+                        url = token["url"].ToString(),
+                        LengthInMilliseconds = ncSong.LengthInMilliseconds,
+                        size = token["size"].ToString(),
+                        md5 = token["md5"].ToString()
+                    };
+                    var item = AppendNCPlayItem(ncp);
+                }
+                HyPlayList.SongAppendDone();
+            }
+            return isok;
         }
 
         public static async Task<bool> AppendFile(StorageFile sf, bool nocheck163 = false)

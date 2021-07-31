@@ -40,9 +40,7 @@ namespace HyPlayer.Pages
                     ((RadioButton)t).Tag.ToString() == Common.Setting.audioRate));
             TextBoxDownloadDir.Text = Common.Setting.downloadDir;
             AnimationCheckbox.IsChecked = Common.Setting.expandAnimation;
-            LazySongUrlGetCheck.IsChecked = ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"] != null &&
-                                            ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"].ToString() !=
-                                            "false";
+            LazySongUrlGetCheck.IsChecked = Common.Setting.songUrlLazyGet;
             TextBoxXREALIP.Text = ApplicationData.Current.LocalSettings.Values["xRealIp"] != null
                 ? ApplicationData.Current.LocalSettings.Values["xRealIp"].ToString()
                 : "";
@@ -66,6 +64,7 @@ namespace HyPlayer.Pages
             StackPanelLyricSet.Children.Add(_lyricItem);
             LyricSize.Value = Common.Setting.lyricSize;
             RomajiSize.Value = Common.Setting.romajiSize;
+            RadioButtonsTheme.SelectedIndex = Common.Setting.themeRequest;
             isbyprogram = false;
 #if DEBUG
             VersionCode.Text += " Debug";
@@ -193,22 +192,26 @@ namespace HyPlayer.Pages
 
         private void LazySongUrlGetCheck_Checked(object sender, RoutedEventArgs e)
         {
-            ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"] = "true";
+            if (isbyprogram) return;
+            Common.Setting.songUrlLazyGet = true;
         }
 
         private void LazySongUrlGetCheck_Unchecked(object sender, RoutedEventArgs e)
         {
-            ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"] = "false";
+            if (isbyprogram) return;
+            Common.Setting.songUrlLazyGet = false;
         }
 
         private void ControlSoundChecked(object sender, RoutedEventArgs e)
         {
+            if (isbyprogram) return;
             ElementSoundPlayer.State = ElementSoundPlayerState.On;
             ElementSoundPlayer.SpatialAudioMode = ElementSpatialAudioMode.On;
         }
 
         private void ControlSoundUnChecked(object sender, RoutedEventArgs e)
         {
+            if (isbyprogram) return;
             ElementSoundPlayer.State = ElementSoundPlayerState.Off;
             ElementSoundPlayer.SpatialAudioMode = ElementSpatialAudioMode.Off;
         }
@@ -239,8 +242,15 @@ namespace HyPlayer.Pages
 
         private void CheckBoxAlignment_OnChecked(object sender, RoutedEventArgs e)
         {
+            if (isbyprogram) return;
             Common.Setting.lyricAlignment = CheckBoxAlignment.IsChecked != null && CheckBoxAlignment.IsChecked.Value;
             _lyricItem.RefreshFontSize();
+        }
+
+        private void RadioButtonsTheme_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (isbyprogram) return;
+            Common.Setting.themeRequest = RadioButtonsTheme.SelectedIndex;
         }
     }
 }
