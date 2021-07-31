@@ -25,7 +25,7 @@
         <Border
             x:Name="AppTitleBar"
             Height="35"
-            Margin="0,0,0,0"
+            Margin="100,0,0,0"
             VerticalAlignment="Top"
             x:FieldModifier="public"
             Background="Transparent"
