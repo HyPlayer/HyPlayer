@@ -543,7 +543,7 @@ namespace HyPlayer.HyPlayControl
 
         public static async void LoadLyrics(HyPlayItem hpi)
         {
-            if (hpi.ItemType == HyPlayItemType.Netease && hpi.AudioInfo.Lyric == null)
+            if ((hpi.ItemType == HyPlayItemType.Netease || hpi.ItemType == HyPlayItemType.Pan) && hpi.AudioInfo.Lyric == null)
             {
                 var lrcs = await LoadNCLyric(hpi);
                 hpi.AudioInfo.Lyric = lrcs.PureLyrics;
@@ -564,7 +564,7 @@ namespace HyPlayer.HyPlayControl
         {
             try
             {
-                if (ncp.ItemType != HyPlayItemType.Netease)
+                if (ncp.ItemType != HyPlayItemType.Netease && ncp.ItemType != HyPlayItemType.Pan)
                     return new PureLyricInfo
                     {
                         PureLyrics = "[00:00.000] 无歌词 请欣赏",

@@ -26,7 +26,7 @@ namespace HyPlayer.Pages
     public sealed partial class MusicCloudPage : Page
     {
         private int page;
-        private ObservableCollection<PanItemStruct> Items = new ObservableCollection<PanItemStruct>();
+        private ObservableCollection<NCSong> Items = new ObservableCollection<NCSong>();
 
         public MusicCloudPage()
         {
@@ -45,7 +45,16 @@ namespace HyPlayer.Pages
             {
                 foreach (var jToken in json["data"])
                 {
-                    var ret = PanItemStruct.CreateFromJson(jToken);
+                    var ret = NCSong.CreateFromJson(jToken["simpleSong"]);
+                    if (ret.Artist[0].id == "0")
+                    {//不是标准歌曲
+                        ret.Album.name = jToken["album"].ToString();
+                        ret.Artist.Clear();
+                        ret.Artist.Add(new NCArtist()
+                        {
+                            name = jToken["artist"].ToString()
+                        });
+                    }
                     Items.Add(ret);
                 }
 
@@ -76,14 +85,14 @@ namespace HyPlayer.Pages
                     var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
                         new Dictionary<string, object>
                         {
-                            {"id", string.Join(',', Items.Select(t => t.id))}
+                            {"id", string.Join(',', Items.Select(t => t.sid))}
                         });
                     if (isok)
                     {
                         var arr = json["data"].ToList();
                         for (var i = 0; i < Items.Count; i++)
                         {
-                            var token = arr.Find(jt => jt["id"].ToString() == Items[i].id);
+                            var token = arr.Find(jt => jt["id"].ToString() == Items[i].sid);
                             if (!token.HasValues) continue;
 
                             var ncSong = Items[i];
@@ -92,55 +101,28 @@ namespace HyPlayer.Pages
                             if (token["type"].ToString().ToLowerInvariant() == "flac")
                                 tag = "SQ";
                             else
-                                tag = ncSong.bitrate + "K";
+                                tag = token["br"].ToObject<int>() / 1000 + "k";
 
-                            var hpi = new HyPlayItem
+                            var ncp = new NCPlayItem
                             {
-                                AudioInfo = new AudioInfo
-                                {
-                                    SongName = ncSong.name,
-                                    Artist = ncSong.artistname,
-                                    ArtistArr = new string[]
-                                    {
-                                        ncSong.artistname
-                                    },
-                                    Album = ncSong.albumname,
-                                    Lyric = null,
-                                    TrLyric = null,
-                                    LengthInMilliseconds = ncSong.duration,
-                                    Picture = "https://p3.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg",
-                                    liked = false,
-                                    tag = tag,
-                                    LocalSongFile = null
-                                },
-                                ItemType = HyPlayItemType.Pan,
-                                Name = ncSong.name,
-                                NcPlayItem = new NCPlayItem
-                                {
-                                    hasLocalFile = false,
-                                    LocalStorageFile = null,
-                                    bitrate = int.Parse(ncSong.bitrate),
-                                    tag = tag,
-                                    id = ncSong.id,
-                                    songname = ncSong.name,
-                                    Type = HyPlayItemType.Pan,
-                                    Artist = new List<NCArtist>() {new NCArtist() {id = "0", name = ncSong.artistname}},
-                                    Album = new NCAlbum(){id = "0",AlbumType = HyPlayItemType.Pan,name = ncSong.artistname,cover = "https://p3.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg"},
-                                    url = token["url"].ToString(),
-                                    subext = token["type"].ToString(),
-                                    size = ncSong.size.ToString(),
-                                    md5 = null,
-                                    LengthInMilliseconds = ncSong.duration
-                                },
-                                Path = null
+                                tag = tag,
+                                Album = ncSong.Album,
+                                Artist = ncSong.Artist,
+                                subext = token["type"].ToString(),
+                                Type = HyPlayItemType.Pan,
+                                id = ncSong.sid,
+                                songname = ncSong.songname,
+                                url = token["url"].ToString(),
+                                LengthInMilliseconds = ncSong.LengthInMilliseconds,
+                                size = token["size"].ToString(),
+                                md5 = token["md5"].ToString()
                             };
-                            HyPlayList.List.Add(hpi);
+                            HyPlayList.AppendNCPlayItem(ncp);
                         }
-
-                        HyPlayList.SongAppendDone();
-
-                        HyPlayList.SongMoveTo(SongContainer.SelectedIndex);
                     }
+
+                    HyPlayList.SongAppendDone();
+                    HyPlayList.SongMoveTo(SongContainer.SelectedIndex);
                 });
             });
         }
@@ -154,35 +136,7 @@ namespace HyPlayer.Pages
 
         private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
         {
-            DownloadManager.AddDownload(Common.ListedSongs);
-        }
-    }
-
-    public class PanItemStruct
-    {
-        public string id;
-        public long size;
-
-        // public string coverid;
-        // public string lyricid;
-        public string albumname;
-        public string artistname;
-        public string bitrate;
-        public string name;
-        public double duration;
-
-        public static PanItemStruct CreateFromJson(JToken json)
-        {
-            return new PanItemStruct
-            {
-                id = json["songId"].ToString(),
-                size = json["fileSize"].ToObject<long>(),
-                albumname = json["album"].ToString(),
-                artistname = json["artist"].ToString(),
-                bitrate = json["bitrate"].ToString(),
-                name = json["songName"].ToString(),
-                duration = json["simpleSong"]["dt"].ToObject<double>()
-            };
+            DownloadManager.AddDownload(Items.ToList());
         }
     }
 }

@@ -1,27 +1,28 @@
 ﻿<Page
-    mc:Ignorable="d"
     x:Class="HyPlayer.Pages.MusicCloudPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:classes="using:HyPlayer.Classes"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="using:HyPlayer.Pages"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    mc:Ignorable="d">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <ScrollViewer.Content>
             <StackPanel Orientation="Vertical">
-                <controls:DockPanel LastChildFill="True" x:Name="GridPersonalInformation">
+                <controls:DockPanel x:Name="GridPersonalInformation" LastChildFill="True">
                     <Rectangle
+                        x:Name="RectangleImage"
+                        Width="250"
                         Height="250"
                         Margin="15"
-                        RadiusX="10"
-                        RadiusY="10"
-                        Width="250"
                         controls:DockPanel.Dock="Left"
-                        x:Name="RectangleImage">
+                        RadiusX="10"
+                        RadiusY="10">
                         <Rectangle.Fill>
-                            <ImageBrush Stretch="UniformToFill" x:Name="ImageRect">
+                            <ImageBrush x:Name="ImageRect" Stretch="UniformToFill">
                                 <ImageBrush.ImageSource>
                                     <BitmapImage UriSource="/Assets/icon.png" />
                                 </ImageBrush.ImageSource>
@@ -29,40 +30,40 @@
                         </Rectangle.Fill>
                     </Rectangle>
                     <StackPanel
-                        Margin="15,15,144,0"
                         Name="StackPanelUserInfo"
+                        Margin="15,15,144,0"
                         Orientation="Vertical">
                         <TextBlock
+                            Margin="0,0,0,0"
                             FontSize="36"
                             FontWeight="Medium"
-                            Margin="0,0,0,0"
                             Text="我的云盘"
                             TextWrapping="Wrap" />
                     </StackPanel>
                 </controls:DockPanel>
                 <ListView Name="SongContainer" SelectionChanged="SongContainer_OnSelectionChanged">
                     <ListView.ItemTemplate>
-                        <DataTemplate x:DataType="pages:PanItemStruct">
+                        <DataTemplate x:DataType="classes:NCSong">
                             <!--  Place Holder  -->
-                            <Grid ColumnSpacing="5" Tag="{x:Bind id}">
+                            <Grid ColumnSpacing="5" Tag="{x:Bind sid}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="2*" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="{x:Bind name}" />
-                                <TextBlock Grid.Column="1" Text="{x:Bind artistname}" />
-                                <TextBlock Grid.Column="2" Text="{x:Bind albumname}" />
+                                <TextBlock Grid.Column="0" Text="{x:Bind songname}" />
+                                <TextBlock Grid.Column="1" Text="{x:Bind ArtistString}" />
+                                <TextBlock Grid.Column="2" Text="{x:Bind Album.name}" />
                             </Grid>
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
                 <Button
+                    x:Name="NextPage"
+                    HorizontalAlignment="Center"
                     Click="NextPage_OnClickPage_OnClick"
                     Content="加载更多"
-                    HorizontalAlignment="Center"
-                    Visibility="Collapsed"
-                    x:Name="NextPage" />
+                    Visibility="Collapsed" />
                 <Grid Height="150" />
             </StackPanel>
 

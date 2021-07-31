@@ -21,13 +21,13 @@ namespace HyPlayer.Classes
         public TimeSpan LyricTime;
 
         public static SongLyric PureSong = new SongLyric
-            {HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏"};
+        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏" };
 
         public static SongLyric NoLyric = new SongLyric
-            {HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏"};
+        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏" };
 
         public static SongLyric LoadingLyric = new SongLyric
-            {HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..."};
+        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..." };
     }
 
 
@@ -118,6 +118,13 @@ namespace HyPlayer.Classes
         public NCAlbum Album;
         public string alias;
         public List<NCArtist> Artist;
+        public string ArtistString
+        {
+            get
+            {
+                return string.Join(" / ", Artist.Select(t => t.name));
+            }
+        }
         public double LengthInMilliseconds;
         public int mvid;
         public string sid;
