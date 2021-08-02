@@ -35,7 +35,7 @@ namespace HyPlayer.Pages
         {
             base.OnNavigatedTo(e);
             DownloadPageFrame.Navigate(typeof(DownloadPage));
-            //LoadLocalMusic();
+            LoadLocalMusic();
         }
 
         private async void Playall_Click(object sender, RoutedEventArgs e)
@@ -62,7 +62,7 @@ namespace HyPlayer.Pages
         private async void LoadLocalMusic()
         {
             FileLoadingIndicateRing.IsActive = true;
-            foreach (var item in (await (await StorageFolder.GetFolderFromPathAsync(Common.Setting.downloadDir)).GetItemsAsync())) GetSubFiles(item);
+            foreach (var item in await (KnownFolders.MusicLibrary.GetItemsAsync()) )GetSubFiles(item);
             FileLoadingIndicateRing.IsActive = false;
         }
 
