@@ -19,6 +19,7 @@ using Kawazu;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls.Primitives;
 
 namespace HyPlayer
 {
@@ -105,6 +106,11 @@ namespace HyPlayer
             PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));
             KawazuConv = null;
             ListedSongs.Clear();
+        }
+        public static void UIElement_RightTapped(object sender, Windows.UI.Xaml.Input.RightTappedRoutedEventArgs e)
+        {
+            var element = sender as UIElement;
+            element.ContextFlyout.ShowAt(element, new FlyoutShowOptions { Position = e.GetPosition(element) });
         }
 
         public static void NavigateBack()

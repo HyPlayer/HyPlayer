@@ -5,6 +5,7 @@
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:hyplayer="using:HyPlayer"
     d:DesignHeight="70"
     d:DesignWidth="800"
     mc:Ignorable="d">
@@ -15,6 +16,7 @@
         DoubleTapped="Grid1_OnDoubleTapped"
         PointerEntered="UIElement_OnPointerEntered"
         PointerExited="Grid1_OnPointerExited"
+        RightTapped="{x:Bind hyplayer:Common.UIElement_RightTapped}"
         Tapped="Grid1_OnTapped">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="30" />
@@ -100,65 +102,66 @@
             <Button
                 x:Name="More"
                 Background="Transparent"
-                ToolTipService.ToolTip="更多">
+                ToolTipService.ToolTip="更多"
+                Click="More_Click">
                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE10C;" />
-                <Button.Flyout>
-                    <MenuFlyout>
-                        <MenuFlyoutItem
+            </Button>
+        </StackPanel>
+        <Grid.ContextFlyout>
+            <MenuFlyout>
+                <MenuFlyoutItem
                             x:Name="FlyoutItemSinger"
                             Click="TextBlockArtist_OnTapped"
                             Text="歌手">
-                            <MenuFlyoutItem.Icon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE716;" />
-                            </MenuFlyoutItem.Icon>
-                        </MenuFlyoutItem>
-                        <MenuFlyoutItem
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE716;" />
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem
                             x:Name="FlyoutItemAlbum"
                             Click="TextBlockAlbum_OnTapped"
                             Text="专辑">
-                            <MenuFlyoutItem.Icon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE93C;" />
-                            </MenuFlyoutItem.Icon>
-                        </MenuFlyoutItem>
-                        <MenuFlyoutSeparator />
-                        <MenuFlyoutItem Click="Comments_Click" Text="评论">
-                            <MenuFlyoutItem.Icon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8F2;" />
-                            </MenuFlyoutItem.Icon>
-                        </MenuFlyoutItem>
-                        <MenuFlyoutItem Click="BtnDownload_OnClick" Text="下载">
-                            <MenuFlyoutItem.Icon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE118;" />
-                            </MenuFlyoutItem.Icon>
-                        </MenuFlyoutItem>
-                        <MenuFlyoutItem
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE93C;" />
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem Click="Comments_Click" Text="评论">
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8F2;" />
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Click="BtnDownload_OnClick" Text="下载">
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE118;" />
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem
                             x:Name="BtnMV"
                             Click="BtnMV_OnClick"
                             Text="视频">
-                            <MenuFlyoutItem.Icon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE173;" />
-                            </MenuFlyoutItem.Icon>
-                        </MenuFlyoutItem>
-                        <MenuFlyoutItem Click="Btn_Sub_OnClick" Text="收藏">
-                            <MenuFlyoutItem.Icon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE1DA;" />
-                            </MenuFlyoutItem.Icon>
-                        </MenuFlyoutItem>
-                        <MenuFlyoutItem
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE173;" />
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Click="Btn_Sub_OnClick" Text="收藏">
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE1DA;" />
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem
                             x:Name="Btn_Del"
                             Click="Btn_Del_Click"
                             Foreground="Red"
                             Text="删除">
-                            <MenuFlyoutItem.Icon>
-                                <FontIcon
+                    <MenuFlyoutItem.Icon>
+                        <FontIcon
                                     FontFamily="{StaticResource SymbolThemeFontFamily}"
                                     Foreground="Red"
                                     Glyph="&#xE107;" />
-                            </MenuFlyoutItem.Icon>
-                        </MenuFlyoutItem>
-                    </MenuFlyout>
-                </Button.Flyout>
-            </Button>
-        </StackPanel>
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+            </MenuFlyout>
+        </Grid.ContextFlyout>
     </Grid>
 </UserControl>

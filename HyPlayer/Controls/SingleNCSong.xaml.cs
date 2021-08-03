@@ -12,6 +12,8 @@ using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
 using NeteaseCloudMusicApi;
+using Windows.UI.Xaml.Controls.Primitives;
+using TagLib.Asf;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -165,6 +167,12 @@ namespace HyPlayer.Controls
                 {"tracks" , ncsong.sid }
             });
             Common.NavigateRefresh();
+        }
+
+
+        private void More_Click(object sender, RoutedEventArgs e)
+        {
+            Grid1.ContextFlyout.ShowAt(sender as Button);
         }
     }
 }
