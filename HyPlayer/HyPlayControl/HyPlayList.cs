@@ -148,11 +148,14 @@ namespace HyPlayer.HyPlayControl
             SecTimer.Start();
             OnTimerTicked += () =>
             {
-                if (GCCountDown-- < 0)
+                Common.Invoke(() =>
                 {
-                    GCCountDown = 10;
-                    GC.Collect(0, GCCollectionMode.Forced);
-                }
+                    if (GCCountDown-- < 0)
+                    {
+                        GCCountDown = 10;
+                        GC.Collect(0, GCCollectionMode.Forced);
+                    }
+                });
             };
             HistoryManagement.InitializeHistoryTrack();
             //Common.Invoke(async () =>

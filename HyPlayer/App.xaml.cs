@@ -54,17 +54,19 @@ namespace HyPlayer
 
         private void MemoryManagerOnAppMemoryUsageLimitChanging(object sender, AppMemoryUsageLimitChangingEventArgs e)
         {
-            // Xbox 求你行行好,别杀我~ QAQ
-            if (isInBackground)
+            Common.Invoke(() =>
             {
-                // 内存占用达到某个值
-                Common.CollectGarbage();
-                GC.Collect();
-            }
+                // Xbox 求你行行好,别杀我~ QAQ
+                if (isInBackground)
+                {
+                    // 内存占用达到某个值
+                    Common.CollectGarbage();
+                    GC.Collect();
+                }
 
 
-            // 追踪代码
-            Crashes.TrackError(new Exception("MemoryManagerOnAppMemoryUsageLimitChanging"), new Dictionary<string, string>()
+                // 追踪代码
+                Crashes.TrackError(new Exception("MemoryManagerOnAppMemoryUsageLimitChanging"), new Dictionary<string, string>()
             {
                 {"ListCount", HyPlayList.List.Count.ToString()},
                 {"NowMemory", MemoryManager.AppMemoryUsage.ToString()},
@@ -76,21 +78,24 @@ namespace HyPlayer
                 {"DeviceFamily",AnalyticsInfo.VersionInfo.DeviceFamily},
                 {"DeviceFamilyVersion",AnalyticsInfo.VersionInfo.DeviceFamilyVersion}
             });
+            });
 
         }
 
         private void MemoryManagerOnAppMemoryUsageIncreased(object sender, object e)
         {
-            if (isInBackground)
+            Common.Invoke(() =>
             {
-                // 内存占用达到某个值
-                Common.CollectGarbage();
-                GC.Collect();
-            }
+                if (isInBackground)
+                {
+                    // 内存占用达到某个值
+                    Common.CollectGarbage();
+                    GC.Collect();
+                }
 
 
-            // 追踪代码
-            Crashes.TrackError(new Exception("MemoryManagerOnAppMemoryUsageIncreased"), new Dictionary<string, string>()
+                // 追踪代码
+                Crashes.TrackError(new Exception("MemoryManagerOnAppMemoryUsageIncreased"), new Dictionary<string, string>()
             {
                 {"ListCount", HyPlayList.List.Count.ToString()},
                 {"NowMemory", MemoryManager.AppMemoryUsage.ToString()},
@@ -100,7 +105,7 @@ namespace HyPlayer
                 {"DeviceFamily",AnalyticsInfo.VersionInfo.DeviceFamily},
                 {"DeviceFamilyVersion",AnalyticsInfo.VersionInfo.DeviceFamilyVersion}
             });
-
+            });
         }
 
 
@@ -141,9 +146,9 @@ namespace HyPlayer
             {
                 case ExtendedExecutionResult.Allowed:
                     executionSession = delaySession;
-                    Common.CollectGarbage();
                     _ = Task.Run(() => Common.Invoke(async () =>
                     {
+                        Common.CollectGarbage();
                         await Task.Delay(1000);
                         GC.Collect();
                     }));
