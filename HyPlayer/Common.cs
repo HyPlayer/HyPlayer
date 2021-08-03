@@ -80,6 +80,8 @@ namespace HyPlayer
 
         public static void NavigatePage(Type SourcePageType, object paratmer = null, object ignore = null)
         {
+            if (NavigationHistory.Count >= 1 && PageBase.NavMain.SelectedItem == NavigationHistory.Peek().Item)
+                PageBase.NavMain.SelectedItem = PageBase.ItemMain;
             NavigationHistory.Push(new NavigationHistoryItem
             {
                 PageType = SourcePageType,
@@ -120,6 +122,12 @@ namespace HyPlayer
             try
             {
                 var bak = NavigationHistory.Peek();
+                while (bak.PageType == typeof(BlankPage))
+                {
+                    NavigationHistory.Pop();
+                    bak = NavigationHistory.Peek();
+                }
+                
                 Common.BaseFrame?.Navigate(bak.PageType, bak.Paratmers);
                 NavigatingBack = true;
                 Common.PageBase.NavMain.SelectedItem = bak.Item;

@@ -60,7 +60,10 @@
                     TextChanged="AutoSuggestBox_TextChanged" />
             </muxc:NavigationView.AutoSuggestBox>
             <muxc:NavigationView.MenuItems>
-                <muxc:NavigationViewItem Content="探索">
+                <muxc:NavigationViewItem
+                    x:Name="ItemMain"
+                    x:FieldModifier="public"
+                    Content="探索">
                     <muxc:NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE12B;" />
                     </muxc:NavigationViewItem.Icon>
