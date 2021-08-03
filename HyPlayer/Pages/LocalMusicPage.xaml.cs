@@ -8,6 +8,8 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
+using NeteaseCloudMusicApi;
+using HyPlayer.Classes;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -138,6 +140,12 @@ namespace HyPlayer.Pages
             localHyItems.ForEach(t => HyPlayList.List.Add(t));
             HyPlayList.SongAppendDone();
             HyPlayList.SongMoveTo(ListBoxLocalMusicContainer.SelectedIndex);
+        }
+
+        private async void UploadCloud_Click(object sender, RoutedEventArgs e)
+        {
+            await CloudUpload.UploadMusic(localHyItems[int.Parse((sender as Button).Tag.ToString())].AudioInfo.LocalSongFile);
+
         }
     }
 }

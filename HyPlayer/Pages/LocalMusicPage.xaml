@@ -37,13 +37,17 @@
                             SelectionMode="Single">
                             <ListView.ItemTemplate>
                                 <DataTemplate x:DataType="local1:ListViewPlayItem">
-                                    <StackPanel Orientation="Horizontal">
-                                        <StackPanel Width="340" Orientation="Vertical">
+                                    <Grid>
+                                        <StackPanel Width="340" Orientation="Vertical" HorizontalAlignment="Left"> 
                                             <TextBlock Text="{x:Bind Name}" />
                                             <TextBlock Foreground="Gray" Text="{x:Bind Artist}" />
                                         </StackPanel>
-
-                                    </StackPanel>
+                                        <Button x:Name="UploadCloud" Click="UploadCloud_Click" ToolTipService.ToolTip="上传到云盘" Tag="{x:Bind index}" HorizontalAlignment="Right">
+                                            <Button.Content>
+                                                <SymbolIcon Symbol="Upload"/>
+                                            </Button.Content>
+                                        </Button>
+                                    </Grid>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
                         </ListView>
