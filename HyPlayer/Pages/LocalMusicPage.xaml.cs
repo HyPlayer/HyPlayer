@@ -10,6 +10,7 @@ using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using NeteaseCloudMusicApi;
 using HyPlayer.Classes;
+using System.Threading.Tasks;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -24,6 +25,7 @@ namespace HyPlayer.Pages
         private readonly List<HyPlayItem> localHyItems;
         private readonly List<ListViewPlayItem> localItems;
         private readonly List<StorageFile> localMusicFiles;
+        private Task FileScanTask;
 
         public LocalMusicPage()
         {
@@ -33,11 +35,19 @@ namespace HyPlayer.Pages
             localHyItems = new List<HyPlayItem>();
         }
 
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            base.OnNavigatedFrom(e);
+            localMusicFiles.Clear();
+            localItems.Clear();
+            localHyItems.Clear();
+            FileScanTask.Dispose();
+        }
+
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
             DownloadPageFrame.Navigate(typeof(DownloadPage));
-            LoadLocalMusic();
         }
 
         private async void Playall_Click(object sender, RoutedEventArgs e)
@@ -63,9 +73,20 @@ namespace HyPlayer.Pages
 
         private async void LoadLocalMusic()
         {
-            FileLoadingIndicateRing.IsActive = true;
-            foreach (var item in await (KnownFolders.MusicLibrary.GetItemsAsync()) )GetSubFiles(item);
-            FileLoadingIndicateRing.IsActive = false;
+            if (FileScanTask != null)
+            {
+                FileScanTask.Dispose();
+            }
+            var tmp = await KnownFolders.MusicLibrary.GetItemsAsync();
+            FileScanTask = Task.Run(() =>
+            {
+                Common.Invoke(() =>
+                {
+                    FileLoadingIndicateRing.IsActive = true;
+                    foreach (var item in tmp) GetSubFiles(item);
+                    FileLoadingIndicateRing.IsActive = false;
+                },Windows.UI.Core.CoreDispatcherPriority.Low);
+            });
         }
 
         private async void GetSubFiles(IStorageItem item)
@@ -146,6 +167,14 @@ namespace HyPlayer.Pages
         {
             await CloudUpload.UploadMusic(localHyItems[int.Parse((sender as Button).Tag.ToString())].AudioInfo.LocalSongFile);
 
+        }
+
+        private void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if ((sender as Pivot).SelectedIndex == 1)
+            {
+                LoadLocalMusic();
+            }
         }
     }
 }

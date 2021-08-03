@@ -7,7 +7,12 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Pivot Title="本地和下载">
+    <Pivot Title="本地和下载" SelectionChanged="Pivot_SelectionChanged">
+
+        <PivotItem Header="下载管理">
+            <Frame x:Name="DownloadPageFrame" />
+        </PivotItem>
+
         <PivotItem Header="本地歌曲">
             <Grid Margin="0,0,0,150">
                 <Grid.RowDefinitions>
@@ -25,7 +30,7 @@
                     <Button
                         x:Name="Refresh"
                         Click="Refresh_Click"
-                        Content="刷新" />
+                        Content="加载" />
                 </StackPanel>
                 <Grid Grid.Row="1">
                     <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalScrollMode="Enabled">
@@ -38,13 +43,21 @@
                             <ListView.ItemTemplate>
                                 <DataTemplate x:DataType="local1:ListViewPlayItem">
                                     <Grid>
-                                        <StackPanel Width="340" Orientation="Vertical" HorizontalAlignment="Left"> 
+                                        <StackPanel
+                                            Width="340"
+                                            HorizontalAlignment="Left"
+                                            Orientation="Vertical">
                                             <TextBlock Text="{x:Bind Name}" />
                                             <TextBlock Foreground="Gray" Text="{x:Bind Artist}" />
                                         </StackPanel>
-                                        <Button x:Name="UploadCloud" Click="UploadCloud_Click" ToolTipService.ToolTip="上传到云盘" Tag="{x:Bind index}" HorizontalAlignment="Right">
+                                        <Button
+                                            x:Name="UploadCloud"
+                                            HorizontalAlignment="Right"
+                                            Click="UploadCloud_Click"
+                                            Tag="{x:Bind index}"
+                                            ToolTipService.ToolTip="上传到云盘">
                                             <Button.Content>
-                                                <SymbolIcon Symbol="Upload"/>
+                                                <SymbolIcon Symbol="Upload" />
                                             </Button.Content>
                                         </Button>
                                     </Grid>
@@ -59,9 +72,6 @@
                         IsActive="False" />
                 </Grid>
             </Grid>
-        </PivotItem>
-        <PivotItem Header="下载管理">
-            <Frame x:Name="DownloadPageFrame" />
         </PivotItem>
     </Pivot>
 </Page>
