@@ -41,7 +41,6 @@ namespace HyPlayer.Pages
                 RadioButtonsSongBr.Items.IndexOf(RadioButtonsSongBr.Items.First(t =>
                     ((RadioButton)t).Tag.ToString() == Common.Setting.audioRate));
             TextBoxDownloadDir.Text = Common.Setting.downloadDir;
-            AnimationCheckbox.IsChecked = Common.Setting.expandAnimation;
             LazySongUrlGetCheck.IsChecked = Common.Setting.songUrlLazyGet;
             TextBoxXREALIP.Text = ApplicationData.Current.LocalSettings.Values["xRealIp"] != null
                 ? ApplicationData.Current.LocalSettings.Values["xRealIp"].ToString()
@@ -184,10 +183,6 @@ namespace HyPlayer.Pages
             }
         }
 
-        private void AnimationCheckbox_Checked(object sender, RoutedEventArgs e)
-        {
-            Common.Setting.expandAnimation = AnimationCheckbox.IsChecked.Value;
-        }
 
         private void UIElement_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {

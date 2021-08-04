@@ -126,11 +126,6 @@
         <PivotItem FontFamily="Thick" Header="实验室">
             <ScrollViewer VerticalScrollMode="Enabled">
                 <StackPanel Orientation="Vertical">
-                    <CheckBox
-                        x:Name="AnimationCheckbox"
-                        Checked="AnimationCheckbox_Checked"
-                        Content="是否开启可选动效"
-                        Unchecked="AnimationCheckbox_Checked" />
                     <Grid MaxWidth="1000">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="100" />

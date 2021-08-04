@@ -38,7 +38,7 @@ namespace HyPlayer.Controls
         {
             Common.BarPlayBar = this;
             InitializeComponent();
-            HyPlayList.Player.Volume = (double) Common.Setting.Volume / 100;
+            HyPlayList.Player.Volume = (double)Common.Setting.Volume / 100;
             SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
             HyPlayList.OnPlayItemChange += LoadPlayingFile;
             HyPlayList.OnPlayPositionChange += OnPlayPositionChange;
@@ -53,24 +53,19 @@ namespace HyPlayer.Controls
                 try
                 {
                     var list = await HistoryManagement.GetcurPlayingListHistory();
-                    await HyPlayList.LoadNCSongs(HyPlayItemType.Netease, list);
+                    await HyPlayList.AppendNCSongs(HyPlayItemType.Netease, list);
                     if (list.Count > 0)
                     {
                         int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"].ToString(),
                             out HyPlayList.NowPlaying);
                         HyPlayList.Player_SourceChanged(null, null);
+                        HyPlayList.SongAppendDone();
                     }
                 }
                 catch
                 {
                 }
             });
-            //保存播放列表 , 请注意,这个应在加载完播放列表后再设置,否则会造成无用的调用
-            HyPlayList.OnPlayListAddDone += () =>
-            {
-                HistoryManagement.SetcurPlayingListHistory(HyPlayList.List
-                    .Where(t => t.ItemType == HyPlayItemType.Netease).Select(t => t.PlayItem.id).ToList());
-            };
         }
 
 
@@ -99,7 +94,7 @@ namespace HyPlayer.Controls
             {
                 var desktopLyricsToast = new ToastContentBuilder();
                 desktopLyricsToast.SetToastScenario(ToastScenario.IncomingCall);
-                desktopLyricsToast.AddAudio(new ToastAudio {Silent = true});
+                desktopLyricsToast.AddAudio(new ToastAudio { Silent = true });
                 desktopLyricsToast.AddVisualChild(new AdaptiveText
                 {
                     Text = new BindableString("Title"),
@@ -186,6 +181,8 @@ namespace HyPlayer.Controls
         private void HyPlayList_OnPlayListAdd()
         {
             RefreshSongList();
+            HistoryManagement.SetcurPlayingListHistory(HyPlayList.List
+                    .Where(t => t.ItemType == HyPlayItemType.Netease).Select(t => t.PlayItem.id).ToList());
         }
 
         private async void TestFile()
@@ -206,32 +203,32 @@ namespace HyPlayer.Controls
 
         public void OnPlayPositionChange(TimeSpan ts)
         {
-            Common.Invoke((Action) (() =>
-            {
-                try
-                {
-                    if (HyPlayList.NowPlayingItem == null) return;
-                    TbSingerName.Content = HyPlayList.NowPlayingItem.PlayItem.ArtistString;
-                    TbAlbumName.Content = HyPlayList.NowPlayingItem.PlayItem.AlbumString;
-                    TbSongName.Text = HyPlayList.NowPlayingItem.PlayItem.Name;
-                    canslide = false;
-                    SliderProgress.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
-                    canslide = true;
-                    TextBlockTotalTime.Text =
-                        TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds).ToString(@"hh\:mm\:ss");
-                    TextBlockNowTime.Text =
-                        HyPlayList.Player.PlaybackSession.Position.ToString(@"hh\:mm\:ss");
-                    PlayStateIcon.Glyph =
-                        HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
-                            ? "\uEDB4"
-                            : "\uEDB5";
-                    //SliderAudioRate.Value = mp.Volume;
-                }
-                catch
-                {
-                    //ignore
-                }
-            }));
+            Common.Invoke((Action)(() =>
+           {
+               try
+               {
+                   if (HyPlayList.NowPlayingItem == null) return;
+                   TbSingerName.Content = HyPlayList.NowPlayingItem.PlayItem.ArtistString;
+                   TbAlbumName.Content = HyPlayList.NowPlayingItem.PlayItem.AlbumString;
+                   TbSongName.Text = HyPlayList.NowPlayingItem.PlayItem.Name;
+                   canslide = false;
+                   SliderProgress.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
+                   canslide = true;
+                   TextBlockTotalTime.Text =
+                       TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds).ToString(@"hh\:mm\:ss");
+                   TextBlockNowTime.Text =
+                       HyPlayList.Player.PlaybackSession.Position.ToString(@"hh\:mm\:ss");
+                   PlayStateIcon.Glyph =
+                       HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
+                           ? "\uEDB4"
+                           : "\uEDB5";
+                   //SliderAudioRate.Value = mp.Volume;
+               }
+               catch
+               {
+                   //ignore
+               }
+           }));
         }
 
 
@@ -263,7 +260,7 @@ namespace HyPlayer.Controls
             }
 
             if (mpi == null) return;
-            
+
             Common.Invoke(async () =>
             {
                 TbSingerName.Content = HyPlayList.NowPlayingItem.PlayItem.ArtistString;
@@ -316,6 +313,7 @@ namespace HyPlayer.Controls
                 ListBoxPlayList.ItemsSource = Contacts;
                 ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
                 realSelectSong = true;
+                PlayListTitle.Text = "播放列表 (共" + HyPlayList.List.Count + "首)";
             }
             catch
             {
@@ -495,7 +493,7 @@ namespace HyPlayer.Controls
             else
             {
                 Common.ncapi.RequestAsync(CloudMusicApiProviders.FmTrash,
-                    new Dictionary<string, object> {{"id", HyPlayList.NowPlayingItem.PlayItem.id}});
+                    new Dictionary<string, object> { { "id", HyPlayList.NowPlayingItem.PlayItem.id } });
                 PersonalFM.LoadNextFM();
             }
         }
@@ -679,7 +677,7 @@ namespace HyPlayer.Controls
 
         public double SecondValue
         {
-            get => (double) GetValue(SecondValueProperty);
+            get => (double)GetValue(SecondValueProperty);
             set => SetValue(SecondValueProperty, value);
         }
 

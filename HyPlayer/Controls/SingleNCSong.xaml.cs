@@ -71,7 +71,7 @@ namespace HyPlayer.Controls
                 {
                     Common.Invoke(async () =>
                     {
-                        await HyPlayList.LoadNCSongs();
+                        await HyPlayList.AppendNCSongs();
                         //此处可以进行优化
                         HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
 

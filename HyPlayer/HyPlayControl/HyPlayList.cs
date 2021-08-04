@@ -660,7 +660,6 @@ namespace HyPlayer.HyPlayControl
             var hpi = await LoadNCSong(ncSong);
             if (hpi != null)
                 List.Add(hpi);
-            SongAppendDone();
             return hpi;
         }
 
@@ -723,12 +722,13 @@ namespace HyPlayer.HyPlayControl
             return hpi;
         }
 
-        public static async Task<bool> LoadNCSongs(HyPlayItemType itemType = HyPlayItemType.Netease,
-            List<NCSong> NCSongs = null)
+        public static async Task<bool> AppendNCSongs(HyPlayItemType itemType = HyPlayItemType.Netease,
+            List<NCSong> NCSongs = null, bool needRemoveList = true)
         {
             if (NCSongs == null)
                 NCSongs = Common.ListedSongs;
-            HyPlayList.RemoveAllSong();
+            if (needRemoveList)
+                HyPlayList.RemoveAllSong();
             var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
                 new Dictionary<string, object>
                 {
@@ -766,8 +766,6 @@ namespace HyPlayer.HyPlayControl
                     };
                     var item = AppendNCPlayItem(ncp);
                 }
-
-                HyPlayList.SongAppendDone();
             }
 
             return isok;

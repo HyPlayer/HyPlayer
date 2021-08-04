@@ -395,10 +395,23 @@
                 <Button.Flyout>
                     <Flyout>
                         <StackPanel Orientation="Vertical">
-                            <StackPanel Orientation="Horizontal">
-                                <Button Click="ButtonCleanAll_OnClick" Content="清除全部" />
-                                <Button Click="ButtonAddLocal_OnClick" Content="添加本地" />
-                            </StackPanel>
+                            <controls:DockPanel LastChildFill="True">
+                                <TextBlock
+                                    x:Name="PlayListTitle"
+                                    Margin="16,0,0,0"
+                                    HorizontalTextAlignment="Center"
+                                    Text="播放列表" />
+                                <Button
+                                    Margin="5,0,0,0"
+                                    controls:DockPanel.Dock="Right"
+                                    Click="ButtonCleanAll_OnClick"
+                                    Content="清除全部" />
+                                <Button
+                                    HorizontalAlignment="Right"
+                                    controls:DockPanel.Dock="Right"
+                                    Click="ButtonAddLocal_OnClick"
+                                    Content="添加本地" />
+                            </controls:DockPanel>
                             <ListView
                                 Name="ListBoxPlayList"
                                 Width="400"
