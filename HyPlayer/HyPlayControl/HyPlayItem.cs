@@ -7,9 +7,7 @@ namespace HyPlayer.HyPlayControl
     {
         public AudioInfo AudioInfo;
         public HyPlayItemType ItemType;
-        public string Name;
         public NCPlayItem NcPlayItem;
-        public string Path;
 
         public NCSong ToNCSong()
         {

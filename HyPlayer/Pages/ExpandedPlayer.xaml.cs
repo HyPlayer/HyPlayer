@@ -615,7 +615,7 @@ namespace HyPlayer.Pages
         private async void SaveAlbumImage_Click(object sender, RoutedEventArgs e)
         {
             var filepicker = new FileSavePicker();
-            filepicker.SuggestedFileName = HyPlayList.NowPlayingItem.Name + "-cover.jpg";
+            filepicker.SuggestedFileName = HyPlayList.NowPlayingItem.AudioInfo.SongName + "-cover.jpg";
             filepicker.FileTypeChoices.Add("图片文件", new List<string> { ".png", ".jpg" });
             var file = await filepicker.PickSaveFileAsync();
             var stream = await (HyPlayList.NowPlayingItem.ItemType != HyPlayItemType.Local

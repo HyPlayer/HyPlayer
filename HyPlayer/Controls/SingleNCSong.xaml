@@ -4,8 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:hyplayer="using:HyPlayer"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     d:DesignHeight="70"
     d:DesignWidth="800"
     mc:Ignorable="d">
@@ -13,6 +13,7 @@
     <Grid
         x:Name="Grid1"
         BorderThickness="1"
+        CornerRadius="4"
         DoubleTapped="Grid1_OnDoubleTapped"
         PointerEntered="UIElement_OnPointerEntered"
         PointerExited="Grid1_OnPointerExited"
@@ -102,25 +103,25 @@
             <Button
                 x:Name="More"
                 Background="Transparent"
-                ToolTipService.ToolTip="更多"
-                Click="More_Click">
+                Click="More_Click"
+                ToolTipService.ToolTip="更多">
                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE10C;" />
             </Button>
         </StackPanel>
         <Grid.ContextFlyout>
             <MenuFlyout>
                 <MenuFlyoutItem
-                            x:Name="FlyoutItemSinger"
-                            Click="TextBlockArtist_OnTapped"
-                            Text="歌手">
+                    x:Name="FlyoutItemSinger"
+                    Click="TextBlockArtist_OnTapped"
+                    Text="歌手">
                     <MenuFlyoutItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE716;" />
                     </MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
                 <MenuFlyoutItem
-                            x:Name="FlyoutItemAlbum"
-                            Click="TextBlockAlbum_OnTapped"
-                            Text="专辑">
+                    x:Name="FlyoutItemAlbum"
+                    Click="TextBlockAlbum_OnTapped"
+                    Text="专辑">
                     <MenuFlyoutItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE93C;" />
                     </MenuFlyoutItem.Icon>
@@ -137,9 +138,9 @@
                     </MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
                 <MenuFlyoutItem
-                            x:Name="BtnMV"
-                            Click="BtnMV_OnClick"
-                            Text="视频">
+                    x:Name="BtnMV"
+                    Click="BtnMV_OnClick"
+                    Text="视频">
                     <MenuFlyoutItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE173;" />
                     </MenuFlyoutItem.Icon>
@@ -150,15 +151,15 @@
                     </MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
                 <MenuFlyoutItem
-                            x:Name="Btn_Del"
-                            Click="Btn_Del_Click"
-                            Foreground="Red"
-                            Text="删除">
+                    x:Name="Btn_Del"
+                    Click="Btn_Del_Click"
+                    Foreground="Red"
+                    Text="删除">
                     <MenuFlyoutItem.Icon>
                         <FontIcon
-                                    FontFamily="{StaticResource SymbolThemeFontFamily}"
-                                    Foreground="Red"
-                                    Glyph="&#xE107;" />
+                            FontFamily="{StaticResource SymbolThemeFontFamily}"
+                            Foreground="Red"
+                            Glyph="&#xE107;" />
                     </MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
             </MenuFlyout>

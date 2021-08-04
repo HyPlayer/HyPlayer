@@ -21,6 +21,7 @@ using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
 using Microsoft.Toolkit.Uwp.Notifications;
 using NeteaseCloudMusicApi;
+using Windows.Storage;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -41,13 +42,36 @@ namespace HyPlayer.Controls
             SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
             HyPlayList.OnPlayItemChange += LoadPlayingFile;
             HyPlayList.OnPlayPositionChange += OnPlayPositionChange;
-            HyPlayList.OnPlayPositionChange += UpdateMSTC;
+            //HyPlayList.OnPlayPositionChange += UpdateMSTC;
             HyPlayList.OnPlayListAddDone += HyPlayList_OnPlayListAdd;
             AlbumImage.Source = new BitmapImage(new Uri("ms-appx:Assets/icon.png"));
             if (Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
                 ButtonDesktopLyrics.Visibility = Visibility.Collapsed;
             InitializeDesktopLyric();
+            Common.Invoke(async () =>
+            {
+                try
+                {
+                    var list = await HistoryManagement.GetcurPlayingListHistory();
+                    await HyPlayList.LoadNCSongs(HyPlayItemType.Netease, list);
+                    if (list.Count > 0)
+                    {
+                        int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"].ToString(), out HyPlayList.NowPlaying);
+                        HyPlayList.Player_SourceChanged(null, null);
+                    }
+                }
+                catch
+                {
+
+                }
+            });
+            //保存播放列表 , 请注意,这个应在加载完播放列表后再设置,否则会造成无用的调用
+            HyPlayList.OnPlayListAddDone += () =>
+            {
+                HistoryManagement.SetcurPlayingListHistory(HyPlayList.List.Where(t => t.ItemType == HyPlayItemType.Netease).Select(t => t.NcPlayItem.id).ToList());
+            };
         }
+
 
         public TimeSpan nowtime => HyPlayList.Player.PlaybackSession.Position;
         private void UpdateMSTC(TimeSpan pos)
@@ -141,7 +165,7 @@ namespace HyPlayer.Controls
             {
                 SequenceNumber = 0
             };
-            data.Values["Title"] = HyPlayList.NowPlayingItem.Name;
+            data.Values["Title"] = HyPlayList.NowPlayingItem.AudioInfo.SongName;
             data.Values["PureLyric"] = HyPlayList.Lyrics[HyPlayList.lyricpos].PureLyric;
             data.Values["Translation"] = HyPlayList.Lyrics[HyPlayList.lyricpos].Translation is null
                 ? " "
@@ -184,8 +208,8 @@ namespace HyPlayer.Controls
                 {
                     if (HyPlayList.NowPlayingItem == null) return;
                     var tai = HyPlayList.NowPlayingItem.AudioInfo;
-                    TbSingerName.Text = tai.Artist;
-                    TbAlbumName.Text = tai.Album;
+                    TbSingerName.Content = tai.Artist;
+                    TbAlbumName.Content = tai.Album;
                     TbSongName.Text = tai.SongName;
                     canslide = false;
                     SliderProgress.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
@@ -240,9 +264,9 @@ namespace HyPlayer.Controls
             var ai = mpi.AudioInfo;
             Common.Invoke(async () =>
             {
-                TbSingerName.Text = ai.Artist;
+                TbSingerName.Content = ai.Artist;
                 TbSongName.Text = ai.SongName;
-                TbAlbumName.Text = ai.Album;
+                TbAlbumName.Content = ai.Album;
                 if (mpi.ItemType == HyPlayItemType.Local)
                 {
                     var img = new BitmapImage();
@@ -282,7 +306,7 @@ namespace HyPlayer.Controls
             {
                 var Contacts = new ObservableCollection<ListViewPlayItem>();
                 for (var i = 0; i < HyPlayList.List.Count; i++)
-                    Contacts.Add(new ListViewPlayItem(HyPlayList.List[i].Name, i, HyPlayList.List[i].AudioInfo.Artist));
+                    Contacts.Add(new ListViewPlayItem(HyPlayList.List[i].AudioInfo.SongName, i, HyPlayList.List[i].AudioInfo.Artist));
 
                 realSelectSong = false;
                 ListBoxPlayList.ItemsSource = Contacts;
@@ -296,6 +320,8 @@ namespace HyPlayer.Controls
 
         private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
         {
+            if (HyPlayList.NowPlayingItem.AudioInfo.SongName != null && HyPlayList.Player.Source == null)
+                HyPlayList.LoadPlayerSong();
             if (HyPlayList.isPlaying)
                 HyPlayList.Player.Pause();
             else if (!HyPlayList.isPlaying) HyPlayList.Player.Play();
@@ -496,7 +522,7 @@ namespace HyPlayer.Controls
             ButtonExpand_OnClick(sender, null);
         }
 
-        private async void TbSingerName_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
+        private async void TbSingerName_OnTapped(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -516,6 +542,29 @@ namespace HyPlayer.Controls
                     }
 
                     //ButtonCollapse_OnClick(this, null);
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        private void TbAlbumName_OnTapped(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
+                {
+                    if (HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].Type == HyPlayItemType.Radio)
+                    {
+                        Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
+                    }
+                    else
+                    {
+                        if (HyPlayList.NowPlayingItem.NcPlayItem.Album.id != "0")
+                            Common.NavigatePage(typeof(AlbumPage),
+                                HyPlayList.NowPlayingItem.NcPlayItem.Album.id);
+                    }
                 }
             }
             catch
@@ -562,7 +611,7 @@ namespace HyPlayer.Controls
                 var dataPackage = new DataPackage();
                 dataPackage.SetWebLink(new Uri("https://music.163.com/#/song?id=" +
                                                HyPlayList.NowPlayingItem.NcPlayItem.id));
-                dataPackage.Properties.Title = HyPlayList.NowPlayingItem.Name;
+                dataPackage.Properties.Title = HyPlayList.NowPlayingItem.AudioInfo.SongName;
                 dataPackage.Properties.Description =
                     "歌手: " + string.Join(';',
                         HyPlayList.NowPlayingItem.NcPlayItem.Artist

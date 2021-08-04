@@ -15,6 +15,8 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using Kawazu;
 using Microsoft.UI.Xaml.Controls;
+using Windows.Security.ExchangeActiveSyncProvisioning;
+using Microsoft.AppCenter.Crashes;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -53,6 +55,8 @@ namespace HyPlayer.Pages
             VersionCode.Text = string.Format("Version {0}.{1}.{2}.{3}  (Package ID: {4})", version.Major, version.Minor,
                 version.Build, version.Revision, packageId.Name);
             if (version.Revision != 0) VersionCode.Text += " Preview";
+            EasClientDeviceInformation deviceInfo = new EasClientDeviceInformation();
+            DeviceInfo.Text = "设备识别码: "+deviceInfo.FriendlyName;
             _lyricItem = new LyricItem(new SongLyric
             {
                 PureLyric = "歌词大小示例 AaBbCcDd 約束の言葉",

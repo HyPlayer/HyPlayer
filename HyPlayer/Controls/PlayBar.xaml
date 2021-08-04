@@ -200,18 +200,20 @@
 
                     </StackPanel>
 
-                    <TextBlock
+                    <HyperlinkButton
                         Name="TbSingerName"
+                        Padding="0"
                         VerticalAlignment="Top"
+                        Click="TbSingerName_OnTapped"
                         FontSize="12"
-                        Foreground="Gray"
-                        Tapped="TbSingerName_OnTapped" />
-                    <TextBlock
+                        Foreground="Gray" />
+                    <HyperlinkButton
                         Name="TbAlbumName"
+                        Padding="0"
                         VerticalAlignment="Top"
                         FontSize="12"
                         Foreground="Gray"
-                        Tapped="TbSingerName_OnTapped" />
+                        Tapped="TbAlbumName_OnTapped" />
                 </StackPanel>
             </StackPanel>
         </Grid>
@@ -279,8 +281,8 @@
                     <FontIcon
                         Name="PlayStateIcon"
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        Glyph="&#xEDB4;" />
-                    <!--  EDB5  -->
+                        Glyph="&#xEDB5;" />
+                    <!--  EDB4  -->
                 </Button>
                 <Button
                     Name="BtnNextSong"
@@ -342,6 +344,7 @@
                 Height="40"
                 Padding="-5"
                 HorizontalAlignment="Right"
+                Background="Transparent"
                 Click="ToggleButton_Click"
                 Content="词"
                 CornerRadius="20"

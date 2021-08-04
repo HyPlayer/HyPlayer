@@ -19,8 +19,8 @@ using Windows.System;
 using Windows.System.Profile;
 using HyPlayer.Pages;
 using Kawazu;
-using System.Collections.Generic;
 using HyPlayer.Classes;
+using Windows.Security.ExchangeActiveSyncProvisioning;
 
 namespace HyPlayer
 {
@@ -47,6 +47,9 @@ namespace HyPlayer
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             AppCenter.Start("8e88eab0-1627-4ff9-9ee7-7fd46d0629cf",
                 typeof(Analytics), typeof(Crashes));
+            AppCenter.SetEnabledAsync(true);
+            EasClientDeviceInformation deviceInfo = new EasClientDeviceInformation();
+            AppCenter.SetUserId(deviceInfo.FriendlyName);
             MemoryManager.AppMemoryUsageIncreased += MemoryManagerOnAppMemoryUsageIncreased;
             MemoryManager.AppMemoryUsageLimitChanging += MemoryManagerOnAppMemoryUsageLimitChanging;
             if (Common.Setting.themeRequest != 0)
@@ -162,15 +165,6 @@ namespace HyPlayer
                     toast.AddText("应用程序进入后台，有可能关闭");
                     toast.Show();
                     */
-                    List<string> ids = new List<string>();
-                    foreach (var item in HyPlayList.List)
-                    {
-                        if (item.ItemType == HyPlayItemType.Netease)
-                        {
-                            ids.Add(item.NcPlayItem.id);
-                        }
-                    }
-                    HistoryManagement.AddcurPlayingListHistory(ids);
                     break;
             }
         }
@@ -301,7 +295,7 @@ namespace HyPlayer
         ///     将在启动应用程序以打开特定文件等情况下使用。
         /// </summary>
         /// <param name="e">有关启动请求和过程的详细信息。</param>
-        protected override async void OnLaunched(LaunchActivatedEventArgs e)
+        protected override void OnLaunched(LaunchActivatedEventArgs e)
         {
             InitializeJumpList();
             var rootFrame = Window.Current.Content as Frame;
@@ -326,17 +320,6 @@ namespace HyPlayer
 
             if (e.PrelaunchActivated == false)
             {
-                try
-                {
-                    foreach (NCSong song in await HistoryManagement.GetcurPlayingListHistory())
-                    {
-                        await HyPlayList.AppendNCSong(song);
-                    }
-                }
-                catch
-                {
-
-                }
                 rootFrame.Navigate(typeof(MainPage), e.Arguments);
 
                 // 确保当前窗口处于活动状态

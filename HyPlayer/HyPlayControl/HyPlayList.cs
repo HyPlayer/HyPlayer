@@ -218,6 +218,7 @@ namespace HyPlayer.HyPlayControl
                             songname = NowPlayingItem.NcPlayItem.songname
                         });
                         LoadPlayerSong();
+                        Player.Play();
                     });
                 else
                     //本地歌曲炸了的话就Move下一首吧
@@ -239,6 +240,7 @@ namespace HyPlayer.HyPlayControl
             if (List.Count == 0) return;
             MoveSongPointer(true);
             LoadPlayerSong();
+            Player.Play();
         }
 
         public static void SongMovePrevious()
@@ -250,6 +252,7 @@ namespace HyPlayer.HyPlayControl
                 NowPlaying--;
 
             LoadPlayerSong();
+            Player.Play();
         }
 
         public static void SongMoveTo(int index)
@@ -257,6 +260,7 @@ namespace HyPlayer.HyPlayControl
             if (List.Count <= index) return;
             NowPlaying = index;
             LoadPlayerSong();
+            Player.Play();
         }
 
         public static void RemoveSong(int index)
@@ -272,6 +276,7 @@ namespace HyPlayer.HyPlayControl
             {
                 List.RemoveAt(index);
                 LoadPlayerSong();
+                Player.Play();
             }
 
             if (index < NowPlaying)
@@ -354,9 +359,9 @@ namespace HyPlayer.HyPlayControl
             LoadPlayerSong();
         }
 
-        private static async void LoadPlayerSong()
+        public static async void LoadPlayerSong()
         {
-            if (NowPlayingItem == null)
+            if (NowPlayingItem.AudioInfo.SongName == null)
             {
                 MoveSongPointer();
             }
@@ -454,13 +459,14 @@ namespace HyPlayer.HyPlayControl
 
             Player.Source = ms;
             MediaSystemControls.IsEnabled = true;
-            Player.Play();
+            //Player.Play();
         }
 
-        private static async void Player_SourceChanged(MediaPlayer sender, object args)
+        public static async void Player_SourceChanged(MediaPlayer sender, object args)
         {
             if (List.Count <= NowPlaying) return;
             //我们先把进度给放到最开始,免得炸
+            Player.Pause();
             Player.PlaybackSession.Position = TimeSpan.Zero;
             //当加载一个新的播放文件时,此时你应当加载歌词和SMTC
             //加载SMTC
@@ -468,6 +474,8 @@ namespace HyPlayer.HyPlayControl
             ControlsDisplayUpdater.MusicProperties.Artist = NowPlayingItem.AudioInfo.Artist;
             ControlsDisplayUpdater.MusicProperties.AlbumTitle = NowPlayingItem.AudioInfo.Album;
             ControlsDisplayUpdater.MusicProperties.Title = NowPlayingItem.AudioInfo.SongName;
+            //记录下当前播放位置
+            ApplicationData.Current.LocalSettings.Values["nowSongPointer"] = NowPlaying.ToString();
             //因为加载图片可能会高耗时,所以在此处加载
             Common.Invoke(() => OnPlayItemChange?.Invoke(NowPlayingItem));
             //加载歌词
@@ -688,9 +696,7 @@ namespace HyPlayer.HyPlayControl
             {
                 AudioInfo = ai,
                 ItemType = ncp.Type,
-                Name = ncp.songname,
                 NcPlayItem = ncp,
-                Path = ncp.url
             };
             Common.GLOBAL["PERSONALFM"] = "false";
             return hpi;
@@ -784,9 +790,7 @@ namespace HyPlayer.HyPlayControl
                 var hyPlayItem = new HyPlayItem
                 {
                     AudioInfo = ai,
-                    ItemType = HyPlayItemType.Local,
-                    Name = ai.SongName,
-                    Path = sf.Path
+                    ItemType = HyPlayItemType.Local
                 };
 
                 List.Add(hyPlayItem);

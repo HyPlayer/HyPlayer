@@ -127,7 +127,7 @@ namespace HyPlayer
                     NavigationHistory.Pop();
                     bak = NavigationHistory.Peek();
                 }
-                
+
                 Common.BaseFrame?.Navigate(bak.PageType, bak.Paratmers);
                 NavigatingBack = true;
                 Common.PageBase.NavMain.SelectedItem = bak.Item;
@@ -271,7 +271,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
         public int themeRequest
         {
             // 0 - 未设置   1 - 浅色  2 - 深色
@@ -381,11 +381,10 @@ namespace HyPlayer
                 list.RemoveRange(100, list.Count - 100);
             ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
         }
-        public static void AddcurPlayingListHistory(List<string> songids)
+        public static void SetcurPlayingListHistory(List<string> songids)
         {
-            if (songids.Count >= 100)
-                songids.RemoveRange(100, songids.Count - 100);
-            ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = JsonConvert.SerializeObject(songids);
+            //现在暂存100首,之后引入高级数据库会多加点
+            ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = JsonConvert.SerializeObject(songids.Count > 100 ? songids.GetRange(0, 100) : songids);
         }
 
         public static void ClearHistory()
@@ -439,12 +438,13 @@ namespace HyPlayer
         public static async Task<List<NCSong>> GetcurPlayingListHistory()
         {
             var retsongs = new List<NCSong>();
+            var hisSongs = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"].ToString());
+            if (hisSongs.Count < 0)
+                return retsongs;
             var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
                 new Dictionary<string, object>
                 {
-                    ["ids"] = string.Join(",",
-                        JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
-                            .Values["curPlayingListHistory"].ToString()))
+                    ["ids"] = string.Join(",", hisSongs)
                 });
             if (isOk) return json["songs"].ToArray().Select(t => NCSong.CreateFromJson(t)).ToList();
             return new List<NCSong>();

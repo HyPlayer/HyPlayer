@@ -132,13 +132,11 @@ namespace HyPlayer.Pages
                         var hyPlayItem = new HyPlayItem
                         {
                             AudioInfo = ai,
-                            ItemType = HyPlayItemType.Local,
-                            Name = ai.SongName,
-                            Path = file.Path
+                            ItemType = HyPlayItemType.Local
                         };
                         localMusicFiles.Add(file);
                         localHyItems.Add(hyPlayItem);
-                        var listViewPlay = new ListViewPlayItem(hyPlayItem.Name, index++, hyPlayItem.AudioInfo.Artist);
+                        var listViewPlay = new ListViewPlayItem(hyPlayItem.AudioInfo.SongName, index++, hyPlayItem.AudioInfo.Artist);
                         localItems.Add(listViewPlay);
                         ListBoxLocalMusicContainer.Items.Add(listViewPlay);
                     }
