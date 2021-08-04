@@ -18,7 +18,7 @@ namespace HyPlayer.HyPlayControl
 {
     internal class DownloadObject
     {
-        private NCPlayItem dontuseme;
+        private PlayItem dontuseme;
         public DownloadOperation downloadOperation;
         private string _filename;
         public string filename
@@ -194,7 +194,7 @@ namespace HyPlayer.HyPlayControl
                     return; //未获取到
                 }
 
-                dontuseme = new NCPlayItem
+                dontuseme = new PlayItem
                 {
                     bitrate = json["data"][0]["br"].ToObject<int>(),
                     tag = "下载",
@@ -202,12 +202,12 @@ namespace HyPlayer.HyPlayControl
                     Artist = ncsong.Artist,
                     subext = json["data"][0]["type"].ToString().ToLowerInvariant(),
                     id = ncsong.sid,
-                    songname = ncsong.songname,
+                    Name = ncsong.songname,
                     Type = HyPlayItemType.Netease,
                     url = json["data"][0]["url"].ToString(),
                     LengthInMilliseconds = ncsong.LengthInMilliseconds,
                     size = json["data"][0]["size"].ToString(),
-                    md5 = json["data"][0]["md5"].ToString()
+                    //md5 = json["data"][0]["md5"].ToString()
                 };
                 filename = string.Join(';', ncsong.Artist.Select(t => t.name)) + " - " + ncsong.songname + "." +
                            json["data"][0]["type"].ToString().ToLowerInvariant();

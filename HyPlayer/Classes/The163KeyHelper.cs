@@ -131,7 +131,7 @@ namespace HyPlayer.Classes
         /// <param name="tag"></param>
         /// <param name="trackId"></param>
         /// <returns></returns>
-        public static bool TrySetMusicInfo(Tag tag, NCPlayItem pi)
+        public static bool TrySetMusicInfo(Tag tag, PlayItem pi)
         {
             if (tag is null)
                 throw new ArgumentNullException(nameof(tag));
@@ -147,7 +147,7 @@ namespace HyPlayer.Classes
                     artist = null,
                     duration = pi.LengthInMilliseconds,
                     musicId = int.Parse(pi.id),
-                    musicName = pi.songname
+                    musicName = pi.Name
                 };
                 key.artist = pi.Artist.Select(t => new List<object> {t.name, int.Parse(t.id)}).ToList();
                 var enc = "music:" + JsonConvert.SerializeObject(key);

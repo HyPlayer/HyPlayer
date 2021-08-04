@@ -14,6 +14,7 @@ using HyPlayer.Pages;
 using NeteaseCloudMusicApi;
 using Windows.UI.Xaml.Controls.Primitives;
 using TagLib.Asf;
+using Windows.System.Profile;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -38,8 +39,8 @@ namespace HyPlayer.Controls
                 BtnPlay.Visibility = Visibility.Collapsed;
                 TextBlockSongname.Foreground = new SolidColorBrush(Color.FromArgb(255, 128, 128, 128));
             }
-
-            ImageRect.Source =
+            if (AnalyticsInfo.VersionInfo.DeviceFamily != "Windows.Xbox")
+                ImageRect.Source =
                 new BitmapImage(new Uri(song.Album.cover + "?param=" + StaticSource.PICSIZE_SINGLENCSONG_COVER));
             TextBlockSongname.Text = song.songname;
             TextBlockTransName.Text = string.IsNullOrEmpty(song.transname) ? "" : $"({song.transname})";
@@ -72,7 +73,7 @@ namespace HyPlayer.Controls
                     {
                         await HyPlayList.LoadNCSongs();
                         //此处可以进行优化
-                        HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.NcPlayItem.id == ncsong.sid));
+                        HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
 
                     });
                 });
@@ -81,7 +82,7 @@ namespace HyPlayer.Controls
             {
                 var item = await HyPlayList.AppendNCSong(ncsong);
                 //此处可以进行优化
-                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.NcPlayItem.id == ncsong.sid));
+                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
             }
 
             return true;

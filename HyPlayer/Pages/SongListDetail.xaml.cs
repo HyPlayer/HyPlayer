@@ -194,7 +194,7 @@ namespace HyPlayer.Pages
                             else
                                 tag = token["br"].ToObject<int>() / 1000 + "k";
 
-                            var ncp = new NCPlayItem
+                            var ncp = new PlayItem
                             {
                                 tag = tag,
                                 Album = ncSong.Album,
@@ -202,11 +202,11 @@ namespace HyPlayer.Pages
                                 subext = token["type"].ToString(),
                                 Type = HyPlayItemType.Netease,
                                 id = ncSong.sid,
-                                songname = ncSong.songname,
+                                Name = ncSong.songname,
                                 url = token["url"].ToString(),
                                 LengthInMilliseconds = ncSong.LengthInMilliseconds,
                                 size = token["size"].ToString(),
-                                md5 = token["md5"].ToString()
+                                //md5 = token["md5"].ToString()
                             };
                             HyPlayList.AppendNCPlayItem(ncp);
                         }
@@ -271,7 +271,7 @@ namespace HyPlayer.Pages
                                 else
                                     tag = token["br"].ToObject<int>() / 1000 + "k";
 
-                                var ncp = new NCPlayItem
+                                var ncp = new PlayItem
                                 {
                                     tag = tag,
                                     Album = ncSong.Album,
@@ -279,11 +279,11 @@ namespace HyPlayer.Pages
                                     subext = token["type"].ToString(),
                                     Type = HyPlayItemType.Netease,
                                     id = ncSong.sid,
-                                    songname = ncSong.songname,
+                                    Name = ncSong.songname,
                                     url = token["url"].ToString(),
                                     LengthInMilliseconds = ncSong.LengthInMilliseconds,
                                     size = token["size"].ToString(),
-                                    md5 = token["md5"].ToString()
+                                    //md5 = token["md5"].ToString()
                                 };
                                 HyPlayList.AppendNCPlayItem(ncp);
                             }

@@ -392,22 +392,22 @@ namespace HyPlayer.Pages
                         {
                             var img = new BitmapImage();
                             await img.SetSourceAsync(
-                                await mpi.AudioInfo.LocalSongFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999));
+                                await HyPlayList.NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999));
                             ImageAlbum.Source = img;
                         }
                         else
                         {
-                            ImageAlbum.PlaceholderSource = new BitmapImage(new Uri(mpi.AudioInfo.Picture + "?param=" +
+                            ImageAlbum.PlaceholderSource = new BitmapImage(new Uri(mpi.PlayItem.Album.cover + "?param=" +
                                 StaticSource.PICSIZE_EXPANDEDPLAYER_PREVIEWALBUMCOVER));
-                            ImageAlbum.Source = new BitmapImage(new Uri(mpi.AudioInfo.Picture));
+                            ImageAlbum.Source = new BitmapImage(new Uri(mpi.PlayItem.Album.cover));
                         }
 
-                        TextBlockSinger.Content = mpi.AudioInfo.Artist;
-                        TextBlockSongTitle.Text = mpi.AudioInfo.SongName;
-                        TextBlockAlbum.Content = mpi.AudioInfo.Album;
+                        TextBlockSinger.Content = mpi.PlayItem.ArtistString;
+                        TextBlockSongTitle.Text = mpi.PlayItem.Name;
+                        TextBlockAlbum.Content = mpi.PlayItem.AlbumString;
                         Background = new ImageBrush
                         { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
-                        ProgressBarPlayProg.Maximum = mpi.AudioInfo.LengthInMilliseconds;
+                        ProgressBarPlayProg.Maximum = mpi.PlayItem.LengthInMilliseconds;
                         SliderVolumn.Value = HyPlayList.Player.Volume * 100;
 
                         if (lastlrcid != HyPlayList.NowPlayingItem.GetHashCode())
@@ -558,15 +558,15 @@ namespace HyPlayer.Pages
             {
                 if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
                 {
-                    if (HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].Type == HyPlayItemType.Radio)
+                    if (HyPlayList.NowPlayingItem.PlayItem.Artist[0].Type == HyPlayItemType.Radio)
                     {
-                        Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
+                        Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.PlayItem.Artist[0].id);
                     }
                     else
                     {
-                        if (HyPlayList.NowPlayingItem.NcPlayItem.Album.id != "0")
+                        if (HyPlayList.NowPlayingItem.PlayItem.Album.id != "0")
                             Common.NavigatePage(typeof(AlbumPage),
-                                HyPlayList.NowPlayingItem.NcPlayItem.Album.id);
+                                HyPlayList.NowPlayingItem.PlayItem.Album.id);
                     }
                     Common.NavigatePage(typeof(BlankPage));
                     Common.BarPlayBar.ButtonCollapse_OnClick(this, null);
@@ -583,19 +583,19 @@ namespace HyPlayer.Pages
             {
                 if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
                 {
-                    if (HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].Type == HyPlayItemType.Radio)
+                    if (HyPlayList.NowPlayingItem.PlayItem.Artist[0].Type == HyPlayItemType.Radio)
                     {
-                        Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
+                        Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.PlayItem.Artist[0].id);
                     }
                     else
                     {
-                        if (HyPlayList.NowPlayingItem.NcPlayItem.Artist.Count > 1)
+                        if (HyPlayList.NowPlayingItem.PlayItem.Artist.Count > 1)
                         {
-                            await new ArtistSelectDialog(HyPlayList.NowPlayingItem.NcPlayItem.Artist).ShowAsync(); return;
+                            await new ArtistSelectDialog(HyPlayList.NowPlayingItem.PlayItem.Artist).ShowAsync(); return;
                         }
                         else
                             Common.NavigatePage(typeof(ArtistPage),
-                                HyPlayList.NowPlayingItem.NcPlayItem.Artist[0].id);
+                                HyPlayList.NowPlayingItem.PlayItem.Artist[0].id);
                     }
                     Common.NavigatePage(typeof(BlankPage));
                     Common.BarPlayBar.ButtonCollapse_OnClick(this, null);
@@ -615,14 +615,14 @@ namespace HyPlayer.Pages
         private async void SaveAlbumImage_Click(object sender, RoutedEventArgs e)
         {
             var filepicker = new FileSavePicker();
-            filepicker.SuggestedFileName = HyPlayList.NowPlayingItem.AudioInfo.SongName + "-cover.jpg";
+            filepicker.SuggestedFileName = HyPlayList.NowPlayingItem.PlayItem.Name + "-cover.jpg";
             filepicker.FileTypeChoices.Add("图片文件", new List<string> { ".png", ".jpg" });
             var file = await filepicker.PickSaveFileAsync();
             var stream = await (HyPlayList.NowPlayingItem.ItemType != HyPlayItemType.Local
                     ? RandomAccessStreamReference.CreateFromUri(
-                        new Uri(HyPlayList.NowPlayingItem.NcPlayItem.Album.cover))
+                        new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover))
                     : RandomAccessStreamReference.CreateFromStream(
-                        await HyPlayList.NowPlayingItem.AudioInfo.LocalSongFile.GetThumbnailAsync(
+                        await HyPlayList.NowPlayingStorageFile.GetThumbnailAsync(
                             ThumbnailMode.SingleItem, 9999)))
                 .OpenReadAsync();
             var buffer = new Buffer((uint)stream.Size);

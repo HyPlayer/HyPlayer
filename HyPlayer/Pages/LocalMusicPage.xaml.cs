@@ -24,13 +24,11 @@ namespace HyPlayer.Pages
         private int index;
         private readonly List<HyPlayItem> localHyItems;
         private readonly List<ListViewPlayItem> localItems;
-        private readonly List<StorageFile> localMusicFiles;
         private Task FileScanTask;
 
         public LocalMusicPage()
         {
             InitializeComponent();
-            localMusicFiles = new List<StorageFile>();
             localItems = new List<ListViewPlayItem>();
             localHyItems = new List<HyPlayItem>();
         }
@@ -38,7 +36,6 @@ namespace HyPlayer.Pages
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
-            localMusicFiles.Clear();
             localItems.Clear();
             localHyItems.Clear();
             FileScanTask.Dispose();
@@ -53,7 +50,7 @@ namespace HyPlayer.Pages
         private async void Playall_Click(object sender, RoutedEventArgs e)
         {
             HyPlayList.RemoveAllSong();
-            foreach (var file in localMusicFiles) await HyPlayList.AppendFile(file);
+            localHyItems.AddRange(localHyItems);
             HyPlayList.SongAppendDone();
             HyPlayList.SongMoveTo(0);
         }
@@ -61,8 +58,7 @@ namespace HyPlayer.Pages
         private void Refresh_Click(object sender, RoutedEventArgs e)
         {
             ListBoxLocalMusicContainer.SelectionChanged -= ListBoxLocalMusicContainer_SelectionChanged;
-            ListBoxLocalMusicContainer.Items.Clear();
-            localMusicFiles.Clear();
+            if (ListBoxLocalMusicContainer.Items != null) ListBoxLocalMusicContainer.Items.Clear();
             localItems.Clear();
             localHyItems.Clear();
             index = 0;
@@ -77,6 +73,7 @@ namespace HyPlayer.Pages
             {
                 FileScanTask.Dispose();
             }
+
             var tmp = await KnownFolders.MusicLibrary.GetItemsAsync();
             FileScanTask = Task.Run(() =>
             {
@@ -85,7 +82,7 @@ namespace HyPlayer.Pages
                     FileLoadingIndicateRing.IsActive = true;
                     foreach (var item in tmp) GetSubFiles(item);
                     FileLoadingIndicateRing.IsActive = false;
-                },Windows.UI.Core.CoreDispatcherPriority.Low);
+                }, Windows.UI.Core.CoreDispatcherPriority.Low);
             });
         }
 
@@ -95,55 +92,18 @@ namespace HyPlayer.Pages
             {
                 if (item is StorageFile)
                 {
+                    
                     var file = item as StorageFile;
-                    if (file.FileType == ".mp3" || file.FileType == ".flac" || file.FileType == ".wav")
-                    {
-                        var mdp = await file.Properties.GetMusicPropertiesAsync();
-                        string[] contributingArtistsKey = { "System.Music.Artist" };
-                        var contributingArtistsProperty =
-                            await mdp.RetrievePropertiesAsync(contributingArtistsKey);
-                        var contributingArtists = contributingArtistsProperty["System.Music.Artist"] as string[];
-                        if (contributingArtists is null) contributingArtists = new[] { "未知歌手" };
-
-                        var ai = new AudioInfo
-                        {
-                            tag = "本地",
-                            Album = string.IsNullOrEmpty(mdp.Album) ? "未知专辑" : mdp.Album,
-                            ArtistArr = contributingArtists,
-                            Artist = string.IsNullOrEmpty(string.Join('/', contributingArtists))
-                                ? "未知歌手"
-                                : string.Join('/', contributingArtists),
-                            LengthInMilliseconds = mdp.Duration.TotalMilliseconds,
-                            SongName = string.IsNullOrEmpty(mdp.Title) ? file.DisplayName : mdp.Title,
-                            LocalSongFile = file
-                        };
-                        try
-                        {
-                            var lrcfile =
-                                await (await file.GetParentAsync()).GetFileAsync(
-                                    Path.ChangeExtension(file.Name, "lrc"));
-                            ai.Lyric = await FileIO.ReadTextAsync(lrcfile);
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.WriteLine(ex.Message);
-                        }
-
-                        var hyPlayItem = new HyPlayItem
-                        {
-                            AudioInfo = ai,
-                            ItemType = HyPlayItemType.Local
-                        };
-                        localMusicFiles.Add(file);
-                        localHyItems.Add(hyPlayItem);
-                        var listViewPlay = new ListViewPlayItem(hyPlayItem.AudioInfo.SongName, index++, hyPlayItem.AudioInfo.Artist);
-                        localItems.Add(listViewPlay);
-                        ListBoxLocalMusicContainer.Items.Add(listViewPlay);
-                    }
+                    var hyPlayItem = await HyPlayList.LoadStorageFile(file);
+                    localHyItems.Add(hyPlayItem);
+                    var listViewPlay = new ListViewPlayItem(hyPlayItem.PlayItem.Name, index++,
+                        hyPlayItem.PlayItem.ArtistString);
+                    localItems.Add(listViewPlay);
+                    if (ListBoxLocalMusicContainer.Items != null) ListBoxLocalMusicContainer.Items.Add(listViewPlay);
                 }
                 else if (item is StorageFolder)
                 {
-                    foreach (var subitems in await ((StorageFolder)item).GetItemsAsync())
+                    foreach (var subitems in await ((StorageFolder) item).GetItemsAsync())
                         GetSubFiles(subitems);
                 }
             }
@@ -163,8 +123,8 @@ namespace HyPlayer.Pages
 
         private async void UploadCloud_Click(object sender, RoutedEventArgs e)
         {
-            await CloudUpload.UploadMusic(localHyItems[int.Parse((sender as Button).Tag.ToString())].AudioInfo.LocalSongFile);
-
+            var sf = await StorageFile.GetFileFromPathAsync(localHyItems[int.Parse((sender as Button).Tag.ToString())].PlayItem.url);
+            await CloudUpload.UploadMusic(sf);
         }
 
         private void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)

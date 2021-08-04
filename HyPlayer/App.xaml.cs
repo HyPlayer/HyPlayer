@@ -285,7 +285,7 @@ namespace HyPlayer
             rootFrame.Navigate(typeof(MainPage));
             Window.Current.Activate();
             HyPlayList.RemoveAllSong();
-            foreach (StorageFile file in args.Files) await HyPlayList.AppendFile(file);
+            foreach (StorageFile file in args.Files) await HyPlayList.AppendStorageFile(file);
             HyPlayList.SongAppendDone();
             HyPlayList.SongMoveTo(0);
         }

@@ -170,7 +170,6 @@
       <DependentUpon>SongListSelect.xaml</DependentUpon>
     </Compile>
     <Compile Include="HyPlayControl\DownloadManager.cs" />
-    <Compile Include="HyPlayControl\HyPlayItem.cs" />
     <Compile Include="HyPlayControl\HyPlayList.cs" />
     <Compile Include="Controls\SingleRadio.xaml.cs">
       <DependentUpon>SingleRadio.xaml</DependentUpon>

@@ -7,6 +7,25 @@ using Newtonsoft.Json.Linq;
 
 namespace HyPlayer.Classes
 {
+    public class HyPlayItem
+    {
+        public HyPlayItemType ItemType;
+        public PlayItem PlayItem;
+
+        public NCSong ToNCSong()
+        {
+            return PlayItem.ToNCSong();
+        }
+    }
+
+    public enum HyPlayItemType
+    {
+        Local,
+        Netease,
+        Pan,
+        Radio
+    }
+
     public struct PureLyricInfo
     {
         public string PureLyrics;
@@ -21,13 +40,13 @@ namespace HyPlayer.Classes
         public TimeSpan LyricTime;
 
         public static SongLyric PureSong = new SongLyric
-        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏" };
+            {HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏"};
 
         public static SongLyric NoLyric = new SongLyric
-        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏" };
+            {HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏"};
 
         public static SongLyric LoadingLyric = new SongLyric
-        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..." };
+            {HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..."};
     }
 
 
@@ -118,13 +137,12 @@ namespace HyPlayer.Classes
         public NCAlbum Album;
         public string alias;
         public List<NCArtist> Artist;
+
         public string ArtistString
         {
-            get
-            {
-                return string.Join(" / ", Artist.Select(t => t.name));
-            }
+            get { return string.Join(" / ", Artist.Select(t => t.name)); }
         }
+
         public double LengthInMilliseconds;
         public int mvid;
         public string sid;
@@ -164,21 +182,28 @@ namespace HyPlayer.Classes
         }
     }
 
-    public struct NCPlayItem
+    public struct PlayItem
     {
-        public bool hasLocalFile;
-        public StorageFile LocalStorageFile;
+        public bool isLocalFile;
         public int bitrate;
         public string tag;
         public string id;
-        public string songname;
+        public string Name;
         public HyPlayItemType Type;
         public List<NCArtist> Artist;
+
+        public string ArtistString
+        {
+            get
+            {
+                return string.Join(" / ", Artist.Select(t => t.name));
+            }
+        }
         public NCAlbum Album;
+        public string AlbumString => Album.name;
         public string url;
         public string subext;
         public string size;
-        public string md5;
         public double LengthInMilliseconds;
 
         public NCSong ToNCSong()
@@ -190,7 +215,7 @@ namespace HyPlayer.Classes
                 Artist = Artist,
                 LengthInMilliseconds = LengthInMilliseconds,
                 sid = id,
-                songname = songname
+                songname = Name
             };
         }
     }

@@ -39,7 +39,6 @@
             CornerRadius="4"
             EnableLazyLoading="True"
             IsCacheEnabled="False"
-            Source="/Assets/icon.png"
             Stretch="UniformToFill" />
         <Grid Grid.Column="2" Padding="7,0,0,0">
             <Grid.RowDefinitions>

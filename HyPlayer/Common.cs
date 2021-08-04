@@ -88,6 +88,7 @@ namespace HyPlayer
                 Paratmers = paratmer,
                 Item = PageBase.NavMain.SelectedItem
             });
+            Common.ListedSongs.Clear();
             BaseFrame?.Navigate(SourcePageType, paratmer);
             GC.Collect();
         }
@@ -95,6 +96,7 @@ namespace HyPlayer
         public static void NavigateRefresh()
         {
             var peek = NavigationHistory.Peek();
+            Common.ListedSongs.Clear();
             BaseFrame?.Navigate(peek.PageType, peek.Paratmers);
             GC.Collect();
         }
@@ -127,7 +129,7 @@ namespace HyPlayer
                     NavigationHistory.Pop();
                     bak = NavigationHistory.Peek();
                 }
-
+                Common.ListedSongs.Clear();
                 Common.BaseFrame?.Navigate(bak.PageType, bak.Paratmers);
                 NavigatingBack = true;
                 Common.PageBase.NavMain.SelectedItem = bak.Item;
@@ -439,7 +441,7 @@ namespace HyPlayer
         {
             var retsongs = new List<NCSong>();
             var hisSongs = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"].ToString());
-            if (hisSongs.Count < 0)
+            if (hisSongs == null || hisSongs.Count == 0)
                 return retsongs;
             var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
                 new Dictionary<string, object>
