@@ -12,6 +12,7 @@
 
     <Grid
         x:Name="Grid1"
+        Background="Transparent"
         BorderThickness="1"
         CornerRadius="4"
         DoubleTapped="Grid1_OnDoubleTapped"

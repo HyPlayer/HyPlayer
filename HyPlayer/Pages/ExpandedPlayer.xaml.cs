@@ -91,16 +91,22 @@ namespace HyPlayer.Pages
         }
         public void Dispose()
         {
-            HyPlayList.OnLyricChange -= RefreshLyricTime;
-            HyPlayList.OnPlayItemChange -= OnSongChange;
-            HyPlayList.OnLyricLoaded -= HyPlayList_OnLyricLoaded;
-            HyPlayList.OnPlayPositionChange -= HyPlayList_OnPlayPositionChange;
-            HyPlayList.OnTimerTicked -= HyPlayList_OnTimerTicked;
-            if (Window.Current != null)
-                Window.Current.SizeChanged -= Current_SizeChanged;
             Common.Invoke(() =>
             {
-                LyricList.Clear();
+                HyPlayList.OnLyricChange -= RefreshLyricTime;
+                HyPlayList.OnPlayItemChange -= OnSongChange;
+                HyPlayList.OnLyricLoaded -= HyPlayList_OnLyricLoaded;
+                HyPlayList.OnPlayPositionChange -= HyPlayList_OnPlayPositionChange;
+                HyPlayList.OnTimerTicked -= HyPlayList_OnTimerTicked;
+                ImageAlbum.Source = null;
+                ImageAlbum.PlaceholderSource = null;
+                Background = null;
+                if (Window.Current != null)
+                    Window.Current.SizeChanged -= Current_SizeChanged;
+                Common.Invoke(() =>
+                {
+                    LyricList.Clear();
+                });
             });
         }
 

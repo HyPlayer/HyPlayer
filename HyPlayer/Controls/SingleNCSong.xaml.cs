@@ -97,7 +97,7 @@ namespace HyPlayer.Controls
 
         private void Grid1_OnPointerExited(object sender, PointerRoutedEventArgs e)
         {
-            Grid1.Background = null;
+            Grid1.Background = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
             Grid1.BorderBrush = new SolidColorBrush();
         }
 
