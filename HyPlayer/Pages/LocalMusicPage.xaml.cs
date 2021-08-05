@@ -47,7 +47,7 @@ namespace HyPlayer.Pages
             DownloadPageFrame.Navigate(typeof(DownloadPage));
         }
 
-        private async void Playall_Click(object sender, RoutedEventArgs e)
+        private void Playall_Click(object sender, RoutedEventArgs e)
         {
             HyPlayList.RemoveAllSong();
             localHyItems.AddRange(localHyItems);

@@ -55,7 +55,7 @@ namespace HyPlayer.Pages
                 version.Build, version.Revision, packageId.Name);
             if (version.Revision != 0) VersionCode.Text += " Preview";
             EasClientDeviceInformation deviceInfo = new EasClientDeviceInformation();
-            DeviceInfo.Text = "设备识别码: "+deviceInfo.FriendlyName;
+            DeviceInfo.Text = "设备识别码: " + deviceInfo.FriendlyName;
             _lyricItem = new LyricItem(new SongLyric
             {
                 PureLyric = "歌词大小示例 AaBbCcDd 約束の言葉",
@@ -67,6 +67,7 @@ namespace HyPlayer.Pages
             StackPanelLyricSet.Children.Add(_lyricItem);
             LyricSize.Value = Common.Setting.lyricSize;
             RomajiSize.Value = Common.Setting.romajiSize;
+            NBShadowDepth.Value  =Common.Setting.expandedCoverShadowDepth;
             RadioButtonsTheme.SelectedIndex = Common.Setting.themeRequest;
             isbyprogram = false;
 #if DEBUG
@@ -236,6 +237,16 @@ namespace HyPlayer.Pages
                 size = Math.Max(size, 1);
                 Common.Setting.romajiSize = size;
                 _lyricItem.RefreshFontSize();
+            }
+        }
+
+        private void NBShadowDepth_OnValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
+        {
+            if (isbyprogram) return;
+            int size = 4;
+            if (int.TryParse(NBShadowDepth.Value.ToString(), out size))
+            {
+                Common.Setting.expandedCoverShadowDepth = Math.Max(0, size);
             }
         }
 

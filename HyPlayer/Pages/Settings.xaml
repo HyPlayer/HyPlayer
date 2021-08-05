@@ -128,31 +128,31 @@
                 <StackPanel Orientation="Vertical">
                     <Grid MaxWidth="1000">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="100" />
+                            <ColumnDefinition Width="150" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="50" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="X-Real-IP" />
+                        <TextBlock Grid.Column="0" Text="X-Real-IP (置空不设置)" />
                         <TextBox x:Name="TextBoxXREALIP" Grid.Column="1" />
                         <Button
                             x:Name="ButtonXREALIPSave"
                             Grid.Column="2"
                             Click="ButtonXREALIPSave_OnClick"
-                            Content="选择" />
+                            Content="设置" />
                     </Grid>
                     <Grid MaxWidth="1000">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="100" />
+                            <ColumnDefinition Width="150" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="50" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="代理服务器" />
+                        <TextBlock Grid.Column="0" Text="代理服务器 (置空不设置)" />
                         <TextBox x:Name="TextBoxPROXY" Grid.Column="1" />
                         <Button
                             x:Name="ButtonPROXYSave"
                             Grid.Column="2"
                             Click="ButtonPROXYSave_OnClick"
-                            Content="选择" />
+                            Content="设置" />
                     </Grid>
                     <CheckBox
                         x:Name="LazySongUrlGetCheck"
@@ -174,6 +174,23 @@
                         <RadioButton Content="亮色" />
                         <RadioButton Content="暗色" />
                     </controls:RadioButtons>
+
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock VerticalAlignment="Center" Text="歌词页面封面背景强度 (0为无背景)" />
+                        <controls:NumberBox
+                            x:Name="NBShadowDepth"
+                            Grid.Column="1"
+                            Width="100"
+                            LargeChange="5"
+                            SmallChange="1"
+                            SpinButtonPlacementMode="Compact"
+                            ValueChanged="NBShadowDepth_OnValueChanged"
+                            Value="4" />
+                    </Grid>
                 </StackPanel>
             </ScrollViewer>
         </PivotItem>

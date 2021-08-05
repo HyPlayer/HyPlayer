@@ -285,6 +285,16 @@ namespace HyPlayer
             }
         }
 
+        public int expandedCoverShadowDepth
+        {
+            get => GetSettings<int>("expandedCoverShadowDepth", 4);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["expandedCoverShadowDepth"] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         public async void OnPropertyChanged([CallerMemberName] string propertyName = "")

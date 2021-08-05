@@ -65,6 +65,7 @@ namespace HyPlayer.Pages
             Current_SizeChanged(null, null);
             ToggleButtonSound.IsChecked = Common.ShowLyricSound;
             ToggleButtonTranslation.IsChecked = Common.ShowLyricTrans;
+            AlbumDropShadow.ShadowOpacity = (double)Common.Setting.expandedCoverShadowDepth / 10;
         }
 
         private void HyPlayList_OnTimerTicked()
