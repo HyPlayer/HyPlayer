@@ -18,6 +18,7 @@
         DoubleTapped="Grid1_OnDoubleTapped"
         PointerEntered="UIElement_OnPointerEntered"
         PointerExited="Grid1_OnPointerExited"
+        PointerCaptureLost="Grid1_OnPointerCaptureLost"
         RightTapped="{x:Bind hyplayer:Common.UIElement_RightTapped}"
         Tapped="Grid1_OnTapped">
         <Grid.ColumnDefinitions>
