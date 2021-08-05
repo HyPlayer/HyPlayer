@@ -14,6 +14,8 @@ using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
+using Windows.UI.Xaml.Media;
+using Windows.UI;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -97,6 +99,13 @@ namespace HyPlayer.Pages
                 var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendSongs);
                 if (isOk)
                 {
+                    if (json["data"]["dailySongs"][0]["alg"].ToString() == "birthDaySong")
+                    {
+                        // 诶呀,没想到还过生了,吼吼
+                        TextBlockDesc.Text = "生日快乐~ 今天也要开心哦!";
+                        TextBlockDesc.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 0, 0));
+                        TextBlockDesc.FontSize = 25;                        
+                    }
                     var idx = 0;
                     foreach (var song in json["data"]["dailySongs"])
                     {
