@@ -6,29 +6,27 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <ScrollViewer
-        VerticalScrollBarVisibility="Auto">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
         <ScrollViewer.Content>
             <StackPanel Orientation="Vertical">
-                <AutoSuggestBox
-                    x:Name="SearchKeywordBox"
-                    QueryIcon="Find"
-                    PlaceholderText="搜索歌曲......"
-                    GotFocus="AutoSuggestBox_GotFocus"
-                    LostFocus="AutoSuggestBox_LostFocus"
-                    QuerySubmitted="AutoSuggestBox_QuerySubmitted"
-                    TextChanged="AutoSuggestBox_TextChanged"
-                    SuggestionChosen="AutoSuggestBox_SuggestionChosen"
-                    Margin="15" />
-                <StackPanel Orientation="Horizontal" Margin="15" Spacing="5">
+                <StackPanel
+                    Margin="15"
+                    Orientation="Horizontal"
+                    Spacing="5">
                     <TextBlock Text="搜索历史" />
                     <ScrollViewer HorizontalScrollMode="Enabled">
-                        <StackPanel Orientation="Horizontal" Spacing="5" x:Name="SearchHistory" />
+                        <StackPanel
+                            x:Name="SearchHistory"
+                            Orientation="Horizontal"
+                            Spacing="5" />
                     </ScrollViewer>
                 </StackPanel>
-                <NavigationView x:Name="NavigationViewSelector" IsSettingsVisible="False"
-                                SelectionChanged="NavigationView_OnSelectionChanged" PaneDisplayMode="Top"
-                                IsBackButtonVisible="Collapsed">
+                <NavigationView
+                    x:Name="NavigationViewSelector"
+                    IsBackButtonVisible="Collapsed"
+                    IsSettingsVisible="False"
+                    PaneDisplayMode="Top"
+                    SelectionChanged="NavigationView_OnSelectionChanged">
                     <NavigationView.MenuItems>
                         <NavigationViewItem Content="单曲" Tag="1" />
                         <NavigationViewItem Content="专辑" Tag="10" />
@@ -41,31 +39,26 @@
                         <NavigationViewItem Content="视频" Tag="1014" />
                         <NavigationViewItem Content="综合" Tag="1018" />
                     </NavigationView.MenuItems>
-                    <StackPanel
-                        Orientation="Vertical">
+                    <StackPanel Orientation="Vertical">
                         <StackPanel
+                            Name="SearchResultContainer"
                             Margin="30"
-                            Spacing="5"
                             Orientation="Vertical"
-                            Name="SearchResultContainer" />
-                        <StackPanel
-                            Orientation="Horizontal"
-                            HorizontalAlignment="Center">
+                            Spacing="5" />
+                        <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
                             <Button
-                                Visibility="Collapsed"
-                                Content="上一页"
                                 x:Name="PrevPage"
-                                Click="PrevPage_OnClick" />
-                            <TextBlock
-                                x:Name="PageIndicator" />
+                                Click="PrevPage_OnClick"
+                                Content="上一页"
+                                Visibility="Collapsed" />
+                            <TextBlock x:Name="PageIndicator" />
                             <Button
-                                Visibility="Collapsed"
-                                Content="下一页"
                                 x:Name="NextPage"
-                                Click="NextPage_OnClickPage_OnClick" />
+                                Click="NextPage_OnClickPage_OnClick"
+                                Content="下一页"
+                                Visibility="Collapsed" />
                         </StackPanel>
-                        <Grid
-                            Height="150" />
+                        <Grid Height="150" />
                     </StackPanel>
                 </NavigationView>
             </StackPanel>

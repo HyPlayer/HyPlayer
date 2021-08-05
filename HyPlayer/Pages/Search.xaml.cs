@@ -46,8 +46,7 @@ namespace HyPlayer.Pages
 
             if (e.Parameter != null)
             {
-                SearchKeywordBox.Text = e.Parameter.ToString();
-                Text = SearchKeywordBox.Text;
+                Text = e.Parameter.ToString();
                 LoadResult();
             }
         }
@@ -123,8 +122,6 @@ namespace HyPlayer.Pages
 
         private void Btn_Click(object sender, RoutedEventArgs e)
         {
-            SearchKeywordBox.Text = ((Button) sender).Content.ToString();
-            Text = SearchKeywordBox.Text;
             LoadResult();
         }
 
@@ -191,46 +188,7 @@ namespace HyPlayer.Pages
                 PrevPage.Visibility = Visibility.Collapsed;
         }
 
-        private void AutoSuggestBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
-        {
-            Text = sender.Text;
-            LoadResult();
-        }
 
-        private async void AutoSuggestBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
-        {
-            if (string.IsNullOrEmpty(sender.Text))
-            {
-                AutoSuggestBox_GotFocus(sender, null);
-                return;
-            }
-
-            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchSuggest,
-                new Dictionary<string, object> {{"keywords", sender.Text}, {"type", "mobile"}});
-
-            if (isOk && json["result"] != null && json["result"]["allMatch"] != null &&
-                json["result"]["allMatch"].HasValues)
-                sender.ItemsSource = json["result"]["allMatch"].ToArray().ToList().Select(t => t["keyword"].ToString())
-                    .ToList();
-        }
-
-        private void AutoSuggestBox_SuggestionChosen(AutoSuggestBox sender,
-            AutoSuggestBoxSuggestionChosenEventArgs args)
-        {
-            sender.Text = args.SelectedItem.ToString();
-        }
-
-
-        private async void AutoSuggestBox_GotFocus(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace((sender as AutoSuggestBox)?.Text))
-            {
-                var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchHot);
-                if (isOk)
-                    ((AutoSuggestBox) sender).ItemsSource =
-                        json["result"]["hots"].ToArray().ToList().Select(t => t["first"].ToString());
-            }
-        }
 
         private void PrevPage_OnClick(object sender, RoutedEventArgs e)
         {
@@ -249,11 +207,6 @@ namespace HyPlayer.Pages
         {
             page = 0;
             LoadResult();
-        }
-
-        private void AutoSuggestBox_LostFocus(object sender, RoutedEventArgs e)
-        {
-            ((AutoSuggestBox) sender).ItemsSource = null;
         }
     }
 }

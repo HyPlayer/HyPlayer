@@ -388,6 +388,7 @@ namespace HyPlayer
                 .Values["searchHistory"].ToString());
             if (!list.Contains(Text))
             {
+                list.Remove(Text);
                 list.Insert(0, Text);
             }
             else
