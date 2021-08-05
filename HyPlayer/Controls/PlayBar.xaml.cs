@@ -22,6 +22,8 @@ using HyPlayer.Pages;
 using Microsoft.Toolkit.Uwp.Notifications;
 using NeteaseCloudMusicApi;
 using Windows.Storage;
+using System.IO;
+using Windows.Storage.Streams;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -190,12 +192,72 @@ namespace HyPlayer.Controls
             var fop = new FileOpenPicker();
             fop.FileTypeFilter.Add(".flac");
             fop.FileTypeFilter.Add(".mp3");
+            fop.FileTypeFilter.Add(".ncm");
 
 
             var files =
                 await fop.PickMultipleFilesAsync();
             HyPlayList.RemoveAllSong();
-            foreach (var file in files) await HyPlayList.AppendStorageFile(file);
+
+            foreach (var file in files)
+            {
+                if (Path.GetExtension(file.Path) == ".ncm")
+                {
+                    //脑残Music
+                    Stream stream = await file.OpenStreamForReadAsync();
+                    if (NCMFile.IsCorrectNCMFile(stream))
+                    {
+                        var Info = NCMFile.GetNCMMusicInfo(stream);
+                        var CoverStream = NCMFile.GetCoverStream(stream);
+                        var encStream = NCMFile.GetEncryptedStream(stream);
+                        encStream.Seek(0, SeekOrigin.Begin);
+
+                        var sf = await StorageFile.CreateStreamedFileAsync(Path.ChangeExtension(file.Name, Info.format), (t) =>
+                          {
+                              encStream.CopyTo(t.AsStreamForWrite());
+                          }, RandomAccessStreamReference.CreateFromStream(CoverStream.AsRandomAccessStream()));
+
+                        var hyitem = new HyPlayItem
+                        {
+                            ItemType = HyPlayItemType.Netease,
+                            PlayItem = new PlayItem
+                            {
+                                DontSetLocalStorageFile = sf,
+                                Album = new NCAlbum
+                                {
+                                    name = Info.album,
+                                    id = Info.albumId.ToString(),
+                                    cover = Info.albumPic
+                                },
+                                url = sf.Path,
+                                subext = sf.FileType,
+                                bitrate = Info.bitrate,
+                                isLocalFile = true,
+                                Type = HyPlayItemType.Netease,
+                                LengthInMilliseconds = Info.duration,
+                                id = Info.musicId.ToString(),
+                                Artist = null,
+                                /*
+                                size = sf.GetBasicPropertiesAsync()
+                                    .GetAwaiter()
+                                    .GetResult()
+                                    .Size.ToString(),
+                                */
+                                Name = Info.musicName,
+                                tag = "本地 NCM"
+                            }
+                        };
+                        hyitem.PlayItem.Artist = Info.artist.Select(t => new NCArtist { name = t[0].ToString(), id = t[1].ToString() })
+                            .ToList();
+
+                        HyPlayList.List.Add(hyitem);
+                    }
+                }
+                else
+                {
+                    await HyPlayList.AppendStorageFile(file);
+                }
+            }
 
             HyPlayList.SongAppendDone();
             HyPlayList.SongMoveTo(0);

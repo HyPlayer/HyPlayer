@@ -67,7 +67,7 @@ namespace HyPlayer.Classes
                     byt163Key = cryptoTransform.TransformFinalBlock(byt163Key, 0, byt163Key.Length);
                 }
 
-                trackId = (int) JObject.Parse(Encoding.UTF8.GetString(byt163Key).Substring(6))["musicId"];
+                trackId = (int)JObject.Parse(Encoding.UTF8.GetString(byt163Key).Substring(6))["musicId"];
             }
             catch
             {
@@ -125,6 +125,27 @@ namespace HyPlayer.Classes
             return true;
         }
 
+        public static bool TrySetMusicInfo(Tag tag, The163KeyStruct key)
+        {
+            try
+            {
+                var enc = "music:" + JsonConvert.SerializeObject(key);
+                var toEncryptArray = Encoding.UTF8.GetBytes(enc);
+                byte[] resultArray;
+                using (var cryptoTransform = _aes.CreateEncryptor())
+                {
+                    resultArray = cryptoTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+                }
+
+                tag.Description = "163 key(Don't modify):" + Convert.ToBase64String(resultArray, 0, resultArray.Length);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         /// <summary>
         ///     尝试设置163音乐信息到文件
         /// </summary>
@@ -147,25 +168,16 @@ namespace HyPlayer.Classes
                     artist = null,
                     duration = pi.LengthInMilliseconds,
                     musicId = int.Parse(pi.id),
-                    musicName = pi.Name
+                    musicName = pi.Name,
+                    format = pi.subext.ToLower()
                 };
-                key.artist = pi.Artist.Select(t => new List<object> {t.name, int.Parse(t.id)}).ToList();
-                var enc = "music:" + JsonConvert.SerializeObject(key);
-                var toEncryptArray = Encoding.UTF8.GetBytes(enc);
-                byte[] resultArray;
-                using (var cryptoTransform = _aes.CreateEncryptor())
-                {
-                    resultArray = cryptoTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
-                }
-
-                tag.Description = "163 key(Don't modify):" + Convert.ToBase64String(resultArray, 0, resultArray.Length);
+                key.artist = pi.Artist.Select(t => new List<object> { t.name, int.Parse(t.id) }).ToList();
+                return TrySetMusicInfo(tag,key);
             }
             catch
             {
                 return false;
             }
-
-            return true;
         }
 
         public static string Get163Key(Tag tag)
@@ -196,5 +208,6 @@ namespace HyPlayer.Classes
         public int bitrate { get; set; }
         public string albumPic { get; set; }
         public List<List<object>> artist { get; set; }
+        public string format { get; set; }
     }
 }

@@ -43,7 +43,7 @@ Azure 编译包会编译 Commit 并发布 Release: [查看Release](https://githu
 
 ## 隐私策略
 
-使用此应用即代表您同意 [网易云音乐隐私策略](https://st.music.163.com/official-terms/privacy#)
+使用此应用即代表您同意 [网易云音乐隐私策略](https://st.music.163.com/official-terms/privacy#) 以及 [HyPlayer 隐私策略](PrivacyPolicy.md)
 
 ## 相关说明
 
@@ -55,20 +55,27 @@ Azure 编译包会编译 Commit 并发布 Release: [查看Release](https://githu
 
 ### 关于无版权
 
-本软件将没有内置也暂时没有计划内置灰色歌曲解锁之类的功能. 
+你可以通过使用 [UnblockNeteaseMusic](https://github.com/nondanee/UnblockNeteaseMusic) 进行解灰, 打开后在 HyPlayer 设置页面填入代理服务器地址.
 
-但是对于 已购买的单曲 / 存储于音乐云盘 的歌曲却无版权仍然可以播放. 
+在使用代理服务器前,你可能需要解除 UWP 网络环回限制
+
+```powershell
+CheckNetIsolation LoopbackExempt -a -n="48848aaaaaaccd.hyplayer_fkcggvf9kbkw0"
+```
 
 ## 使用
 
 * NeteaseCloudMusicApi
   [wwh1004/NeteaseCloudMusicApi](https://github.com/wwh1004/NeteaseCloudMusicApi) => [HyPlayer/NeteaseCloudMusicApi](https://github.com/HyPlayer/NeteaseCloudMusicApi) (MIT Licence)
-
 * Kawazu [Cutano/Kawazu](https://github.com/Cutano/Kawazu) => [HyPlayer / Kawazu](https://github.com/HyPlayer/Kawazu) (MIT Licence)
+* Windows UI Library [microsoft/microsoft-ui-xaml](https://github.com/microsoft/microsoft-ui-xaml) (MIT Licence)
+* Windows Community Toolkit [CommunityToolkit/WindowsCommunityToolkit](https://github.com/CommunityToolkit/WindowsCommunityToolkit) (MIT Licence)
+* TagLibSharp [mono/taglib-sharp](https://github.com/mono/taglib-sharp) (LGPL)
 
-* Windows UI Library [microsoft/microsoft-ui-xaml](https://github.com/microsoft/microsoft-ui-xaml)
+## 代码参考
 
-* Windows Community Toolkit [CommunityToolkit/WindowsCommunityToolkit](https://github.com/CommunityToolkit/WindowsCommunityToolkit)
+* NLyric [wwh1004/NLyric](https://github.com/wwh1004/NLyric)
+* ncmdump [anonymous5l/ncmdump-gui](https://github.com/anonymous5l/ncmdump-gui)
 
 ## 捐助
 
