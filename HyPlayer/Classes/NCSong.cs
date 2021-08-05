@@ -185,6 +185,7 @@ namespace HyPlayer.Classes
     public struct PlayItem
     {
         public bool isLocalFile;
+        public StorageFile DontSetLocalStorageFile; //如非特殊原因请不要设置这个东西!
         public int bitrate;
         public string tag;
         public string id;

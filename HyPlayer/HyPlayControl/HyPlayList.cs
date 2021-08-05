@@ -87,10 +87,17 @@ namespace HyPlayer.HyPlayControl
                 // 此处可以改进
                 if (_lastStorageUrl != NowPlayingItem.PlayItem.url)
                 {
-                    _lastStorageUrl = NowPlayingItem.PlayItem.url;
-                    var tsk = StorageFile.GetFileFromPathAsync(NowPlayingItem.PlayItem.url).AsTask();
-                    tsk.Wait();
-                    _lastStorageFile = tsk.Result;
+                    if (NowPlayingItem.PlayItem.DontSetLocalStorageFile != null)
+                    {
+                        _lastStorageFile = NowPlayingItem.PlayItem.DontSetLocalStorageFile;
+                    }
+                    else
+                    {
+                        _lastStorageUrl = NowPlayingItem.PlayItem.url;
+                        var tsk = StorageFile.GetFileFromPathAsync(NowPlayingItem.PlayItem.url).AsTask();
+                        tsk.Wait();
+                        _lastStorageFile = tsk.Result;
+                    }
                 }
 
                 return _lastStorageFile;
@@ -101,7 +108,7 @@ namespace HyPlayer.HyPlayControl
         {
             get
             {
-                if (List.Count < NowPlaying) return new HyPlayItem {ItemType = HyPlayItemType.Netease};
+                if (List.Count <= NowPlaying) return new HyPlayItem {ItemType = HyPlayItemType.Netease};
                 return List[NowPlaying];
             }
         }
@@ -428,7 +435,7 @@ namespace HyPlayer.HyPlayControl
                                 // 加载本地缓存文件
                                 var sf =
                                     await (await ApplicationData.Current.LocalCacheFolder
-                                            .CreateFolderAsync("songCache",CreationCollisionOption.OpenIfExists))
+                                            .CreateFolderAsync("songCache", CreationCollisionOption.OpenIfExists))
                                         .GetFileAsync(NowPlayingItem.PlayItem.id +
                                                       "." + NowPlayingItem.PlayItem.subext);
                                 if ((await sf.GetBasicPropertiesAsync()).Size.ToString() ==
@@ -456,9 +463,18 @@ namespace HyPlayer.HyPlayControl
                             ms = MediaSource.CreateFromUri(new Uri(playUrl));
                         }
                     }
+
                     break;
                 case HyPlayItemType.Local:
-                    ms = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
+                    try
+                    {
+                        ms = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
+                    }
+                    catch
+                    {
+                        ms = MediaSource.CreateFromUri(new Uri(NowPlayingItem.PlayItem.url));
+                    }
+
                     break;
                 default:
                     ms = null;
@@ -789,7 +805,7 @@ namespace HyPlayer.HyPlayControl
                     {
                         isLocalFile = true,
                         bitrate = (int) mdp.Bitrate,
-                        tag = "本地",
+                        tag = sf.Provider.DisplayName,
                         id = null,
                         Name = mdp.Title ?? sf.Name,
                         Type = HyPlayItemType.Local,
@@ -808,6 +824,8 @@ namespace HyPlayer.HyPlayControl
                     },
                     ItemType = HyPlayItemType.Local
                 };
+                if (sf.Provider.Id == "network")
+                    hyPlayItem.PlayItem.DontSetLocalStorageFile = sf;
                 return hyPlayItem;
             }
 
@@ -834,10 +852,12 @@ namespace HyPlayer.HyPlayControl
                     .GetResult()
                     .Size.ToString(),
                 Name = mi.musicName,
-                tag = "本地"
+                tag = sf.Provider.DisplayName
             };
             hpi.Artist = mi.artist.Select(t => new NCArtist {name = t[0].ToString(), id = t[1].ToString()})
                 .ToList();
+            if (sf.Provider.Id == "network")
+                hpi.DontSetLocalStorageFile = sf;
             return new HyPlayItem()
             {
                 ItemType = HyPlayItemType.Local,
