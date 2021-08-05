@@ -480,7 +480,7 @@ namespace HyPlayer.HyPlayControl
                     ms = null;
                     break;
             }
-
+            MediaSystemControls.IsEnabled = true;
             Player.Source = ms;
             //Player.Play();
         }
