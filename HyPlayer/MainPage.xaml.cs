@@ -9,6 +9,7 @@ using HyPlayer.Pages;
 using Kawazu;
 using HyPlayer.Controls;
 using HyPlayer.Classes;
+using Windows.UI.Xaml;
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
 
@@ -21,10 +22,15 @@ namespace HyPlayer
     {
         public MainPage()
         {
-            Common.PageMain = this;            
+            Common.PageMain = this;
             Common.ncapi.RealIP = Setting.GetSettings<string>("xRealIp", null);
             Common.ncapi.Proxy = new WebProxy(Setting.GetSettings<string>("neteaseProxy", null));
             Common.ncapi.UseProxy = !(ApplicationData.Current.LocalSettings.Values["neteaseProxy"] is null);
+            if (Common.Setting.uiSound)
+            {
+                ElementSoundPlayer.State = ElementSoundPlayerState.Off;
+                ElementSoundPlayer.SpatialAudioMode = ElementSpatialAudioMode.Off;
+            }
             NavigationCacheMode = NavigationCacheMode.Required;
             InitializeComponent();
         }
@@ -53,7 +59,7 @@ namespace HyPlayer
         private void Page_PointerEntered(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
             if (Common.PageExpandedPlayer != null)
-                Common.PageExpandedPlayer.ExpandedPlayer_OnPointerEntered(sender,e);
+                Common.PageExpandedPlayer.ExpandedPlayer_OnPointerEntered(sender, e);
         }
 
         private void Page_PointerExited(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)

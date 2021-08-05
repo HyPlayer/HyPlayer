@@ -254,6 +254,16 @@ namespace HyPlayer
             }
         }
 
+        public bool uiSound
+        {
+            get { return GetSettings<bool>("uiSound", false); }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["uiSound"] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public int songRollType
         {
             get { return GetSettings<int>("songRollType", 0); }

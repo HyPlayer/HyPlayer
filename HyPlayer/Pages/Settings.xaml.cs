@@ -70,6 +70,7 @@ namespace HyPlayer.Pages
             NBShadowDepth.Value  =Common.Setting.expandedCoverShadowDepth;
             RadioButtonsTheme.SelectedIndex = Common.Setting.themeRequest;
             CBSongCacheEnable.IsChecked = Common.Setting.enableCache;
+            ControlSoundCheck.IsChecked = Common.Setting.uiSound;
             isbyprogram = false;
 #if DEBUG
             VersionCode.Text += " Debug";
@@ -206,6 +207,7 @@ namespace HyPlayer.Pages
         private void ControlSoundChecked(object sender, RoutedEventArgs e)
         {
             if (isbyprogram) return;
+            Common.Setting.uiSound = true;
             ElementSoundPlayer.State = ElementSoundPlayerState.On;
             ElementSoundPlayer.SpatialAudioMode = ElementSpatialAudioMode.On;
         }
@@ -213,6 +215,7 @@ namespace HyPlayer.Pages
         private void ControlSoundUnChecked(object sender, RoutedEventArgs e)
         {
             if (isbyprogram) return;
+            Common.Setting.uiSound = false;
             ElementSoundPlayer.State = ElementSoundPlayerState.Off;
             ElementSoundPlayer.SpatialAudioMode = ElementSpatialAudioMode.Off;
         }
