@@ -38,7 +38,7 @@ namespace HyPlayer.Pages
             base.OnNavigatedFrom(e);
             localItems.Clear();
             localHyItems.Clear();
-            FileScanTask.Dispose();
+            FileScanTask?.Dispose();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
