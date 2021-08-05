@@ -49,7 +49,7 @@ namespace HyPlayer
                 typeof(Analytics), typeof(Crashes));
             AppCenter.SetEnabledAsync(true);
             EasClientDeviceInformation deviceInfo = new EasClientDeviceInformation();
-            AppCenter.SetUserId(deviceInfo.FriendlyName);
+            AppCenter.SetUserId(deviceInfo.Id.ToString());
             MemoryManager.AppMemoryUsageIncreased += MemoryManagerOnAppMemoryUsageIncreased;
             MemoryManager.AppMemoryUsageLimitChanging += MemoryManagerOnAppMemoryUsageLimitChanging;
             if (Common.Setting.themeRequest != 0)

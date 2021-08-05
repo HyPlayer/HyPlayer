@@ -55,7 +55,7 @@ namespace HyPlayer.Pages
                 version.Build, version.Revision, packageId.Name);
             if (version.Revision != 0) VersionCode.Text += " Preview";
             EasClientDeviceInformation deviceInfo = new EasClientDeviceInformation();
-            DeviceInfo.Text = "设备识别码: " + deviceInfo.FriendlyName;
+            DeviceInfo.Text = "设备识别码: " + deviceInfo.Id;
             _lyricItem = new LyricItem(new SongLyric
             {
                 PureLyric = "歌词大小示例 AaBbCcDd 約束の言葉",
