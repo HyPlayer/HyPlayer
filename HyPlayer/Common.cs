@@ -294,6 +294,16 @@ namespace HyPlayer
             }
         }
 
+        public bool highQualityCoverInSMTC
+        {
+            get { return GetSettings<bool>("highQualityCoverInSMTC", false); }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["highQualityCoverInSMTC"] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public int themeRequest
         {
             // 0 - 未设置   1 - 浅色  2 - 深色
@@ -388,14 +398,11 @@ namespace HyPlayer
                 .Values["searchHistory"].ToString());
             if (!list.Contains(Text))
             {
-                list.Remove(Text);
                 list.Insert(0, Text);
             }
             else
             {
-                for (var i = 0; i < list.Count; i++)
-                    if (list[i] == Text)
-                        list.Remove(list[i]);
+                list.RemoveAll(t => t == Text);
                 list.Insert(0, Text);
             }
 

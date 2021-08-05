@@ -122,6 +122,7 @@ namespace HyPlayer.Pages
 
         private void Btn_Click(object sender, RoutedEventArgs e)
         {
+            Text = (sender as Button).Content.ToString();
             LoadResult();
         }
 

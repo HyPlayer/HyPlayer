@@ -71,6 +71,7 @@ namespace HyPlayer.Pages
             RadioButtonsTheme.SelectedIndex = Common.Setting.themeRequest;
             CBSongCacheEnable.IsChecked = Common.Setting.enableCache;
             ControlSoundCheck.IsChecked = Common.Setting.uiSound;
+            HighQualityCoverInSMTC.IsChecked = Common.Setting.highQualityCoverInSMTC;
             isbyprogram = false;
 #if DEBUG
             VersionCode.Text += " Debug";
@@ -163,6 +164,13 @@ namespace HyPlayer.Pages
             ApplicationData.Current.LocalSettings.Values["xRealIp"] =
                 TextBoxXREALIP.Text == "" ? null : TextBoxXREALIP.Text;
             Common.ncapi.RealIP = (string)ApplicationData.Current.LocalSettings.Values["xRealIp"];
+        }
+
+        private void HighQualityCoverInSMTC_Changed(object sender, RoutedEventArgs e)
+        {
+            if (isbyprogram) return;
+            Common.Setting.highQualityCoverInSMTC = HighQualityCoverInSMTC.IsChecked.Value;
+            StaticSource.PICSIZE_AUDIO_PLAYER_COVER = Common.Setting.highQualityCoverInSMTC ? "1024y1024":"100y100";
         }
 
         private void ButtonPROXYSave_OnClick(object sender, RoutedEventArgs e)

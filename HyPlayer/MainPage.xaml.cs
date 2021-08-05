@@ -26,6 +26,7 @@ namespace HyPlayer
             Common.ncapi.RealIP = Setting.GetSettings<string>("xRealIp", null);
             Common.ncapi.Proxy = new WebProxy(Setting.GetSettings<string>("neteaseProxy", null));
             Common.ncapi.UseProxy = !(ApplicationData.Current.LocalSettings.Values["neteaseProxy"] is null);
+            StaticSource.PICSIZE_AUDIO_PLAYER_COVER = Common.Setting.highQualityCoverInSMTC ? "1024y1024" : "100y100";
             if (Common.Setting.uiSound)
             {
                 ElementSoundPlayer.State = ElementSoundPlayerState.Off;
