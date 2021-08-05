@@ -69,6 +69,7 @@ namespace HyPlayer.Pages
             RomajiSize.Value = Common.Setting.romajiSize;
             NBShadowDepth.Value  =Common.Setting.expandedCoverShadowDepth;
             RadioButtonsTheme.SelectedIndex = Common.Setting.themeRequest;
+            CBSongCacheEnable.IsChecked = Common.Setting.enableCache;
             isbyprogram = false;
 #if DEBUG
             VersionCode.Text += " Debug";
@@ -261,6 +262,18 @@ namespace HyPlayer.Pages
         {
             if (isbyprogram) return;
             Common.Setting.themeRequest = RadioButtonsTheme.SelectedIndex;
+        }
+
+        private void CBSongCacheEnable_Checked(object sender, RoutedEventArgs e)
+        {
+            if (isbyprogram) return;
+            Common.Setting.enableCache = CBSongCacheEnable.IsChecked != null && CBSongCacheEnable.IsChecked.Value;
+        }
+
+        private void CBSongCacheEnable_Unchecked(object sender, RoutedEventArgs e)
+        {
+            if (isbyprogram) return;
+            Common.Setting.enableCache = CBSongCacheEnable.IsChecked != null && CBSongCacheEnable.IsChecked.Value;
         }
     }
 }

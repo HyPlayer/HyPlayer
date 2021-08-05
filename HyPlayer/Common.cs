@@ -274,6 +274,16 @@ namespace HyPlayer
             }
         }
 
+        public bool enableCache
+        {
+            get { return GetSettings<bool>("enableCache", false); }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["enableCache"] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public int themeRequest
         {
             // 0 - 未设置   1 - 浅色  2 - 深色
