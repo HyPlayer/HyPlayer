@@ -254,7 +254,8 @@
                     <StackPanel
                         Margin="10,20,0,0"
                         Orientation="Horizontal"
-                        Tapped="UIElement_OnTapped">
+                        Tapped="UIElement_OnTapped"
+                        DoubleTapped="StackPanel_DoubleTapped">
                         <PersonPicture ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=GibeJPa6pAcRMKgoHC9ibI4w&amp;s=100" />
                         <StackPanel Margin="15,0,0,0" Orientation="Vertical">
                             <TextBlock FontSize="18" FontWeight="Medium">
@@ -293,7 +294,8 @@
                     <StackPanel
                         Margin="10,20,0,0"
                         Orientation="Horizontal"
-                        Tapped="UIElement_OnTapped">
+                        Tapped="UIElement_OnTapped"
+                        DoubleTapped="StackPanel_DoubleTapped">
                         <PersonPicture ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=eHh3SVVDUJKHf1I5XD7CPg&amp;s=100" />
                         <StackPanel Margin="15,0,0,0" Orientation="Vertical">
                             <TextBlock FontSize="18" FontWeight="Medium">
@@ -326,7 +328,8 @@
                     <StackPanel
                         Margin="10,20,0,0"
                         Orientation="Horizontal"
-                        Tapped="UIElement_OnTapped">
+                        Tapped="UIElement_OnTapped"
+                        DoubleTapped="StackPanel_DoubleTapped">
                         <PersonPicture ProfilePicture="https://himg.bdimg.com/sys/portraitn/item/0fd16570303132303134g930801000000" />
                         <StackPanel Margin="15,0,0,0" Orientation="Vertical">
                             <TextBlock FontSize="18" FontWeight="Medium">

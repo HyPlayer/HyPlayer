@@ -5,6 +5,7 @@
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:hyplayer="using:HyPlayer"
     Width="200"
     Height="250"
     d:DesignHeight="250"
@@ -14,7 +15,8 @@
         CornerRadius="8"
         PointerEntered="UIElement_OnPointerEntered"
         PointerExited="UIElement_OnPointerExited"
-        PointerCaptureLost="UIElement_OnPointerCaptureLost">
+        PointerCaptureLost="UIElement_OnPointerCaptureLost"
+        RightTapped="{x:Bind hyplayer:Common.UIElement_RightTapped}">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition />
@@ -62,6 +64,7 @@
             </controls:ImageEx>
             <Button
                 x:Name="PlayAllBtn"
+                ToolTipService.ToolTip="播放全部"
                 Grid.Row="0"
                 Width="50"
                 Height="50"
@@ -96,5 +99,10 @@
                     TextWrapping="WrapWholeWords" />
             </Grid>
         </Grid>
+        <Grid.ContextFlyout>
+            <MenuFlyout>
+                <MenuFlyoutItem Text="播放全部" Click="PlayAllBtn_Click"/>
+            </MenuFlyout>
+        </Grid.ContextFlyout>
     </Grid>
 </UserControl>

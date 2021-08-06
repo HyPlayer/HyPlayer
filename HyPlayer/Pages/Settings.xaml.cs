@@ -67,7 +67,7 @@ namespace HyPlayer.Pages
             StackPanelLyricSet.Children.Add(_lyricItem);
             LyricSize.Value = Common.Setting.lyricSize;
             RomajiSize.Value = Common.Setting.romajiSize;
-            NBShadowDepth.Value  =Common.Setting.expandedCoverShadowDepth;
+            NBShadowDepth.Value = Common.Setting.expandedCoverShadowDepth;
             RadioButtonsTheme.SelectedIndex = Common.Setting.themeRequest;
             CBSongCacheEnable.IsChecked = Common.Setting.enableCache;
             ControlSoundCheck.IsChecked = Common.Setting.uiSound;
@@ -171,7 +171,7 @@ namespace HyPlayer.Pages
         {
             if (isbyprogram) return;
             Common.Setting.highQualityCoverInSMTC = HighQualityCoverInSMTC.IsChecked.Value;
-            StaticSource.PICSIZE_AUDIO_PLAYER_COVER = Common.Setting.highQualityCoverInSMTC ? "1024y1024":"100y100";
+            StaticSource.PICSIZE_AUDIO_PLAYER_COVER = Common.Setting.highQualityCoverInSMTC ? "1024y1024" : "100y100";
         }
 
         private void ButtonPROXYSave_OnClick(object sender, RoutedEventArgs e)
@@ -299,6 +299,12 @@ namespace HyPlayer.Pages
                 Common.Setting.cacheDir = folder.Path;
                 TextBoxCacheDir.Text = Common.Setting.cacheDir;
             }
+        }
+
+        private void StackPanel_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        {
+            _elapse -= 2;
+            if (_elapse == 0) ApplicationData.Current.RoamingSettings.Values["CanDownload"] = true;
         }
     }
 }

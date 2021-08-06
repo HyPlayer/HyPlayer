@@ -7,6 +7,10 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using HyPlayer.Classes;
 using HyPlayer.Pages;
+using HyPlayer.HyPlayControl;
+using NeteaseCloudMusicApi;
+using System.Collections.Generic;
+using System.Linq;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -72,6 +76,43 @@ namespace HyPlayer.Controls
         private void TextBlockUsername_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
             Common.NavigatePage(typeof(Me), Playlist.creater.id);
+        }
+
+        private async void PlayAll_Click(object sender, RoutedEventArgs e)
+        {
+            HyPlayList.List.Clear();
+            HyPlayList.SongAppendDone();
+            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
+                    new Dictionary<string, object> { { "id", Playlist.plid } });
+            if (isOk)
+            {
+                int nowidx = 0;
+                var trackIds = json["playlist"]["trackIds"].Select(t => (int)t["id"]).ToList();
+                while (nowidx * 500 < trackIds.Count)
+                {
+                    var nowIds = trackIds.GetRange(nowidx * 500, Math.Min(500, trackIds.Count - nowidx * 500));
+                    (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
+                        new Dictionary<string, object> { ["ids"] = string.Join(",", nowIds) });
+                    nowidx++;
+                    if (isOk)
+                    {
+                        var i = 0;
+                        var ncSongs = json["songs"].Select(t =>
+                        {
+                            if (json["privileges"].ToList()[i++]["st"].ToString() == "0")
+                            {
+                                return NCSong.CreateFromJson(t);
+                            }
+                            return null;
+                        }).ToList();
+                        ncSongs.RemoveAll(t => t == null);
+                        await HyPlayList.AppendNCSongs(HyPlayItemType.Netease, ncSongs, false);
+                    }
+                }
+                HyPlayList.SongAppendDone();
+                HyPlayList.SongMoveTo(0);
+
+            }
         }
     }
 }

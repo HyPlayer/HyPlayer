@@ -4,7 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls" 
+    xmlns:hyplayer="using:HyPlayer"
     mc:Ignorable="d"
     d:DesignHeight="70"
     d:DesignWidth="800">
@@ -16,7 +17,8 @@
         DoubleTapped="Grid1_OnDoubleTapped"
         PointerEntered="UIElement_OnPointerEntered"
         PointerExited="Grid1_OnPointerExited"
-        PointerCaptureLost="Grid1_OnPointerCaptureLost">
+        PointerCaptureLost="Grid1_OnPointerCaptureLost"
+        RightTapped="{x:Bind hyplayer:Common.UIElement_RightTapped}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition
                 Width="30" />
@@ -53,5 +55,10 @@
                 x:Name="TextBlockDesc"
                 Foreground="Gray" />
         </StackPanel>
+        <Grid.ContextFlyout>
+            <MenuFlyout>
+                <MenuFlyoutItem Text="播放全部" x:Name="PlayAll" Click="PlayAll_Click"/>
+            </MenuFlyout>
+        </Grid.ContextFlyout>
     </Grid>
 </UserControl>

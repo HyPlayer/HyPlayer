@@ -213,6 +213,7 @@ namespace HyPlayer.HyPlayControl
         }
 
 
+
         public static void LoginDownCall()
         {
             Common.Invoke(() => { OnLoginDone?.Invoke(); });
@@ -684,11 +685,16 @@ namespace HyPlayer.HyPlayControl
 
         /********        播放文件相关        ********/
 
-        public static async Task<HyPlayItem> AppendNCSong(NCSong ncSong)
+        public static async Task<HyPlayItem> AppendNCSong(NCSong ncSong, bool isSetPosition = false, int Position = 0)
         {
             var hpi = await LoadNCSong(ncSong);
             if (hpi != null)
-                List.Add(hpi);
+            {
+                if (!isSetPosition)
+                    List.Add(hpi);
+                else List.Insert(Position, hpi);
+                Common.BarPlayBar.RefreshSongList();
+            }
             return hpi;
         }
 
@@ -796,13 +802,14 @@ namespace HyPlayer.HyPlayControl
                     var item = AppendNCPlayItem(ncp);
                 }
             }
-
+            Common.BarPlayBar.RefreshSongList();
             return isok;
         }
 
         public static async Task<bool> AppendStorageFile(StorageFile sf, bool nocheck163 = false)
         {
             List.Add(await LoadStorageFile(sf));
+            Common.BarPlayBar.RefreshSongList();
             return true;
         }
 

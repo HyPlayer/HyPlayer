@@ -183,5 +183,11 @@ namespace HyPlayer.Controls
         {
             Grid1.ContextFlyout.ShowAt(sender as Button);
         }
+
+        private async void PlayNext_Click(object sender, RoutedEventArgs e)
+        {
+            _ = await HyPlayList.AppendNCSong(ncsong, true, HyPlayList.NowPlaying + 1);
+            HyPlayList.SongMoveNext();
+        }
     }
 }

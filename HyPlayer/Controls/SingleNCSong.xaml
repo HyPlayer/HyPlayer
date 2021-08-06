@@ -112,6 +112,23 @@
         <Grid.ContextFlyout>
             <MenuFlyout>
                 <MenuFlyoutItem
+                    x:Name="FlyoutItemPlay"
+                    Click="ButtonBase_OnClick"
+                    Text="播放">
+                    <MenuFlyoutItem.Icon>
+                        <SymbolIcon Symbol="Play"/>
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem
+                    x:Name="FlyoutItemPlayNext"
+                    Click="PlayNext_Click"
+                    Text="下一首播放">
+                    <MenuFlyoutItem.Icon>
+                        <SymbolIcon Symbol="Next"/>
+                    </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem
                     x:Name="FlyoutItemSinger"
                     Click="TextBlockArtist_OnTapped"
                     Text="歌手">
