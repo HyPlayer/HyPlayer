@@ -132,7 +132,7 @@ namespace HyPlayer
             });
         }
 
-        private async void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)
+        private void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)
         {
             isInBackground = false;
             InitializeThings();

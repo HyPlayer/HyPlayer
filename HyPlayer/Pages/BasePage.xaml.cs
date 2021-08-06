@@ -48,6 +48,7 @@ namespace HyPlayer.Pages
         {
             InitializeComponent();
             Common.PageBase = this;
+            Common.GlobalTip = TheTeachingTip;
             if (HyPlayList.Player == null)
                 HyPlayList.InitializeHyPlaylist();
             if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Desktop")
@@ -70,7 +71,6 @@ namespace HyPlayer.Pages
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
             //Common.NavigatePage(typeof(Home));上一行代码会引发NavMain的SelectionChanged事件，不需要重复导航
-
         }
 
         private void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs args)
@@ -180,7 +180,7 @@ namespace HyPlayer.Pages
                     Common.NavigatePage(typeof(Welcome));
                 }
             }
-            catch (Exception e)
+            catch
             {
                 // ignored
             }
@@ -639,6 +639,16 @@ namespace HyPlayer.Pages
                     ((AutoSuggestBox)sender).ItemsSource =
                         json["result"]["hots"].ToArray().ToList().Select(t => t["first"].ToString());
             }
+        }
+
+        private void BtnScaleQrCode_Click(object sender, RoutedEventArgs e)
+        {
+            DialogLogin.Width = 550;
+            DialogLogin.Height = Window.Current.Bounds.Height;
+            LoginPivot.Width = 520;
+            LoginPivot.Height = 550;
+            QrContainer.Height = 500;
+            QrContainer.Width = QrContainer.Height;
         }
     }
 }

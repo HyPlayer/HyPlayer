@@ -184,6 +184,11 @@
                         Content="是否开启 UI 音效"
                         Unchecked="ControlSoundUnChecked" />
                     <CheckBox
+                        x:Name="CBOldSMTC"
+                        Checked="CBOldSMTCChecked"
+                        Content="是否同时开启传统SMTC控制 (可能会减小后台闪退几率,重启后生效)"
+                        Unchecked="CBOldSMTCUnChecked" />
+                    <CheckBox
                         x:Name="HighQualityCoverInSMTC"
                         Checked="HighQualityCoverInSMTC_Changed"
                         Content="是否输出高清图片到SMTC"

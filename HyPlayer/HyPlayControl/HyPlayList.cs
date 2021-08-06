@@ -15,6 +15,7 @@ using Windows.Storage.Streams;
 using HyPlayer.Classes;
 using NeteaseCloudMusicApi;
 using File = TagLib.File;
+using Windows.System.Profile;
 
 namespace HyPlayer.HyPlayControl
 {
@@ -171,15 +172,15 @@ namespace HyPlayer.HyPlayControl
             };
             MediaSystemControls = SystemMediaTransportControls.GetForCurrentView();
             ControlsDisplayUpdater = MediaSystemControls.DisplayUpdater;
-            Player.CommandManager.IsEnabled = false;
+            Player.CommandManager.IsEnabled = Common.Setting.ancientSMTC;
             MediaSystemControls.IsPlayEnabled = true;
             MediaSystemControls.IsPauseEnabled = true;
             MediaSystemControls.IsNextEnabled = true;
             MediaSystemControls.IsPreviousEnabled = true;
-            MediaSystemControls.IsEnabled = false;
+            MediaSystemControls.IsEnabled = true;
             MediaSystemControls.ButtonPressed += SystemControls_ButtonPressed;
             MediaSystemControls.PlaybackStatus = MediaPlaybackStatus.Closed;
-            MediaSystemControls.PlaybackPositionChangeRequested += MediaSystemControls_PlaybackPositionChangeRequested;
+            //MediaSystemControls.PlaybackPositionChangeRequested += MediaSystemControls_PlaybackPositionChangeRequested;
             //Player.SourceChanged += Player_SourceChanged;   //锚点修改
             Player.MediaEnded += Player_MediaEnded;
             Player.CurrentStateChanged += Player_CurrentStateChanged;
@@ -240,6 +241,7 @@ namespace HyPlayer.HyPlayControl
             //歌曲崩溃了的话就是这个
             //SongMoveNext();
             //TimeSpan temppos = Player.PlaybackSession.Position;
+            Common.ShowTeachingTip("播放失败 正在重试", args.ErrorMessage);
             if (crashedTime == NowPlayingItem.PlayItem.url)
             {
                 SongMoveNext();
@@ -467,18 +469,25 @@ namespace HyPlayer.HyPlayControl
                                 else
                                     throw new Exception("File Size Not Match");
                             }
-                            catch (Exception e)
+                            catch
                             {
-                                //尝试从DownloadOperation下载
-                                StorageFile destinationFile =
-                                    await (await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("songCache",
-                                        CreationCollisionOption.OpenIfExists)).CreateFileAsync(
-                                        NowPlayingItem.PlayItem.id +
-                                        "." + NowPlayingItem.PlayItem.subext, CreationCollisionOption.ReplaceExisting);
-                                var downloadOperation =
-                                    downloader.CreateDownload(new Uri(playUrl), destinationFile);
-                                downloadOperation.IsRandomAccessRequired = true;
-                                ms = MediaSource.CreateFromDownloadOperation(downloadOperation);
+                                try
+                                {
+                                    //尝试从DownloadOperation下载
+                                    StorageFile destinationFile =
+                                        await (await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("songCache",
+                                            CreationCollisionOption.OpenIfExists)).CreateFileAsync(
+                                            NowPlayingItem.PlayItem.id +
+                                            "." + NowPlayingItem.PlayItem.subext, CreationCollisionOption.ReplaceExisting);
+                                    var downloadOperation =
+                                        downloader.CreateDownload(new Uri(playUrl), destinationFile);
+                                    downloadOperation.IsRandomAccessRequired = true;
+                                    ms = MediaSource.CreateFromDownloadOperation(downloadOperation);
+                                }
+                                catch
+                                {
+                                    ms = MediaSource.CreateFromUri(new Uri(playUrl));
+                                }
                             }
                         }
                         else

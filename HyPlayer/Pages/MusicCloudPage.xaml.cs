@@ -71,7 +71,7 @@ namespace HyPlayer.Pages
         {
             base.OnNavigatedTo(e);
             SongContainer.ItemsSource = Items;
-            await Task.Run(() => { Common.Invoke(async () => { LoadMusicCloudItem(); }); });
+            await Task.Run(() => { Common.Invoke(() => { LoadMusicCloudItem(); }); });
         }
 
 

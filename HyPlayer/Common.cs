@@ -20,6 +20,7 @@ using NeteaseCloudMusicApi;
 using Newtonsoft.Json;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Controls;
 
 namespace HyPlayer
 {
@@ -43,6 +44,7 @@ namespace HyPlayer
         public static List<NCSong> ListedSongs = new List<NCSong>();
         public static readonly Stack<NavigationHistoryItem> NavigationHistory = new Stack<NavigationHistoryItem>();
         public static bool isExpanded = false;
+        public static TeachingTip GlobalTip;
 
         public struct NavigationHistoryItem
         {
@@ -78,6 +80,17 @@ namespace HyPlayer
             }
         }
 
+
+        public static void ShowTeachingTip(string title, string subtitle = null)
+        {
+            Common.Invoke(() =>
+            {
+                GlobalTip.Title = title;
+                GlobalTip.Subtitle = subtitle;
+                if (!GlobalTip.IsOpen)
+                    GlobalTip.IsOpen = true;
+            });
+        }
         public static void NavigatePage(Type SourcePageType, object paratmer = null, object ignore = null)
         {
             if (NavigationHistory.Count >= 1 && PageBase.NavMain.SelectedItem == NavigationHistory.Peek().Item)
@@ -115,7 +128,7 @@ namespace HyPlayer
         public static void UIElement_RightTapped(object sender, Windows.UI.Xaml.Input.RightTappedRoutedEventArgs e)
         {
             var element = sender as UIElement;
-            element.ContextFlyout.ShowAt(element, new FlyoutShowOptions {Position = e.GetPosition(element)});
+            element.ContextFlyout.ShowAt(element, new FlyoutShowOptions { Position = e.GetPosition(element) });
         }
 
         public static void NavigateBack()
@@ -181,6 +194,16 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values["lyricAlignment"] = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool ancientSMTC
+        {
+            get { return GetSettings<bool>("ancientSMTC", false); }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["ancientSMTC"] = value;
                 OnPropertyChanged();
             }
         }
@@ -364,7 +387,7 @@ namespace HyPlayer
                     !string.IsNullOrEmpty(ApplicationData.Current.LocalSettings.Values[propertyName].ToString()))
                 {
                     //超长的IF
-                    return (T) ApplicationData.Current.LocalSettings.Values[propertyName];
+                    return (T)ApplicationData.Current.LocalSettings.Values[propertyName];
                 }
                 else
                 {

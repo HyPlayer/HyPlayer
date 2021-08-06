@@ -22,6 +22,11 @@
         </ResourceDictionary>
     </Page.Resources>
     <Grid x:Name="MainGrid">
+        <muxc:TeachingTip
+            x:Name="TheTeachingTip"
+            Title="一个弹窗, 两个弹窗, 三个弹窗, 四个弹窗...zzzzzz"
+            IsLightDismissEnabled="True"
+            PreferredPlacement="TopRight" />
         <Border
             x:Name="AppTitleBar"
             Height="35"
@@ -174,7 +179,10 @@
                         FontSize="15"
                         Glyph="&#xE106;" />
                 </Button>
-                <Pivot Width="300" SelectionChanged="Pivot_SelectionChanged">
+                <Pivot
+                    x:Name="LoginPivot"
+                    Width="300"
+                    SelectionChanged="Pivot_SelectionChanged">
                     <PivotItem Header="密码登录">
                         <StackPanel Orientation="Vertical">
                             <Image Height="100" Source="/Assets/icon.png" />
@@ -203,12 +211,19 @@
                         </StackPanel>
                     </PivotItem>
                     <PivotItem Header="扫码登录">
-                        <Image
-                            x:Name="QrContainer"
-                            Height="200"
-                            Margin="0,46,0,46"
-                            Source="/Assets/icon.png"
-                            Tapped="LoadQr" />
+                        <StackPanel Orientation="Vertical" Spacing="15">
+                            <Image
+                                x:Name="QrContainer"
+                                Height="200"
+                                Margin="0,46,0,46"
+                                Source="/Assets/icon.png"
+                                Tapped="LoadQr" />
+                            <Button
+                                x:Name="BtnScaleQrCode"
+                                HorizontalAlignment="Center"
+                                Click="BtnScaleQrCode_Click"
+                                Content="放大二维码" />
+                        </StackPanel>
                     </PivotItem>
                 </Pivot>
                 <muxc:InfoBar

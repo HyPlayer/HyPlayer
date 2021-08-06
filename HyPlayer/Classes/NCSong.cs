@@ -264,7 +264,7 @@ namespace HyPlayer.Classes
 
                 return ncp;
             }
-            catch (Exception e)
+            catch
             {
                 return new NCPlayList();
             }

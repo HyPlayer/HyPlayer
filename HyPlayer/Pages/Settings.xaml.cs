@@ -74,6 +74,7 @@ namespace HyPlayer.Pages
             ControlSoundCheck.IsChecked = Common.Setting.uiSound;
             HighQualityCoverInSMTC.IsChecked = Common.Setting.highQualityCoverInSMTC;
             TextBoxCacheDir.Text = Common.Setting.cacheDir;
+            CBOldSMTC.IsChecked = Common.Setting.ancientSMTC;
             isbyprogram = false;
 #if DEBUG
             VersionCode.Text += " Debug";
@@ -81,8 +82,22 @@ namespace HyPlayer.Pages
             //ToggleButtonDaylight.IsChecked = Application.Current.RequestedTheme == ApplicationTheme.Dark;
         }
 
+        private void CBOldSMTCUnChecked(object sender, RoutedEventArgs e)
+        {
+            if (isbyprogram) return;
+            Common.Setting.ancientSMTC = CBOldSMTC.IsChecked.Value;
+        }
+
+        private void CBOldSMTCChecked(object sender, RoutedEventArgs e)
+        {
+            if (isbyprogram) return;
+            Common.Setting.ancientSMTC = CBOldSMTC.IsChecked.Value;
+        }
+
+
         private void RadioButton_Checked(object sender, RoutedEventArgs e)
         {
+            if (isbyprogram) return;
             Common.Setting.audioRate = ((RadioButton)sender).Tag.ToString();
         }
 
