@@ -17,6 +17,7 @@ using Kawazu;
 using Microsoft.UI.Xaml.Controls;
 using Windows.Security.ExchangeActiveSyncProvisioning;
 using Microsoft.AppCenter.Crashes;
+using Windows.ApplicationModel.DataTransfer;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -234,6 +235,15 @@ namespace HyPlayer.Pages
             HistoryManagement.ClearHistory();
         }
 
+
+        private void CopyDeviceCode_Click(object sender, RoutedEventArgs e)
+        {
+            EasClientDeviceInformation deviceInfo = new EasClientDeviceInformation();
+            DataPackage dp = new DataPackage();
+            dp.SetText(deviceInfo.Id.ToString());
+            Clipboard.SetContent(dp);
+        }
+
         private void LyricSize_OnValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
         {
             if (isbyprogram) return;
@@ -305,6 +315,11 @@ namespace HyPlayer.Pages
         {
             _elapse -= 2;
             if (_elapse == 0) ApplicationData.Current.RoamingSettings.Values["CanDownload"] = true;
+        }
+
+        private void DeviceInfo_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            DeviceInfo.ContextFlyout.ShowAt(DeviceInfo);
         }
     }
 }

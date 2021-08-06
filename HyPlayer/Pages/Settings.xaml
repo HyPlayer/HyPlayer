@@ -246,16 +246,25 @@
                         <Paragraph>HyPlayer is licensed under the GNU General Public License v3.0</Paragraph>
                     </RichTextBlock>
                     <TextBlock x:Name="VersionCode" />
-                    <TextBlock x:Name="DeviceInfo" />
+                    <TextBlock x:Name="DeviceInfo" RightTapped="DeviceInfo_RightTapped">
+                        <TextBlock.ContextFlyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem
+                                    Click="CopyDeviceCode_Click"
+                                    Icon="Copy"
+                                    Text="复制设备识别码" />
+                            </MenuFlyout>
+                        </TextBlock.ContextFlyout>
+                    </TextBlock>
                     <TextBlock
                         FontFamily="Thick"
                         FontSize="25"
                         Text="开发者" />
                     <StackPanel
                         Margin="10,20,0,0"
+                        DoubleTapped="StackPanel_DoubleTapped"
                         Orientation="Horizontal"
-                        Tapped="UIElement_OnTapped"
-                        DoubleTapped="StackPanel_DoubleTapped">
+                        Tapped="UIElement_OnTapped">
                         <PersonPicture ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=GibeJPa6pAcRMKgoHC9ibI4w&amp;s=100" />
                         <StackPanel Margin="15,0,0,0" Orientation="Vertical">
                             <TextBlock FontSize="18" FontWeight="Medium">
@@ -293,9 +302,9 @@
                     </StackPanel>
                     <StackPanel
                         Margin="10,20,0,0"
+                        DoubleTapped="StackPanel_DoubleTapped"
                         Orientation="Horizontal"
-                        Tapped="UIElement_OnTapped"
-                        DoubleTapped="StackPanel_DoubleTapped">
+                        Tapped="UIElement_OnTapped">
                         <PersonPicture ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=eHh3SVVDUJKHf1I5XD7CPg&amp;s=100" />
                         <StackPanel Margin="15,0,0,0" Orientation="Vertical">
                             <TextBlock FontSize="18" FontWeight="Medium">
@@ -327,9 +336,9 @@
                     </StackPanel>
                     <StackPanel
                         Margin="10,20,0,0"
+                        DoubleTapped="StackPanel_DoubleTapped"
                         Orientation="Horizontal"
-                        Tapped="UIElement_OnTapped"
-                        DoubleTapped="StackPanel_DoubleTapped">
+                        Tapped="UIElement_OnTapped">
                         <PersonPicture ProfilePicture="https://himg.bdimg.com/sys/portraitn/item/0fd16570303132303134g930801000000" />
                         <StackPanel Margin="15,0,0,0" Orientation="Vertical">
                             <TextBlock FontSize="18" FontWeight="Medium">
