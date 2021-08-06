@@ -72,6 +72,7 @@ namespace HyPlayer.Pages
             CBSongCacheEnable.IsChecked = Common.Setting.enableCache;
             ControlSoundCheck.IsChecked = Common.Setting.uiSound;
             HighQualityCoverInSMTC.IsChecked = Common.Setting.highQualityCoverInSMTC;
+            TextBoxCacheDir.Text = Common.Setting.cacheDir;
             isbyprogram = false;
 #if DEBUG
             VersionCode.Text += " Debug";
@@ -285,6 +286,19 @@ namespace HyPlayer.Pages
         {
             if (isbyprogram) return;
             Common.Setting.enableCache = CBSongCacheEnable.IsChecked != null && CBSongCacheEnable.IsChecked.Value;
+        }
+
+        private async void ButtonCacheSelect_OnClick(object sender, RoutedEventArgs e)
+        {
+            var folderPicker = new FolderPicker();
+            folderPicker.SuggestedStartLocation = PickerLocationId.Desktop;
+            folderPicker.FileTypeFilter.Add("*");
+            var folder = await folderPicker.PickSingleFolderAsync();
+            if (folder != null)
+            {
+                Common.Setting.cacheDir = folder.Path;
+                TextBoxCacheDir.Text = Common.Setting.cacheDir;
+            }
         }
     }
 }

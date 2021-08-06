@@ -111,10 +111,11 @@ namespace HyPlayer
             KawazuConv = null;
             ListedSongs.Clear();
         }
+
         public static void UIElement_RightTapped(object sender, Windows.UI.Xaml.Input.RightTappedRoutedEventArgs e)
         {
             var element = sender as UIElement;
-            element.ContextFlyout.ShowAt(element, new FlyoutShowOptions { Position = e.GetPosition(element) });
+            element.ContextFlyout.ShowAt(element, new FlyoutShowOptions {Position = e.GetPosition(element)});
         }
 
         public static void NavigateBack()
@@ -129,6 +130,7 @@ namespace HyPlayer
                     NavigationHistory.Pop();
                     bak = NavigationHistory.Peek();
                 }
+
                 Common.ListedSongs.Clear();
                 Common.BaseFrame?.Navigate(bak.PageType, bak.Paratmers);
                 NavigatingBack = true;
@@ -165,10 +167,7 @@ namespace HyPlayer
 
         public int romajiSize
         {
-            get
-            {
-                return GetSettings<int>("romajiSize", 15);
-            }
+            get { return GetSettings<int>("romajiSize", 15); }
             set
             {
                 ApplicationData.Current.LocalSettings.Values["romajiSize"] = value;
@@ -230,6 +229,28 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values["downloadDir"] = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string cacheDir
+        {
+            get
+            {
+                try
+                {
+                    return GetSettings<string>("cacheDir", ApplicationData.Current.LocalCacheFolder
+                        .CreateFolderAsync("songCache", CreationCollisionOption.OpenIfExists).AsTask().GetAwaiter()
+                        .GetResult().Path);
+                }
+                catch
+                {
+                    return ApplicationData.Current.LocalCacheFolder.Path;
+                }
+            }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["cacheDir"] = value;
                 OnPropertyChanged();
             }
         }
@@ -343,7 +364,7 @@ namespace HyPlayer
                     !string.IsNullOrEmpty(ApplicationData.Current.LocalSettings.Values[propertyName].ToString()))
                 {
                     //超长的IF
-                    return (T)ApplicationData.Current.LocalSettings.Values[propertyName];
+                    return (T) ApplicationData.Current.LocalSettings.Values[propertyName];
                 }
                 else
                 {
@@ -371,9 +392,11 @@ namespace HyPlayer
             if (ApplicationData.Current.LocalSettings.Values["songlistHistory"] == null)
                 ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
             if (ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] == null)
-                ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = JsonConvert.SerializeObject(list);
+                ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] =
+                    JsonConvert.SerializeObject(list);
             if (ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"].ToString().StartsWith("[{"))
-                ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = JsonConvert.SerializeObject(list);
+                ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] =
+                    JsonConvert.SerializeObject(list);
             if (ApplicationData.Current.LocalSettings.Values["songlistHistory"].ToString().StartsWith("[{"))
                 ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
         }
@@ -421,10 +444,12 @@ namespace HyPlayer
                 list.RemoveRange(100, list.Count - 100);
             ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
         }
+
         public static void SetcurPlayingListHistory(List<string> songids)
         {
             //现在暂存100首,之后引入高级数据库会多加点
-            ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = JsonConvert.SerializeObject(songids.Count > 100 ? songids.GetRange(0, 100) : songids);
+            ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] =
+                JsonConvert.SerializeObject(songids.Count > 100 ? songids.GetRange(0, 100) : songids);
         }
 
         public static void ClearHistory()
@@ -475,10 +500,12 @@ namespace HyPlayer
             return JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
                 .Values["searchHistory"].ToString());
         }
+
         public static async Task<List<NCSong>> GetcurPlayingListHistory()
         {
             var retsongs = new List<NCSong>();
-            var hisSongs = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"].ToString());
+            var hisSongs = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
+                .Values["curPlayingListHistory"].ToString());
             if (hisSongs == null || hisSongs.Count == 0)
                 return retsongs;
             var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
