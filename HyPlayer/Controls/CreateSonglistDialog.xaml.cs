@@ -15,9 +15,13 @@ namespace HyPlayer.Controls
 
         private void ContentDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
         {
+            // This request would return with a 250 error without RealIP set
+            string realIpBackup = Common.ncapi.RealIP;
+            Common.ncapi.RealIP = "118.88.88.88";
             Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistCreate,
                 new Dictionary<string, object>
                     {{"name", SonglistTitle.Text}, {"privacy", (bool) PrivateCheckBox.IsChecked ? 10 : 0}});
+            Common.ncapi.RealIP = realIpBackup; // Restore user setting
         }
 
         private void ContentDialog_SecondaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
