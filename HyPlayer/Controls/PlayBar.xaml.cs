@@ -208,29 +208,20 @@ namespace HyPlayer.Controls
                     if (NCMFile.IsCorrectNCMFile(stream))
                     {
                         var Info = NCMFile.GetNCMMusicInfo(stream);
-                        var CoverStream = NCMFile.GetCoverStream(stream);
-                        var encStream = NCMFile.GetEncryptedStream(stream);
-                        encStream.Seek(0, SeekOrigin.Begin);
-
-                        var sf = await StorageFile.CreateStreamedFileAsync(Path.ChangeExtension(file.Name, Info.format), (t) =>
-                          {
-                              encStream.CopyTo(t.AsStreamForWrite());
-                          }, RandomAccessStreamReference.CreateFromStream(CoverStream.AsRandomAccessStream()));
-
                         var hyitem = new HyPlayItem
                         {
                             ItemType = HyPlayItemType.Netease,
                             PlayItem = new PlayItem
                             {
-                                DontSetLocalStorageFile = sf,
+                                DontSetLocalStorageFile = file,
                                 Album = new NCAlbum
                                 {
                                     name = Info.album,
                                     id = Info.albumId.ToString(),
                                     cover = Info.albumPic
                                 },
-                                url = sf.Path,
-                                subext = sf.FileType,
+                                url = file.Path,
+                                subext = Info.format,
                                 bitrate = Info.bitrate,
                                 isLocalFile = true,
                                 Type = HyPlayItemType.Netease,
@@ -244,7 +235,7 @@ namespace HyPlayer.Controls
                                     .Size.ToString(),
                                 */
                                 Name = Info.musicName,
-                                tag = "本地 NCM"
+                                tag = file.Provider.DisplayName + " NCM"
                             }
                         };
                         hyitem.PlayItem.Artist = Info.artist.Select(t => new NCArtist { name = t[0].ToString(), id = t[1].ToString() })
@@ -252,6 +243,7 @@ namespace HyPlayer.Controls
 
                         HyPlayList.List.Add(hyitem);
                     }
+                    stream.Dispose();
                 }
                 else
                 {
