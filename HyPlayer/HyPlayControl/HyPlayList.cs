@@ -685,16 +685,13 @@ namespace HyPlayer.HyPlayControl
 
         /********        播放文件相关        ********/
 
-        public static async Task<HyPlayItem> AppendNCSong(NCSong ncSong, bool isSetPosition = false, int Position = 0)
+        public static async Task<HyPlayItem> AppendNCSong(NCSong ncSong, int position = -1)
         {
             var hpi = await LoadNCSong(ncSong);
+            if (position < 0)
+                position = List.Count;
             if (hpi != null)
-            {
-                if (!isSetPosition)
-                    List.Add(hpi);
-                else List.Insert(Position, hpi);
-                Common.BarPlayBar.RefreshSongList();
-            }
+                List.Insert(position, hpi);
             return hpi;
         }
 
@@ -802,14 +799,46 @@ namespace HyPlayer.HyPlayControl
                     var item = AppendNCPlayItem(ncp);
                 }
             }
-            Common.BarPlayBar.RefreshSongList();
             return isok;
+        }
+
+        public static async Task<bool> AppendPlayList(string plid)
+        {
+            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
+                                new Dictionary<string, object> { { "id", plid } });
+            if (isOk)
+            {
+                int nowidx = 0;
+                var trackIds = json["playlist"]["trackIds"].Select(t => (int)t["id"]).ToList();
+                while (nowidx * 500 < trackIds.Count)
+                {
+                    var nowIds = trackIds.GetRange(nowidx * 500, Math.Min(500, trackIds.Count - nowidx * 500));
+                    (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
+                        new Dictionary<string, object> { ["ids"] = string.Join(",", nowIds) });
+                    nowidx++;
+                    if (isOk)
+                    {
+                        var i = 0;
+                        var ncSongs = json["songs"].Select(t =>
+                        {
+                            if (json["privileges"].ToList()[i++]["st"].ToString() == "0")
+                            {
+                                return NCSong.CreateFromJson(t);
+                            }
+                            return null;
+                        }).ToList();
+                        ncSongs.RemoveAll(t => t == null);
+                        await HyPlayList.AppendNCSongs(HyPlayItemType.Netease, ncSongs, false);
+                    }
+                }
+                return true;
+            }
+            return false;
         }
 
         public static async Task<bool> AppendStorageFile(StorageFile sf, bool nocheck163 = false)
         {
             List.Add(await LoadStorageFile(sf));
-            Common.BarPlayBar.RefreshSongList();
             return true;
         }
 

@@ -23,7 +23,7 @@ namespace HyPlayer.Controls
     public sealed partial class SingleNCSong : UserControl
     {
         private readonly bool CanPlay;
-        private readonly bool LoadList;
+        private bool LoadList;
         public readonly NCSong ncsong;
         public readonly string plId;
 
@@ -84,6 +84,7 @@ namespace HyPlayer.Controls
                 var item = await HyPlayList.AppendNCSong(ncsong);
                 //此处可以进行优化
                 HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
+                HyPlayList.SongAppendDone();
             }
 
             return true;
@@ -118,6 +119,14 @@ namespace HyPlayer.Controls
         private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
         {
             _ = AppendMe();
+        }
+
+        private async void BtnPlayNow_Click(object sender, RoutedEventArgs e)
+        {
+            var oldLoadList = LoadList;
+            LoadList = false;
+            await AppendMe();
+            LoadList = oldLoadList;
         }
 
         private void Grid1_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
@@ -186,8 +195,9 @@ namespace HyPlayer.Controls
 
         private async void PlayNext_Click(object sender, RoutedEventArgs e)
         {
-            _ = await HyPlayList.AppendNCSong(ncsong, true, HyPlayList.NowPlaying + 1);
-            HyPlayList.SongMoveNext();
+            _ = await HyPlayList.AppendNCSong(ncsong, HyPlayList.NowPlaying + 1);
+            HyPlayList.SongAppendDone();
+            //HyPlayList.SongMoveNext();
         }
     }
 }

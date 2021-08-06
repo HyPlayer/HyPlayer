@@ -16,9 +16,9 @@
         BorderThickness="1"
         CornerRadius="4"
         DoubleTapped="Grid1_OnDoubleTapped"
+        PointerCaptureLost="Grid1_OnPointerCaptureLost"
         PointerEntered="UIElement_OnPointerEntered"
         PointerExited="Grid1_OnPointerExited"
-        PointerCaptureLost="Grid1_OnPointerCaptureLost"
         RightTapped="{x:Bind hyplayer:Common.UIElement_RightTapped}"
         Tapped="Grid1_OnTapped">
         <Grid.ColumnDefinitions>
@@ -113,10 +113,10 @@
             <MenuFlyout>
                 <MenuFlyoutItem
                     x:Name="FlyoutItemPlay"
-                    Click="ButtonBase_OnClick"
-                    Text="播放">
+                    Click="BtnPlayNow_Click"
+                    Text="立即播放">
                     <MenuFlyoutItem.Icon>
-                        <SymbolIcon Symbol="Play"/>
+                        <SymbolIcon Symbol="Play" />
                     </MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
                 <MenuFlyoutItem
@@ -124,7 +124,7 @@
                     Click="PlayNext_Click"
                     Text="下一首播放">
                     <MenuFlyoutItem.Icon>
-                        <SymbolIcon Symbol="Next"/>
+                        <SymbolIcon Symbol="Next" />
                     </MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
                 <MenuFlyoutSeparator />
