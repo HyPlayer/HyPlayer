@@ -204,7 +204,17 @@
                     VerticalAlignment="Top"
                     x:FieldModifier="public"
                     HorizontalScrollBarVisibility="Hidden"
+                    RightTapped="LyricBoxContainer_RightTapped"
                     VerticalScrollBarVisibility="Hidden">
+                    <ScrollViewer.ContextFlyout>
+                        <MenuFlyout>
+                            <MenuFlyoutItem Click="BtnLoadLocalLyric" Text="加载本地歌词">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE160;" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                        </MenuFlyout>
+                    </ScrollViewer.ContextFlyout>
                     <ScrollViewer.Content>
                         <StackPanel
                             Name="LyricBox"

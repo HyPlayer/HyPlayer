@@ -22,6 +22,7 @@ using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using Buffer = Windows.Storage.Streams.Buffer;
 using Windows.ApplicationModel.DataTransfer;
+using System.Text;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -698,6 +699,21 @@ namespace HyPlayer.Pages
             DataPackage dataPackage = new DataPackage();
             dataPackage.SetText(TextBlockSongTitle.Text);
             Clipboard.SetContent(dataPackage);
+        }
+
+        private void LyricBoxContainer_RightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            LyricBoxContainer.ContextFlyout.ShowAt(LyricBoxContainer);
+        }
+
+        private async void BtnLoadLocalLyric(object sender, RoutedEventArgs e)
+        {
+            FileOpenPicker fop = new FileOpenPicker();
+            fop.FileTypeFilter.Add(".lrc");
+            // register provider - by default encoding is not supported 
+            Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+            HyPlayList.Lyrics = Utils.ConvertPureLyric(await FileIO.ReadTextAsync(await fop.PickSingleFileAsync()));
+            LoadLyricsBox();
         }
     }
 
