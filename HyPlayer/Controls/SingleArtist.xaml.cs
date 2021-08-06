@@ -54,7 +54,11 @@ namespace HyPlayer.Controls
                 Application.Current.Resources["SystemControlBackgroundListMediumRevealBorderBrush"] as Brush;
         }
 
-        private void Grid1_OnPointerExited(object sender, PointerRoutedEventArgs e)
+        private void Grid1_OnPointerExited(object sender, PointerRoutedEventArgs e) => SetUnfocusedState();
+
+        private void Grid1_OnPointerCaptureLost(object sender, PointerRoutedEventArgs e) => SetUnfocusedState();
+
+        private void SetUnfocusedState()
         {
             Grid1.Background = null;
             Grid1.BorderBrush = new SolidColorBrush();

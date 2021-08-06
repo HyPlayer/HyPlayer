@@ -13,7 +13,8 @@
     <Grid
         CornerRadius="8"
         PointerEntered="UIElement_OnPointerEntered"
-        PointerExited="UIElement_OnPointerExited">
+        PointerExited="UIElement_OnPointerExited"
+        PointerCaptureLost="UIElement_OnPointerCaptureLost">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition />

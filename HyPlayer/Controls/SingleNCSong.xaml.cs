@@ -96,7 +96,14 @@ namespace HyPlayer.Controls
                 Application.Current.Resources["SystemControlBackgroundListMediumRevealBorderBrush"] as Brush;
         }
 
-        private void Grid1_OnPointerExited(object sender, PointerRoutedEventArgs e)
+        private void Grid1_OnPointerExited(object sender, PointerRoutedEventArgs e) => SetUnfocusedState();
+
+        // When scrolling in the collection control on a touchscreen-equipped device with pointer
+        // inside the control, PointerCaptureLost event instead of PointerExited event gets triggered.
+        // Handling both of the events would fix the styling issue in this situation.
+        private void Grid1_OnPointerCaptureLost(object sender, PointerRoutedEventArgs e) => SetUnfocusedState();
+
+        private void SetUnfocusedState()
         {
             Grid1.Background = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
             Grid1.BorderBrush = new SolidColorBrush();

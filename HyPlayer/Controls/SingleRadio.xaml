@@ -11,11 +11,12 @@
 
     <Grid
         x:Name="Grid1"
+        BorderThickness="1"
         Tapped="Grid1_OnTapped"
         DoubleTapped="Grid1_OnDoubleTapped"
         PointerEntered="UIElement_OnPointerEntered"
-        BorderThickness="1"
-        PointerExited="Grid1_OnPointerExited">
+        PointerExited="Grid1_OnPointerExited"
+        PointerCaptureLost="Grid1_OnPointerCaptureLost">
         <Grid.ColumnDefinitions>
             <ColumnDefinition
                 Width="30" />

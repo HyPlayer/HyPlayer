@@ -54,6 +54,11 @@ namespace HyPlayer.Controls
             StoryboardIn.Begin();
         }
 
+        private void UIElement_OnPointerCaptureLost(object sender, PointerRoutedEventArgs e)
+        {
+            StoryboardIn.Begin();
+        }
+
         private async void PlayAllBtn_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
         {
             //播放全部歌曲
