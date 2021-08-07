@@ -172,21 +172,29 @@ namespace HyPlayer.Pages
         private void LoadSongResult(JObject json)
         {
             var idx = 0;
-            foreach (var song in json["result"]["songs"].ToArray())
+            try
             {
-                var ncSong = NCSong.CreateFromJson(song);
-                SearchResultContainer.Children.Add(new SingleNCSong(ncSong, idx++,
-                    song["privilege"]["st"].ToString() == "0"));
+                foreach (var song in json["result"]["songs"].ToArray())
+                {
+                    var ncSong = NCSong.CreateFromJson(song);
+                    SearchResultContainer.Children.Add(new SingleNCSong(ncSong, idx++,
+                        song["privilege"]["st"].ToString() == "0"));
+                }
+                if (int.Parse(json["result"]["songCount"].ToString()) >= (page + 1) * 30)
+                    NextPage.Visibility = Visibility.Visible;
+                else
+                    NextPage.Visibility = Visibility.Collapsed;
+                if (page > 0)
+                    PrevPage.Visibility = Visibility.Visible;
+                else
+                    PrevPage.Visibility = Visibility.Collapsed;
+            }
+            catch
+            {
+                Windows.UI.Popups.MessageDialog msgdlg = new Windows.UI.Popups.MessageDialog(json["msg"].ToString(),"出现错误");
+                msgdlg.ShowAsync();
             }
 
-            if (int.Parse(json["result"]["songCount"].ToString()) >= (page + 1) * 30)
-                NextPage.Visibility = Visibility.Visible;
-            else
-                NextPage.Visibility = Visibility.Collapsed;
-            if (page > 0)
-                PrevPage.Visibility = Visibility.Visible;
-            else
-                PrevPage.Visibility = Visibility.Collapsed;
         }
 
 
