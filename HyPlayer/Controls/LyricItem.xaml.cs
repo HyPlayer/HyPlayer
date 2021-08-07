@@ -98,6 +98,7 @@ namespace HyPlayer.Controls
         private void LyricItem_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
             HyPlayList.Player.PlaybackSession.Position = Lrc.LyricTime;
+            Common.PageExpandedPlayer.jumpedLyrics = true;
         }
     }
 }

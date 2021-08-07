@@ -50,6 +50,7 @@ namespace HyPlayer.Pages
         private int lastheight;
         private bool realclick = false;
         private bool programClick = false;
+        public bool jumpedLyrics = false;
 
         public ExpandedPlayer()
         {
@@ -725,12 +726,17 @@ namespace HyPlayer.Pages
             }
         }
 
-        private void LyricBox_Tapped(object sender, TappedRoutedEventArgs e)
+        private async void LyricBox_Tapped(object sender, TappedRoutedEventArgs e)
         {
             if (WindowMode == ExpandedWindowMode.LyricOnly)
             {
-                WindowMode = ExpandedWindowMode.CoverOnly;
-                ChangeWindowMode();
+                await Task.Delay(1000);
+                if (!jumpedLyrics)
+                {
+                    WindowMode = ExpandedWindowMode.CoverOnly;
+                    ChangeWindowMode();
+                }
+                else jumpedLyrics = false;
             }
         }
     }
