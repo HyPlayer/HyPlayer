@@ -421,6 +421,7 @@ namespace HyPlayer.Pages
                         }
                     });
                 });
+                Common.NavigateBack();
                 return;
             }
 
