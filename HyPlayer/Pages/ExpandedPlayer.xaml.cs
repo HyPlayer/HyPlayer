@@ -715,6 +715,24 @@ namespace HyPlayer.Pages
             HyPlayList.Lyrics = Utils.ConvertPureLyric(await FileIO.ReadTextAsync(await fop.PickSingleFileAsync()));
             LoadLyricsBox();
         }
+
+        private void ImageAlbum_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            if(WindowMode == ExpandedWindowMode.CoverOnly)
+            {
+                WindowMode = ExpandedWindowMode.LyricOnly;
+                ChangeWindowMode();
+            }
+        }
+
+        private void LyricBox_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            if (WindowMode == ExpandedWindowMode.LyricOnly)
+            {
+                WindowMode = ExpandedWindowMode.CoverOnly;
+                ChangeWindowMode();
+            }
+        }
     }
 
     enum ExpandedWindowMode

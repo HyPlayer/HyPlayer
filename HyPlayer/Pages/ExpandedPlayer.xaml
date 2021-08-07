@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:hyplayer="using:HyPlayer"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
     <!--  Grid Beam~  -->
@@ -132,7 +133,8 @@
                         CornerRadius="12"
                         IsCacheEnabled="False"
                         PlaceholderStretch="Uniform"
-                        RightTapped="ImageAlbum_RightTapped"
+                        RightTapped="{x:Bind hyplayer:Common.UIElement_RightTapped}"
+                        Tapped="ImageAlbum_Tapped"
                         Source="/Assets/icon.png"
                         Stretch="Uniform">
                         <FlyoutBase.AttachedFlyout>
@@ -220,6 +222,7 @@
                             Name="LyricBox"
                             Orientation="Vertical"
                             PointerWheelChanged="LyricBoxContainer_OnPointerWheelChanged"
+                            Tapped="LyricBox_Tapped"
                             ScrollViewer.VerticalScrollBarVisibility="Auto"
                             Spacing="15">
                             <StackPanel Orientation="Horizontal" Spacing="5">

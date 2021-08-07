@@ -128,7 +128,15 @@ namespace HyPlayer
         public static void UIElement_RightTapped(object sender, Windows.UI.Xaml.Input.RightTappedRoutedEventArgs e)
         {
             var element = sender as UIElement;
-            element.ContextFlyout.ShowAt(element, new FlyoutShowOptions { Position = e.GetPosition(element) });
+            try
+            {
+                element.ContextFlyout.ShowAt(element, new FlyoutShowOptions { Position = e.GetPosition(element) });
+            }
+            catch
+            {
+                var flyout = FlyoutBase.GetAttachedFlyout((FrameworkElement)element);
+                flyout.ShowAt(element, new FlyoutShowOptions { Position = e.GetPosition(element) });
+            }
         }
 
         public static void NavigateBack()
