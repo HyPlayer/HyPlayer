@@ -7,7 +7,7 @@
     mc:Ignorable="d">
 
 
-    <ScrollViewer VerticalScrollMode="Enabled" VerticalScrollBarVisibility="Visible">
+    <ScrollViewer x:Name="MainScroll" VerticalScrollMode="Enabled" VerticalScrollBarVisibility="Visible">
 
         <StackPanel
             Orientation="Vertical">
@@ -48,6 +48,7 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock
                         Text="所有评论"
+                        x:Name="AllCmtsTB"
                         FontSize="40"
                         Margin="15" />
                     <ComboBox SelectionChanged="ComboBoxSortType_OnSelectionChanged" x:Name="ComboBoxSortType"

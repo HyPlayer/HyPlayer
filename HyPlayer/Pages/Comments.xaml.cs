@@ -10,6 +10,7 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
+using Windows.Foundation;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -112,12 +113,14 @@ namespace HyPlayer.Pages
         {
             page++;
             LoadComments(sortType);
+            ScrollTop();
         }
 
         private void PrevPage_Click(object sender, RoutedEventArgs e)
         {
             page--;
             LoadComments(sortType);
+            ScrollTop();
         }
 
         private async void SendComment_Click(object sender, RoutedEventArgs e)
@@ -160,7 +163,19 @@ namespace HyPlayer.Pages
         private void SkipPage_Click(object sender, RoutedEventArgs e)
         {
             if (int.TryParse(PageSelect.Text, out page))
+            {
                 LoadComments(sortType);
+                ScrollTop();
+            }
+        }
+        private void ScrollTop()
+        {
+            var transform = AllCmtsTB.TransformToVisual(MainScroll);
+            var point = transform.TransformPoint(new Point(0, 0));
+
+            var y = point.Y + MainScroll.VerticalOffset;
+            MainScroll.ChangeView(null, y, null, true);
+
         }
     }
 }

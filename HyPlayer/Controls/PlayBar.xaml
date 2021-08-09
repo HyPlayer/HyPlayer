@@ -125,7 +125,8 @@
                     Padding="-5"
                     Background="Transparent"
                     Click="Btn_Sub_OnClick"
-                    CornerRadius="20">
+                    CornerRadius="20"
+                    ToolTipService.ToolTip="添加到歌单">
                     <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE1DA;" />
                 </Button>
                 <Button
@@ -135,7 +136,8 @@
                     Padding="-5"
                     Background="Transparent"
                     Click="Btn_Down_OnClick"
-                    CornerRadius="20">
+                    CornerRadius="20"
+                    ToolTipService.ToolTip="下载音乐">
                     <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE118;" />
                 </Button>
                 <Button
@@ -145,7 +147,8 @@
                     Padding="-5"
                     Background="Transparent"
                     Click="Btn_Comment_OnClick"
-                    CornerRadius="20">
+                    CornerRadius="20"
+                    ToolTipService.ToolTip="查看评论">
                     <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8F2;" />
                 </Button>
                 <Button
@@ -155,7 +158,8 @@
                     Padding="-5"
                     Background="Transparent"
                     Click="Btn_Share_OnClick"
-                    CornerRadius="20">
+                    CornerRadius="20"
+                    ToolTipService.ToolTip="分享">
                     <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE72D;" />
                 </Button>
             </StackPanel>

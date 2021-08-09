@@ -616,11 +616,6 @@ namespace HyPlayer.Pages
         }
 
 
-        private void ImageAlbum_RightTapped(object sender, RightTappedRoutedEventArgs e)
-        {
-            FlyoutBase.ShowAttachedFlyout((FrameworkElement)sender);
-        }
-
         private async void SaveAlbumImage_Click(object sender, RoutedEventArgs e)
         {
             var filepicker = new FileSavePicker();
