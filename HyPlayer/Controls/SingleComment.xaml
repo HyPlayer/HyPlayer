@@ -45,6 +45,7 @@
                     Orientation="Horizontal"
                     Spacing="10">
                     <ToggleButton
+                        Style="{StaticResource ToggleButtonRevealStyle}"
                         x:Name="Like"
                         Height="35"
                         Click="Like_Click"
@@ -72,6 +73,7 @@
                         <SymbolIcon Symbol="Copy" />
                     </Button>
                     <ToggleButton
+                        Style="{StaticResource ToggleButtonRevealStyle}"
                         x:Name="ReplyBtn"
                         Height="35"
                         Click="ReplyBtn_Click"

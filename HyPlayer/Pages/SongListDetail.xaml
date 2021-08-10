@@ -51,6 +51,7 @@
                             Spacing="15">
                             <Button Style="{StaticResource ButtonRevealStyle}"  Click="ButtonPlayAll_OnClick" Content="播放全部" />
                             <ToggleButton
+                                Style="{StaticResource ToggleButtonRevealStyle}"
                                 x:Name="ToggleButtonLike"
                                 Click="LikeBtnClick"
                                 Content="收藏" />

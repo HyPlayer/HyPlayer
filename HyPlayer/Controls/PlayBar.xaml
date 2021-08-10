@@ -344,6 +344,7 @@
             FirstColumn="0">
             <ToggleButton
                 x:Name="ButtonDesktopLyrics"
+                Style="{StaticResource ToggleButtonRevealStyle}"
                 Width="40"
                 Height="40"
                 Padding="-5"
