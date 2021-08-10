@@ -170,12 +170,26 @@ namespace HyPlayer.Pages
         }
         private void ScrollTop()
         {
-            var transform = AllCmtsTB.TransformToVisual(MainScroll);
-            var point = transform.TransformPoint(new Point(0, 0));
+            Windows.UI.Xaml.Media.GeneralTransform transform = AllCmtsTB.TransformToVisual(MainScroll);
+            Point point = transform.TransformPoint(new Point(0, 0));
+            double y = point.Y + MainScroll.VerticalOffset;
+            MainScroll.ChangeView(null, y, null, false);
 
-            var y = point.Y + MainScroll.VerticalOffset;
-            MainScroll.ChangeView(null, y, null, true);
+        }
 
+        private void BackToTop_Click(object sender, RoutedEventArgs e)
+        {
+            ScrollTop();
+        }
+
+        private void MainScroll_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
+        {
+            Windows.UI.Xaml.Media.GeneralTransform transform = AllCmtsTB.TransformToVisual(MainScroll);
+            Point point = transform.TransformPoint(new Point(0, 0));
+            double y = point.Y + MainScroll.VerticalOffset;
+            if ((sender as ScrollViewer).VerticalOffset > y + 25)
+                BackToTop.Visibility = Visibility.Visible;
+            else BackToTop.Visibility = Visibility.Collapsed;
         }
     }
 }

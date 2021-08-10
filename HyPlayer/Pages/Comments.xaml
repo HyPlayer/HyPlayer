@@ -7,82 +7,89 @@
     mc:Ignorable="d">
 
 
-    <ScrollViewer x:Name="MainScroll" VerticalScrollMode="Enabled" VerticalScrollBarVisibility="Visible">
+    <Grid>
+        <ScrollViewer x:Name="MainScroll" VerticalScrollMode="Enabled" VerticalScrollBarVisibility="Visible" ViewChanged="MainScroll_ViewChanged">
 
-        <StackPanel
+            <StackPanel
             Orientation="Vertical">
-            <Grid x:Name="SongInfoContainer" Margin="0,0,0,15" />
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition />
-                    <ColumnDefinition Width="100" />
-                </Grid.ColumnDefinitions>
-                <TextBox PlaceholderText="发表评论" Margin="15" x:Name="CommentEdit" HorizontalAlignment="Stretch"
+                <Grid x:Name="SongInfoContainer" Margin="0,0,0,15" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="100" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox PlaceholderText="发表评论" Margin="15" x:Name="CommentEdit" HorizontalAlignment="Stretch"
                          MaxLength="140" TextWrapping="Wrap" Grid.Column="0" />
-                <Button Content="发表" Margin="15" MaxWidth="100" Grid.Column="1" HorizontalAlignment="Right"
+                    <Button Content="发表" Margin="15" MaxWidth="100" Grid.Column="1" HorizontalAlignment="Right"
                         x:Name="SendComment" Click="SendComment_Click" />
-            </Grid>
-            <!--
+                </Grid>
+                <!--
             <TextBlock Text="热评" FontSize="40" Margin="15" />
             <StackPanel x:Name="HotCommentList" Orientation="Vertical" Margin="10" Spacing="30" />
             <StackPanel Margin="15" Height="2" Background="Black" />
 -->
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition />
-                    <ColumnDefinition
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition
                         Width="100" />
-                </Grid.ColumnDefinitions>
-                <TextBlock
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
                     Text="热评"
                     FontSize="40"
                     Margin="15" />
 
-            </Grid>
-            <StackPanel Orientation="Vertical">
-                <StackPanel x:Name="HotCommentList" Orientation="Vertical" Margin="10" Spacing="30" />
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition />
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock
+                </Grid>
+                <StackPanel Orientation="Vertical">
+                    <StackPanel x:Name="HotCommentList" Orientation="Vertical" Margin="10" Spacing="30" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
                         Text="所有评论"
                         x:Name="AllCmtsTB"
                         FontSize="40"
                         Margin="15" />
-                    <ComboBox SelectionChanged="ComboBoxSortType_OnSelectionChanged" x:Name="ComboBoxSortType"
+                        <ComboBox SelectionChanged="ComboBoxSortType_OnSelectionChanged" x:Name="ComboBoxSortType"
                               SelectedIndex="2" HorizontalAlignment="Right" Margin="0,25,15,0" Grid.Column="1">
-                        <x:String>推荐</x:String>
-                        <x:String>热度</x:String>
-                        <x:String>时间</x:String>
-                    </ComboBox>
-                </Grid>
-                <StackPanel x:Name="CommentList" Orientation="Vertical" Margin="10" Spacing="30" />
+                            <x:String>推荐</x:String>
+                            <x:String>热度</x:String>
+                            <x:String>时间</x:String>
+                        </ComboBox>
+                    </Grid>
+                    <StackPanel x:Name="CommentList" Orientation="Vertical" Margin="10" Spacing="30" />
 
-            </StackPanel>
-            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="15">
-                <Button
+                </StackPanel>
+                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="15">
+                    <Button
                     IsEnabled="False"
                     Content="上一页"
                     x:Name="PrevPage"
                     Click="PrevPage_Click" />
-                <StackPanel Orientation="Vertical">
-                    <TextBlock
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock
                         x:Name="PageIndicator" />
-                    <TextBox PlaceholderText="跳页" Header="跳页" x:Name="PageSelect" />
-                    <Button x:Name="SkipPage" Content="跳转" Click="SkipPage_Click" />
-                </StackPanel>
-                <Button
+                        <TextBox PlaceholderText="跳页" Header="跳页" x:Name="PageSelect" />
+                        <Button x:Name="SkipPage" Content="跳转" Click="SkipPage_Click" />
+                    </StackPanel>
+                    <Button
                     IsEnabled="False"
                     Content="下一页"
                     x:Name="NextPage"
                     Click="NextPage_Click" />
-            </StackPanel>
-            <Grid
+                </StackPanel>
+                <Grid
                 Height="150" />
-        </StackPanel>
-    </ScrollViewer>
+            </StackPanel>
+        </ScrollViewer>
+        <Button x:Name="BackToTop" Click="BackToTop_Click" HorizontalAlignment="Right" Style="{StaticResource ButtonRevealStyle}" Width="50" Height="50" CornerRadius="5" Margin="15" ToolTipService.ToolTip="回到顶部" Visibility="Collapsed">
+            <Button.Content>
+                <SymbolIcon Symbol="Up"/>
+            </Button.Content>
+        </Button>
+    </Grid>
 
 
 </Page>
