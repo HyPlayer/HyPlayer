@@ -83,7 +83,7 @@
                                 Name="TextBoxSignature"
                                 Text="签名"
                                 FontSize="18" />
-                            <Button
+                            <Button Style="{StaticResource ButtonRevealStyle}" 
                                 Margin="0,10,0,0"
                                 x:Name="ButtonLogout"
                                 Content="退出登录"

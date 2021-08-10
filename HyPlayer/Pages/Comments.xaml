@@ -20,7 +20,7 @@
                     </Grid.ColumnDefinitions>
                     <TextBox PlaceholderText="发表评论" Margin="15" x:Name="CommentEdit" HorizontalAlignment="Stretch"
                          MaxLength="140" TextWrapping="Wrap" Grid.Column="0" />
-                    <Button Content="发表" Margin="15" MaxWidth="100" Grid.Column="1" HorizontalAlignment="Right"
+                    <Button Style="{StaticResource ButtonRevealStyle}"  Content="发表" Margin="15" MaxWidth="100" Grid.Column="1" HorizontalAlignment="Right"
                         x:Name="SendComment" Click="SendComment_Click" />
                 </Grid>
                 <!--
@@ -63,7 +63,7 @@
 
                 </StackPanel>
                 <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="15">
-                    <Button
+                    <Button Style="{StaticResource ButtonRevealStyle}" 
                     IsEnabled="False"
                     Content="上一页"
                     x:Name="PrevPage"
@@ -72,9 +72,9 @@
                         <TextBlock
                         x:Name="PageIndicator" />
                         <TextBox PlaceholderText="跳页" Header="跳页" x:Name="PageSelect" />
-                        <Button x:Name="SkipPage" Content="跳转" Click="SkipPage_Click" />
+                        <Button Style="{StaticResource ButtonRevealStyle}"  x:Name="SkipPage" Content="跳转" Click="SkipPage_Click" />
                     </StackPanel>
-                    <Button
+                    <Button Style="{StaticResource ButtonRevealStyle}" 
                     IsEnabled="False"
                     Content="下一页"
                     x:Name="NextPage"

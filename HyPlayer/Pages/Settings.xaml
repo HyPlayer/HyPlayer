@@ -23,7 +23,7 @@
                         x:Name="RomajiStatus"
                         Margin="0,10,0,0"
                         Text="获取中" />
-                    <Button
+                    <Button Style="{StaticResource ButtonRevealStyle}" 
                         Margin="0,10,0,0"
                         Click="ButtonBase_OnClick"
                         Content="获取罗马音资源文件" />
@@ -110,7 +110,7 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="下载路径" />
                         <TextBlock x:Name="TextBoxDownloadDir" Grid.Column="1" />
-                        <Button
+                        <Button Style="{StaticResource ButtonRevealStyle}" 
                             x:Name="ButtonDownloadSelect"
                             Grid.Column="2"
                             Click="ButtonDownloadSelect_OnClick"
@@ -124,13 +124,13 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="缓存路径" />
                         <TextBlock x:Name="TextBoxCacheDir" Grid.Column="1" />
-                        <Button
+                        <Button Style="{StaticResource ButtonRevealStyle}" 
                             x:Name="ButtonCacheSelect"
                             Grid.Column="2"
                             Click="ButtonCacheSelect_OnClick"
                             Content="选择" />
                     </Grid>
-                    <Button
+                    <Button Style="{StaticResource ButtonRevealStyle}" 
                         x:Name="ClearHistory"
                         Click="ClearHistory_Click"
                         Content="清除历史记录" />
@@ -148,7 +148,7 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="X-Real-IP (置空不设置)" />
                         <TextBox x:Name="TextBoxXREALIP" Grid.Column="1" />
-                        <Button
+                        <Button Style="{StaticResource ButtonRevealStyle}" 
                             x:Name="ButtonXREALIPSave"
                             Grid.Column="2"
                             Click="ButtonXREALIPSave_OnClick"
@@ -162,7 +162,7 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="代理服务器 (置空不设置)" />
                         <TextBox x:Name="TextBoxPROXY" Grid.Column="1" />
-                        <Button
+                        <Button Style="{StaticResource ButtonRevealStyle}" 
                             x:Name="ButtonPROXYSave"
                             Grid.Column="2"
                             Click="ButtonPROXYSave_OnClick"

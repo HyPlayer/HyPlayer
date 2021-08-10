@@ -58,7 +58,7 @@
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
-                <Button
+                <Button Style="{StaticResource ButtonRevealStyle}" 
                     x:Name="NextPage"
                     HorizontalAlignment="Center"
                     Click="NextPage_OnClickPage_OnClick"

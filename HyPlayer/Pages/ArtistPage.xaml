@@ -106,7 +106,7 @@
                     <TextBlock
                         Text="热门10首"
                         FontSize="25" Width="109" />
-                    <Button Content="播放全部" Name="ButtonPlayAll" Click="ButtonPlayAll_OnClick" />
+                    <Button Style="{StaticResource ButtonRevealStyle}"  Content="播放全部" Name="ButtonPlayAll" Click="ButtonPlayAll_OnClick" />
                 </StackPanel>
                 <StackPanel
                     Margin="20,10,0,0"

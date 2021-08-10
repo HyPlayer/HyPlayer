@@ -23,11 +23,11 @@
                     Grid.Row="0"
                     Padding="15"
                     Orientation="Horizontal">
-                    <Button
+                    <Button Style="{StaticResource ButtonRevealStyle}" 
                         x:Name="Playall"
                         Click="Playall_Click"
                         Content="播放全部" />
-                    <Button
+                    <Button Style="{StaticResource ButtonRevealStyle}" 
                         x:Name="Refresh"
                         Click="Refresh_Click"
                         Content="加载" />
@@ -50,7 +50,7 @@
                                             <TextBlock Text="{x:Bind Name}" />
                                             <TextBlock Foreground="Gray" Text="{x:Bind Artist}" />
                                         </StackPanel>
-                                        <Button
+                                        <Button Style="{StaticResource ButtonRevealStyle}" 
                                             x:Name="UploadCloud"
                                             HorizontalAlignment="Right"
                                             Click="UploadCloud_Click"

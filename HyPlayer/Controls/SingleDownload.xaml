@@ -41,7 +41,7 @@
             Orientation="Horizontal"
             Spacing="15"
             HorizontalAlignment="Center">
-            <Button
+            <Button Style="{StaticResource ButtonRevealStyle}" 
                 Click="ButtonPause_Click"
                 ToolTipService.ToolTip="暂停下载"
              >
@@ -49,7 +49,7 @@
                     <SymbolIcon Symbol="Pause"/>
                 </Button.Content>
             </Button>
-            <Button
+            <Button Style="{StaticResource ButtonRevealStyle}" 
                 Click="ButtonStop_Click"
                 ToolTipService.ToolTip="停止下载"
                >

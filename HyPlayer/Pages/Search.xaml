@@ -46,13 +46,13 @@
                             Orientation="Vertical"
                             Spacing="5" />
                         <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                            <Button
+                            <Button Style="{StaticResource ButtonRevealStyle}" 
                                 x:Name="PrevPage"
                                 Click="PrevPage_OnClick"
                                 Content="上一页"
                                 Visibility="Collapsed" />
                             <TextBlock x:Name="PageIndicator" />
-                            <Button
+                            <Button Style="{StaticResource ButtonRevealStyle}" 
                                 x:Name="NextPage"
                                 Click="NextPage_OnClickPage_OnClick"
                                 Content="下一页"

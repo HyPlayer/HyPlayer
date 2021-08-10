@@ -169,7 +169,7 @@
         <!--  登录弹窗  -->
         <ContentDialog x:Name="DialogLogin" Width="400">
             <StackPanel Orientation="Vertical">
-                <Button
+                <Button Style="{StaticResource ButtonRevealStyle}" 
                     x:Name="ButtonCloseLoginForm"
                     HorizontalAlignment="Right"
                     Background="Transparent"
@@ -201,13 +201,12 @@
                                 Margin="5"
                                 KeyDown="TextBoxPassword_OnKeyDown"
                                 PlaceholderText="密码" />
-                            <Button
+                            <Button Style="{StaticResource AccentButtonStyle}" 
                                 Name="ButtonLogin"
                                 Margin="0,15,0,15"
                                 HorizontalAlignment="Stretch"
                                 Click="ButtonLogin_OnClick"
-                                Content="登录"
-                                Style="{StaticResource AccentButtonStyle}" />
+                                Content="登录"/>
                         </StackPanel>
                     </PivotItem>
                     <PivotItem Header="扫码登录">
@@ -218,7 +217,7 @@
                                 Margin="0,46,0,46"
                                 Source="/Assets/icon.png"
                                 Tapped="LoadQr" />
-                            <Button
+                            <Button Style="{StaticResource ButtonRevealStyle}" 
                                 x:Name="BtnScaleQrCode"
                                 HorizontalAlignment="Center"
                                 Click="BtnScaleQrCode_Click"
@@ -231,7 +230,7 @@
                     Title="登录代表你同意相关条款"
                     IsClosable="False"
                     IsOpen="True" />
-                <Button
+                <Button Style="{StaticResource ButtonRevealStyle}" 
                     HorizontalAlignment="Center"
                     Background="Transparent"
                     Content="第三方账号登录">
@@ -241,7 +240,7 @@
                                 Height="50"
                                 Orientation="Horizontal"
                                 Spacing="10">
-                                <Button
+                                <Button Style="{StaticResource ButtonRevealStyle}" 
                                     x:Name="QQLogin"
                                     MinWidth="48"
                                     MinHeight="48"
@@ -252,7 +251,7 @@
                                         <Image Source="/Assets/ThirdPartyIcons/QQ.png" Stretch="Fill" />
                                     </Button.Content>
                                 </Button>
-                                <Button
+                                <Button Style="{StaticResource ButtonRevealStyle}" 
                                     x:Name="WXLogin"
                                     MinWidth="48"
                                     MinHeight="48"
@@ -263,7 +262,7 @@
                                         <Image Source="/Assets/ThirdPartyIcons/WX.png" Stretch="Fill" />
                                     </Button.Content>
                                 </Button>
-                                <Button
+                                <Button Style="{StaticResource ButtonRevealStyle}" 
                                     x:Name="WBLogin"
                                     MinWidth="48"
                                     MinHeight="48"

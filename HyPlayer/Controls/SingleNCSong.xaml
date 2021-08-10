@@ -91,7 +91,7 @@
             Grid.Column="3"
             Orientation="Horizontal"
             Spacing="8">
-            <Button
+            <Button Style="{StaticResource ButtonRevealStyle}" 
                 x:Name="BtnPlay"
                 Background="Transparent"
                 Click="ButtonBase_OnClick"
@@ -101,7 +101,7 @@
                     FontFamily="{StaticResource SymbolThemeFontFamily}"
                     Glyph="&#xEDB5;" />
             </Button>
-            <Button
+            <Button Style="{StaticResource ButtonRevealStyle}" 
                 x:Name="More"
                 Background="Transparent"
                 Click="More_Click"

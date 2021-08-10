@@ -22,7 +22,7 @@
                 VerticalScrollBarVisibility="Auto">
                 <StackPanel Orientation="Vertical">
                     <StackPanel x:Name="ItemContainer" Orientation="Vertical" />
-                    <Button HorizontalAlignment="Center" Click="BtnLoadMore_OnClick" x:Name="BtnLoadMore"
+                    <Button Style="{StaticResource ButtonRevealStyle}"  HorizontalAlignment="Center" Click="BtnLoadMore_OnClick" x:Name="BtnLoadMore"
                             Content="加载更多" />
                     <StackPanel Height="150" />
                 </StackPanel>

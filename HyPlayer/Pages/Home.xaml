@@ -50,7 +50,7 @@
                             <ColumnDefinition MinWidth="230" />
                             <ColumnDefinition MinWidth="230" />
                         </Grid.ColumnDefinitions>
-                        <Button
+                        <Button Style="{StaticResource ButtonRevealStyle}" 
                             Grid.Column="0"
                             Padding="15"
                             HorizontalAlignment="Center"
@@ -67,7 +67,7 @@
                                     Text="私人 FM" />
                             </StackPanel>
                         </Button>
-                        <Button
+                        <Button Style="{StaticResource ButtonRevealStyle}" 
                             Grid.Column="1"
                             Padding="15"
                             HorizontalAlignment="Center"

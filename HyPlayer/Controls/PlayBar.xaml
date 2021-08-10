@@ -118,7 +118,7 @@
                 Orientation="Horizontal"
                 Spacing="15"
                 Visibility="Collapsed">
-                <Button
+                <Button Style="{StaticResource ButtonRevealStyle}" 
                     x:Name="Btn_Sub"
                     Width="40"
                     Height="40"
@@ -129,7 +129,7 @@
                     ToolTipService.ToolTip="添加到歌单">
                     <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE1DA;" />
                 </Button>
-                <Button
+                <Button Style="{StaticResource ButtonRevealStyle}" 
                     x:Name="Btn_Down"
                     Width="40"
                     Height="40"
@@ -140,7 +140,7 @@
                     ToolTipService.ToolTip="下载音乐">
                     <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE118;" />
                 </Button>
-                <Button
+                <Button Style="{StaticResource ButtonRevealStyle}" 
                     x:Name="Btn_Comment"
                     Width="40"
                     Height="40"
@@ -151,7 +151,7 @@
                     ToolTipService.ToolTip="查看评论">
                     <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8F2;" />
                 </Button>
-                <Button
+                <Button Style="{StaticResource ButtonRevealStyle}" 
                     x:Name="Btn_Share"
                     Width="40"
                     Height="40"
@@ -355,7 +355,7 @@
                 IsChecked="{x:Bind hy:Common.Setting.toastLyric, Mode=TwoWay}"
                 IsThreeState="False"
                 ToolTipService.ToolTip="桌面歌词" />
-            <Button
+            <Button Style="{StaticResource ButtonRevealStyle}" 
                 Name="BtnVolume"
                 Width="40"
                 Height="40"
@@ -388,7 +388,7 @@
                     </Flyout>
                 </Button.Flyout>
             </Button>
-            <Button
+            <Button Style="{StaticResource ButtonRevealStyle}" 
                 x:Name="ButtonPlayList"
                 Width="40"
                 Height="40"
@@ -405,12 +405,12 @@
                                     Margin="16,0,0,0"
                                     HorizontalTextAlignment="Center"
                                     Text="播放列表" />
-                                <Button
+                                <Button Style="{StaticResource ButtonRevealStyle}" 
                                     Margin="5,0,0,0"
                                     controls:DockPanel.Dock="Right"
                                     Click="ButtonCleanAll_OnClick"
                                     Content="清除全部" />
-                                <Button
+                                <Button Style="{StaticResource ButtonRevealStyle}" 
                                     HorizontalAlignment="Right"
                                     controls:DockPanel.Dock="Right"
                                     Click="ButtonAddLocal_OnClick"
@@ -429,7 +429,7 @@
                                                 <TextBlock Text="{x:Bind Name}" />
                                                 <TextBlock Foreground="Gray" Text="{x:Bind Artist}" />
                                             </StackPanel>
-                                            <Button
+                                            <Button Style="{StaticResource ButtonRevealStyle}" 
                                                 Width="30"
                                                 Height="30"
                                                 Padding="-5"
@@ -452,7 +452,7 @@
             </Button>
         </controls:UniformGrid>
 
-        <Button
+        <Button Style="{StaticResource ButtonRevealStyle}" 
             Name="ButtonExpand"
             Grid.Column="4"
             Width="40"
@@ -465,7 +465,7 @@
             CornerRadius="20">
             <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE971;" />
         </Button>
-        <Button
+        <Button Style="{StaticResource ButtonRevealStyle}" 
             Name="ButtonCollapse"
             Grid.Column="4"
             Width="40"

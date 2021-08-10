@@ -48,9 +48,9 @@
                             Margin="0,10,0,0"
                             Orientation="Horizontal"
                             Spacing="15">
-                            <Button Click="ButtonPlayAll_OnClick" Content="播放全部" />
-                            <Button Click="ButtonDownloadAll_OnClick" Content="下载全部" />
-                            <Button Click="ButtonComment_OnClick" Content="评论" />
+                            <Button Style="{StaticResource ButtonRevealStyle}"  Click="ButtonPlayAll_OnClick" Content="播放全部" />
+                            <Button Style="{StaticResource ButtonRevealStyle}"  Click="ButtonDownloadAll_OnClick" Content="下载全部" />
+                            <Button Style="{StaticResource ButtonRevealStyle}"  Click="ButtonComment_OnClick" Content="评论" />
                         </StackPanel>
                         <TextBlock
                             x:Name="TextBlockDesc"
@@ -67,7 +67,7 @@
                     Margin="20,30,0,0"
                     Orientation="Vertical"
                     Spacing="10" />
-                <Button
+                <Button Style="{StaticResource ButtonRevealStyle}" 
                     x:Name="NextPage"
                     HorizontalAlignment="Center"
                     Click="NextPage_OnClickPage_OnClick"
