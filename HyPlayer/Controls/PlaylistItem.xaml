@@ -101,7 +101,7 @@
         </Grid>
         <Grid.ContextFlyout>
             <MenuFlyout>
-                <MenuFlyoutItem Text="播放全部" Click="PlayAllBtn_Click"/>
+                <MenuFlyoutItem Style="{StaticResource MenuFlyoutItemRevealStyle}" Text="播放全部" Click="PlayAllBtn_Click"/>
             </MenuFlyout>
         </Grid.ContextFlyout>
     </Grid>

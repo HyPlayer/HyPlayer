@@ -139,11 +139,11 @@
                         Stretch="Uniform">
                         <FlyoutBase.AttachedFlyout>
                             <MenuFlyout>
-                                <MenuFlyoutItem
+                                <MenuFlyoutItem Style="{StaticResource MenuFlyoutItemRevealStyle}"
                                     Click="SaveAlbumImage_Click"
                                     Icon="Save"
                                     Text="保存图片" />
-                                <MenuFlyoutItem
+                                <MenuFlyoutItem Style="{StaticResource MenuFlyoutItemRevealStyle}"
                                     Click="CopySongName_Click"
                                     Icon="Copy"
                                     Text="复制歌名" />
@@ -210,7 +210,7 @@
                     VerticalScrollBarVisibility="Hidden">
                     <ScrollViewer.ContextFlyout>
                         <MenuFlyout>
-                            <MenuFlyoutItem Click="BtnLoadLocalLyric" Text="加载本地歌词">
+                            <MenuFlyoutItem Style="{StaticResource MenuFlyoutItemRevealStyle}" Click="BtnLoadLocalLyric" Text="加载本地歌词">
                                 <MenuFlyoutItem.Icon>
                                     <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE160;" />
                                 </MenuFlyoutItem.Icon>

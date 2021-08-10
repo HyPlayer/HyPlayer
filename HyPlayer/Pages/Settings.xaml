@@ -254,7 +254,7 @@
                     <TextBlock x:Name="DeviceInfo" RightTapped="DeviceInfo_RightTapped">
                         <TextBlock.ContextFlyout>
                             <MenuFlyout>
-                                <MenuFlyoutItem
+                                <MenuFlyoutItem Style="{StaticResource MenuFlyoutItemRevealStyle}"
                                     Click="CopyDeviceCode_Click"
                                     Icon="Copy"
                                     Text="复制设备识别码" />

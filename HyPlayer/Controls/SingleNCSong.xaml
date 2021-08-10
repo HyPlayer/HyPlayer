@@ -111,7 +111,7 @@
         </StackPanel>
         <Grid.ContextFlyout>
             <MenuFlyout>
-                <MenuFlyoutItem
+                <MenuFlyoutItem Style="{StaticResource MenuFlyoutItemRevealStyle}"
                     x:Name="FlyoutItemPlay"
                     Click="BtnPlayNow_Click"
                     Text="立即播放">
@@ -119,7 +119,7 @@
                         <SymbolIcon Symbol="Play" />
                     </MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem
+                <MenuFlyoutItem Style="{StaticResource MenuFlyoutItemRevealStyle}"
                     x:Name="FlyoutItemPlayNext"
                     Click="PlayNext_Click"
                     Text="下一首播放">
@@ -128,7 +128,7 @@
                     </MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
                 <MenuFlyoutSeparator />
-                <MenuFlyoutItem
+                <MenuFlyoutItem Style="{StaticResource MenuFlyoutItemRevealStyle}"
                     x:Name="FlyoutItemSinger"
                     Click="TextBlockArtist_OnTapped"
                     Text="歌手">
@@ -136,7 +136,7 @@
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE716;" />
                     </MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem
+                <MenuFlyoutItem Style="{StaticResource MenuFlyoutItemRevealStyle}"
                     x:Name="FlyoutItemAlbum"
                     Click="TextBlockAlbum_OnTapped"
                     Text="专辑">
@@ -145,17 +145,17 @@
                     </MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
                 <MenuFlyoutSeparator />
-                <MenuFlyoutItem Click="Comments_Click" Text="评论">
+                <MenuFlyoutItem Style="{StaticResource MenuFlyoutItemRevealStyle}" Click="Comments_Click" Text="评论">
                     <MenuFlyoutItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8F2;" />
                     </MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem Click="BtnDownload_OnClick" Text="下载">
+                <MenuFlyoutItem Style="{StaticResource MenuFlyoutItemRevealStyle}" Click="BtnDownload_OnClick" Text="下载">
                     <MenuFlyoutItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE118;" />
                     </MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem
+                <MenuFlyoutItem Style="{StaticResource MenuFlyoutItemRevealStyle}"
                     x:Name="BtnMV"
                     Click="BtnMV_OnClick"
                     Text="视频">
@@ -163,12 +163,12 @@
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE173;" />
                     </MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem Click="Btn_Sub_OnClick" Text="收藏">
+                <MenuFlyoutItem Style="{StaticResource MenuFlyoutItemRevealStyle}" Click="Btn_Sub_OnClick" Text="收藏">
                     <MenuFlyoutItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE1DA;" />
                     </MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem
+                <MenuFlyoutItem Style="{StaticResource MenuFlyoutItemRevealStyle}"
                     x:Name="Btn_Del"
                     Click="Btn_Del_Click"
                     Foreground="Red"

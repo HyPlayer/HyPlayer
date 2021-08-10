@@ -60,8 +60,8 @@
         </StackPanel>
         <Grid.ContextFlyout>
             <MenuFlyout>
-                <MenuFlyoutItem Text="暂停" Click="ButtonPause_Click"/>
-                <MenuFlyoutItem Text="停止" Click="ButtonStop_Click"/>
+                <MenuFlyoutItem Style="{StaticResource MenuFlyoutItemRevealStyle}" Text="暂停" Click="ButtonPause_Click"/>
+                <MenuFlyoutItem Style="{StaticResource MenuFlyoutItemRevealStyle}" Text="停止" Click="ButtonStop_Click"/>
             </MenuFlyout>
         </Grid.ContextFlyout>
     </Grid>
