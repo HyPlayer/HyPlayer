@@ -319,7 +319,7 @@ namespace HyPlayer
                 }
             }
 
-            set => ApplicationData.Current.LocalSettings.Values["Volume"] = value;
+            set => ApplicationData.Current.LocalSettings.Values["fadeInOutTime"] = value;
         }
 
         public bool toastLyric

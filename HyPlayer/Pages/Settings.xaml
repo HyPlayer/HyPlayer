@@ -98,7 +98,7 @@
                             Tag="999000" />
                     </controls:RadioButtons>
                     <ToggleSwitch x:Name="FadeInOut" Header="播放时渐入渐出：" IsOn="{x:Bind hyplayer:Common.Setting.fadeInOut,Mode=TwoWay}"/>
-                    <Slider x:Name="FadeTime" Header="渐入渐出时间" Visibility="{x:Bind hyplayer:Common.Setting.fadeInOut,Mode=OneWay}" Minimum="0.1" Maximum="6" Value="{x:Bind hyplayer:Common.Setting.fadeInOutTime,Mode=TwoWay}" Width="300" HorizontalAlignment="Left" ToolTipService.ToolTip="{x:Bind FadeTime.Value}"/>
+                    <Slider x:Name="FadeTime" Header="渐入渐出时间" Visibility="{x:Bind hyplayer:Common.Setting.fadeInOut,Mode=OneWay}" Minimum="0" Maximum="6" Value="{x:Bind hyplayer:Common.Setting.fadeInOutTime,Mode=TwoWay}" Width="300" HorizontalAlignment="Left" ToolTipService.ToolTip="{x:Bind FadeTime.Value}"/>
                 </StackPanel>
             </ScrollViewer>
         </PivotItem>
