@@ -6,6 +6,7 @@
     xmlns:controls1="using:HyPlayer.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:hyplayer="using:HyPlayer"
     mc:Ignorable="d">
 
     <Pivot
@@ -71,7 +72,7 @@
                 </StackPanel>
             </ScrollViewer>
         </PivotItem>
-        <PivotItem FontFamily="Thick" Header="在线播放设置">
+        <PivotItem FontFamily="Thick" Header="播放设置">
             <ScrollViewer VerticalScrollMode="Enabled">
                 <StackPanel Orientation="Vertical">
                     <controls:RadioButtons
@@ -96,6 +97,8 @@
                             Content="无损 (VIP)"
                             Tag="999000" />
                     </controls:RadioButtons>
+                    <ToggleSwitch x:Name="FadeInOut" Header="播放时渐入渐出：" IsOn="{x:Bind hyplayer:Common.Setting.fadeInOut,Mode=TwoWay}"/>
+                    <Slider x:Name="FadeTime" Header="渐入渐出时间" Visibility="{x:Bind hyplayer:Common.Setting.fadeInOut,Mode=OneWay}" Minimum="0.1" Maximum="6" Value="{x:Bind hyplayer:Common.Setting.fadeInOutTime,Mode=TwoWay}" Width="300" HorizontalAlignment="Left" ToolTipService.ToolTip="{x:Bind FadeTime.Value}"/>
                 </StackPanel>
             </ScrollViewer>
         </PivotItem>
@@ -243,7 +246,8 @@
                             <Hyperlink NavigateUri="https://github.com/HyPlayer/HyPlayer">
                                 Github
                             </Hyperlink>
-                            |<Hyperlink NavigateUri="https://gitee.com/kengwang/HyPlayer">
+                            |
+                            <Hyperlink NavigateUri="https://gitee.com/kengwang/HyPlayer">
                                 Gitee
                             </Hyperlink>
                         </Paragraph>
@@ -292,13 +296,16 @@
                                     <Hyperlink NavigateUri="https://github.com/kengwang">
                                         Github
                                     </Hyperlink>
-                                    |<Hyperlink NavigateUri="https://blog.kengwang.co">
+                                    |
+                                    <Hyperlink NavigateUri="https://blog.kengwang.co">
                                         博客
                                     </Hyperlink>
-                                    |<Hyperlink NavigateUri="http://www.coolapk.com/u/1683034">
+                                    |
+                                    <Hyperlink NavigateUri="http://www.coolapk.com/u/1683034">
                                         酷安@kengwang
                                     </Hyperlink>
-                                    |<Hyperlink NavigateUri="https://afdian.net/@kengwang">
+                                    |
+                                    <Hyperlink NavigateUri="https://afdian.net/@kengwang">
                                         爱发电打赏
                                     </Hyperlink>
                                 </Paragraph>
@@ -332,7 +339,8 @@
                                     <Hyperlink NavigateUri="https://github.com/aaaaaaccd">
                                         Github
                                     </Hyperlink>
-                                    |<Hyperlink NavigateUri="https://www.coolapk.com/u/2409682">
+                                    |
+                                    <Hyperlink NavigateUri="https://www.coolapk.com/u/2409682">
                                         酷安@一只老白
                                     </Hyperlink>
                                 </Paragraph>
@@ -366,7 +374,8 @@
                                     <Hyperlink NavigateUri="https://github.com/EP012014">
                                         Github
                                     </Hyperlink>
-                                    |</Paragraph>
+                                    |
+                                </Paragraph>
                             </RichTextBlock>
                         </StackPanel>
                     </StackPanel>

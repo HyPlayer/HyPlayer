@@ -296,6 +296,31 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        public bool fadeInOut
+        {
+            get { return GetSettings<bool>("FadeInOut", false); }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["FadeInOut"] = value;
+                OnPropertyChanged();
+            }
+        }
+        public double fadeInOutTime
+        {
+            get
+            {
+                try
+                {
+                    return GetSettings<double>("fadeInOutTime", 3);
+                }
+                catch
+                {
+                    return 3;
+                }
+            }
+
+            set => ApplicationData.Current.LocalSettings.Values["Volume"] = value;
+        }
 
         public bool toastLyric
         {
