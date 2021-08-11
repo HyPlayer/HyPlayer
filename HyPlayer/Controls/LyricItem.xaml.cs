@@ -57,7 +57,7 @@ namespace HyPlayer.Controls
 
         public TextAlignment LyricAlignment => Common.Setting.lyricAlignment ? TextAlignment.Left : TextAlignment.Center;
 
-        private Brush originBrush => Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as Brush;
+        private Brush originBrush => Common.PageExpandedPlayer != null ? Common.PageExpandedPlayer.ForegroundAlbumBrush : Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush;
 
         public void RefreshFontSize()
         {

@@ -4,9 +4,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hyplayer="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
-    xmlns:hyplayer="using:HyPlayer"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
     <!--  Grid Beam~  -->
@@ -107,92 +107,106 @@
                 <ColumnDefinition />
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
-            <ScrollViewer VerticalScrollMode="Disabled" Canvas.ZIndex="0" VerticalScrollBarVisibility="Hidden"  HorizontalScrollMode="Disabled" MinWidth="600"  x:Name="UIAugmentationSys">
-                <Grid x:Name="LeftPanel" MaxWidth="600">
+            <ScrollViewer
+                x:Name="UIAugmentationSys"
+                MinWidth="600"
+                Canvas.ZIndex="0"
+                HorizontalScrollMode="Disabled"
+                VerticalScrollBarVisibility="Hidden"
+                VerticalScrollMode="Disabled">
+                <Grid
+                    x:Name="LeftPanel"
+                    MaxWidth="600"
+                    HorizontalAlignment="Stretch">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="10*" />
                     </Grid.RowDefinitions>
                     <controls:DropShadowPanel
-                    x:Name="AlbumDropShadow"
-                    Grid.Row="1"
-                    MaxWidth="600"
-                    MaxHeight="600"
-                    Margin="20"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    BlurRadius="20"
-                    IsMasked="True"
-                    OffsetX="0"
-                    OffsetY="4"
-                    ShadowOpacity="0.4"
-                    Color="Black">
+                        x:Name="AlbumDropShadow"
+                        Grid.Row="1"
+                        MaxWidth="600"
+                        MaxHeight="600"
+                        Margin="20"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        BlurRadius="20"
+                        IsMasked="True"
+                        OffsetX="0"
+                        OffsetY="4"
+                        ShadowOpacity="0.4"
+                        Color="Black">
                         <controls:ImageEx
-                        x:Name="ImageAlbum"
-                        x:FieldModifier="public"
-                        CornerRadius="12"
-                        IsCacheEnabled="False"
-                        PlaceholderStretch="Uniform"
-                        RightTapped="{x:Bind hyplayer:Common.UIElement_RightTapped}"
-                        Tapped="ImageAlbum_Tapped"
-                        Source="/Assets/icon.png"
-                        Stretch="Uniform">
+                            x:Name="ImageAlbum"
+                            x:FieldModifier="public"
+                            CornerRadius="12"
+                            IsCacheEnabled="False"
+                            PlaceholderStretch="Uniform"
+                            RightTapped="{x:Bind hyplayer:Common.UIElement_RightTapped}"
+                            Source="/Assets/icon.png"
+                            Stretch="Uniform"
+                            Tapped="ImageAlbum_Tapped">
                             <FlyoutBase.AttachedFlyout>
                                 <MenuFlyout>
-                                    <MenuFlyoutItem Style="{StaticResource MenuFlyoutItemRevealStyle}"
-                                    Click="SaveAlbumImage_Click"
-                                    Icon="Save"
-                                    Text="保存图片" />
-                                    <MenuFlyoutItem Style="{StaticResource MenuFlyoutItemRevealStyle}"
-                                    Click="CopySongName_Click"
-                                    Icon="Copy"
-                                    Text="复制歌名" />
+                                    <MenuFlyoutItem
+                                        Click="SaveAlbumImage_Click"
+                                        Icon="Save"
+                                        Style="{StaticResource MenuFlyoutItemRevealStyle}"
+                                        Text="保存图片" />
+                                    <MenuFlyoutItem
+                                        Click="CopySongName_Click"
+                                        Icon="Copy"
+                                        Style="{StaticResource MenuFlyoutItemRevealStyle}"
+                                        Text="复制歌名" />
                                 </MenuFlyout>
                             </FlyoutBase.AttachedFlyout>
                         </controls:ImageEx>
                     </controls:DropShadowPanel>
                     <StackPanel
-                    x:Name="SongInfo"
-                    Grid.Row="2"
-                    MaxWidth="600"
-                    Margin="20"
-                    HorizontalAlignment="Stretch"
-                    CornerRadius="12"
-                    Orientation="Vertical"
-                    Spacing="5">
+                        x:Name="SongInfo"
+                        Grid.Row="2"
+                        MaxWidth="600"
+                        Margin="20"
+                        HorizontalAlignment="Stretch"
+                        CornerRadius="12"
+                        Orientation="Vertical"
+                        Spacing="5">
                         <TextBlock
-                        Name="TextBlockSongTitle"
-                        x:FieldModifier="public"
-                        FontSize="35"
-                        FontWeight="Bold"
-                        Text="歌曲名"
-                        TextAlignment="Left" />
-                        <StackPanel Orientation="Horizontal" Spacing="5" x:Name="SongInfoContainer">
-                            <TextBlock
-                            Padding="0,6,0,6"
-                            FontSize="18"
+                            Name="TextBlockSongTitle"
+                            x:FieldModifier="public"
+                            FontSize="35"
                             FontWeight="Bold"
-                            Foreground="{x:Bind TextBlockSongTitle.Foreground}"
-                            Text="歌手: "
-                            TextAlignment="Center" />
+                            Text="歌曲名"
+                            TextAlignment="Left" />
+                        <StackPanel
+                            x:Name="SongInfoContainer"
+                            Orientation="Horizontal"
+                            Spacing="5">
+                            <TextBlock
+                                Padding="0,6,0,6"
+                                FontSize="18"
+                                FontWeight="Bold"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="歌手: "
+                                TextAlignment="Center" />
                             <HyperlinkButton
-                            Name="TextBlockSinger"
-                            Click="TextBlockSinger_OnTapped"
-                            FontSize="18" />
+                                Name="TextBlockSinger"
+                                Click="TextBlockSinger_OnTapped"
+                                FontSize="18" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="5">
                             <TextBlock
-                            Padding="0,6,0,6"
-                            FontSize="18"
-                            FontWeight="Bold"
-                            Foreground="{x:Bind TextBlockSongTitle.Foreground}"
-                            Text="专辑: "
-                            TextAlignment="Center" />
+                                Padding="0,6,0,6"
+                                FontSize="18"
+                                FontWeight="Bold"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="专辑: "
+                                TextAlignment="Center" />
                             <HyperlinkButton
-                            Name="TextBlockAlbum"
-                            Click="TextBlockAlbum_OnTapped"
-                            FontSize="18" />
+                                Name="TextBlockAlbum"
+                                Click="TextBlockAlbum_OnTapped"
+                                FontSize="18" />
                         </StackPanel>
                     </StackPanel>
                 </Grid>
@@ -212,7 +226,10 @@
                     VerticalScrollBarVisibility="Hidden">
                     <ScrollViewer.ContextFlyout>
                         <MenuFlyout>
-                            <MenuFlyoutItem Style="{StaticResource MenuFlyoutItemRevealStyle}" Click="BtnLoadLocalLyric" Text="加载本地歌词">
+                            <MenuFlyoutItem
+                                Click="BtnLoadLocalLyric"
+                                Style="{StaticResource MenuFlyoutItemRevealStyle}"
+                                Text="加载本地歌词">
                                 <MenuFlyoutItem.Icon>
                                     <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE160;" />
                                 </MenuFlyoutItem.Icon>
@@ -224,9 +241,9 @@
                             Name="LyricBox"
                             Orientation="Vertical"
                             PointerWheelChanged="LyricBoxContainer_OnPointerWheelChanged"
-                            Tapped="LyricBox_Tapped"
                             ScrollViewer.VerticalScrollBarVisibility="Auto"
-                            Spacing="15">
+                            Spacing="15"
+                            Tapped="LyricBox_Tapped">
                             <StackPanel Orientation="Horizontal" Spacing="5">
                                 <TextBlock HorizontalAlignment="Center" Text="当前暂未播放歌曲" />
                             </StackPanel>
@@ -234,7 +251,7 @@
                     </ScrollViewer.Content>
                 </ScrollViewer>
             </Grid>
-            <Button Style="{StaticResource ButtonRevealStyle}" 
+            <Button
                 Grid.Row="1"
                 Grid.Column="0"
                 Grid.ColumnSpan="2"
@@ -246,7 +263,8 @@
                 VerticalAlignment="Bottom"
                 Background="Transparent"
                 BorderThickness="0"
-                CornerRadius="30">
+                CornerRadius="30"
+                Style="{StaticResource ButtonRevealStyle}">
                 <Button.Flyout>
                     <MenuFlyout>
                         <ToggleMenuFlyoutItem

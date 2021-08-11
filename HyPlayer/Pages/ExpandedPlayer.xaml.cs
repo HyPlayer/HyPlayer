@@ -23,8 +23,8 @@ using HyPlayer.HyPlayControl;
 using Buffer = Windows.Storage.Streams.Buffer;
 using Windows.ApplicationModel.DataTransfer;
 using System.Text;
+using Windows.Graphics.Imaging;
 using Windows.UI;
-using System.Runtime.InteropServices.WindowsRuntime;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -53,6 +53,10 @@ namespace HyPlayer.Pages
         private bool realclick = false;
         private bool programClick = false;
         public bool jumpedLyrics = false;
+
+        public string lastSongUrlForBrush = "";
+        public SolidColorBrush ForegroundAlbumBrush = Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush;
+
 
         public ExpandedPlayer()
         {
@@ -246,9 +250,25 @@ namespace HyPlayer.Pages
                 SongInfo.Width = double.NaN;
             }
 
-            if (AlbumDropShadow.ActualOffset.Y + AlbumDropShadow.ActualHeight + 370 > LeftPanel.ActualHeight && WindowMode != ExpandedWindowMode.LyricOnly)
+            if (AlbumDropShadow.ActualOffset.X + AlbumDropShadow.ActualWidth + 17 > nowwidth)
             {
-                UIAugmentationSys.ChangeView(0, 0, (float?)(LeftPanel.ActualHeight / (AlbumDropShadow.ActualOffset.Y + AlbumDropShadow.ActualHeight + 370)));
+                AlbumDropShadow.Width = nowwidth - AlbumDropShadow.ActualOffset.X - 15;
+                LeftPanel.HorizontalAlignment = HorizontalAlignment.Left;
+            }
+            else
+            {
+                AlbumDropShadow.Width = double.NaN;
+                LeftPanel.HorizontalAlignment = HorizontalAlignment.Center;
+            }
+
+            if (AlbumDropShadow.ActualHeight + 250 > LeftPanel.ActualHeight && WindowMode != ExpandedWindowMode.LyricOnly)
+            {
+                float? size = (float?)(LeftPanel.ActualHeight / (SongInfo.ActualOffset.Y + SongInfo.ActualHeight + 150));
+                UIAugmentationSys.ChangeView(0, 0, size);
+            }
+            else
+            {
+                UIAugmentationSys.ChangeView(0, 0, 1);
             }
             //{//合并显示
             //    SongInfo.SetValue(Grid.RowProperty, 1);
@@ -351,7 +371,7 @@ namespace HyPlayer.Pages
             if (sclock > 0)
                 return;
             var transform = item?.TransformToVisual((UIElement)LyricBoxContainer.Content);
-            var position = transform?.TransformPoint(new Point(0, 0));
+            var position = transform?.TransformPoint(new Windows.Foundation.Point(0, 0));
             LyricBoxContainer.ChangeView(null, position?.Y - LyricBoxContainer.ActualHeight / 3, null, false);
         }
 
@@ -415,6 +435,19 @@ namespace HyPlayer.Pages
                         {
                             ImageAlbum.PlaceholderSource = new BitmapImage(new Uri(mpi.PlayItem.Album.cover + "?param=" +
                                 StaticSource.PICSIZE_EXPANDEDPLAYER_PREVIEWALBUMCOVER));
+                            ImageAlbum.ImageExOpened += async (a, b) =>
+                            {
+                                if (await IsBrightAsync())
+                                {
+                                    ForegroundAlbumBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0, 0, 0));
+                                    TextBlockSongTitle.Foreground = ForegroundAlbumBrush;
+                                }
+                                else
+                                {
+                                    ForegroundAlbumBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
+                                    TextBlockSongTitle.Foreground = ForegroundAlbumBrush;
+                                }
+                            };
                             ImageAlbum.Source = new BitmapImage(new Uri(mpi.PlayItem.Album.cover));
                         }
                         TextBlockSinger.Content = mpi.PlayItem.ArtistString;
@@ -443,7 +476,6 @@ namespace HyPlayer.Pages
                         }
 
                         needRedesign++;
-                        LoadColor();
                     }
                     catch (Exception)
                     {
@@ -741,31 +773,35 @@ namespace HyPlayer.Pages
                 else jumpedLyrics = false;
             }
         }
-        private async void LoadColor()
+
+        private async Task<bool> IsBrightAsync()
         {
-
-            Color avgcolor = new Color();
-            RenderTargetBitmap renderbmp = new RenderTargetBitmap();
-            await renderbmp.RenderAsync(TextBlockSongTitle);
-            IBuffer pixelBuffer = await renderbmp.GetPixelsAsync();
-            byte[] pixels = pixelBuffer.ToArray();
-            double totalB = 0, totalG = 0, totalR = 0, totalA = 0;
-            int addTimes = 0;
-            for (int i = 0; i < pixels.Length; i += 4)
+            if (lastSongUrlForBrush == HyPlayList.NowPlayingItem.PlayItem.url) return ForegroundAlbumBrush.Color.R == 0;
+            try
             {
-                totalB += pixels[i];
-                totalG += pixels[i + 1];
-                totalR += pixels[i + 2];
-                totalA += pixels[i + 3];
-                addTimes++;
+                var decoder = await BitmapDecoder.CreateAsync(await RandomAccessStreamReference.CreateFromUri(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=1y1")).OpenReadAsync());
+                var data = await decoder.GetPixelDataAsync();
+                var bytes = data.DetachPixelData();
+                System.Drawing.Color c = GetPixel(bytes, 0, 0, decoder.PixelWidth, decoder.PixelHeight);
+                double Y = 0.299 * c.R + 0.587 * c.G + 0.114 * c.B;
+                lastSongUrlForBrush = HyPlayList.NowPlayingItem.PlayItem.url;
+                return Y >= 150;
             }
-            avgcolor.A = (byte)(totalA / addTimes);
-            avgcolor.B = (byte)(totalB / addTimes);
-            avgcolor.G = (byte)(totalG / addTimes);
-            avgcolor.R = (byte)(totalR / addTimes);
-            SolidColorBrush colorBrush = new SolidColorBrush(ColorHelper.GetReversedColor(avgcolor));
-            TextBlockSongTitle.Foreground = colorBrush;
+            catch
+            {
+                return ActualTheme == ElementTheme.Light;
+            }
+        }
 
+        public static System.Drawing.Color GetPixel(byte[] pixels, int x, int y, uint width, uint height)
+        {
+            int i = x;
+            int j = y;
+            int k = (i * (int)width + j) * 3;
+            var r = pixels[k + 0];
+            var g = pixels[k + 1];
+            var b = pixels[k + 2];
+            return System.Drawing.Color.FromArgb(0, r, g, b);
         }
     }
 
