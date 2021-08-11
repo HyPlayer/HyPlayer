@@ -172,7 +172,7 @@ namespace HyPlayer
         public static Color GetReversedColor(Color color)
         {
             double grayLevel = (0.299 * color.R + 0.587 * color.G + 0.114 * color.B) / 255;
-            if (grayLevel > 0.5)
+            if (grayLevel > 0.1)
                 return Colors.Black;
             else return Colors.White;
         }

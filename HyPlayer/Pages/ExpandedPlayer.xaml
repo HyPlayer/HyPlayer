@@ -107,7 +107,7 @@
                 <ColumnDefinition />
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
-            <ScrollViewer VerticalScrollMode="Disabled" HorizontalScrollMode="Disabled" x:Name="UIAugmentationSys">
+            <ScrollViewer VerticalScrollMode="Disabled" Canvas.ZIndex="0" VerticalScrollBarVisibility="Hidden"  HorizontalScrollMode="Disabled" MinWidth="600"  x:Name="UIAugmentationSys">
                 <Grid x:Name="LeftPanel" MaxWidth="600">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" />
@@ -173,7 +173,7 @@
                             Padding="0,6,0,6"
                             FontSize="18"
                             FontWeight="Bold"
-                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Foreground="{x:Bind TextBlockSongTitle.Foreground}"
                             Text="歌手: "
                             TextAlignment="Center" />
                             <HyperlinkButton
@@ -186,7 +186,7 @@
                             Padding="0,6,0,6"
                             FontSize="18"
                             FontWeight="Bold"
-                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Foreground="{x:Bind TextBlockSongTitle.Foreground}"
                             Text="专辑: "
                             TextAlignment="Center" />
                             <HyperlinkButton

@@ -177,26 +177,28 @@ namespace HyPlayer.Pages
                     BtnToggleAlbum.IsChecked = true;
                     BtnToggleLyric.IsChecked = true;
                     RightPanel.Visibility = Visibility.Visible;
-                    LeftPanel.Visibility = Visibility.Visible;
+                    UIAugmentationSys.Visibility = Visibility.Visible;
                     LyricBox.Margin = new Thickness(0);
-                    LeftPanel.SetValue(Grid.ColumnProperty, 0);
-                    LeftPanel.SetValue(Grid.ColumnSpanProperty, 1);
+                    UIAugmentationSys.SetValue(Grid.ColumnProperty, 0);
+                    UIAugmentationSys.SetValue(Grid.ColumnSpanProperty, 1);
                     RightPanel.SetValue(Grid.ColumnProperty, 1);
                     RightPanel.SetValue(Grid.ColumnSpanProperty, 1);
                     break;
                 case ExpandedWindowMode.CoverOnly:
                     BtnToggleAlbum.IsChecked = true;
                     BtnToggleLyric.IsChecked = false;
-                    LeftPanel.Visibility = Visibility.Visible;
+                    UIAugmentationSys.Visibility = Visibility.Visible;
                     RightPanel.Visibility = Visibility.Collapsed;
-                    LeftPanel.SetValue(Grid.ColumnProperty, 0);
-                    LeftPanel.SetValue(Grid.ColumnSpanProperty, 2);
+                    UIAugmentationSys.SetValue(Grid.ColumnProperty, 0);
+                    UIAugmentationSys.SetValue(Grid.ColumnSpanProperty, 2);
+                    UIAugmentationSys.VerticalAlignment = VerticalAlignment.Stretch;
+                    UIAugmentationSys.HorizontalAlignment = HorizontalAlignment.Stretch;
                     break;
                 case ExpandedWindowMode.LyricOnly:
                     BtnToggleAlbum.IsChecked = false;
                     BtnToggleLyric.IsChecked = true;
                     RightPanel.Visibility = Visibility.Visible;
-                    LeftPanel.Visibility = Visibility.Collapsed;
+                    UIAugmentationSys.Visibility = Visibility.Collapsed;
                     RightPanel.SetValue(Grid.ColumnProperty, 0);
                     RightPanel.SetValue(Grid.ColumnSpanProperty, 2);
                     LyricBox.Margin = new Thickness(15);
@@ -244,9 +246,9 @@ namespace HyPlayer.Pages
                 SongInfo.Width = double.NaN;
             }
 
-            if (AlbumDropShadow.ActualOffset.Y + AlbumDropShadow.ActualHeight + 240 > LeftPanel.ActualHeight)
+            if (AlbumDropShadow.ActualOffset.Y + AlbumDropShadow.ActualHeight + 370 > LeftPanel.ActualHeight && WindowMode != ExpandedWindowMode.LyricOnly)
             {
-                UIAugmentationSys.ChangeView(0, 0, (float?)(LeftPanel.ActualHeight / (AlbumDropShadow.ActualOffset.Y + AlbumDropShadow.ActualHeight + 240)));
+                UIAugmentationSys.ChangeView(0, 0, (float?)(LeftPanel.ActualHeight / (AlbumDropShadow.ActualOffset.Y + AlbumDropShadow.ActualHeight + 370)));
             }
             //{//合并显示
             //    SongInfo.SetValue(Grid.RowProperty, 1);
@@ -762,7 +764,7 @@ namespace HyPlayer.Pages
             avgcolor.G = (byte)(totalG / addTimes);
             avgcolor.R = (byte)(totalR / addTimes);
             SolidColorBrush colorBrush = new SolidColorBrush(ColorHelper.GetReversedColor(avgcolor));
-            TextBlockSinger.Foreground = TextBlockSongTitle.Foreground = colorBrush;
+            TextBlockSongTitle.Foreground = colorBrush;
 
         }
     }
