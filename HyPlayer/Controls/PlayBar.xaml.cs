@@ -35,6 +35,7 @@ namespace HyPlayer.Controls
 
         public PlayMode NowPlayType = PlayMode.DefaultRoll;
         private bool realSelectSong;
+        public bool FadeSettedVolume = false;
 
         public PlayBar()
         {
@@ -280,15 +281,19 @@ namespace HyPlayer.Controls
                    {
                        if (HyPlayList.Player.PlaybackSession.Position.TotalSeconds <= Common.Setting.fadeInOutTime)
                        {
+                           FadeSettedVolume = true;
                            int vol = Common.Setting.Volume;
                            HyPlayList.Player.Volume = HyPlayList.Player.PlaybackSession.Position.TotalSeconds / Common.Setting.fadeInOutTime * vol / 100;
                            System.Diagnostics.Debug.WriteLine(HyPlayList.Player.PlaybackSession.Position.TotalSeconds / Common.Setting.fadeInOutTime * vol / 100);
                        }
                        else if (HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds / 1000 - HyPlayList.Player.PlaybackSession.Position.TotalSeconds <= Common.Setting.fadeInOutTime)
                        {
+                           FadeSettedVolume = true;
                            HyPlayList.Player.Volume = (HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds / 1000 - HyPlayList.Player.PlaybackSession.Position.TotalSeconds) / Common.Setting.fadeInOutTime * Common.Setting.Volume / 100;
                            System.Diagnostics.Debug.WriteLine((HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds / 1000 - HyPlayList.Player.PlaybackSession.Position.TotalSeconds) / Common.Setting.fadeInOutTime * Common.Setting.Volume / 100);
                        }
+                       else
+                           FadeSettedVolume = false;
                    }
                    //SliderAudioRate.Value = mp.Volume;
                }

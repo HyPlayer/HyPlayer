@@ -583,7 +583,7 @@ namespace HyPlayer.HyPlayControl
 
         private static void Player_VolumeChanged(MediaPlayer sender, object args)
         {
-            if (!Common.Setting.fadeInOut || (HyPlayList.Player.PlaybackSession.Position.TotalSeconds > Common.Setting.fadeInOutTime && (HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds / 1000 - HyPlayList.Player.PlaybackSession.Position.TotalSeconds > Common.Setting.fadeInOutTime)))
+            if (!Common.BarPlayBar.FadeSettedVolume)
                 Common.Setting.Volume = (int)(Player.Volume * 100);
 
             Common.Invoke(() => OnVolumeChange?.Invoke(Player.Volume));
