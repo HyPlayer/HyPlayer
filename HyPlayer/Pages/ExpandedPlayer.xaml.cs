@@ -23,6 +23,8 @@ using HyPlayer.HyPlayControl;
 using Buffer = Windows.Storage.Streams.Buffer;
 using Windows.ApplicationModel.DataTransfer;
 using System.Text;
+using Windows.UI;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -242,7 +244,10 @@ namespace HyPlayer.Pages
                 SongInfo.Width = double.NaN;
             }
 
-            //if (AlbumDropShadow.ActualOffset.Y + AlbumDropShadow.ActualHeight + 190 > LeftPanel.ActualHeight)
+            if (AlbumDropShadow.ActualOffset.Y + AlbumDropShadow.ActualHeight + 240 > LeftPanel.ActualHeight)
+            {
+                UIAugmentationSys.ChangeView(0, 0, (float?)(LeftPanel.ActualHeight / (AlbumDropShadow.ActualOffset.Y + AlbumDropShadow.ActualHeight + 240)));
+            }
             //{//合并显示
             //    SongInfo.SetValue(Grid.RowProperty, 1);
             //    SongInfo.VerticalAlignment = VerticalAlignment.Bottom;
@@ -410,7 +415,6 @@ namespace HyPlayer.Pages
                                 StaticSource.PICSIZE_EXPANDEDPLAYER_PREVIEWALBUMCOVER));
                             ImageAlbum.Source = new BitmapImage(new Uri(mpi.PlayItem.Album.cover));
                         }
-
                         TextBlockSinger.Content = mpi.PlayItem.ArtistString;
                         TextBlockSongTitle.Text = mpi.PlayItem.Name;
                         TextBlockAlbum.Content = mpi.PlayItem.AlbumString;
@@ -437,6 +441,7 @@ namespace HyPlayer.Pages
                         }
 
                         needRedesign++;
+                        LoadColor();
                     }
                     catch (Exception)
                     {
@@ -714,7 +719,7 @@ namespace HyPlayer.Pages
 
         private void ImageAlbum_Tapped(object sender, TappedRoutedEventArgs e)
         {
-            if(WindowMode == ExpandedWindowMode.CoverOnly)
+            if (WindowMode == ExpandedWindowMode.CoverOnly)
             {
                 WindowMode = ExpandedWindowMode.LyricOnly;
                 ChangeWindowMode();
@@ -733,6 +738,32 @@ namespace HyPlayer.Pages
                 }
                 else jumpedLyrics = false;
             }
+        }
+        private async void LoadColor()
+        {
+
+            Color avgcolor = new Color();
+            RenderTargetBitmap renderbmp = new RenderTargetBitmap();
+            await renderbmp.RenderAsync(TextBlockSongTitle);
+            IBuffer pixelBuffer = await renderbmp.GetPixelsAsync();
+            byte[] pixels = pixelBuffer.ToArray();
+            double totalB = 0, totalG = 0, totalR = 0, totalA = 0;
+            int addTimes = 0;
+            for (int i = 0; i < pixels.Length; i += 4)
+            {
+                totalB += pixels[i];
+                totalG += pixels[i + 1];
+                totalR += pixels[i + 2];
+                totalA += pixels[i + 3];
+                addTimes++;
+            }
+            avgcolor.A = (byte)(totalA / addTimes);
+            avgcolor.B = (byte)(totalB / addTimes);
+            avgcolor.G = (byte)(totalG / addTimes);
+            avgcolor.R = (byte)(totalR / addTimes);
+            SolidColorBrush colorBrush = new SolidColorBrush(ColorHelper.GetReversedColor(avgcolor));
+            TextBlockSinger.Foreground = TextBlockSongTitle.Foreground = colorBrush;
+
         }
     }
 

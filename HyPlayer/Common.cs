@@ -21,6 +21,7 @@ using Newtonsoft.Json;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Controls;
+using Windows.UI;
 
 namespace HyPlayer
 {
@@ -165,6 +166,16 @@ namespace HyPlayer
         }
 
         public static bool NavigatingBack = false;
+    }
+    internal class ColorHelper
+    {
+        public static Color GetReversedColor(Color color)
+        {
+            double grayLevel = (0.299 * color.R + 0.587 * color.G + 0.114 * color.B) / 255;
+            if (grayLevel > 0.5)
+                return Colors.Black;
+            else return Colors.White;
+        }
     }
 
     internal class Setting : INotifyPropertyChanged
