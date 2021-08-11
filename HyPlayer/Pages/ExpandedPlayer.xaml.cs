@@ -70,6 +70,19 @@ namespace HyPlayer.Pages
             HyPlayList.OnPlayPositionChange += HyPlayList_OnPlayPositionChange;
             Window.Current.SizeChanged += Current_SizeChanged;
             HyPlayList.OnTimerTicked += HyPlayList_OnTimerTicked;
+            ImageAlbum.ImageExOpened += async (a, b) =>
+            {
+                if (await IsBrightAsync())
+                {
+                    ForegroundAlbumBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0, 0, 0));
+                    TextBlockSongTitle.Foreground = ForegroundAlbumBrush;
+                }
+                else
+                {
+                    ForegroundAlbumBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
+                    TextBlockSongTitle.Foreground = ForegroundAlbumBrush;
+                }
+            };
             Current_SizeChanged(null, null);
             ToggleButtonSound.IsChecked = Common.ShowLyricSound;
             ToggleButtonTranslation.IsChecked = Common.ShowLyricTrans;
@@ -435,19 +448,6 @@ namespace HyPlayer.Pages
                         {
                             ImageAlbum.PlaceholderSource = new BitmapImage(new Uri(mpi.PlayItem.Album.cover + "?param=" +
                                 StaticSource.PICSIZE_EXPANDEDPLAYER_PREVIEWALBUMCOVER));
-                            ImageAlbum.ImageExOpened += async (a, b) =>
-                            {
-                                if (await IsBrightAsync())
-                                {
-                                    ForegroundAlbumBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0, 0, 0));
-                                    TextBlockSongTitle.Foreground = ForegroundAlbumBrush;
-                                }
-                                else
-                                {
-                                    ForegroundAlbumBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
-                                    TextBlockSongTitle.Foreground = ForegroundAlbumBrush;
-                                }
-                            };
                             ImageAlbum.Source = new BitmapImage(new Uri(mpi.PlayItem.Album.cover));
                         }
                         TextBlockSinger.Content = mpi.PlayItem.ArtistString;
@@ -779,7 +779,15 @@ namespace HyPlayer.Pages
             if (lastSongUrlForBrush == HyPlayList.NowPlayingItem.PlayItem.url) return ForegroundAlbumBrush.Color.R == 0;
             try
             {
-                var decoder = await BitmapDecoder.CreateAsync(await RandomAccessStreamReference.CreateFromUri(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=1y1")).OpenReadAsync());
+                BitmapDecoder decoder;
+                if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Local)
+                {
+                    decoder = await BitmapDecoder.CreateAsync(await HyPlayList.NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 1));
+                }
+                else
+                {
+                    decoder = await BitmapDecoder.CreateAsync(await RandomAccessStreamReference.CreateFromUri(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=1y1")).OpenReadAsync());
+                }
                 var data = await decoder.GetPixelDataAsync();
                 var bytes = data.DetachPixelData();
                 System.Drawing.Color c = GetPixel(bytes, 0, 0, decoder.PixelWidth, decoder.PixelHeight);
