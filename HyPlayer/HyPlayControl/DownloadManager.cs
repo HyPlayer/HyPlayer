@@ -75,8 +75,10 @@ namespace HyPlayer.HyPlayControl
                           }
 
 
-                    //写相关信息
                     var file = File.Create(new UwpStorageFileAbstraction(await StorageFile.GetFileFromPathAsync(fullpath)));
+                    The163KeyHelper.TrySetMusicInfo(file.Tag, dontuseme);
+                    if (Path.GetExtension(fullpath) != ".flac"){
+                    //写相关信息
                       file.Tag.Album = ncsong.Album.name;
                       file.Tag.Performers = ncsong.Artist.Select(t => t.name).ToArray();
                       file.Tag.Title = ncsong.songname;
@@ -88,9 +90,8 @@ namespace HyPlayer.HyPlayControl
                       };
                       file.Tag.Pictures[0].MimeType = "image/jpeg";
                       file.Tag.Pictures[0].Description = "cover.jpg";
-                      The163KeyHelper.TrySetMusicInfo(file.Tag, dontuseme);
                       file.Save();
-
+                    }
                       var downloadToastContent = new ToastContent
                       {
                           Visual = new ToastVisual
