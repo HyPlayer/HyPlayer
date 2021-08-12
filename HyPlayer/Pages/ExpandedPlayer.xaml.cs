@@ -244,8 +244,11 @@ namespace HyPlayer.Pages
 
             if (600 > Math.Min(LeftPanel.ActualHeight, MainGrid.ActualHeight))
             {
+                /*
                 ImageAlbum.Width = Math.Max(Math.Min(MainGrid.ActualHeight, LeftPanel.ActualWidth) - 80, 1);
                 ImageAlbum.Height = ImageAlbum.Width;
+                */
+
                 /*
                 if (ImageAlbum.Width < 250 || iscompact)
                     SongInfo.Visibility = Visibility.Collapsed;
@@ -263,26 +266,42 @@ namespace HyPlayer.Pages
                 SongInfo.Width = double.NaN;
             }
 
-            if (AlbumDropShadow.ActualOffset.X + AlbumDropShadow.ActualWidth + 17 > nowwidth)
+
+            if (iscompact)
             {
-                AlbumDropShadow.Width = nowwidth - AlbumDropShadow.ActualOffset.X - 15;
+                AlbumDropShadow.Width = double.NaN;
                 LeftPanel.HorizontalAlignment = HorizontalAlignment.Left;
+                AlbumDropShadow.HorizontalAlignment = HorizontalAlignment.Left;
             }
             else
             {
-                AlbumDropShadow.Width = double.NaN;
-                LeftPanel.HorizontalAlignment = HorizontalAlignment.Center;
+                if (550 > nowwidth)
+                {
+                    AlbumDropShadow.Width = nowwidth - AlbumDropShadow.ActualOffset.X - 15;
+                    LeftPanel.HorizontalAlignment = HorizontalAlignment.Left;
+                    AlbumDropShadow.HorizontalAlignment = HorizontalAlignment.Left;
+                }
+                else
+                {
+                    AlbumDropShadow.Width = double.NaN;
+                    LeftPanel.HorizontalAlignment = HorizontalAlignment.Center;
+                    AlbumDropShadow.HorizontalAlignment = HorizontalAlignment.Center;
+                }
             }
 
-            if (AlbumDropShadow.ActualHeight + 250 > LeftPanel.ActualHeight && WindowMode != ExpandedWindowMode.LyricOnly)
+
+            
+            if (SongInfo.ActualOffset.Y + SongInfo.ActualHeight > MainGrid.ActualHeight && WindowMode != ExpandedWindowMode.LyricOnly)
             {
-                float? size = (float?)(LeftPanel.ActualHeight / (SongInfo.ActualOffset.Y + SongInfo.ActualHeight + 150));
+                float? size = (float?)(MainGrid.ActualHeight / (SongInfo.ActualOffset.Y + SongInfo.ActualHeight));
                 UIAugmentationSys.ChangeView(0, 0, size);
             }
             else
             {
                 UIAugmentationSys.ChangeView(0, 0, 1);
             }
+            
+
             //{//合并显示
             //    SongInfo.SetValue(Grid.RowProperty, 1);
             //    SongInfo.VerticalAlignment = VerticalAlignment.Bottom;
@@ -383,9 +402,11 @@ namespace HyPlayer.Pages
             lastitem = item;
             if (sclock > 0)
                 return;
+            
             var transform = item?.TransformToVisual((UIElement)LyricBoxContainer.Content);
             var position = transform?.TransformPoint(new Windows.Foundation.Point(0, 0));
             LyricBoxContainer.ChangeView(null, position?.Y - LyricBoxContainer.ActualHeight / 3, null, false);
+            
         }
 
         public void LoadLyricsBox()
