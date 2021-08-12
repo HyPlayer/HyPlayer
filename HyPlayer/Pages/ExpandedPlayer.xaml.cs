@@ -405,7 +405,7 @@ namespace HyPlayer.Pages
             
             var transform = item?.TransformToVisual((UIElement)LyricBoxContainer.Content);
             var position = transform?.TransformPoint(new Windows.Foundation.Point(0, 0));
-            LyricBoxContainer.ChangeView(null, position?.Y - LyricBoxContainer.ActualHeight / 3, null, false);
+            LyricBoxContainer.ChangeView(null, position?.Y - MainGrid.ActualHeight / 4, null, false);
             
         }
 

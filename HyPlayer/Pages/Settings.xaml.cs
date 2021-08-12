@@ -214,7 +214,7 @@ namespace HyPlayer.Pages
 
         private void UIElement_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
         {
-            if (_elapse-- == 0) ApplicationData.Current.RoamingSettings.Values["CanDownload"] = true;
+            if (_elapse-- <= 0) ApplicationData.Current.RoamingSettings.Values["CanDownload"] = true;
         }
 
         private void LazySongUrlGetCheck_Checked(object sender, RoutedEventArgs e)
