@@ -69,6 +69,7 @@ namespace HyPlayer
                     GC.Collect();
                 }
 
+/*
 
                 // 追踪代码
                 Crashes.TrackError(new Exception("MemoryManagerOnAppMemoryUsageLimitChanging"), new Dictionary<string, string>()
@@ -83,6 +84,7 @@ namespace HyPlayer
                 {"DeviceFamily",AnalyticsInfo.VersionInfo.DeviceFamily},
                 {"DeviceFamilyVersion",AnalyticsInfo.VersionInfo.DeviceFamilyVersion}
             });
+			*/
             });
 
         }
@@ -98,7 +100,7 @@ namespace HyPlayer
                     GC.Collect();
                 }
 
-
+/*
                 // 追踪代码
                 Crashes.TrackError(new Exception("MemoryManagerOnAppMemoryUsageIncreased"), new Dictionary<string, string>()
             {
@@ -110,6 +112,7 @@ namespace HyPlayer
                 {"DeviceFamily",AnalyticsInfo.VersionInfo.DeviceFamily},
                 {"DeviceFamilyVersion",AnalyticsInfo.VersionInfo.DeviceFamilyVersion}
             });
+			*/
             });
         }
 
