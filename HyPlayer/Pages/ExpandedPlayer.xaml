@@ -178,7 +178,9 @@
                             FontSize="35"
                             FontWeight="Bold"
                             Text="歌曲名"
-                            TextAlignment="Left" />
+                            TextAlignment="Left" 
+                            TextWrapping="Wrap"
+                            HorizontalAlignment="Stretch"/>
                         <StackPanel
                             x:Name="SongInfoContainer"
                             Orientation="Horizontal"
