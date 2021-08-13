@@ -110,8 +110,9 @@
         <Grid
             x:Name="GridSongInfoContainer"
             Grid.Column="0"
-            Grid.ColumnSpan="2"
-            x:FieldModifier="public">
+            Grid.ColumnSpan="3"
+            x:FieldModifier="public"
+            Canvas.ZIndex="2">
             <StackPanel
                 x:Name="GridSongAdvancedOperation"
                 Margin="30,0,0,15"
@@ -224,7 +225,8 @@
         <Grid
             Name="MainControlGrid"
             Grid.Column="2"
-            Margin="5">
+            Margin="5"
+            Canvas.ZIndex="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="2*" />
                 <RowDefinition Height="*" />
