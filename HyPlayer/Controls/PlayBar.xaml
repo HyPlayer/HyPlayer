@@ -112,6 +112,7 @@
             Grid.Column="0"
             Grid.ColumnSpan="3"
             x:FieldModifier="public"
+            HorizontalAlignment="Left"
             Canvas.ZIndex="2">
             <StackPanel
                 x:Name="GridSongAdvancedOperation"
