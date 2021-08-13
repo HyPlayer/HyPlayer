@@ -57,11 +57,12 @@ Azure 编译包会编译 Commit 并发布 Release: [查看Release](https://githu
 
 你可以通过使用 [UnblockNeteaseMusic](https://github.com/nondanee/UnblockNeteaseMusic) 进行解灰, 打开后在 HyPlayer 设置页面填入代理服务器地址.
 
-在使用代理服务器前,你可能需要解除 UWP 网络环回限制
+~~在使用代理服务器前,你可能需要解除 UWP 网络环回限制~~
 
 ```powershell
 CheckNetIsolation LoopbackExempt -a -n="48848aaaaaaccd.hyplayer_fkcggvf9kbkw0"
 ```
+我们已经在2.0.27版本中修复此问题
 
 ## 使用
 
