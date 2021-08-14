@@ -51,9 +51,9 @@ namespace HyPlayer.HyPlayControl
               {
                   Common.Invoke(async () =>
                   {
-                    //下载歌词
-                    var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Lyric,
-                          new Dictionary<string, object> { { "id", ncsong.sid } });
+                      //下载歌词
+                      var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Lyric,
+                            new Dictionary<string, object> { { "id", ncsong.sid } });
                       if (isOk)
                           if (!(json.ContainsKey("nolyric") && json["nolyric"].ToString().ToLower() == "true") &&
                               !(json.ContainsKey("uncollected") && json["uncollected"].ToString().ToLower() == "true"))
@@ -75,23 +75,24 @@ namespace HyPlayer.HyPlayControl
                           }
 
 
-                    var file = File.Create(new UwpStorageFileAbstraction(await StorageFile.GetFileFromPathAsync(fullpath)));
-                    The163KeyHelper.TrySetMusicInfo(file.Tag, dontuseme);
-                    if (Path.GetExtension(fullpath) != ".flac"){
-                    //写相关信息
-                      file.Tag.Album = ncsong.Album.name;
-                      file.Tag.Performers = ncsong.Artist.Select(t => t.name).ToArray();
-                      file.Tag.Title = ncsong.songname;
-                      file.Tag.Pictures = new IPicture[]
+                      var file = File.Create(new UwpStorageFileAbstraction(await StorageFile.GetFileFromPathAsync(fullpath)));
+                      The163KeyHelper.TrySetMusicInfo(file.Tag, dontuseme);
+                      if (string.IsNullOrEmpty(file.Tag.Title))
                       {
+                          //写相关信息
+                          file.Tag.Album = ncsong.Album.name;
+                          file.Tag.Performers = ncsong.Artist.Select(t => t.name).ToArray();
+                          file.Tag.Title = ncsong.songname;
+                          file.Tag.Pictures = new IPicture[]
+                          {
                 new Picture(ByteVector.FromStream(RandomAccessStreamReference
                     .CreateFromUri(new Uri(ncsong.Album.cover + "?param=" + StaticSource.PICSIZE_DOWNLOAD_ALBUMCOVER))
                     .OpenReadAsync().GetAwaiter().GetResult().AsStreamForRead()))
-                      };
-                      file.Tag.Pictures[0].MimeType = "image/jpeg";
-                      file.Tag.Pictures[0].Description = "cover.jpg";
-                      file.Save();
-                    }
+                          };
+                          file.Tag.Pictures[0].MimeType = "image/jpeg";
+                          file.Tag.Pictures[0].Description = "cover.jpg";
+                          file.Save();
+                      }
                       var downloadToastContent = new ToastContent
                       {
                           Visual = new ToastVisual
