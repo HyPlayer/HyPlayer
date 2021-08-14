@@ -2,35 +2,55 @@
     x:Class="HyPlayer.Controls.LyricItem"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hyPlayer="using:HyPlayer"
-    mc:Ignorable="d"
-    d:DesignHeight="70"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     VerticalAlignment="Stretch"
+    d:DesignHeight="70"
     d:DesignWidth="500"
-    DoubleTapped="LyricItem_OnDoubleTapped">
+    DoubleTapped="LyricItem_OnDoubleTapped"
+    mc:Ignorable="d">
 
-    <controls:DockPanel
-        LastChildFill="True">
-        <TextBlock
-            controls:DockPanel.Dock="Top"
-            TextWrapping="WrapWholeWords"
-            Name="TextBoxPureLyric"
-            Text="原句"
-            TextAlignment="Center" />
-        <TextBlock
-            controls:DockPanel.Dock="Top"
-            TextWrapping="WrapWholeWords"
-            Name="TextBoxTranslation"
-            Text="翻译"
-            TextAlignment="Center" />
-        <TextBlock
-            controls:DockPanel.Dock="Bottom"
-            TextWrapping="WrapWholeWords"
-            FontSize="15"
-            Name="TextBoxSound"
-            TextAlignment="Center" />
-    </controls:DockPanel>
+    <StackPanel>
+        <controls:DropShadowPanel
+            Name="TextBoxPureLyricPanel"
+            BlurRadius="8"
+            IsMasked="True"
+            OffsetX="2"
+            OffsetY="2"
+            ShadowOpacity="1">
+            <TextBlock
+                Name="TextBoxPureLyric"
+                TextAlignment="Center"
+                TextWrapping="WrapWholeWords" />
+        </controls:DropShadowPanel>
+        <controls:DropShadowPanel
+            Name="TextBoxTranslationPanel"
+            BlurRadius="8"
+            IsMasked="True"
+            OffsetX="2"
+            OffsetY="2"
+            ShadowOpacity="1"
+            Color="{x:Bind shadowColor, Mode=OneWay}">
+            <TextBlock
+                Name="TextBoxTranslation"
+                TextAlignment="Center"
+                TextWrapping="WrapWholeWords" />
+        </controls:DropShadowPanel>
+        <controls:DropShadowPanel
+            Name="TextBoxSoundPanel"
+            BlurRadius="8"
+            IsMasked="True"
+            OffsetX="2"
+            OffsetY="2"
+            ShadowOpacity="1"
+            Color="{x:Bind shadowColor, Mode=OneWay}">
+            <TextBlock
+                Name="TextBoxSound"
+                TextAlignment="Center"
+                TextWrapping="WrapWholeWords" />
+        </controls:DropShadowPanel>
+    </StackPanel>
+
 </UserControl>

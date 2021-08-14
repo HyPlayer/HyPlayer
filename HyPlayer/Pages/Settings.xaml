@@ -5,8 +5,8 @@
     xmlns:controls="using:Microsoft.UI.Xaml.Controls"
     xmlns:controls1="using:HyPlayer.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:hyplayer="using:HyPlayer"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
     <Pivot
@@ -24,10 +24,11 @@
                         x:Name="RomajiStatus"
                         Margin="0,10,0,0"
                         Text="获取中" />
-                    <Button Style="{StaticResource ButtonRevealStyle}" 
+                    <Button
                         Margin="0,10,0,0"
                         Click="ButtonBase_OnClick"
-                        Content="获取罗马音资源文件" />
+                        Content="获取罗马音资源文件"
+                        Style="{StaticResource ButtonRevealStyle}" />
                     <TextBlock FontSize="36" Text="歌词大小设置" />
                     <Grid ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
@@ -69,6 +70,11 @@
                         Checked="CheckBoxAlignment_OnChecked"
                         Content="是否左对齐"
                         Unchecked="CheckBoxAlignment_OnChecked" />
+                    <CheckBox
+                        x:Name="CheckBoxLyricShadow"
+                        Checked="CheckBoxLyricShadow_Checked"
+                        Content="是否产生阴影"
+                        Unchecked="CheckBoxLyricShadow_Unchecked" />
                 </StackPanel>
             </ScrollViewer>
         </PivotItem>
@@ -97,8 +103,20 @@
                             Content="无损 (VIP)"
                             Tag="999000" />
                     </controls:RadioButtons>
-                    <ToggleSwitch x:Name="FadeInOut" Header="播放时渐入渐出：" IsOn="{x:Bind hyplayer:Common.Setting.fadeInOut,Mode=TwoWay}"/>
-                    <Slider x:Name="FadeTime" Header="渐入渐出时间" Visibility="{x:Bind hyplayer:Common.Setting.fadeInOut,Mode=OneWay}" Minimum="0" Maximum="6" Value="{x:Bind hyplayer:Common.Setting.fadeInOutTime,Mode=TwoWay}" Width="300" HorizontalAlignment="Left" ToolTipService.ToolTip="{x:Bind FadeTime.Value}"/>
+                    <ToggleSwitch
+                        x:Name="FadeInOut"
+                        Header="播放时渐入渐出："
+                        IsOn="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=TwoWay}" />
+                    <Slider
+                        x:Name="FadeTime"
+                        Width="300"
+                        HorizontalAlignment="Left"
+                        Header="渐入渐出时间"
+                        Maximum="6"
+                        Minimum="0"
+                        ToolTipService.ToolTip="{x:Bind FadeTime.Value}"
+                        Visibility="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=OneWay}"
+                        Value="{x:Bind hyplayer:Common.Setting.fadeInOutTime, Mode=TwoWay}" />
                 </StackPanel>
             </ScrollViewer>
         </PivotItem>
@@ -113,11 +131,12 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="下载路径" />
                         <TextBlock x:Name="TextBoxDownloadDir" Grid.Column="1" />
-                        <Button Style="{StaticResource ButtonRevealStyle}" 
+                        <Button
                             x:Name="ButtonDownloadSelect"
                             Grid.Column="2"
                             Click="ButtonDownloadSelect_OnClick"
-                            Content="选择" />
+                            Content="选择"
+                            Style="{StaticResource ButtonRevealStyle}" />
                     </Grid>
                     <Grid MaxWidth="1000">
                         <Grid.ColumnDefinitions>
@@ -127,16 +146,18 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="缓存路径" />
                         <TextBlock x:Name="TextBoxCacheDir" Grid.Column="1" />
-                        <Button Style="{StaticResource ButtonRevealStyle}" 
+                        <Button
                             x:Name="ButtonCacheSelect"
                             Grid.Column="2"
                             Click="ButtonCacheSelect_OnClick"
-                            Content="选择" />
+                            Content="选择"
+                            Style="{StaticResource ButtonRevealStyle}" />
                     </Grid>
-                    <Button Style="{StaticResource ButtonRevealStyle}" 
+                    <Button
                         x:Name="ClearHistory"
                         Click="ClearHistory_Click"
-                        Content="清除历史记录" />
+                        Content="清除历史记录"
+                        Style="{StaticResource ButtonRevealStyle}" />
                 </StackPanel>
             </ScrollViewer>
         </PivotItem>
@@ -151,11 +172,12 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="X-Real-IP (置空不设置)" />
                         <TextBox x:Name="TextBoxXREALIP" Grid.Column="1" />
-                        <Button Style="{StaticResource ButtonRevealStyle}" 
+                        <Button
                             x:Name="ButtonXREALIPSave"
                             Grid.Column="2"
                             Click="ButtonXREALIPSave_OnClick"
-                            Content="设置" />
+                            Content="设置"
+                            Style="{StaticResource ButtonRevealStyle}" />
                     </Grid>
                     <Grid MaxWidth="1000">
                         <Grid.ColumnDefinitions>
@@ -165,11 +187,12 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="代理服务器 (置空不设置)" />
                         <TextBox x:Name="TextBoxPROXY" Grid.Column="1" />
-                        <Button Style="{StaticResource ButtonRevealStyle}" 
+                        <Button
                             x:Name="ButtonPROXYSave"
                             Grid.Column="2"
                             Click="ButtonPROXYSave_OnClick"
-                            Content="设置" />
+                            Content="设置"
+                            Style="{StaticResource ButtonRevealStyle}" />
                     </Grid>
                     <CheckBox
                         x:Name="LazySongUrlGetCheck"
@@ -246,8 +269,7 @@
                             <Hyperlink NavigateUri="https://github.com/HyPlayer/HyPlayer">
                                 Github
                             </Hyperlink>
-                            |
-                            <Hyperlink NavigateUri="https://gitee.com/kengwang/HyPlayer">
+                            |<Hyperlink NavigateUri="https://gitee.com/kengwang/HyPlayer">
                                 Gitee
                             </Hyperlink>
                         </Paragraph>
@@ -258,9 +280,10 @@
                     <TextBlock x:Name="DeviceInfo" RightTapped="DeviceInfo_RightTapped">
                         <TextBlock.ContextFlyout>
                             <MenuFlyout>
-                                <MenuFlyoutItem Style="{StaticResource MenuFlyoutItemRevealStyle}"
+                                <MenuFlyoutItem
                                     Click="CopyDeviceCode_Click"
                                     Icon="Copy"
+                                    Style="{StaticResource MenuFlyoutItemRevealStyle}"
                                     Text="复制设备识别码" />
                             </MenuFlyout>
                         </TextBlock.ContextFlyout>
@@ -296,16 +319,13 @@
                                     <Hyperlink NavigateUri="https://github.com/kengwang">
                                         Github
                                     </Hyperlink>
-                                    |
-                                    <Hyperlink NavigateUri="https://blog.kengwang.co">
+                                    |<Hyperlink NavigateUri="https://blog.kengwang.co">
                                         博客
                                     </Hyperlink>
-                                    |
-                                    <Hyperlink NavigateUri="http://www.coolapk.com/u/1683034">
+                                    |<Hyperlink NavigateUri="http://www.coolapk.com/u/1683034">
                                         酷安@kengwang
                                     </Hyperlink>
-                                    |
-                                    <Hyperlink NavigateUri="https://afdian.net/@kengwang">
+                                    |<Hyperlink NavigateUri="https://afdian.net/@kengwang">
                                         爱发电打赏
                                     </Hyperlink>
                                 </Paragraph>
@@ -339,8 +359,7 @@
                                     <Hyperlink NavigateUri="https://github.com/aaaaaaccd">
                                         Github
                                     </Hyperlink>
-                                    |
-                                    <Hyperlink NavigateUri="https://www.coolapk.com/u/2409682">
+                                    |<Hyperlink NavigateUri="https://www.coolapk.com/u/2409682">
                                         酷安@一只老白
                                     </Hyperlink>
                                 </Paragraph>
@@ -374,8 +393,7 @@
                                     <Hyperlink NavigateUri="https://github.com/EP012014">
                                         Github
                                     </Hyperlink>
-                                    |
-                                </Paragraph>
+                                    |</Paragraph>
                             </RichTextBlock>
                         </StackPanel>
                     </StackPanel>

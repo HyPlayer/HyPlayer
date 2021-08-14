@@ -162,7 +162,7 @@ namespace HyPlayer.Pages
                     LyricWidth = nowwidth * 0.4;
                 else
                     LyricWidth = nowwidth - 15;
-                showsize = Common.Setting.lyricSize <= 0 ? Math.Max(nowwidth / 66, 16) : Common.Setting.lyricSize;
+                showsize = Common.Setting.lyricSize <= 0 ? Math.Max(nowwidth / 66, iscompact ? 16 : 23) : Common.Setting.lyricSize;
 
                 lastwidth = nowwidth;
                 needRedesign += 2;
@@ -290,7 +290,7 @@ namespace HyPlayer.Pages
             }
 
 
-            
+
             if (SongInfo.ActualOffset.Y + SongInfo.ActualHeight > MainGrid.ActualHeight && WindowMode != ExpandedWindowMode.LyricOnly)
             {
                 float? size = (float?)(MainGrid.ActualHeight / (SongInfo.ActualOffset.Y + SongInfo.ActualHeight));
@@ -300,7 +300,7 @@ namespace HyPlayer.Pages
             {
                 UIAugmentationSys.ChangeView(0, 0, 1);
             }
-            
+
 
             //{//合并显示
             //    SongInfo.SetValue(Grid.RowProperty, 1);
@@ -402,11 +402,11 @@ namespace HyPlayer.Pages
             lastitem = item;
             if (sclock > 0)
                 return;
-            
+
             var transform = item?.TransformToVisual((UIElement)LyricBoxContainer.Content);
             var position = transform?.TransformPoint(new Windows.Foundation.Point(0, 0));
             LyricBoxContainer.ChangeView(null, position?.Y - MainGrid.ActualHeight / 4, null, false);
-            
+
         }
 
         public void LoadLyricsBox()

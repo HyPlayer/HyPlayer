@@ -197,6 +197,12 @@ namespace HyPlayer
             }
         }
 
+        public bool lyricDropshadow
+        {
+            get { return GetSettings<bool>("lyricDropshadow", false); }
+            set { ApplicationData.Current.LocalSettings.Values["lyricDropshadow"] = value; }
+        }
+
         public int romajiSize
         {
             get { return GetSettings<int>("romajiSize", 15); }

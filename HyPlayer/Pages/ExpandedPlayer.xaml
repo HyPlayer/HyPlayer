@@ -174,13 +174,13 @@
                         Spacing="5">
                         <TextBlock
                             Name="TextBlockSongTitle"
+                            HorizontalAlignment="Stretch"
                             x:FieldModifier="public"
                             FontSize="35"
                             FontWeight="Bold"
                             Text="歌曲名"
-                            TextAlignment="Left" 
-                            TextWrapping="Wrap"
-                            HorizontalAlignment="Stretch"/>
+                            TextAlignment="Left"
+                            TextWrapping="Wrap" />
                         <StackPanel
                             x:Name="SongInfoContainer"
                             Orientation="Horizontal"
@@ -214,10 +214,6 @@
                 </Grid>
             </ScrollViewer>
             <Grid x:Name="RightPanel" Grid.Column="1">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="40" />
-                </Grid.RowDefinitions>
                 <ScrollViewer
                     x:Name="LyricBoxContainer"
                     HorizontalAlignment="Stretch"

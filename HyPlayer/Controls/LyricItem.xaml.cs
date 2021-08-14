@@ -19,6 +19,7 @@ namespace HyPlayer.Controls
         public bool hiding = false;
 
         public bool showing = true;
+        public Color shadowColor = Color.FromArgb(255, 0, 0, 0);
 
         public LyricItem(SongLyric lrc)
         {
@@ -52,12 +53,12 @@ namespace HyPlayer.Controls
 
 
         public double actualsize => Common.PageExpandedPlayer == null
-            ? Common.Setting.lyricSize <= 0 ? 18 : Common.Setting.lyricSize
+            ? Common.Setting.lyricSize <= 0 ? 23 : Common.Setting.lyricSize
             : Common.PageExpandedPlayer.showsize;
 
         public TextAlignment LyricAlignment => Common.Setting.lyricAlignment ? TextAlignment.Left : TextAlignment.Center;
 
-        private Brush originBrush => Common.PageExpandedPlayer != null ? Common.PageExpandedPlayer.ForegroundAlbumBrush : Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush;
+        private SolidColorBrush originBrush => Common.PageExpandedPlayer != null ? Common.PageExpandedPlayer.ForegroundAlbumBrush : Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush;
 
         public void RefreshFontSize()
         {
@@ -80,6 +81,10 @@ namespace HyPlayer.Controls
             TextBoxPureLyric.Foreground = originBrush;
             TextBoxSound.Foreground = originBrush;
             TextBoxTranslation.Foreground = originBrush;
+            shadowColor = (originBrush.Color == Color.FromArgb(255, 0, 0, 0)) ? Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 255, 255, 255) : Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 0, 0, 0);
+            TextBoxPureLyricPanel.Color = shadowColor;
+            TextBoxTranslationPanel.Color = shadowColor;
+            TextBoxSoundPanel.Color = shadowColor;
         }
 
         public void OnHind()
@@ -90,9 +95,13 @@ namespace HyPlayer.Controls
             showing = false;
             TextBoxPureLyric.FontWeight = FontWeights.Normal;
             TextBoxTranslation.FontWeight = FontWeights.Normal;
-            TextBoxPureLyric.Foreground =Application.Current.Resources["TextFillColorDisabledBrush"] as Brush;
+            TextBoxPureLyric.Foreground = Application.Current.Resources["TextFillColorDisabledBrush"] as Brush;
             TextBoxTranslation.Foreground = Application.Current.Resources["TextFillColorDisabledBrush"] as Brush;
             TextBoxSound.Foreground = Application.Current.Resources["TextFillColorDisabledBrush"] as Brush;
+            shadowColor = Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 0, 0, 0);
+            TextBoxPureLyricPanel.Color = shadowColor;
+            TextBoxTranslationPanel.Color = shadowColor;
+            TextBoxSoundPanel.Color = shadowColor;
         }
 
         private void LyricItem_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)

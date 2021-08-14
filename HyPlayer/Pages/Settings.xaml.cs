@@ -74,6 +74,7 @@ namespace HyPlayer.Pages
             ControlSoundCheck.IsChecked = Common.Setting.uiSound;
             HighQualityCoverInSMTC.IsChecked = Common.Setting.highQualityCoverInSMTC;
             TextBoxCacheDir.Text = Common.Setting.cacheDir;
+            CheckBoxLyricShadow.IsChecked = Common.Setting.lyricDropshadow;
             CBOldSMTC.IsChecked = Common.Setting.ancientSMTC;
             isbyprogram = false;
 #if DEBUG
@@ -335,6 +336,20 @@ namespace HyPlayer.Pages
         private void DeviceInfo_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
             DeviceInfo.ContextFlyout.ShowAt(DeviceInfo);
+        }
+
+        private void CheckBoxLyricShadow_Checked(object sender, RoutedEventArgs e)
+        {
+            if (isbyprogram) return;
+            Common.Setting.lyricDropshadow = CheckBoxLyricShadow.IsChecked.Value;
+            _lyricItem.OnShow();
+        }
+
+        private void CheckBoxLyricShadow_Unchecked(object sender, RoutedEventArgs e)
+        {
+            if (isbyprogram) return;
+            Common.Setting.lyricDropshadow = CheckBoxLyricShadow.IsChecked.Value;
+            _lyricItem.OnShow();
         }
     }
 }
