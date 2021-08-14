@@ -47,7 +47,7 @@ namespace HyPlayer
         public static bool isExpanded = false;
         public static TeachingTip GlobalTip;
 
-        public struct NavigationHistoryItem
+        public class NavigationHistoryItem
         {
             public Type PageType;
             public object Paratmers;

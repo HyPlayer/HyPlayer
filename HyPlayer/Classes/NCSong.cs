@@ -26,13 +26,13 @@ namespace HyPlayer.Classes
         Radio
     }
 
-    public struct PureLyricInfo
+    public class PureLyricInfo
     {
         public string PureLyrics;
         public string TrLyrics;
     }
 
-    public struct SongLyric
+    public class SongLyric
     {
         public string PureLyric;
         public string Translation;
@@ -50,7 +50,7 @@ namespace HyPlayer.Classes
     }
 
 
-    public struct NCRadio
+    public class NCRadio
     {
         public string name;
         public string id;
@@ -182,7 +182,7 @@ namespace HyPlayer.Classes
         }
     }
 
-    public struct PlayItem
+    public class PlayItem
     {
         public bool isLocalFile;
         public StorageFile DontSetLocalStorageFile; //如非特殊原因请不要设置这个东西!
@@ -221,7 +221,7 @@ namespace HyPlayer.Classes
         }
     }
 
-    public struct NCPlayList
+    public class NCPlayList
     {
         public string plid;
         public string cover;
@@ -271,7 +271,7 @@ namespace HyPlayer.Classes
         }
     }
 
-    public struct NCUser
+    public class NCUser
     {
         public string id;
         public string name;
@@ -302,7 +302,7 @@ namespace HyPlayer.Classes
         }
     }
 
-    public struct NCMlog
+    public class NCMlog
     {
         public string id;
         public string title;
@@ -323,7 +323,7 @@ namespace HyPlayer.Classes
         }
     }
 
-    public struct NCArtist
+    public class NCArtist
     {
         public HyPlayItemType Type;
         public string id;
@@ -349,7 +349,7 @@ namespace HyPlayer.Classes
         }
     }
 
-    public struct NCAlbum
+    public class NCAlbum
     {
         public HyPlayItemType AlbumType;
         public string id;
@@ -374,7 +374,7 @@ namespace HyPlayer.Classes
         }
     }
 
-    public struct Comment
+    public class Comment
     {
         public string resourceId;
         public int resourceType;

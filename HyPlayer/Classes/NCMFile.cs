@@ -101,9 +101,9 @@ namespace HyPlayer.Classes
         }
 
 
-        public static The163KeyStruct GetNCMMusicInfo(Stream stream)
+        public static The163KeyClass GetNCMMusicInfo(Stream stream)
         {
-            The163KeyStruct keys = default;
+            The163KeyClass keys = default;
             stream.Seek(2, SeekOrigin.Current);
             byte[] coreKeyChunk = ReadChunk(stream);
             for (int i = 0; i < coreKeyChunk.Length; i++)
@@ -159,7 +159,7 @@ namespace HyPlayer.Classes
                 {
                     var infoStr = Encoding.UTF8.GetString(reader.ToArray());
                     var obj = JsonConvert.DeserializeObject<JObject>(infoStr);
-                    keys = new The163KeyStruct
+                    keys = new The163KeyClass
                     {
                         albumId = obj["albumId"].ToObject<int>(),
                         album = obj["album"].ToString(),

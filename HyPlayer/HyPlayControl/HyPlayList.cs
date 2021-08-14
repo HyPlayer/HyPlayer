@@ -855,7 +855,7 @@ namespace HyPlayer.HyPlayControl
 
         public static async Task<HyPlayItem> LoadStorageFile(StorageFile sf, bool nocheck163 = false)
         {
-            The163KeyStruct mi;
+            The163KeyClass mi;
             var mdp = await sf.Properties.GetMusicPropertiesAsync();
 
             if (nocheck163 ||

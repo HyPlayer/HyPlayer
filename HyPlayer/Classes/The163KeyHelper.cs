@@ -77,12 +77,12 @@ namespace HyPlayer.Classes
             return true;
         }
 
-        public static bool TryGetMusicInfo(Tag tag, out The163KeyStruct KeyStruct)
+        public static bool TryGetMusicInfo(Tag tag, out The163KeyClass KeyStruct)
         {
             if (tag is null)
                 throw new ArgumentNullException(nameof(tag));
 
-            KeyStruct = new The163KeyStruct();
+            KeyStruct = new The163KeyClass();
             var the163Key = tag.Comment;
             if (!Is163KeyCandidate(the163Key))
                 the163Key = tag.Description;
@@ -100,11 +100,11 @@ namespace HyPlayer.Classes
             return true;
         }
 
-        public static bool TryGetMusicInfo(string the163Key, out The163KeyStruct KeyStruct)
+        public static bool TryGetMusicInfo(string the163Key, out The163KeyClass KeyStruct)
         {
             if (string.IsNullOrEmpty(the163Key))
                 throw new ArgumentNullException(nameof(the163Key));
-            KeyStruct = new The163KeyStruct();
+            KeyStruct = new The163KeyClass();
             try
             {
                 the163Key = the163Key.Substring(22);
@@ -114,7 +114,7 @@ namespace HyPlayer.Classes
                     byt163Key = cryptoTransform.TransformFinalBlock(byt163Key, 0, byt163Key.Length);
                 }
 
-                KeyStruct = JsonConvert.DeserializeObject<The163KeyStruct>(Encoding.UTF8.GetString(byt163Key)
+                KeyStruct = JsonConvert.DeserializeObject<The163KeyClass>(Encoding.UTF8.GetString(byt163Key)
                     .Substring(6));
             }
             catch
@@ -125,7 +125,7 @@ namespace HyPlayer.Classes
             return true;
         }
 
-        public static bool TrySetMusicInfo(Tag tag, The163KeyStruct key)
+        public static bool TrySetMusicInfo(Tag tag, The163KeyClass key)
         {
             try
             {
@@ -159,7 +159,7 @@ namespace HyPlayer.Classes
 
             try
             {
-                var key = new The163KeyStruct
+                var key = new The163KeyClass
                 {
                     album = pi.Album.name,
                     albumId = int.Parse(pi.Album.id),
@@ -196,7 +196,7 @@ namespace HyPlayer.Classes
         }
     }
 
-    internal struct The163KeyStruct
+    internal class The163KeyClass
     {
         public int albumId { get; set; }
 
