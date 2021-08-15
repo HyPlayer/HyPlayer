@@ -39,7 +39,7 @@ namespace HyPlayer.Pages
         private bool iscompact;
         public double lastChangedLyricWidth;
         private ExpandedWindowMode WindowMode;
-        private bool HandChangeMode = false;
+        private bool ManualChangeMode = false;
 
         private LyricItem lastitem;
         private int lastlrcid;
@@ -330,7 +330,7 @@ namespace HyPlayer.Pages
             //歌词宽度
             if (nowwidth <= 800)
             {
-                if (!HandChangeMode && WindowMode == ExpandedWindowMode.Both)
+                if (!ManualChangeMode && WindowMode == ExpandedWindowMode.Both)
                 {
                     WindowMode = ExpandedWindowMode.CoverOnly;
                     ChangeWindowMode();
@@ -338,7 +338,7 @@ namespace HyPlayer.Pages
             }
             else if (nowwidth > 800)
             {
-                if (!HandChangeMode && WindowMode != ExpandedWindowMode.Both)
+                if (!ManualChangeMode && WindowMode != ExpandedWindowMode.Both)
                 {
                     WindowMode = ExpandedWindowMode.Both;
                     ChangeWindowMode();
@@ -697,7 +697,7 @@ namespace HyPlayer.Pages
         private void BtnToggleWindowsMode_Checked(object sender, RoutedEventArgs e)
         {
             if (!realclick) return;
-            HandChangeMode = true;
+            ManualChangeMode = true;
             if (BtnToggleAlbum.IsChecked && BtnToggleLyric.IsChecked)
             {
                 WindowMode = ExpandedWindowMode.Both;
