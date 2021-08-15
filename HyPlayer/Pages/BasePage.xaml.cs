@@ -364,11 +364,6 @@ namespace HyPlayer.Pages
             if (Common.NavigationHistory.Count > 1)
                 NavMain.IsBackEnabled = true;
             if (nowitem.Tag is null) return;
-            if (nowitem.Tag.ToString() == "PersonalFM")
-            {
-                PersonalFM.InitPersonalFM();
-                return;
-            }
 
             if (nowitem.Tag.ToString() == "PageMe" && !Common.Logined)
             {
@@ -381,48 +376,6 @@ namespace HyPlayer.Pages
             if (nowitem.Tag.ToString() == "MusicCloud")
             {
                 Common.NavigatePage(typeof(MusicCloudPage));
-            }
-
-            if (nowitem.Tag.ToString() == "SonglistCreate")
-            {
-                await new CreateSonglistDialog().ShowAsync();
-                _ = Task.Run(() =>
-                {
-                    Common.Invoke(async () =>
-                    {
-                        //加载用户歌单
-                        var item = NavItemsMyList;
-                        var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
-                            new Dictionary<string, object> { { "uid", Common.LoginedUser.id } });
-                        if (isOk)
-                        {
-                            NavItemsLikeList.Visibility = Visibility.Visible;
-                            NavItemsMyList.Visibility = Visibility.Visible;
-                            Common.MySongLists.Clear();
-                            NavItemsMyList.MenuItems.Clear();
-                            foreach (var jToken in json["playlist"])
-                                if (jToken["subscribed"].ToString() == "True")
-                                {
-                                    NavItemsLikeList.MenuItems.Add(new NavigationViewItem
-                                    {
-                                        Content = jToken["name"].ToString(),
-                                        Tag = "Playlist" + jToken["id"]
-                                    });
-                                }
-                                else
-                                {
-                                    Common.MySongLists.Add(NCPlayList.CreateFromJson(jToken));
-                                    NavItemsMyList.MenuItems.Add(new NavigationViewItem
-                                    {
-                                        Content = jToken["name"].ToString(),
-                                        Tag = "Playlist" + jToken["id"]
-                                    });
-                                }
-                        }
-                    });
-                });
-                Common.NavigateBack();
-                return;
             }
 
             if (nowitem.Tag.ToString() == "DailyRcmd")
@@ -478,6 +431,62 @@ namespace HyPlayer.Pages
                 case "PageFavorite":
                     Common.NavigatePage(typeof(PageFavorite), null, new EntranceNavigationTransitionInfo());
                     break;
+            }
+        }
+
+        // Invoked events of not-for-navigation items can be handled separately.
+        // Meanwhile we set "SelectsOnInvoked" property of these items "False" to avoid the navigation pane indicator being set to them.
+        private async void NavMain_ItemInvoked(NavigationView sender, Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs args)
+        {
+            string invokedItemTag = (args.InvokedItemContainer as NavigationViewItem)?.Tag?.ToString();
+            if (invokedItemTag is null || invokedItemTag == string.Empty) return;
+            switch (invokedItemTag)
+            {
+                case "SonglistCreate":
+                    {
+                        await new CreateSonglistDialog().ShowAsync();
+                        _ = Task.Run(() =>
+                        {
+                            Common.Invoke(async () =>
+                            {
+                                //加载用户歌单
+                                var item = NavItemsMyList;
+                                var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
+                                    new Dictionary<string, object> { { "uid", Common.LoginedUser.id } });
+                                if (isOk)
+                                {
+                                    NavItemsLikeList.Visibility = Visibility.Visible;
+                                    NavItemsMyList.Visibility = Visibility.Visible;
+                                    Common.MySongLists.Clear();
+                                    NavItemsMyList.MenuItems.Clear();
+                                    foreach (var jToken in json["playlist"])
+                                        if (jToken["subscribed"].ToString() == "True")
+                                        {
+                                            NavItemsLikeList.MenuItems.Add(new NavigationViewItem
+                                            {
+                                                Content = jToken["name"].ToString(),
+                                                Tag = "Playlist" + jToken["id"]
+                                            });
+                                        }
+                                        else
+                                        {
+                                            Common.MySongLists.Add(NCPlayList.CreateFromJson(jToken));
+                                            NavItemsMyList.MenuItems.Add(new NavigationViewItem
+                                            {
+                                                Content = jToken["name"].ToString(),
+                                                Tag = "Playlist" + jToken["id"]
+                                            });
+                                        }
+                                }
+                            });
+                        });
+                        break;
+                    }
+                case "PersonalFM":
+                    {
+                        PersonalFM.InitPersonalFM();
+                        break;
+                    }
             }
         }
 

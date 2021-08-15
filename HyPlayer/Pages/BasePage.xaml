@@ -50,6 +50,7 @@
             IsTitleBarAutoPaddingEnabled="False"
             PaneDisplayMode="Auto"
             PaneTitle="HyPlayer"
+            ItemInvoked="NavMain_ItemInvoked"
             SelectionChanged="NavMain_OnSelectionChanged">
             <muxc:NavigationView.AutoSuggestBox>
                 <AutoSuggestBox
@@ -100,7 +101,7 @@
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE734;" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
-                <muxc:NavigationViewItem Content="私人FM" Tag="PersonalFM">
+                <muxc:NavigationViewItem Content="私人FM" Tag="PersonalFM" SelectsOnInvoked="False">
                     <muxc:NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xEFA9;" />
                     </muxc:NavigationViewItem.Icon>
@@ -116,7 +117,8 @@
                     Content="创建歌单"
                     Icon="Add"
                     Tag="SonglistCreate"
-                    Visibility="Collapsed" />
+                    Visibility="Collapsed"
+                    SelectsOnInvoked="False" />
                 <muxc:NavigationViewItem
                     x:Name="NavItemsMyLovedPlaylist"
                     Content="我喜欢的音乐"
