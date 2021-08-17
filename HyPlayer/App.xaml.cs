@@ -69,22 +69,22 @@ namespace HyPlayer
                     GC.Collect();
                 }
 
-/*
+                /*
 
-                // 追踪代码
-                Crashes.TrackError(new Exception("MemoryManagerOnAppMemoryUsageLimitChanging"), new Dictionary<string, string>()
-            {
-                {"ListCount", HyPlayList.List.Count.ToString()},
-                {"NowMemory", MemoryManager.AppMemoryUsage.ToString()},
-                {"DesireMemory", MemoryManager.AppMemoryUsageLimit.ToString()},
-                {"TotalCommitLimit", MemoryManager.GetAppMemoryReport().TotalCommitLimit.ToString()},
-                {"IsInBackground", isInBackground.ToString()},
-                {"OldSize", e.OldLimit.ToString()},
-                {"NewSize", e.NewLimit.ToString()},
-                {"DeviceFamily",AnalyticsInfo.VersionInfo.DeviceFamily},
-                {"DeviceFamilyVersion",AnalyticsInfo.VersionInfo.DeviceFamilyVersion}
-            });
-			*/
+                                // 追踪代码
+                                Crashes.TrackError(new Exception("MemoryManagerOnAppMemoryUsageLimitChanging"), new Dictionary<string, string>()
+                            {
+                                {"ListCount", HyPlayList.List.Count.ToString()},
+                                {"NowMemory", MemoryManager.AppMemoryUsage.ToString()},
+                                {"DesireMemory", MemoryManager.AppMemoryUsageLimit.ToString()},
+                                {"TotalCommitLimit", MemoryManager.GetAppMemoryReport().TotalCommitLimit.ToString()},
+                                {"IsInBackground", isInBackground.ToString()},
+                                {"OldSize", e.OldLimit.ToString()},
+                                {"NewSize", e.NewLimit.ToString()},
+                                {"DeviceFamily",AnalyticsInfo.VersionInfo.DeviceFamily},
+                                {"DeviceFamilyVersion",AnalyticsInfo.VersionInfo.DeviceFamilyVersion}
+                            });
+                            */
             });
 
         }
@@ -100,19 +100,19 @@ namespace HyPlayer
                     GC.Collect();
                 }
 
-/*
-                // 追踪代码
-                Crashes.TrackError(new Exception("MemoryManagerOnAppMemoryUsageIncreased"), new Dictionary<string, string>()
-            {
-                {"ListCount", HyPlayList.List.Count.ToString()},
-                {"NowMemory", MemoryManager.AppMemoryUsage.ToString()},
-                {"DesireMemory", MemoryManager.AppMemoryUsageLimit.ToString()},
-                {"TotalCommitLimit", MemoryManager.GetAppMemoryReport().TotalCommitLimit.ToString()},
-                {"IsInBackground", isInBackground.ToString()},
-                {"DeviceFamily",AnalyticsInfo.VersionInfo.DeviceFamily},
-                {"DeviceFamilyVersion",AnalyticsInfo.VersionInfo.DeviceFamilyVersion}
-            });
-			*/
+                /*
+                                // 追踪代码
+                                Crashes.TrackError(new Exception("MemoryManagerOnAppMemoryUsageIncreased"), new Dictionary<string, string>()
+                            {
+                                {"ListCount", HyPlayList.List.Count.ToString()},
+                                {"NowMemory", MemoryManager.AppMemoryUsage.ToString()},
+                                {"DesireMemory", MemoryManager.AppMemoryUsageLimit.ToString()},
+                                {"TotalCommitLimit", MemoryManager.GetAppMemoryReport().TotalCommitLimit.ToString()},
+                                {"IsInBackground", isInBackground.ToString()},
+                                {"DeviceFamily",AnalyticsInfo.VersionInfo.DeviceFamily},
+                                {"DeviceFamilyVersion",AnalyticsInfo.VersionInfo.DeviceFamilyVersion}
+                            });
+                            */
             });
         }
 
@@ -206,12 +206,36 @@ namespace HyPlayer
                 });
         }
 
-        protected override void OnActivated(IActivatedEventArgs args)
+        protected override async void OnActivated(IActivatedEventArgs args)
         {
             base.OnActivated(args);
             if (args.Kind == ActivationKind.ToastNotification) //如果用户点击了桌面歌词通知，则代表通知已经关闭，需要重新初始化推送
+            {
+                var rootFrame = Window.Current.Content as Frame;
+                if (rootFrame == null)
+                {
+                    rootFrame = new Frame();
+                    Window.Current.Content = rootFrame;
+                }
+
+                rootFrame.Navigate(typeof(MainPage));
+                Window.Current.Activate();
                 if (Common.BarPlayBar != null)
+                {
                     Common.BarPlayBar.InitializeDesktopLyric();
+                    if (!Common.isExpanded)
+                    {
+                        bool animation = Common.Setting.expandAnimation;
+                        await Task.Run(() =>
+                        {
+                            Common.Setting.expandAnimation = false;
+                            Common.Invoke(() => Common.BarPlayBar.ShowExpandedPlayer());
+                        });
+                        bool a = Common.Setting.expandAnimation;
+                        Common.Setting.expandAnimation = animation;
+                    }
+                }
+            }
         }
 
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)

@@ -436,8 +436,7 @@ namespace HyPlayer.Controls
                 realSelectSong)
                 HyPlayList.SongMoveTo(ListBoxPlayList.SelectedIndex);
         }
-
-        private void ButtonExpand_OnClick(object sender, RoutedEventArgs e)
+        public void ShowExpandedPlayer()
         {
             ButtonExpand.Visibility = Visibility.Collapsed;
             ButtonCollapse.Visibility = Visibility.Visible;
@@ -460,6 +459,11 @@ namespace HyPlayer.Controls
             Common.isExpanded = true;
             GridSongInfo.Visibility = Visibility.Collapsed;
             GridSongAdvancedOperation.Visibility = Visibility.Visible;
+        }
+
+        private void ButtonExpand_OnClick(object sender, RoutedEventArgs e)
+        {
+            ShowExpandedPlayer();
         }
 
         public void ButtonCollapse_OnClick(object sender, RoutedEventArgs e)

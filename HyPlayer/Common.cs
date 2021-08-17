@@ -436,6 +436,11 @@ namespace HyPlayer
                     ApplicationData.Current.LocalSettings.Values[propertyName] != null &&
                     !string.IsNullOrEmpty(ApplicationData.Current.LocalSettings.Values[propertyName].ToString()))
                 {
+                    if (typeof(T).ToString() == "System.Boolean")
+                    {
+                        return (T)(object)bool.Parse(ApplicationData.Current.LocalSettings.Values[propertyName].ToString());
+
+                    }
                     //超长的IF
                     return (T)ApplicationData.Current.LocalSettings.Values[propertyName];
                 }
