@@ -21,6 +21,7 @@ namespace HyPlayer.Controls
         public bool showing = true;
         public Color shadowColor = Color.FromArgb(255, 0, 0, 0);
 
+
         public LyricItem(SongLyric lrc)
         {
             InitializeComponent();
@@ -82,9 +83,6 @@ namespace HyPlayer.Controls
             TextBoxSound.Foreground = originBrush;
             TextBoxTranslation.Foreground = originBrush;
             shadowColor = (originBrush.Color == Color.FromArgb(255, 0, 0, 0)) ? Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 255, 255, 255) : Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 0, 0, 0);
-            TextBoxPureLyricPanel.Color = shadowColor;
-            TextBoxTranslationPanel.Color = shadowColor;
-            TextBoxSoundPanel.Color = shadowColor;
         }
 
         public void OnHind()
@@ -99,9 +97,6 @@ namespace HyPlayer.Controls
             TextBoxTranslation.Foreground = Application.Current.Resources["TextFillColorDisabledBrush"] as Brush;
             TextBoxSound.Foreground = Application.Current.Resources["TextFillColorDisabledBrush"] as Brush;
             shadowColor = Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 0, 0, 0);
-            TextBoxPureLyricPanel.Color = shadowColor;
-            TextBoxTranslationPanel.Color = shadowColor;
-            TextBoxSoundPanel.Color = shadowColor;
         }
 
         private void LyricItem_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)

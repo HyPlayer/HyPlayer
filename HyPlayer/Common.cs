@@ -203,6 +203,13 @@ namespace HyPlayer
             set { ApplicationData.Current.LocalSettings.Values["lyricDropshadow"] = value; }
         }
 
+
+        public int lyricColor
+        {
+            get { return GetSettings("lyricColor", 0); }
+            set { ApplicationData.Current.LocalSettings.Values["lyricColor"] = value; }
+        }
+
         public int romajiSize
         {
             get { return GetSettings<int>("romajiSize", 15); }
@@ -311,6 +318,17 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+
+        public bool fadeInOutPause
+        {
+            get { return GetSettings<bool>("FadeInOutPause", false); }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["FadeInOutPause"] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public double fadeInOutTime
         {
             get

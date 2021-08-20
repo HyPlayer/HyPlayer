@@ -45,7 +45,7 @@
                             SmallChange="1"
                             SpinButtonPlacementMode="Compact"
                             ValueChanged="LyricSize_OnValueChanged"
-                            Value="1" />
+                            Value="{x:Bind hyplayer:Common.Setting.lyricSize, Mode=OneTime}" />
                     </Grid>
 
                     <Grid ColumnSpacing="12">
@@ -62,19 +62,25 @@
                             LargeChange="5"
                             SmallChange="1"
                             SpinButtonPlacementMode="Compact"
-                            ValueChanged="LyricSize_OnValueChanged"
-                            Value="1" />
+                            Value="{x:Bind hyplayer:Common.Setting.romajiSize, Mode=TwoWay}" />
                     </Grid>
                     <CheckBox
                         x:Name="CheckBoxAlignment"
-                        Checked="CheckBoxAlignment_OnChecked"
                         Content="是否左对齐"
-                        Unchecked="CheckBoxAlignment_OnChecked" />
-                    <CheckBox
+                        IsChecked="{x:Bind hyplayer:Common.Setting.lyricAlignment, Mode=TwoWay}" />
+                    <!--<CheckBox
                         x:Name="CheckBoxLyricShadow"
-                        Checked="CheckBoxLyricShadow_Checked"
                         Content="是否产生阴影"
-                        Unchecked="CheckBoxLyricShadow_Unchecked" />
+                        IsChecked="{x:Bind hyplayer:Common.Setting.lyricDropshadow, Mode=TwoWay}" />-->
+                    <controls:RadioButtons
+                        FontSize="20"
+                        Header="歌词颜色"
+                        MaxColumns="4"
+                        SelectedIndex="{x:Bind hyplayer:Common.Setting.lyricColor, Mode=TwoWay}">
+                        <RadioButton Content="自动" />
+                        <RadioButton Content="白色" />
+                        <RadioButton Content="黑色" />
+                    </controls:RadioButtons>
                 </StackPanel>
             </ScrollViewer>
         </PivotItem>
@@ -105,7 +111,7 @@
                     </controls:RadioButtons>
                     <ToggleSwitch
                         x:Name="FadeInOut"
-                        Header="播放时渐入渐出："
+                        Header="渐入渐出："
                         IsOn="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=TwoWay}" />
                     <Slider
                         x:Name="FadeTime"
@@ -117,6 +123,7 @@
                         ToolTipService.ToolTip="{x:Bind FadeTime.Value}"
                         Visibility="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=OneWay}"
                         Value="{x:Bind hyplayer:Common.Setting.fadeInOutTime, Mode=TwoWay}" />
+                    <!--<ToggleSwitch Header="播放暂停时渐入渐出" IsOn="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=TwoWay}" /> -->
                 </StackPanel>
             </ScrollViewer>
         </PivotItem>
@@ -130,7 +137,10 @@
                             <ColumnDefinition Width="50" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="下载路径" />
-                        <TextBlock x:Name="TextBoxDownloadDir" Grid.Column="1" />
+                        <TextBlock
+                            x:Name="TextBoxDownloadDir"
+                            Grid.Column="1"
+                            Text="{x:Bind hyplayer:Common.Setting.downloadDir, Mode=TwoWay}" />
                         <Button
                             x:Name="ButtonDownloadSelect"
                             Grid.Column="2"
@@ -145,7 +155,10 @@
                             <ColumnDefinition Width="50" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="缓存路径" />
-                        <TextBlock x:Name="TextBoxCacheDir" Grid.Column="1" />
+                        <TextBlock
+                            x:Name="TextBoxCacheDir"
+                            Grid.Column="1"
+                            Text="{x:Bind hyplayer:Common.Setting.cacheDir, Mode=TwoWay}" />
                         <Button
                             x:Name="ButtonCacheSelect"
                             Grid.Column="2"
@@ -196,35 +209,32 @@
                     </Grid>
                     <CheckBox
                         x:Name="LazySongUrlGetCheck"
-                        Checked="LazySongUrlGetCheck_Checked"
                         Content="是否在播放时才获取播放链接"
-                        Unchecked="LazySongUrlGetCheck_Unchecked" />
+                        IsChecked="{x:Bind hyplayer:Common.Setting.songUrlLazyGet, Mode=TwoWay}" />
                     <CheckBox
                         x:Name="CBSongCacheEnable"
-                        Checked="CBSongCacheEnable_Checked"
                         Content="是否开启播放缓存 (可能造成播放前空白)"
-                        Unchecked="CBSongCacheEnable_Unchecked" />
+                        IsChecked="{x:Bind hyplayer:Common.Setting.enableCache, Mode=TwoWay}" />
                     <CheckBox
                         x:Name="ControlSoundCheck"
                         Checked="ControlSoundChecked"
                         Content="是否开启 UI 音效"
+                        IsChecked="{x:Bind hyplayer:Common.Setting.uiSound, Mode=TwoWay}"
                         Unchecked="ControlSoundUnChecked" />
                     <CheckBox
                         x:Name="CBOldSMTC"
-                        Checked="CBOldSMTCChecked"
                         Content="是否同时开启传统SMTC控制 (可能会减小后台闪退几率,重启后生效)"
-                        Unchecked="CBOldSMTCUnChecked" />
+                        IsChecked="{x:Bind hyplayer:Common.Setting.ancientSMTC, Mode=TwoWay}" />
                     <CheckBox
                         x:Name="HighQualityCoverInSMTC"
-                        Checked="HighQualityCoverInSMTC_Changed"
                         Content="是否输出高清图片到SMTC"
-                        Unchecked="HighQualityCoverInSMTC_Changed" />
+                        IsChecked="{x:Bind hyplayer:Common.Setting.highQualityCoverInSMTC, Mode=TwoWay}" />
                     <controls:RadioButtons
                         x:Name="RadioButtonsTheme"
                         FontSize="20"
                         Header="颜色模式: (修改将在重启 HyPlayer 后生效)"
                         MaxColumns="3"
-                        SelectionChanged="RadioButtonsTheme_SelectionChanged">
+                        SelectedIndex="{x:Bind hyplayer:Common.Setting.themeRequest, Mode=TwoWay}">
                         <RadioButton Content="跟随系统" />
                         <RadioButton Content="亮色" />
                         <RadioButton Content="暗色" />
@@ -244,7 +254,7 @@
                             SmallChange="1"
                             SpinButtonPlacementMode="Compact"
                             ValueChanged="NBShadowDepth_OnValueChanged"
-                            Value="4" />
+                            Value="{x:Bind hyplayer:Common.Setting.expandedCoverShadowDepth, Mode=OneTime}" />
                     </Grid>
                 </StackPanel>
             </ScrollViewer>

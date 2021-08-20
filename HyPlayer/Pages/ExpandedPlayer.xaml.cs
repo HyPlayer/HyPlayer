@@ -347,8 +347,8 @@ namespace HyPlayer.Pages
             }
             LyricList.ForEach(t =>
             {
-                t.RefreshFontSize();
                 t.Width = LyricWidth;
+                t.RefreshFontSize();
             });
         }
 
@@ -797,6 +797,10 @@ namespace HyPlayer.Pages
 
         private async Task<bool> IsBrightAsync()
         {
+            if (Common.Setting.lyricColor != 0)
+            {
+                return Common.Setting.lyricColor == 2;
+            }
             if (lastSongUrlForBrush == HyPlayList.NowPlayingItem.PlayItem.url) return ForegroundAlbumBrush.Color.R == 0;
             try
             {
