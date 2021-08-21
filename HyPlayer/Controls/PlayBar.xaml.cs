@@ -402,7 +402,7 @@ namespace HyPlayer.Controls
                 HyPlayList.LoadPlayerSong();
             if (HyPlayList.isPlaying)
             {
-                if (Common.Setting.fadeInOut)
+                if (Common.Setting.fadeInOutPause)
                 {
                     FadeSettedVolume = true;
                     int vol = Common.Setting.Volume;
@@ -412,7 +412,7 @@ namespace HyPlayer.Controls
                         try
                         {
                             await Task.Delay(50);
-                            double curvol = (1 - (HyPlayList.Player.PlaybackSession.Position.TotalSeconds - curtime) / (Common.Setting.fadeInOutTime / 10)) * vol / 100;
+                            double curvol = (1 - (HyPlayList.Player.PlaybackSession.Position.TotalSeconds - curtime) / (Common.Setting.fadeInOutTimePause / 10)) * vol / 100;
                             System.Diagnostics.Debug.WriteLine(HyPlayList.Player.Volume);
                             if (curvol <= 0)
                             {
@@ -441,7 +441,7 @@ namespace HyPlayer.Controls
             else if (!HyPlayList.isPlaying)
             {
                 HyPlayList.Player.Play();
-                if (Common.Setting.fadeInOut)
+                if (Common.Setting.fadeInOutPause)
                 {
                     FadeSettedVolume = true;
                     int vol = Common.Setting.Volume;
@@ -450,7 +450,7 @@ namespace HyPlayer.Controls
                     for (; ; )
                     {
                         await Task.Delay(50);
-                        double curvol = (HyPlayList.Player.PlaybackSession.Position.TotalSeconds - curtime) / (Common.Setting.fadeInOutTime / 10) * vol / 100;
+                        double curvol = (HyPlayList.Player.PlaybackSession.Position.TotalSeconds - curtime) / (Common.Setting.fadeInOutTimePause / 10) * vol / 100;
                         if (curvol >= (double)vol / 100)
                         {
                             curvol = (double)vol / 100;

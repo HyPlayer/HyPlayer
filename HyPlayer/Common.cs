@@ -346,6 +346,23 @@ namespace HyPlayer
             set => ApplicationData.Current.LocalSettings.Values["fadeInOutTime"] = value;
         }
 
+        public double fadeInOutTimePause
+        {
+            get
+            {
+                try
+                {
+                    return GetSettings<double>("fadeInOutTimePause", 3);
+                }
+                catch
+                {
+                    return 3;
+                }
+            }
+
+            set => ApplicationData.Current.LocalSettings.Values["fadeInOutTimePause"] = value;
+        }
+
         public bool toastLyric
         {
             get { return GetSettings<bool>("toastLyric", false); }

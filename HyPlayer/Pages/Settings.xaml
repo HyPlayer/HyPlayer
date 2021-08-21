@@ -111,19 +111,29 @@
                     </controls:RadioButtons>
                     <ToggleSwitch
                         x:Name="FadeInOut"
-                        Header="渐入渐出："
+                        Header="切歌渐入渐出："
                         IsOn="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=TwoWay}" />
                     <Slider
                         x:Name="FadeTime"
                         Width="300"
                         HorizontalAlignment="Left"
-                        Header="渐入渐出时间（播放与暂停时时间单位为0.1s，切歌时时间单位为s）"
+                        Header="切歌渐入渐出时间 单位: 秒"
                         Maximum="6"
                         Minimum="0"
                         ToolTipService.ToolTip="{x:Bind FadeTime.Value}"
                         Visibility="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=OneWay}"
                         Value="{x:Bind hyplayer:Common.Setting.fadeInOutTime, Mode=TwoWay}" />
-                    <!--<ToggleSwitch Header="播放暂停时渐入渐出" IsOn="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=TwoWay}" /> -->
+                    <ToggleSwitch Header="播放暂停渐入渐出" IsOn="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=TwoWay}" />
+                    <Slider
+                        x:Name="FadeTimePause"
+                        Width="300"
+                        HorizontalAlignment="Left"
+                        Header="渐入渐出时间 单位: 0.1s"
+                        Maximum="10"
+                        Minimum="0"
+                        ToolTipService.ToolTip="{x:Bind FadeTimePause.Value}"
+                        Visibility="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=OneWay}"
+                        Value="{x:Bind hyplayer:Common.Setting.fadeInOutTimePause, Mode=TwoWay}" />
                 </StackPanel>
             </ScrollViewer>
         </PivotItem>
@@ -148,7 +158,7 @@
                             Content="选择"
                             Style="{StaticResource ButtonRevealStyle}" />
                     </Grid>
-                    <Grid MaxWidth="1000">
+                    <Grid MaxWidth="1000" Visibility="{x:Bind hyplayer:Common.Setting.enableCache, Mode=OneWay}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="100" />
                             <ColumnDefinition Width="*" />
