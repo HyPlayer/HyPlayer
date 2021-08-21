@@ -117,7 +117,7 @@
                         x:Name="FadeTime"
                         Width="300"
                         HorizontalAlignment="Left"
-                        Header="渐入渐出时间"
+                        Header="渐入渐出时间（播放与暂停时时间单位为0.1s，切歌时时间单位为s）"
                         Maximum="6"
                         Minimum="0"
                         ToolTipService.ToolTip="{x:Bind FadeTime.Value}"

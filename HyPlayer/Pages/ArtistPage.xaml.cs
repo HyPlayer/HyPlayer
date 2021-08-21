@@ -22,6 +22,7 @@ namespace HyPlayer.Pages
     {
         private NCArtist artist;
         private readonly List<NCSong> songs = new List<NCSong>();
+        private int page = 0;
 
         public ArtistPage()
         {
@@ -32,7 +33,7 @@ namespace HyPlayer.Pages
         {
             base.OnNavigatedTo(e);
             var (isOk, res) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistDetail,
-                new Dictionary<string, object> {{"id", (string) e.Parameter}});
+                new Dictionary<string, object> { { "id", (string)e.Parameter } });
             if (isOk)
             {
                 artist = NCArtist.CreateFromJson(res["data"]["artist"]);
@@ -51,19 +52,22 @@ namespace HyPlayer.Pages
                                      res["data"]["artist"]["albumSize"] + " | 视频数: " +
                                      res["data"]["artist"]["mvSize"];
                 LoadHotSongs();
+                LoadSongs();
+                LoadAlbum();
             }
         }
 
         private async void LoadHotSongs()
         {
-            var (isok, j1) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistSongs,
-                new Dictionary<string, object> {{"id", artist.id}, {"limit", "10"}});
+            var (isok, j1) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistTopSong,
+                new Dictionary<string, object> { { "id", artist.id } });
             if (isok)
             {
+                songs.Clear();
                 var idx = 0;
                 var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
                     new Dictionary<string, object>
-                        {["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"]))});
+                    { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) });
                 foreach (var jToken in json["songs"])
                 {
                     var ncSong = NCSong.CreateFromJson(jToken);
@@ -75,6 +79,39 @@ namespace HyPlayer.Pages
                     HotSongContainer.Children.Add(new SingleNCSong(ncSong, idx++, canplay));
                 }
             }
+        }
+        private async void LoadSongs()
+        {
+            var (isok, j1) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistSongs,
+                new Dictionary<string, object> { { "id", artist.id }, { "limit", 50 }, { "offset", page * 50 } });
+            if (isok)
+            {
+                AllSongContainer.Children.Clear();
+                songs.Clear();
+                var idx = 0;
+                var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
+                    new Dictionary<string, object>
+                    { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) });
+                foreach (var jToken in json["songs"])
+                {
+                    var ncSong = NCSong.CreateFromJson(jToken);
+                    var canplay =
+                        json["privileges"].ToList().Find(x => x["id"].ToString() == jToken["id"].ToString())[
+                            "st"].ToString() == "0";
+                    if (canplay) songs.Add(ncSong);
+
+                    AllSongContainer.Children.Add(new SingleNCSong(ncSong, idx++, canplay));
+                }
+
+            }
+            if (int.Parse(j1["total"].ToString()) >= (page + 1) * 50)
+                NextPage.Visibility = Visibility.Visible;
+            else
+                NextPage.Visibility = Visibility.Collapsed;
+            if (page > 0)
+                PrevPage.Visibility = Visibility.Visible;
+            else
+                PrevPage.Visibility = Visibility.Collapsed;
         }
 
         private void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
@@ -125,6 +162,51 @@ namespace HyPlayer.Pages
                     }
                 });
             });
+        }
+
+        private void NextPage_Click(object sender, RoutedEventArgs e)
+        {
+            page++;
+            if (mp.SelectedIndex == 1)
+                LoadSongs();
+            else if (mp.SelectedIndex == 2)
+                LoadAlbum();
+        }
+
+        private async void LoadAlbum()
+        {
+            var (isok, j1) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistAlbum,
+                new Dictionary<string, object> { { "id", artist.id }, { "limit", 50 }, { "offset", page * 50 } });
+            if(isok)
+            {
+                AlbumContainer.Children.Clear();
+                foreach (var albumjson in j1["hotAlbums"].ToArray())
+                    AlbumContainer.Children.Add(new SingleAlbum(NCAlbum.CreateFromJson(albumjson),
+                        albumjson["artists"].ToArray().Select(t => NCArtist.CreateFromJson(t)).ToList()));
+                if (int.Parse(j1["artist"]["albumSize"].ToString()) >= (page + 1) * 50)
+                    NextPage.Visibility = Visibility.Visible;
+                else
+                    NextPage.Visibility = Visibility.Collapsed;
+                if (page > 0)
+                    PrevPage.Visibility = Visibility.Visible;
+                else
+                    PrevPage.Visibility = Visibility.Collapsed;
+            }
+        }
+
+
+        private void PrevPage_Click(object sender, RoutedEventArgs e)
+        {
+            page--;
+            if (mp.SelectedIndex == 1)
+                LoadSongs();
+            else if (mp.SelectedIndex == 2)
+                LoadAlbum();
+        }
+
+        private void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            page = 0;
         }
     }
 }
