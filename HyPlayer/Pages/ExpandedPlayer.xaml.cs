@@ -354,9 +354,13 @@ namespace HyPlayer.Pages
 
 
 
-        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        protected override async void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
+            if (ApplicationView.GetForCurrentView().ViewMode == ApplicationViewMode.CompactOverlay)
+                await ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
+            if (ApplicationView.GetForCurrentView().IsFullScreenMode)
+                ApplicationView.GetForCurrentView().ExitFullScreenMode();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
