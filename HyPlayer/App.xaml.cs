@@ -53,7 +53,7 @@ namespace HyPlayer
             MemoryManager.AppMemoryUsageIncreased += MemoryManagerOnAppMemoryUsageIncreased;
             MemoryManager.AppMemoryUsageLimitChanging += MemoryManagerOnAppMemoryUsageLimitChanging;
             if (Common.Setting.themeRequest != 0)
-                RequestedTheme = Common.Setting.themeRequest == 1 ? ApplicationTheme.Light : ApplicationTheme.Light;
+                RequestedTheme = Common.Setting.themeRequest == 1 ? ApplicationTheme.Light : ApplicationTheme.Dark;
             InitializeThings();
         }
 
@@ -69,22 +69,6 @@ namespace HyPlayer
                     GC.Collect();
                 }
 
-                /*
-
-                                // 追踪代码
-                                Crashes.TrackError(new Exception("MemoryManagerOnAppMemoryUsageLimitChanging"), new Dictionary<string, string>()
-                            {
-                                {"ListCount", HyPlayList.List.Count.ToString()},
-                                {"NowMemory", MemoryManager.AppMemoryUsage.ToString()},
-                                {"DesireMemory", MemoryManager.AppMemoryUsageLimit.ToString()},
-                                {"TotalCommitLimit", MemoryManager.GetAppMemoryReport().TotalCommitLimit.ToString()},
-                                {"IsInBackground", isInBackground.ToString()},
-                                {"OldSize", e.OldLimit.ToString()},
-                                {"NewSize", e.NewLimit.ToString()},
-                                {"DeviceFamily",AnalyticsInfo.VersionInfo.DeviceFamily},
-                                {"DeviceFamilyVersion",AnalyticsInfo.VersionInfo.DeviceFamilyVersion}
-                            });
-                            */
             });
 
         }

@@ -24,6 +24,7 @@ using NeteaseCloudMusicApi;
 using Windows.Storage;
 using System.IO;
 using Windows.Storage.Streams;
+using System.Threading.Tasks;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -277,6 +278,7 @@ namespace HyPlayer.Controls
                        HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
                            ? "\uEDB4"
                            : "\uEDB5";
+
                    if (Common.Setting.fadeInOut)
                    {
                        if (HyPlayList.Player.PlaybackSession.Position.TotalSeconds <= Common.Setting.fadeInOutTime)
@@ -295,6 +297,7 @@ namespace HyPlayer.Controls
                        else
                            FadeSettedVolume = false;
                    }
+
                    //SliderAudioRate.Value = mp.Volume;
                }
                catch
@@ -393,15 +396,87 @@ namespace HyPlayer.Controls
             }
         }
 
-        private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
+        private async void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
         {
             if (HyPlayList.NowPlayingItem.PlayItem.Name != null && HyPlayList.Player.Source == null)
                 HyPlayList.LoadPlayerSong();
             if (HyPlayList.isPlaying)
+            {
+                if (Common.Setting.fadeInOutPause)
+                {
+                    FadeSettedVolume = true;
+                    int vol = Common.Setting.Volume;
+                    double curtime = HyPlayList.Player.PlaybackSession.Position.TotalSeconds;
+                    for (; ; )
+                    {
+                        try
+                        {
+                            await Task.Delay(50);
+                            double curvol = (1 - (HyPlayList.Player.PlaybackSession.Position.TotalSeconds - curtime) / (Common.Setting.fadeInOutTimePause / 10)) * vol / 100;
+                            System.Diagnostics.Debug.WriteLine(HyPlayList.Player.Volume);
+                            if (curvol <= 0)
+                            {
+                                HyPlayList.Player.Volume = 0;
+                                HyPlayList.Player.Pause();
+                                HyPlayList.Player.Volume = (double)vol / 100;
+                                FadeSettedVolume = false;
+                                break;
+                            }
+                            HyPlayList.Player.Volume = curvol;
+                        }
+                        catch
+                        {
+                            HyPlayList.Player.Volume = 0;
+                            HyPlayList.Player.Pause();
+                            HyPlayList.Player.Volume = vol;
+                            FadeSettedVolume = false;
+                            break;
+                        }
+                    }
+                }
                 HyPlayList.Player.Pause();
-            else if (!HyPlayList.isPlaying) HyPlayList.Player.Play();
+                PlayStateIcon.Glyph = HyPlayList.isPlaying ? "\uEDB5" : "\uEDB4";
+                return;
+            }
+            else if (!HyPlayList.isPlaying)
+            {
+                HyPlayList.Player.Play();
+                if (Common.Setting.fadeInOutPause)
+                {
+                    FadeSettedVolume = true;
+                    int vol = Common.Setting.Volume;
+                    HyPlayList.Player.Volume = 0;
+                    double curtime = HyPlayList.Player.PlaybackSession.Position.TotalSeconds;
+                    for (; ; )
+                    {
+                        await Task.Delay(50);
+                        double curvol = (HyPlayList.Player.PlaybackSession.Position.TotalSeconds - curtime) / (Common.Setting.fadeInOutTimePause / 10) * vol / 100;
+                        if (curvol >= (double)vol / 100)
+                        {
+                            curvol = (double)vol / 100;
+                            HyPlayList.Player.Volume = curvol;
+                            break;
+                        }
+                        if (curtime < HyPlayList.Player.PlaybackSession.Position.TotalSeconds)
+                            HyPlayList.Player.Volume = curvol;
+                        else HyPlayList.Player.Volume = (double)vol / 100;
+                        System.Diagnostics.Debug.WriteLine(HyPlayList.Player.Volume);
+                        if (HyPlayList.Player.Volume >= (double)vol / 100)
+                        {
+                            HyPlayList.Player.Volume = (double)vol / 100;
+                            break;
 
-            PlayStateIcon.Glyph = HyPlayList.isPlaying ? "\uEDB5" : "\uEDB4";
+                        }
+
+                    }
+                    FadeSettedVolume = false;
+                    PlayStateIcon.Glyph = HyPlayList.isPlaying ? "\uEDB5" : "\uEDB4";
+                    return;
+                }
+
+            }
+
+
         }
 
         private void SliderAudioRate_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)

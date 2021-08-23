@@ -103,20 +103,54 @@
                     Margin="45,30,0,0"
                     Spacing="15"
                     Orientation="Horizontal">
-                    <TextBlock
-                        Text="热门10首"
-                        FontSize="25" Width="109" />
                     <Button Style="{StaticResource ButtonRevealStyle}"  Content="播放全部" Name="ButtonPlayAll" Click="ButtonPlayAll_OnClick" />
                 </StackPanel>
-                <StackPanel
+                <Pivot SelectionChanged="Pivot_SelectionChanged" x:Name="mp">
+                    <PivotItem Header="热门50首">
+                        <StackPanel Orientation="Vertical">
+                            <StackPanel
                     Margin="20,10,0,0"
                     Spacing="10"
                     Name="HotSongContainer"
                     Orientation="Vertical" />
+
+                        </StackPanel>
+                    </PivotItem>
+                    <PivotItem Header="全部歌曲">
+                        <StackPanel Orientation="Vertical">
+                            <StackPanel
+                    Margin="20,10,0,0"
+                    Spacing="10"
+                    Name="AllSongContainer"
+                    Orientation="Vertical" />
+
+                        </StackPanel>
+                    </PivotItem>
+                    <PivotItem Header="专辑">
+                        <StackPanel
+                    Margin="20,10,0,0"
+                    Spacing="10"
+                    Name="AlbumContainer"
+                    Orientation="Vertical" />
+                    </PivotItem>
+                </Pivot>
+                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                    <Button Style="{StaticResource ButtonRevealStyle}" 
+                                x:Name="PrevPage"
+                                Click="PrevPage_Click"
+                                Content="上一页"
+                                Visibility="Collapsed" />
+                    <TextBlock x:Name="PageIndicator" />
+                    <Button Style="{StaticResource ButtonRevealStyle}" 
+                                x:Name="NextPage"
+                                Click="NextPage_Click"
+                                Content="下一页"
+                                Visibility="Collapsed" />
+                </StackPanel>
                 <Grid
                     Height="150" />
+                
             </StackPanel>
-
         </ScrollViewer.Content>
     </ScrollViewer>
 </Page>

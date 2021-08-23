@@ -6,51 +6,31 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hyPlayer="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    x:Name="LyricPanel"
     VerticalAlignment="Stretch"
     d:DesignHeight="70"
     d:DesignWidth="500"
     DoubleTapped="LyricItem_OnDoubleTapped"
     mc:Ignorable="d">
 
-    <StackPanel>
-        <controls:DropShadowPanel
-            Name="TextBoxPureLyricPanel"
-            BlurRadius="8"
-            IsMasked="True"
-            OffsetX="2"
-            OffsetY="2"
-            ShadowOpacity="1">
-            <TextBlock
-                Name="TextBoxPureLyric"
-                TextAlignment="Center"
-                TextWrapping="WrapWholeWords" />
-        </controls:DropShadowPanel>
-        <controls:DropShadowPanel
-            Name="TextBoxTranslationPanel"
-            BlurRadius="8"
-            IsMasked="True"
-            OffsetX="2"
-            OffsetY="2"
-            ShadowOpacity="1"
-            Color="{x:Bind shadowColor, Mode=OneWay}">
-            <TextBlock
-                Name="TextBoxTranslation"
-                TextAlignment="Center"
-                TextWrapping="WrapWholeWords" />
-        </controls:DropShadowPanel>
-        <controls:DropShadowPanel
-            Name="TextBoxSoundPanel"
-            BlurRadius="8"
-            IsMasked="True"
-            OffsetX="2"
-            OffsetY="2"
-            ShadowOpacity="1"
-            Color="{x:Bind shadowColor, Mode=OneWay}">
-            <TextBlock
-                Name="TextBoxSound"
-                TextAlignment="Center"
-                TextWrapping="WrapWholeWords" />
-        </controls:DropShadowPanel>
-    </StackPanel>
+    <controls:DockPanel
+        LastChildFill="True">
+        <TextBlock
+            controls:DockPanel.Dock="Top"
+            TextWrapping="WrapWholeWords"
+            Name="TextBoxPureLyric"
+            TextAlignment="Center" />
+        <TextBlock
+            controls:DockPanel.Dock="Top"
+            TextWrapping="WrapWholeWords"
+            Name="TextBoxTranslation"
+            TextAlignment="Center" />
+        <TextBlock
+            controls:DockPanel.Dock="Bottom"
+            TextWrapping="WrapWholeWords"
+            FontSize="15"
+            Name="TextBoxSound"
+            TextAlignment="Center" />
+    </controls:DockPanel>
 
 </UserControl>

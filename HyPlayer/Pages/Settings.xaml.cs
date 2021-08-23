@@ -41,8 +41,6 @@ namespace HyPlayer.Pages
             RadioButtonsSongBr.SelectedIndex =
                 RadioButtonsSongBr.Items.IndexOf(RadioButtonsSongBr.Items.First(t =>
                     ((RadioButton)t).Tag.ToString() == Common.Setting.audioRate));
-            TextBoxDownloadDir.Text = Common.Setting.downloadDir;
-            LazySongUrlGetCheck.IsChecked = Common.Setting.songUrlLazyGet;
             TextBoxXREALIP.Text = ApplicationData.Current.LocalSettings.Values["xRealIp"] != null
                 ? ApplicationData.Current.LocalSettings.Values["xRealIp"].ToString()
                 : "";
@@ -64,35 +62,12 @@ namespace HyPlayer.Pages
                 HaveTranslation = true
             });
             _lyricItem.OnShow();
-            CheckBoxAlignment.IsChecked = Common.Setting.lyricAlignment;
             StackPanelLyricSet.Children.Add(_lyricItem);
-            LyricSize.Value = Common.Setting.lyricSize;
-            RomajiSize.Value = Common.Setting.romajiSize;
-            NBShadowDepth.Value = Common.Setting.expandedCoverShadowDepth;
-            RadioButtonsTheme.SelectedIndex = Common.Setting.themeRequest;
-            CBSongCacheEnable.IsChecked = Common.Setting.enableCache;
-            ControlSoundCheck.IsChecked = Common.Setting.uiSound;
-            HighQualityCoverInSMTC.IsChecked = Common.Setting.highQualityCoverInSMTC;
-            TextBoxCacheDir.Text = Common.Setting.cacheDir;
-            CheckBoxLyricShadow.IsChecked = Common.Setting.lyricDropshadow;
-            CBOldSMTC.IsChecked = Common.Setting.ancientSMTC;
             isbyprogram = false;
 #if DEBUG
             VersionCode.Text += " Debug";
 #endif
             //ToggleButtonDaylight.IsChecked = Application.Current.RequestedTheme == ApplicationTheme.Dark;
-        }
-
-        private void CBOldSMTCUnChecked(object sender, RoutedEventArgs e)
-        {
-            if (isbyprogram) return;
-            Common.Setting.ancientSMTC = CBOldSMTC.IsChecked.Value;
-        }
-
-        private void CBOldSMTCChecked(object sender, RoutedEventArgs e)
-        {
-            if (isbyprogram) return;
-            Common.Setting.ancientSMTC = CBOldSMTC.IsChecked.Value;
         }
 
 
@@ -184,13 +159,7 @@ namespace HyPlayer.Pages
             Common.ncapi.RealIP = (string)ApplicationData.Current.LocalSettings.Values["xRealIp"];
         }
 
-        private void HighQualityCoverInSMTC_Changed(object sender, RoutedEventArgs e)
-        {
-            if (isbyprogram) return;
-            Common.Setting.highQualityCoverInSMTC = HighQualityCoverInSMTC.IsChecked.Value;
-            StaticSource.PICSIZE_AUDIO_PLAYER_COVER = Common.Setting.highQualityCoverInSMTC ? "1024y1024" : "100y100";
-        }
-
+        
         private void ButtonPROXYSave_OnClick(object sender, RoutedEventArgs e)
         {
             ApplicationData.Current.LocalSettings.Values["neteaseProxy"] =
@@ -218,17 +187,7 @@ namespace HyPlayer.Pages
             if (_elapse-- <= 0) ApplicationData.Current.RoamingSettings.Values["CanDownload"] = true;
         }
 
-        private void LazySongUrlGetCheck_Checked(object sender, RoutedEventArgs e)
-        {
-            if (isbyprogram) return;
-            Common.Setting.songUrlLazyGet = true;
-        }
-
-        private void LazySongUrlGetCheck_Unchecked(object sender, RoutedEventArgs e)
-        {
-            if (isbyprogram) return;
-            Common.Setting.songUrlLazyGet = false;
-        }
+        
 
         private void ControlSoundChecked(object sender, RoutedEventArgs e)
         {
@@ -289,30 +248,7 @@ namespace HyPlayer.Pages
             }
         }
 
-        private void CheckBoxAlignment_OnChecked(object sender, RoutedEventArgs e)
-        {
-            if (isbyprogram) return;
-            Common.Setting.lyricAlignment = CheckBoxAlignment.IsChecked != null && CheckBoxAlignment.IsChecked.Value;
-            _lyricItem.RefreshFontSize();
-        }
 
-        private void RadioButtonsTheme_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (isbyprogram) return;
-            Common.Setting.themeRequest = RadioButtonsTheme.SelectedIndex;
-        }
-
-        private void CBSongCacheEnable_Checked(object sender, RoutedEventArgs e)
-        {
-            if (isbyprogram) return;
-            Common.Setting.enableCache = CBSongCacheEnable.IsChecked != null && CBSongCacheEnable.IsChecked.Value;
-        }
-
-        private void CBSongCacheEnable_Unchecked(object sender, RoutedEventArgs e)
-        {
-            if (isbyprogram) return;
-            Common.Setting.enableCache = CBSongCacheEnable.IsChecked != null && CBSongCacheEnable.IsChecked.Value;
-        }
 
         private async void ButtonCacheSelect_OnClick(object sender, RoutedEventArgs e)
         {
@@ -330,26 +266,12 @@ namespace HyPlayer.Pages
         private void StackPanel_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
             _elapse -= 2;
-            if (_elapse == 0) ApplicationData.Current.RoamingSettings.Values["CanDownload"] = true;
+            if (_elapse <= 0) ApplicationData.Current.RoamingSettings.Values["CanDownload"] = true;
         }
 
         private void DeviceInfo_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
             DeviceInfo.ContextFlyout.ShowAt(DeviceInfo);
-        }
-
-        private void CheckBoxLyricShadow_Checked(object sender, RoutedEventArgs e)
-        {
-            if (isbyprogram) return;
-            Common.Setting.lyricDropshadow = CheckBoxLyricShadow.IsChecked.Value;
-            _lyricItem.OnShow();
-        }
-
-        private void CheckBoxLyricShadow_Unchecked(object sender, RoutedEventArgs e)
-        {
-            if (isbyprogram) return;
-            Common.Setting.lyricDropshadow = CheckBoxLyricShadow.IsChecked.Value;
-            _lyricItem.OnShow();
         }
     }
 }
