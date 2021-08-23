@@ -27,15 +27,29 @@
             Title="一个弹窗, 两个弹窗, 三个弹窗, 四个弹窗...zzzzzz"
             IsLightDismissEnabled="True"
             PreferredPlacement="TopRight" />
-        <Border
-            x:Name="AppTitleBar"
-            Height="35"
-            Margin="100,0,0,0"
-            VerticalAlignment="Top"
-            x:FieldModifier="public"
-            Background="Transparent"
-            Canvas.ZIndex="1"
-            IsHitTestVisible="True" />
+        <Border x:Name="AppTitleBar"
+                IsHitTestVisible="True"
+                VerticalAlignment="Top"
+                x:FieldModifier="public"
+                Background="Transparent"
+                Height="40"
+                Canvas.ZIndex="1" 
+                Margin="48,4,0,0">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Image x:Name="AppFontIcon"
+                    Stretch="Fill"
+                    HorizontalAlignment="Left" 
+                    VerticalAlignment="Top"
+                    Source="/Assets/icon.png" 
+                    Width="16" 
+                    Height="16"/>
+                <TextBlock x:Name="AppTitle"
+                    Text="HyPlayer"
+                    VerticalAlignment="Top"
+                    Margin="12, 0, 0, 0"
+                    Style="{StaticResource CaptionTextBlockStyle}" />
+            </StackPanel>
+        </Border>
         <muxc:NavigationView
             x:Name="NavMain"
             x:FieldModifier="public"
@@ -51,7 +65,8 @@
             PaneDisplayMode="Auto"
             PaneTitle="HyPlayer"
             ItemInvoked="NavMain_ItemInvoked"
-            SelectionChanged="NavMain_OnSelectionChanged">
+            SelectionChanged="NavMain_OnSelectionChanged"
+            DisplayModeChanged="NavMain_DisplayModeChanged">
             <muxc:NavigationView.AutoSuggestBox>
                 <AutoSuggestBox
                     x:Name="SearchKeywordBox"

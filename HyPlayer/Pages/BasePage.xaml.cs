@@ -660,5 +660,30 @@ namespace HyPlayer.Pages
             QrContainer.Height = 500;
             QrContainer.Width = QrContainer.Height;
         }
+
+        private void NavMain_DisplayModeChanged(NavigationView sender, Microsoft.UI.Xaml.Controls.NavigationViewDisplayModeChangedEventArgs args)
+        {
+            const int topIndent = 16;
+            const int expandedIndent = 48;
+            int minimalIndent = 104;
+            if (NavMain.IsBackButtonVisible.Equals(Microsoft.UI.Xaml.Controls.NavigationViewBackButtonVisible.Collapsed))
+            {
+                minimalIndent = 48;
+            }
+
+            Thickness currMargin = AppTitleBar.Margin;
+            if (sender.PaneDisplayMode == Microsoft.UI.Xaml.Controls.NavigationViewPaneDisplayMode.Top)
+            {
+                AppTitleBar.Margin = new Thickness(topIndent, currMargin.Top, currMargin.Right, currMargin.Bottom);
+            }
+            else if (sender.DisplayMode == Microsoft.UI.Xaml.Controls.NavigationViewDisplayMode.Minimal)
+            {
+                AppTitleBar.Margin = new Thickness(minimalIndent, currMargin.Top, currMargin.Right, currMargin.Bottom);
+            }
+            else
+            {
+                AppTitleBar.Margin = new Thickness(expandedIndent, currMargin.Top, currMargin.Right, currMargin.Bottom);
+            }
+        }
     }
 }
