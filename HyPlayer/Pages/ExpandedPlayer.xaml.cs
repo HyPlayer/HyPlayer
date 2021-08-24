@@ -275,7 +275,7 @@ namespace HyPlayer.Pages
             }
             else
             {
-                if (550 > nowwidth)
+                if (550 > nowwidth && !iscompact)
                 {
                     AlbumDropShadow.Width = nowwidth - AlbumDropShadow.ActualOffset.X - 15;
                     LeftPanel.HorizontalAlignment = HorizontalAlignment.Left;
@@ -593,7 +593,7 @@ namespace HyPlayer.Pages
 
         public void ExpandedPlayer_OnPointerEntered(object sender, PointerRoutedEventArgs e)
         {
-            if ((nowwidth <= 300 || nowheight <= 300) && iscompact)
+            if (nowheight <= 300 && iscompact)
             {
                 //小窗模式
                 StackPanelTiny.Visibility = Visibility.Visible;
@@ -604,12 +604,14 @@ namespace HyPlayer.Pages
 
         public void ExpandedPlayer_OnPointerExited(object sender, PointerRoutedEventArgs e)
         {
-            if ((nowwidth <= 250 || nowheight <= 250) && iscompact)
+            if (nowheight <= 300)
             {
                 //小窗模式
-                StackPanelTiny.Visibility = Visibility.Collapsed;
                 PageContainer.Background = null;
-
+            }
+            if (nowheight <= 300 || !iscompact)
+            {
+                StackPanelTiny.Visibility = Visibility.Collapsed;
             }
         }
 

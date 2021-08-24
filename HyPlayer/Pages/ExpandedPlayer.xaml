@@ -147,7 +147,7 @@
                             Source="/Assets/icon.png"
                             Stretch="Uniform"
                             Tapped="ImageAlbum_Tapped">
-                            <FlyoutBase.AttachedFlyout>
+                            <controls:ImageEx.ContextFlyout>
                                 <MenuFlyout>
                                     <MenuFlyoutItem
                                         Click="SaveAlbumImage_Click"
@@ -160,7 +160,7 @@
                                         Style="{StaticResource MenuFlyoutItemRevealStyle}"
                                         Text="复制歌名" />
                                 </MenuFlyout>
-                            </FlyoutBase.AttachedFlyout>
+                            </controls:ImageEx.ContextFlyout>
                         </controls:ImageEx>
                     </controls:DropShadowPanel>
                     <StackPanel
