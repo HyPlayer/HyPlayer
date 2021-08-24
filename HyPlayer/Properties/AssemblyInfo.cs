@@ -7,9 +7,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("HyPlayer")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Kengwang")]
+[assembly: AssemblyCompany("HyPlayer Development Team")]
 [assembly: AssemblyProduct("HyPlayer")]
-[assembly: AssemblyCopyright("Copyright © Kengwang 2021")]
+[assembly: AssemblyCopyright("Copyright © HyPlayer Development Team 2021")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
