@@ -125,6 +125,7 @@ namespace HyPlayer.HyPlayControl
                       toast.Data.SequenceNumber = 0;
                       var notifier = ToastNotificationManager.CreateToastNotifier();
                       notifier.Show(toast);
+                      Common.ShowTeachingTip(filename + "下载完成");
                   });
               });
         }
@@ -180,6 +181,7 @@ namespace HyPlayer.HyPlayControl
             toast.Data.SequenceNumber = 0;
             var notifier = ToastNotificationManager.CreateToastNotifier();
             notifier.Show(toast);
+            Common.ShowTeachingTip("下载开始", "歌曲" + songname + "下载开始");
         }
 
         public async void StartDownload()
@@ -267,6 +269,7 @@ namespace HyPlayer.HyPlayControl
             toast.Data.SequenceNumber = 0;
             var notifier = ToastNotificationManager.CreateToastNotifier();
             notifier.Show(toast);
+            Common.ShowTeachingTip("下载功能已关闭");
             return false;
         }
 
@@ -327,6 +330,7 @@ namespace HyPlayer.HyPlayControl
                     toast.Data.SequenceNumber = 0;
                     var notifier = ToastNotificationManager.CreateToastNotifier();
                     notifier.Show(toast);
+                    Common.ShowTeachingTip("下载全部完成");
                 }
 
                 return;

@@ -244,11 +244,13 @@
                         FontSize="20"
                         Header="颜色模式: (修改将在重启 HyPlayer 后生效)"
                         MaxColumns="3"
+                        SelectionChanged="RadioButtonsTheme_SelectionChanged"
                         SelectedIndex="{x:Bind hyplayer:Common.Setting.themeRequest, Mode=TwoWay}">
                         <RadioButton Content="跟随系统" />
                         <RadioButton Content="亮色" />
                         <RadioButton Content="暗色" />
                     </controls:RadioButtons>
+                    <Button x:Name="RestartBtn" Click="RestartBtn_Click" Visibility="Collapsed" Content="立即重启" Style="{StaticResource ButtonRevealStyle}" VerticalAlignment="Center"/>
 
                     <Grid ColumnSpacing="12">
                         <Grid.ColumnDefinitions>

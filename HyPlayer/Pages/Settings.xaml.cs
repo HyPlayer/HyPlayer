@@ -18,6 +18,7 @@ using Microsoft.UI.Xaml.Controls;
 using Windows.Security.ExchangeActiveSyncProvisioning;
 using Microsoft.AppCenter.Crashes;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.ApplicationModel.Core;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -272,6 +273,16 @@ namespace HyPlayer.Pages
         private void DeviceInfo_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
             DeviceInfo.ContextFlyout.ShowAt(DeviceInfo);
+        }
+
+        private void RadioButtonsTheme_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            RestartBtn.Visibility = Visibility.Visible;
+        }
+
+        private async void RestartBtn_Click(object sender, RoutedEventArgs e)
+        {
+            await CoreApplication.RequestRestartAsync("ChangeThemeRestart");
         }
     }
 }

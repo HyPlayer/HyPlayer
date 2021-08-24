@@ -91,7 +91,7 @@
         <Border
             x:Name="SubCmtsConainer"
             Margin="5"
-            Background="#29292950"
+            Background="{ThemeResource SystemControlBackgroundBaseLowBrush}"
             CornerRadius="5"
             Visibility="Collapsed">
             <StackPanel Orientation="Vertical">

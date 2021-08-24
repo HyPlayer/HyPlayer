@@ -82,7 +82,7 @@ namespace HyPlayer
         }
 
 
-        public static void ShowTeachingTip(string title, string subtitle = null)
+        public static void ShowTeachingTip(string title, string subtitle = "")
         {
             Common.Invoke(() =>
             {
