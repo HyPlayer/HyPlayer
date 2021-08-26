@@ -31,7 +31,7 @@
             x:Name="AppTitleBar"
             Height="40"
             Margin="48,0,0,0"
-            Padding="0,4,0,0"
+            Padding="0,8,0,0"
             VerticalAlignment="Top"
             x:FieldModifier="public"
             Background="Transparent"
