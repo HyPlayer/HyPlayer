@@ -62,15 +62,14 @@ namespace HyPlayer.Pages
             }
             else if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
             {
-                //if is fucking xbox, fuck xbox develop!
-                bool result = Windows.UI.ViewManagement.ApplicationViewScaling.TrySetDisableLayoutScaling(true);
-                Windows.UI.ViewManagement.ApplicationView.GetForCurrentView().SetDesiredBoundsMode(Windows.UI.ViewManagement.ApplicationViewBoundsMode.UseCoreWindow);
+                bool result = ApplicationViewScaling.TrySetDisableLayoutScaling(true);
+                ApplicationView.GetForCurrentView().SetDesiredBoundsMode(ApplicationViewBoundsMode.UseCoreWindow);
             }
+            ApplicationView.TerminateAppOnFinalViewClose = false;
             Common.BaseFrame = BaseFrame;
             BaseFrame.IsNavigationStackEnabled = false;
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
-            //Common.NavigatePage(typeof(Home));上一行代码会引发NavMain的SelectionChanged事件，不需要重复导航
         }
 
         private void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs args)
