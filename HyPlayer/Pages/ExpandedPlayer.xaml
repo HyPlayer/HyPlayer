@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:ctl="using:HyPlayer.HyPlayControl"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hyplayer="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -232,6 +233,35 @@
                                     <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE160;" />
                                 </MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem IsEnabled="false" Text="歌词偏移" />
+                            <MenuFlyoutItem>
+                                <MenuFlyoutItem.Template>
+                                    <ControlTemplate TargetType="MenuFlyoutItem">
+                                        <controls:DockPanel LastChildFill="True">
+                                            <Button
+                                                x:Name="LyricOffsetMin"
+                                                controls:DockPanel.Dock="Left"
+                                                Click="LyricOffsetMin_Click"
+                                                Content="-" />
+                                            <Button
+                                                x:Name="LyricOffsetAdd"
+                                                controls:DockPanel.Dock="Right"
+                                                Click="LyricOffsetAdd_Click"
+                                                Content="+" />
+                                            <Button
+                                                x:Name="LyricOffsetUnset"
+                                                x:FieldModifier="public"
+                                                Click="LyricOffsetUnset_Click"
+                                                Content="偏移复原" />
+                                        </controls:DockPanel>
+                                    </ControlTemplate>
+                                </MenuFlyoutItem.Template>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem
+                                x:Name="TbOffset"
+                                IsEnabled="false"
+                                Text="00.00" />
                         </MenuFlyout>
                     </ScrollViewer.ContextFlyout>
                     <ScrollViewer.Content>

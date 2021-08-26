@@ -67,6 +67,7 @@ namespace HyPlayer.HyPlayControl
         public static Timer SecTimer = new Timer(1000); // 公用秒表
         public static readonly List<HyPlayItem> List = new List<HyPlayItem>();
         public static List<SongLyric> Lyrics = new List<SongLyric>();
+        public static TimeSpan LyricOffset = TimeSpan.Zero;
 
         /********        API        ********/
         public static MediaPlayer Player;
@@ -548,9 +549,10 @@ namespace HyPlayer.HyPlayControl
             if (Lyrics.Count == 0) return;
             if (lyricpos >= Lyrics.Count || lyricpos < 0) lyricpos = 0;
             var changed = false;
-            if (Lyrics[lyricpos].LyricTime > Player.PlaybackSession.Position) //当感知到进度回溯时执行
+            var realpos = Player.PlaybackSession.Position - LyricOffset;
+            if (Lyrics[lyricpos].LyricTime > realpos) //当感知到进度回溯时执行
             {
-                lyricpos = Lyrics.FindLastIndex(t => t.LyricTime <= Player.PlaybackSession.Position) - 1;
+                lyricpos = Lyrics.FindLastIndex(t => t.LyricTime <= realpos) - 1;
                 if (lyricpos == -2) lyricpos = -1;
 
                 changed = true;
@@ -560,7 +562,7 @@ namespace HyPlayer.HyPlayControl
             {
                 if (lyricpos == 0 && Lyrics.Count != 1) changed = false;
                 while (Lyrics.Count > lyricpos + 1 &&
-                       Lyrics[lyricpos + 1].LyricTime <= Player.PlaybackSession.Position) //正常的滚歌词
+                       Lyrics[lyricpos + 1].LyricTime <= realpos) //正常的滚歌词
                 {
                     lyricpos++;
                     changed = true;
