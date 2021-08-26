@@ -37,6 +37,9 @@ namespace HyPlayer.Controls
         public PlayMode NowPlayType = PlayMode.DefaultRoll;
         private bool realSelectSong;
         public bool FadeSettedVolume = false;
+        private Storyboard TbSongNameScrollStoryBoard;
+        private double lastOffsetX;
+        DoubleAnimation verticalAnimation;
 
         public PlayBar()
         {
@@ -70,6 +73,24 @@ namespace HyPlayer.Controls
                 {
                 }
             });
+            /*
+            verticalAnimation = new DoubleAnimation();
+
+            verticalAnimation.From = 0;
+            verticalAnimation.To = 0;
+            verticalAnimation.SpeedRatio = 0.1;
+            verticalAnimation.Duration = new Duration(TimeSpan.FromSeconds(4));
+            verticalAnimation.AutoReverse = true;
+            verticalAnimation.RepeatBehavior = RepeatBehavior.Forever;
+            verticalAnimation.EnableDependentAnimation = true;
+
+            TbSongNameScrollStoryBoard = new Storyboard();
+            TbSongNameScrollStoryBoard.Children.Add(verticalAnimation);
+            Storyboard.SetTarget(verticalAnimation, TbSongName);
+            Storyboard.SetTargetProperty(verticalAnimation, "Horizontalofset");
+            TbSongNameScrollStoryBoard.Begin();
+            */
+
         }
 
 
@@ -161,6 +182,7 @@ namespace HyPlayer.Controls
 
         private void FreshDesktopLyric(TimeSpan ts)
         {
+            
             var data = new NotificationData
             {
                 SequenceNumber = 0
@@ -297,7 +319,11 @@ namespace HyPlayer.Controls
                        else
                            FadeSettedVolume = false;
                    }
-
+                   if (MainControlGrid.ActualOffset.X != lastOffsetX)
+                   {
+                       lastOffsetX = MainControlGrid.ActualOffset.X;
+                       TbSongName.Width = MainControlGrid.ActualOffset.X - 165;
+                   }
                    //SliderAudioRate.Value = mp.Volume;
                }
                catch
@@ -373,6 +399,14 @@ namespace HyPlayer.Controls
                 realSelectSong = true;
                 TbSongTag.Text = HyPlayList.NowPlayingItem.PlayItem.tag;
                 Btn_Share.IsEnabled = HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease;
+                /*
+                verticalAnimation.To = TbSongName.ActualWidth - TbSongName.Tb.ActualWidth;
+                verticalAnimation.SpeedRatio = 0.1;
+                TbSongNameScrollStoryBoard.Stop();
+                TbSongNameScrollStoryBoard.Children.Clear();
+                TbSongNameScrollStoryBoard.Children.Add(verticalAnimation);
+                TbSongNameScrollStoryBoard.Begin();
+                */
             });
         }
 
@@ -796,6 +830,8 @@ namespace HyPlayer.Controls
         {
             ButtonExpand_OnClick(sender, e);
         }
+
+
     }
 
 
@@ -818,6 +854,9 @@ namespace HyPlayer.Controls
         {
             return Artist + " - " + Name;
         }
+
+
+
     }
 
     public class ThumbConverter : DependencyObject, IValueConverter
@@ -846,4 +885,5 @@ namespace HyPlayer.Controls
             throw new NotImplementedException();
         }
     }
+
 }

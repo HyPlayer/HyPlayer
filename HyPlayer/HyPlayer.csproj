@@ -150,6 +150,9 @@
     <Compile Include="Controls\PlaylistItem.xaml.cs">
       <DependentUpon>PlaylistItem.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\ScrollingTextBlock.xaml.cs">
+      <DependentUpon>ScrollingTextBlock.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\SingleAlbum.xaml.cs">
       <DependentUpon>SingleAlbum.xaml</DependentUpon>
     </Compile>
@@ -311,6 +314,10 @@
     <Content Include="Assets\Wide310x150Logo.scale-150.png" />
     <Content Include="Assets\Wide310x150Logo.scale-400.png" />
     <Page Include="Controls\CreateSonglistDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ScrollingTextBlock.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

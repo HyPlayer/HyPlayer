@@ -13,7 +13,6 @@
     mc:Ignorable="d">
     <Grid Name="GridThis">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="2*" />
             <ColumnDefinition Width="*" />
@@ -110,9 +109,9 @@
         <Grid
             x:Name="GridSongInfoContainer"
             Grid.Column="0"
-            Grid.ColumnSpan="3"
-            x:FieldModifier="public"
+            Grid.ColumnSpan="1"
             HorizontalAlignment="Left"
+            x:FieldModifier="public"
             Canvas.ZIndex="2">
             <StackPanel
                 x:Name="GridSongAdvancedOperation"
@@ -120,7 +119,7 @@
                 Orientation="Horizontal"
                 Spacing="15"
                 Visibility="Collapsed">
-                <Button Style="{StaticResource ButtonRevealStyle}" 
+                <Button
                     x:Name="Btn_Sub"
                     Width="40"
                     Height="40"
@@ -128,10 +127,11 @@
                     Background="Transparent"
                     Click="Btn_Sub_OnClick"
                     CornerRadius="20"
+                    Style="{StaticResource ButtonRevealStyle}"
                     ToolTipService.ToolTip="添加到歌单">
                     <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE1DA;" />
                 </Button>
-                <Button Style="{StaticResource ButtonRevealStyle}" 
+                <Button
                     x:Name="Btn_Down"
                     Width="40"
                     Height="40"
@@ -139,10 +139,11 @@
                     Background="Transparent"
                     Click="Btn_Down_OnClick"
                     CornerRadius="20"
+                    Style="{StaticResource ButtonRevealStyle}"
                     ToolTipService.ToolTip="下载音乐">
                     <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE118;" />
                 </Button>
-                <Button Style="{StaticResource ButtonRevealStyle}" 
+                <Button
                     x:Name="Btn_Comment"
                     Width="40"
                     Height="40"
@@ -150,10 +151,11 @@
                     Background="Transparent"
                     Click="Btn_Comment_OnClick"
                     CornerRadius="20"
+                    Style="{StaticResource ButtonRevealStyle}"
                     ToolTipService.ToolTip="查看评论">
                     <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8F2;" />
                 </Button>
-                <Button Style="{StaticResource ButtonRevealStyle}" 
+                <Button
                     x:Name="Btn_Share"
                     Width="40"
                     Height="40"
@@ -161,6 +163,7 @@
                     Background="Transparent"
                     Click="Btn_Share_OnClick"
                     CornerRadius="20"
+                    Style="{StaticResource ButtonRevealStyle}"
                     ToolTipService.ToolTip="分享">
                     <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE72D;" />
                 </Button>
@@ -179,21 +182,12 @@
                         IsCacheEnabled="False"
                         Stretch="UniformToFill" />
                 </Grid>
-                <StackPanel
-                    Margin="12,0,0,0"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch"
-                    Spacing="12">
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <TextBlock
-                            Name="TbSongName"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Bottom"
-                            FontSize="18"
-                            FontWeight="Bold" />
+                <StackPanel Margin="12,0,0,0" Spacing="12">
+                    <controls:DockPanel LastChildFill="True">
                         <Grid
                             MaxHeight="20"
                             Padding="3,0,3,0"
+                            controls:DockPanel.Dock="Left"
                             BorderBrush="Red"
                             BorderThickness="1">
                             <TextBlock
@@ -203,8 +197,13 @@
                                 Foreground="Red"
                                 Text="无歌曲" />
                         </Grid>
+                        <local:ScrollingTextBlock
+                            x:Name="TbSongName"
+                            controls:DockPanel.Dock="Left"
+                            FontSize="18"
+                            FontWeight="Bold" />
 
-                    </StackPanel>
+                    </controls:DockPanel>
 
                     <HyperlinkButton
                         Name="TbSingerName"
@@ -225,7 +224,7 @@
         </Grid>
         <Grid
             Name="MainControlGrid"
-            Grid.Column="2"
+            Grid.Column="1"
             Margin="5"
             Canvas.ZIndex="0">
             <Grid.RowDefinitions>
@@ -342,12 +341,11 @@
         </Grid>
         <controls:UniformGrid
             x:Name="Btns"
-            Grid.Column="3"
+            Grid.Column="2"
             Columns="3"
             FirstColumn="0">
             <ToggleButton
                 x:Name="ButtonDesktopLyrics"
-                Style="{StaticResource ToggleButtonRevealStyle}"
                 Width="40"
                 Height="40"
                 Padding="-5"
@@ -358,14 +356,16 @@
                 CornerRadius="20"
                 IsChecked="{x:Bind hy:Common.Setting.toastLyric, Mode=TwoWay}"
                 IsThreeState="False"
+                Style="{StaticResource ToggleButtonRevealStyle}"
                 ToolTipService.ToolTip="桌面歌词" />
-            <Button Style="{StaticResource ButtonRevealStyle}" 
+            <Button
                 Name="BtnVolume"
                 Width="40"
                 Height="40"
                 HorizontalAlignment="Right"
                 Background="Transparent"
-                CornerRadius="20">
+                CornerRadius="20"
+                Style="{StaticResource ButtonRevealStyle}">
                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE15D;" />
                 <!--  E198  -->
                 <Button.Flyout>
@@ -392,13 +392,14 @@
                     </Flyout>
                 </Button.Flyout>
             </Button>
-            <Button Style="{StaticResource ButtonRevealStyle}" 
+            <Button
                 x:Name="ButtonPlayList"
                 Width="40"
                 Height="40"
                 HorizontalAlignment="Right"
                 Background="Transparent"
-                CornerRadius="20">
+                CornerRadius="20"
+                Style="{StaticResource ButtonRevealStyle}">
                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE142;" />
                 <Button.Flyout>
                     <Flyout>
@@ -409,16 +410,18 @@
                                     Margin="16,0,0,0"
                                     HorizontalTextAlignment="Center"
                                     Text="播放列表" />
-                                <Button Style="{StaticResource ButtonRevealStyle}" 
+                                <Button
                                     Margin="5,0,0,0"
                                     controls:DockPanel.Dock="Right"
                                     Click="ButtonCleanAll_OnClick"
-                                    Content="清除全部" />
-                                <Button Style="{StaticResource ButtonRevealStyle}" 
+                                    Content="清除全部"
+                                    Style="{StaticResource ButtonRevealStyle}" />
+                                <Button
                                     HorizontalAlignment="Right"
                                     controls:DockPanel.Dock="Right"
                                     Click="ButtonAddLocal_OnClick"
-                                    Content="添加本地" />
+                                    Content="添加本地"
+                                    Style="{StaticResource ButtonRevealStyle}" />
                             </controls:DockPanel>
                             <ListView
                                 Name="ListBoxPlayList"
@@ -433,12 +436,13 @@
                                                 <TextBlock Text="{x:Bind Name}" />
                                                 <TextBlock Foreground="Gray" Text="{x:Bind Artist}" />
                                             </StackPanel>
-                                            <Button Style="{StaticResource ButtonRevealStyle}" 
+                                            <Button
                                                 Width="30"
                                                 Height="30"
                                                 Padding="-5"
                                                 Background="Transparent"
                                                 Click="PlayListRemove_OnClick"
+                                                Style="{StaticResource ButtonRevealStyle}"
                                                 Tag="{x:Bind index}">
                                                 <FontIcon
                                                     Margin="-5,0,0,0"
@@ -456,7 +460,7 @@
             </Button>
         </controls:UniformGrid>
 
-        <Button Style="{StaticResource ButtonRevealStyle}" 
+        <Button
             Name="ButtonExpand"
             Grid.Column="4"
             Width="40"
@@ -466,10 +470,11 @@
             HorizontalAlignment="Right"
             Background="Transparent"
             Click="ButtonExpand_OnClick"
-            CornerRadius="20">
+            CornerRadius="20"
+            Style="{StaticResource ButtonRevealStyle}">
             <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE971;" />
         </Button>
-        <Button Style="{StaticResource ButtonRevealStyle}" 
+        <Button
             Name="ButtonCollapse"
             Grid.Column="4"
             Width="40"
@@ -480,6 +485,7 @@
             Background="Transparent"
             Click="ButtonCollapse_OnClick"
             CornerRadius="20"
+            Style="{StaticResource ButtonRevealStyle}"
             Visibility="Collapsed">
             <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE972;" />
         </Button>
