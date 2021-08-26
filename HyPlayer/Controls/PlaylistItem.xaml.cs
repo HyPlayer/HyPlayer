@@ -11,6 +11,7 @@ using NeteaseCloudMusicApi;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using HyPlayer.HyPlayControl;
+using Windows.UI.Xaml;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -66,13 +67,35 @@ namespace HyPlayer.Controls
             HyPlayList.SongAppendDone();
             await HyPlayList.AppendPlayList(playList.plid);
             HyPlayList.SongAppendDone();
-            HyPlayList.SongMoveTo(0);
+            HyPlayList.NowPlaying = -1;
+            HyPlayList.SongMoveNext();
         }
 
         public void Dispose()
         {
             playList = null;
             ImageContainer.Source = null;
+        }
+
+        private async void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)
+        {
+            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistPrivacy, new Dictionary<string, object>()
+            {
+                { "id", playList.plid }
+            });
+            Common.ShowTeachingTip(isOk ? "成功公开歌单" : "公开歌单失败");
+            Common.PageBase.LoadSongList();
+        }
+
+        private async void ItemDelPlayList_Click(object sender, RoutedEventArgs e)
+        {
+            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDelete, new Dictionary<string, object>()
+            {
+                {"ids",playList.plid }
+            });
+            Common.ShowTeachingTip(isOk ? "成功删除" : "删除失败");
+            Common.PageBase.LoadSongList();
+            Common.NavigateRefresh();
         }
     }
 }

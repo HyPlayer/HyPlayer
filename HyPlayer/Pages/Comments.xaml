@@ -8,85 +8,132 @@
 
 
     <Grid>
-        <ScrollViewer x:Name="MainScroll" VerticalScrollMode="Enabled" VerticalScrollBarVisibility="Visible" ViewChanged="MainScroll_ViewChanged">
+        <ScrollViewer
+            x:Name="MainScroll"
+            VerticalScrollBarVisibility="Visible"
+            VerticalScrollMode="Enabled"
+            ViewChanged="MainScroll_ViewChanged">
 
-            <StackPanel
-            Orientation="Vertical">
+            <StackPanel Orientation="Vertical">
                 <Grid x:Name="SongInfoContainer" Margin="0,0,0,15" />
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition />
                         <ColumnDefinition Width="100" />
                     </Grid.ColumnDefinitions>
-                    <TextBox PlaceholderText="发表评论" Margin="15" x:Name="CommentEdit" HorizontalAlignment="Stretch"
-                         MaxLength="140" TextWrapping="Wrap" Grid.Column="0" />
-                    <Button Style="{StaticResource ButtonRevealStyle}"  Content="发表" Margin="15" MaxWidth="100" Grid.Column="1" HorizontalAlignment="Right"
-                        x:Name="SendComment" Click="SendComment_Click" />
+                    <TextBox
+                        x:Name="CommentEdit"
+                        Grid.Column="0"
+                        Margin="15"
+                        HorizontalAlignment="Stretch"
+                        MaxLength="140"
+                        PlaceholderText="发表评论"
+                        TextWrapping="Wrap" />
+                    <Button
+                        x:Name="SendComment"
+                        Grid.Column="1"
+                        MaxWidth="100"
+                        Margin="15"
+                        HorizontalAlignment="Right"
+                        Click="SendComment_Click"
+                        Content="发表"
+                        Style="{StaticResource ButtonRevealStyle}" />
                 </Grid>
                 <!--
             <TextBlock Text="热评" FontSize="40" Margin="15" />
             <StackPanel x:Name="HotCommentList" Orientation="Vertical" Margin="10" Spacing="30" />
-            <StackPanel Margin="15" Height="2" Background="Black" />
--->
+            <StackPanel Margin="15" Height="2" Background="Black" />-->
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition />
-                        <ColumnDefinition
-                        Width="100" />
+                        <ColumnDefinition Width="100" />
                     </Grid.ColumnDefinitions>
                     <TextBlock
-                    Text="热评"
-                    FontSize="40"
-                    Margin="15" />
+                        Margin="15"
+                        FontSize="40"
+                        Text="热评" />
 
                 </Grid>
                 <StackPanel Orientation="Vertical">
-                    <StackPanel x:Name="HotCommentList" Orientation="Vertical" Margin="10" Spacing="30" />
+                    <StackPanel
+                        x:Name="HotCommentList"
+                        Margin="10"
+                        Orientation="Vertical"
+                        Spacing="30" />
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition />
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
                         <TextBlock
-                        Text="所有评论"
-                        x:Name="AllCmtsTB"
-                        FontSize="40"
-                        Margin="15" />
-                        <ComboBox SelectionChanged="ComboBoxSortType_OnSelectionChanged" x:Name="ComboBoxSortType"
-                              SelectedIndex="2" HorizontalAlignment="Right" Margin="0,25,15,0" Grid.Column="1">
+                            x:Name="AllCmtsTB"
+                            Margin="15"
+                            FontSize="40"
+                            Text="所有评论" />
+                        <ComboBox
+                            x:Name="ComboBoxSortType"
+                            Grid.Column="1"
+                            Margin="0,25,15,0"
+                            HorizontalAlignment="Right"
+                            SelectedIndex="2"
+                            SelectionChanged="ComboBoxSortType_OnSelectionChanged">
                             <x:String>推荐</x:String>
                             <x:String>热度</x:String>
                             <x:String>时间</x:String>
                         </ComboBox>
                     </Grid>
-                    <StackPanel x:Name="CommentList" Orientation="Vertical" Margin="10" Spacing="30" />
+                    <StackPanel
+                        x:Name="CommentList"
+                        Margin="10"
+                        Orientation="Vertical"
+                        Spacing="30" />
 
                 </StackPanel>
-                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="15">
-                    <Button Style="{StaticResource ButtonRevealStyle}" 
-                    IsEnabled="False"
-                    Content="上一页"
-                    x:Name="PrevPage"
-                    Click="PrevPage_Click" />
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    Orientation="Horizontal"
+                    Spacing="15">
+                    <Button
+                        x:Name="PrevPage"
+                        Click="PrevPage_Click"
+                        Content="上一页"
+                        IsEnabled="False"
+                        Style="{StaticResource ButtonRevealStyle}" />
                     <StackPanel Orientation="Vertical">
-                        <TextBlock
-                        x:Name="PageIndicator" />
-                        <TextBox PlaceholderText="跳页" Header="跳页" x:Name="PageSelect" />
-                        <Button Style="{StaticResource ButtonRevealStyle}"  x:Name="SkipPage" Content="跳转" Click="SkipPage_Click" />
+                        <TextBlock x:Name="PageIndicator" />
+                        <TextBox
+                            x:Name="PageSelect"
+                            Header="跳页"
+                            PlaceholderText="跳页" />
+                        <Button
+                            x:Name="SkipPage"
+                            Click="SkipPage_Click"
+                            Content="跳转"
+                            Style="{StaticResource ButtonRevealStyle}" />
                     </StackPanel>
-                    <Button Style="{StaticResource ButtonRevealStyle}" 
-                    IsEnabled="False"
-                    Content="下一页"
-                    x:Name="NextPage"
-                    Click="NextPage_Click" />
+                    <Button
+                        x:Name="NextPage"
+                        Click="NextPage_Click"
+                        Content="下一页"
+                        IsEnabled="False"
+                        Style="{StaticResource ButtonRevealStyle}" />
                 </StackPanel>
-                <Grid
-                Height="150" />
+                <Grid Height="150" />
             </StackPanel>
         </ScrollViewer>
-        <Button x:Name="BackToTop" Click="BackToTop_Click" HorizontalAlignment="Right" Style="{StaticResource ButtonRevealStyle}" Width="50" Height="50" CornerRadius="5" Margin="15" ToolTipService.ToolTip="回到顶部" Visibility="Collapsed">
+        <Button
+            x:Name="BackToTop"
+            Width="50"
+            Height="50"
+            Margin="15"
+            HorizontalAlignment="Right"
+            Click="BackToTop_Click"
+            CornerRadius="5"
+            Style="{StaticResource ButtonRevealStyle}"
+            ToolTipService.ToolTip="回到顶部"
+            Visibility="Collapsed">
             <Button.Content>
-                <SymbolIcon Symbol="Up"/>
+                <SymbolIcon Symbol="Up" />
             </Button.Content>
         </Button>
     </Grid>

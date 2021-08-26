@@ -22,6 +22,21 @@
         </ResourceDictionary>
     </Page.Resources>
     <Grid x:Name="MainGrid">
+        <FlyoutBase.AttachedFlyout>
+            <MenuFlyout x:Name="PlaylistFlyout">
+                <MenuFlyoutItem
+                    x:Name="ItemPublicPlayList"
+                    Click="ItemPublicPlayList_Click"
+                    Icon="People"
+                    Text="公开此歌单" />
+                <MenuFlyoutItem
+                    x:Name="ItemDelPlayList"
+                    Click="ItemDelPlayList_Click"
+                    Foreground="Red"
+                    Icon="Delete"
+                    Text="删除此歌单" />
+            </MenuFlyout>
+        </FlyoutBase.AttachedFlyout>
         <muxc:TeachingTip
             x:Name="TheTeachingTip"
             Title="一个弹窗, 两个弹窗, 三个弹窗, 四个弹窗...zzzzzz"

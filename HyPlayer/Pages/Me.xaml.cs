@@ -18,7 +18,7 @@ namespace HyPlayer.Pages
     /// <summary>
     ///     可用于自身或导航至 Frame 内部的空白页。
     /// </summary>
-    public sealed partial class Me : Page , IDisposable
+    public sealed partial class Me : Page, IDisposable
     {
         private string uid = "";
 
@@ -30,14 +30,15 @@ namespace HyPlayer.Pages
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
-            GridContainer.Children.Clear();
+            GridContainerMy.Children.Clear();
+            GridContainerSub.Children.Clear();
         }
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
             if (e.Parameter != null)
             {
-                uid = (string) e.Parameter;
+                uid = (string)e.Parameter;
                 ButtonLogout.Visibility = Visibility.Collapsed;
             }
             else
@@ -54,13 +55,16 @@ namespace HyPlayer.Pages
             try
             {
                 var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
-                    new Dictionary<string, object> {["uid"] = uid});
+                    new Dictionary<string, object> { ["uid"] = uid });
 
                 if (isok)
                     foreach (var PlaylistItemJson in json["playlist"].ToArray())
                     {
                         var ncp = NCPlayList.CreateFromJson(PlaylistItemJson);
-                        GridContainer.Children.Add(new PlaylistItem(ncp));
+                        if (PlaylistItemJson["subscribed"].ToString() == "True")
+                            GridContainerSub.Children.Add(new PlaylistItem(ncp));
+                        else
+                            GridContainerMy.Children.Add(new PlaylistItem(ncp));
                     }
             }
             catch (Exception ex)
@@ -76,7 +80,7 @@ namespace HyPlayer.Pages
                 Common.Invoke(async () =>
                 {
                     var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserDetail,
-                        new Dictionary<string, object> {["uid"] = uid});
+                        new Dictionary<string, object> { ["uid"] = uid });
                     if (isok)
                     {
                         TextBoxUserName.Text = json["profile"]["nickname"].ToString();
@@ -120,7 +124,8 @@ namespace HyPlayer.Pages
         public void Dispose()
         {
             ImageRect.ImageSource = null;
-            GridContainer.Children.Clear();
+            GridContainerMy.Children.Clear();
+            GridContainerSub.Children.Clear();
         }
     }
 }

@@ -4,8 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:hyplayer="using:HyPlayer"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Width="200"
     Height="250"
     d:DesignHeight="250"
@@ -13,9 +13,9 @@
     mc:Ignorable="d">
     <Grid
         CornerRadius="8"
+        PointerCaptureLost="UIElement_OnPointerCaptureLost"
         PointerEntered="UIElement_OnPointerEntered"
         PointerExited="UIElement_OnPointerExited"
-        PointerCaptureLost="UIElement_OnPointerCaptureLost"
         RightTapped="{x:Bind hyplayer:Common.UIElement_RightTapped}">
         <Grid>
             <Grid.RowDefinitions>
@@ -64,7 +64,6 @@
             </controls:ImageEx>
             <Button
                 x:Name="PlayAllBtn"
-                ToolTipService.ToolTip="播放全部"
                 Grid.Row="0"
                 Width="50"
                 Height="50"
@@ -73,7 +72,8 @@
                 VerticalAlignment="Top"
                 Click="PlayAllBtn_Click"
                 CornerRadius="30"
-                Style="{StaticResource AccentButtonStyle}">
+                Style="{StaticResource AccentButtonStyle}"
+                ToolTipService.ToolTip="播放全部">
                 <Button.Content>
                     <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE102;" />
                 </Button.Content>
@@ -101,7 +101,21 @@
         </Grid>
         <Grid.ContextFlyout>
             <MenuFlyout>
-                <MenuFlyoutItem Style="{StaticResource MenuFlyoutItemRevealStyle}" Text="播放全部" Click="PlayAllBtn_Click"/>
+                <MenuFlyoutItem
+                    Click="PlayAllBtn_Click"
+                    Icon="Play"
+                    Text="播放全部" />
+                <MenuFlyoutItem
+                    x:Name="ItemPublicPlayList"
+                    Click="ItemPublicPlayList_Click"
+                    Icon="People"
+                    Text="公开此歌单" />
+                <MenuFlyoutItem
+                    x:Name="ItemDelPlayList"
+                    Click="ItemDelPlayList_Click"
+                    Foreground="Red"
+                    Icon="Delete"
+                    Text="删除此歌单" />
             </MenuFlyout>
         </Grid.ContextFlyout>
     </Grid>

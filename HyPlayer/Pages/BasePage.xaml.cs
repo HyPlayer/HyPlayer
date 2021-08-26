@@ -31,6 +31,8 @@ using NavigationViewItem = Microsoft.UI.Xaml.Controls.NavigationViewItem;
 using NavigationViewSelectionChangedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewSelectionChangedEventArgs;
 using Microsoft.Toolkit.Uwp.UI.Controls;
 using Windows.UI.Core;
+using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Controls.Primitives;
 
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
@@ -43,7 +45,7 @@ namespace HyPlayer.Pages
     public sealed partial class BasePage : Page
     {
         private string nowqrkey;
-
+        private string nowplid;
         public BasePage()
         {
             InitializeComponent();
@@ -291,49 +293,7 @@ namespace HyPlayer.Pages
                 });
             });
 
-            _ = Task.Run(() =>
-            {
-                Common.Invoke(async () =>
-                {
-                    //加载用户歌单
-                    var nowitem = NavItemsMyList;
-                    var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
-                        new Dictionary<string, object> { { "uid", Common.LoginedUser.id } });
-                    if (isOk)
-                    {
-                        NavItemsLikeList.Visibility = Visibility.Visible;
-                        NavItemsAddPlaylist.Visibility = Visibility.Visible;
-                        NavItemsMyList.Visibility = Visibility.Visible;
-                        NavItemsMyLovedPlaylist.Visibility = Visibility.Visible;
-                        Common.MySongLists.Clear();
-                        var isliked = false;
-                        foreach (var jToken in json["playlist"])
-                            if (jToken["subscribed"].ToString() == "True")
-                            {
-                                NavItemsLikeList.MenuItems.Add(new NavigationViewItem
-                                {
-                                    Content = jToken["name"].ToString(),
-                                    Tag = "Playlist" + jToken["id"]
-                                });
-                            }
-                            else
-                            {
-                                Common.MySongLists.Add(NCPlayList.CreateFromJson(jToken));
-                                if (!isliked)
-                                {
-                                    isliked = true;
-                                    continue;
-                                }
-
-                                NavItemsMyList.MenuItems.Add(new NavigationViewItem
-                                {
-                                    Content = jToken["name"].ToString(),
-                                    Tag = "Playlist" + jToken["id"]
-                                });
-                            }
-                    }
-                });
-            });
+            LoadSongList();
 
             // 执行签到操作
             _ = Task.Run(() =>
@@ -354,6 +314,74 @@ namespace HyPlayer.Pages
             return true;
         }
 
+        public async void LoadSongList()
+        {
+            //加载用户歌单
+            var nowitem = NavItemsMyList;
+            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
+                new Dictionary<string, object> { { "uid", Common.LoginedUser.id } });
+            if (isOk)
+            {
+                NavItemsLikeList.MenuItems.Clear();
+                NavItemsMyList.MenuItems.Clear();
+                NavItemsLikeList.Visibility = Visibility.Visible;
+                NavItemsAddPlaylist.Visibility = Visibility.Visible;
+                NavItemsMyList.Visibility = Visibility.Visible;
+                NavItemsMyLovedPlaylist.Visibility = Visibility.Visible;
+                Common.MySongLists.Clear();
+                var isliked = false;
+                foreach (var jToken in json["playlist"])
+                    if (jToken["subscribed"].ToString() == "True")
+                    {
+                        var item = new NavigationViewItem
+                        {
+                            Content = jToken["name"].ToString(),
+                            Tag = "Playlist" + jToken["id"],
+                            IsRightTapEnabled = true,
+                            Icon = new FontIcon()
+                            {
+                                FontFamily = Application.Current.Resources["SymbolThemeFontFamily"] as FontFamily,
+                                Glyph = "\uE142"
+                            }
+                        };
+                        item.RightTapped += (_, __) =>
+                        {
+                            nowplid = jToken["id"].ToString();
+                            ItemPublicPlayList.Visibility = Visibility.Collapsed;
+                            PlaylistFlyout.ShowAt((FrameworkElement)_);
+                        };
+                        NavItemsLikeList.MenuItems.Add(item);
+                    }
+                    else
+                    {
+                        if (!isliked)
+                        {
+                            isliked = true;
+                            continue;
+                        }
+                        Common.MySongLists.Add(NCPlayList.CreateFromJson(jToken));
+                        var item = new NavigationViewItem
+                        {
+                            Icon = new FontIcon()
+                            {
+                                FontFamily = Application.Current.Resources["SymbolThemeFontFamily"] as FontFamily,
+                                Glyph = jToken["privacy"].ToString() == "0" ? "\uE142" : "\uE72E",
+                                Foreground = jToken["privacy"].ToString() == "0" ? new SolidColorBrush(Color.FromArgb(255, 255, 255, 255)) : new SolidColorBrush(Color.FromArgb(255, 255, 214, 133))
+                            },
+                            Content = jToken["name"].ToString(),
+                            Tag = "Playlist" + jToken["id"],
+                            IsRightTapEnabled = true
+                        };
+                        item.RightTapped += (_, __) =>
+                        {
+                            nowplid = jToken["id"].ToString();
+                            ItemPublicPlayList.Visibility = jToken["privacy"].ToString() == "0" ? Visibility.Collapsed : Visibility.Visible;
+                            PlaylistFlyout.ShowAt((FrameworkElement)_);
+                        };
+                        NavItemsMyList.MenuItems.Add(item);
+                    }
+            }
+        }
 
         private async void NavMain_OnSelectionChanged(NavigationView sender,
             NavigationViewSelectionChangedEventArgs args)
@@ -444,41 +472,7 @@ namespace HyPlayer.Pages
                 case "SonglistCreate":
                     {
                         await new CreateSonglistDialog().ShowAsync();
-                        _ = Task.Run(() =>
-                        {
-                            Common.Invoke(async () =>
-                            {
-                                //加载用户歌单
-                                var item = NavItemsMyList;
-                                var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
-                                    new Dictionary<string, object> { { "uid", Common.LoginedUser.id } });
-                                if (isOk)
-                                {
-                                    NavItemsLikeList.Visibility = Visibility.Visible;
-                                    NavItemsMyList.Visibility = Visibility.Visible;
-                                    Common.MySongLists.Clear();
-                                    NavItemsMyList.MenuItems.Clear();
-                                    foreach (var jToken in json["playlist"])
-                                        if (jToken["subscribed"].ToString() == "True")
-                                        {
-                                            NavItemsLikeList.MenuItems.Add(new NavigationViewItem
-                                            {
-                                                Content = jToken["name"].ToString(),
-                                                Tag = "Playlist" + jToken["id"]
-                                            });
-                                        }
-                                        else
-                                        {
-                                            Common.MySongLists.Add(NCPlayList.CreateFromJson(jToken));
-                                            NavItemsMyList.MenuItems.Add(new NavigationViewItem
-                                            {
-                                                Content = jToken["name"].ToString(),
-                                                Tag = "Playlist" + jToken["id"]
-                                            });
-                                        }
-                                }
-                            });
-                        });
+                        LoadSongList();
                         break;
                     }
                 case "PersonalFM":
@@ -683,6 +677,26 @@ namespace HyPlayer.Pages
             {
                 AppTitleBar.Margin = new Thickness(expandedIndent, currMargin.Top, currMargin.Right, currMargin.Bottom);
             }
+        }
+
+        private async void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)
+        {
+            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistPrivacy, new Dictionary<string, object>()
+            {
+                { "id", nowplid }
+            });
+            Common.ShowTeachingTip(isOk ? "成功公开歌单" : "公开歌单失败");
+            LoadSongList();
+        }
+
+        private async void ItemDelPlayList_Click(object sender, RoutedEventArgs e)
+        {
+            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDelete, new Dictionary<string, object>()
+            {
+                {"ids",nowplid }
+            });
+            Common.ShowTeachingTip(isOk ? "成功删除" : "删除失败");            
+            LoadSongList();
         }
     }
 }
