@@ -27,27 +27,31 @@
             Title="一个弹窗, 两个弹窗, 三个弹窗, 四个弹窗...zzzzzz"
             IsLightDismissEnabled="True"
             PreferredPlacement="TopRight" />
-        <Border x:Name="AppTitleBar"
-                IsHitTestVisible="True"
-                VerticalAlignment="Top"
-                x:FieldModifier="public"
-                Background="Transparent"
-                Height="40"
-                Canvas.ZIndex="1" 
-                Margin="48,4,0,0">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <Image x:Name="AppFontIcon"
-                    Stretch="Fill"
-                    HorizontalAlignment="Left" 
+        <Border
+            x:Name="AppTitleBar"
+            Height="40"
+            Margin="48,0,0,0"
+            Padding="0,4,0,0"
+            VerticalAlignment="Top"
+            x:FieldModifier="public"
+            Background="Transparent"
+            Canvas.ZIndex="1"
+            IsHitTestVisible="True">
+            <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                <Image
+                    x:Name="AppFontIcon"
+                    Width="16"
+                    Height="16"
+                    HorizontalAlignment="Left"
                     VerticalAlignment="Top"
-                    Source="/Assets/icon.png" 
-                    Width="16" 
-                    Height="16"/>
-                <TextBlock x:Name="AppTitle"
-                    Text="HyPlayer"
+                    Source="/Assets/icon.png"
+                    Stretch="Fill" />
+                <TextBlock
+                    x:Name="AppTitle"
+                    Margin="12,0,0,0"
                     VerticalAlignment="Top"
-                    Margin="12, 0, 0, 0"
-                    Style="{StaticResource CaptionTextBlockStyle}" />
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Text="HyPlayer" />
             </StackPanel>
         </Border>
         <muxc:NavigationView
@@ -55,6 +59,7 @@
             x:FieldModifier="public"
             BackRequested="OnNavigateBack"
             Canvas.ZIndex="0"
+            DisplayModeChanged="NavMain_DisplayModeChanged"
             FlowDirection="LeftToRight"
             FontFamily="Microsoft Sans Serif"
             IsBackButtonVisible="Visible"
@@ -62,11 +67,10 @@
             IsSettingsVisible="False"
             IsTabStop="False"
             IsTitleBarAutoPaddingEnabled="False"
+            ItemInvoked="NavMain_ItemInvoked"
             PaneDisplayMode="Auto"
             PaneTitle="HyPlayer"
-            ItemInvoked="NavMain_ItemInvoked"
-            SelectionChanged="NavMain_OnSelectionChanged"
-            DisplayModeChanged="NavMain_DisplayModeChanged">
+            SelectionChanged="NavMain_OnSelectionChanged">
             <muxc:NavigationView.AutoSuggestBox>
                 <AutoSuggestBox
                     x:Name="SearchKeywordBox"
@@ -116,7 +120,10 @@
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE734;" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
-                <muxc:NavigationViewItem Content="私人FM" Tag="PersonalFM" SelectsOnInvoked="False">
+                <muxc:NavigationViewItem
+                    Content="私人FM"
+                    SelectsOnInvoked="False"
+                    Tag="PersonalFM">
                     <muxc:NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xEFA9;" />
                     </muxc:NavigationViewItem.Icon>
@@ -131,9 +138,9 @@
                     x:Name="NavItemsAddPlaylist"
                     Content="创建歌单"
                     Icon="Add"
+                    SelectsOnInvoked="False"
                     Tag="SonglistCreate"
-                    Visibility="Collapsed"
-                    SelectsOnInvoked="False" />
+                    Visibility="Collapsed" />
                 <muxc:NavigationViewItem
                     x:Name="NavItemsMyLovedPlaylist"
                     Content="我喜欢的音乐"
@@ -186,11 +193,12 @@
         <!--  登录弹窗  -->
         <ContentDialog x:Name="DialogLogin" Width="400">
             <StackPanel Orientation="Vertical">
-                <Button Style="{StaticResource ButtonRevealStyle}" 
+                <Button
                     x:Name="ButtonCloseLoginForm"
                     HorizontalAlignment="Right"
                     Background="Transparent"
-                    Click="ButtonCloseLoginForm_Click">
+                    Click="ButtonCloseLoginForm_Click"
+                    Style="{StaticResource ButtonRevealStyle}">
                     <FontIcon
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
                         FontSize="15"
@@ -218,12 +226,13 @@
                                 Margin="5"
                                 KeyDown="TextBoxPassword_OnKeyDown"
                                 PlaceholderText="密码" />
-                            <Button Style="{StaticResource AccentButtonStyle}" 
+                            <Button
                                 Name="ButtonLogin"
                                 Margin="0,15,0,15"
                                 HorizontalAlignment="Stretch"
                                 Click="ButtonLogin_OnClick"
-                                Content="登录"/>
+                                Content="登录"
+                                Style="{StaticResource AccentButtonStyle}" />
                         </StackPanel>
                     </PivotItem>
                     <PivotItem Header="扫码登录">
@@ -234,11 +243,12 @@
                                 Margin="0,46,0,46"
                                 Source="/Assets/icon.png"
                                 Tapped="LoadQr" />
-                            <Button Style="{StaticResource ButtonRevealStyle}" 
+                            <Button
                                 x:Name="BtnScaleQrCode"
                                 HorizontalAlignment="Center"
                                 Click="BtnScaleQrCode_Click"
-                                Content="放大二维码" />
+                                Content="放大二维码"
+                                Style="{StaticResource ButtonRevealStyle}" />
                         </StackPanel>
                     </PivotItem>
                 </Pivot>
@@ -247,44 +257,48 @@
                     Title="登录代表你同意相关条款"
                     IsClosable="False"
                     IsOpen="True" />
-                <Button Style="{StaticResource ButtonRevealStyle}" 
+                <Button
                     HorizontalAlignment="Center"
                     Background="Transparent"
-                    Content="第三方账号登录">
+                    Content="第三方账号登录"
+                    Style="{StaticResource ButtonRevealStyle}">
                     <Button.Flyout>
                         <Flyout>
                             <StackPanel
                                 Height="50"
                                 Orientation="Horizontal"
                                 Spacing="10">
-                                <Button Style="{StaticResource ButtonRevealStyle}" 
+                                <Button
                                     x:Name="QQLogin"
                                     MinWidth="48"
                                     MinHeight="48"
                                     Click="ThirdPartyLogin_Click"
                                     CornerRadius="5"
+                                    Style="{StaticResource ButtonRevealStyle}"
                                     Tag="QQ">
                                     <Button.Content>
                                         <Image Source="/Assets/ThirdPartyIcons/QQ.png" Stretch="Fill" />
                                     </Button.Content>
                                 </Button>
-                                <Button Style="{StaticResource ButtonRevealStyle}" 
+                                <Button
                                     x:Name="WXLogin"
                                     MinWidth="48"
                                     MinHeight="48"
                                     Click="ThirdPartyLogin_Click"
                                     CornerRadius="5"
+                                    Style="{StaticResource ButtonRevealStyle}"
                                     Tag="WX">
                                     <Button.Content>
                                         <Image Source="/Assets/ThirdPartyIcons/WX.png" Stretch="Fill" />
                                     </Button.Content>
                                 </Button>
-                                <Button Style="{StaticResource ButtonRevealStyle}" 
+                                <Button
                                     x:Name="WBLogin"
                                     MinWidth="48"
                                     MinHeight="48"
                                     Click="ThirdPartyLogin_Click"
                                     CornerRadius="5"
+                                    Style="{StaticResource ButtonRevealStyle}"
                                     Tag="WB">
                                     <Button.Content>
                                         <Image Source="/Assets/ThirdPartyIcons/SinaWB.png" Stretch="Fill" />
