@@ -9,7 +9,6 @@
     mc:Ignorable="d">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-
         <ScrollViewer.Content>
             <StackPanel Orientation="Vertical">
                 <controls:DockPanel x:Name="GridPersonalInformation" LastChildFill="True">
@@ -129,6 +128,7 @@
             </StackPanel>
 
         </ScrollViewer.Content>
+
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState>
