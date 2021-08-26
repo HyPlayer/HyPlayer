@@ -21,7 +21,7 @@ namespace HyPlayer.HyPlayControl
 {
     public static class HyPlayList
     {
-        private static int GCCountDown = 10;
+        private static int GCCountDown = 5;
 
         public delegate void TimerTicked();
 
@@ -195,21 +195,14 @@ namespace HyPlayer.HyPlayControl
             {
                 Common.Invoke(() =>
                 {
-                    if (GCCountDown-- < 0)
+                    if (--GCCountDown < 0)
                     {
-                        GCCountDown = 10;
-                        GC.Collect(0, GCCollectionMode.Forced);
+                        GCCountDown = 5;
+                        GC.Collect();
                     }
                 });
             };
             HistoryManagement.InitializeHistoryTrack();
-            //Common.Invoke(async () =>
-            //{
-            //    foreach (NCSong song in await HistoryManagement.GetNCSongHistory())
-            //    {
-            //        await HyPlayList.AppendNCSong(song);
-            //    }
-            //});
             Common.GLOBAL["PERSONALFM"] = "false";
         }
 

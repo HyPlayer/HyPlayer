@@ -5,6 +5,7 @@
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    NavigationCacheMode="Disabled"
     mc:Ignorable="d">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -49,30 +50,40 @@
                             Margin="0,10,0,0"
                             Orientation="Horizontal"
                             Spacing="15">
-                            <Button Style="{StaticResource ButtonRevealStyle}"  Click="ButtonPlayAll_OnClick" Content="播放全部" />
+                            <Button
+                                Click="ButtonPlayAll_OnClick"
+                                Content="播放全部"
+                                Style="{StaticResource ButtonRevealStyle}" />
                             <ToggleButton
-                                Style="{StaticResource ToggleButtonRevealStyle}"
                                 x:Name="ToggleButtonLike"
                                 Click="LikeBtnClick"
-                                Content="收藏" />
-                            <Button Style="{StaticResource ButtonRevealStyle}"  Click="ButtonDownloadAll_OnClick" Content="下载全部" />
-                            <Button Style="{StaticResource ButtonRevealStyle}"  Click="ButtonComment_OnClick" Content="评论" />
-                            <Button Style="{StaticResource ButtonRevealStyle}" 
+                                Content="收藏"
+                                Style="{StaticResource ToggleButtonRevealStyle}" />
+                            <Button
+                                Click="ButtonDownloadAll_OnClick"
+                                Content="下载全部"
+                                Style="{StaticResource ButtonRevealStyle}" />
+                            <Button
+                                Click="ButtonComment_OnClick"
+                                Content="评论"
+                                Style="{StaticResource ButtonRevealStyle}" />
+                            <Button
                                 x:Name="ButtonIntel"
                                 Click="ButtonHeartBeat_OnClick"
                                 Content="心动模式"
+                                Style="{StaticResource ButtonRevealStyle}"
                                 Visibility="Collapsed" />
                         </StackPanel>
                         <StackPanel Orientation="Vertical">
                             <TextBlock
                                 x:Name="TextBlockDesc"
+                                MaxWidth="300"
                                 Margin="0,5,0,0"
                                 HorizontalAlignment="Left"
                                 FontSize="13"
                                 Foreground="{ThemeResource SystemControlForegroundChromeHighBrush}"
                                 MaxLines="7"
                                 Text="歌单简介"
-                                MaxWidth="300"
                                 TextWrapping="WrapWholeWords">
                                 <FlyoutBase.AttachedFlyout>
                                     <Flyout>
@@ -84,10 +95,11 @@
                                                 AcceptsReturn="True"
                                                 Text="{x:Bind TextBlockDesc.Text}"
                                                 TextWrapping="Wrap" />
-                                            <Button Style="{StaticResource ButtonRevealStyle}" 
+                                            <Button
                                                 x:Name="Confirm"
                                                 Click="Confirm_Click"
-                                                Content="确认" />
+                                                Content="确认"
+                                                Style="{StaticResource ButtonRevealStyle}" />
                                         </StackPanel>
                                     </Flyout>
                                 </FlyoutBase.AttachedFlyout>
@@ -105,11 +117,12 @@
                     Margin="20,30,0,0"
                     Orientation="Vertical"
                     Spacing="10" />
-                <Button Style="{StaticResource ButtonRevealStyle}" 
+                <Button
                     x:Name="NextPage"
                     HorizontalAlignment="Center"
                     Click="NextPage_OnClickPage_OnClick"
                     Content="加载更多"
+                    Style="{StaticResource ButtonRevealStyle}"
                     Visibility="Collapsed" />
                 <Grid Height="150" />
             </StackPanel>

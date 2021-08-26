@@ -21,12 +21,13 @@ namespace HyPlayer.Pages
     /// <summary>
     ///     可用于自身或导航至 Frame 内部的空白页。
     /// </summary>
-    public sealed partial class AlbumPage : Page
+    public sealed partial class AlbumPage : Page , IDisposable
     {
         private readonly List<NCSong> songs = new List<NCSong>();
         private NCAlbum Album;
         private List<NCArtist> artists = new List<NCArtist>();
         private int page;
+        private bool disposedValue;
 
         public AlbumPage()
         {
@@ -54,7 +55,7 @@ namespace HyPlayer.Pages
                     }
 
                     (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Album,
-    new Dictionary<string, object> { { "id", albumid } });
+                        new Dictionary<string, object> { { "id", albumid } });
                     Album = NCAlbum.CreateFromJson(json["album"]);
                     ImageRect.ImageSource =
                         new BitmapImage(
@@ -187,5 +188,16 @@ namespace HyPlayer.Pages
             else
                 Common.NavigatePage(typeof(ArtistPage), artists[0].id);
         }
+
+       public void Dispose()
+        {
+            songs.Clear();
+            Album = null;
+            artists = null;
+            ImageRect.ImageSource = null;
+            SongContainer.Children.Clear();
+            GC.SuppressFinalize(this);
+        }
+
     }
 }

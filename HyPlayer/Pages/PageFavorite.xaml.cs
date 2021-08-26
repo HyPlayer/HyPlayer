@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -14,7 +15,7 @@ namespace HyPlayer.Pages
     /// <summary>
     ///     An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class PageFavorite : Page
+    public sealed partial class PageFavorite : Page,IDisposable
     {
         private int page;
 
@@ -104,6 +105,11 @@ namespace HyPlayer.Pages
         {
             page++;
             RealLoad();
+        }
+
+        public void Dispose()
+        {
+            ItemContainer.Children.Clear();
         }
     }
 }

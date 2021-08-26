@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
@@ -57,9 +58,12 @@ namespace HyPlayer.Controls
             ? Common.Setting.lyricSize <= 0 ? 23 : Common.Setting.lyricSize
             : Common.PageExpandedPlayer.showsize;
 
-        public TextAlignment LyricAlignment => Common.Setting.lyricAlignment ? TextAlignment.Left : TextAlignment.Center;
+        public TextAlignment LyricAlignment =>
+            Common.Setting.lyricAlignment ? TextAlignment.Left : TextAlignment.Center;
 
-        private SolidColorBrush originBrush => Common.PageExpandedPlayer != null ? Common.PageExpandedPlayer.ForegroundAlbumBrush : Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush;
+        private SolidColorBrush originBrush => Common.PageExpandedPlayer != null
+            ? Common.PageExpandedPlayer.ForegroundAlbumBrush
+            : Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush;
 
         public void RefreshFontSize()
         {
@@ -82,7 +86,9 @@ namespace HyPlayer.Controls
             TextBoxPureLyric.Foreground = originBrush;
             TextBoxSound.Foreground = originBrush;
             TextBoxTranslation.Foreground = originBrush;
-            shadowColor = (originBrush.Color == Color.FromArgb(255, 0, 0, 0)) ? Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 255, 255, 255) : Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 0, 0, 0);
+            shadowColor = (originBrush.Color == Color.FromArgb(255, 0, 0, 0))
+                ? Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 255, 255, 255)
+                : Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 0, 0, 0);
         }
 
         public void OnHind()

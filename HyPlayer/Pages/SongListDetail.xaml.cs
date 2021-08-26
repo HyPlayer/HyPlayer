@@ -24,7 +24,7 @@ namespace HyPlayer.Pages
     /// <summary>
     ///     可用于自身或导航至 Frame 内部的空白页。
     /// </summary>
-    public sealed partial class SongListDetail : Page
+    public sealed partial class SongListDetail : Page, IDisposable
     {
         private string intelsong = "";
         private int page;
@@ -104,7 +104,7 @@ namespace HyPlayer.Pages
                         // 诶呀,没想到还过生了,吼吼
                         TextBlockDesc.Text = "生日快乐~ 今天也要开心哦!";
                         TextBlockDesc.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 0, 0));
-                        TextBlockDesc.FontSize = 25;                        
+                        TextBlockDesc.FontSize = 25;
                     }
                     var idx = 0;
                     foreach (var song in json["data"]["dailySongs"])
@@ -122,7 +122,9 @@ namespace HyPlayer.Pages
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
+            SongContainer.Children.Cast<SingleNCSong>().ToList().ForEach(t => t.Dispose());
             SongContainer.Children.Clear();
+            ImageRect.ImageSource = null;
         }
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -180,51 +182,12 @@ namespace HyPlayer.Pages
             {
                 Common.Invoke(async () =>
                 {
-                    HyPlayList.RemoveAllSong();
-                    var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                        new Dictionary<string, object>
-                        {
-                            {"id", string.Join(',', Common.ListedSongs.Select(t => t.sid))},
-                            {"br", Common.Setting.audioRate}
-                        });
-                    if (isok)
-                    {
-                        var arr = json["data"].ToList();
-                        for (var i = 0; i < Common.ListedSongs.Count; i++)
-                        {
-                            var token = arr.Find(jt => jt["id"].ToString() == Common.ListedSongs[i].sid);
-                            if (!token.HasValues) continue;
-
-                            var ncSong = Common.ListedSongs[i];
-
-                            var tag = "";
-                            if (token["type"].ToString().ToLowerInvariant() == "flac")
-                                tag = "SQ";
-                            else
-                                tag = token["br"].ToObject<int>() / 1000 + "k";
-
-                            var ncp = new PlayItem
-                            {
-                                tag = tag,
-                                Album = ncSong.Album,
-                                Artist = ncSong.Artist,
-                                subext = token["type"].ToString(),
-                                Type = HyPlayItemType.Netease,
-                                id = ncSong.sid,
-                                Name = ncSong.songname,
-                                url = token["url"].ToString(),
-                                LengthInMilliseconds = ncSong.LengthInMilliseconds,
-                                size = token["size"].ToString(),
-                                //md5 = token["md5"].ToString()
-                            };
-                            HyPlayList.AppendNCPlayItem(ncp);
-                        }
-
-                        HistoryManagement.AddSonglistHistory(playList.plid);
-                        HyPlayList.SongAppendDone();
-
-                        HyPlayList.SongMoveTo(0);
-                    }
+                    HyPlayList.List.Clear();
+                    HyPlayList.SongAppendDone();
+                    await HyPlayList.AppendPlayList(playList.plid);
+                    HyPlayList.SongAppendDone();
+                    HyPlayList.NowPlaying = -1;
+                    HyPlayList.SongMoveNext();
                 });
             });
         }
@@ -334,6 +297,13 @@ namespace HyPlayer.Pages
                 new Dictionary<string, object> { { "id", playList.plid }, { "desc", NewDesc.Text } });
             playList.desc = NewDesc.Text;
             LoadSongListDetail();
+        }
+
+        public void Dispose()
+        {
+            SongContainer.Children.Cast<SingleNCSong>().ToList().ForEach(t => t.Dispose());
+            SongContainer.Children.Clear();
+            ImageRect.ImageSource = null;
         }
     }
 }

@@ -23,7 +23,7 @@ namespace HyPlayer.Pages
     /// <summary>
     ///     可用于自身或导航至 Frame 内部的空白页。
     /// </summary>
-    public sealed partial class MusicCloudPage : Page
+    public sealed partial class MusicCloudPage : Page , IDisposable
     {
         private int page;
         private ObservableCollection<NCSong> Items = new ObservableCollection<NCSong>();
@@ -137,6 +137,11 @@ namespace HyPlayer.Pages
         private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
         {
             DownloadManager.AddDownload(Items.ToList());
+        }
+
+        public void Dispose()
+        {
+            Items = null;
         }
     }
 }

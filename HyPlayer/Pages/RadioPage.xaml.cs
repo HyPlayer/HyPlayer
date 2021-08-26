@@ -14,7 +14,7 @@ using NeteaseCloudMusicApi;
 
 namespace HyPlayer.Pages
 {
-    public sealed partial class RadioPage : Page
+    public sealed partial class RadioPage : Page , IDisposable
     {
         private bool asc;
         private int i;
@@ -134,6 +134,12 @@ namespace HyPlayer.Pages
             page = 0;
             asc = !asc;
             LoadProgram();
+        }
+
+        public void Dispose()
+        {
+            ImageRect.ImageSource = null;
+            SongContainer.Children.Clear();
         }
     }
 }

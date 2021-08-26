@@ -104,6 +104,7 @@ namespace HyPlayer
             });
             Common.ListedSongs.Clear();
             BaseFrame?.Navigate(SourcePageType, paratmer);
+
             GC.Collect();
         }
 
@@ -675,6 +676,8 @@ namespace HyPlayer
         public static string Get(this CookieCollection cookies, string name, string defaultValue)
         {
             return cookies[name]?.Value ?? defaultValue;
+
         }
+
     }
 }

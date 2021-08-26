@@ -244,13 +244,19 @@
                         FontSize="20"
                         Header="颜色模式: (修改将在重启 HyPlayer 后生效)"
                         MaxColumns="3"
-                        SelectionChanged="RadioButtonsTheme_SelectionChanged"
-                        SelectedIndex="{x:Bind hyplayer:Common.Setting.themeRequest, Mode=TwoWay}">
+                        SelectedIndex="{x:Bind hyplayer:Common.Setting.themeRequest, Mode=TwoWay}"
+                        SelectionChanged="RadioButtonsTheme_SelectionChanged">
                         <RadioButton Content="跟随系统" />
                         <RadioButton Content="亮色" />
                         <RadioButton Content="暗色" />
                     </controls:RadioButtons>
-                    <Button x:Name="RestartBtn" Click="RestartBtn_Click" Visibility="Collapsed" Content="立即重启" Style="{StaticResource ButtonRevealStyle}" VerticalAlignment="Center"/>
+                    <Button
+                        x:Name="RestartBtn"
+                        VerticalAlignment="Center"
+                        Click="RestartBtn_Click"
+                        Content="立即重启"
+                        Style="{StaticResource ButtonRevealStyle}"
+                        Visibility="Collapsed" />
 
                     <Grid ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
@@ -268,6 +274,11 @@
                             ValueChanged="NBShadowDepth_OnValueChanged"
                             Value="{x:Bind hyplayer:Common.Setting.expandedCoverShadowDepth, Mode=OneTime}" />
                     </Grid>
+                    <Button
+                        x:Name="BtnXboxReserve"
+                        Click="BtnXboxReserve_Click"
+                        Content="Xbox 进后台模式"
+                        Style="{StaticResource ButtonRevealStyle}" />
                 </StackPanel>
             </ScrollViewer>
         </PivotItem>

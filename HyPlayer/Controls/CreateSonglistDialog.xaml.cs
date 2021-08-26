@@ -22,16 +22,9 @@ namespace HyPlayer.Controls
             (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistCreate,
                 new Dictionary<string, object>
                     {{"name", SonglistTitle.Text}, {"privacy", (bool) PrivateCheckBox.IsChecked ? 10 : 0}});
-            if (isOk)
-            {
-                Windows.UI.Popups.MessageDialog msgdlg = new Windows.UI.Popups.MessageDialog("歌单" + json["playlist"]["name"] + "创建成功", "创建成功");
-                msgdlg.ShowAsync();
-            }
-            else
-            {
-                Windows.UI.Popups.MessageDialog msgdlg = new Windows.UI.Popups.MessageDialog("创建失败");
-                msgdlg.ShowAsync();
-            }
+
+            Common.ShowTeachingTip(isOk ? "创建成功" : "创建失败");
+            Common.PageBase.LoadSongList();
             Common.ncapi.RealIP = realIpBackup; // Restore user setting
         }
 

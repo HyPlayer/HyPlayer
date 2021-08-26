@@ -15,9 +15,8 @@ namespace HyPlayer.Pages
     /// <summary>
     ///     可用于自身或导航至 Frame 内部的空白页。
     /// </summary>
-    public sealed partial class DownloadPage : Page
+    public sealed partial class DownloadPage : Page,IDisposable
     {
-        private Timer timer;
 
         public DownloadPage()
         {
@@ -27,21 +26,16 @@ namespace HyPlayer.Pages
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            if (timer == null)
-            {
-                timer = new Timer(1000);
-                timer.Elapsed += DownloadPage_Elapsed;
-                timer.Start();
-            }
+            HyPlayList.OnTimerTicked += DownloadPage_Elapsed;
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
-            timer = null;
+            HyPlayList.OnTimerTicked -= DownloadPage_Elapsed;
         }
 
-        private void DownloadPage_Elapsed(object sender, ElapsedEventArgs e)
+        private void DownloadPage_Elapsed()
         {
             Common.Invoke(() =>
             {
@@ -54,7 +48,11 @@ namespace HyPlayer.Pages
                         DLList.Children.Add(new SingleDownload(DLList.Children.Count));
                 }
 
-                foreach (SingleDownload dl in DLList.Children) dl.UpdateUI();
+                foreach (var uiElement in DLList.Children)
+                {
+                    var dl = (SingleDownload)uiElement;
+                    dl.UpdateUI();
+                }
             });
         }
 
@@ -71,6 +69,11 @@ namespace HyPlayer.Pages
         private async void OpenDownloadFolder_Click(object sender, RoutedEventArgs e)
         {
             await Launcher.LaunchFolderPathAsync(Common.Setting.downloadDir);
+        }
+
+        public void Dispose()
+        {
+            DLList.Children.Clear();
         }
     }
 }
