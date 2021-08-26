@@ -18,7 +18,7 @@ namespace HyPlayer.Pages
     /// <summary>
     ///     可用于自身或导航至 Frame 内部的空白页。
     /// </summary>
-    public sealed partial class Me : Page
+    public sealed partial class Me : Page , IDisposable
     {
         private string uid = "";
 
@@ -115,6 +115,12 @@ namespace HyPlayer.Pages
             catch
             {
             }
+        }
+
+        public void Dispose()
+        {
+            ImageRect.ImageSource = null;
+            GridContainer.Children.Clear();
         }
     }
 }

@@ -19,7 +19,7 @@ namespace HyPlayer.Pages
     /// <summary>
     ///     可用于自身或导航至 Frame 内部的空白页。
     /// </summary>
-    public sealed partial class Comments : Page
+    public sealed partial class Comments : Page,IDisposable
     {
         private string cursor;
         private int page = 1;
@@ -190,6 +190,12 @@ namespace HyPlayer.Pages
             if ((sender as ScrollViewer).VerticalOffset > y + 25)
                 BackToTop.Visibility = Visibility.Visible;
             else BackToTop.Visibility = Visibility.Collapsed;
+        }
+
+        public void Dispose()
+        {
+            HotCommentList.Children.Clear();
+            CommentList.Children.Clear();
         }
     }
 }

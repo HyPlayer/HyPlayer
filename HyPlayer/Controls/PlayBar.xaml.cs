@@ -263,7 +263,7 @@ namespace HyPlayer.Controls
            {
                try
                {
-                   if (HyPlayList.NowPlayingItem == null) return;
+                   if (HyPlayList.NowPlayingItem?.PlayItem == null) return;
                    TbSingerName.Content = HyPlayList.NowPlayingItem.PlayItem.ArtistString;
                    TbAlbumName.Content = HyPlayList.NowPlayingItem.PlayItem.AlbumString;
                    TbSongName.Text = HyPlayList.NowPlayingItem.PlayItem.Name;

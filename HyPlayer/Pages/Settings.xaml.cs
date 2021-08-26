@@ -19,6 +19,7 @@ using Windows.Security.ExchangeActiveSyncProvisioning;
 using Microsoft.AppCenter.Crashes;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.ApplicationModel.Core;
+using Windows.System.Profile;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -69,6 +70,7 @@ namespace HyPlayer.Pages
             VersionCode.Text += " Debug";
 #endif
             //ToggleButtonDaylight.IsChecked = Application.Current.RequestedTheme == ApplicationTheme.Dark;
+            BtnXboxReserve.Visibility = AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox" ? Visibility.Visible : Visibility.Collapsed;
         }
 
 
@@ -283,6 +285,11 @@ namespace HyPlayer.Pages
         private async void RestartBtn_Click(object sender, RoutedEventArgs e)
         {
             await CoreApplication.RequestRestartAsync("ChangeThemeRestart");
+        }
+
+        private void BtnXboxReserve_Click(object sender, RoutedEventArgs e)
+        {
+            Common.CollectGarbage();
         }
     }
 }

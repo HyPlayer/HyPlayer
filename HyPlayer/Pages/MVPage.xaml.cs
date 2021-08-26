@@ -16,7 +16,7 @@ namespace HyPlayer.Pages
     /// <summary>
     ///     可用于自身或导航至 Frame 内部的空白页。
     /// </summary>
-    public sealed partial class MVPage : Page
+    public sealed partial class MVPage : Page , IDisposable
     {
         private string mvid;
         private string mvquality = "1080";
@@ -147,6 +147,12 @@ namespace HyPlayer.Pages
         {
             mvid = (RelativeList.SelectedItem is NCMlog ? (NCMlog) RelativeList.SelectedItem : default).id;
             LoadThings();
+        }
+
+        public void Dispose()
+        {
+            MediaPlayerElement.Source = null;
+            sources.Clear();
         }
     }
 }

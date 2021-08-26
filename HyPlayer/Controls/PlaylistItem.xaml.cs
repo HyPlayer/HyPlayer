@@ -16,9 +16,9 @@ using HyPlayer.HyPlayControl;
 
 namespace HyPlayer.Controls
 {
-    public sealed partial class PlaylistItem : UserControl
+    public sealed partial class PlaylistItem : UserControl , IDisposable
     {
-        private readonly NCPlayList playList;
+        private NCPlayList playList;
 
         public PlaylistItem(NCPlayList playList)
         {
@@ -67,6 +67,12 @@ namespace HyPlayer.Controls
             await HyPlayList.AppendPlayList(playList.plid);
             HyPlayList.SongAppendDone();
             HyPlayList.SongMoveTo(0);
+        }
+
+        public void Dispose()
+        {
+            playList = null;
+            ImageContainer.Source = null;
         }
     }
 }

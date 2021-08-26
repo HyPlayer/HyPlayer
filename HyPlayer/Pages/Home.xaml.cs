@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
@@ -65,7 +66,7 @@ namespace HyPlayer.Pages
                 CloudMusicApiProviders.Batch,
                 new Dictionary<string, object>
                 {
-                    {"/api/toplist", "{}"}
+                    { "/api/toplist", "{}" }
                     //{ "/weapi/v1/discovery/recommend/resource","{}" }   //这个走不了Batch
                 }
             );
@@ -98,7 +99,6 @@ namespace HyPlayer.Pages
                 foreach (var bditem in ret["/api/toplist"]["list"])
                     RankPlayList.Children.Add(new PlaylistItem(NCPlayList.CreateFromJson(bditem)));
 
-                
 
                 //推荐歌单加载部分 - 优先级稍微靠后下
                 var (ok1, ret1) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendResource);
@@ -110,6 +110,7 @@ namespace HyPlayer.Pages
                 }
             }
         }
+
         public async void LoadRanklist()
         {
             await Task.Run((() =>
@@ -128,6 +129,7 @@ namespace HyPlayer.Pages
                 }));
             }));
         }
+
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
             PersonalFM.InitPersonalFM();
@@ -146,8 +148,8 @@ namespace HyPlayer.Pages
                         CloudMusicApiProviders.PlaymodeIntelligenceList,
                         new Dictionary<string, object>
                         {
-                            {"pid", Common.MySongLists[0].plid},
-                            {"id", jsoon["playlist"]["trackIds"][0]["id"].ToString()}
+                            { "pid", Common.MySongLists[0].plid },
+                            { "id", jsoon["playlist"]["trackIds"][0]["id"].ToString() }
                         });
                     if (isOk)
                     {
@@ -160,7 +162,9 @@ namespace HyPlayer.Pages
 
                         var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
                             new Dictionary<string, object>
-                                {{"id", string.Join(",", Songs.Select(t => t.sid))}, {"br", Common.Setting.audioRate}});
+                            {
+                                { "id", string.Join(",", Songs.Select(t => t.sid)) }, { "br", Common.Setting.audioRate }
+                            });
                         ;
                         if (isok)
                         {

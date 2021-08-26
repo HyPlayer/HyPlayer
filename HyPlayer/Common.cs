@@ -104,6 +104,7 @@ namespace HyPlayer
             });
             Common.ListedSongs.Clear();
             BaseFrame?.Navigate(SourcePageType, paratmer);
+
             GC.Collect();
         }
 

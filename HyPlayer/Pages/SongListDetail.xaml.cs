@@ -24,7 +24,7 @@ namespace HyPlayer.Pages
     /// <summary>
     ///     可用于自身或导航至 Frame 内部的空白页。
     /// </summary>
-    public sealed partial class SongListDetail : Page
+    public sealed partial class SongListDetail : Page , IDisposable
     {
         private string intelsong = "";
         private int page;
@@ -104,7 +104,7 @@ namespace HyPlayer.Pages
                         // 诶呀,没想到还过生了,吼吼
                         TextBlockDesc.Text = "生日快乐~ 今天也要开心哦!";
                         TextBlockDesc.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 0, 0));
-                        TextBlockDesc.FontSize = 25;                        
+                        TextBlockDesc.FontSize = 25;
                     }
                     var idx = 0;
                     foreach (var song in json["data"]["dailySongs"])
@@ -122,7 +122,9 @@ namespace HyPlayer.Pages
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
+            SongContainer.Children.Cast<SingleNCSong>().ToList().ForEach(t => t.Dispose());
             SongContainer.Children.Clear();
+            ImageRect.ImageSource = null;
         }
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -334,6 +336,13 @@ namespace HyPlayer.Pages
                 new Dictionary<string, object> { { "id", playList.plid }, { "desc", NewDesc.Text } });
             playList.desc = NewDesc.Text;
             LoadSongListDetail();
+        }
+
+        public void Dispose()
+        {
+            SongContainer.Children.Cast<SingleNCSong>().ToList().ForEach(t => t.Dispose());
+            SongContainer.Children.Clear();
+            ImageRect.ImageSource = null;
         }
     }
 }

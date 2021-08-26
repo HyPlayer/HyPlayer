@@ -20,11 +20,11 @@ using Windows.System.Profile;
 
 namespace HyPlayer.Controls
 {
-    public sealed partial class SingleNCSong : UserControl
+    public sealed partial class SingleNCSong : UserControl, IDisposable
     {
         private readonly bool CanPlay;
         private bool LoadList;
-        public readonly NCSong ncsong;
+        public NCSong ncsong;
         public readonly string plId;
 
         public SingleNCSong(NCSong song, int order, bool canplay = true, bool loadlist = false,
@@ -198,6 +198,12 @@ namespace HyPlayer.Controls
             _ = await HyPlayList.AppendNCSong(ncsong, HyPlayList.NowPlaying + 1);
             HyPlayList.SongAppendDone();
             //HyPlayList.SongMoveNext();
+        }
+
+        public void Dispose()
+        {
+            ncsong = null;
+            ImageRect.Source = null;
         }
     }
 }

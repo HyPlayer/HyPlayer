@@ -17,7 +17,7 @@ namespace HyPlayer.Pages
     /// <summary>
     ///     可用于自身或导航至 Frame 内部的空白页。
     /// </summary>
-    public sealed partial class Search : Page
+    public sealed partial class Search : Page, IDisposable
     {
         private int page;
         private string Text = "";
@@ -50,11 +50,13 @@ namespace HyPlayer.Pages
                 LoadResult();
             }
         }
+
         protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
         {
             SearchResultContainer.Children.Clear();
             GC.Collect();
         }
+
         private async void LoadResult()
         {
             if (string.IsNullOrEmpty(Text)) return;
@@ -81,12 +83,12 @@ namespace HyPlayer.Pages
             var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Cloudsearch,
                 new Dictionary<string, object>
                 {
-                    {"keywords", Text},
-                    {"type", ((NavigationViewItem) NavigationViewSelector.SelectedItem).Tag.ToString()},
-                    {"offset", page * 30}
+                    { "keywords", Text },
+                    { "type", ((NavigationViewItem)NavigationViewSelector.SelectedItem).Tag.ToString() },
+                    { "offset", page * 30 }
                 });
             if (isOk)
-                switch (((NavigationViewItem) NavigationViewSelector.SelectedItem).Tag.ToString())
+                switch (((NavigationViewItem)NavigationViewSelector.SelectedItem).Tag.ToString())
                 {
                     case "1":
                         LoadSongResult(json);
@@ -180,6 +182,7 @@ namespace HyPlayer.Pages
                     SearchResultContainer.Children.Add(new SingleNCSong(ncSong, idx++,
                         song["privilege"]["st"].ToString() == "0"));
                 }
+
                 if (int.Parse(json["result"]["songCount"].ToString()) >= (page + 1) * 30)
                     NextPage.Visibility = Visibility.Visible;
                 else
@@ -191,12 +194,11 @@ namespace HyPlayer.Pages
             }
             catch
             {
-                Windows.UI.Popups.MessageDialog msgdlg = new Windows.UI.Popups.MessageDialog(json["msg"].ToString(),"出现错误");
+                Windows.UI.Popups.MessageDialog msgdlg =
+                    new Windows.UI.Popups.MessageDialog(json["msg"].ToString(), "出现错误");
                 msgdlg.ShowAsync();
             }
-
         }
-
 
 
         private void PrevPage_OnClick(object sender, RoutedEventArgs e)
@@ -216,6 +218,11 @@ namespace HyPlayer.Pages
         {
             page = 0;
             LoadResult();
+        }
+
+        public void Dispose()
+        {
+            SearchResultContainer.Children.Clear();
         }
     }
 }
