@@ -17,7 +17,7 @@ using Windows.UI.Xaml;
 
 namespace HyPlayer.Controls
 {
-    public sealed partial class PlaylistItem : UserControl , IDisposable
+    public sealed partial class PlaylistItem : UserControl, IDisposable
     {
         private NCPlayList playList;
 
@@ -79,21 +79,41 @@ namespace HyPlayer.Controls
 
         private async void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)
         {
-            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistPrivacy, new Dictionary<string, object>()
+            try
             {
-                { "id", playList.plid }
-            });
-            Common.ShowTeachingTip(isOk ? "成功公开歌单" : "公开歌单失败");
+                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistPrivacy,
+                    new Dictionary<string, object>()
+                    {
+                        { "id", playList.plid }
+                    });
+            }
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip("公开歌单失败", ex.Message);
+                return;
+            }
+
+            Common.ShowTeachingTip("成功公开歌单");
             Common.PageBase.LoadSongList();
         }
 
         private async void ItemDelPlayList_Click(object sender, RoutedEventArgs e)
         {
-            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDelete, new Dictionary<string, object>()
+            try
             {
-                {"ids",playList.plid }
-            });
-            Common.ShowTeachingTip(isOk ? "成功删除" : "删除失败");
+                await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDelete,
+                    new Dictionary<string, object>()
+                    {
+                        { "ids", playList.plid }
+                    });
+                Common.ShowTeachingTip("成功删除");
+            }
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip("发生错误", ex.Message);
+            }
+
+            
             Common.PageBase.LoadSongList();
             Common.NavigateRefresh();
         }

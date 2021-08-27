@@ -14,7 +14,7 @@ using NeteaseCloudMusicApi;
 
 namespace HyPlayer.Pages
 {
-    public sealed partial class RadioPage : Page , IDisposable
+    public sealed partial class RadioPage : Page, IDisposable
     {
         private bool asc;
         private int i;
@@ -28,15 +28,15 @@ namespace HyPlayer.Pages
 
         private async void LoadProgram()
         {
-            var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.DjProgram,
-                new Dictionary<string, object>
-                {
-                    {"rid", Radio.id},
-                    {"offset", page * 30},
-                    {"asc", asc}
-                });
-            if (isok)
+            try
             {
+                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.DjProgram,
+                    new Dictionary<string, object>
+                    {
+                        { "rid", Radio.id },
+                        { "offset", page * 30 },
+                        { "asc", asc }
+                    });
                 NextPage.Visibility = json["more"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
                 foreach (var jToken in json["programs"])
                 {
@@ -44,6 +44,10 @@ namespace HyPlayer.Pages
                     Common.ListedSongs.Add(song);
                     SongContainer.Children.Add(new SingleNCSong(song, i++, true, true));
                 }
+            }
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip("发生错误", ex.Message);
             }
         }
 
@@ -76,14 +80,14 @@ namespace HyPlayer.Pages
                 Common.Invoke(async () =>
                 {
                     HyPlayList.RemoveAllSong();
-                    var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                        new Dictionary<string, object>
-                        {
-                            {"id", string.Join(',', Common.ListedSongs.Select(t => t.sid))},
-                            {"br", Common.Setting.audioRate}
-                        });
-                    if (isok)
+                    try
                     {
+                        var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
+                            new Dictionary<string, object>
+                            {
+                                { "id", string.Join(',', Common.ListedSongs.Select(t => t.sid)) },
+                                { "br", Common.Setting.audioRate }
+                            });
                         var arr = json["data"].ToList();
                         for (var i = 0; i < Common.ListedSongs.Count; i++)
                         {
@@ -114,11 +118,14 @@ namespace HyPlayer.Pages
                             };
                             HyPlayList.AppendNCPlayItem(ncp);
                         }
-
-                        HyPlayList.SongAppendDone();
-
-                        HyPlayList.SongMoveTo(0);
                     }
+                    catch (Exception ex)
+                    {
+                        Common.ShowTeachingTip("发生错误", ex.Message);
+                    }
+
+                    HyPlayList.SongAppendDone();
+                    HyPlayList.SongMoveTo(0);
                 });
             });
         }

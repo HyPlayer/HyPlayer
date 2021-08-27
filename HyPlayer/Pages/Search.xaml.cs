@@ -80,14 +80,16 @@ namespace HyPlayer.Pages
             }
 
             SearchResultContainer.Children.Clear();
-            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Cloudsearch,
-                new Dictionary<string, object>
-                {
-                    { "keywords", Text },
-                    { "type", ((NavigationViewItem)NavigationViewSelector.SelectedItem).Tag.ToString() },
-                    { "offset", page * 30 }
-                });
-            if (isOk)
+            try
+            {
+                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Cloudsearch,
+                    new Dictionary<string, object>
+                    {
+                        { "keywords", Text },
+                        { "type", ((NavigationViewItem)NavigationViewSelector.SelectedItem).Tag.ToString() },
+                        { "offset", page * 30 }
+                    });
+
                 switch (((NavigationViewItem)NavigationViewSelector.SelectedItem).Tag.ToString())
                 {
                     case "1":
@@ -106,6 +108,11 @@ namespace HyPlayer.Pages
                         LoadRadioResult(json);
                         break;
                 }
+            }
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip("发生错误", ex.Message);
+            }
         }
 
         private void LoadRadioResult(JObject json)

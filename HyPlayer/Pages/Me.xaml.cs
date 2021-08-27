@@ -33,6 +33,7 @@ namespace HyPlayer.Pages
             GridContainerMy.Children.Clear();
             GridContainerSub.Children.Clear();
         }
+
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
@@ -54,10 +55,12 @@ namespace HyPlayer.Pages
         {
             try
             {
-                var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
-                    new Dictionary<string, object> { ["uid"] = uid });
+                try
+                {
+                    var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
+                        new Dictionary<string, object> { ["uid"] = uid });
 
-                if (isok)
+
                     foreach (var PlaylistItemJson in json["playlist"].ToArray())
                     {
                         var ncp = NCPlayList.CreateFromJson(PlaylistItemJson);
@@ -66,6 +69,11 @@ namespace HyPlayer.Pages
                         else
                             GridContainerMy.Children.Add(new PlaylistItem(ncp));
                     }
+                }
+                catch (Exception ex)
+                {
+                    Common.ShowTeachingTip("发生错误", ex.Message);
+                }
             }
             catch (Exception ex)
             {
@@ -79,13 +87,18 @@ namespace HyPlayer.Pages
             {
                 Common.Invoke(async () =>
                 {
-                    var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserDetail,
-                        new Dictionary<string, object> { ["uid"] = uid });
-                    if (isok)
+                    try
                     {
+                        var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserDetail,
+                            new Dictionary<string, object> { ["uid"] = uid });
+
                         TextBoxUserName.Text = json["profile"]["nickname"].ToString();
                         TextBoxSignature.Text = json["profile"]["signature"].ToString();
                         ImageRect.ImageSource = new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
+                    }
+                    catch (Exception ex)
+                    {
+                        Common.ShowTeachingTip("发生错误", ex.Message);
                     }
                 });
             });

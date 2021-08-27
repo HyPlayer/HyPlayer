@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Windows.UI.Xaml.Controls;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
@@ -14,16 +15,25 @@ namespace HyPlayer.Controls
             InitializeComponent();
         }
 
-        private async void ContentDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
+        private async void ContentDialog_PrimaryButtonClick(ContentDialog sender,
+            ContentDialogButtonClickEventArgs args)
         {
             // This request would return with a 250 error without RealIP set
             string realIpBackup = Common.ncapi.RealIP;
             Common.ncapi.RealIP = "118.88.88.88";
-            (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistCreate,
-                new Dictionary<string, object>
-                    {{"name", SonglistTitle.Text}, {"privacy", (bool) PrivateCheckBox.IsChecked ? 10 : 0}});
+            try
+            {
+                await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistCreate,
+                    new Dictionary<string, object>
+                        { { "name", SonglistTitle.Text }, { "privacy", (bool)PrivateCheckBox.IsChecked ? 10 : 0 } });
+            }
+            catch (Exception e)
+            {
+                Common.ShowTeachingTip("创建失败", e.Message);
+                return;
+            }
 
-            Common.ShowTeachingTip(isOk ? "创建成功" : "创建失败");
+            Common.ShowTeachingTip("创建成功");
             Common.PageBase.LoadSongList();
             Common.ncapi.RealIP = realIpBackup; // Restore user setting
         }

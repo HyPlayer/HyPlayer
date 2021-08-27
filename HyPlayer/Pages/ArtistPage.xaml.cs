@@ -32,10 +32,10 @@ namespace HyPlayer.Pages
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            var (isOk, res) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistDetail,
-                new Dictionary<string, object> { { "id", (string)e.Parameter } });
-            if (isOk)
+            try
             {
+                var res = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistDetail,
+                    new Dictionary<string, object> { { "id", (string)e.Parameter } });
                 artist = NCArtist.CreateFromJson(res["data"]["artist"]);
                 if (res["data"]["artist"]["cover"].ToString().StartsWith("http"))
                     ImageRect.ImageSource =
@@ -55,19 +55,24 @@ namespace HyPlayer.Pages
                 LoadSongs();
                 LoadAlbum();
             }
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip("发生错误", ex.Message);
+            }
         }
 
         private async void LoadHotSongs()
         {
-            var (isok, j1) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistTopSong,
-                new Dictionary<string, object> { { "id", artist.id } });
-            if (isok)
+            try
             {
+                var j1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistTopSong,
+                    new Dictionary<string, object> { { "id", artist.id } });
+
                 songs.Clear();
                 var idx = 0;
-                var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
+                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
                     new Dictionary<string, object>
-                    { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) });
+                        { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) }, false);
                 foreach (var jToken in json["songs"])
                 {
                     var ncSong = NCSong.CreateFromJson(jToken);
@@ -79,39 +84,56 @@ namespace HyPlayer.Pages
                     HotSongContainer.Children.Add(new SingleNCSong(ncSong, idx++, canplay));
                 }
             }
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip("发生错误", ex.Message);
+            }
         }
+
         private async void LoadSongs()
         {
-            var (isok, j1) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistSongs,
-                new Dictionary<string, object> { { "id", artist.id }, { "limit", 50 }, { "offset", page * 50 } });
-            if (isok)
+            try
             {
+                var j1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistSongs,
+                    new Dictionary<string, object> { { "id", artist.id }, { "limit", 50 }, { "offset", page * 50 } });
+
                 AllSongContainer.Children.Clear();
                 songs.Clear();
                 var idx = 0;
-                var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
-                    new Dictionary<string, object>
-                    { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) });
-                foreach (var jToken in json["songs"])
+                try
                 {
-                    var ncSong = NCSong.CreateFromJson(jToken);
-                    var canplay =
-                        json["privileges"].ToList().Find(x => x["id"].ToString() == jToken["id"].ToString())[
-                            "st"].ToString() == "0";
-                    if (canplay) songs.Add(ncSong);
+                    var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
+                        new Dictionary<string, object>
+                            { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) });
+                    foreach (var jToken in json["songs"])
+                    {
+                        var ncSong = NCSong.CreateFromJson(jToken);
+                        var canplay =
+                            json["privileges"].ToList().Find(x => x["id"].ToString() == jToken["id"].ToString())[
+                                "st"].ToString() == "0";
+                        if (canplay) songs.Add(ncSong);
 
-                    AllSongContainer.Children.Add(new SingleNCSong(ncSong, idx++, canplay));
+                        AllSongContainer.Children.Add(new SingleNCSong(ncSong, idx++, canplay));
+                    }
+
+                    if (int.Parse(j1["total"].ToString()) >= (page + 1) * 50)
+                        NextPage.Visibility = Visibility.Visible;
+                    else
+                        NextPage.Visibility = Visibility.Collapsed;
+                    if (page > 0)
+                        PrevPage.Visibility = Visibility.Visible;
+                    else
+                        PrevPage.Visibility = Visibility.Collapsed;
                 }
-
+                catch (Exception ex)
+                {
+                    Common.ShowTeachingTip("发生错误", ex.Message);
+                }
             }
-            if (int.Parse(j1["total"].ToString()) >= (page + 1) * 50)
-                NextPage.Visibility = Visibility.Visible;
-            else
-                NextPage.Visibility = Visibility.Collapsed;
-            if (page > 0)
-                PrevPage.Visibility = Visibility.Visible;
-            else
-                PrevPage.Visibility = Visibility.Collapsed;
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip("发生错误", ex.Message);
+            }
         }
 
         private void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
@@ -121,11 +143,14 @@ namespace HyPlayer.Pages
                 Common.Invoke(async () =>
                 {
                     HyPlayList.RemoveAllSong();
-                    var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                        new Dictionary<string, object>
-                            {{"id", string.Join(',', songs.Select(t => t.sid))}, {"br", Common.Setting.audioRate}});
-                    if (isok)
+                    try
                     {
+                        var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
+                            new Dictionary<string, object>
+                            {
+                                { "id", string.Join(',', songs.Select(t => t.sid)) }, { "br", Common.Setting.audioRate }
+                            });
+
                         var arr = json["data"].ToList();
                         for (var i = 0; i < songs.Count; i++)
                         {
@@ -160,6 +185,10 @@ namespace HyPlayer.Pages
 
                         HyPlayList.SongMoveTo(0);
                     }
+                    catch (Exception ex)
+                    {
+                        Common.ShowTeachingTip("发生错误", ex.Message);
+                    }
                 });
             });
         }
@@ -175,10 +204,11 @@ namespace HyPlayer.Pages
 
         private async void LoadAlbum()
         {
-            var (isok, j1) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistAlbum,
-                new Dictionary<string, object> { { "id", artist.id }, { "limit", 50 }, { "offset", page * 50 } });
-            if(isok)
+            try
             {
+                var j1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistAlbum,
+                    new Dictionary<string, object> { { "id", artist.id }, { "limit", 50 }, { "offset", page * 50 } });
+
                 AlbumContainer.Children.Clear();
                 foreach (var albumjson in j1["hotAlbums"].ToArray())
                     AlbumContainer.Children.Add(new SingleAlbum(NCAlbum.CreateFromJson(albumjson),
@@ -191,6 +221,10 @@ namespace HyPlayer.Pages
                     PrevPage.Visibility = Visibility.Visible;
                 else
                     PrevPage.Visibility = Visibility.Collapsed;
+            }
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip("发生错误", ex.Message);
             }
         }
 

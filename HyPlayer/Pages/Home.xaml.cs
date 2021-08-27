@@ -62,16 +62,17 @@ namespace HyPlayer.Pages
             LoginedContent.Visibility = Visibility.Visible;
             TbHelloUserName.Text = Common.LoginedUser.name;
             //我们直接Batch吧
-            var (isok, ret) = await Common.ncapi.RequestAsync(
-                CloudMusicApiProviders.Batch,
-                new Dictionary<string, object>
-                {
-                    { "/api/toplist", "{}" }
-                    //{ "/weapi/v1/discovery/recommend/resource","{}" }   //这个走不了Batch
-                }
-            );
-            if (isok)
+            try
             {
+                var ret = await Common.ncapi.RequestAsync(
+                    CloudMusicApiProviders.Batch,
+                    new Dictionary<string, object>
+                    {
+                        { "/api/toplist", "{}" }
+                        //{ "/weapi/v1/discovery/recommend/resource","{}" }   //这个走不了Batch
+                    }
+                );
+
                 //每日推荐加载部分 - 日推不加载
                 /*
                 var rcmdSongsJson = ret["/api/v3/discovery/recommend/songs"]["data"]["dailySongs"].ToArray();
@@ -101,13 +102,22 @@ namespace HyPlayer.Pages
 
 
                 //推荐歌单加载部分 - 优先级稍微靠后下
-                var (ok1, ret1) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendResource);
-                if (ok1)
+                try
                 {
+                    var ret1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendResource);
+
                     RecommendSongListContainer.Children.Clear();
                     foreach (var item in ret1["recommend"])
                         RecommendSongListContainer.Children.Add(new PlaylistItem(NCPlayList.CreateFromJson(item)));
                 }
+                catch (Exception ex)
+                {
+                    Common.ShowTeachingTip("发生错误", ex.Message);
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip("发生错误", ex.Message);
             }
         }
 
@@ -117,14 +127,19 @@ namespace HyPlayer.Pages
             {
                 Common.Invoke((async () =>
                 {
-                    (bool isOk, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Toplist);
-                    if (isOk)
+                    try
                     {
+                        JObject json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Toplist);
+
                         foreach (JToken PlaylistItemJson in json["list"].ToArray())
                         {
                             NCPlayList ncp = NCPlayList.CreateFromJson(PlaylistItemJson);
                             RankList.Children.Add(new PlaylistItem(ncp));
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        Common.ShowTeachingTip("发生错误", ex.Message);
                     }
                 }));
             }));
@@ -142,17 +157,18 @@ namespace HyPlayer.Pages
                 Common.Invoke(async () =>
                 {
                     HyPlayList.RemoveAllSong();
-                    var (isojbk, jsoon) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
-                        new Dictionary<string, object> { { "id", Common.MySongLists[0].plid } });
-                    var (isOk, jsona) = await Common.ncapi.RequestAsync(
-                        CloudMusicApiProviders.PlaymodeIntelligenceList,
-                        new Dictionary<string, object>
-                        {
-                            { "pid", Common.MySongLists[0].plid },
-                            { "id", jsoon["playlist"]["trackIds"][0]["id"].ToString() }
-                        });
-                    if (isOk)
+                    try
                     {
+                        var jsoon = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
+                            new Dictionary<string, object> { { "id", Common.MySongLists[0].plid } });
+                        var jsona = await Common.ncapi.RequestAsync(
+                            CloudMusicApiProviders.PlaymodeIntelligenceList,
+                            new Dictionary<string, object>
+                            {
+                                { "pid", Common.MySongLists[0].plid },
+                                { "id", jsoon["playlist"]["trackIds"][0]["id"].ToString() }
+                            });
+
                         var Songs = new List<NCSong>();
                         foreach (var token in jsona["data"])
                         {
@@ -160,14 +176,14 @@ namespace HyPlayer.Pages
                             Songs.Add(ncSong);
                         }
 
-                        var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                            new Dictionary<string, object>
-                            {
-                                { "id", string.Join(",", Songs.Select(t => t.sid)) }, { "br", Common.Setting.audioRate }
-                            });
-                        ;
-                        if (isok)
+                        try
                         {
+                            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
+                                new Dictionary<string, object>
+                                {
+                                    { "id", string.Join(",", Songs.Select(t => t.sid)) },
+                                    { "br", Common.Setting.audioRate }
+                                });
                             var arr = json["data"].ToList();
                             for (var i = 0; i < Songs.Count; i++)
                             {
@@ -203,7 +219,15 @@ namespace HyPlayer.Pages
 
                             HyPlayList.SongMoveTo(0);
                         }
+                        catch (Exception ex)
+                        {
+                            Common.ShowTeachingTip("发生错误", ex.Message);
+                        }
+                    }                        catch (Exception ex)
+                    {
+                        Common.ShowTeachingTip("发生错误", ex.Message);
                     }
+
                 });
             });
         }

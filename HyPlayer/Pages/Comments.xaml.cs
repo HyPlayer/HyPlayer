@@ -19,7 +19,7 @@ namespace HyPlayer.Pages
     /// <summary>
     ///     可用于自身或导航至 Frame 内部的空白页。
     /// </summary>
-    public sealed partial class Comments : Page,IDisposable
+    public sealed partial class Comments : Page, IDisposable
     {
         private string cursor;
         private int page = 1;
@@ -77,23 +77,25 @@ namespace HyPlayer.Pages
                 addingPanel = CommentList;
             // type 1:按推荐排序,2:按热度排序,3:按时间排序
             if (string.IsNullOrEmpty(resourceid)) return;
-            (bool isOk, JObject json) res;
+            JObject res;
 
-            res = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentNew,
-                new Dictionary<string, object>
-                {
-                    {"cursor", cursor}, {"id", resourceid}, {"type", resourcetype}, {"pageNo", page}, {"pageSize", 20},
-                    {"sortType", type}
-                });
-            if (res.isOk)
+            try
             {
+                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentNew,
+                    new Dictionary<string, object>
+                    {
+                        { "cursor", cursor }, { "id", resourceid }, { "type", resourcetype }, { "pageNo", page },
+                        { "pageSize", 20 },
+                        { "sortType", type }
+                    });
+
                 addingPanel.Children.Clear();
-                foreach (var comment in res.json["data"]["comments"].ToArray())
+                foreach (var comment in json["data"]["comments"].ToArray())
                     addingPanel.Children.Add(
                         new SingleComment(Comment.CreateFromJson(comment, resourceid, resourcetype)));
                 if (type == 3)
-                    cursor = res.json["data"]["cursor"].ToString();
-                if (res.json["data"]["hasMore"].ToString() == "True")
+                    cursor = json["data"]["cursor"].ToString();
+                if (json["data"]["hasMore"].ToString() == "True")
                     NextPage.IsEnabled = true;
                 else
                     NextPage.IsEnabled = false;
@@ -104,7 +106,11 @@ namespace HyPlayer.Pages
                     PrevPage.IsEnabled = false;
 
                 PageIndicator.Text =
-                    $"第 {page} 页 / 共 {Math.Ceiling((decimal)res.json["data"]["totalCount"].ToObject<long>() / 20).ToString()} 页";
+                    $"第 {page} 页 / 共 {Math.Ceiling((decimal)json["data"]["totalCount"].ToObject<long>() / 20).ToString()} 页";
+            }
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip("发生错误", ex.Message);
             }
         }
 
@@ -131,7 +137,20 @@ namespace HyPlayer.Pages
                 {
                     await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment,
                         new Dictionary<string, object>
-                            {{"id", resourceid}, {"type", resourcetype}, {"t", "1"}, {"content", CommentEdit.Text}});
+                        {
+                            {
+                                "id", resourceid
+                            },
+                            {
+                                "type", resourcetype
+                            },
+                            {
+                                "t", "1"
+                            },
+                            {
+                                "content", CommentEdit.Text
+                            }
+                        });
                     CommentEdit.Text = string.Empty;
                     await Task.Delay(1000);
                     LoadComments(1);
@@ -142,6 +161,7 @@ namespace HyPlayer.Pages
                     await dlg.ShowAsync();
                 }
             }
+
             else if (string.IsNullOrWhiteSpace(CommentEdit.Text))
             {
                 var dlg = new MessageDialog("评论不能为空");
@@ -168,13 +188,13 @@ namespace HyPlayer.Pages
                 ScrollTop();
             }
         }
+
         private void ScrollTop()
         {
             Windows.UI.Xaml.Media.GeneralTransform transform = AllCmtsTB.TransformToVisual(MainScroll);
             Point point = transform.TransformPoint(new Point(0, 0));
             double y = point.Y + MainScroll.VerticalOffset;
             MainScroll.ChangeView(null, y, null, false);
-
         }
 
         private void BackToTop_Click(object sender, RoutedEventArgs e)
