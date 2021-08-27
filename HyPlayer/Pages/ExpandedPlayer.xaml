@@ -2,12 +2,14 @@
     x:Class="HyPlayer.Pages.ExpandedPlayer"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ani="using:Microsoft.Toolkit.Uwp.UI.Animations"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:ctl="using:HyPlayer.HyPlayControl"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hyplayer="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:ui="using:Microsoft.Toolkit.Uwp.UI"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
     <!--  Grid Beam~  -->
@@ -132,15 +134,30 @@
                         Margin="20"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
+                        ui:VisualExtensions.NormalizedCenterPoint="0.5"
                         BlurRadius="20"
                         IsMasked="True"
                         OffsetX="0"
                         OffsetY="4"
                         ShadowOpacity="0.4"
                         Color="Black">
+                        <ani:Explicit.Animations>
+                            <ani:AnimationSet x:Name="RotateAnimationSet">
+                                <ani:RotationInDegreesAnimation
+                                    x:Name="AlbumRotateAnimation"
+                                    EasingMode="EaseOut"
+                                    EasingType="Linear"
+                                    Repeat="Forever"
+                                    From="0"
+                                    To="360"
+                                    Duration="0:0:20" />
+                            </ani:AnimationSet>
+                        </ani:Explicit.Animations>
                         <controls:ImageEx
                             x:Name="ImageAlbum"
                             x:FieldModifier="public"
+                            BorderBrush="Black"
+                            BorderThickness="80"
                             CornerRadius="12"
                             IsCacheEnabled="False"
                             PlaceholderStretch="Uniform"

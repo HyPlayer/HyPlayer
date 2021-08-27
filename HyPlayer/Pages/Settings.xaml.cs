@@ -70,7 +70,7 @@ namespace HyPlayer.Pages
             VersionCode.Text += " Debug";
 #endif
             //ToggleButtonDaylight.IsChecked = Application.Current.RequestedTheme == ApplicationTheme.Dark;
-            BtnXboxReserve.Visibility = AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox" ? Visibility.Visible : Visibility.Collapsed;
+            BtnXboxReserve.Visibility = true ? Visibility.Visible : Visibility.Collapsed;
         }
 
 

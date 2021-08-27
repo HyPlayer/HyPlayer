@@ -123,6 +123,7 @@ namespace HyPlayer
             PageExpandedPlayer?.Dispose();
             PageExpandedPlayer = null;
             PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));
+            _ = Microsoft.Toolkit.Uwp.UI.ImageCache.Instance.ClearAsync();
             KawazuConv = null;
             ListedSongs.Clear();
         }
@@ -209,6 +210,24 @@ namespace HyPlayer
         {
             get { return GetSettings("lyricColor", 0); }
             set { ApplicationData.Current.LocalSettings.Values["lyricColor"] = value; }
+        }
+
+        public bool albumRotate
+        {
+            get => GetSettings("albumRotate", false);
+            set => ApplicationData.Current.LocalSettings.Values["albumRotate"] = value;
+        }
+
+        public bool albumRound
+        {
+            get => GetSettings("albumRound", false);
+            set => ApplicationData.Current.LocalSettings.Values["albumRound"] = value;
+        }
+
+        public int albumBorderLength
+        {
+            get => GetSettings("albumBorderLength", 0);
+            set => ApplicationData.Current.LocalSettings.Values["albumBorderLength"] = value;
         }
 
         public int romajiSize

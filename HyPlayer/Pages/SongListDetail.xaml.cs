@@ -57,6 +57,7 @@ namespace HyPlayer.Pages
         {
             if (playList.plid != "-666")
             {
+                
                 var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
                     new Dictionary<string, object> { { "id", playList.plid } });
                 if (isOk)

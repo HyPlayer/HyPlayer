@@ -134,6 +134,18 @@
                         ToolTipService.ToolTip="{x:Bind FadeTimePause.Value}"
                         Visibility="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=OneWay}"
                         Value="{x:Bind hyplayer:Common.Setting.fadeInOutTimePause, Mode=TwoWay}" />
+                    <Border Height="15" />
+                    <CheckBox Content="圆形唱片" IsChecked="{x:Bind hyplayer:Common.Setting.albumRound, Mode=TwoWay}" />
+                    <CheckBox Content="唱片旋转" IsChecked="{x:Bind hyplayer:Common.Setting.albumRotate, Mode=TwoWay}" />
+                    <Slider
+                        x:Name="SliderAlbumBorderLength"
+                        Width="300"
+                        HorizontalAlignment="Left"
+                        Header="唱片边框厚度 (0 为无边框)"
+                        Maximum="280"
+                        Minimum="0"
+                        ToolTipService.ToolTip="{x:Bind SliderAlbumBorderLength.Value}"
+                        Value="{x:Bind hyplayer:Common.Setting.albumBorderLength, Mode=TwoWay}" />
                 </StackPanel>
             </ScrollViewer>
         </PivotItem>
