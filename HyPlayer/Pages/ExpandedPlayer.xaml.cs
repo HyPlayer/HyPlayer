@@ -844,15 +844,15 @@ namespace HyPlayer.Pages
             return System.Drawing.Color.FromArgb(0, r, g, b);
         }
 
-        private void LyricOffsetMin_Click(object sender, RoutedEventArgs e)
-        {
-            HyPlayList.LyricOffset = TimeSpan.FromMilliseconds(++offset * 100);
-            TbOffset.Text = (HyPlayList.LyricOffset > TimeSpan.Zero ? "-" : "") + HyPlayList.LyricOffset.ToString("ss\\.ff");
-        }
-
         private void LyricOffsetAdd_Click(object sender, RoutedEventArgs e)
         {
             HyPlayList.LyricOffset = TimeSpan.FromMilliseconds(--offset * 100);
+            TbOffset.Text = (HyPlayList.LyricOffset > TimeSpan.Zero ? "-" : "") + HyPlayList.LyricOffset.ToString("ss\\.ff");
+        }
+
+        private void LyricOffsetMin_Click(object sender, RoutedEventArgs e)
+        {
+            HyPlayList.LyricOffset = TimeSpan.FromMilliseconds(++offset * 100);
             TbOffset.Text = (HyPlayList.LyricOffset > TimeSpan.Zero ? "-" : "") + HyPlayList.LyricOffset.ToString("ss\\.ff");
 
         }

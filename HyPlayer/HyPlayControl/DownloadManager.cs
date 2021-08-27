@@ -235,7 +235,8 @@ namespace HyPlayer.HyPlayControl
 
         public static bool CheckDownloadAbilityAndToast()
         {
-            if (ApplicationData.Current.RoamingSettings.Values.ContainsKey("CanDownload")) return true;
+            return true;
+            //if (ApplicationData.Current.RoamingSettings.Values.ContainsKey("CanDownload")) return true;
             var downloadToastContent = new ToastContent
             {
                 Visual = new ToastVisual
