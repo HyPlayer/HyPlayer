@@ -68,10 +68,10 @@
                         x:Name="CheckBoxAlignment"
                         Content="是否左对齐"
                         IsChecked="{x:Bind hyplayer:Common.Setting.lyricAlignment, Mode=TwoWay}" />
-                    <!--<CheckBox
+                    <CheckBox
                         x:Name="CheckBoxLyricShadow"
                         Content="是否产生阴影"
-                        IsChecked="{x:Bind hyplayer:Common.Setting.lyricDropshadow, Mode=TwoWay}" />-->
+                        IsChecked="{x:Bind hyplayer:Common.Setting.lyricDropshadow, Mode=TwoWay}" />
                     <controls:RadioButtons
                         FontSize="20"
                         Header="歌词颜色"
@@ -117,7 +117,7 @@
                         x:Name="FadeTime"
                         Width="300"
                         HorizontalAlignment="Left"
-                        Header="切歌渐入渐出时间 单位: 秒"
+                        Header="切歌渐入渐出时间 单位: s"
                         Maximum="6"
                         Minimum="0"
                         ToolTipService.ToolTip="{x:Bind FadeTime.Value}"

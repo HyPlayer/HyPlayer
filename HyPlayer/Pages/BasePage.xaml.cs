@@ -695,7 +695,7 @@ namespace HyPlayer.Pages
             {
                 {"ids",nowplid }
             });
-            Common.ShowTeachingTip(isOk ? "成功删除" : "删除失败");            
+            Common.ShowTeachingTip(isOk ? "成功删除" : "删除失败");
             LoadSongList();
         }
     }

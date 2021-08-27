@@ -75,6 +75,7 @@
             BackRequested="OnNavigateBack"
             Canvas.ZIndex="0"
             DisplayModeChanged="NavMain_DisplayModeChanged"
+            CompactModeThresholdWidth="0"
             FlowDirection="LeftToRight"
             FontFamily="Microsoft Sans Serif"
             IsBackButtonVisible="Visible"
