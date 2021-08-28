@@ -87,20 +87,11 @@
             PaneDisplayMode="Auto"
             PaneTitle="HyPlayer"
             SelectionChanged="NavMain_OnSelectionChanged">
-            <muxc:NavigationView.AutoSuggestBox>
-                <AutoSuggestBox
-                    x:Name="SearchKeywordBox"
-                    AutomationProperties.Name="Search"
-                    GotFocus="AutoSuggestBox_GotFocus"
-                    LostFocus="AutoSuggestBox_LostFocus"
-                    PlaceholderText="搜索歌曲......"
-                    QueryIcon="Find"
-                    QuerySubmitted="AutoSuggestBox_QuerySubmitted"
-                    SuggestionChosen="AutoSuggestBox_SuggestionChosen"
-                    Tag="PageSearch"
-                    TextChanged="AutoSuggestBox_TextChanged" />
-            </muxc:NavigationView.AutoSuggestBox>
             <muxc:NavigationView.MenuItems>
+                <muxc:NavigationViewItem 
+                    Content="搜索"
+                    Tag="PageSearch"
+                    Icon="Find"/>
                 <muxc:NavigationViewItem
                     x:Name="ItemMain"
                     x:FieldModifier="public"

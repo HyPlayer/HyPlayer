@@ -9,6 +9,17 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <ScrollViewer.Content>
             <StackPanel Orientation="Vertical">
+                <AutoSuggestBox
+                    x:Name="SearchKeywordBox"
+                    AutomationProperties.Name="Search"
+                    GotFocus="SearchKeywordBox_GotFocus"
+                    LostFocus="SearchKeywordBox_LostFocus"
+                    PlaceholderText="搜索歌曲......"
+                    QueryIcon="Find"
+                    QuerySubmitted="SearchKeywordBox_QuerySubmitted"
+                    SuggestionChosen="SearchKeywordBox_SuggestionChosen"
+                    Tag="PageSearch"
+                    TextChanged="SearchKeywordBox_TextChanged"/>
                 <StackPanel
                     Margin="15"
                     Orientation="Horizontal"

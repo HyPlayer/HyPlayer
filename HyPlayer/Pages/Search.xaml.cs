@@ -80,14 +80,16 @@ namespace HyPlayer.Pages
             }
 
             SearchResultContainer.Children.Clear();
-            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Cloudsearch,
-                new Dictionary<string, object>
-                {
-                    { "keywords", Text },
-                    { "type", ((NavigationViewItem)NavigationViewSelector.SelectedItem).Tag.ToString() },
-                    { "offset", page * 30 }
-                });
-            if (isOk)
+            try
+            {
+                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Cloudsearch,
+                    new Dictionary<string, object>
+                    {
+                        { "keywords", Text },
+                        { "type", ((NavigationViewItem)NavigationViewSelector.SelectedItem).Tag.ToString() },
+                        { "offset", page * 30 }
+                    });
+
                 switch (((NavigationViewItem)NavigationViewSelector.SelectedItem).Tag.ToString())
                 {
                     case "1":
@@ -106,6 +108,11 @@ namespace HyPlayer.Pages
                         LoadRadioResult(json);
                         break;
                 }
+            }
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip("发生错误", ex.Message);
+            }
         }
 
         private void LoadRadioResult(JObject json)
@@ -194,9 +201,7 @@ namespace HyPlayer.Pages
             }
             catch
             {
-                Windows.UI.Popups.MessageDialog msgdlg =
-                    new Windows.UI.Popups.MessageDialog(json["msg"].ToString(), "出现错误");
-                msgdlg.ShowAsync();
+                Common.ShowTeachingTip("出现错误", json["msg"].ToString());
             }
         }
 
@@ -223,6 +228,65 @@ namespace HyPlayer.Pages
         public void Dispose()
         {
             SearchResultContainer.Children.Clear();
+        }
+
+        private async void SearchKeywordBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace((sender as AutoSuggestBox)?.Text))
+            {
+                try
+                {
+                    var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchHot);
+
+                    ((AutoSuggestBox)sender).ItemsSource =
+                        json["result"]["hots"].ToArray().ToList().Select(t => t["first"].ToString());
+                }
+                catch (Exception ex)
+                {
+                    Common.ShowTeachingTip("发生错误", ex.Message);
+                }
+            }
+        }
+
+        private void SearchKeywordBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            ((AutoSuggestBox)sender).ItemsSource = null;
+        }
+
+        private void SearchKeywordBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+        {
+            Text = sender.Text;
+            LoadResult();
+        }
+
+        private void SearchKeywordBox_SuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+        {
+            sender.Text = args.SelectedItem.ToString();
+        }
+
+        private async void SearchKeywordBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+        {
+            if (string.IsNullOrEmpty(sender.Text))
+            {
+                AutoSuggestBox_GotFocus(sender, null);
+                return;
+            }
+
+            try
+            {
+                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchSuggest,
+                    new Dictionary<string, object> { { "keywords", sender.Text }, { "type", "mobile" } });
+
+                if (json["result"] != null && json["result"]["allMatch"] != null &&
+                    json["result"]["allMatch"].HasValues)
+                    sender.ItemsSource = json["result"]["allMatch"].ToArray().ToList()
+                        .Select(t => t["keyword"].ToString())
+                        .ToList();
+            }
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip("发生错误", ex.Message);
+            }
         }
     }
 }
