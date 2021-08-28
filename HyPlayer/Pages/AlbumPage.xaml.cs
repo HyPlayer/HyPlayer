@@ -21,7 +21,7 @@ namespace HyPlayer.Pages
     /// <summary>
     ///     可用于自身或导航至 Frame 内部的空白页。
     /// </summary>
-    public sealed partial class AlbumPage : Page , IDisposable
+    public sealed partial class AlbumPage : Page, IDisposable
     {
         private readonly List<NCSong> songs = new List<NCSong>();
         private NCAlbum Album;
@@ -54,16 +54,16 @@ namespace HyPlayer.Pages
                         albumid = e.Parameter.ToString();
                     }
 
-                    (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Album,
-                        new Dictionary<string, object> { { "id", albumid } });
-                    Album = NCAlbum.CreateFromJson(json["album"]);
-                    ImageRect.ImageSource =
-                        new BitmapImage(
-                            new Uri(Album.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
-                    TextBoxAlbumName.Text = Album.name;
-
-                    if (isok)
+                    try
                     {
+                        json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Album,
+                            new Dictionary<string, object> { { "id", albumid } });
+                        Album = NCAlbum.CreateFromJson(json["album"]);
+                        ImageRect.ImageSource =
+                            new BitmapImage(
+                                new Uri(Album.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
+                        TextBoxAlbumName.Text = Album.name;
+
                         TextBoxAlbumName.Text = json["album"]["name"].ToString();
                         artists = json["album"]["artists"].ToArray().Select(t => new NCArtist
                         {
@@ -94,20 +94,24 @@ namespace HyPlayer.Pages
                                 {
                                     Orientation = Orientation.Vertical,
                                     Children =
+                                    {
+                                        new TextBlock
                                         {
-                                            new TextBlock
-                                            {
-                                                Margin = new Thickness(5, 0, 0, 0),
-                                                FontWeight = FontWeights.Black, FontSize = 23, Text = "Disc " + cdname
-                                            },
-                                            stp
-                                        }
+                                            Margin = new Thickness(5, 0, 0, 0),
+                                            FontWeight = FontWeights.Black, FontSize = 23, Text = "Disc " + cdname
+                                        },
+                                        stp
+                                    }
                                 });
                             }
 
                             stp.Children.Add(new SingleNCSong(ncSong, idx++,
                                 song["privilege"]["st"].ToString() == "0", true));
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        Common.ShowTeachingTip("发生错误", ex.Message);
                     }
                 });
             });
@@ -121,11 +125,13 @@ namespace HyPlayer.Pages
                 Common.Invoke(async () =>
                 {
                     HyPlayList.RemoveAllSong();
-                    var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                        new Dictionary<string, object>
-                            {{"id", string.Join(',', songs.Select(t => t.sid))}, {"br", Common.Setting.audioRate}});
-                    if (isok)
+                    try
                     {
+                        var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
+                            new Dictionary<string, object>
+                            {
+                                { "id", string.Join(',', songs.Select(t => t.sid)) }, { "br", Common.Setting.audioRate }
+                            });
                         var arr = json["data"].ToList();
                         for (var i = 0; i < songs.Count; i++)
                         {
@@ -161,6 +167,10 @@ namespace HyPlayer.Pages
 
                         HyPlayList.SongMoveTo(0);
                     }
+                    catch (Exception ex)
+                    {
+                        Common.ShowTeachingTip("发生错误", ex.Message);
+                    }
                 });
             });
         }
@@ -189,7 +199,7 @@ namespace HyPlayer.Pages
                 Common.NavigatePage(typeof(ArtistPage), artists[0].id);
         }
 
-       public void Dispose()
+        public void Dispose()
         {
             songs.Clear();
             Album = null;
@@ -198,6 +208,5 @@ namespace HyPlayer.Pages
             SongContainer.Children.Clear();
             GC.SuppressFinalize(this);
         }
-
     }
 }

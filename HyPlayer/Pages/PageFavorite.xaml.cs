@@ -15,7 +15,7 @@ namespace HyPlayer.Pages
     /// <summary>
     ///     An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class PageFavorite : Page,IDisposable
+    public sealed partial class PageFavorite : Page, IDisposable
     {
         private int page;
 
@@ -55,49 +55,62 @@ namespace HyPlayer.Pages
 
         private async void LoadRadioResult()
         {
-            var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.DjSublist,
-                new Dictionary<string, object>
-                {
-                    {"offset", page * 25}
-                });
-            if (isok)
+            try
             {
+                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.DjSublist,
+                    new Dictionary<string, object>
+                    {
+                        { "offset", page * 25 }
+                    });
                 BtnLoadMore.Visibility = json["hasMore"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
                 foreach (var token in json["djRadios"])
                     ItemContainer.Children.Add(new SingleRadio(NCRadio.CreateFromJson(token)));
+            }
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip("发生错误", ex.Message);
             }
         }
 
         private async void LoadArtistResult()
         {
-            var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistSublist,
-                new Dictionary<string, object>
-                {
-                    {"offset", page * 25}
-                });
-            if (isok)
+            try
             {
+                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistSublist,
+                    new Dictionary<string, object>
+                    {
+                        { "offset", page * 25 }
+                    });
+
                 BtnLoadMore.Visibility = json["hasMore"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
                 foreach (var token in json["data"])
                     ItemContainer.Children.Add(new SingleArtist(NCArtist.CreateFromJson(token)));
+            }
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip("发生错误", ex.Message);
             }
         }
 
         private async void LoadAlbumResult()
         {
-            var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.AlbumSublist,
-                new Dictionary<string, object>
-                {
-                    {"offset", page * 25}
-                });
-            if (isok)
+            try
             {
+                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.AlbumSublist,
+                    new Dictionary<string, object>
+                    {
+                        { "offset", page * 25 }
+                    });
                 BtnLoadMore.Visibility = json["hasMore"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
                 foreach (var token in json["data"])
                 {
                     var artist = token["artists"].Select(t => NCArtist.CreateFromJson(t)).ToList();
                     ItemContainer.Children.Add(new SingleAlbum(NCAlbum.CreateFromJson(token), artist));
                 }
+            }
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip("发生错误", ex.Message);
             }
         }
 

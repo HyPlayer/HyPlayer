@@ -16,7 +16,7 @@ namespace HyPlayer.Pages
     /// <summary>
     ///     可用于自身或导航至 Frame 内部的空白页。
     /// </summary>
-    public sealed partial class MVPage : Page , IDisposable
+    public sealed partial class MVPage : Page, IDisposable
     {
         private string mvid;
         private string mvquality = "1080";
@@ -47,19 +47,24 @@ namespace HyPlayer.Pages
 
         private async void LoadRelateive()
         {
-            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.MlogRcmdFeedList,
-                new Dictionary<string, object>
-                {
-                    {"id", mvid},
-                    {"songid", songid}
-                });
-            if (isOk)
+            try
             {
+                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.MlogRcmdFeedList,
+                    new Dictionary<string, object>
+                    {
+                        { "id", mvid },
+                        { "songid", songid }
+                    });
                 foreach (var jToken in json["data"]["feeds"])
                     sources.Add(NCMlog.CreateFromJson(jToken["resource"]["mlogBaseData"]));
 
                 RelativeList.ItemsSource = sources;
             }
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip("发生错误", ex.Message);
+            }
+
             RelativeList.SelectedIndex = 0;
         }
 
@@ -82,31 +87,41 @@ namespace HyPlayer.Pages
             if (Regex.IsMatch(mvid, "^[0-9]*$"))
             {
                 //纯MV
-                var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.MvUrl,
-                    new Dictionary<string, object> {{"id", mvid}, {"r", mvquality}});
-                if (isOk)
+                try
                 {
+                    var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.MvUrl,
+                        new Dictionary<string, object> { { "id", mvid }, { "r", mvquality } });
+
                     MediaPlayerElement.Source = MediaSource.CreateFromUri(new Uri(json["data"]["url"].ToString()));
                     var mediaPlayer = MediaPlayerElement.MediaPlayer;
                     mediaPlayer.Play();
                     LoadingControl.IsLoading = false;
                 }
+                catch (Exception ex)
+                {
+                    Common.ShowTeachingTip("发生错误", ex.Message);
+                }
             }
             else
             {
-                var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.MlogUrl,
-                    new Dictionary<string, object>
-                    {
-                        {"id", mvid},
-                        {"resolution", mvquality}
-                    });
-                if (isOk)
+                try
                 {
+                    var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.MlogUrl,
+                        new Dictionary<string, object>
+                        {
+                            { "id", mvid },
+                            { "resolution", mvquality }
+                        });
+
                     MediaPlayerElement.Source =
                         MediaSource.CreateFromUri(new Uri(json["data"][mvid]["urlInfo"]["url"].ToString()));
                     var mediaPlayer = MediaPlayerElement.MediaPlayer;
                     mediaPlayer.Play();
                     LoadingControl.IsLoading = false;
+                }
+                catch (Exception ex)
+                {
+                    Common.ShowTeachingTip("发生错误", ex.Message);
                 }
             }
         }
@@ -115,16 +130,20 @@ namespace HyPlayer.Pages
         {
             if (Regex.IsMatch(mvid, "^[0-9]*$"))
             {
-                var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.MvDetail,
-                    new Dictionary<string, object> {{"mvid", mvid}});
-                if (isok)
+                try
                 {
+                    var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.MvDetail,
+                        new Dictionary<string, object> { { "mvid", mvid } });
                     TextBoxVideoName.Text = json["data"]["name"].ToString();
                     TextBoxSinger.Text = json["data"]["artistName"].ToString();
                     TextBoxDesc.Text = json["data"]["desc"].ToString();
                     TextBoxOtherInfo.Text =
                         $"发布时间: {json["data"]["publishTime"]}    播放量: {json["data"]["playCount"]}次    收藏量: {json["data"]["subCount"]}次";
                     foreach (var br in json["data"]["brs"].ToArray()) VideoQualityBox.Items.Add(br["br"].ToString());
+                }
+                catch (Exception ex)
+                {
+                    Common.ShowTeachingTip("发生错误", ex.Message);
                 }
             }
             else
@@ -145,7 +164,7 @@ namespace HyPlayer.Pages
 
         private void RelativeList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            mvid = (RelativeList.SelectedItem is NCMlog ? (NCMlog) RelativeList.SelectedItem : default).id;
+            mvid = (RelativeList.SelectedItem is NCMlog ? (NCMlog)RelativeList.SelectedItem : default).id;
             LoadThings();
         }
 

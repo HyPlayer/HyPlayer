@@ -199,6 +199,7 @@
                         </Grid>
                         <local:ScrollingTextBlock
                             x:Name="TbSongName"
+                            Margin="5,0,0,0"
                             controls:DockPanel.Dock="Left"
                             FontSize="18"
                             FontWeight="Bold" />

@@ -98,7 +98,8 @@ namespace HyPlayer.HyPlayControl
                         else
                         {
                             // 脑残Music解析
-                            Stream stream = NowPlayingItem.PlayItem.DontSetLocalStorageFile.OpenReadAsync().AsTask().GetAwaiter().GetResult().AsStreamForRead();
+                            Stream stream = NowPlayingItem.PlayItem.DontSetLocalStorageFile.OpenReadAsync().AsTask()
+                                .GetAwaiter().GetResult().AsStreamForRead();
                             if (NCMFile.IsCorrectNCMFile(stream))
                             {
                                 var Info = NCMFile.GetNCMMusicInfo(stream);
@@ -106,13 +107,14 @@ namespace HyPlayer.HyPlayControl
                                 var encStream = NCMFile.GetEncryptedStream(stream);
                                 encStream.Seek(0, SeekOrigin.Begin);
 
-                                _lastStorageFile = StorageFile.CreateStreamedFileAsync(Path.ChangeExtension(NowPlayingItem.PlayItem.DontSetLocalStorageFile.Name, Info.format), (t) =>
-                                {
-                                    encStream.CopyTo(t.AsStreamForWrite());
-                                }, RandomAccessStreamReference.CreateFromStream(CoverStream.AsRandomAccessStream())).AsTask().GetAwaiter().GetResult();
+                                _lastStorageFile = StorageFile.CreateStreamedFileAsync(
+                                        Path.ChangeExtension(NowPlayingItem.PlayItem.DontSetLocalStorageFile.Name,
+                                            Info.format), (t) => { encStream.CopyTo(t.AsStreamForWrite()); },
+                                        RandomAccessStreamReference.CreateFromStream(
+                                            CoverStream.AsRandomAccessStream()))
+                                    .AsTask().GetAwaiter().GetResult();
                             }
                         }
-
                     }
                     else
                     {
@@ -206,7 +208,6 @@ namespace HyPlayer.HyPlayControl
             HistoryManagement.InitializeHistoryTrack();
             Common.GLOBAL["PERSONALFM"] = "false";
         }
-
 
 
         public static void LoginDownCall()
@@ -429,18 +430,26 @@ namespace HyPlayer.HyPlayControl
                         if (string.IsNullOrEmpty(NowPlayingItem.PlayItem.url) ||
                             Common.Setting.songUrlLazyGet)
                         {
-                            var (isok, json) = await Common.ncapi.RequestAsync(
-                                CloudMusicApiProviders.SongUrl,
-                                new Dictionary<string, object>
-                                {
-                                    {"id", NowPlayingItem.PlayItem.id},
-                                    {"br", Common.Setting.audioRate}
-                                });
-                            if (isok && json["data"][0]["code"].ToString() == "200")
+                            try
                             {
-                                playUrl = json["data"][0]["url"].ToString();
+                                var json = await Common.ncapi.RequestAsync(
+                                    CloudMusicApiProviders.SongUrl,
+                                    new Dictionary<string, object>
+                                    {
+                                        { "id", NowPlayingItem.PlayItem.id },
+                                        { "br", Common.Setting.audioRate }
+                                    });
+                                if (json["data"][0]["code"].ToString() == "200")
+                                {
+                                    playUrl = json["data"][0]["url"].ToString();
+                                }
+                                else
+                                {
+                                    PlayerOnMediaFailed(Player, null); //传一个播放失败\
+                                    return;
+                                }
                             }
-                            else
+                            catch (Exception ex)
                             {
                                 PlayerOnMediaFailed(Player, null); //传一个播放失败\
                                 return;
@@ -469,10 +478,12 @@ namespace HyPlayer.HyPlayControl
                                 {
                                     //尝试从DownloadOperation下载
                                     StorageFile destinationFile =
-                                        await (await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("songCache",
+                                        await (await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync(
+                                            "songCache",
                                             CreationCollisionOption.OpenIfExists)).CreateFileAsync(
                                             NowPlayingItem.PlayItem.id +
-                                            "." + NowPlayingItem.PlayItem.subext, CreationCollisionOption.ReplaceExisting);
+                                            "." + NowPlayingItem.PlayItem.subext,
+                                            CreationCollisionOption.ReplaceExisting);
                                     var downloadOperation =
                                         downloader.CreateDownload(new Uri(playUrl), destinationFile);
                                     downloadOperation.IsRandomAccessRequired = true;
@@ -649,12 +660,12 @@ namespace HyPlayer.HyPlayControl
                         PureLyrics = "[00:00.000] 无歌词 请欣赏",
                         TrLyrics = null
                     };
-
-                var (isOk, json) = await Common.ncapi.RequestAsync(
-                    CloudMusicApiProviders.Lyric,
-                    new Dictionary<string, object> { { "id", ncp.PlayItem.id } });
-                if (isOk)
+                try
                 {
+                    var json = await Common.ncapi.RequestAsync(
+                        CloudMusicApiProviders.Lyric,
+                        new Dictionary<string, object> { { "id", ncp.PlayItem.id } });
+
                     if (json.ContainsKey("nolyric") && json["nolyric"].ToString().ToLower() == "true")
                         return new PureLyricInfo
                         {
@@ -680,6 +691,10 @@ namespace HyPlayer.HyPlayControl
                         //DEBUG
                     }
                 }
+                catch (Exception ex)
+                {
+                    Common.ShowTeachingTip("发生错误", ex.Message);
+                }
             }
             catch
             {
@@ -703,10 +718,12 @@ namespace HyPlayer.HyPlayControl
 
         public static async Task<HyPlayItem> LoadNCSong(NCSong ncSong)
         {
-            var (isOk, json) = await Common.ncapi.RequestAsync(
-                CloudMusicApiProviders.SongUrl,
-                new Dictionary<string, object> { { "id", ncSong.sid }, { "br", Common.Setting.audioRate } });
-            if (isOk)
+            try
+            {
+                var json = await Common.ncapi.RequestAsync(
+                    CloudMusicApiProviders.SongUrl,
+                    new Dictionary<string, object> { { "id", ncSong.sid }, { "br", Common.Setting.audioRate } });
+
                 try
                 {
                     if (json["data"][0]["code"].ToString() != "200") return null; //未获取到
@@ -738,6 +755,11 @@ namespace HyPlayer.HyPlayControl
                 {
                     return null;
                 }
+            }
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip("发生错误", ex.Message);
+            }
 
             return null;
         }
@@ -767,14 +789,15 @@ namespace HyPlayer.HyPlayControl
                 NCSongs = Common.ListedSongs;
             if (needRemoveList)
                 HyPlayList.RemoveAllSong();
-            var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                new Dictionary<string, object>
-                {
-                    {"id", string.Join(',', NCSongs.Select(t => t.sid))},
-                    {"br", Common.Setting.audioRate}
-                });
-            if (isok)
+            try
             {
+                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
+                    new Dictionary<string, object>
+                    {
+                        { "id", string.Join(',', NCSongs.Select(t => t.sid)) },
+                        { "br", Common.Setting.audioRate }
+                    });
+
                 var arr = json["data"].ToList();
                 for (var i = 0; i < NCSongs.Count; i++)
                 {
@@ -804,26 +827,34 @@ namespace HyPlayer.HyPlayControl
                     };
                     var item = AppendNCPlayItem(ncp);
                 }
+
+                return true;
             }
-            return isok;
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip("发生错误", ex.Message);
+            }
+
+            return false;
         }
 
         public static async Task<bool> AppendPlayList(string plid)
         {
-            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
-                                new Dictionary<string, object> { { "id", plid } });
-            if (isOk)
+            try
             {
+                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
+                    new Dictionary<string, object> { { "id", plid } });
+
                 int nowidx = 0;
                 var trackIds = json["playlist"]["trackIds"].Select(t => (int)t["id"]).ToList();
                 while (nowidx * 500 < trackIds.Count)
                 {
                     var nowIds = trackIds.GetRange(nowidx * 500, Math.Min(500, trackIds.Count - nowidx * 500));
-                    (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
-                        new Dictionary<string, object> { ["ids"] = string.Join(",", nowIds) });
-                    nowidx++;
-                    if (isOk)
+                    try
                     {
+                        json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
+                            new Dictionary<string, object> { ["ids"] = string.Join(",", nowIds) });
+                        nowidx++;
                         var i = 0;
                         var ncSongs = json["songs"].Select(t =>
                         {
@@ -831,14 +862,25 @@ namespace HyPlayer.HyPlayControl
                             {
                                 return NCSong.CreateFromJson(t);
                             }
+
                             return null;
                         }).ToList();
                         ncSongs.RemoveAll(t => t == null);
                         await HyPlayList.AppendNCSongs(HyPlayItemType.Netease, ncSongs, false);
                     }
+                    catch (Exception ex)
+                    {
+                        Common.ShowTeachingTip("发生错误", ex.Message);
+                    }
                 }
+
                 return true;
             }
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip("发生错误", ex.Message);
+            }
+
             return false;
         }
 

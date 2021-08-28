@@ -92,6 +92,7 @@ namespace HyPlayer
                     GlobalTip.IsOpen = true;
             });
         }
+
         public static void NavigatePage(Type SourcePageType, object paratmer = null, object ignore = null)
         {
             if (NavigationHistory.Count >= 1 && PageBase.NavMain.SelectedItem == NavigationHistory.Peek().Item)
@@ -123,6 +124,7 @@ namespace HyPlayer
             PageExpandedPlayer?.Dispose();
             PageExpandedPlayer = null;
             PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));
+            _ = Microsoft.Toolkit.Uwp.UI.ImageCache.Instance.ClearAsync();
             KawazuConv = null;
             ListedSongs.Clear();
         }
@@ -168,6 +170,7 @@ namespace HyPlayer
 
         public static bool NavigatingBack = false;
     }
+
     internal class ColorHelper
     {
         public static Color GetReversedColor(Color color)
@@ -209,6 +212,24 @@ namespace HyPlayer
         {
             get { return GetSettings("lyricColor", 0); }
             set { ApplicationData.Current.LocalSettings.Values["lyricColor"] = value; }
+        }
+
+        public bool albumRotate
+        {
+            get => GetSettings("albumRotate", false);
+            set => ApplicationData.Current.LocalSettings.Values["albumRotate"] = value;
+        }
+
+        public bool albumRound
+        {
+            get => GetSettings("albumRound", false);
+            set => ApplicationData.Current.LocalSettings.Values["albumRound"] = value;
+        }
+
+        public int albumBorderLength
+        {
+            get => GetSettings("albumBorderLength", 0);
+            set => ApplicationData.Current.LocalSettings.Values["albumBorderLength"] = value;
         }
 
         public int romajiSize
@@ -310,6 +331,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+
         public bool fadeInOut
         {
             get { return GetSettings<bool>("FadeInOut", false); }
@@ -474,9 +496,10 @@ namespace HyPlayer
                 {
                     if (typeof(T).ToString() == "System.Boolean")
                     {
-                        return (T)(object)bool.Parse(ApplicationData.Current.LocalSettings.Values[propertyName].ToString());
-
+                        return (T)(object)bool.Parse(ApplicationData.Current.LocalSettings.Values[propertyName]
+                            .ToString());
                     }
+
                     //超长的IF
                     return (T)ApplicationData.Current.LocalSettings.Values[propertyName];
                 }
@@ -577,14 +600,22 @@ namespace HyPlayer
         public static async Task<List<NCSong>> GetNCSongHistory()
         {
             var retsongs = new List<NCSong>();
-            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
-                new Dictionary<string, object>
-                {
-                    ["ids"] = string.Join(",",
-                        JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
-                            .Values["songHistory"].ToString()))
-                });
-            if (isOk) return json["songs"].ToArray().Select(t => NCSong.CreateFromJson(t)).ToList();
+            try
+            {
+                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
+                    new Dictionary<string, object>
+                    {
+                        ["ids"] = string.Join(",",
+                            JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
+                                .Values["songHistory"].ToString()))
+                    });
+                return json["songs"].ToArray().Select(t => NCSong.CreateFromJson(t)).ToList();
+            }
+            catch (Exception e)
+            {
+                Common.ShowTeachingTip("发生错误", e.Message);
+            }
+
             return new List<NCSong>();
         }
 
@@ -602,10 +633,20 @@ namespace HyPlayer
                         ["s"] = 8
                     });
             if (queries.Count == 0) return new List<NCPlayList>();
-            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Batch, queries);
             var ret = new List<NCPlayList>();
-            for (var k = 0; k < json.Count - 1; k++)
-                ret.Add(NCPlayList.CreateFromJson(json["/api/v6/playlist/detail" + new string('/', k)]["playlist"]));
+            try
+            {
+                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Batch, queries);
+
+                for (var k = 0; k < json.Count - 1; k++)
+                    ret.Add(NCPlayList.CreateFromJson(
+                        json["/api/v6/playlist/detail" + new string('/', k)]["playlist"]));
+            }
+            catch (Exception e)
+            {
+                Common.ShowTeachingTip("发生错误", e.Message);
+            }
+
             return ret;
         }
 
@@ -622,12 +663,20 @@ namespace HyPlayer
                 .Values["curPlayingListHistory"].ToString());
             if (hisSongs == null || hisSongs.Count == 0)
                 return retsongs;
-            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
-                new Dictionary<string, object>
-                {
-                    ["ids"] = string.Join(",", hisSongs)
-                });
-            if (isOk) return json["songs"].ToArray().Select(t => NCSong.CreateFromJson(t)).ToList();
+            try
+            {
+                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
+                    new Dictionary<string, object>
+                    {
+                        ["ids"] = string.Join(",", hisSongs)
+                    });
+                return json["songs"].ToArray().Select(t => NCSong.CreateFromJson(t)).ToList();
+            }
+            catch (Exception e)
+            {
+                Common.ShowTeachingTip("发生错误", e.Message);
+            }
+
             return new List<NCSong>();
         }
     }
@@ -676,8 +725,6 @@ namespace HyPlayer
         public static string Get(this CookieCollection cookies, string name, string defaultValue)
         {
             return cookies[name]?.Value ?? defaultValue;
-
         }
-
     }
 }

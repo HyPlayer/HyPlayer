@@ -23,7 +23,7 @@ namespace HyPlayer.Pages
     /// <summary>
     ///     可用于自身或导航至 Frame 内部的空白页。
     /// </summary>
-    public sealed partial class MusicCloudPage : Page , IDisposable
+    public sealed partial class MusicCloudPage : Page, IDisposable
     {
         private int page;
         private ObservableCollection<NCSong> Items = new ObservableCollection<NCSong>();
@@ -35,19 +35,20 @@ namespace HyPlayer.Pages
 
         public async void LoadMusicCloudItem()
         {
-            var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserCloud,
-                new Dictionary<string, object>()
-                {
-                    {"limit", 200},
-                    {"offset", page * 200}
-                });
-            if (isOk)
+            try
             {
+                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserCloud,
+                    new Dictionary<string, object>()
+                    {
+                        { "limit", 200 },
+                        { "offset", page * 200 }
+                    });
                 foreach (var jToken in json["data"])
                 {
                     var ret = NCSong.CreateFromJson(jToken["simpleSong"]);
                     if (ret.Artist[0].id == "0")
-                    {//不是标准歌曲
+                    {
+                        //不是标准歌曲
                         ret.Album.name = jToken["album"].ToString();
                         ret.Artist.Clear();
                         ret.Artist.Add(new NCArtist()
@@ -55,10 +56,15 @@ namespace HyPlayer.Pages
                             name = jToken["artist"].ToString()
                         });
                     }
+
                     Items.Add(ret);
                 }
 
                 NextPage.Visibility = json["hasMore"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
+            }
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip("发生错误", ex.Message);
             }
         }
 
@@ -82,13 +88,13 @@ namespace HyPlayer.Pages
                 Common.Invoke(async () =>
                 {
                     HyPlayList.RemoveAllSong();
-                    var (isok, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                        new Dictionary<string, object>
-                        {
-                            {"id", string.Join(',', Items.Select(t => t.sid))}
-                        });
-                    if (isok)
+                    try
                     {
+                        var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
+                            new Dictionary<string, object>
+                            {
+                                { "id", string.Join(',', Items.Select(t => t.sid)) }
+                            });
                         var arr = json["data"].ToList();
                         for (var i = 0; i < Items.Count; i++)
                         {
@@ -120,6 +126,11 @@ namespace HyPlayer.Pages
                             HyPlayList.AppendNCPlayItem(ncp);
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        Common.ShowTeachingTip("发生错误", ex.Message);
+                    }
+
 
                     HyPlayList.SongAppendDone();
                     HyPlayList.SongMoveTo(SongContainer.SelectedIndex);
