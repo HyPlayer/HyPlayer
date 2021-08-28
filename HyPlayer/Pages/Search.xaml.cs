@@ -268,7 +268,7 @@ namespace HyPlayer.Pages
         {
             if (string.IsNullOrEmpty(sender.Text))
             {
-                AutoSuggestBox_GotFocus(sender, null);
+                SearchKeywordBox_GotFocus(sender, null);
                 return;
             }
 

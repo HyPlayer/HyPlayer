@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Windows.UI.Xaml.Controls;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
@@ -57,10 +58,11 @@ namespace HyPlayer.Pages
                 case 2:
                     //听歌排行加载部分 - 优先级靠下
                     MySongHis.Children.Clear();
-                    var (ok2, ret2) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserRecord,
-                        new Dictionary<string, object> { { "uid", Common.LoginedUser.id }, { "type", "1" } });
-                    if (ok2)
+                    try
                     {
+                        var ret2 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserRecord,
+                            new Dictionary<string, object> { { "uid", Common.LoginedUser.id }, { "type", "1" } });
+
                         var weekData = ret2["weekData"].ToArray();
                         MySongHis.Children.Clear();
                         Common.ListedSongs.Clear();
@@ -72,14 +74,20 @@ namespace HyPlayer.Pages
                                 true, "最近一周播放 " + weekData[i]["playCount"] + " 次"));
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        Common.ShowTeachingTip("发生错误", ex.Message);
+                    }
+
                     break;
                 case 3:
                     //听歌排行加载部分 - 优先级靠下
                     MySongHisAll.Children.Clear();
-                    var (ok3, ret3) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserRecord,
-                        new Dictionary<string, object> { { "uid", Common.LoginedUser.id }, { "type", "0" } });
-                    if (ok3)
+                    try
                     {
+                        var ret3 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserRecord,
+                            new Dictionary<string, object> { { "uid", Common.LoginedUser.id }, { "type", "0" } });
+
                         var weekData = ret3["allData"].ToArray();
                         MySongHisAll.Children.Clear();
                         Common.ListedSongs.Clear();
@@ -91,6 +99,11 @@ namespace HyPlayer.Pages
                                 true, "共播放 " + weekData[i]["playCount"] + " 次"));
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        Common.ShowTeachingTip("发生错误", ex.Message);
+                    }
+
                     break;
             }
         }

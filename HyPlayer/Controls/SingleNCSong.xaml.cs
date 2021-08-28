@@ -178,7 +178,7 @@ namespace HyPlayer.Controls
 
         private async void Btn_Del_Click(object sender, RoutedEventArgs e)
         {
-            var ret = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistTracks, new Dictionary<string, object>()
+            await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistTracks, new Dictionary<string, object>()
             {
                 { "op" , "del" },
                 {"pid",plId },

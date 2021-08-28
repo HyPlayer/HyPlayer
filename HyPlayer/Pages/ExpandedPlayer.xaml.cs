@@ -65,6 +65,8 @@ namespace HyPlayer.Pages
             SliderVolumn.Value = HyPlayList.Player.Volume * 100;
             loaded = true;
             Common.PageExpandedPlayer = this;
+            HyPlayList.OnPause += HyPlayList_OnPause;
+            HyPlayList.OnPlay += HyPlayList_OnPlay;
             HyPlayList.OnLyricChange += RefreshLyricTime;
             HyPlayList.OnPlayItemChange += OnSongChange;
             HyPlayList.OnLyricLoaded += HyPlayList_OnLyricLoaded;
@@ -88,6 +90,35 @@ namespace HyPlayer.Pages
             ToggleButtonSound.IsChecked = Common.ShowLyricSound;
             ToggleButtonTranslation.IsChecked = Common.ShowLyricTrans;
             AlbumDropShadow.ShadowOpacity = (double)Common.Setting.expandedCoverShadowDepth / 10;
+            if (Common.Setting.albumRound)
+            {
+                ImageAlbum.CornerRadius = new CornerRadius(300);
+                AlbumDropShadow.ShadowOpacity = 0;
+            }
+
+            ImageAlbum.BorderThickness = new Thickness(Common.Setting.albumBorderLength);
+
+            if (Common.Setting.albumRotate)
+            {
+                //网易云音乐圆形唱片
+                if (HyPlayList.isPlaying)
+                    RotateAnimationSet.StartAsync();
+            }
+        }
+
+        private void HyPlayList_OnPlay()
+        {
+            if (Common.Setting.albumRotate)
+            {
+                //网易云音乐圆形唱片
+                RotateAnimationSet.StartAsync();
+            }
+        }
+
+        private void HyPlayList_OnPause()
+        {
+            if (Common.Setting.albumRotate)
+                RotateAnimationSet.Stop();
         }
 
         private void HyPlayList_OnTimerTicked()
@@ -109,7 +140,6 @@ namespace HyPlayer.Pages
 
         protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
         {
-            LyricBox.Children.Clear();
             Dispose();
         }
         public void Dispose()
@@ -128,7 +158,10 @@ namespace HyPlayer.Pages
                     Window.Current.SizeChanged -= Current_SizeChanged;
                 Common.Invoke(() =>
                 {
+                    LyricBox.Children.Clear();
                     LyricList.Clear();
+                    if (Common.Setting.albumRotate)
+                        RotateAnimationSet.Stop();
                 });
             });
         }

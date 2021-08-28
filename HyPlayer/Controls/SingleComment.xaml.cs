@@ -34,23 +34,28 @@ namespace HyPlayer.Controls
 
         private async void LoadFloorComments()
         {
-            var (IsOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentFloor,
-                new Dictionary<string, object>
-                {
-                    {"parentCommentId", comment.cid}, {"id", comment.resourceId}, {"type", comment.resourceType},
-                    {"time", time}
-                });
-            if (IsOk)
+            try
             {
+                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentFloor,
+                    new Dictionary<string, object>
+                    {
+                        { "parentCommentId", comment.cid }, { "id", comment.resourceId },
+                        { "type", comment.resourceType },
+                        { "time", time }
+                    });
                 foreach (var floorcomment in json["data"]["comments"].ToArray())
                     SubCmts.Children.Add(
                         new SingleComment(
                                 Comment.CreateFromJson(floorcomment, comment.resourceId, comment.resourceType))
-                            {Margin = new Thickness {Left = 5, Right = 5, Top = 5, Bottom = 5}});
+                            { Margin = new Thickness { Left = 5, Right = 5, Top = 5, Bottom = 5 } });
                 time = json["data"]["time"].ToString();
                 if (json["data"]["hasMore"].ToString() == "True")
                     LoadMore.Visibility = Visibility.Visible;
                 else LoadMore.Visibility = Visibility.Collapsed;
+            }
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip("发生错误", ex.Message);
             }
         }
 
@@ -67,8 +72,8 @@ namespace HyPlayer.Controls
             await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentLike,
                 new Dictionary<string, object>
                 {
-                    {"id", comment.resourceId}, {"cid", comment.cid}, {"type", comment.resourceType},
-                    {"t", comment.HasLiked ? "0" : "1"}
+                    { "id", comment.resourceId }, { "cid", comment.cid }, { "type", comment.resourceType },
+                    { "t", comment.HasLiked ? "0" : "1" }
                 });
             comment.likedCount += comment.HasLiked ? -1 : 1;
             LikeCountTB.Text = comment.likedCount.ToString();
@@ -79,7 +84,8 @@ namespace HyPlayer.Controls
             await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment,
                 new Dictionary<string, object>
                 {
-                    {"id", comment.resourceId}, {"t", "0"}, {"type", comment.resourceType}, {"commentId", comment.cid}
+                    { "id", comment.resourceId }, { "t", "0" }, { "type", comment.resourceType },
+                    { "commentId", comment.cid }
                 });
             (Parent as StackPanel).Children.Remove(this);
         }
@@ -95,11 +101,12 @@ namespace HyPlayer.Controls
             {
                 try
                 {
-                    var (isOk, json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment,
+                    var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment,
                         new Dictionary<string, object>
                         {
-                            {"id", comment.resourceId}, {"commentId", comment.cid}, {"type", comment.resourceType},
-                            {"t", "2"}, {"content", ReplyText.Text}
+                            { "id", comment.resourceId }, { "commentId", comment.cid },
+                            { "type", comment.resourceType },
+                            { "t", "2" }, { "content", ReplyText.Text }
                         });
                     ReplyText.Text = string.Empty;
                     await Task.Delay(1000);
