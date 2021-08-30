@@ -4,6 +4,8 @@ using System.Linq;
 using Windows.Storage;
 using HyPlayer.HyPlayControl;
 using Newtonsoft.Json.Linq;
+using Windows.UI.Xaml.Media.Imaging;
+using System.Threading.Tasks;
 
 namespace HyPlayer.Classes
 {
@@ -40,13 +42,13 @@ namespace HyPlayer.Classes
         public TimeSpan LyricTime;
 
         public static SongLyric PureSong = new SongLyric
-            {HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏"};
+        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏" };
 
         public static SongLyric NoLyric = new SongLyric
-            {HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏"};
+        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏" };
 
         public static SongLyric LoadingLyric = new SongLyric
-            {HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..."};
+        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..." };
     }
 
 
@@ -137,6 +139,10 @@ namespace HyPlayer.Classes
         public NCAlbum Album;
         public string alias;
         public List<NCArtist> Artist;
+        public int Order = 0;
+        public BitmapImage Cover => new BitmapImage(new Uri(Album.cover + "?param=" + StaticSource.PICSIZE_SINGLENCSONG_COVER));
+        public bool LoadList = false;
+        public bool IsAvailable = true;
 
         public string ArtistString
         {
@@ -179,6 +185,34 @@ namespace HyPlayer.Classes
             if (song["tns"] != null)
                 NCSong.transname = string.Join(" / ", song["tns"].ToArray().Select(t => t.ToString()));
             return NCSong;
+        }
+        public async Task<bool> AppendMe()
+        {
+            if (!IsAvailable) return false;
+
+            if (LoadList)
+            {
+                _ = Task.Run(() =>
+                {
+                    Common.Invoke(async () =>
+                    {
+                        await HyPlayList.AppendNCSongs();
+                        HyPlayList.SongAppendDone();
+                        //此处可以进行优化
+                        HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == this.sid));
+
+                    });
+                });
+            }
+            else
+            {
+                var item = await HyPlayList.AppendNCSong(this);
+                //此处可以进行优化
+                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == this.sid));
+                HyPlayList.SongAppendDone();
+            }
+
+            return true;
         }
     }
 
