@@ -16,6 +16,7 @@ using Newtonsoft.Json.Linq;
 using Windows.UI.Xaml.Media;
 using Windows.UI;
 using HyPlayer.Controls;
+using System.Collections.ObjectModel;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -30,12 +31,12 @@ namespace HyPlayer.Pages
         private int page;
         private NCPlayList playList;
         private bool IsManualSelect = true;
-        public List<NCSong> Songs;
+        public ObservableCollection<NCSong> Songs;
 
         public SongListDetail()
         {
             InitializeComponent();
-            Songs = new List<NCSong>();
+            Songs = new ObservableCollection<NCSong>();
         }
 
         public void LoadSongListDetail()
@@ -96,7 +97,7 @@ namespace HyPlayer.Pages
                                     json["privileges"].ToList()[i++]["st"].ToString() == "0";
                                 ncSong.Order = idx++;
                                 if (ncSong.IsAvailable) Common.ListedSongs.Add(ncSong);
-                                Songs.Add(ncSong);
+                                Common.Invoke(() => { Songs.Add(ncSong); });
                             }
                         }
 
@@ -138,7 +139,7 @@ namespace HyPlayer.Pages
                             ncSong.IsAvailable = true;
                             ncSong.Order = idx++;
                             if (ncSong.IsAvailable) Common.ListedSongs.Add(ncSong);
-                            Songs.Add(ncSong);
+                            Common.Invoke(() => { Songs.Add(ncSong); });
 
                         }
                     }
@@ -147,11 +148,6 @@ namespace HyPlayer.Pages
                         Common.ShowTeachingTip("发生错误", ex.Message);
                     }
                 }
-                Common.Invoke(() =>
-                {
-                    if (SongContainer.ItemsSource == null)
-                        SongContainer.ItemsSource = Songs;
-                });
             });
         }
 

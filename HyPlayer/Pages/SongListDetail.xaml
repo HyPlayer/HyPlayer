@@ -12,15 +12,19 @@
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <ScrollViewer.Content>
-            <StackPanel Orientation="Vertical">
-                <controls:DockPanel x:Name="GridPersonalInformation" LastChildFill="True">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="200"/>
+            <RowDefinition/>
+            <RowDefinition Height="175"/>
+        </Grid.RowDefinitions>
+        <controls:DockPanel Grid.Row="0" x:Name="GridPersonalInformation" LastChildFill="True">
                     <Rectangle
                         x:Name="RectangleImage"
-                        Width="250"
-                        Height="250"
-                        Margin="15"
+                        Width="200"
+                        Height="200"
+                        Margin="15,0,15,0"
                         controls:DockPanel.Dock="Left"
                         RadiusX="10"
                         RadiusY="10">
@@ -117,10 +121,15 @@
                     </StackPanel>
                 </controls:DockPanel>
                 <ListView
+                    Grid.Row="1"
+                    Grid.RowSpan="2"
+                    VerticalAlignment="Stretch"
                     Name="SongContainer"
-                    Margin="20,30,0,0"
+                    Margin="20,20,0,150"
                     Padding="10"
-                    SelectionChanged="SongContainer_SelectionChanged">
+                    ItemsSource="{x:Bind Songs}"
+                    SelectionChanged="SongContainer_SelectionChanged"
+                    ShowsScrollingPlaceholders="True">
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="classes:NCSong">
                             <Grid RightTapped="Grid_RightTapped" Tag="{x:Bind Order}">
@@ -140,7 +149,8 @@
                                     IsCacheEnabled="False"
                                     Stretch="UniformToFill"
                                     Source="{x:Bind Cover}"
-                                    IsEnabled="{x:Bind IsAvailable}"/>
+                                    IsEnabled="{x:Bind IsAvailable}"
+                                    x:Phase="4"/>
                                     <Grid  Padding="7,0,0,0">
                                         <Grid.RowDefinitions>
                                             <RowDefinition />
@@ -155,11 +165,13 @@
                                             <TextBlock
                                             Name="TextBlockSongname"
                                             FontSize="20"
+                                            x:Phase="0"
                                             Text="{x:Bind songname}" />
                                             <TextBlock
                                             Name="TextBlockTransName"
                                             Margin="5,0,0,0"
                                             FontSize="20"
+                                            x:Phase="0"
                                             Foreground="Gray"
                                             Text="{x:Bind transname}" />
                                         </StackPanel>
@@ -170,6 +182,7 @@
                                         FontSize="12"
                                         Foreground="{ThemeResource TextFillColorTertiaryBrush}"
                                         Text="{x:Bind alias}"
+                                             x:Phase="2"
                                         Visibility="Visible" />
                                         <TextBlock
                                         Name="TextBlockArtist"
@@ -196,6 +209,7 @@
                                     Background="Transparent"
                                     Click="BtnPlay_Click"
                                     ToolTipService.ToolTip="播放"
+                                             x:Phase="1"
                                            Visibility="{x:Bind IsAvailable}">
                                         <FontIcon
                                         Name="PlayStateIcon"
@@ -207,7 +221,8 @@
                                         Background="Transparent"
                                         Click="More_Click"
                                         Tag="{x:Bind Order}"
-                                        ToolTipService.ToolTip="更多">
+                                        ToolTipService.ToolTip="更多"
+                                            x:Phase="3">
                                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE10C;" />
                                     </Button>
                                 </StackPanel>
@@ -288,17 +303,18 @@
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
-                <Button
+                    <Button
+                        Grid.Row="2"
                     x:Name="NextPage"
                     HorizontalAlignment="Center"
                     Click="NextPage_OnClickPage_OnClick"
                     Content="加载更多"
                     Style="{StaticResource ButtonRevealStyle}"
-                    Visibility="Collapsed" />
-                <Grid Height="150" />
-            </StackPanel>
+                    Visibility="Visible" 
+                        VerticalAlignment="Top"
+                        />
+                </Grid>
 
-        </ScrollViewer.Content>
 
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
@@ -324,5 +340,5 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-    </ScrollViewer>
+
 </Page>
