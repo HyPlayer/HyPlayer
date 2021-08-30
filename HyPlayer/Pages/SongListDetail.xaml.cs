@@ -205,7 +205,7 @@ namespace HyPlayer.Pages
                             }
                         }
                     }
-
+                    SongsList.ListSource = "pl" + playList.plid;
                     LoadSongListDetail();
                     LoadSongListItem();
                 });
@@ -352,6 +352,6 @@ namespace HyPlayer.Pages
             ImageRect.ImageSource = null;
         }
 
-        
+
     }
 }

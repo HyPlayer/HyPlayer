@@ -214,6 +214,11 @@ namespace HyPlayer.Classes
 
             return true;
         }
+
+        public string ConvertTranslate(string source)
+        {
+            return source == null ? "" : "(" + source + ")";
+        }
     }
 
     public class PlayItem

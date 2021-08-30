@@ -836,6 +836,22 @@ namespace HyPlayer.HyPlayControl
             return false;
         }
 
+        public static async Task<bool> AppendNCSource(string sourceId)
+        {
+            string prefix = sourceId.Substring(0, 2);
+            switch (prefix)
+            {
+                case "pl":
+                    return await AppendPlayList(sourceId.Substring(2, sourceId.Length - 2));
+                    break;
+                case "ns":
+                    //return await AppendNCSong() //TODO
+                    return true;
+                    break;
+            }
+            return false;
+        }
+
         public static async Task<bool> AppendPlayList(string plid)
         {
             try

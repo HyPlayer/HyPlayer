@@ -35,8 +35,8 @@ namespace HyPlayer.Controls
   typeof(SongsList),
   new PropertyMetadata(null)
 );
-        public static readonly DependencyProperty PlayListProperty = DependencyProperty.Register(
-"playList", typeof(NCPlayList)
+        public static readonly DependencyProperty ListSourceProperty = DependencyProperty.Register(
+"ListSource", typeof(string)
 ,
 typeof(SongsList),
 new PropertyMetadata(null)
@@ -49,11 +49,11 @@ new PropertyMetadata(null)
             set { SetValue(SongsProperty, value); }
         }
 
-        public bool IsManualSelect { get; private set; }
-        public NCPlayList playList
+        public bool IsManualSelect = true;
+        public string ListSource
         {
-            get { return (NCPlayList)GetValue(PlayListProperty); }
-            set { SetValue(PlayListProperty, value); }
+            get { return (string)GetValue(ListSourceProperty); }
+            set { SetValue(ListSourceProperty, value); }
         }
 
         private async void SongContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -62,7 +62,7 @@ new PropertyMetadata(null)
             {
                 HyPlayList.List.Clear();
                 HyPlayList.Player.Pause();
-                await HyPlayList.AppendPlayList(playList.plid);
+                await HyPlayList.AppendNCSource(ListSource);
                 HyPlayList.SongAppendDone();
                 HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem?.id == Songs[SongContainer.SelectedIndex].sid));
             }
@@ -143,7 +143,7 @@ new PropertyMetadata(null)
                 await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistTracks, new Dictionary<string, object>()
             {
                 { "op" , "del" },
-                {"pid",playList.plid },
+                {"pid", ListSource.Substring(2,ListSource.Length -2) },
                 {"tracks" , Songs[SongContainer.SelectedIndex].sid }
             });
             });
