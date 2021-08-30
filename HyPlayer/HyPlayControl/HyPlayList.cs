@@ -273,6 +273,7 @@ namespace HyPlayer.HyPlayControl
         /********        方法         ********/
         public static void SongAppendDone()
         {
+            Common.GLOBAL["PERSONALFM"] = "false";
             Common.Invoke(() => OnPlayListAddDone?.Invoke());
         }
 
@@ -403,9 +404,10 @@ namespace HyPlayer.HyPlayControl
 
         public static async void LoadPlayerSong()
         {
-            if (NowPlayingItem.PlayItem.Name == null)
+            if (NowPlayingItem.PlayItem?.Name == null)
             {
                 MoveSongPointer();
+                return;
             }
 
             Player_SourceChanged(null, null);
@@ -654,7 +656,7 @@ namespace HyPlayer.HyPlayControl
         {
             try
             {
-                if (ncp.ItemType != HyPlayItemType.Netease && ncp.ItemType != HyPlayItemType.Pan)
+                if ((ncp.ItemType != HyPlayItemType.Netease && ncp.ItemType != HyPlayItemType.Pan) || ncp.PlayItem == null)
                     return new PureLyricInfo
                     {
                         PureLyrics = "[00:00.000] 无歌词 请欣赏",
@@ -778,7 +780,6 @@ namespace HyPlayer.HyPlayControl
                 ItemType = ncp.Type,
                 PlayItem = ncp,
             };
-            Common.GLOBAL["PERSONALFM"] = "false";
             return hpi;
         }
 

@@ -182,7 +182,7 @@ namespace HyPlayer.Controls
 
         private void FreshDesktopLyric(TimeSpan ts)
         {
-            
+
             var data = new NotificationData
             {
                 SequenceNumber = 0
@@ -361,7 +361,7 @@ namespace HyPlayer.Controls
                 }
             }
 
-            if (mpi == null) return;
+            if (HyPlayList.NowPlayingItem.PlayItem == null) return;
 
             Common.Invoke(async () =>
             {
@@ -432,7 +432,7 @@ namespace HyPlayer.Controls
 
         private async void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
         {
-            if (HyPlayList.NowPlayingItem.PlayItem.Name != null && HyPlayList.Player.Source == null)
+            if (HyPlayList.NowPlayingItem.PlayItem?.Name != null && HyPlayList.Player.Source == null)
                 HyPlayList.LoadPlayerSong();
             if (HyPlayList.isPlaying)
             {
@@ -678,7 +678,7 @@ namespace HyPlayer.Controls
             }
             else
             {
-                Common.ncapi.RequestAsync(CloudMusicApiProviders.FmTrash,
+                _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.FmTrash,
                     new Dictionary<string, object> { { "id", HyPlayList.NowPlayingItem.PlayItem.id } });
                 PersonalFM.LoadNextFM();
             }
@@ -699,7 +699,7 @@ namespace HyPlayer.Controls
             }
             else if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Radio)
             {
-                Common.ncapi.RequestAsync(CloudMusicApiProviders.ResourceLike,
+                _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.ResourceLike,
                     new Dictionary<string, object>
                         {{"type", "4"}, {"t", "1"}, {"id", HyPlayList.NowPlayingItem.PlayItem.id}});
             }

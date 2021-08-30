@@ -74,8 +74,8 @@
             x:FieldModifier="public"
             BackRequested="OnNavigateBack"
             Canvas.ZIndex="0"
-            DisplayModeChanged="NavMain_DisplayModeChanged"
             CompactModeThresholdWidth="0"
+            DisplayModeChanged="NavMain_DisplayModeChanged"
             FlowDirection="LeftToRight"
             FontFamily="Microsoft Sans Serif"
             IsBackButtonVisible="Visible"
@@ -88,10 +88,10 @@
             PaneTitle="HyPlayer"
             SelectionChanged="NavMain_OnSelectionChanged">
             <muxc:NavigationView.MenuItems>
-                <muxc:NavigationViewItem 
+                <muxc:NavigationViewItem
                     Content="搜索"
-                    Tag="PageSearch"
-                    Icon="Find"/>
+                    Icon="Find"
+                    Tag="PageSearch" />
                 <muxc:NavigationViewItem
                     x:Name="ItemMain"
                     x:FieldModifier="public"

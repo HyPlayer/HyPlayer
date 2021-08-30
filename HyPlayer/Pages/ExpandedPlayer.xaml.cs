@@ -491,7 +491,7 @@ namespace HyPlayer.Pages
 
         public void OnSongChange(HyPlayItem mpi)
         {
-            if (mpi != null)
+            if (mpi?.PlayItem != null)
                 Common.Invoke(async () =>
                 {
                     try

@@ -32,14 +32,28 @@ namespace HyPlayer.Classes
         {
             try
             {
-                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PersonalFm);
-                var song = json["data"][0];
-                HyPlayList.RemoveAllSong();
-                var item = await HyPlayList.AppendNCSong(NCSong.CreateFromJson(song));
-                item.ItemType = HyPlayItemType.Netease;
-                Common.GLOBAL["PERSONALFM"] = "true";
+                if (HyPlayList.List.Count > 2)
+                {
+                    HyPlayList.RemoveAllSong();
+                }
+                else if (HyPlayList.List.Count > 0)
+                {
+                    HyPlayList.List.RemoveAt(0);
+                }
+                if (HyPlayList.List.Count < 1)
+                {
+                    //只有一首需要请求下一首
+                    var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PersonalFm);
+                    var song1 = json["data"][0];
+                    var song2 = json["data"][1];
+                    var item1 = await HyPlayList.AppendNCSong(NCSong.CreateFromJson(song1));
+                    var item2 = await HyPlayList.AppendNCSong(NCSong.CreateFromJson(song2));
+                    item1.ItemType = HyPlayItemType.Netease;
+                    item2.ItemType = HyPlayItemType.Netease;
+                }
                 HyPlayList.SongAppendDone();
                 HyPlayList.SongMoveTo(0);
+                Common.GLOBAL["PERSONALFM"] = "true";
             }
             catch (Exception e)
             {

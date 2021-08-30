@@ -380,13 +380,13 @@ namespace HyPlayer.Pages
                     }
                     else
                     {
+
+                        Common.MySongLists.Add(NCPlayList.CreateFromJson(jToken));
                         if (!isliked)
                         {
                             isliked = true;
                             continue;
                         }
-
-                        Common.MySongLists.Add(NCPlayList.CreateFromJson(jToken));
                         var item = new NavigationViewItem
                         {
                             Icon = new FontIcon()
