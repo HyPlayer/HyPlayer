@@ -352,9 +352,16 @@ namespace HyPlayer.Pages
             ImageRect.ImageSource = null;
         }
 
-        private void SongContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void SongContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (IsManualSelect) _ = Songs[SongContainer.SelectedIndex].AppendMe();
+            if (IsManualSelect)
+            {
+                HyPlayList.List.Clear();
+                HyPlayList.Player.Pause();
+                await HyPlayList.AppendPlayList(playList.plid);
+                HyPlayList.SongAppendDone();
+                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem?.id == Songs[SongContainer.SelectedIndex].sid));
+            }
         }
 
         private void BtnPlay_Click(object sender, RoutedEventArgs e)
