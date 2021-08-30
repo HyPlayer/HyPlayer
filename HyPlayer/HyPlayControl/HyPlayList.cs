@@ -82,52 +82,8 @@ namespace HyPlayer.HyPlayControl
         private static string _lastStorageUrl;
         private static StorageFile _lastStorageFile;
 
-        public static StorageFile NowPlayingStorageFile
-        {
-            get
-            {
-                // 此处可以改进
-                if (_lastStorageUrl != NowPlayingItem.PlayItem.url)
-                {
-                    if (NowPlayingItem.PlayItem.DontSetLocalStorageFile != null)
-                    {
-                        if (NowPlayingItem.PlayItem.DontSetLocalStorageFile.FileType != ".ncm")
-                        {
-                            _lastStorageFile = NowPlayingItem.PlayItem.DontSetLocalStorageFile;
-                        }
-                        else
-                        {
-                            // 脑残Music解析
-                            Stream stream = NowPlayingItem.PlayItem.DontSetLocalStorageFile.OpenReadAsync().AsTask()
-                                .GetAwaiter().GetResult().AsStreamForRead();
-                            if (NCMFile.IsCorrectNCMFile(stream))
-                            {
-                                var Info = NCMFile.GetNCMMusicInfo(stream);
-                                var CoverStream = NCMFile.GetCoverStream(stream);
-                                var encStream = NCMFile.GetEncryptedStream(stream);
-                                encStream.Seek(0, SeekOrigin.Begin);
+        public static StorageFile NowPlayingStorageFile => _lastStorageFile;
 
-                                _lastStorageFile = StorageFile.CreateStreamedFileAsync(
-                                        Path.ChangeExtension(NowPlayingItem.PlayItem.DontSetLocalStorageFile.Name,
-                                            Info.format), (t) => { encStream.CopyTo(t.AsStreamForWrite()); },
-                                        RandomAccessStreamReference.CreateFromStream(
-                                            CoverStream.AsRandomAccessStream()))
-                                    .AsTask().GetAwaiter().GetResult();
-                            }
-                        }
-                    }
-                    else
-                    {
-                        _lastStorageUrl = NowPlayingItem.PlayItem.url;
-                        var tsk = StorageFile.GetFileFromPathAsync(NowPlayingItem.PlayItem.url).AsTask();
-                        tsk.Wait();
-                        _lastStorageFile = tsk.Result;
-                    }
-                }
-
-                return _lastStorageFile;
-            }
-        }
 
         public static HyPlayItem NowPlayingItem
         {
@@ -268,6 +224,45 @@ namespace HyPlayer.HyPlayControl
             }
 
             //Player.PlaybackSession.Position = temppos;
+        }
+
+        private static async Task<StorageFile> LoadLocalFile()
+        {
+            // 此处可以改进
+            if (_lastStorageUrl != NowPlayingItem.PlayItem.url)
+            {
+                if (NowPlayingItem.PlayItem.DontSetLocalStorageFile != null)
+                {
+                    if (NowPlayingItem.PlayItem.DontSetLocalStorageFile.FileType != ".ncm")
+                    {
+                        _lastStorageFile = NowPlayingItem.PlayItem.DontSetLocalStorageFile;
+                    }
+                    else
+                    {
+                        // 脑残Music解析
+                        Stream stream = (await NowPlayingItem.PlayItem.DontSetLocalStorageFile.OpenReadAsync()).AsStreamForRead();
+                        if (NCMFile.IsCorrectNCMFile(stream))
+                        {
+                            var Info = NCMFile.GetNCMMusicInfo(stream);
+                            var CoverStream = NCMFile.GetCoverStream(stream);
+                            var encStream = NCMFile.GetEncryptedStream(stream);
+                            encStream.Seek(0, SeekOrigin.Begin);
+                            _lastStorageFile = await StorageFile.CreateStreamedFileAsync(
+                                    Path.ChangeExtension(NowPlayingItem.PlayItem.DontSetLocalStorageFile.Name,
+                                        Info.format), (t) => { encStream.CopyTo(t.AsStreamForWrite()); },
+                                    RandomAccessStreamReference.CreateFromStream(
+                                        CoverStream.AsRandomAccessStream()));
+                        }
+                    }
+                }
+                else
+                {
+                    _lastStorageUrl = NowPlayingItem.PlayItem.url;
+                    _lastStorageFile = await StorageFile.GetFileFromPathAsync(NowPlayingItem.PlayItem.url);
+                }
+            }
+            Player_SourceChanged(null, null);
+            return _lastStorageFile;
         }
 
         /********        方法         ********/
@@ -423,6 +418,7 @@ namespace HyPlayer.HyPlayControl
                     //cnm的NCM,我试试其他方式
                     if (NowPlayingItem.PlayItem.isLocalFile)
                     {
+                        await LoadLocalFile();
                         ms = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
                     }
                     else
@@ -507,6 +503,7 @@ namespace HyPlayer.HyPlayControl
                 case HyPlayItemType.Local:
                     try
                     {
+                        await LoadLocalFile();
                         ms = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
                     }
                     catch

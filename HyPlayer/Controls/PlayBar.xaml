@@ -168,7 +168,10 @@
                     <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE72D;" />
                 </Button>
             </StackPanel>
-            <StackPanel x:Name="GridSongInfo" Orientation="Horizontal">
+            <StackPanel
+                x:Name="GridSongInfo"
+                HorizontalAlignment="Stretch"
+                Orientation="Horizontal">
                 <Grid
                     x:Name="ImageContainer"
                     Margin="0"
@@ -183,7 +186,7 @@
                         Stretch="UniformToFill" />
                 </Grid>
                 <StackPanel Margin="12,0,0,0" Spacing="12">
-                    <controls:DockPanel LastChildFill="True">
+                    <controls:DockPanel HorizontalAlignment="Stretch" LastChildFill="True">
                         <Grid
                             MaxHeight="20"
                             Padding="3,0,3,0"
@@ -197,12 +200,14 @@
                                 Foreground="Red"
                                 Text="无歌曲" />
                         </Grid>
-                        <local:ScrollingTextBlock
+                        <TextBlock
                             x:Name="TbSongName"
                             Margin="5,0,0,0"
+                            HorizontalAlignment="Stretch"
                             controls:DockPanel.Dock="Left"
                             FontSize="18"
-                            FontWeight="Bold" />
+                            FontWeight="Bold"
+                            ToolTipService.ToolTip="{x:Bind TbSongName.Text, Mode=OneWay}" />
 
                     </controls:DockPanel>
 

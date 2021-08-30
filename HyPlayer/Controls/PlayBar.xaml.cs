@@ -319,11 +319,8 @@ namespace HyPlayer.Controls
                        else
                            FadeSettedVolume = false;
                    }
-                   if (MainControlGrid.ActualOffset.X != lastOffsetX)
-                   {
-                       lastOffsetX = MainControlGrid.ActualOffset.X;
-                       TbSongName.Width = MainControlGrid.ActualOffset.X - 165;
-                   }
+                   
+                  
                    //SliderAudioRate.Value = mp.Volume;
                }
                catch

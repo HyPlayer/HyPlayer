@@ -19,6 +19,7 @@
             VerticalScrollMode="Disabled">
             <TextBlock
                 x:Name="Tb"
+                Padding="0,0,100,0"
                 x:FieldModifier="public"
                 FontSize="{x:Bind FontSize, Mode=OneWay}"
                 FontWeight="{x:Bind FontWeight}" />
