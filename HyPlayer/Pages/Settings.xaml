@@ -291,7 +291,7 @@
                         Click="BtnXboxReserve_Click"
                         Content="Xbox 进后台模式"
                         Style="{StaticResource ButtonRevealStyle}" />
-                    <CheckBox Content="纯净模式 (隐藏发现及评论入口)" IsChecked="{x:Bind hyplayer:Common.Setting.notClearMode, Mode=TwoWay}" />
+                    <CheckBox Content="完整模式 (显示发现及评论入口)" IsChecked="{x:Bind hyplayer:Common.Setting.notClearMode, Mode=TwoWay}" />
                 </StackPanel>
             </ScrollViewer>
         </PivotItem>
