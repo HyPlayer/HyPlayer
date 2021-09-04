@@ -27,7 +27,6 @@ namespace HyPlayer.Pages
     /// </summary>
     public sealed partial class SongListDetail : Page, IDisposable
     {
-        private string intelsong = "";
         private int page;
         private NCPlayList playList;
         private bool IsManualSelect = true;
@@ -90,7 +89,6 @@ namespace HyPlayer.Pages
                             foreach (var jToken in json["songs"])
                             {
                                 var song = (JObject)jToken;
-                                if (string.IsNullOrEmpty(intelsong)) intelsong = song["id"].ToString();
 
                                 var ncSong = NCSong.CreateFromJson(song);
                                 ncSong.IsAvailable =
@@ -252,12 +250,24 @@ namespace HyPlayer.Pages
                     {
                         var jsona = await Common.ncapi.RequestAsync(
                             CloudMusicApiProviders.PlaymodeIntelligenceList,
-                            new Dictionary<string, object> { { "pid", playList.plid }, { "id", intelsong } });
-                        var Songs = new List<NCSong>();
+                            new Dictionary<string, object> { { "pid", playList.plid }, { "id", Songs[0].sid }/*, { "sid", Songs[0].sid }*/ });
+                        var IntSongs = new List<NCSong>();
+                        IntSongs.Add(Songs[new Random().Next(0, Songs.Count)]);
                         foreach (var token in jsona["data"])
                         {
-                            var ncSong = NCSong.CreateFromJson(token["songInfo"]);
-                            Songs.Add(ncSong);
+                            try
+                            {
+                                if (token["songInfo"] != null)
+                                {
+                                    var ncSong = NCSong.CreateFromJson(token["songInfo"]);
+                                    IntSongs.Add(ncSong);
+                                }
+                            }
+                            catch
+                            {
+                                //ignore
+                            }
+
                         }
 
                         try
@@ -265,17 +275,17 @@ namespace HyPlayer.Pages
                             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
                                 new Dictionary<string, object>
                                 {
-                                    { "id", string.Join(",", Songs.Select(t => t.sid)) },
+                                    { "id", string.Join(",", IntSongs.Select(t => t.sid)) },
                                     { "br", Common.Setting.audioRate }
                                 });
 
                             var arr = json["data"].ToList();
-                            for (var i = 0; i < Songs.Count; i++)
+                            for (var i = 0; i < IntSongs.Count; i++)
                             {
-                                var token = arr.Find(jt => jt["id"].ToString() == Songs[i].sid);
+                                var token = arr.Find(jt => jt["id"].ToString() == IntSongs[i].sid);
                                 if (!token.HasValues) continue;
 
-                                var ncSong = Songs[i];
+                                var ncSong = IntSongs[i];
 
                                 var tag = "";
                                 if (token["type"].ToString().ToLowerInvariant() == "flac")
