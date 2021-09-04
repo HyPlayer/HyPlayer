@@ -352,6 +352,16 @@ namespace HyPlayer
             }
         }
 
+        public bool notClearMode
+        {
+            get { return GetSettings<bool>("notClearMode", true); }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["notClearMode"] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public double fadeInOutTime
         {
             get

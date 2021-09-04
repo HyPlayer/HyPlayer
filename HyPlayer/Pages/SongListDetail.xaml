@@ -104,7 +104,8 @@
                     <Button
                         Click="ButtonComment_OnClick"
                         Content="评论"
-                        Style="{StaticResource ButtonRevealStyle}" />
+                        Style="{StaticResource ButtonRevealStyle}"
+                        Visibility="{x:Bind hyplayer:Common.Setting.notClearMode, Mode=OneWay}" />
                     <Button
                         x:Name="ButtonIntel"
                         Click="ButtonHeartBeat_OnClick"
