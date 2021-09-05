@@ -206,7 +206,7 @@ namespace HyPlayer.HyPlayControl
                     //TODO FM和普通歌曲一起
                     Common.Invoke(async () =>
                     {
-                        List[NowPlaying] = await LoadNCSong(new NCSong
+                        List[NowPlaying] = LoadNCSong(new NCSong
                         {
                             Type = NowPlayingItem.ItemType,
                             Album = NowPlayingItem.PlayItem.Album,
@@ -707,7 +707,7 @@ namespace HyPlayer.HyPlayControl
 
         public static async Task<HyPlayItem> AppendNCSong(NCSong ncSong, int position = -1)
         {
-            var hpi = await LoadNCSong(ncSong);
+            var hpi = LoadNCSong(ncSong);
             if (position < 0)
                 position = List.Count;
             if (hpi != null)
@@ -715,45 +715,26 @@ namespace HyPlayer.HyPlayControl
             return hpi;
         }
 
-        public static async Task<HyPlayItem> LoadNCSong(NCSong ncSong)
+        public static HyPlayItem LoadNCSong(NCSong ncSong)
         {
             try
             {
-                var json = await Common.ncapi.RequestAsync(
-                    CloudMusicApiProviders.SongUrl,
-                    new Dictionary<string, object> { { "id", ncSong.sid }, { "br", Common.Setting.audioRate } });
-
-                try
+                var ncp = new PlayItem
                 {
-                    if (json["data"][0]["code"].ToString() != "200") return null; //未获取到
-
-                    var tag = "";
-                    if (json["data"][0]["type"].ToString().ToLowerInvariant() == "flac")
-                        tag = "SQ";
-                    else
-                        tag = json["data"][0]["br"].ToObject<int>() / 1000 + "k";
-
-                    var ncp = new PlayItem
-                    {
-                        Type = ncSong.Type,
-                        bitrate = json["data"][0]["br"].ToObject<int>(),
-                        tag = tag,
-                        Album = ncSong.Album,
-                        Artist = ncSong.Artist,
-                        subext = json["data"][0]["type"].ToString().ToLowerInvariant(),
-                        id = ncSong.sid,
-                        Name = ncSong.songname,
-                        url = json["data"][0]["url"].ToString(),
-                        LengthInMilliseconds = ncSong.LengthInMilliseconds,
-                        size = json["data"][0]["size"].ToString(),
-                        //md5 = json["data"][0]["md5"].ToString()
-                    };
-                    return LoadNCPlayItem(ncp);
-                }
-                catch
-                {
-                    return null;
-                }
+                    Type = ncSong.Type,
+                    //bitrate = json["data"][0]["br"].ToObject<int>(),
+                    tag = "在线",
+                    Album = ncSong.Album,
+                    Artist = ncSong.Artist,
+                    //subext = json["data"][0]["type"].ToString().ToLowerInvariant(),
+                    id = ncSong.sid,
+                    Name = ncSong.songname,
+                    //url = json["data"][0]["url"].ToString(),
+                    LengthInMilliseconds = ncSong.LengthInMilliseconds,
+                    //size = json["data"][0]["size"].ToString(),
+                    //md5 = json["data"][0]["md5"].ToString()
+                };
+                return LoadNCPlayItem(ncp);
             }
             catch (Exception ex)
             {
@@ -789,38 +770,22 @@ namespace HyPlayer.HyPlayControl
                 HyPlayList.RemoveAllSong();
             try
             {
-                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                    new Dictionary<string, object>
-                    {
-                        { "id", string.Join(',', NCSongs.Select(t => t.sid)) },
-                        { "br", Common.Setting.audioRate }
-                    });
 
-                var arr = json["data"].ToList();
                 for (var i = 0; i < NCSongs.Count; i++)
                 {
-                    var token = arr.Find(jt => jt["id"].ToString() == NCSongs[i].sid);
-                    if (!token.HasValues) continue;
-
                     var ncSong = NCSongs[i];
-                    var tag = "";
-                    if (token["type"].ToString().ToLowerInvariant() == "flac")
-                        tag = "SQ";
-                    else
-                        tag = token["br"].ToObject<int>() / 1000 + "k";
-
                     var ncp = new PlayItem
                     {
                         Type = itemType,
-                        tag = tag,
+                        tag = "在线",
                         Album = ncSong.Album,
                         Artist = ncSong.Artist,
-                        subext = token["type"].ToString(),
+                        //subext = token["type"].ToString(),
                         id = ncSong.sid,
                         Name = ncSong.songname,
-                        url = token["url"].ToString(),
+                        //url = token["url"].ToString(),
                         LengthInMilliseconds = ncSong.LengthInMilliseconds,
-                        size = token["size"].ToString(),
+                        //size = token["size"].ToString(),
                         //md5 = token["md5"].ToString()
                     };
                     var item = AppendNCPlayItem(ncp);
@@ -838,18 +803,30 @@ namespace HyPlayer.HyPlayControl
 
         public static async Task<bool> AppendNCSource(string sourceId)
         {
+            /*  歌单: pl+歌单ID (e.g. pl123456)
+             *  单曲: ns+歌曲ID (e.g. ns1515584)
+             *  专辑: al + 专辑ID(e.g.al552255)
+             *  歌手热门: sh + 歌手ID(e.g sh25151)
+             *  歌手全部: sa + 歌手ID e.g.sa245144
+             *  电台: rd + 电台ID  e.g.rd5274522
+             *  最近播放: rc + 随机数字
+             */
             string prefix = sourceId.Substring(0, 2);
             switch (prefix)
             {
                 case "pl":
                     return await AppendPlayList(sourceId.Substring(2, sourceId.Length - 2));
-                    break;
                 case "ns":
                     _ = AppendNCSong(NCSong.CreateFromJson((await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail, new Dictionary<string, object>() { { "id", sourceId.Substring(2, sourceId.Length - 2) } }))["songs"][0]));
                     return true;
-                    break;
+                case "al":
+                case "sh":
+                case "sa":
+                case "rd":
+                case "rc":
+                default:
+                    return false;
             }
-            return false;
         }
 
         public static async Task<bool> AppendPlayList(string plid)

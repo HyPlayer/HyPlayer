@@ -79,53 +79,17 @@ namespace HyPlayer.Pages
             {
                 Common.Invoke(async () =>
                 {
-                    HyPlayList.RemoveAllSong();
                     try
                     {
-                        var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                            new Dictionary<string, object>
-                            {
-                                { "id", string.Join(',', Common.ListedSongs.Select(t => t.sid)) },
-                                { "br", Common.Setting.audioRate }
-                            });
-                        var arr = json["data"].ToList();
-                        for (var i = 0; i < Common.ListedSongs.Count; i++)
-                        {
-                            var token = arr.Find(jt => jt["id"].ToString() == Common.ListedSongs[i].sid);
-                            if (!token.HasValues) continue;
-
-                            var ncSong = Common.ListedSongs[i];
-
-                            var tag = "";
-                            if (token["type"].ToString().ToLowerInvariant() == "flac")
-                                tag = "SQ";
-                            else
-                                tag = token["br"].ToObject<int>() / 1000 + "k";
-
-                            var ncp = new PlayItem
-                            {
-                                tag = tag,
-                                Album = ncSong.Album,
-                                Artist = ncSong.Artist,
-                                subext = token["type"].ToString(),
-                                id = ncSong.sid,
-                                Type = HyPlayItemType.Radio,
-                                Name = ncSong.songname,
-                                url = token["url"].ToString(),
-                                LengthInMilliseconds = ncSong.LengthInMilliseconds,
-                                size = token["size"].ToString(),
-                                //md5 = token["md5"].ToString()
-                            };
-                            HyPlayList.AppendNCPlayItem(ncp);
-                        }
+                        await HyPlayList.AppendNCSongs(HyPlayItemType.Netease);
+                        HyPlayList.SongAppendDone();
+                        HyPlayList.SongMoveTo(0);
                     }
                     catch (Exception ex)
                     {
                         Common.ShowTeachingTip("发生错误", ex.Message);
                     }
 
-                    HyPlayList.SongAppendDone();
-                    HyPlayList.SongMoveTo(0);
                 });
             });
         }

@@ -274,43 +274,7 @@ namespace HyPlayer.Pages
 
                         try
                         {
-                            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                                new Dictionary<string, object>
-                                {
-                                    { "id", string.Join(",", IntSongs.Select(t => t.sid)) },
-                                    { "br", Common.Setting.audioRate }
-                                });
-
-                            var arr = json["data"].ToList();
-                            for (var i = 0; i < IntSongs.Count; i++)
-                            {
-                                var token = arr.Find(jt => jt["id"].ToString() == IntSongs[i].sid);
-                                if (!token.HasValues) continue;
-
-                                var ncSong = IntSongs[i];
-
-                                var tag = "";
-                                if (token["type"].ToString().ToLowerInvariant() == "flac")
-                                    tag = "SQ";
-                                else
-                                    tag = token["br"].ToObject<int>() / 1000 + "k";
-
-                                var ncp = new PlayItem
-                                {
-                                    tag = tag,
-                                    Album = ncSong.Album,
-                                    Artist = ncSong.Artist,
-                                    subext = token["type"].ToString(),
-                                    Type = HyPlayItemType.Netease,
-                                    id = ncSong.sid,
-                                    Name = ncSong.songname,
-                                    url = token["url"].ToString(),
-                                    LengthInMilliseconds = ncSong.LengthInMilliseconds,
-                                    size = token["size"].ToString(),
-                                    //md5 = token["md5"].ToString()
-                                };
-                                HyPlayList.AppendNCPlayItem(ncp);
-                            }
+                            await HyPlayList.AppendNCSongs(HyPlayItemType.Netease,IntSongs);
 
                             HyPlayList.SongAppendDone();
 
