@@ -185,6 +185,8 @@ namespace HyPlayer.Classes
 
             if (song["tns"] != null)
                 NCSong.transname = string.Join(" / ", song["tns"].ToArray().Select(t => t.ToString()));
+            if (song["privilege"] != null)
+                NCSong.IsAvailable = song["privilege"]["st"].ToString() == "0";
             return NCSong;
         }
 
