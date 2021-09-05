@@ -11,6 +11,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -156,5 +157,10 @@ new PropertyMetadata(null)
             element.ContextFlyout.ShowAt(element, new FlyoutShowOptions { Position = e.GetPosition(element) });
             IsManualSelect = true;
         }
+        public static Brush GetBrush(bool IsAvailable)
+        {
+            return IsAvailable ? (Brush)Application.Current.Resources["DefaultTextForegroundThemeBrush"] : new SolidColorBrush(Color.FromArgb(255, 128, 128, 128));
+        }
+
     }
 }

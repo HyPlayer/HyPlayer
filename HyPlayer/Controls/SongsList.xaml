@@ -7,6 +7,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:hycontrols="using:HyPlayer.Controls"
     d:DesignHeight="300"
     mc:Ignorable="d">
 
@@ -18,7 +19,7 @@
         ShowsScrollingPlaceholders="True">
         <ListView.ItemTemplate>
             <DataTemplate x:DataType="classes:NCSong">
-                <Grid RightTapped="Grid_RightTapped" Tag="{x:Bind Order}">
+                <Grid RightTapped="Grid_RightTapped" Tag="{x:Bind Order}" IsRightTapEnabled="True" >
                     <StackPanel Orientation="Horizontal">
                         <TextBlock
                             x:Name="OrderId"
@@ -53,6 +54,7 @@
                                     Name="TextBlockSongname"
                                     x:Phase="0"
                                     FontSize="20"
+                                    Foreground="{x:Bind hycontrols:SongsList.GetBrush(IsAvailable)}"
                                     Text="{x:Bind songname}" />
                                 <TextBlock
                                     Name="TextBlockTransName"
