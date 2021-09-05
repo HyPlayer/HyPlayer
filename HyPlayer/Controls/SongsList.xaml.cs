@@ -139,7 +139,7 @@ new PropertyMetadata(null)
 
         private async void Btn_Del_Click(object sender, RoutedEventArgs e)
         {
-            await Task.Run(async () =>
+            Common.Invoke(async () =>
             {
                 await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistTracks, new Dictionary<string, object>()
             {
@@ -148,6 +148,7 @@ new PropertyMetadata(null)
                 {"tracks" , Songs[SongContainer.SelectedIndex].sid }
             });
             });
+            Songs.RemoveAt(SongContainer.SelectedIndex);
         }
 
         private void Grid_RightTapped(object sender, RightTappedRoutedEventArgs e)
