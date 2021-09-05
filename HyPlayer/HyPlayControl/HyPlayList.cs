@@ -845,7 +845,7 @@ namespace HyPlayer.HyPlayControl
                     return await AppendPlayList(sourceId.Substring(2, sourceId.Length - 2));
                     break;
                 case "ns":
-                    //return await AppendNCSong() //TODO
+                    _ = AppendNCSong(NCSong.CreateFromJson((await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail, new Dictionary<string, object>() { { "id", sourceId.Substring(2, sourceId.Length - 2) } }))["songs"][0]));
                     return true;
                     break;
             }
