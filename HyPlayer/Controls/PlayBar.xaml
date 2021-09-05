@@ -152,7 +152,8 @@
                     Click="Btn_Comment_OnClick"
                     CornerRadius="20"
                     Style="{StaticResource ButtonRevealStyle}"
-                    ToolTipService.ToolTip="查看评论">
+                    ToolTipService.ToolTip="查看评论"
+                    Visibility="{x:Bind hy:Common.Setting.notClearMode, Mode=OneWay}">
                     <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8F2;" />
                 </Button>
                 <Button

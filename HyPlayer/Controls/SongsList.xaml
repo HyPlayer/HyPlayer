@@ -5,7 +5,7 @@
     xmlns:classes="using:HyPlayer.Classes"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="using:HyPlayer.Controls"
+    xmlns:local="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     d:DesignHeight="300"
     mc:Ignorable="d">
@@ -160,7 +160,8 @@
                                 x:Name="FlyoutItemComments"
                                 Click="FlyoutItemComments_Click"
                                 Style="{StaticResource MenuFlyoutItemRevealStyle}"
-                                Text="评论">
+                                Text="评论"
+                                Visibility="{x:Bind local:Common.Setting.notClearMode, Mode=OneWay}">
                                 <MenuFlyoutItem.Icon>
                                     <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8F2;" />
                                 </MenuFlyoutItem.Icon>
@@ -178,7 +179,8 @@
                                 x:Name="BtnMV"
                                 Click="BtnMV_Click"
                                 Style="{StaticResource MenuFlyoutItemRevealStyle}"
-                                Text="视频">
+                                Text="视频"
+                                Visibility="{x:Bind local:Common.Setting.notClearMode, Mode=OneWay}">
                                 <MenuFlyoutItem.Icon>
                                     <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE173;" />
                                 </MenuFlyoutItem.Icon>
