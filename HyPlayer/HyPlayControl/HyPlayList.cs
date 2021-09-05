@@ -761,7 +761,7 @@ namespace HyPlayer.HyPlayControl
             return hpi;
         }
 
-        public static async Task<bool> AppendNCSongs(List<NCSong> NCSongs, HyPlayItemType itemType = HyPlayItemType.Netease,
+        public static async Task<bool> AppendNCSongs(IList<NCSong> NCSongs, HyPlayItemType itemType = HyPlayItemType.Netease,
              bool needRemoveList = true)
         {
             if (NCSongs == null)
@@ -820,6 +820,7 @@ namespace HyPlayer.HyPlayControl
                     _ = AppendNCSong(NCSong.CreateFromJson((await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail, new Dictionary<string, object>() { { "id", sourceId.Substring(2, sourceId.Length - 2) } }))["songs"][0]));
                     return true;
                 case "al":
+                    return await AppendAlbum(sourceId.Substring(2, sourceId.Length - 2));
                 case "sh":
                 case "sa":
                 case "rd":
@@ -829,6 +830,32 @@ namespace HyPlayer.HyPlayControl
             }
         }
 
+        public static async Task<bool> AppendAlbum(string alid)
+        {
+            try
+            {
+                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Album,
+                    new Dictionary<string, object> { { "id", alid } });
+
+                List<NCSong> list = new List<NCSong>();
+                foreach (var song in json["songs"].ToArray())
+                {
+                    var ncSong = NCSong.CreateFromJson(song);
+                    list.Add(ncSong);
+                }
+                list.RemoveAll(t => t == null);
+                await HyPlayList.AppendNCSongs(list, HyPlayItemType.Netease, false);
+                
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip("发生错误", ex.Message);
+            }
+
+            return false;
+        }
         public static async Task<bool> AppendPlayList(string plid)
         {
             try

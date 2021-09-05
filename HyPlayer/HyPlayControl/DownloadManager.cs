@@ -13,6 +13,7 @@ using NeteaseCloudMusicApi;
 using TagLib;
 using File = TagLib.File;
 using System.Threading.Tasks;
+using System.Collections.ObjectModel;
 
 namespace HyPlayer.HyPlayControl
 {
@@ -327,6 +328,17 @@ namespace HyPlayer.HyPlayControl
             if (!Timered)
                 HyPlayList.OnTimerTicked += Timer_Elapsed;
             songs.ForEach(t => { DownloadLists.Add(new DownloadObject(t)); });
+        }
+
+        internal static void AddDownload(ObservableCollection<NCSong> songs)
+        {
+            if (!CheckDownloadAbilityAndToast()) return;
+            if (!Timered)
+                HyPlayList.OnTimerTicked += Timer_Elapsed;
+            foreach(NCSong song in songs)
+            {
+                DownloadLists.Add(new DownloadObject(song));
+            }
         }
     }
 

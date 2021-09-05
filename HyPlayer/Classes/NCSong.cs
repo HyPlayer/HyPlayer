@@ -140,6 +140,7 @@ namespace HyPlayer.Classes
         public string alias;
         public List<NCArtist> Artist;
         public int Order = 0;
+        public int DspOrder => Order + 1;
         public BitmapImage Cover => new BitmapImage(new Uri(Album.cover + "?param=" + StaticSource.PICSIZE_SINGLENCSONG_COVER));
         public bool LoadList = false;
         public bool IsAvailable = true;

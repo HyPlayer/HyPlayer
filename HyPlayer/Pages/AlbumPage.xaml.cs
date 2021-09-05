@@ -13,6 +13,7 @@ using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
+using System.Collections.ObjectModel;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -23,7 +24,7 @@ namespace HyPlayer.Pages
     /// </summary>
     public sealed partial class AlbumPage : Page, IDisposable
     {
-        private readonly List<NCSong> songs = new List<NCSong>();
+        private readonly ObservableCollection<NCSong> songs = new ObservableCollection<NCSong>();
         private NCAlbum Album;
         private List<NCArtist> artists = new List<NCArtist>();
         private int page;
@@ -77,7 +78,7 @@ namespace HyPlayer.Pages
                                                  : "")
                                              + json["album"]["description"];
                         var cdname = "";
-                        StackPanel stp = null;
+                        SongsList sl = null;
                         var idx = 0;
                         foreach (var song in json["songs"].ToArray())
                         {
@@ -87,7 +88,7 @@ namespace HyPlayer.Pages
                             {
                                 idx = 0;
                                 cdname = song["cd"].ToString();
-                                stp = new StackPanel();
+                                sl = new SongsList { Songs = new ObservableCollection<NCSong>() ,ListSource="al"+ Album.id};
                                 SongContainer.Children.Add(new StackPanel
                                 {
                                     Orientation = Orientation.Vertical,
@@ -98,13 +99,12 @@ namespace HyPlayer.Pages
                                             Margin = new Thickness(5, 0, 0, 0),
                                             FontWeight = FontWeights.Black, FontSize = 23, Text = "Disc " + cdname
                                         },
-                                        stp
+                                        sl
                                     }
                                 });
                             }
-
-                            stp.Children.Add(new SingleNCSong(ncSong, idx++,
-                                song["privilege"]["st"].ToString() == "0", true));
+                            ncSong.Order = idx++;
+                            sl.Songs.Add(ncSong);
                         }
                     }
                     catch (Exception ex)
@@ -124,7 +124,7 @@ namespace HyPlayer.Pages
                 {
                     try
                     {
-                        await HyPlayList.AppendNCSongs(songs,HyPlayItemType.Netease);
+                        await HyPlayList.AppendNCSongs(songs, HyPlayItemType.Netease);
 
                         HyPlayList.SongAppendDone();
 
