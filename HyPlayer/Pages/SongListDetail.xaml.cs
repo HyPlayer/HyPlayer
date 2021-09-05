@@ -85,7 +85,6 @@ namespace HyPlayer.Pages
                         {
                             json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
                                 new Dictionary<string, object> { ["ids"] = string.Join(",", trackIds) });
-                            Common.ListedSongs = new List<NCSong>();
                             var idx = page * 500;
                             var i = 0;
                             foreach (var jToken in json["songs"])
@@ -96,7 +95,6 @@ namespace HyPlayer.Pages
                                 ncSong.IsAvailable =
                                     json["privileges"].ToList()[i++]["st"].ToString() == "0";
                                 ncSong.Order = idx++;
-                                if (ncSong.IsAvailable) Common.ListedSongs.Add(ncSong);
                                 Common.Invoke(() => { Songs.Add(ncSong); });
                             }
                         }
@@ -138,7 +136,6 @@ namespace HyPlayer.Pages
                             var ncSong = NCSong.CreateFromJson(song);
                             ncSong.IsAvailable = true;
                             ncSong.Order = idx++;
-                            if (ncSong.IsAvailable) Common.ListedSongs.Add(ncSong);
                             Common.Invoke(() => { Songs.Add(ncSong); });
 
                         }
@@ -274,7 +271,7 @@ namespace HyPlayer.Pages
 
                         try
                         {
-                            await HyPlayList.AppendNCSongs(HyPlayItemType.Netease,IntSongs);
+                            await HyPlayList.AppendNCSongs(IntSongs);
 
                             HyPlayList.SongAppendDone();
 
@@ -295,7 +292,7 @@ namespace HyPlayer.Pages
 
         private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
         {
-            DownloadManager.AddDownload(Common.ListedSongs);
+            DownloadManager.AddDownload(Songs.ToList());
         }
 
         private void LikeBtnClick(object sender, RoutedEventArgs e)

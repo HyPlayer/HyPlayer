@@ -27,7 +27,6 @@ namespace HyPlayer.Pages
         private NCAlbum Album;
         private List<NCArtist> artists = new List<NCArtist>();
         private int page;
-        private bool disposedValue;
 
         public AlbumPage()
         {
@@ -41,7 +40,6 @@ namespace HyPlayer.Pages
             {
                 Common.Invoke(async () =>
                 {
-                    bool isok;
                     JObject json;
                     string albumid = "";
                     if (e.Parameter is NCAlbum)
@@ -84,7 +82,7 @@ namespace HyPlayer.Pages
                         foreach (var song in json["songs"].ToArray())
                         {
                             var ncSong = NCSong.CreateFromJson(song);
-                            Common.ListedSongs.Add(ncSong);
+                            songs.Add(ncSong);
                             if (song["cd"].ToString() != cdname)
                             {
                                 idx = 0;
@@ -126,7 +124,7 @@ namespace HyPlayer.Pages
                 {
                     try
                     {
-                        await HyPlayList.AppendNCSongs(HyPlayItemType.Netease, songs);
+                        await HyPlayList.AppendNCSongs(songs,HyPlayItemType.Netease);
 
                         HyPlayList.SongAppendDone();
 

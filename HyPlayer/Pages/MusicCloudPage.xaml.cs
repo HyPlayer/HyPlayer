@@ -89,7 +89,7 @@ namespace HyPlayer.Pages
                 {
                     try
                     {
-                        await HyPlayList.AppendNCSongs(HyPlayItemType.Netease, Items.ToList());
+                        await HyPlayList.AppendNCSongs(Items.ToList());
                         HyPlayList.SongAppendDone();
                         HyPlayList.SongMoveTo(SongContainer.SelectedIndex);
                     }

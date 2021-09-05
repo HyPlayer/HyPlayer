@@ -60,7 +60,7 @@ namespace HyPlayer.Controls
                 try
                 {
                     var list = await HistoryManagement.GetcurPlayingListHistory();
-                    await HyPlayList.AppendNCSongs(HyPlayItemType.Netease, list);
+                    await HyPlayList.AppendNCSongs(list);
                     if (list.Count > 0)
                     {
                         int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"].ToString(),

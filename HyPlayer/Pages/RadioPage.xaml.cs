@@ -21,6 +21,8 @@ namespace HyPlayer.Pages
         private int page;
         private NCRadio Radio;
 
+        public List<NCSong> Songs { get; private set; }
+
         public RadioPage()
         {
             InitializeComponent();
@@ -41,7 +43,7 @@ namespace HyPlayer.Pages
                 foreach (var jToken in json["programs"])
                 {
                     var song = NCFmItem.CreateFromJson(jToken);
-                    Common.ListedSongs.Add(song);
+                    Songs.Add(song);
                     SongContainer.Children.Add(new SingleNCSong(song, i++, true, true));
                 }
             }
@@ -62,7 +64,7 @@ namespace HyPlayer.Pages
                 TextBlockDesc.Text = radio.desc;
                 ImageRect.ImageSource =
                     new BitmapImage(new Uri(radio.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
-                Common.ListedSongs.Clear();
+                Songs.Clear();
                 LoadProgram();
             }
         }
@@ -81,7 +83,7 @@ namespace HyPlayer.Pages
                 {
                     try
                     {
-                        await HyPlayList.AppendNCSongs(HyPlayItemType.Netease);
+                        await HyPlayList.AppendNCSongs(Songs);
                         HyPlayList.SongAppendDone();
                         HyPlayList.SongMoveTo(0);
                     }

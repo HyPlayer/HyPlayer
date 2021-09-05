@@ -42,7 +42,6 @@ namespace HyPlayer
         public static List<string> LikedSongs = new List<string>();
         public static KawazuConverter KawazuConv = null;
         public static List<NCPlayList> MySongLists = new List<NCPlayList>();
-        public static List<NCSong> ListedSongs = new List<NCSong>();
         public static readonly Stack<NavigationHistoryItem> NavigationHistory = new Stack<NavigationHistoryItem>();
         public static bool isExpanded = false;
         public static TeachingTip GlobalTip;
@@ -103,7 +102,6 @@ namespace HyPlayer
                 Paratmers = paratmer,
                 Item = PageBase.NavMain.SelectedItem
             });
-            Common.ListedSongs.Clear();
             BaseFrame?.Navigate(SourcePageType, paratmer);
 
             GC.Collect();
@@ -112,7 +110,6 @@ namespace HyPlayer
         public static void NavigateRefresh()
         {
             var peek = NavigationHistory.Peek();
-            Common.ListedSongs.Clear();
             BaseFrame?.Navigate(peek.PageType, peek.Paratmers);
             GC.Collect();
         }
@@ -126,7 +123,6 @@ namespace HyPlayer
             PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));
             _ = Microsoft.Toolkit.Uwp.UI.ImageCache.Instance.ClearAsync();
             KawazuConv = null;
-            ListedSongs.Clear();
         }
 
         public static void UIElement_RightTapped(object sender, Windows.UI.Xaml.Input.RightTappedRoutedEventArgs e)
@@ -155,8 +151,6 @@ namespace HyPlayer
                     NavigationHistory.Pop();
                     bak = NavigationHistory.Peek();
                 }
-
-                Common.ListedSongs.Clear();
                 Common.BaseFrame?.Navigate(bak.PageType, bak.Paratmers);
                 NavigatingBack = true;
                 Common.PageBase.NavMain.SelectedItem = bak.Item;

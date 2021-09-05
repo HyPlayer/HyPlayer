@@ -61,31 +61,15 @@ namespace HyPlayer.Controls
             }
         }
 
+        [Obsolete]
         public async Task<bool> AppendMe()
         {
             if (!CanPlay) return false;
-
-            if (LoadList)
-            {
-                _ = Task.Run(() =>
-                {
-                    Common.Invoke(async () =>
-                    {
-                        await HyPlayList.AppendNCSongs();
-                        HyPlayList.SongAppendDone();
-                        //此处可以进行优化
-                        HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
-
-                    });
-                });
-            }
-            else
-            {
-                var item = await HyPlayList.AppendNCSong(ncsong);
-                //此处可以进行优化
-                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
-                HyPlayList.SongAppendDone();
-            }
+            // 
+            var item = await HyPlayList.AppendNCSong(ncsong);
+            //此处可以进行优化
+            HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
+            HyPlayList.SongAppendDone();
 
             return true;
         }

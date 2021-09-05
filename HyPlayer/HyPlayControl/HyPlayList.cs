@@ -761,11 +761,11 @@ namespace HyPlayer.HyPlayControl
             return hpi;
         }
 
-        public static async Task<bool> AppendNCSongs(HyPlayItemType itemType = HyPlayItemType.Netease,
-            List<NCSong> NCSongs = null, bool needRemoveList = true)
+        public static async Task<bool> AppendNCSongs(List<NCSong> NCSongs, HyPlayItemType itemType = HyPlayItemType.Netease,
+             bool needRemoveList = true)
         {
             if (NCSongs == null)
-                NCSongs = Common.ListedSongs;
+                return false;
             if (needRemoveList)
                 HyPlayList.RemoveAllSong();
             try
@@ -857,7 +857,7 @@ namespace HyPlayer.HyPlayControl
                             return null;
                         }).ToList();
                         ncSongs.RemoveAll(t => t == null);
-                        await HyPlayList.AppendNCSongs(HyPlayItemType.Netease, ncSongs, false);
+                        await HyPlayList.AppendNCSongs(ncSongs, HyPlayItemType.Netease, false);
                     }
                     catch (Exception ex)
                     {

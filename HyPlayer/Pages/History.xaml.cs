@@ -15,6 +15,8 @@ namespace HyPlayer.Pages
     /// </summary>
     public sealed partial class History : Page
     {
+
+        List<NCSong> Songs = new List<NCSong>();
         public History()
         {
             InitializeComponent();
@@ -41,11 +43,9 @@ namespace HyPlayer.Pages
                     break;
                 case 0:
                     SongHistory.Children.Clear();
-                    var Songlist = new List<NCSong>();
-                    Songlist = await HistoryManagement.GetNCSongHistory();
-                    Common.ListedSongs = Songlist;
+                    Songs = await HistoryManagement.GetNCSongHistory();
                     var songorder = 0;
-                    foreach (var song in Songlist)
+                    foreach (var song in Songs)
                         try
                         {
                             SongHistory.Children.Add(new SingleNCSong(song, songorder++, true, true));
@@ -65,11 +65,11 @@ namespace HyPlayer.Pages
 
                         var weekData = ret2["weekData"].ToArray();
                         MySongHis.Children.Clear();
-                        Common.ListedSongs.Clear();
+                        Songs.Clear();
                         for (var i = 0; i < weekData.Length; i++)
                         {
                             var song = NCSong.CreateFromJson(weekData[i]["song"]);
-                            Common.ListedSongs.Add(song);
+                            Songs.Add(song);
                             MySongHis.Children.Add(new SingleNCSong(song, i, true,
                                 true, "最近一周播放 " + weekData[i]["playCount"] + " 次"));
                         }
@@ -90,11 +90,11 @@ namespace HyPlayer.Pages
 
                         var weekData = ret3["allData"].ToArray();
                         MySongHisAll.Children.Clear();
-                        Common.ListedSongs.Clear();
+                        Songs.Clear();
                         for (var i = 0; i < weekData.Length; i++)
                         {
                             var song = NCSong.CreateFromJson(weekData[i]["song"]);
-                            Common.ListedSongs.Add(song);
+                            Songs.Add(song);
                             MySongHisAll.Children.Add(new SingleNCSong(song, i, true,
                                 true, "共播放 " + weekData[i]["playCount"] + " 次"));
                         }

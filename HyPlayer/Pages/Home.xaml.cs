@@ -178,7 +178,7 @@ namespace HyPlayer.Pages
 
                         try
                         {
-                            await HyPlayList.AppendNCSongs(HyPlayItemType.Netease, Songs);
+                            await HyPlayList.AppendNCSongs(Songs);
 
                             HyPlayList.SongAppendDone();
 

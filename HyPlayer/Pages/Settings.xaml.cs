@@ -98,7 +98,7 @@ namespace HyPlayer.Pages
 
                     var sf = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("RomajiData.zip");
                     var downloader = new BackgroundDownloader();
-                    var dl = downloader.CreateDownload(new Uri("https://api.kengwang.co/hyplayer/getromaji.php"), sf);
+                    var dl = downloader.CreateDownload(new Uri("https://api.kengwang.com.cn/hyplayer/getromaji.php"), sf);
                     HandleDownloadAsync(dl, true);
                 });
             });
@@ -107,13 +107,21 @@ namespace HyPlayer.Pages
         private async void HandleDownloadAsync(DownloadOperation dl, bool b)
         {
             var process = new Progress<DownloadOperation>(ProgressCallback);
-            await dl.StartAsync().AsTask(process);
+            try
+            {
+                await dl.StartAsync().AsTask(process);
+
+            }
+            catch (Exception E)
+            {
+                RomajiStatus.Text = "下载错误 " + E.Message;
+            }
         }
 
         private void ProgressCallback(DownloadOperation obj)
         {
             RomajiStatus.Text = $"正在下载资源文件 ({obj.Progress.BytesReceived * 100 / obj.Progress.TotalBytesToReceive:D}%)";
-            if (obj.Progress.BytesReceived == obj.Progress.TotalBytesToReceive)
+            if (obj.Progress.BytesReceived == obj.Progress.TotalBytesToReceive && obj.Progress.TotalBytesToReceive > 5000)
                 _ = Task.Run(() =>
                 {
                     Common.Invoke(async () =>
@@ -162,7 +170,7 @@ namespace HyPlayer.Pages
             Common.ncapi.RealIP = (string)ApplicationData.Current.LocalSettings.Values["xRealIp"];
         }
 
-        
+
         private void ButtonPROXYSave_OnClick(object sender, RoutedEventArgs e)
         {
             ApplicationData.Current.LocalSettings.Values["neteaseProxy"] =
@@ -190,7 +198,7 @@ namespace HyPlayer.Pages
             if (_elapse-- <= 0) ApplicationData.Current.RoamingSettings.Values["CanDownload"] = true;
         }
 
-        
+
 
         private void ControlSoundChecked(object sender, RoutedEventArgs e)
         {

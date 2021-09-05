@@ -71,7 +71,7 @@ new PropertyMetadata(null)
 
         private void BtnPlay_Click(object sender, RoutedEventArgs e)
         {
-            _ = Songs[int.Parse((sender as Button).Tag.ToString())].AppendMe();
+            _ = HyPlayList.AppendNCSong(Songs[int.Parse((sender as Button).Tag.ToString())]);
         }
 
         private void More_Click(object sender, RoutedEventArgs e)

@@ -186,34 +186,6 @@ namespace HyPlayer.Classes
                 NCSong.transname = string.Join(" / ", song["tns"].ToArray().Select(t => t.ToString()));
             return NCSong;
         }
-        public async Task<bool> AppendMe()
-        {
-            if (!IsAvailable) return false;
-
-            if (LoadList)
-            {
-                _ = Task.Run(() =>
-                {
-                    Common.Invoke(async () =>
-                    {
-                        await HyPlayList.AppendNCSongs();
-                        HyPlayList.SongAppendDone();
-                        //此处可以进行优化
-                        HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == this.sid));
-
-                    });
-                });
-            }
-            else
-            {
-                var item = await HyPlayList.AppendNCSong(this);
-                //此处可以进行优化
-                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == this.sid));
-                HyPlayList.SongAppendDone();
-            }
-
-            return true;
-        }
 
         public string ConvertTranslate(string source)
         {
