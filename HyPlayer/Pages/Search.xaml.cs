@@ -44,9 +44,8 @@ namespace HyPlayer.Pages
                 SearchHistory.Children.Add(btn);
             }
 
-            if (e.Parameter != null)
+            if (Text != string.Empty)
             {
-                Text = e.Parameter.ToString();
                 LoadResult();
             }
         }
