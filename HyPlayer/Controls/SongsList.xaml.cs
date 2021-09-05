@@ -41,6 +41,7 @@ namespace HyPlayer.Controls
 typeof(SongsList),
 new PropertyMetadata(null)
 );
+        public bool IsSongList => ListSource != string.Empty;
 
 
         public ObservableCollection<NCSong> Songs

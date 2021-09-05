@@ -196,6 +196,7 @@
                                 x:Name="Btn_Del"
                                 Click="Btn_Del_Click"
                                 Foreground="Red"
+                                Visibility="{Binding Source=local:SongsList.IsSongList}"
                                 Style="{StaticResource MenuFlyoutItemRevealStyle}"
                                 Text="删除">
                                 <MenuFlyoutItem.Icon>
