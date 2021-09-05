@@ -82,13 +82,10 @@ new PropertyMetadata(null)
             IsManualSelect = true;
         }
 
-        private async void FlyoutItemPlay_Click(object sender, RoutedEventArgs e)
+        private void FlyoutItemPlay_Click(object sender, RoutedEventArgs e)
         {
             var ncsong = Songs[SongContainer.SelectedIndex];
-            var oldLoadList = ncsong.LoadList;
-            ncsong.LoadList = false;
-            await ncsong.AppendMe();
-            ncsong.LoadList = oldLoadList;
+            _ = HyPlayList.AppendNCSong(ncsong, HyPlayList.NowPlaying + 1);
         }
 
         private async void FlyoutItemPlayNext_Click(object sender, RoutedEventArgs e)
