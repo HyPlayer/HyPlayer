@@ -22,6 +22,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Controls;
 using Windows.UI;
+using System.Collections.ObjectModel;
 
 namespace HyPlayer
 {

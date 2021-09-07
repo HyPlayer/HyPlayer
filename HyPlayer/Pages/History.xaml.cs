@@ -5,6 +5,9 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using NeteaseCloudMusicApi;
 using System.Linq;
+using System.Collections.ObjectModel;
+using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -16,63 +19,48 @@ namespace HyPlayer.Pages
     public sealed partial class History : Page
     {
 
-        List<NCSong> Songs = new List<NCSong>();
+        ObservableCollection<NCSong> Songs;
         public History()
         {
             InitializeComponent();
+            Songs = new ObservableCollection<NCSong>();
+            HisModeNavView.SelectedItem = SongHis;
         }
 
-        private async void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void NavigationView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
         {
-            switch (HistoryPivot.SelectedIndex)
+            switch ((sender.SelectedItem as NavigationViewItem).Name.ToString())
             {
-                case 1:
-                    SongListHistory.Children.Clear();
-                    var PlayListlist = new List<NCPlayList>();
-                    PlayListlist = await HistoryManagement.GetSonglistHistory();
-                    foreach (var playList in PlayListlist)
-                        try
-                        {
-                            SongListHistory.Children.Add(new SinglePlaylistStack(playList));
-                        }
-                        catch
-                        {
-                            //
-                        }
-
-                    break;
-                case 0:
-                    SongHistory.Children.Clear();
-                    Songs = await HistoryManagement.GetNCSongHistory();
+                case "SongHis":
+                    Songs.Clear();
+                    var Songsl = await HistoryManagement.GetNCSongHistory();
                     var songorder = 0;
-                    foreach (var song in Songs)
-                        try
-                        {
-                            SongHistory.Children.Add(new SingleNCSong(song, songorder++, true, true));
-                        }
-                        catch
-                        {
-                        }
-
+                    foreach (var song in Songsl)
+                    {
+                        song.Order = songorder++;
+                        Songs.Add(song);
+                    }
                     break;
-                case 2:
+                case "SongRankWeek":
                     //听歌排行加载部分 - 优先级靠下
-                    MySongHis.Children.Clear();
+                    Songs.Clear();
                     try
                     {
-                        var ret2 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserRecord,
+                        await Task.Run(async () =>
+                        {
+                            JObject ret2 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserRecord,
                             new Dictionary<string, object> { { "uid", Common.LoginedUser.id }, { "type", "1" } });
 
-                        var weekData = ret2["weekData"].ToArray();
-                        MySongHis.Children.Clear();
-                        Songs.Clear();
-                        for (var i = 0; i < weekData.Length; i++)
-                        {
-                            var song = NCSong.CreateFromJson(weekData[i]["song"]);
-                            Songs.Add(song);
-                            MySongHis.Children.Add(new SingleNCSong(song, i, true,
-                                true, "最近一周播放 " + weekData[i]["playCount"] + " 次"));
-                        }
+                            var weekData = ret2["weekData"].ToArray();
+
+                            for (var i = 0; i < weekData.Length; i++)
+                            {
+                                var song = NCSong.CreateFromJson(weekData[i]["song"]);
+                                song.Order = i;
+                                Common.Invoke(() => { Songs.Add(song); });
+                            }
+                        });
+
                     }
                     catch (Exception ex)
                     {
@@ -80,24 +68,26 @@ namespace HyPlayer.Pages
                     }
 
                     break;
-                case 3:
+                case "SongRankAll":
                     //听歌排行加载部分 - 优先级靠下
-                    MySongHisAll.Children.Clear();
+                    Songs.Clear();
                     try
                     {
-                        var ret3 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserRecord,
-                            new Dictionary<string, object> { { "uid", Common.LoginedUser.id }, { "type", "0" } });
+                        await Task.Run(async () =>
+                             {
+                                 JObject ret3 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserRecord,
+                                 new Dictionary<string, object> { { "uid", Common.LoginedUser.id }, { "type", "0" } });
 
-                        var weekData = ret3["allData"].ToArray();
-                        MySongHisAll.Children.Clear();
-                        Songs.Clear();
-                        for (var i = 0; i < weekData.Length; i++)
-                        {
-                            var song = NCSong.CreateFromJson(weekData[i]["song"]);
-                            Songs.Add(song);
-                            MySongHisAll.Children.Add(new SingleNCSong(song, i, true,
-                                true, "共播放 " + weekData[i]["playCount"] + " 次"));
-                        }
+                                 var weekData = ret3["allData"].ToArray();
+                                 for (var i = 0; i < weekData.Length; i++)
+                                 {
+                                     var song = NCSong.CreateFromJson(weekData[i]["song"]);
+                                     song.Order = i;
+                                     Common.Invoke(() => { Songs.Add(song); });
+
+                                 }
+                             });
+
                     }
                     catch (Exception ex)
                     {
