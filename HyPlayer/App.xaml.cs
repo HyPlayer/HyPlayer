@@ -40,11 +40,13 @@ namespace HyPlayer
         public App()
         {
             InitializeComponent();
+            /*
             this.RequiresPointerMode = Windows.UI.Xaml.ApplicationRequiresPointerMode.WhenRequested;
             if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
             {
                 this.FocusVisualKind = FocusVisualKind.Reveal;
             }
+            */
             Suspending += OnSuspending;
             UnhandledException += App_UnhandledException;
             EnteredBackground += App_EnteredBackground;

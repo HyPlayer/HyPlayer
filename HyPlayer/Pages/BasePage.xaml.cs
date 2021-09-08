@@ -325,14 +325,31 @@ namespace HyPlayer.Pages
             {
                 Common.Invoke(() =>
                 {
-                    Common.ncapi.RequestAsync(CloudMusicApiProviders.DailySignin);
-                    Common.ncapi.RequestAsync(CloudMusicApiProviders.DailySignin,
+                    _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.DailySignin);
+                    _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.DailySignin,
                         new Dictionary<string, object> { { "type", 1 } });
                     //刷播放量不?
                 });
             });
 
-            HyPlayList.LoginDownCall();
+            HyPlayList.OnMediaEnd += hpi =>
+            {
+                // 播放数据
+                _ = Task.Run((() =>
+                {
+                    Common.Invoke((() =>
+                    {
+                        if (hpi.ItemType != HyPlayItemType.Netease) return;
+                        _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.Scrobble, new Dictionary<string, object>()
+                        {
+                            {"id",hpi.PlayItem.id},
+                            {"sourceid","-1"}
+                        });
+                    }));
+                }));
+            };
+
+            HyPlayList.LoginDoneCall();
             ((App)App.Current).InitializeJumpList();
             NavMain.SelectedItem = NavItemLogin;
             Common.NavigatePage(typeof(Me));
@@ -496,8 +513,8 @@ namespace HyPlayer.Pages
             }
         }
 
-// Invoked events of not-for-navigation items can be handled separately.
-// Meanwhile we set "SelectsOnInvoked" property of these items "False" to avoid the navigation pane indicator being set to them.
+        // Invoked events of not-for-navigation items can be handled separately.
+        // Meanwhile we set "SelectsOnInvoked" property of these items "False" to avoid the navigation pane indicator being set to them.
         private async void NavMain_ItemInvoked(NavigationView sender,
             Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs args)
         {
@@ -506,16 +523,16 @@ namespace HyPlayer.Pages
             switch (invokedItemTag)
             {
                 case "SonglistCreate":
-                {
-                    await new CreateSonglistDialog().ShowAsync();
-                    LoadSongList();
-                    break;
-                }
+                    {
+                        await new CreateSonglistDialog().ShowAsync();
+                        LoadSongList();
+                        break;
+                    }
                 case "PersonalFM":
-                {
-                    PersonalFM.InitPersonalFM();
-                    break;
-                }
+                    {
+                        PersonalFM.InitPersonalFM();
+                        break;
+                    }
             }
         }
 

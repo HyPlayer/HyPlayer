@@ -166,7 +166,7 @@ namespace HyPlayer.HyPlayControl
         }
 
 
-        public static void LoginDownCall()
+        public static void LoginDoneCall()
         {
             Common.Invoke(() => { OnLoginDone?.Invoke(); });
         }
