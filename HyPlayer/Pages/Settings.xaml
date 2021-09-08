@@ -68,10 +68,10 @@
                         x:Name="CheckBoxAlignment"
                         Content="是否左对齐"
                         IsChecked="{x:Bind hyplayer:Common.Setting.lyricAlignment, Mode=TwoWay}" />
-                    <CheckBox
+                    <!--<CheckBox
                         x:Name="CheckBoxLyricShadow"
                         Content="是否产生阴影"
-                        IsChecked="{x:Bind hyplayer:Common.Setting.lyricDropshadow, Mode=TwoWay}" />
+                        IsChecked="{x:Bind hyplayer:Common.Setting.lyricDropshadow, Mode=TwoWay}" />-->
                     <controls:RadioButtons
                         FontSize="20"
                         Header="歌词颜色"
@@ -229,10 +229,10 @@
                             Content="设置"
                             Style="{StaticResource ButtonRevealStyle}" />
                     </Grid>
-                    <CheckBox
+                    <!--<CheckBox
                         x:Name="LazySongUrlGetCheck"
                         Content="是否在播放时才获取播放链接"
-                        IsChecked="{x:Bind hyplayer:Common.Setting.songUrlLazyGet, Mode=TwoWay}" />
+                        IsChecked="{x:Bind hyplayer:Common.Setting.songUrlLazyGet, Mode=TwoWay}" />-->
                     <CheckBox
                         x:Name="CBSongCacheEnable"
                         Content="是否开启播放缓存 (可能造成播放前空白)"
