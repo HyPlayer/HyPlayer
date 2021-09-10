@@ -9,6 +9,7 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
+using System.Collections.ObjectModel;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -21,7 +22,7 @@ namespace HyPlayer.Pages
     {
         private int page;
         private string Text = "";
-
+        ObservableCollection<NCSong> SongResults;
         public Search()
         {
             InitializeComponent();
@@ -29,6 +30,7 @@ namespace HyPlayer.Pages
 
 
             NavigationCacheMode = NavigationCacheMode.Required;
+            SongResults = new ObservableCollection<NCSong>();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -179,14 +181,15 @@ namespace HyPlayer.Pages
 
         private void LoadSongResult(JObject json)
         {
+            SongResults.Clear();
             var idx = 0;
             try
             {
                 foreach (var song in json["result"]["songs"].ToArray())
                 {
                     var ncSong = NCSong.CreateFromJson(song);
-                    SearchResultContainer.Children.Add(new SingleNCSong(ncSong, idx++,
-                        song["privilege"]["st"].ToString() == "0"));
+                    ncSong.Order = idx++;
+                    SongResults.Add(ncSong);
                 }
 
                 if (int.Parse(json["result"]["songCount"].ToString()) >= (page + 1) * 30)
@@ -221,6 +224,16 @@ namespace HyPlayer.Pages
             NavigationViewSelectionChangedEventArgs args)
         {
             page = 0;
+            if ((args.SelectedItem as NavigationViewItem).Tag.ToString() == "1")
+            {
+                SongsSearchResultContainer.Visibility = Visibility.Visible;
+                SearchResultContainer.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                SongsSearchResultContainer.Visibility = Visibility.Collapsed;
+                SearchResultContainer.Visibility = Visibility.Visible;
+            }
             LoadResult();
         }
 

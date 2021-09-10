@@ -60,7 +60,7 @@ new PropertyMetadata(null)
 
         private async void SongContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (IsManualSelect)
+            if (IsManualSelect && ListSource != null)
             {
                 HyPlayList.List.Clear();
                 HyPlayList.Player.Pause();
@@ -68,11 +68,21 @@ new PropertyMetadata(null)
                 HyPlayList.SongAppendDone();
                 HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem?.id == Songs[SongContainer.SelectedIndex].sid));
             }
+            else if (ListSource == null)
+            {
+                var ncsong = Songs[SongContainer.SelectedIndex];
+                _ = HyPlayList.AppendNCSong(ncsong);
+                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
+                HyPlayList.SongAppendDone();
+            }
         }
 
         private void BtnPlay_Click(object sender, RoutedEventArgs e)
         {
-            _ = HyPlayList.AppendNCSong(Songs[int.Parse((sender as Button).Tag.ToString())]);
+            var ncsong = Songs[int.Parse((sender as Button).Tag.ToString())];
+            _ = HyPlayList.AppendNCSong(ncsong);
+            HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
+            HyPlayList.SongAppendDone();
         }
 
         private void More_Click(object sender, RoutedEventArgs e)

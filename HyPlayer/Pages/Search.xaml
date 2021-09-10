@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:hycontrol="using:HyPlayer.Controls"
     mc:Ignorable="d">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -51,11 +52,17 @@
                         <NavigationViewItem Content="综合" Tag="1018" />
                     </NavigationView.MenuItems>
                     <StackPanel Orientation="Vertical">
-                        <StackPanel
+                        <Grid>
+                            <StackPanel
                             Name="SearchResultContainer"
                             Margin="30"
                             Orientation="Vertical"
                             Spacing="5" />
+                            <hycontrol:SongsList
+                                 x:Name="SongsSearchResultContainer"
+                                 Margin="30"
+                                Songs="{x:Bind SongResults}"/>
+                        </Grid>
                         <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
                             <Button Style="{StaticResource ButtonRevealStyle}" 
                                 x:Name="PrevPage"
