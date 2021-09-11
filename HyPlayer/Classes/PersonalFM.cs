@@ -57,7 +57,7 @@ namespace HyPlayer.Classes
             }
             catch (Exception e)
             {
-                Common.ShowTeachingTip("发生错误", e.Message);
+                Common.ShowTeachingTip(e.Message, (e.InnerException ?? new Exception()).Message);
             }
         }
 

@@ -72,7 +72,7 @@ namespace HyPlayer.Pages
                 }
                 catch (Exception ex)
                 {
-                    Common.ShowTeachingTip("发生错误", ex.Message);
+                    Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
                 }
             }
             catch (Exception ex)
@@ -98,7 +98,7 @@ namespace HyPlayer.Pages
                     }
                     catch (Exception ex)
                     {
-                        Common.ShowTeachingTip("发生错误", ex.Message);
+                        Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
                     }
                 });
             });

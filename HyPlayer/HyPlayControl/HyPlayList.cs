@@ -689,7 +689,7 @@ namespace HyPlayer.HyPlayControl
                 }
                 catch (Exception ex)
                 {
-                    Common.ShowTeachingTip("发生错误", ex.Message);
+                    Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
                 }
             }
             catch
@@ -735,7 +735,7 @@ namespace HyPlayer.HyPlayControl
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip("发生错误", ex.Message);
+                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
 
             return null;
@@ -792,7 +792,7 @@ namespace HyPlayer.HyPlayControl
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip("发生错误", ex.Message);
+                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
 
             return false;
@@ -857,7 +857,7 @@ namespace HyPlayer.HyPlayControl
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip("发生错误", ex.Message);
+                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
 
             return false;
@@ -883,7 +883,7 @@ namespace HyPlayer.HyPlayControl
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip("发生错误", ex.Message);
+                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
 
             return false;
@@ -913,7 +913,7 @@ namespace HyPlayer.HyPlayControl
                     }
                     catch (Exception ex)
                     {
-                        Common.ShowTeachingTip("发生错误", ex.Message);
+                        Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
                     }
                 }
 
@@ -921,7 +921,7 @@ namespace HyPlayer.HyPlayControl
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip("发生错误", ex.Message);
+                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
 
             return false;
@@ -958,7 +958,7 @@ namespace HyPlayer.HyPlayControl
                     }
                     catch (Exception ex)
                     {
-                        Common.ShowTeachingTip("发生错误", ex.Message);
+                        Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
                     }
                 }
 
@@ -966,7 +966,7 @@ namespace HyPlayer.HyPlayControl
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip("发生错误", ex.Message);
+                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
 
             return false;

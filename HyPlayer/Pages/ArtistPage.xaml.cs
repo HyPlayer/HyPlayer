@@ -61,7 +61,7 @@ namespace HyPlayer.Pages
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip("发生错误", ex.Message);
+                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
 
@@ -76,7 +76,7 @@ namespace HyPlayer.Pages
                 var idx = 0;
                 var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
                     new Dictionary<string, object>
-                    { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) }, false);
+                        { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) }, false);
                 foreach (var jToken in json["songs"])
                 {
                     var ncSong = NCSong.CreateFromJson(jToken);
@@ -89,7 +89,7 @@ namespace HyPlayer.Pages
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip("发生错误", ex.Message);
+                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
 
@@ -105,7 +105,7 @@ namespace HyPlayer.Pages
                 {
                     var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
                         new Dictionary<string, object>
-                        { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) });
+                            { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) });
                     foreach (var jToken in json["songs"])
                     {
                         var ncSong = NCSong.CreateFromJson(jToken);
@@ -127,12 +127,12 @@ namespace HyPlayer.Pages
                 }
                 catch (Exception ex)
                 {
-                    Common.ShowTeachingTip("发生错误", ex.Message);
+                    Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
                 }
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip("发生错误", ex.Message);
+                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
 
@@ -152,7 +152,7 @@ namespace HyPlayer.Pages
                     }
                     catch (Exception ex)
                     {
-                        Common.ShowTeachingTip("发生错误", ex.Message);
+                        Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
                     }
                 });
             });
@@ -189,7 +189,7 @@ namespace HyPlayer.Pages
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip("发生错误", ex.Message);
+                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
 

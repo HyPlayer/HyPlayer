@@ -623,7 +623,7 @@ namespace HyPlayer
             }
             catch (Exception e)
             {
-                Common.ShowTeachingTip("发生错误", e.Message);
+                Common.ShowTeachingTip(e.Message, (e.InnerException ?? new Exception()).Message);
             }
 
             return new List<NCSong>();
@@ -654,7 +654,7 @@ namespace HyPlayer
             }
             catch (Exception e)
             {
-                Common.ShowTeachingTip("发生错误", e.Message);
+                Common.ShowTeachingTip(e.Message, (e.InnerException ?? new Exception()).Message);
             }
 
             return ret;
@@ -684,7 +684,7 @@ namespace HyPlayer
             }
             catch (Exception e)
             {
-                Common.ShowTeachingTip("发生错误", e.Message);
+                Common.ShowTeachingTip(e.Message, (e.InnerException ?? new Exception()).Message);
             }
 
             return new List<NCSong>();

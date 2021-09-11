@@ -263,7 +263,7 @@ namespace HyPlayer.Pages
             }
             catch (Exception e)
             {
-                Common.ShowTeachingTip("发生错误", e.Message);
+                Common.ShowTeachingTip(e.Message, (e.InnerException ?? new Exception()).Message);
                 return false;
             }
 
@@ -313,7 +313,7 @@ namespace HyPlayer.Pages
                     }
                     catch (Exception ex)
                     {
-                        Common.ShowTeachingTip("发生错误", ex.Message);
+                        Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
                     }
                 });
             });
@@ -431,7 +431,7 @@ namespace HyPlayer.Pages
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip("发生错误", ex.Message);
+                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
 
@@ -595,7 +595,7 @@ namespace HyPlayer.Pages
                         }
                         catch (Exception ex)
                         {
-                            Common.ShowTeachingTip("发生错误", ex.Message);
+                            Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
                         }
                     }
                     else if (res["code"].ToString() == "801")
