@@ -120,6 +120,11 @@ namespace HyPlayer.Pages
 
         private void ProgressCallback(DownloadOperation obj)
         {
+            if (obj.Progress.TotalBytesToReceive == 0)
+            {
+                RomajiStatus.Text = "下载错误 " + obj.CurrentWebErrorStatus.ToString();
+                return;
+            }
             RomajiStatus.Text = $"正在下载资源文件 ({obj.Progress.BytesReceived * 100 / obj.Progress.TotalBytesToReceive:D}%)";
             if (obj.Progress.BytesReceived == obj.Progress.TotalBytesToReceive && obj.Progress.TotalBytesToReceive > 5000)
                 _ = Task.Run(() =>
