@@ -37,9 +37,11 @@ namespace HyPlayer.Controls
         public PlayMode NowPlayType = PlayMode.DefaultRoll;
         private bool realSelectSong;
         public bool FadeSettedVolume = false;
+        /*
         private Storyboard TbSongNameScrollStoryBoard;
         private double lastOffsetX;
         DoubleAnimation verticalAnimation;
+        */
 
         public PlayBar()
         {

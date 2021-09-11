@@ -2,155 +2,133 @@
     x:Class="HyPlayer.Pages.ArtistPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:controls1="using:HyPlayer.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     mc:Ignorable="d">
 
-    <ScrollViewer
-        VerticalScrollBarVisibility="Auto">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <ScrollViewer.Content>
+            <StackPanel Orientation="Vertical">
+                <controls:DockPanel x:Name="GridPersonalInformation" LastChildFill="True">
+                    <Rectangle
+                        x:Name="RectangleImage"
+                        Width="250"
+                        Height="250"
+                        Margin="15"
+                        controls:DockPanel.Dock="Left"
+                        RadiusX="10"
+                        RadiusY="10">
+                        <Rectangle.Fill>
+                            <ImageBrush x:Name="ImageRect" Stretch="UniformToFill" />
+                        </Rectangle.Fill>
+                    </Rectangle>
+                    <StackPanel
+                        Name="StackPanelUserInfo"
+                        Margin="15,15,144,0"
+                        Orientation="Vertical">
+                        <TextBlock
+                            Name="TextBoxArtistName"
+                            Margin="0,0,0,0"
+                            FontSize="40"
+                            FontWeight="ExtraBold"
+                            Text="歌手名"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            Name="TextboxArtistNameTranslated"
+                            Margin="0,2,0,0"
+                            FontSize="25"
+                            Text="歌手别名" />
+                        <TextBlock
+                            x:Name="TextBlockDesc"
+                            Margin="0,5,0,0"
+                            FontSize="15"
+                            MaxLines="7"
+                            Text="歌手简介"
+                            TextWrapping="WrapWholeWords" />
+                        <TextBlock
+                            x:Name="TextBlockInfo"
+                            Margin="0,10,0,0"
+                            FontSize="15"
+                            MaxLines="7"
+                            Text="歌手简略信息" />
+                    </StackPanel>
+                </controls:DockPanel>
+                <StackPanel
+                    Margin="45,30,0,0"
+                    Orientation="Horizontal"
+                    Spacing="15">
+                    <Button
+                        Name="ButtonPlayAll"
+                        Click="ButtonPlayAll_OnClick"
+                        Content="播放全部"
+                        Style="{StaticResource ButtonRevealStyle}" />
+                </StackPanel>
+                <Pivot x:Name="mp" SelectionChanged="Pivot_SelectionChanged">
+                    <PivotItem Header="热门50首">
+                        <controls1:SongsList
+                            x:Name="HotSongContainer"
+                            Margin="20,10,0,0"
+                            Songs="{x:Bind hotSongs, Mode=OneWay}" />
+                    </PivotItem>
+                    <PivotItem Header="全部歌曲">
+                        <controls1:SongsList
+                            x:Name="AllSongContainer"
+                            Margin="20,10,0,0"
+                            Songs="{x:Bind allSongs, Mode=OneWay}" />
+                    </PivotItem>
+                    <PivotItem Header="专辑">
+                        <StackPanel
+                            Name="AlbumContainer"
+                            Margin="20,10,0,0"
+                            Orientation="Vertical"
+                            Spacing="10" />
+                    </PivotItem>
+                </Pivot>
+                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                    <Button
+                        x:Name="PrevPage"
+                        Click="PrevPage_Click"
+                        Content="上一页"
+                        Style="{StaticResource ButtonRevealStyle}"
+                        Visibility="Collapsed" />
+                    <TextBlock x:Name="PageIndicator" />
+                    <Button
+                        x:Name="NextPage"
+                        Click="NextPage_Click"
+                        Content="下一页"
+                        Style="{StaticResource ButtonRevealStyle}"
+                        Visibility="Collapsed" />
+                </StackPanel>
+                <Grid Height="150" />
+
+            </StackPanel>
+        </ScrollViewer.Content>
 
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState>
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger
-                            MinWindowWidth="0" />
+                        <AdaptiveTrigger MinWindowWidth="0" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
-                        <Setter
-                            Target="RectangleImage.Visibility"
-                            Value="Collapsed" />
-                        <Setter
-                            Target="StackPanelUserInfo.(Grid.Column)"
-                            Value="1" />
-                        <Setter
-                            Target="StackPanelUserInfo.(Grid.ColumnSpan)"
-                            Value="10" />
+                        <Setter Target="RectangleImage.Visibility" Value="Collapsed" />
+                        <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="1" />
+                        <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="10" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState>
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger
-                            MinWindowWidth="1024" />
+                        <AdaptiveTrigger MinWindowWidth="1024" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
-                        <Setter
-                            Target="RectangleImage.Visibility"
-                            Value="Visible" />
-                        <Setter
-                            Target="StackPanelUserInfo.(Grid.Column)"
-                            Value="5" />
-                        <Setter
-                            Target="StackPanelUserInfo.(Grid.ColumnSpan)"
-                            Value="6" />
+                        <Setter Target="RectangleImage.Visibility" Value="Visible" />
+                        <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="5" />
+                        <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="6" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        <ScrollViewer.Content>
-            <StackPanel
-                Orientation="Vertical">
-                <controls:DockPanel
-                    LastChildFill="True"
-                    x:Name="GridPersonalInformation">
-                    <Rectangle
-                        x:Name="RectangleImage"
-                        RadiusX="10"
-                        RadiusY="10"
-                        Width="250"
-                        Height="250"
-                        Margin="15"
-                        controls:DockPanel.Dock="Left">
-                        <Rectangle.Fill>
-                            <ImageBrush
-                                x:Name="ImageRect"
-                                Stretch="UniformToFill" />
-                        </Rectangle.Fill>
-                    </Rectangle>
-                    <StackPanel
-                        Name="StackPanelUserInfo"
-                        Orientation="Vertical"
-                        Margin="15,15,144,0">
-                        <TextBlock
-                            Margin="0,0,0,0"
-                            Name="TextBoxArtistName"
-                            FontWeight="ExtraBold"
-                            TextWrapping="Wrap"
-                            Text="歌手名"
-                            FontSize="40" />
-                        <TextBlock
-                            Margin="0,2,0,0"
-                            Name="TextboxArtistNameTranslated"
-                            Text="歌手别名"
-                            FontSize="25" />
-                        <TextBlock
-                            Margin="0,5,0,0"
-                            MaxLines="7"
-                            TextWrapping="WrapWholeWords"
-                            x:Name="TextBlockDesc"
-                            Text="歌手简介"
-                            FontSize="15" />
-                        <TextBlock
-                            Margin="0,10,0,0"
-                            MaxLines="7"
-                            x:Name="TextBlockInfo"
-                            Text="歌手简略信息"
-                            FontSize="15" />
-                    </StackPanel>
-                </controls:DockPanel>
-                <StackPanel
-                    Margin="45,30,0,0"
-                    Spacing="15"
-                    Orientation="Horizontal">
-                    <Button Style="{StaticResource ButtonRevealStyle}"  Content="播放全部" Name="ButtonPlayAll" Click="ButtonPlayAll_OnClick" />
-                </StackPanel>
-                <Pivot SelectionChanged="Pivot_SelectionChanged" x:Name="mp">
-                    <PivotItem Header="热门50首">
-                        <StackPanel Orientation="Vertical">
-                            <StackPanel
-                    Margin="20,10,0,0"
-                    Spacing="10"
-                    Name="HotSongContainer"
-                    Orientation="Vertical" />
-
-                        </StackPanel>
-                    </PivotItem>
-                    <PivotItem Header="全部歌曲">
-                        <StackPanel Orientation="Vertical">
-                            <StackPanel
-                    Margin="20,10,0,0"
-                    Spacing="10"
-                    Name="AllSongContainer"
-                    Orientation="Vertical" />
-
-                        </StackPanel>
-                    </PivotItem>
-                    <PivotItem Header="专辑">
-                        <StackPanel
-                    Margin="20,10,0,0"
-                    Spacing="10"
-                    Name="AlbumContainer"
-                    Orientation="Vertical" />
-                    </PivotItem>
-                </Pivot>
-                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                    <Button Style="{StaticResource ButtonRevealStyle}" 
-                                x:Name="PrevPage"
-                                Click="PrevPage_Click"
-                                Content="上一页"
-                                Visibility="Collapsed" />
-                    <TextBlock x:Name="PageIndicator" />
-                    <Button Style="{StaticResource ButtonRevealStyle}" 
-                                x:Name="NextPage"
-                                Click="NextPage_Click"
-                                Content="下一页"
-                                Visibility="Collapsed" />
-                </StackPanel>
-                <Grid
-                    Height="150" />
-                
-            </StackPanel>
-        </ScrollViewer.Content>
     </ScrollViewer>
 </Page>

@@ -42,7 +42,25 @@ namespace HyPlayer.Controls
 typeof(SongsList),
 new PropertyMetadata(null)
 );
-        public bool IsMySongList = false;
+
+
+        public static readonly DependencyProperty IsMySongListProperty = DependencyProperty.Register(
+"IsMySongList", typeof(bool)
+,
+typeof(SongsList),
+new PropertyMetadata(null)
+);
+        public bool IsMySongList
+        {
+            get
+            {
+                return (bool)GetValue(IsMySongListProperty);
+            }
+            set
+            {
+                SetValue(IsMySongListProperty, value);
+            }
+        }
 
 
         public ObservableCollection<NCSong> Songs
@@ -60,7 +78,7 @@ new PropertyMetadata(null)
 
         private async void SongContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (IsManualSelect && ListSource != null)
+            if (IsManualSelect && ListSource != null && ListSource != "content")
             {
                 HyPlayList.List.Clear();
                 HyPlayList.Player.Pause();
@@ -72,8 +90,13 @@ new PropertyMetadata(null)
             {
                 var ncsong = Songs[SongContainer.SelectedIndex];
                 _ = HyPlayList.AppendNCSong(ncsong);
-                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
                 HyPlayList.SongAppendDone();
+                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
+            }
+            else if (ListSource == "content")
+            {
+                await HyPlayList.AppendNCSongs(Songs);
+                HyPlayList.SongMoveTo(0);
             }
         }
 

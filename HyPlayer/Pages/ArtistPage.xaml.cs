@@ -10,6 +10,7 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using NeteaseCloudMusicApi;
+using System.Collections.ObjectModel;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -21,7 +22,8 @@ namespace HyPlayer.Pages
     public sealed partial class ArtistPage : Page
     {
         private NCArtist artist;
-        private readonly List<NCSong> songs = new List<NCSong>();
+        private readonly ObservableCollection<NCSong> hotSongs = new ObservableCollection<NCSong>();
+        private readonly ObservableCollection<NCSong> allSongs = new ObservableCollection<NCSong>();
         private int page = 0;
 
         public ArtistPage()
@@ -51,6 +53,8 @@ namespace HyPlayer.Pages
                 TextBlockInfo.Text = "歌曲数: " + res["data"]["artist"]["musicSize"] + " | 专辑数: " +
                                      res["data"]["artist"]["albumSize"] + " | 视频数: " +
                                      res["data"]["artist"]["mvSize"];
+                HotSongContainer.ListSource = "sh" + artist.id;
+                AllSongContainer.ListSource = "content";
                 LoadHotSongs();
                 LoadSongs();
                 LoadAlbum();
@@ -68,20 +72,19 @@ namespace HyPlayer.Pages
                 var j1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistTopSong,
                     new Dictionary<string, object> { { "id", artist.id } });
 
-                songs.Clear();
+                hotSongs.Clear();
                 var idx = 0;
                 var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
                     new Dictionary<string, object>
-                        { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) }, false);
+                    { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) }, false);
                 foreach (var jToken in json["songs"])
                 {
                     var ncSong = NCSong.CreateFromJson(jToken);
-                    var canplay =
-                        json["privileges"].ToList().Find(x => x["id"].ToString() == jToken["id"].ToString())[
+                    ncSong.IsAvailable =
+                        json["privileges"][idx][
                             "st"].ToString() == "0";
-                    if (canplay) songs.Add(ncSong);
-
-                    HotSongContainer.Children.Add(new SingleNCSong(ncSong, idx++, canplay));
+                    ncSong.Order = idx++;
+                    hotSongs.Add(ncSong);
                 }
             }
             catch (Exception ex)
@@ -96,24 +99,21 @@ namespace HyPlayer.Pages
             {
                 var j1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistSongs,
                     new Dictionary<string, object> { { "id", artist.id }, { "limit", 50 }, { "offset", page * 50 } });
-
-                AllSongContainer.Children.Clear();
-                songs.Clear();
+                allSongs.Clear();
                 var idx = 0;
                 try
                 {
                     var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
                         new Dictionary<string, object>
-                            { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) });
+                        { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) });
                     foreach (var jToken in json["songs"])
                     {
                         var ncSong = NCSong.CreateFromJson(jToken);
-                        var canplay =
-                            json["privileges"].ToList().Find(x => x["id"].ToString() == jToken["id"].ToString())[
+                        ncSong.IsAvailable =
+                            json["privileges"][idx][
                                 "st"].ToString() == "0";
-                        if (canplay) songs.Add(ncSong);
-
-                        AllSongContainer.Children.Add(new SingleNCSong(ncSong, idx++, canplay));
+                        ncSong.Order = idx++;
+                        allSongs.Add(ncSong);
                     }
 
                     if (int.Parse(j1["total"].ToString()) >= (page + 1) * 50)
@@ -144,7 +144,7 @@ namespace HyPlayer.Pages
                 {
                     try
                     {
-                        await HyPlayList.AppendNCSongs(songs);
+                        await HyPlayList.AppendNCSongs(hotSongs);
 
                         HyPlayList.SongAppendDone();
 

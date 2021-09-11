@@ -124,8 +124,8 @@ namespace HyPlayer.Classes
                 },
                 LengthInMilliseconds = song["duration"].ToObject<double>(),
                 mvid = -1,
-                alias = "",
-                transname = "",
+                alias = null,
+                transname = null,
                 fmId = song["id"].ToString(),
                 description = song["description"].ToString(),
                 RadioId = song["radio"]["id"].ToString(),
@@ -159,6 +159,7 @@ namespace HyPlayer.Classes
 
         public static NCSong CreateFromJson(JToken song)
         {
+            if (song == null) return null;
             var alpath = "album";
             var arpath = "artists";
             var dtpath = "duration";

@@ -58,93 +58,95 @@ namespace HyPlayer.Pages
 
         public async void LoadSongListItem()
         {
-            await Task.Run(async () =>
+            await Task.Run(() =>
             {
-                if (playList.plid != "-666")
+                Common.Invoke(async () =>
                 {
-                    try
+                    if (playList.plid != "-666")
                     {
-
-                        var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
-                        new Dictionary<string, object> { { "id", playList.plid } });
-                        var trackIds = json["playlist"]["trackIds"].Select(t => (int)t["id"]).Skip(page * 500).Take(500)
-                            .ToArray();
-                        Common.Invoke(() =>
+                        try
                         {
+
+                            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
+                            new Dictionary<string, object> { { "id", playList.plid } });
+                            var trackIds = json["playlist"]["trackIds"].Select(t => (int)t["id"]).Skip(page * 500).Take(500)
+                                .ToArray();
+
                             if (trackIds.Length >= 500)
                                 NextPage.Visibility = Visibility.Visible;
                             else
                                 NextPage.Visibility = Visibility.Collapsed;
-                        });
 
-                        if (json["playlist"]["specialType"].ToString() == "5" && json["playlist"]["userId"].ToString() == Common.LoginedUser.id)
-                            Common.Invoke(() => { ButtonIntel.Visibility = Visibility.Visible; });
-                        if (json["playlist"]["userId"].ToString() == Common.LoginedUser.id)
-                            SongsList.IsMySongList = true;
-                        try
-                        {
-                            json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
-                                new Dictionary<string, object> { ["ids"] = string.Join(",", trackIds) });
-                            var idx = page * 500;
-                            var i = 0;
-                            foreach (var jToken in json["songs"])
+
+                            if (json["playlist"]["specialType"].ToString() == "5" && json["playlist"]["userId"].ToString() == Common.LoginedUser.id)
+                                Common.Invoke(() => { ButtonIntel.Visibility = Visibility.Visible; });
+                            if (json["playlist"]["userId"].ToString() == Common.LoginedUser.id)
+                                SongsList.IsMySongList = true;
+                            try
                             {
-                                var song = (JObject)jToken;
+                                json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
+                                    new Dictionary<string, object> { ["ids"] = string.Join(",", trackIds) });
+                                var idx = page * 500;
+                                var i = 0;
+                                foreach (var jToken in json["songs"])
+                                {
+                                    var song = (JObject)jToken;
 
-                                var ncSong = NCSong.CreateFromJson(song);
-                                ncSong.IsAvailable =
-                                    json["privileges"].ToList()[i++]["st"].ToString() == "0";
-                                ncSong.Order = idx++;
-                                Common.Invoke(() => { Songs.Add(ncSong); });
+                                    var ncSong = NCSong.CreateFromJson(song);
+                                    ncSong.IsAvailable =
+                                        json["privileges"].ToList()[i++]["st"].ToString() == "0";
+                                    ncSong.Order = idx++;
+                                    Common.Invoke(() => { Songs.Add(ncSong); });
+                                }
                             }
-                        }
 
+                            catch (Exception ex)
+                            {
+                                Common.ShowTeachingTip("发生错误", ex.Message);
+                            }
+
+                        }
                         catch (Exception ex)
                         {
                             Common.ShowTeachingTip("发生错误", ex.Message);
                         }
-
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        Common.ShowTeachingTip("发生错误", ex.Message);
-                    }
-                }
-                else
-                {
-                    Common.Invoke(() =>
-                    { //每日推荐
+                        Common.Invoke(() =>
+                        { //每日推荐
                         ButtonIntel.Visibility = Visibility.Collapsed;
-                    });
-                    try
-                    {
-                        var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendSongs);
-                        if (json["data"]["dailySongs"][0]["alg"].ToString() == "birthDaySong")
+                        });
+                        try
                         {
-                            Common.Invoke(() =>
+                            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendSongs);
+                            if (json["data"]["dailySongs"][0]["alg"].ToString() == "birthDaySong")
                             {
+                                Common.Invoke(() =>
+                                {
                                 // 诶呀,没想到还过生了,吼吼
                                 TextBlockDesc.Text = "生日快乐~ 今天也要开心哦!";
-                                TextBlockDesc.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 0, 0));
-                                TextBlockDesc.FontSize = 25;
-                            });
-                        }
+                                    TextBlockDesc.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 0, 0));
+                                    TextBlockDesc.FontSize = 25;
+                                });
+                            }
 
-                        var idx = 0;
-                        foreach (var song in json["data"]["dailySongs"])
+                            var idx = 0;
+                            foreach (var song in json["data"]["dailySongs"])
+                            {
+                                var ncSong = NCSong.CreateFromJson(song);
+                                ncSong.IsAvailable = true;
+                                ncSong.Order = idx++;
+                                Common.Invoke(() => { Songs.Add(ncSong); });
+
+                            }
+                        }
+                        catch (Exception ex)
                         {
-                            var ncSong = NCSong.CreateFromJson(song);
-                            ncSong.IsAvailable = true;
-                            ncSong.Order = idx++;
-                            Common.Invoke(() => { Songs.Add(ncSong); });
-
+                            Common.ShowTeachingTip("发生错误", ex.Message);
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        Common.ShowTeachingTip("发生错误", ex.Message);
-                    }
-                }
+                });
             });
         }
 

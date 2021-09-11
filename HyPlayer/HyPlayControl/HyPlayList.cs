@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
-using Windows.Foundation;
 using Windows.Media;
 using Windows.Media.Core;
 using Windows.Media.Playback;
@@ -14,8 +13,6 @@ using Windows.Storage.FileProperties;
 using Windows.Storage.Streams;
 using HyPlayer.Classes;
 using NeteaseCloudMusicApi;
-using File = TagLib.File;
-using Windows.System.Profile;
 
 namespace HyPlayer.HyPlayControl
 {
@@ -89,7 +86,7 @@ namespace HyPlayer.HyPlayControl
         {
             get
             {
-                if (List.Count <= NowPlaying) return new HyPlayItem { ItemType = HyPlayItemType.Netease };
+                if (List.Count <= NowPlaying || NowPlaying == -1) return new HyPlayItem { ItemType = HyPlayItemType.Netease };
                 return List[NowPlaying];
             }
         }
@@ -822,14 +819,49 @@ namespace HyPlayer.HyPlayControl
                 case "al":
                     return await AppendAlbum(sourceId.Substring(2, sourceId.Length - 2));
                 case "sh":
+                    return await AppendSingerHot(sourceId.Substring(2, sourceId.Length - 2));
                 case "sa":
                 case "rd":
+                    return await AppendRadioList(sourceId.Substring(2, sourceId.Length - 2));
                 case "rc":
                 default:
                     return false;
             }
         }
 
+        public static async Task<bool> AppendSingerHot(string id)
+        {
+            try
+            {
+                var j1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistTopSong,
+                    new Dictionary<string, object> { { "id", id } });
+
+
+                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
+                     new Dictionary<string, object>
+                     { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) }, false);
+                var idx = 0;
+                List<NCSong> list = new List<NCSong>();
+                foreach (var jToken in json["songs"])
+                {
+                    var ncSong = NCSong.CreateFromJson(jToken);
+                    ncSong.IsAvailable =
+                        json["privileges"][idx][
+                            "st"].ToString() == "0";
+                    ncSong.Order = idx++;
+                    list.Add(ncSong);
+                }
+                list.RemoveAll(t => t == null);
+                await HyPlayList.AppendNCSongs(list, HyPlayItemType.Netease, false);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip("发生错误", ex.Message);
+            }
+
+            return false;
+        }
         public static async Task<bool> AppendAlbum(string alid)
         {
             try
@@ -845,7 +877,45 @@ namespace HyPlayer.HyPlayControl
                 }
                 list.RemoveAll(t => t == null);
                 await HyPlayList.AppendNCSongs(list, HyPlayItemType.Netease, false);
-                
+
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip("发生错误", ex.Message);
+            }
+
+            return false;
+
+        }
+
+        public static async Task<bool> AppendRadioList(string rdid, bool asc = false)
+        {
+            try
+            {
+                bool hasmore = true;
+                int page = 0;
+                while (hasmore)
+                {
+                    try
+                    {
+                        var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.DjProgram,
+                            new Dictionary<string, object>
+                            {
+                                { "rid", rdid },
+                                { "offset", page++ * 100 },
+                                { "limit", 100 },
+                                { "asc", asc }
+                            });
+                        hasmore = json["more"].ToObject<bool>();
+                        await AppendNCSongs(json["programs"].Select(t => (NCSong)NCFmItem.CreateFromJson(t)).ToList(), HyPlayItemType.Radio, false);
+                    }
+                    catch (Exception ex)
+                    {
+                        Common.ShowTeachingTip("发生错误", ex.Message);
+                    }
+                }
 
                 return true;
             }
@@ -856,6 +926,7 @@ namespace HyPlayer.HyPlayControl
 
             return false;
         }
+
         public static async Task<bool> AppendPlayList(string plid)
         {
             try
@@ -880,7 +951,6 @@ namespace HyPlayer.HyPlayControl
                             {
                                 return NCSong.CreateFromJson(t);
                             }
-
                             return null;
                         }).ToList();
                         ncSongs.RemoveAll(t => t == null);
@@ -914,7 +984,7 @@ namespace HyPlayer.HyPlayControl
             var mdp = await sf.Properties.GetMusicPropertiesAsync();
 
             if (nocheck163 ||
-                !The163KeyHelper.TryGetMusicInfo(File.Create(new UwpStorageFileAbstraction(sf)).Tag, out mi))
+                !The163KeyHelper.TryGetMusicInfo(TagLib.File.Create(new UwpStorageFileAbstraction(sf)).Tag, out mi))
             {
                 //TagLib.File afi = TagLib.File.Create(new UwpStorageFileAbstraction(sf), ReadStyle.Average);
                 string[] contributingArtistsKey = { "System.Music.Artist" };

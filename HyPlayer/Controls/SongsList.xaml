@@ -5,9 +5,10 @@
     xmlns:classes="using:HyPlayer.Classes"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hycontrols="using:HyPlayer.Controls"
     xmlns:local="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:hycontrols="using:HyPlayer.Controls"
+    x:Name="SongListRoot"
     d:DesignHeight="300"
     mc:Ignorable="d">
 
@@ -19,7 +20,10 @@
         ShowsScrollingPlaceholders="True">
         <ListView.ItemTemplate>
             <DataTemplate x:DataType="classes:NCSong">
-                <Grid RightTapped="Grid_RightTapped" Tag="{x:Bind Order}" IsRightTapEnabled="True" >
+                <Grid
+                    IsRightTapEnabled="True"
+                    RightTapped="Grid_RightTapped"
+                    Tag="{x:Bind Order}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock
                             x:Name="OrderId"
@@ -202,7 +206,7 @@
                                 Foreground="Red"
                                 Style="{StaticResource MenuFlyoutItemRevealStyle}"
                                 Text="删除"
-                                Visibility="{Binding Source=local:SongsList.IsSongList}">
+                                Visibility="{Binding ElementName=SongListRoot, Path=IsMySongList}">
                                 <MenuFlyoutItem.Icon>
                                     <FontIcon
                                         FontFamily="{StaticResource SymbolThemeFontFamily}"

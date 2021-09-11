@@ -90,6 +90,11 @@ namespace HyPlayer
                 GlobalTip.Subtitle = subtitle;
                 if (!GlobalTip.IsOpen)
                     GlobalTip.IsOpen = true;
+                else
+                {
+                    GlobalTip.IsOpen = false;
+                    GlobalTip.IsOpen = true;
+                }
             });
         }
 

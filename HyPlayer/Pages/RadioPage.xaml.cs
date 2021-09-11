@@ -11,17 +11,18 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using NeteaseCloudMusicApi;
+using System.Collections.ObjectModel;
 
 namespace HyPlayer.Pages
 {
     public sealed partial class RadioPage : Page, IDisposable
     {
         private bool asc;
-        private int i;
+        private int i = 0;
         private int page;
         private NCRadio Radio;
 
-        public List<NCSong> Songs { get; private set; }
+        public ObservableCollection<NCSong> Songs = new ObservableCollection<NCSong>();
 
         public RadioPage()
         {
@@ -43,8 +44,9 @@ namespace HyPlayer.Pages
                 foreach (var jToken in json["programs"])
                 {
                     var song = NCFmItem.CreateFromJson(jToken);
+                    song.Type = HyPlayItemType.Radio;
+                    song.Order = i++;
                     Songs.Add(song);
-                    SongContainer.Children.Add(new SingleNCSong(song, i++, true, true));
                 }
             }
             catch (Exception ex)
@@ -65,6 +67,7 @@ namespace HyPlayer.Pages
                 ImageRect.ImageSource =
                     new BitmapImage(new Uri(radio.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
                 Songs.Clear();
+                SongContainer.ListSource = "rd" + radio.id;
                 LoadProgram();
             }
         }
@@ -103,8 +106,9 @@ namespace HyPlayer.Pages
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            SongContainer.Children.Clear();
+            Songs.Clear();
             page = 0;
+            i = 0;
             asc = !asc;
             LoadProgram();
         }
@@ -112,7 +116,7 @@ namespace HyPlayer.Pages
         public void Dispose()
         {
             ImageRect.ImageSource = null;
-            SongContainer.Children.Clear();
+            Songs.Clear();
         }
     }
 }

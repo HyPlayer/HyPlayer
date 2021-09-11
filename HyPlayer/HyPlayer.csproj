@@ -165,9 +165,6 @@
     <Compile Include="Controls\SingleDownload.xaml.cs">
       <DependentUpon>SingleDownload.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\SingleNCSong.xaml.cs">
-      <DependentUpon>SingleNCSong.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Controls\SinglePlaylistStack.xaml.cs">
       <DependentUpon>SinglePlaylistStack.xaml</DependentUpon>
     </Compile>
@@ -373,10 +370,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\SingleComment.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Controls\SingleNCSong.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
