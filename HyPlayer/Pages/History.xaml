@@ -9,7 +9,6 @@
     d:DataContext="{d:DesignInstance Type=pages:History}"
     mc:Ignorable="d">
 
-    <ScrollViewer VerticalScrollMode="Enabled">
         <StackPanel Spacing="15">
             <TextBlock
                 Margin="30,0,30,0"
@@ -21,10 +20,10 @@
                     <NavigationViewItem x:Name="SongRankWeek" Content="听歌排行 (本周)" />
                     <NavigationViewItem x:Name="SongRankAll" Content="听歌排行 (全部)" />
                 </NavigationView.MenuItems>
-                <controls:SongsList x:Name="SongsList" MinHeight="200" Songs="{x:Bind Songs,Mode=OneWay}"/>
+                <controls:SongsList x:Name="SongsList" MaxHeight="355" Songs="{x:Bind Songs,Mode=OneWay}"/>
             </NavigationView>
             <Grid Height="150" />
         </StackPanel>
 
-    </ScrollViewer>
+
 </Page>

@@ -8,8 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <ScrollViewer.Content>
+
             <StackPanel Orientation="Vertical">
                 <controls:DockPanel x:Name="GridPersonalInformation" LastChildFill="True">
                     <Rectangle
@@ -104,7 +103,7 @@
                 <Grid Height="150" />
 
             </StackPanel>
-        </ScrollViewer.Content>
+
 
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
@@ -130,5 +129,5 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-    </ScrollViewer>
+
 </Page>
