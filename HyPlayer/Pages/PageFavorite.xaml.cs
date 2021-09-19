@@ -72,7 +72,7 @@ namespace HyPlayer.Pages
                         LineOne = pljs["dj"]["nickname"].ToString(),
                         LineTwo = pljs["desc"].ToString(),
                         LineThree = "最后一个节目: " + pljs["lastProgramName"].ToString(),
-                        ResourceId = "rd" + json["id"],
+                        ResourceId = "rd" + pljs["id"],
                         CoverUri = pljs["picUrl"].ToString() + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
                         Order = i++
                     });

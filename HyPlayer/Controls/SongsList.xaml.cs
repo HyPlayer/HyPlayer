@@ -22,46 +22,51 @@ namespace HyPlayer.Controls
         {
             this.InitializeComponent();
         }
+
         public static readonly DependencyProperty SongsProperty = DependencyProperty.Register(
-  "Songs", typeof(ObservableCollection<NCSong>)
-  ,
-  typeof(SongsList),
-  new PropertyMetadata(null)
-);
+            "Songs", typeof(ObservableCollection<NCSong>)
+            ,
+            typeof(SongsList),
+            new PropertyMetadata(null)
+        );
+
         public static readonly DependencyProperty ListSourceProperty = DependencyProperty.Register(
-"ListSource", typeof(string)
-,
-typeof(SongsList),
-new PropertyMetadata(null)
-);
+            "ListSource", typeof(string)
+            ,
+            typeof(SongsList),
+            new PropertyMetadata(null)
+        );
 
 
         public static readonly DependencyProperty IsMySongListProperty = DependencyProperty.Register(
-"IsMySongList", typeof(bool)
-,
-typeof(SongsList),
-new PropertyMetadata(null)
-);
+            "IsMySongList", typeof(bool)
+            ,
+            typeof(SongsList),
+            new PropertyMetadata(null)
+        );
+
         public bool IsMySongList
         {
-            get
-            {
-                return (bool)GetValue(IsMySongListProperty);
-            }
-            set
-            {
-                SetValue(IsMySongListProperty, value);
-            }
+            get { return (bool)GetValue(IsMySongListProperty); }
+            set { SetValue(IsMySongListProperty, value); }
         }
 
 
         public ObservableCollection<NCSong> Songs
         {
             get { return (ObservableCollection<NCSong>)GetValue(SongsProperty); }
-            set { SetValue(SongsProperty, value); }
+            set
+            {
+                SetValue(SongsProperty, value);
+                FilterBox_OnTextChanged(null, null);
+                value.CollectionChanged += (_, __) => { FilterBox_OnTextChanged(null, null); };
+            }
         }
 
+        private ObservableCollection<NCSong> VisibleSongs = new ObservableCollection<NCSong>();
+
         public bool IsManualSelect = true;
+
         public string ListSource
         {
             get { return (string)GetValue(ListSourceProperty); }
@@ -71,31 +76,33 @@ new PropertyMetadata(null)
         private async void SongContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (SongContainer.SelectedIndex == -1) return;
-            if (IsManualSelect && ListSource != null && ListSource != "content")
+            if (IsManualSelect && ListSource != null && ListSource != "content" && Songs.Count == VisibleSongs.Count)
             {
                 HyPlayList.List.Clear();
                 HyPlayList.Player.Pause();
                 await HyPlayList.AppendNCSource(ListSource);
                 HyPlayList.SongAppendDone();
-                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem?.id == Songs[SongContainer.SelectedIndex].sid));
+                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t =>
+                    t.PlayItem?.id == VisibleSongs[SongContainer.SelectedIndex].sid));
             }
             else if (ListSource == null)
             {
-                var ncsong = Songs[SongContainer.SelectedIndex];
+                var ncsong = VisibleSongs[SongContainer.SelectedIndex];
                 _ = HyPlayList.AppendNCSong(ncsong);
                 HyPlayList.SongAppendDone();
                 HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
             }
-            else if (ListSource == "content")
+            else
             {
-                await HyPlayList.AppendNCSongs(Songs);
-                HyPlayList.SongMoveTo(0);
+                await HyPlayList.AppendNCSongs(VisibleSongs);
+                HyPlayList.SongAppendDone();
+                HyPlayList.SongMoveTo(SongContainer.SelectedIndex);
             }
         }
 
         private void BtnPlay_Click(object sender, RoutedEventArgs e)
         {
-            var ncsong = Songs[int.Parse((sender as Button).Tag.ToString())];
+            var ncsong = VisibleSongs[int.Parse((sender as Button).Tag.ToString())];
             _ = HyPlayList.AppendNCSong(ncsong);
             HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
             HyPlayList.SongAppendDone();
@@ -111,54 +118,54 @@ new PropertyMetadata(null)
 
         private void FlyoutItemPlay_Click(object sender, RoutedEventArgs e)
         {
-            var ncsong = Songs[SongContainer.SelectedIndex];
+            var ncsong = VisibleSongs[SongContainer.SelectedIndex];
             _ = HyPlayList.AppendNCSong(ncsong, HyPlayList.NowPlaying + 1);
         }
 
         private async void FlyoutItemPlayNext_Click(object sender, RoutedEventArgs e)
         {
-            _ = await HyPlayList.AppendNCSong(Songs[SongContainer.SelectedIndex], HyPlayList.NowPlaying + 1);
+            _ = await HyPlayList.AppendNCSong(VisibleSongs[SongContainer.SelectedIndex], HyPlayList.NowPlaying + 1);
             HyPlayList.SongAppendDone();
         }
 
         private async void FlyoutItemSinger_Click(object sender, RoutedEventArgs e)
         {
-            if (Songs[SongContainer.SelectedIndex].Artist[0].Type == HyPlayItemType.Radio)
+            if (VisibleSongs[SongContainer.SelectedIndex].Artist[0].Type == HyPlayItemType.Radio)
             {
-                Common.NavigatePage(typeof(Me), Songs[SongContainer.SelectedIndex].Artist[0].id);
+                Common.NavigatePage(typeof(Me), VisibleSongs[SongContainer.SelectedIndex].Artist[0].id);
             }
             else
             {
-                if (Songs[SongContainer.SelectedIndex].Artist.Count > 1)
-                    await new ArtistSelectDialog(Songs[SongContainer.SelectedIndex].Artist).ShowAsync();
+                if (VisibleSongs[SongContainer.SelectedIndex].Artist.Count > 1)
+                    await new ArtistSelectDialog(VisibleSongs[SongContainer.SelectedIndex].Artist).ShowAsync();
                 else
-                    Common.NavigatePage(typeof(ArtistPage), Songs[SongContainer.SelectedIndex].Artist[0].id);
+                    Common.NavigatePage(typeof(ArtistPage), VisibleSongs[SongContainer.SelectedIndex].Artist[0].id);
             }
         }
 
         private void FlyoutItemAlbum_Click(object sender, RoutedEventArgs e)
         {
-            Common.NavigatePage(typeof(AlbumPage), Songs[SongContainer.SelectedIndex].Album);
+            Common.NavigatePage(typeof(AlbumPage), VisibleSongs[SongContainer.SelectedIndex].Album);
         }
 
         private void FlyoutItemComments_Click(object sender, RoutedEventArgs e)
         {
-            Common.NavigatePage(typeof(Comments), "sg" + Songs[SongContainer.SelectedIndex].sid);
+            Common.NavigatePage(typeof(Comments), "sg" + VisibleSongs[SongContainer.SelectedIndex].sid);
         }
 
         private void FlyoutItemDownload_Click(object sender, RoutedEventArgs e)
         {
-            DownloadManager.AddDownload(Songs[SongContainer.SelectedIndex]);
+            DownloadManager.AddDownload(VisibleSongs[SongContainer.SelectedIndex]);
         }
 
         private void BtnMV_Click(object sender, RoutedEventArgs e)
         {
-            Common.NavigatePage(typeof(MVPage), Songs[SongContainer.SelectedIndex]);
+            Common.NavigatePage(typeof(MVPage), VisibleSongs[SongContainer.SelectedIndex]);
         }
 
         private async void FlyoutCollection_Click(object sender, RoutedEventArgs e)
         {
-            await new SongListSelect(Songs[SongContainer.SelectedIndex].sid).ShowAsync();
+            await new SongListSelect(VisibleSongs[SongContainer.SelectedIndex].sid).ShowAsync();
         }
 
         private async void Btn_Del_Click(object sender, RoutedEventArgs e)
@@ -166,13 +173,13 @@ new PropertyMetadata(null)
             Common.Invoke(async () =>
             {
                 await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistTracks, new Dictionary<string, object>()
-            {
-                { "op" , "del" },
-                {"pid", ListSource.Substring(2,ListSource.Length -2) },
-                {"tracks" , Songs[SongContainer.SelectedIndex].sid }
+                {
+                    { "op", "del" },
+                    { "pid", ListSource.Substring(2, ListSource.Length - 2) },
+                    { "tracks", VisibleSongs[SongContainer.SelectedIndex].sid }
+                });
             });
-            });
-            Songs.RemoveAt(SongContainer.SelectedIndex);
+            VisibleSongs.RemoveAt(SongContainer.SelectedIndex);
         }
 
         private void Grid_RightTapped(object sender, RightTappedRoutedEventArgs e)
@@ -183,10 +190,44 @@ new PropertyMetadata(null)
             element.ContextFlyout.ShowAt(element, new FlyoutShowOptions { Position = e.GetPosition(element) });
             IsManualSelect = true;
         }
+
         public static Brush GetBrush(bool IsAvailable)
         {
-            return IsAvailable ? (Brush)Application.Current.Resources["DefaultTextForegroundThemeBrush"] : new SolidColorBrush(Color.FromArgb(255, 128, 128, 128));
+            return IsAvailable
+                ? (Brush)Application.Current.Resources["DefaultTextForegroundThemeBrush"]
+                : new SolidColorBrush(Color.FromArgb(255, 128, 128, 128));
         }
+
+        private void FilterBox_OnTextChanged(object sender, RoutedEventArgs e)
+        {
+            int vpos = -1;
+            for (int i = 0; i < Songs.Count; i++)
+            {
+                if (string.IsNullOrWhiteSpace(FilterBox.Text) || Filter(Songs[i]))
+                {
+                    vpos++;
+                    if (!VisibleSongs.Contains(Songs[i]))
+                    {
+                        VisibleSongs.Insert(vpos, Songs[i]);
+                    }
+                }
+                else
+                {
+                    VisibleSongs.Remove(Songs[i]);
+                }
+            }
+
+
+        }
+
+        private bool Filter(NCSong ncsong)
+        {
+            return ncsong.songname.ToLower().Contains(FilterBox.Text.ToLower()) || ncsong.ArtistString.ToLower().Contains(FilterBox.Text.ToLower()) ||
+                   ncsong.Album.name.ToLower().Contains(FilterBox.Text.ToLower()) || (ncsong.transname ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
+                   (ncsong.alias ?? "").ToLower().Contains(FilterBox.Text.ToLower());
+        }
+
+
 
     }
 }

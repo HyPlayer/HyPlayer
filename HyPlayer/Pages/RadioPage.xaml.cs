@@ -62,7 +62,7 @@ namespace HyPlayer.Pages
                 {
                     var json1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.DjDetail,
                         new Dictionary<string, object> { { "rid", rid } });
-                    Radio = NCRadio.CreateFromJson(json1["data"]);
+                    Radio = NCRadio.CreateFromJson(json1["djRadio"]);
                 }
                 catch (Exception ex)
                 {
