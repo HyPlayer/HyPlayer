@@ -1,49 +1,50 @@
 ﻿<Page
+    mc:Ignorable="d"
     x:Class="HyPlayer.Pages.Search"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:hycontrol="using:HyPlayer.Controls"
-    mc:Ignorable="d">
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="75"/>
+            <RowDefinition Height="75" />
             <RowDefinition />
         </Grid.RowDefinitions>
-        <StackPanel Orientation="Vertical" Grid.Row="0">
+        <StackPanel Grid.Row="0" Orientation="Vertical">
             <AutoSuggestBox
-                    x:Name="SearchKeywordBox"
-                    AutomationProperties.Name="Search"
-                    GotFocus="SearchKeywordBox_GotFocus"
-                    LostFocus="SearchKeywordBox_LostFocus"
-                    PlaceholderText="搜索歌曲......"
-                    QueryIcon="Find"
-                    QuerySubmitted="SearchKeywordBox_QuerySubmitted"
-                    SuggestionChosen="SearchKeywordBox_SuggestionChosen"
-                    Tag="PageSearch"
-                    TextChanged="SearchKeywordBox_TextChanged"/>
+                AutomationProperties.Name="Search"
+                GotFocus="SearchKeywordBox_GotFocus"
+                LostFocus="SearchKeywordBox_LostFocus"
+                PlaceholderText="搜索歌曲......"
+                QueryIcon="Find"
+                QuerySubmitted="SearchKeywordBox_QuerySubmitted"
+                SuggestionChosen="SearchKeywordBox_SuggestionChosen"
+                Tag="PageSearch"
+                TextChanged="SearchKeywordBox_TextChanged"
+                x:Name="SearchKeywordBox" />
             <StackPanel
-                    Margin="15"
-                    Orientation="Horizontal"
-                    Spacing="5">
+                Margin="15"
+                Orientation="Horizontal"
+                Spacing="5">
                 <TextBlock Text="搜索历史" />
                 <ScrollViewer HorizontalScrollMode="Enabled">
                     <StackPanel
-                            x:Name="SearchHistory"
-                            Orientation="Horizontal"
-                            Spacing="5" />
+                        Orientation="Horizontal"
+                        Spacing="5"
+                        x:Name="SearchHistory" />
                 </ScrollViewer>
             </StackPanel>
         </StackPanel>
-        <NavigationView Grid.Row="1"
-                    x:Name="NavigationViewSelector"
-                    IsBackButtonVisible="Collapsed"
-                    IsSettingsVisible="False"
-                    PaneDisplayMode="Top"
-                    SelectionChanged="NavigationView_OnSelectionChanged">
+        <NavigationView
+            Grid.Row="1"
+            IsBackButtonVisible="Collapsed"
+            IsSettingsVisible="False"
+            PaneDisplayMode="Top"
+            SelectionChanged="NavigationView_OnSelectionChanged"
+            x:Name="NavigationViewSelector">
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="单曲" Tag="1" />
                 <NavigationViewItem Content="专辑" Tag="10" />
@@ -57,30 +58,31 @@
                 <NavigationViewItem Content="综合" Tag="1018" />
             </NavigationView.MenuItems>
             <Grid>
-                <Grid VerticalAlignment="Stretch" Margin="0,0,0,150">
-                    <StackPanel
-                            Name="SearchResultContainer"
-                            Margin="30"
-                            Orientation="Vertical"
-                            Spacing="5" />
+                <Grid Margin="0,0,0,150" VerticalAlignment="Stretch">
+                    <hycontrol:SimpleLinerList Margin="30" x:Name="SearchResultContainer" />
                     <hycontrol:SongsList
-                                 x:Name="SongsSearchResultContainer"
-                                 Margin="30"
-                                Songs="{x:Bind SongResults}"
-                        />
+                        Margin="30"
+                        Songs="{x:Bind SongResults}"
+                        x:Name="SongsSearchResultContainer" />
                 </Grid>
-                <StackPanel Margin="0,0,0,150" VerticalAlignment="Bottom"  HorizontalAlignment="Center" Orientation="Horizontal">
-                    <Button Style="{StaticResource ButtonRevealStyle}" 
-                                x:Name="PrevPage"
-                                Click="PrevPage_OnClick"
-                                Content="上一页"
-                                Visibility="Collapsed" />
+                <StackPanel
+                    HorizontalAlignment="Center"
+                    Margin="0,0,0,150"
+                    Orientation="Horizontal"
+                    VerticalAlignment="Bottom">
+                    <Button
+                        Click="PrevPage_OnClick"
+                        Content="上一页"
+                        Style="{StaticResource ButtonRevealStyle}"
+                        Visibility="Collapsed"
+                        x:Name="PrevPage" />
                     <TextBlock x:Name="PageIndicator" />
-                    <Button Style="{StaticResource ButtonRevealStyle}" 
-                                x:Name="NextPage"
-                                Click="NextPage_OnClickPage_OnClick"
-                                Content="下一页"
-                                Visibility="Collapsed" />
+                    <Button
+                        Click="NextPage_OnClickPage_OnClick"
+                        Content="下一页"
+                        Style="{StaticResource ButtonRevealStyle}"
+                        Visibility="Collapsed"
+                        x:Name="NextPage" />
                 </StackPanel>
 
             </Grid>

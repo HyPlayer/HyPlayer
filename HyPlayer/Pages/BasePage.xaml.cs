@@ -217,7 +217,7 @@ namespace HyPlayer.Pages
                 queries["password"] = TextBoxPassword.Password;
                 json = await Common.ncapi.RequestAsync(
                     isPhone ? CloudMusicApiProviders.LoginCellphone : CloudMusicApiProviders.Login, queries);
-                if (json["code"].ToString() != "200")
+                if (json?["code"]?.ToString() != "200")
                 {
                     ButtonLogin.Visibility = Visibility.Visible;
                     InfoBarLoginHint.IsOpen = true;

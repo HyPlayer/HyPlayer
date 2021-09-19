@@ -174,10 +174,21 @@ namespace HyPlayer.Pages
                 var j1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistAlbum,
                     new Dictionary<string, object> { { "id", artist.id }, { "limit", 50 }, { "offset", page * 50 } });
 
-                AlbumContainer.Children.Clear();
+                AlbumContainer.ListItems = new ObservableCollection<SimpleListItem>();
+                int i = 0;
                 foreach (var albumjson in j1["hotAlbums"].ToArray())
-                    AlbumContainer.Children.Add(new SingleAlbum(NCAlbum.CreateFromJson(albumjson),
-                        albumjson["artists"].ToArray().Select(t => NCArtist.CreateFromJson(t)).ToList()));
+                    AlbumContainer.ListItems.Add(new SimpleListItem
+                    {
+                        Title = albumjson["name"].ToString(),
+                        LineOne = albumjson["artist"]["name"].ToString(),
+                        LineTwo = albumjson["alias"] != null
+                            ? string.Join(" / ", albumjson["alias"].ToArray().Select(t => t.ToString()))
+                            : "",
+                        LineThree = albumjson.Value<bool>("paid") ? "付费专辑" : "",
+                        ResourceId = "al"+albumjson["id"].ToString(),
+                        CoverUri = albumjson["picUrl"].ToString()+"?param="+StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                        Order = i++
+                    });
                 if (int.Parse(j1["artist"]["albumSize"].ToString()) >= (page + 1) * 50)
                     NextPage.Visibility = Visibility.Visible;
                 else

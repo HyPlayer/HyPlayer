@@ -1,19 +1,18 @@
-﻿using System;
+﻿using HyPlayer.Classes;
+using HyPlayer.Controls;
+using HyPlayer.HyPlayControl;
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using Windows.UI.Text;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using HyPlayer.HyPlayControl;
-using NeteaseCloudMusicApi;
-using Newtonsoft.Json.Linq;
-using System.Collections.ObjectModel;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -77,34 +76,13 @@ namespace HyPlayer.Pages
                                                    "\r\n"
                                                  : "")
                                              + json["album"]["description"];
-                        var cdname = "";
-                        SongsList sl = null;
                         var idx = 0;
+                        SongContainer.ListSource = "al" + Album.id;
                         foreach (var song in json["songs"].ToArray())
                         {
                             var ncSong = NCSong.CreateFromJson(song);
-                            songs.Add(ncSong);
-                            if (song["cd"].ToString() != cdname)
-                            {
-                                idx = 0;
-                                cdname = song["cd"].ToString();
-                                sl = new SongsList { Songs = new ObservableCollection<NCSong>() ,ListSource="al"+ Album.id};
-                                SongContainer.Children.Add(new StackPanel
-                                {
-                                    Orientation = Orientation.Vertical,
-                                    Children =
-                                    {
-                                        new TextBlock
-                                        {
-                                            Margin = new Thickness(5, 0, 0, 0),
-                                            FontWeight = FontWeights.Black, FontSize = 23, Text = "Disc " + cdname
-                                        },
-                                        sl
-                                    }
-                                });
-                            }
                             ncSong.Order = idx++;
-                            sl.Songs.Add(ncSong);
+                            songs.Add(ncSong);
                         }
                     }
                     catch (Exception ex)
@@ -168,7 +146,6 @@ namespace HyPlayer.Pages
             Album = null;
             artists = null;
             ImageRect.ImageSource = null;
-            SongContainer.Children.Clear();
             GC.SuppressFinalize(this);
         }
     }

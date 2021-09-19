@@ -153,20 +153,14 @@
     <Compile Include="Controls\ScrollingTextBlock.xaml.cs">
       <DependentUpon>ScrollingTextBlock.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\SingleAlbum.xaml.cs">
-      <DependentUpon>SingleAlbum.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\SingleArtist.xaml.cs">
-      <DependentUpon>SingleArtist.xaml</DependentUpon>
+    <Compile Include="Controls\SimpleLinerList.xaml.cs">
+      <DependentUpon>SimpleLinerList.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\SingleComment.xaml.cs">
       <DependentUpon>SingleComment.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\SingleDownload.xaml.cs">
       <DependentUpon>SingleDownload.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\SinglePlaylistStack.xaml.cs">
-      <DependentUpon>SinglePlaylistStack.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\SongListSelect.cs">
       <DependentUpon>SongListSelect.xaml</DependentUpon>
@@ -176,9 +170,6 @@
     </Compile>
     <Compile Include="HyPlayControl\DownloadManager.cs" />
     <Compile Include="HyPlayControl\HyPlayList.cs" />
-    <Compile Include="Controls\SingleRadio.xaml.cs">
-      <DependentUpon>SingleRadio.xaml</DependentUpon>
-    </Compile>
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -321,19 +312,8 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Controls\SingleAlbum.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Controls\SingleArtist.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
+    <Page Include="Controls\SimpleLinerList.xaml" />
     <Page Include="Controls\SingleDownload.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Controls\SinglePlaylistStack.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -370,10 +350,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\SingleComment.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Controls\SingleRadio.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

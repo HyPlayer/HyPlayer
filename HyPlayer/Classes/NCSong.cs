@@ -42,13 +42,13 @@ namespace HyPlayer.Classes
         public TimeSpan LyricTime;
 
         public static SongLyric PureSong = new SongLyric
-        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏" };
+            { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏" };
 
         public static SongLyric NoLyric = new SongLyric
-        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏" };
+            { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏" };
 
         public static SongLyric LoadingLyric = new SongLyric
-        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..." };
+            { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..." };
     }
 
 
@@ -141,7 +141,10 @@ namespace HyPlayer.Classes
         public List<NCArtist> Artist;
         public int Order = 0;
         public int DspOrder => Order + 1;
-        public BitmapImage Cover => new BitmapImage(new Uri(Album.cover + "?param=" + StaticSource.PICSIZE_SINGLENCSONG_COVER));
+
+        public BitmapImage Cover =>
+            new BitmapImage(new Uri(Album.cover + "?param=" + StaticSource.PICSIZE_SINGLENCSONG_COVER));
+
         public bool LoadList = false;
         public bool IsAvailable = true;
 
@@ -197,6 +200,19 @@ namespace HyPlayer.Classes
         }
     }
 
+    public class SimpleListItem
+    {
+        public string Title;
+        public string LineOne;
+        public string LineTwo;
+        public string LineThree;
+        public string ResourceId;
+        public string CoverUri;
+        public BitmapImage Cover => new BitmapImage(new Uri(CoverUri));
+        public int Order = 0;
+        public int DspOrder => Order + 1;
+    }
+
     public class PlayItem
     {
         public bool isLocalFile;
@@ -210,11 +226,9 @@ namespace HyPlayer.Classes
 
         public string ArtistString
         {
-            get
-            {
-                return string.Join(" / ", Artist.Select(t => t.name));
-            }
+            get { return string.Join(" / ", Artist.Select(t => t.name)); }
         }
+
         public NCAlbum Album;
         public string AlbumString => Album.name;
         public string url;

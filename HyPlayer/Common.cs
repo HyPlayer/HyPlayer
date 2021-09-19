@@ -120,6 +120,25 @@ namespace HyPlayer
             GC.Collect();
         }
 
+        public static void NavigatePageResource(string resourceId)
+        {
+            switch (resourceId.Substring(0, 2))
+            {
+                case "al":
+                    NavigatePage(typeof(AlbumPage), resourceId.Substring(2));
+                    break;
+                case "pl":
+                    NavigatePage(typeof(SongListDetail), resourceId.Substring(2));
+                    break;
+                case "rd":
+                    NavigatePage(typeof(RadioPage), resourceId.Substring(2));
+                    break;
+                case "ar":
+                    NavigatePage(typeof(ArtistPage),resourceId.Substring(2));
+                    break;
+            }
+        }
+
         public static void CollectGarbage()
         {
             NavigatePage(typeof(BlankPage));
@@ -157,6 +176,7 @@ namespace HyPlayer
                     NavigationHistory.Pop();
                     bak = NavigationHistory.Peek();
                 }
+
                 Common.BaseFrame?.Navigate(bak.PageType, bak.Paratmers);
                 NavigatingBack = true;
                 Common.PageBase.NavMain.SelectedItem = bak.Item;

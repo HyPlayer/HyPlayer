@@ -10,6 +10,7 @@ using HyPlayer.Controls;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
 using System.Collections.ObjectModel;
+using System.Globalization;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -23,6 +24,7 @@ namespace HyPlayer.Pages
         private int page;
         private string Text = "";
         ObservableCollection<NCSong> SongResults;
+
         public Search()
         {
             InitializeComponent();
@@ -54,7 +56,7 @@ namespace HyPlayer.Pages
 
         protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
         {
-            SearchResultContainer.Children.Clear();
+            SearchResultContainer.ListItems.Clear();
             GC.Collect();
         }
 
@@ -80,7 +82,7 @@ namespace HyPlayer.Pages
                 SearchHistory.Children.Add(btn);
             }
 
-            SearchResultContainer.Children.Clear();
+            SearchResultContainer.ListItems.Clear();
             try
             {
                 var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Cloudsearch,
@@ -118,8 +120,19 @@ namespace HyPlayer.Pages
 
         private void LoadRadioResult(JObject json)
         {
+            int i = 0;
             foreach (var pljs in json["result"]["djRadios"].ToArray())
-                SearchResultContainer.Children.Add(new SingleRadio(NCRadio.CreateFromJson(pljs)));
+                SearchResultContainer.ListItems.Add(
+                    new SimpleListItem
+                    {
+                        Title = pljs["name"].ToString(),
+                        LineOne = pljs["dj"]["nickname"].ToString(),
+                        LineTwo = pljs["desc"].ToString(),
+                        LineThree = pljs["rcmdText"].ToString(),
+                        ResourceId = "rd" + json["id"],
+                        CoverUri = json["picUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                        Order = i++
+                    });
             if (int.Parse(json["result"]["djRadiosCount"].ToString()) >= (page + 1) * 30)
                 NextPage.Visibility = Visibility.Visible;
             else
@@ -138,8 +151,18 @@ namespace HyPlayer.Pages
 
         private void LoadPlaylistResult(JObject json)
         {
+            int i = 0;
             foreach (var pljs in json["result"]["playlists"].ToArray())
-                SearchResultContainer.Children.Add(new SinglePlaylistStack(NCPlayList.CreateFromJson(pljs)));
+                SearchResultContainer.ListItems.Add(new SimpleListItem
+                {
+                    Title = pljs["name"].ToString(),
+                    LineOne = pljs["creator"]["nickname"].ToString(),
+                    LineTwo = pljs["description"].ToString(),
+                    LineThree = $"{pljs["trackCount"]}首 | 播放{pljs["playCount"]}次 | 收藏 {pljs["bookCount"]}次",
+                    ResourceId = "pl"+pljs["id"],
+                    CoverUri = pljs["coverImgUrl"].ToString()+"?param="+StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                    Order = i++
+                });
             if (int.Parse(json["result"]["playlistCount"].ToString()) >= (page + 1) * 30)
                 NextPage.Visibility = Visibility.Visible;
             else
@@ -152,8 +175,18 @@ namespace HyPlayer.Pages
 
         private void LoadArtistResult(JObject json)
         {
+            int i = 0;
             foreach (var singerjson in json["result"]["artists"].ToArray())
-                SearchResultContainer.Children.Add(new SingleArtist(NCArtist.CreateFromJson(singerjson)));
+                SearchResultContainer.ListItems.Add(new SimpleListItem
+                {
+                    Title = singerjson["name"].ToString(),
+                    LineOne = singerjson["trans"].ToString(),
+                    LineTwo = string.Join(" / ", singerjson["alia"].ToList()),
+                    LineThree = $"专辑数 {singerjson["albumSize"]} | MV 数 {singerjson["mvSize"]}",
+                    ResourceId = "ar"+singerjson["id"],
+                    CoverUri = singerjson["img1v1Url"].ToString()+"?param="+StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                    Order = i++
+                });
             if (int.Parse(json["result"]["artistCount"].ToString()) >= (page + 1) * 30)
                 NextPage.Visibility = Visibility.Visible;
             else
@@ -166,9 +199,20 @@ namespace HyPlayer.Pages
 
         private void LoadAlbumResult(JObject json)
         {
+            int i = 0;
             foreach (var albumjson in json["result"]["albums"].ToArray())
-                SearchResultContainer.Children.Add(new SingleAlbum(NCAlbum.CreateFromJson(albumjson),
-                    albumjson["artists"].ToArray().Select(t => NCArtist.CreateFromJson(t)).ToList()));
+                SearchResultContainer.ListItems.Add(new SimpleListItem()
+                {
+                    Title = albumjson["name"].ToString(),
+                    LineOne = albumjson["artist"]["name"].ToString(),
+                    LineTwo = albumjson["alias"] != null
+                        ? string.Join(" / ", albumjson["alias"].ToArray().Select(t => t.ToString()))
+                        : "",
+                    LineThree = albumjson.Value<bool>("paid") ? "付费专辑" : "",
+                    ResourceId = "al"+albumjson["id"].ToString(),
+                    CoverUri = albumjson["picUrl"].ToString()+"?param="+StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                    Order = i++
+                });
             if (int.Parse(json["result"]["albumCount"].ToString()) >= (page + 1) * 30)
                 NextPage.Visibility = Visibility.Visible;
             else
@@ -234,12 +278,13 @@ namespace HyPlayer.Pages
                 SongsSearchResultContainer.Visibility = Visibility.Collapsed;
                 SearchResultContainer.Visibility = Visibility.Visible;
             }
+
             LoadResult();
         }
 
         public void Dispose()
         {
-            SearchResultContainer.Children.Clear();
+            SearchResultContainer.ListItems.Clear();
         }
 
         private async void SearchKeywordBox_GotFocus(object sender, RoutedEventArgs e)
@@ -271,7 +316,8 @@ namespace HyPlayer.Pages
             LoadResult();
         }
 
-        private void SearchKeywordBox_SuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+        private void SearchKeywordBox_SuggestionChosen(AutoSuggestBox sender,
+            AutoSuggestBoxSuggestionChosenEventArgs args)
         {
             sender.Text = args.SelectedItem.ToString();
         }

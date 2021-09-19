@@ -1,33 +1,38 @@
 ﻿<Page
+    mc:Ignorable="d"
     x:Class="HyPlayer.Pages.PageFavorite"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:HyPlayer.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-
-    <NavigationView
-        SelectionChanged="NavView_OnSelectionChanged"
-        PaneDisplayMode="Top"
-        x:Name="NavView"
-        PaneTitle="我的收藏">
-        <NavigationView.MenuItems>
-            <NavigationViewItem Content="专辑" Tag="Album" />
-            <NavigationViewItem Content="歌手" Tag="Artist" />
-            <NavigationViewItem Content="电台" Tag="Radio" />
-        </NavigationView.MenuItems>
-        <NavigationView.Content>
-            <ScrollViewer
-                VerticalScrollBarVisibility="Auto">
-                <StackPanel Orientation="Vertical">
-                    <StackPanel x:Name="ItemContainer" Orientation="Vertical" />
-                    <Button Style="{StaticResource ButtonRevealStyle}"  HorizontalAlignment="Center" Click="BtnLoadMore_OnClick" x:Name="BtnLoadMore"
-                            Content="加载更多" />
-                    <StackPanel Height="150" />
-                </StackPanel>
-            </ScrollViewer>
-        </NavigationView.Content>
-    </NavigationView>
+    <Grid Margin="0,0,0,150">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <NavigationView
+            Grid.Row="0"
+            PaneDisplayMode="Top"
+            PaneTitle="我的收藏"
+            SelectionChanged="NavView_OnSelectionChanged"
+            x:Name="NavView">
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="专辑" Tag="Album" />
+                <NavigationViewItem Content="歌手" Tag="Artist" />
+                <NavigationViewItem Content="电台" Tag="Radio" />
+            </NavigationView.MenuItems>
+        </NavigationView>
+        <controls:SimpleLinerList Grid.Row="1" x:Name="ItemContainer" />
+        <Button
+            Click="BtnLoadMore_OnClick"
+            Content="加载更多"
+            Grid.Row="2"
+            HorizontalAlignment="Center"
+            Style="{StaticResource ButtonRevealStyle}"
+            x:Name="BtnLoadMore" />
+    </Grid>
 
 </Page>

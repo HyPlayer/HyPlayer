@@ -2,28 +2,46 @@
     x:Class="HyPlayer.Pages.History"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:controls="using:HyPlayer.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="using:HyPlayer.Pages"
     d:DataContext="{d:DesignInstance Type=pages:History}"
     mc:Ignorable="d">
 
-        <StackPanel Spacing="15">
-            <TextBlock
-                Margin="30,0,30,0"
-                FontSize="60"
-                Text="最近播放" />
-            <NavigationView x:Name="HisModeNavView"  VerticalAlignment="Stretch"  PaneDisplayMode="Top" IsSettingsVisible="False" SelectionChanged="NavigationView_SelectionChanged" IsBackButtonVisible="Collapsed" IsBackEnabled="False">
-                <NavigationView.MenuItems>
-                    <NavigationViewItem x:Name="SongHis" Content="最近播放歌曲" />
-                    <NavigationViewItem x:Name="SongRankWeek" Content="听歌排行 (本周)" />
-                    <NavigationViewItem x:Name="SongRankAll" Content="听歌排行 (全部)" />
-                </NavigationView.MenuItems>
-                <controls:SongsList x:Name="SongsList" MaxHeight="355" Songs="{x:Bind Songs,Mode=OneWay}"/>
-            </NavigationView>
-            <Grid Height="150" />
-        </StackPanel>
+    <Grid>
+        <Grid.RowSpacing>15</Grid.RowSpacing>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="150" />
+        </Grid.RowDefinitions>
+        <TextBlock
+            Grid.Row="0"
+            Margin="30,0,30,0"
+            FontSize="60"
+            Text="最近播放" />
+        <NavigationView
+            x:Name="HisModeNavView"
+            Grid.Row="1"
+            VerticalAlignment="Stretch"
+            IsBackButtonVisible="Collapsed"
+            IsBackEnabled="False"
+            IsSettingsVisible="False"
+            PaneDisplayMode="Top"
+            SelectionChanged="NavigationView_SelectionChanged">
+            <NavigationView.MenuItems>
+                <NavigationViewItem x:Name="SongHis" Content="最近播放歌曲" />
+                <NavigationViewItem x:Name="SongRankWeek" Content="听歌排行 (本周)" />
+                <NavigationViewItem x:Name="SongRankAll" Content="听歌排行 (全部)" />
+            </NavigationView.MenuItems>
+        </NavigationView>
+        <controls:SongsList
+            x:Name="SongsList"
+            Grid.Row="2"
+            Songs="{x:Bind Songs, Mode=OneWay}" />
+    </Grid>
 
 
 </Page>

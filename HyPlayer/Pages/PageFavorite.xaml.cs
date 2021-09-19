@@ -1,12 +1,11 @@
-﻿using System;
+﻿using HyPlayer.Classes;
+using NeteaseCloudMusicApi;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using NeteaseCloudMusicApi;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -18,6 +17,7 @@ namespace HyPlayer.Pages
     public sealed partial class PageFavorite : Page, IDisposable
     {
         private int page;
+        int i = 0;
 
         public PageFavorite()
         {
@@ -33,7 +33,8 @@ namespace HyPlayer.Pages
         private void NavView_OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
         {
             page = 0;
-            ItemContainer.Children.Clear();
+            i = 0;
+            ItemContainer.ListItems.Clear();
             RealLoad();
         }
 
@@ -63,8 +64,19 @@ namespace HyPlayer.Pages
                         { "offset", page * 25 }
                     });
                 BtnLoadMore.Visibility = json["hasMore"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
-                foreach (var token in json["djRadios"])
-                    ItemContainer.Children.Add(new SingleRadio(NCRadio.CreateFromJson(token)));
+                foreach (var pljs in json["djRadios"])
+                {
+                    ItemContainer.ListItems.Add(new SimpleListItem()
+                    {
+                        Title = pljs["name"].ToString(),
+                        LineOne = pljs["dj"]["nickname"].ToString(),
+                        LineTwo = pljs["desc"].ToString(),
+                        LineThree = "最后一个节目: " + pljs["lastProgramName"].ToString(),
+                        ResourceId = "rd" + json["id"],
+                        CoverUri = pljs["picUrl"].ToString() + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                        Order = i++
+                    });
+                }
             }
             catch (Exception ex)
             {
@@ -83,8 +95,17 @@ namespace HyPlayer.Pages
                     });
 
                 BtnLoadMore.Visibility = json["hasMore"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
-                foreach (var token in json["data"])
-                    ItemContainer.Children.Add(new SingleArtist(NCArtist.CreateFromJson(token)));
+                foreach (var singerjson in json["data"])
+                    ItemContainer.ListItems.Add(new SimpleListItem
+                    {
+                        Title = singerjson["name"].ToString(),
+                        LineOne = singerjson["trans"].ToString(),
+                        LineTwo = string.Join(" / ", singerjson["alia"]?.Select(t => t.ToString()) ?? new List<string>()),
+                        LineThree = $"专辑数 {singerjson["albumSize"]} | MV 数 {singerjson["mvSize"]}",
+                        ResourceId = "ar" + singerjson["id"],
+                        CoverUri = singerjson["img1v1Url"].ToString() + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                        Order = i++
+                    });
             }
             catch (Exception ex)
             {
@@ -102,10 +123,20 @@ namespace HyPlayer.Pages
                         { "offset", page * 25 }
                     });
                 BtnLoadMore.Visibility = json["hasMore"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
-                foreach (var token in json["data"])
+                foreach (var albumjson in json["data"])
                 {
-                    var artist = token["artists"].Select(t => NCArtist.CreateFromJson(t)).ToList();
-                    ItemContainer.Children.Add(new SingleAlbum(NCAlbum.CreateFromJson(token), artist));
+                    ItemContainer.ListItems.Add(new SimpleListItem()
+                    {
+                        Title = albumjson["name"].ToString(),
+                        LineOne = string.Join(" / ", albumjson["artists"].Select(t => t["name"].ToString())),
+                        LineTwo = albumjson["alias"] != null
+                            ? string.Join(" / ", albumjson["alias"].ToArray().Select(t => t.ToString()))
+                            : "",
+                        LineThree = albumjson.Value<bool>("paid") ? "付费专辑" : "",
+                        ResourceId = "al" + albumjson["id"].ToString(),
+                        CoverUri = albumjson["picUrl"].ToString() + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                        Order = i++
+                    });
                 }
             }
             catch (Exception ex)
@@ -122,7 +153,7 @@ namespace HyPlayer.Pages
 
         public void Dispose()
         {
-            ItemContainer.Children.Clear();
+            ItemContainer.ListItems.Clear();
         }
     }
 }
