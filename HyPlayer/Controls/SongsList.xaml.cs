@@ -27,7 +27,7 @@ namespace HyPlayer.Controls
             "Songs", typeof(ObservableCollection<NCSong>)
             ,
             typeof(SongsList),
-            new PropertyMetadata(null)
+            new PropertyMetadata(new ObservableCollection<NCSong>())
         );
 
         public static readonly DependencyProperty ListSourceProperty = DependencyProperty.Register(
@@ -76,28 +76,29 @@ namespace HyPlayer.Controls
         private async void SongContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (SongContainer.SelectedIndex == -1) return;
-            if (IsManualSelect && ListSource != null && ListSource != "content" && Songs.Count == VisibleSongs.Count)
-            {
-                HyPlayList.List.Clear();
-                HyPlayList.Player.Pause();
-                await HyPlayList.AppendNCSource(ListSource);
-                HyPlayList.SongAppendDone();
-                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t =>
-                    t.PlayItem?.id == VisibleSongs[SongContainer.SelectedIndex].sid));
-            }
-            else if (ListSource == null)
-            {
-                var ncsong = VisibleSongs[SongContainer.SelectedIndex];
-                _ = HyPlayList.AppendNCSong(ncsong);
-                HyPlayList.SongAppendDone();
-                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
-            }
-            else
-            {
-                await HyPlayList.AppendNCSongs(VisibleSongs);
-                HyPlayList.SongAppendDone();
-                HyPlayList.SongMoveTo(SongContainer.SelectedIndex);
-            }
+            if (IsManualSelect)
+                if (ListSource != null && ListSource != "content" && Songs.Count == VisibleSongs.Count)
+                {
+                    HyPlayList.List.Clear();
+                    HyPlayList.Player.Pause();
+                    await HyPlayList.AppendNCSource(ListSource);
+                    HyPlayList.SongAppendDone();
+                    HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t =>
+                        t.PlayItem?.id == VisibleSongs[SongContainer.SelectedIndex].sid));
+                }
+                else if (ListSource == null)
+                {
+                    var ncsong = VisibleSongs[SongContainer.SelectedIndex];
+                    _ = HyPlayList.AppendNCSong(ncsong);
+                    HyPlayList.SongAppendDone();
+                    HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
+                }
+                else
+                {
+                    await HyPlayList.AppendNCSongs(VisibleSongs);
+                    HyPlayList.SongAppendDone();
+                    HyPlayList.SongMoveTo(SongContainer.SelectedIndex);
+                }
         }
 
         private void BtnPlay_Click(object sender, RoutedEventArgs e)

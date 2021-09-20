@@ -1,4 +1,12 @@
-﻿using System;
+﻿using HyPlayer.Classes;
+using HyPlayer.Controls;
+using HyPlayer.HyPlayControl;
+using HyPlayer.Pages;
+using Kawazu;
+using Microsoft.UI.Xaml.Controls;
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -7,22 +15,13 @@ using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
 using Windows.Storage;
-using Windows.UI.Core;
-using Windows.UI.Xaml.Controls;
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using HyPlayer.Pages;
-using Kawazu;
-using NeteaseCloudMusicApi;
-using Newtonsoft.Json;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Controls;
 using Windows.UI;
-using System.Collections.ObjectModel;
+using Windows.UI.Core;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
 
 namespace HyPlayer
 {
@@ -86,8 +85,8 @@ namespace HyPlayer
         {
             Common.Invoke(() =>
             {
-                GlobalTip.Title = title;
-                GlobalTip.Subtitle = subtitle;
+                GlobalTip.Title = title ?? "";
+                GlobalTip.Subtitle = subtitle ?? "";
                 if (!GlobalTip.IsOpen)
                     GlobalTip.IsOpen = true;
                 else
@@ -134,8 +133,21 @@ namespace HyPlayer
                     NavigatePage(typeof(RadioPage), resourceId.Substring(2));
                     break;
                 case "ar":
-                    NavigatePage(typeof(ArtistPage),resourceId.Substring(2));
+                    NavigatePage(typeof(ArtistPage), resourceId.Substring(2));
                     break;
+                case "us":
+                    NavigatePage(typeof(Me), resourceId.Substring(2));
+                    break;
+                case "ns":
+                    Common.Invoke(async () =>
+                    {
+                        await HyPlayList.AppendNCSource(resourceId);
+                        HyPlayList.SongAppendDone();
+                        HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => "ns" + t.PlayItem.id == resourceId));
+                    });
+
+                    break;
+
             }
         }
 

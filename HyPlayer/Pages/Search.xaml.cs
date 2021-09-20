@@ -1,16 +1,13 @@
-﻿using System;
+﻿using HyPlayer.Classes;
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using NeteaseCloudMusicApi;
-using Newtonsoft.Json.Linq;
-using System.Collections.ObjectModel;
-using System.Globalization;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -23,7 +20,7 @@ namespace HyPlayer.Pages
     {
         private int page;
         private string Text = "";
-        ObservableCollection<NCSong> SongResults;
+        private bool NoResult = false;
 
         public Search()
         {
@@ -32,7 +29,6 @@ namespace HyPlayer.Pages
 
 
             NavigationCacheMode = NavigationCacheMode.Required;
-            SongResults = new ObservableCollection<NCSong>();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -83,6 +79,7 @@ namespace HyPlayer.Pages
             }
 
             SearchResultContainer.ListItems.Clear();
+            SongsSearchResultContainer.Songs.Clear();
             try
             {
                 var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Cloudsearch,
@@ -110,6 +107,12 @@ namespace HyPlayer.Pages
                     case "1009":
                         LoadRadioResult(json);
                         break;
+                    case "1002":
+                        LoadUserResult(json);
+                        break;
+                    case "1006":
+                        LoadLyricResult(json);
+                        break;
                 }
             }
             catch (Exception ex)
@@ -118,9 +121,74 @@ namespace HyPlayer.Pages
             }
         }
 
+        private void LoadLyricResult(JObject json)
+        {
+            int i = 0;
+            if (json["result"]["songCount"].ToObject<int>() == 0)
+            {
+                NoResult = true;
+                return;
+            }
+            foreach (var songJs in json["result"]["songs"].ToArray())
+                SearchResultContainer.ListItems.Add(
+                    new SimpleListItem
+                    {
+                        Title = songJs["name"].ToString(),
+                        LineOne = string.Join(" / ", songJs["ar"].Select(t => t["name"].ToString())),
+                        LineTwo = songJs["lyrics"].ToList().First(t => t.ToString().Contains("</b>")).ToString(),
+                        LineThree = string.Join("\r\n", songJs["lyrics"].ToList()),
+                        ResourceId = "ns" + songJs["id"],
+                        CoverUri = songJs["al"]["picUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                        Order = i++
+                    });
+            if (json["result"]["songCount"].ToObject<int>() >= (page + 1) * 30)
+                NextPage.Visibility = Visibility.Visible;
+            else
+                NextPage.Visibility = Visibility.Collapsed;
+            if (page > 0)
+                PrevPage.Visibility = Visibility.Visible;
+            else
+                PrevPage.Visibility = Visibility.Collapsed;
+        }
+
+        private void LoadUserResult(JObject json)
+        {
+            int i = 0;
+            if (json["result"]["userprofileCount"].ToObject<int>() == 0)
+            {
+                NoResult = true;
+                return;
+            }
+            foreach (var userJs in json["result"]["userprofiles"].ToArray())
+                SearchResultContainer.ListItems.Add(
+                    new SimpleListItem
+                    {
+                        Title = userJs["nickname"].ToString(),
+                        LineOne = userJs["signature"].ToString(),
+                        LineTwo = "",
+                        LineThree = "",
+                        ResourceId = "us" + userJs["userId"],
+                        CoverUri = userJs["avatarUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                        Order = i++
+                    });
+            if (json["result"]["userprofileCount"].ToObject<int>() >= (page + 1) * 30)
+                NextPage.Visibility = Visibility.Visible;
+            else
+                NextPage.Visibility = Visibility.Collapsed;
+            if (page > 0)
+                PrevPage.Visibility = Visibility.Visible;
+            else
+                PrevPage.Visibility = Visibility.Collapsed;
+        }
+
         private void LoadRadioResult(JObject json)
         {
             int i = 0;
+            if (json["result"]["djRadiosCount"].ToObject<int>() == 0)
+            {
+                NoResult = true;
+                return;
+            }
             foreach (var pljs in json["result"]["djRadios"].ToArray())
                 SearchResultContainer.ListItems.Add(
                     new SimpleListItem
@@ -129,11 +197,11 @@ namespace HyPlayer.Pages
                         LineOne = pljs["dj"]["nickname"].ToString(),
                         LineTwo = pljs["desc"].ToString(),
                         LineThree = pljs["rcmdText"].ToString(),
-                        ResourceId = "rd" + json["id"],
-                        CoverUri = json["picUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                        ResourceId = "rd" + pljs["id"],
+                        CoverUri = pljs["picUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
                         Order = i++
                     });
-            if (int.Parse(json["result"]["djRadiosCount"].ToString()) >= (page + 1) * 30)
+            if (json["result"]["djRadiosCount"].ToObject<int>() >= (page + 1) * 30)
                 NextPage.Visibility = Visibility.Visible;
             else
                 NextPage.Visibility = Visibility.Collapsed;
@@ -146,12 +214,18 @@ namespace HyPlayer.Pages
         private void Btn_Click(object sender, RoutedEventArgs e)
         {
             Text = (sender as Button).Content.ToString();
+            SearchKeywordBox.Text = Text;
             LoadResult();
         }
 
         private void LoadPlaylistResult(JObject json)
         {
             int i = 0;
+            if (json["result"]["playlistCount"].ToObject<int>() == 0)
+            {
+                NoResult = true;
+                return;
+            }
             foreach (var pljs in json["result"]["playlists"].ToArray())
                 SearchResultContainer.ListItems.Add(new SimpleListItem
                 {
@@ -159,11 +233,11 @@ namespace HyPlayer.Pages
                     LineOne = pljs["creator"]["nickname"].ToString(),
                     LineTwo = pljs["description"].ToString(),
                     LineThree = $"{pljs["trackCount"]}首 | 播放{pljs["playCount"]}次 | 收藏 {pljs["bookCount"]}次",
-                    ResourceId = "pl"+pljs["id"],
-                    CoverUri = pljs["coverImgUrl"].ToString()+"?param="+StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                    ResourceId = "pl" + pljs["id"],
+                    CoverUri = pljs["coverImgUrl"].ToString() + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
                     Order = i++
                 });
-            if (int.Parse(json["result"]["playlistCount"].ToString()) >= (page + 1) * 30)
+            if (json["result"]["playlistCount"].ToObject<int>() >= (page + 1) * 30)
                 NextPage.Visibility = Visibility.Visible;
             else
                 NextPage.Visibility = Visibility.Collapsed;
@@ -176,6 +250,11 @@ namespace HyPlayer.Pages
         private void LoadArtistResult(JObject json)
         {
             int i = 0;
+            if (json["result"]["artistCount"].ToObject<int>() == 0)
+            {
+                NoResult = true;
+                return;
+            }
             foreach (var singerjson in json["result"]["artists"].ToArray())
                 SearchResultContainer.ListItems.Add(new SimpleListItem
                 {
@@ -183,11 +262,11 @@ namespace HyPlayer.Pages
                     LineOne = singerjson["trans"].ToString(),
                     LineTwo = string.Join(" / ", singerjson["alia"].ToList()),
                     LineThree = $"专辑数 {singerjson["albumSize"]} | MV 数 {singerjson["mvSize"]}",
-                    ResourceId = "ar"+singerjson["id"],
-                    CoverUri = singerjson["img1v1Url"].ToString()+"?param="+StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                    ResourceId = "ar" + singerjson["id"],
+                    CoverUri = singerjson["img1v1Url"].ToString() + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
                     Order = i++
                 });
-            if (int.Parse(json["result"]["artistCount"].ToString()) >= (page + 1) * 30)
+            if (json["result"]["artistCount"].ToObject<int>() >= (page + 1) * 30)
                 NextPage.Visibility = Visibility.Visible;
             else
                 NextPage.Visibility = Visibility.Collapsed;
@@ -200,6 +279,11 @@ namespace HyPlayer.Pages
         private void LoadAlbumResult(JObject json)
         {
             int i = 0;
+            if (json["result"]["albumCount"].ToObject<int>() == 0)
+            {
+                NoResult = true;
+                return;
+            }
             foreach (var albumjson in json["result"]["albums"].ToArray())
                 SearchResultContainer.ListItems.Add(new SimpleListItem()
                 {
@@ -209,11 +293,11 @@ namespace HyPlayer.Pages
                         ? string.Join(" / ", albumjson["alias"].ToArray().Select(t => t.ToString()))
                         : "",
                     LineThree = albumjson.Value<bool>("paid") ? "付费专辑" : "",
-                    ResourceId = "al"+albumjson["id"].ToString(),
-                    CoverUri = albumjson["picUrl"].ToString()+"?param="+StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                    ResourceId = "al" + albumjson["id"].ToString(),
+                    CoverUri = albumjson["picUrl"].ToString() + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
                     Order = i++
                 });
-            if (int.Parse(json["result"]["albumCount"].ToString()) >= (page + 1) * 30)
+            if (json["result"]["albumCount"].ToObject<int>() >= (page + 1) * 30)
                 NextPage.Visibility = Visibility.Visible;
             else
                 NextPage.Visibility = Visibility.Collapsed;
@@ -225,7 +309,11 @@ namespace HyPlayer.Pages
 
         private void LoadSongResult(JObject json)
         {
-            SongResults.Clear();
+            if (json["result"]["songCount"].ToObject<int>() == 0)
+            {
+                NoResult = true;
+                return;
+            }
             var idx = 0;
             try
             {
@@ -233,10 +321,10 @@ namespace HyPlayer.Pages
                 {
                     var ncSong = NCSong.CreateFromJson(song);
                     ncSong.Order = idx++;
-                    SongResults.Add(ncSong);
+                    SongsSearchResultContainer.Songs.Add(ncSong);
                 }
 
-                if (int.Parse(json["result"]["songCount"].ToString()) >= (page + 1) * 30)
+                if (json["result"]["songCount"].ToObject<int>() >= (page + 1) * 30)
                     NextPage.Visibility = Visibility.Visible;
                 else
                     NextPage.Visibility = Visibility.Collapsed;

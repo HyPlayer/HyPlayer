@@ -1,4 +1,6 @@
-﻿using System;
+﻿using HyPlayer.Classes;
+using NeteaseCloudMusicApi;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,8 +13,6 @@ using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Streams;
-using HyPlayer.Classes;
-using NeteaseCloudMusicApi;
 
 namespace HyPlayer.HyPlayControl
 {
@@ -86,7 +86,8 @@ namespace HyPlayer.HyPlayControl
         {
             get
             {
-                if (List.Count <= NowPlaying || NowPlaying == -1) return new HyPlayItem { ItemType = HyPlayItemType.Netease };
+                if (List.Count <= NowPlaying || NowPlaying == -1)
+                    return new HyPlayItem { ItemType = HyPlayItemType.Netease };
                 return List[NowPlaying];
             }
         }
@@ -189,7 +190,7 @@ namespace HyPlayer.HyPlayControl
             //歌曲崩溃了的话就是这个
             //SongMoveNext();
             //TimeSpan temppos = Player.PlaybackSession.Position;
-            Common.ShowTeachingTip("播放失败 正在重试", args.ErrorMessage);
+            Common.ShowTeachingTip("播放失败 正在重试", args?.ErrorMessage);
             if (crashedTime == NowPlayingItem.PlayItem.url)
             {
                 SongMoveNext();
@@ -237,7 +238,8 @@ namespace HyPlayer.HyPlayControl
                     else
                     {
                         // 脑残Music解析
-                        Stream stream = (await NowPlayingItem.PlayItem.DontSetLocalStorageFile.OpenReadAsync()).AsStreamForRead();
+                        Stream stream = (await NowPlayingItem.PlayItem.DontSetLocalStorageFile.OpenReadAsync())
+                            .AsStreamForRead();
                         if (NCMFile.IsCorrectNCMFile(stream))
                         {
                             var Info = NCMFile.GetNCMMusicInfo(stream);
@@ -245,10 +247,10 @@ namespace HyPlayer.HyPlayControl
                             var encStream = NCMFile.GetEncryptedStream(stream);
                             encStream.Seek(0, SeekOrigin.Begin);
                             _lastStorageFile = await StorageFile.CreateStreamedFileAsync(
-                                    Path.ChangeExtension(NowPlayingItem.PlayItem.DontSetLocalStorageFile.Name,
-                                        Info.format), (t) => { encStream.CopyTo(t.AsStreamForWrite()); },
-                                    RandomAccessStreamReference.CreateFromStream(
-                                        CoverStream.AsRandomAccessStream()));
+                                Path.ChangeExtension(NowPlayingItem.PlayItem.DontSetLocalStorageFile.Name,
+                                    Info.format), (t) => { encStream.CopyTo(t.AsStreamForWrite()); },
+                                RandomAccessStreamReference.CreateFromStream(
+                                    CoverStream.AsRandomAccessStream()));
                         }
                     }
                 }
@@ -258,6 +260,7 @@ namespace HyPlayer.HyPlayControl
                     _lastStorageFile = await StorageFile.GetFileFromPathAsync(NowPlayingItem.PlayItem.url);
                 }
             }
+
             Player_SourceChanged(null, null);
             return _lastStorageFile;
         }
@@ -329,6 +332,7 @@ namespace HyPlayer.HyPlayControl
         public static void RemoveAllSong()
         {
             List.Clear();
+            NowPlaying = -1;
             Player.Source = null;
         }
 
@@ -650,7 +654,8 @@ namespace HyPlayer.HyPlayControl
         {
             try
             {
-                if ((ncp.ItemType != HyPlayItemType.Netease && ncp.ItemType != HyPlayItemType.Pan) || ncp.PlayItem == null)
+                if ((ncp.ItemType != HyPlayItemType.Netease && ncp.ItemType != HyPlayItemType.Pan) ||
+                    ncp.PlayItem == null)
                     return new PureLyricInfo
                     {
                         PureLyrics = "[00:00.000] 无歌词 请欣赏",
@@ -758,8 +763,9 @@ namespace HyPlayer.HyPlayControl
             return hpi;
         }
 
-        public static async Task<bool> AppendNCSongs(IList<NCSong> NCSongs, HyPlayItemType itemType = HyPlayItemType.Netease,
-             bool needRemoveList = true)
+        public static async Task<bool> AppendNCSongs(IList<NCSong> NCSongs,
+            HyPlayItemType itemType = HyPlayItemType.Netease,
+            bool needRemoveList = true)
         {
             if (NCSongs == null)
                 return false;
@@ -767,7 +773,6 @@ namespace HyPlayer.HyPlayControl
                 HyPlayList.RemoveAllSong();
             try
             {
-
                 for (var i = 0; i < NCSongs.Count; i++)
                 {
                     var ncSong = NCSongs[i];
@@ -808,24 +813,34 @@ namespace HyPlayer.HyPlayControl
              *  电台: rd + 电台ID  e.g.rd5274522
              *  最近播放: rc + 随机数字
              */
-            string prefix = sourceId.Substring(0, 2);
-            switch (prefix)
+            try
             {
-                case "pl":
-                    return await AppendPlayList(sourceId.Substring(2, sourceId.Length - 2));
-                case "ns":
-                    _ = AppendNCSong(NCSong.CreateFromJson((await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail, new Dictionary<string, object>() { { "id", sourceId.Substring(2, sourceId.Length - 2) } }))["songs"][0]));
-                    return true;
-                case "al":
-                    return await AppendAlbum(sourceId.Substring(2, sourceId.Length - 2));
-                case "sh":
-                    return await AppendSingerHot(sourceId.Substring(2, sourceId.Length - 2));
-                case "sa":
-                case "rd":
-                    return await AppendRadioList(sourceId.Substring(2, sourceId.Length - 2));
-                case "rc":
-                default:
-                    return false;
+                string prefix = sourceId.Substring(0, 2);
+                switch (prefix)
+                {
+                    case "pl":
+                        return await AppendPlayList(sourceId.Substring(2, sourceId.Length - 2));
+                    case "ns":
+                        var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
+                            new Dictionary<string, object>() { { "ids", sourceId.Substring(2, sourceId.Length - 2) } });
+                        _ = AppendNCSong(NCSong.CreateFromJson(json["songs"][0]));
+                        return true;
+                    case "al":
+                        return await AppendAlbum(sourceId.Substring(2, sourceId.Length - 2));
+                    case "sh":
+                        return await AppendSingerHot(sourceId.Substring(2, sourceId.Length - 2));
+                    case "sa":
+                    case "rd":
+                        return await AppendRadioList(sourceId.Substring(2, sourceId.Length - 2));
+                    case "rc":
+                    default:
+                        return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                return false;
             }
         }
 
@@ -838,8 +853,8 @@ namespace HyPlayer.HyPlayControl
 
 
                 var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
-                     new Dictionary<string, object>
-                     { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) }, false);
+                    new Dictionary<string, object>
+                    { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) }, false);
                 var idx = 0;
                 List<NCSong> list = new List<NCSong>();
                 foreach (var jToken in json["songs"])
@@ -851,6 +866,7 @@ namespace HyPlayer.HyPlayControl
                     ncSong.Order = idx++;
                     list.Add(ncSong);
                 }
+
                 list.RemoveAll(t => t == null);
                 await HyPlayList.AppendNCSongs(list, HyPlayItemType.Netease, false);
                 return true;
@@ -862,6 +878,7 @@ namespace HyPlayer.HyPlayControl
 
             return false;
         }
+
         public static async Task<bool> AppendAlbum(string alid)
         {
             try
@@ -875,6 +892,7 @@ namespace HyPlayer.HyPlayControl
                     var ncSong = NCSong.CreateFromJson(song);
                     list.Add(ncSong);
                 }
+
                 list.RemoveAll(t => t == null);
                 await HyPlayList.AppendNCSongs(list, HyPlayItemType.Netease, false);
 
@@ -887,7 +905,6 @@ namespace HyPlayer.HyPlayControl
             }
 
             return false;
-
         }
 
         public static async Task<bool> AppendRadioList(string rdid, bool asc = false)
@@ -909,7 +926,8 @@ namespace HyPlayer.HyPlayControl
                                 { "asc", asc }
                             });
                         hasmore = json["more"].ToObject<bool>();
-                        await AppendNCSongs(json["programs"].Select(t => (NCSong)NCFmItem.CreateFromJson(t)).ToList(), HyPlayItemType.Radio, false);
+                        await AppendNCSongs(json["programs"].Select(t => (NCSong)NCFmItem.CreateFromJson(t)).ToList(),
+                            HyPlayItemType.Radio, false);
                     }
                     catch (Exception ex)
                     {
@@ -951,6 +969,7 @@ namespace HyPlayer.HyPlayControl
                             {
                                 return NCSong.CreateFromJson(t);
                             }
+
                             return null;
                         }).ToList();
                         ncSongs.RemoveAll(t => t == null);
