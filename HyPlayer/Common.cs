@@ -60,11 +60,14 @@ namespace HyPlayer
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority,
                     () => { action(); });
             }
+#if RELEASE
             catch (Exception e)
             {
-#if RELEASE
                 Crashes.TrackError(e);
+#else
+            catch{
 #endif
+                
                 /*
                 Invoke((async () =>
                 {

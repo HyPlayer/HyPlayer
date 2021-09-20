@@ -42,7 +42,7 @@ namespace HyPlayer.Controls
             "Songs", typeof(ObservableCollection<NCSong>)
             ,
             typeof(SongsList),
-            new PropertyMetadata(new ObservableCollection<NCSong>())
+            new PropertyMetadata(null)
         );
 
         public static readonly DependencyProperty ListSourceProperty = DependencyProperty.Register(
@@ -124,7 +124,7 @@ namespace HyPlayer.Controls
                 }
                 else
                 {
-                    await HyPlayList.AppendNCSongs(VisibleSongs);
+                    HyPlayList.AppendNCSongs(VisibleSongs);
                     HyPlayList.SongAppendDone();
                     HyPlayList.SongMoveTo(SongContainer.SelectedIndex);
                 }
@@ -152,9 +152,9 @@ namespace HyPlayer.Controls
             _ = HyPlayList.AppendNCSong(ncsong, HyPlayList.NowPlaying + 1);
         }
 
-        private async void FlyoutItemPlayNext_Click(object sender, RoutedEventArgs e)
+        private void FlyoutItemPlayNext_Click(object sender, RoutedEventArgs e)
         {
-            _ = await HyPlayList.AppendNCSong(VisibleSongs[SongContainer.SelectedIndex], HyPlayList.NowPlaying + 1);
+            HyPlayList.AppendNCSong(VisibleSongs[SongContainer.SelectedIndex], HyPlayList.NowPlaying + 1);
             HyPlayList.SongAppendDone();
         }
 
@@ -198,11 +198,11 @@ namespace HyPlayer.Controls
             await new SongListSelect(VisibleSongs[SongContainer.SelectedIndex].sid).ShowAsync();
         }
 
-        private async void Btn_Del_Click(object sender, RoutedEventArgs e)
+        private void Btn_Del_Click(object sender, RoutedEventArgs e)
         {
-            Common.Invoke(async () =>
+            Common.Invoke(() =>
             {
-                await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistTracks, new Dictionary<string, object>()
+                Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistTracks, new Dictionary<string, object>()
                 {
                     { "op", "del" },
                     { "pid", ListSource.Substring(2, ListSource.Length - 2) },
@@ -231,7 +231,7 @@ namespace HyPlayer.Controls
         private void FilterBox_OnTextChanged(object sender, RoutedEventArgs e)
         {
             VisibleSongs.Clear();
-            foreach(NCSong song in Songs)
+            foreach (NCSong song in Songs)
             {
                 if (Filter(song))
                     VisibleSongs.Add(song);

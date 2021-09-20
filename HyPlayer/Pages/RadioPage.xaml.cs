@@ -95,11 +95,11 @@ namespace HyPlayer.Pages
         {
             Task.Run(() =>
             {
-                Common.Invoke(async () =>
+                Common.Invoke(() =>
                 {
                     try
-                    {
-                        await HyPlayList.AppendNCSongs(Songs);
+                    { 
+                        HyPlayList.AppendNCSongs(Songs);
                         HyPlayList.SongAppendDone();
                         HyPlayList.SongMoveTo(0);
                     }

@@ -60,7 +60,10 @@
             <Grid>
                 <Grid Margin="0,0,0,150" VerticalAlignment="Stretch">
                     <hycontrol:SimpleLinerList x:Name="SearchResultContainer" Margin="0,30,0,0" />
-                    <hycontrol:SongsList x:Name="SongsSearchResultContainer" Margin="0,30,0,0" />
+                    <hycontrol:SongsList
+                        x:Name="SongsSearchResultContainer"
+                        Margin="0,30,0,0"
+                        Songs="{x:Bind SongResults}" />
                     <TextBlock
                         Margin="0,30,0,0"
                         Text="没有搜索到相关内容"

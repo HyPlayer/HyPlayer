@@ -29,7 +29,6 @@ namespace HyPlayer.Pages
     {
         private int page;
         private NCPlayList playList;
-        private bool IsManualSelect = true;
         public ObservableCollection<NCSong> Songs;
 
         public SongListDetail()
@@ -273,7 +272,7 @@ namespace HyPlayer.Pages
 
                         try
                         {
-                            await HyPlayList.AppendNCSongs(IntSongs);
+                            HyPlayList.AppendNCSongs(IntSongs);
 
                             HyPlayList.SongAppendDone();
 

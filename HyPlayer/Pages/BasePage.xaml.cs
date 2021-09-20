@@ -179,7 +179,7 @@ namespace HyPlayer.Pages
                         await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginStatus);
                         await LoginDone();
                     }
-                    catch (Exception ex)
+                    catch
                     {
                         // ignored
                     }
@@ -206,7 +206,6 @@ namespace HyPlayer.Pages
 
             ButtonLogin.IsEnabled = false;
             ButtonLogin.Content = "登录中......";
-            bool isOk;
             JObject json;
             try
             {
@@ -719,7 +718,7 @@ namespace HyPlayer.Pages
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip("公开歌单失败");
+                Common.ShowTeachingTip("公开歌单失败",ex.Message);
             }
         }
 
@@ -737,7 +736,7 @@ namespace HyPlayer.Pages
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip("删除失败");
+                Common.ShowTeachingTip("删除失败",ex.Message);
             }
         }
     }

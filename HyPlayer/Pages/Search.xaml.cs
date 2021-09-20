@@ -3,6 +3,7 @@ using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Windows.System;
 using Windows.UI.Xaml;
@@ -21,13 +22,14 @@ namespace HyPlayer.Pages
         private int page;
         private string Text = "";
         private bool NoResult = false;
+        ObservableCollection<NCSong> SongResults;
+
 
         public Search()
         {
             InitializeComponent();
             NavigationViewSelector.SelectedItem = NavigationViewSelector.MenuItems[0];
-
-
+            SongResults = new ObservableCollection<NCSong>();
             NavigationCacheMode = NavigationCacheMode.Required;
         }
 
@@ -64,7 +66,7 @@ namespace HyPlayer.Pages
                 _ = Launcher.LaunchUriAsync(new Uri(@"http://music.163.com/m/topic/18926801"));
                 return;
             }
-
+            NoResult = false;
             HistoryManagement.AddSearchHistory(Text);
             var list = HistoryManagement.GetSearchHistory();
             SearchHistory.Children.Clear();
@@ -79,7 +81,7 @@ namespace HyPlayer.Pages
             }
 
             SearchResultContainer.ListItems.Clear();
-            SongsSearchResultContainer.Songs.Clear();
+            SongResults.Clear();
             try
             {
                 var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Cloudsearch,
@@ -321,7 +323,7 @@ namespace HyPlayer.Pages
                 {
                     var ncSong = NCSong.CreateFromJson(song);
                     ncSong.Order = idx++;
-                    SongsSearchResultContainer.Songs.Add(ncSong);
+                    SongResults.Add(ncSong);
                 }
 
                 if (json["result"]["songCount"].ToObject<int>() >= (page + 1) * 30)

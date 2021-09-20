@@ -202,7 +202,7 @@ namespace HyPlayer.HyPlayControl
                 if ((NowPlayingItem.ItemType == HyPlayItemType.Netease && !NowPlayingItem.PlayItem.isLocalFile) ||
                     NowPlayingItem.ItemType == HyPlayItemType.Radio)
                     //TODO FM和普通歌曲一起
-                    Common.Invoke(async () =>
+                    Common.Invoke(() =>
                     {
                         List[NowPlaying] = LoadNCSong(new NCSong
                         {
@@ -448,7 +448,7 @@ namespace HyPlayer.HyPlayControl
                                     return;
                                 }
                             }
-                            catch (Exception ex)
+                            catch
                             {
                                 PlayerOnMediaFailed(Player, null); //传一个播放失败\
                                 return;
@@ -707,7 +707,7 @@ namespace HyPlayer.HyPlayControl
 
         /********        播放文件相关        ********/
 
-        public static async Task<HyPlayItem> AppendNCSong(NCSong ncSong, int position = -1)
+        public static HyPlayItem AppendNCSong(NCSong ncSong, int position = -1)
         {
             var hpi = LoadNCSong(ncSong);
             if (position < 0)
@@ -763,7 +763,7 @@ namespace HyPlayer.HyPlayControl
             return hpi;
         }
 
-        public static async Task<bool> AppendNCSongs(IList<NCSong> NCSongs,
+        public static bool AppendNCSongs(IList<NCSong> NCSongs,
             HyPlayItemType itemType = HyPlayItemType.Netease,
             bool needRemoveList = true)
         {
@@ -868,7 +868,7 @@ namespace HyPlayer.HyPlayControl
                 }
 
                 list.RemoveAll(t => t == null);
-                await HyPlayList.AppendNCSongs(list, HyPlayItemType.Netease, false);
+                HyPlayList.AppendNCSongs(list, HyPlayItemType.Netease, false);
                 return true;
             }
             catch (Exception ex)
@@ -894,7 +894,7 @@ namespace HyPlayer.HyPlayControl
                 }
 
                 list.RemoveAll(t => t == null);
-                await HyPlayList.AppendNCSongs(list, HyPlayItemType.Netease, false);
+                HyPlayList.AppendNCSongs(list, HyPlayItemType.Netease, false);
 
 
                 return true;
@@ -926,7 +926,7 @@ namespace HyPlayer.HyPlayControl
                                 { "asc", asc }
                             });
                         hasmore = json["more"].ToObject<bool>();
-                        await AppendNCSongs(json["programs"].Select(t => (NCSong)NCFmItem.CreateFromJson(t)).ToList(),
+                        AppendNCSongs(json["programs"].Select(t => (NCSong)NCFmItem.CreateFromJson(t)).ToList(),
                             HyPlayItemType.Radio, false);
                     }
                     catch (Exception ex)
@@ -973,7 +973,7 @@ namespace HyPlayer.HyPlayControl
                             return null;
                         }).ToList();
                         ncSongs.RemoveAll(t => t == null);
-                        await HyPlayList.AppendNCSongs(ncSongs, HyPlayItemType.Netease, false);
+                        HyPlayList.AppendNCSongs(ncSongs, HyPlayItemType.Netease, false);
                     }
                     catch (Exception ex)
                     {

@@ -77,8 +77,6 @@ namespace HyPlayer.Pages
                 addingPanel = CommentList;
             // type 1:按推荐排序,2:按热度排序,3:按时间排序
             if (string.IsNullOrEmpty(resourceid)) return;
-            JObject res;
-
             try
             {
                 var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentNew,
