@@ -126,6 +126,7 @@
         <controls1:SongsList
             x:Name="SongsList"
             Grid.Row="1"
+            IsSearchEnabled="True"
             Grid.RowSpan="2"
             Margin="20,20,0,150"
             VerticalAlignment="Stretch"

@@ -23,6 +23,21 @@ namespace HyPlayer.Controls
             this.InitializeComponent();
         }
 
+        private void Songs_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            VisibleSongs.Clear();
+            foreach (NCSong song in Songs)
+            {
+                VisibleSongs.Add(song);
+            }
+        }
+
+        public static readonly DependencyProperty IsSearchEnabledProperty = DependencyProperty.Register(
+    "IsSearchEnabled", typeof(bool)
+    ,
+    typeof(SongsList),
+    new PropertyMetadata(null)
+);
         public static readonly DependencyProperty SongsProperty = DependencyProperty.Register(
             "Songs", typeof(ObservableCollection<NCSong>)
             ,
@@ -51,15 +66,29 @@ namespace HyPlayer.Controls
             set { SetValue(IsMySongListProperty, value); }
         }
 
-
+        public bool IsSearchEnabled
+        {
+            get { return (bool)GetValue(IsSearchEnabledProperty); }
+            set { SetValue(IsSearchEnabledProperty, value); }
+        }
         public ObservableCollection<NCSong> Songs
         {
             get { return (ObservableCollection<NCSong>)GetValue(SongsProperty); }
             set
             {
                 SetValue(SongsProperty, value);
-                FilterBox_OnTextChanged(null, null);
-                value.CollectionChanged += (_, __) => { FilterBox_OnTextChanged(null, null); };
+                try
+                {
+                    Songs.CollectionChanged -= Songs_CollectionChanged;
+                }
+                catch
+                {
+
+                }
+                finally
+                {
+                    Songs.CollectionChanged += Songs_CollectionChanged;
+                }
             }
         }
 
@@ -200,24 +229,12 @@ namespace HyPlayer.Controls
 
         private void FilterBox_OnTextChanged(object sender, RoutedEventArgs e)
         {
-            int vpos = -1;
-            for (int i = 0; i < Songs.Count; i++)
+            VisibleSongs.Clear();
+            foreach(NCSong song in Songs)
             {
-                if (string.IsNullOrWhiteSpace(FilterBox.Text) || Filter(Songs[i]))
-                {
-                    vpos++;
-                    if (!VisibleSongs.Contains(Songs[i]))
-                    {
-                        VisibleSongs.Insert(vpos, Songs[i]);
-                    }
-                }
-                else
-                {
-                    VisibleSongs.Remove(Songs[i]);
-                }
+                if (Filter(song))
+                    VisibleSongs.Add(song);
             }
-
-
         }
 
         private bool Filter(NCSong ncsong)
