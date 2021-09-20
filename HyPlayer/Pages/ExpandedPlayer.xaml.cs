@@ -1,8 +1,13 @@
-﻿using System;
+﻿using HyPlayer.Classes;
+using HyPlayer.Controls;
+using HyPlayer.HyPlayControl;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
-using Windows.Foundation;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
@@ -17,14 +22,7 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using HyPlayer.HyPlayControl;
 using Buffer = Windows.Storage.Streams.Buffer;
-using Windows.ApplicationModel.DataTransfer;
-using System.Text;
-using Windows.Graphics.Imaging;
-using Windows.UI;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -840,6 +838,10 @@ namespace HyPlayer.Pages
             if (Common.Setting.lyricColor != 0)
             {
                 return Common.Setting.lyricColor == 2;
+            }
+            if (HyPlayList.NowPlayingItem.PlayItem == null)
+            {
+                return false;
             }
             if (lastSongUrlForBrush == HyPlayList.NowPlayingItem.PlayItem.url) return ForegroundAlbumBrush.Color.R == 0;
             try

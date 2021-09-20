@@ -1,11 +1,11 @@
 ﻿<Page
-    mc:Ignorable="d"
     x:Class="HyPlayer.Pages.Search"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hycontrol="using:HyPlayer.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    mc:Ignorable="d">
 
 
     <Grid>
@@ -15,6 +15,7 @@
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" Orientation="Vertical">
             <AutoSuggestBox
+                x:Name="SearchKeywordBox"
                 AutomationProperties.Name="Search"
                 GotFocus="SearchKeywordBox_GotFocus"
                 LostFocus="SearchKeywordBox_LostFocus"
@@ -23,8 +24,7 @@
                 QuerySubmitted="SearchKeywordBox_QuerySubmitted"
                 SuggestionChosen="SearchKeywordBox_SuggestionChosen"
                 Tag="PageSearch"
-                TextChanged="SearchKeywordBox_TextChanged"
-                x:Name="SearchKeywordBox" />
+                TextChanged="SearchKeywordBox_TextChanged" />
             <StackPanel
                 Margin="15"
                 Orientation="Horizontal"
@@ -32,19 +32,19 @@
                 <TextBlock Text="搜索历史" />
                 <ScrollViewer HorizontalScrollMode="Enabled">
                     <StackPanel
+                        x:Name="SearchHistory"
                         Orientation="Horizontal"
-                        Spacing="5"
-                        x:Name="SearchHistory" />
+                        Spacing="5" />
                 </ScrollViewer>
             </StackPanel>
         </StackPanel>
         <NavigationView
+            x:Name="NavigationViewSelector"
             Grid.Row="1"
             IsBackButtonVisible="Collapsed"
             IsSettingsVisible="False"
             PaneDisplayMode="Top"
-            SelectionChanged="NavigationView_OnSelectionChanged"
-            x:Name="NavigationViewSelector">
+            SelectionChanged="NavigationView_OnSelectionChanged">
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="单曲" Tag="1" />
                 <NavigationViewItem Content="专辑" Tag="10" />
@@ -59,30 +59,31 @@
             </NavigationView.MenuItems>
             <Grid>
                 <Grid Margin="0,0,0,150" VerticalAlignment="Stretch">
-                    <hycontrol:SimpleLinerList Margin="30" x:Name="SearchResultContainer" />
-                    <hycontrol:SongsList
-                        Margin="30"
-                        Songs="{x:Bind SongResults}"
-                        x:Name="SongsSearchResultContainer" />
+                    <hycontrol:SimpleLinerList x:Name="SearchResultContainer" Margin="0,30,0,0" />
+                    <hycontrol:SongsList x:Name="SongsSearchResultContainer" Margin="0,30,0,0" />
+                    <TextBlock
+                        Margin="0,30,0,0"
+                        Text="没有搜索到相关内容"
+                        Visibility="{x:Bind NoResult}" />
                 </Grid>
                 <StackPanel
-                    HorizontalAlignment="Center"
                     Margin="0,0,0,150"
-                    Orientation="Horizontal"
-                    VerticalAlignment="Bottom">
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Bottom"
+                    Orientation="Horizontal">
                     <Button
+                        x:Name="PrevPage"
                         Click="PrevPage_OnClick"
                         Content="上一页"
                         Style="{StaticResource ButtonRevealStyle}"
-                        Visibility="Collapsed"
-                        x:Name="PrevPage" />
+                        Visibility="Collapsed" />
                     <TextBlock x:Name="PageIndicator" />
                     <Button
+                        x:Name="NextPage"
                         Click="NextPage_OnClickPage_OnClick"
                         Content="下一页"
                         Style="{StaticResource ButtonRevealStyle}"
-                        Visibility="Collapsed"
-                        x:Name="NextPage" />
+                        Visibility="Collapsed" />
                 </StackPanel>
 
             </Grid>
