@@ -1,5 +1,14 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using HyPlayer.Controls;
+using HyPlayer.HyPlayControl;
+using HyPlayer.Pages;
+using Kawazu;
+using Microsoft.Toolkit.Uwp.UI;
+using Microsoft.UI.Xaml.Controls;
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -17,15 +26,10 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using HyPlayer.HyPlayControl;
-using HyPlayer.Pages;
-using Kawazu;
-using Microsoft.Toolkit.Uwp.UI;
-using Microsoft.UI.Xaml.Controls;
-using NeteaseCloudMusicApi;
-using Newtonsoft.Json;
+
+#if !DEBUG
+using Microsoft.AppCenter.Crashes;
+#endif
 
 #endregion
 
@@ -61,13 +65,13 @@ namespace HyPlayer
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority,
                     () => { action(); });
             }
-#if RELEASE
+#if DEBUG
+            catch
+            {
+#else
             catch (Exception e)
             {
                 Crashes.TrackError(e);
-#else
-            catch
-            {
 #endif
 
                 /*
