@@ -1,5 +1,8 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -8,9 +11,6 @@ using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using NeteaseCloudMusicApi;
-using Newtonsoft.Json.Linq;
 
 #endregion
 
@@ -23,7 +23,6 @@ namespace HyPlayer.Pages
     /// </summary>
     public sealed partial class Search : Page, IDisposable
     {
-        private bool NoResult;
         private int page;
         private readonly ObservableCollection<NCSong> SongResults;
         private string Text = "";
@@ -73,7 +72,7 @@ namespace HyPlayer.Pages
                 return;
             }
 
-            NoResult = false;
+            TBNoRes.Visibility = Visibility.Collapsed;
             HistoryManagement.AddSearchHistory(Text);
             var list = HistoryManagement.GetSearchHistory();
             SearchHistory.Children.Clear();
@@ -135,7 +134,7 @@ namespace HyPlayer.Pages
             var i = 0;
             if (json["result"]["songCount"].ToObject<int>() == 0)
             {
-                NoResult = true;
+                TBNoRes.Visibility = Visibility.Visible;
                 return;
             }
 
@@ -164,9 +163,9 @@ namespace HyPlayer.Pages
         private void LoadUserResult(JObject json)
         {
             var i = 0;
-            if (json["result"]["userprofileCount"].ToObject<int>() == 0)
+            if (!json["result"].HasValues)
             {
-                NoResult = true;
+                TBNoRes.Visibility = Visibility.Visible;
                 return;
             }
 
@@ -197,7 +196,7 @@ namespace HyPlayer.Pages
             var i = 0;
             if (json["result"]["djRadiosCount"].ToObject<int>() == 0)
             {
-                NoResult = true;
+                TBNoRes.Visibility = Visibility.Visible;
                 return;
             }
 
@@ -235,7 +234,7 @@ namespace HyPlayer.Pages
             var i = 0;
             if (json["result"]["playlistCount"].ToObject<int>() == 0)
             {
-                NoResult = true;
+                TBNoRes.Visibility = Visibility.Visible;
                 return;
             }
 
@@ -265,7 +264,7 @@ namespace HyPlayer.Pages
             var i = 0;
             if (json["result"]["artistCount"].ToObject<int>() == 0)
             {
-                NoResult = true;
+                TBNoRes.Visibility = Visibility.Visible;
                 return;
             }
 
@@ -274,7 +273,7 @@ namespace HyPlayer.Pages
                 {
                     Title = singerjson["name"].ToString(),
                     LineOne = singerjson["trans"].ToString(),
-                    LineTwo = string.Join(" / ", singerjson["alia"].ToList()),
+                    LineTwo = string.Join(" / ", (singerjson["alia"]?.ToList() ?? new List<JToken>()).Select(t => t.ToString())),
                     LineThree = $"专辑数 {singerjson["albumSize"]} | MV 数 {singerjson["mvSize"]}",
                     ResourceId = "ar" + singerjson["id"],
                     CoverUri = singerjson["img1v1Url"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
@@ -295,7 +294,7 @@ namespace HyPlayer.Pages
             var i = 0;
             if (json["result"]["albumCount"].ToObject<int>() == 0)
             {
-                NoResult = true;
+                TBNoRes.Visibility = Visibility.Visible;
                 return;
             }
 
@@ -326,7 +325,7 @@ namespace HyPlayer.Pages
         {
             if (json["result"]["songCount"].ToObject<int>() == 0)
             {
-                NoResult = true;
+                TBNoRes.Visibility = Visibility.Visible;
                 return;
             }
 

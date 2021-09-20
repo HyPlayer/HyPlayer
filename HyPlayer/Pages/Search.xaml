@@ -65,9 +65,9 @@
                         Margin="0,30,0,0"
                         Songs="{x:Bind SongResults}" />
                     <TextBlock
+                        x:Name="TBNoRes"
                         Margin="0,30,0,0"
-                        Text="没有搜索到相关内容"
-                        Visibility="{x:Bind NoResult}" />
+                        Text="没有搜索到相关内容" />
                 </Grid>
                 <StackPanel
                     Margin="0,0,0,150"
