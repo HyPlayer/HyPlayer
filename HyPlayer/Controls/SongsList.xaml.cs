@@ -1,10 +1,13 @@
-﻿using HyPlayer.Classes;
+﻿#region
+
+using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
 using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -12,32 +15,21 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 
+#endregion
+
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
 namespace HyPlayer.Controls
 {
     public sealed partial class SongsList : UserControl
     {
-        public SongsList()
-        {
-            this.InitializeComponent();
-        }
-
-        private void Songs_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {
-            VisibleSongs.Clear();
-            foreach (NCSong song in Songs)
-            {
-                VisibleSongs.Add(song);
-            }
-        }
-
         public static readonly DependencyProperty IsSearchEnabledProperty = DependencyProperty.Register(
-    "IsSearchEnabled", typeof(bool)
-    ,
-    typeof(SongsList),
-    new PropertyMetadata(null)
-);
+            "IsSearchEnabled", typeof(bool)
+            ,
+            typeof(SongsList),
+            new PropertyMetadata(null)
+        );
+
         public static readonly DependencyProperty SongsProperty = DependencyProperty.Register(
             "Songs", typeof(ObservableCollection<NCSong>)
             ,
@@ -60,20 +52,30 @@ namespace HyPlayer.Controls
             new PropertyMetadata(null)
         );
 
+        public bool IsManualSelect = true;
+
+        private readonly ObservableCollection<NCSong> VisibleSongs = new ObservableCollection<NCSong>();
+
+        public SongsList()
+        {
+            InitializeComponent();
+        }
+
         public bool IsMySongList
         {
-            get { return (bool)GetValue(IsMySongListProperty); }
-            set { SetValue(IsMySongListProperty, value); }
+            get => (bool)GetValue(IsMySongListProperty);
+            set => SetValue(IsMySongListProperty, value);
         }
 
         public bool IsSearchEnabled
         {
-            get { return (bool)GetValue(IsSearchEnabledProperty); }
-            set { SetValue(IsSearchEnabledProperty, value); }
+            get => (bool)GetValue(IsSearchEnabledProperty);
+            set => SetValue(IsSearchEnabledProperty, value);
         }
+
         public ObservableCollection<NCSong> Songs
         {
-            get { return (ObservableCollection<NCSong>)GetValue(SongsProperty); }
+            get => (ObservableCollection<NCSong>)GetValue(SongsProperty);
             set
             {
                 SetValue(SongsProperty, value);
@@ -83,7 +85,6 @@ namespace HyPlayer.Controls
                 }
                 catch
                 {
-
                 }
                 finally
                 {
@@ -92,14 +93,16 @@ namespace HyPlayer.Controls
             }
         }
 
-        private ObservableCollection<NCSong> VisibleSongs = new ObservableCollection<NCSong>();
-
-        public bool IsManualSelect = true;
-
         public string ListSource
         {
-            get { return (string)GetValue(ListSourceProperty); }
-            set { SetValue(ListSourceProperty, value); }
+            get => (string)GetValue(ListSourceProperty);
+            set => SetValue(ListSourceProperty, value);
+        }
+
+        private void Songs_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            VisibleSongs.Clear();
+            foreach (var song in Songs) VisibleSongs.Add(song);
         }
 
         private async void SongContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -115,13 +118,13 @@ namespace HyPlayer.Controls
                     HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t =>
                         t.PlayItem?.id == VisibleSongs[SongContainer.SelectedIndex].sid));
                 }
-                else if (ListSource == null)
-                {
-                    var ncsong = VisibleSongs[SongContainer.SelectedIndex];
-                    _ = HyPlayList.AppendNCSong(ncsong);
-                    HyPlayList.SongAppendDone();
-                    HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
-                }
+                //else if (ListSource == null)
+                //{
+                //    var ncsong = VisibleSongs[SongContainer.SelectedIndex];
+                //    _ = HyPlayList.AppendNCSong(ncsong);
+                //    HyPlayList.SongAppendDone();
+                //    HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
+                //}
                 else
                 {
                     HyPlayList.AppendNCSongs(VisibleSongs);
@@ -202,7 +205,7 @@ namespace HyPlayer.Controls
         {
             Common.Invoke(() =>
             {
-                Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistTracks, new Dictionary<string, object>()
+                Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistTracks, new Dictionary<string, object>
                 {
                     { "op", "del" },
                     { "pid", ListSource.Substring(2, ListSource.Length - 2) },
@@ -231,21 +234,18 @@ namespace HyPlayer.Controls
         private void FilterBox_OnTextChanged(object sender, RoutedEventArgs e)
         {
             VisibleSongs.Clear();
-            foreach (NCSong song in Songs)
-            {
+            foreach (var song in Songs)
                 if (Filter(song))
                     VisibleSongs.Add(song);
-            }
         }
 
         private bool Filter(NCSong ncsong)
         {
-            return ncsong.songname.ToLower().Contains(FilterBox.Text.ToLower()) || ncsong.ArtistString.ToLower().Contains(FilterBox.Text.ToLower()) ||
-                   ncsong.Album.name.ToLower().Contains(FilterBox.Text.ToLower()) || (ncsong.transname ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
+            return ncsong.songname.ToLower().Contains(FilterBox.Text.ToLower()) ||
+                   ncsong.ArtistString.ToLower().Contains(FilterBox.Text.ToLower()) ||
+                   ncsong.Album.name.ToLower().Contains(FilterBox.Text.ToLower()) ||
+                   (ncsong.transname ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
                    (ncsong.alias ?? "").ToLower().Contains(FilterBox.Text.ToLower());
         }
-
-
-
     }
 }

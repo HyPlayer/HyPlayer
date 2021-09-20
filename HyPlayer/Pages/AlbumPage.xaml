@@ -1,12 +1,12 @@
 ﻿<Page
+    mc:Ignorable="d"
     x:Class="HyPlayer.Pages.AlbumPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:controls1="using:HyPlayer.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -15,19 +15,19 @@
             <RowDefinition Height="150" />
         </Grid.RowDefinitions>
         <controls:DockPanel
-            x:Name="GridPersonalInformation"
             Grid.Row="0"
-            LastChildFill="True">
+            LastChildFill="True"
+            x:Name="GridPersonalInformation">
             <Rectangle
-                x:Name="RectangleImage"
-                Width="250"
                 Height="250"
                 Margin="15"
-                controls:DockPanel.Dock="Left"
                 RadiusX="10"
-                RadiusY="10">
+                RadiusY="10"
+                Width="250"
+                controls:DockPanel.Dock="Left"
+                x:Name="RectangleImage">
                 <Rectangle.Fill>
-                    <ImageBrush x:Name="ImageRect" Stretch="UniformToFill">
+                    <ImageBrush Stretch="UniformToFill" x:Name="ImageRect">
                         <ImageBrush.ImageSource>
                             <BitmapImage UriSource="/Assets/icon.png" />
                         </ImageBrush.ImageSource>
@@ -35,21 +35,21 @@
                 </Rectangle.Fill>
             </Rectangle>
             <StackPanel
-                Name="StackPanelUserInfo"
                 Margin="15,15,144,0"
+                Name="StackPanelUserInfo"
                 Orientation="Vertical">
                 <TextBlock
-                    Name="TextBoxAlbumName"
-                    Margin="0,0,0,0"
                     FontSize="36"
                     FontWeight="Medium"
+                    Margin="0,0,0,0"
+                    Name="TextBoxAlbumName"
                     Text="专辑名"
                     TextWrapping="Wrap" />
                 <TextBlock
-                    Name="TextBoxAuthor"
-                    Margin="0,2,0,0"
                     FontSize="18"
                     Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
+                    Margin="0,2,0,0"
+                    Name="TextBoxAuthor"
                     Tapped="TextBoxAuthor_OnTapped"
                     Text="歌手" />
                 <StackPanel
@@ -70,30 +70,29 @@
                         Style="{StaticResource ButtonRevealStyle}" />
                 </StackPanel>
                 <TextBlock
-                    x:Name="TextBlockDesc"
-                    Margin="0,5,0,0"
                     FontSize="13"
                     Foreground="{ThemeResource SystemControlForegroundChromeHighBrush}"
+                    Margin="0,5,0,0"
                     MaxLines="7"
                     Text="专辑简介"
-                    TextWrapping="WrapWholeWords" />
+                    TextWrapping="WrapWholeWords"
+                    x:Name="TextBlockDesc" />
             </StackPanel>
         </controls:DockPanel>
         <controls1:SongsList
-            x:Name="SongContainer"
             Grid.Row="1"
             Margin="20,30,0,0"
-            Songs="{x:Bind songs}" />
+            Songs="{x:Bind songs}"
+            x:Name="SongContainer" />
         <Button
-            x:Name="NextPage"
-            Grid.Row="2"
-            HorizontalAlignment="Center"
             Click="NextPage_OnClickPage_OnClick"
             Content="加载更多"
+            Grid.Row="2"
+            HorizontalAlignment="Center"
             Style="{StaticResource ButtonRevealStyle}"
-            Visibility="Collapsed" />
+            Visibility="Collapsed"
+            x:Name="NextPage" />
     </Grid>
-
 
 
     <VisualStateManager.VisualStateGroups>

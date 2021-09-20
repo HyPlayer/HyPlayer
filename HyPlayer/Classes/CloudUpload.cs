@@ -1,30 +1,29 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
-using Windows.Security.Cryptography;
-using Windows.Security.Cryptography.Core;
-using Windows.Storage;
-using Windows.Storage.Streams;
-using HyPlayer.HyPlayControl;
-using NeteaseCloudMusicApi;
-using System.Net;
-using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Windows.Storage;
+using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
+
+#endregion
 
 namespace HyPlayer.Classes
 {
     /// <summary>
-    /// 网易云音乐云盘上载
-    /// @copyright Kengwang
-    /// @refer https://github.com/Binaryify/NeteaseCloudMusicApi
+    ///     网易云音乐云盘上载
+    ///     @copyright Kengwang
+    ///     @refer https://github.com/Binaryify/NeteaseCloudMusicApi
     /// </summary>
-    class CloudUpload
+    internal class CloudUpload
     {
         public static async Task<Dictionary<string, JObject>> UploadMusic(StorageFile file)
         {
@@ -36,18 +35,15 @@ namespace HyPlayer.Classes
                 var musicprop = await file.Properties.GetMusicPropertiesAsync();
                 var bytes = await FileIO.ReadBufferAsync(file);
                 //再获取上传所需要的信息
-                byte[] computedHash = new MD5CryptoServiceProvider().ComputeHash(bytes.ToArray());
+                var computedHash = new MD5CryptoServiceProvider().ComputeHash(bytes.ToArray());
                 var sBuilder = new StringBuilder();
-                foreach (byte b in computedHash)
-                {
-                    sBuilder.Append(b.ToString("x2").ToLower());
-                }
+                foreach (var b in computedHash) sBuilder.Append(b.ToString("x2").ToLower());
 
-                string md5 = sBuilder.ToString();
+                var md5 = sBuilder.ToString();
 
 
                 var res = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CloudUploadCheck,
-                    new Dictionary<string, object>()
+                    new Dictionary<string, object>
                     {
                         { "bitrate", musicprop.Bitrate },
                         { "size", basicprop.Size },
@@ -56,7 +52,7 @@ namespace HyPlayer.Classes
 
 
                 var tokenres = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CloudUploadToken,
-                    new Dictionary<string, object>()
+                    new Dictionary<string, object>
                     {
                         { "ext", file.FileType },
                         { "filename", file.Name },
@@ -67,19 +63,19 @@ namespace HyPlayer.Classes
                 {
                     // 文件需要上传
                     var tokenRes = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CloudUploadToken,
-                        new Dictionary<string, object>()
+                        new Dictionary<string, object>
                         {
                             { "ext", file.FileType },
                             { "filename", file.Name },
                             { "md5", md5 }
                         });
-                    string s = tokenRes["result"]["objectKey"].ToString() /*.Replace("/", "%2F")*/;
-                    Regex r = new Regex("\\/");
+                    var s = tokenRes["result"]["objectKey"].ToString() /*.Replace("/", "%2F")*/;
+                    var r = new Regex("\\/");
                     var objkey = r.Replace(s, "%2F", 1);
-                    HttpClient request = new HttpClient();
+                    var request = new HttpClient();
                     var content = new StreamContent(await file.OpenStreamForReadAsync());
                     content.Headers.Add("x-nos-token", tokenRes["result"]["token"].ToString());
-                    content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("audio/mpeg");
+                    content.Headers.ContentType = new MediaTypeHeaderValue("audio/mpeg");
                     content.Headers.Add("Content-MD5", md5);
                     content.Headers.ContentLength = (long)basicprop.Size;
 
@@ -88,11 +84,11 @@ namespace HyPlayer.Classes
                         content);
                 }
 
-                string title = string.IsNullOrEmpty(musicprop.Title)
+                var title = string.IsNullOrEmpty(musicprop.Title)
                     ? Path.GetFileNameWithoutExtension(file.Path)
                     : musicprop.Title;
                 var res2 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UploadCloudInfo,
-                    new Dictionary<string, object>()
+                    new Dictionary<string, object>
                     {
                         { "md5", md5 },
                         { "songId", res["songId"].ToString() },
@@ -105,12 +101,12 @@ namespace HyPlayer.Classes
                     });
 
                 var res3 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CloudPub,
-                    new Dictionary<string, object>()
+                    new Dictionary<string, object>
                     {
                         { "songid", res2["songId"] }
                     });
 
-                return new Dictionary<string, JObject>()
+                return new Dictionary<string, JObject>
                 {
                     { "res", res },
                     { "res3", res3 }

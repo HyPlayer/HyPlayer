@@ -1,7 +1,10 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Windows.Foundation;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -9,8 +12,8 @@ using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using NeteaseCloudMusicApi;
-using Newtonsoft.Json.Linq;
-using Windows.Foundation;
+
+#endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -30,6 +33,12 @@ namespace HyPlayer.Pages
         public Comments()
         {
             InitializeComponent();
+        }
+
+        public void Dispose()
+        {
+            HotCommentList.Children.Clear();
+            CommentList.Children.Clear();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -189,9 +198,9 @@ namespace HyPlayer.Pages
 
         private void ScrollTop()
         {
-            Windows.UI.Xaml.Media.GeneralTransform transform = AllCmtsTB.TransformToVisual(MainScroll);
-            Point point = transform.TransformPoint(new Point(0, 0));
-            double y = point.Y + MainScroll.VerticalOffset;
+            var transform = AllCmtsTB.TransformToVisual(MainScroll);
+            var point = transform.TransformPoint(new Point(0, 0));
+            var y = point.Y + MainScroll.VerticalOffset;
             MainScroll.ChangeView(null, y, null, false);
         }
 
@@ -202,18 +211,12 @@ namespace HyPlayer.Pages
 
         private void MainScroll_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
         {
-            Windows.UI.Xaml.Media.GeneralTransform transform = AllCmtsTB.TransformToVisual(MainScroll);
-            Point point = transform.TransformPoint(new Point(0, 0));
-            double y = point.Y + MainScroll.VerticalOffset;
+            var transform = AllCmtsTB.TransformToVisual(MainScroll);
+            var point = transform.TransformPoint(new Point(0, 0));
+            var y = point.Y + MainScroll.VerticalOffset;
             if ((sender as ScrollViewer).VerticalOffset > y + 25)
                 BackToTop.Visibility = Visibility.Visible;
             else BackToTop.Visibility = Visibility.Collapsed;
-        }
-
-        public void Dispose()
-        {
-            HotCommentList.Children.Clear();
-            CommentList.Children.Clear();
         }
     }
 }

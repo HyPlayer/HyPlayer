@@ -1,8 +1,5 @@
-﻿using HyPlayer.Classes;
-using HyPlayer.Controls;
-using HyPlayer.HyPlayControl;
-using NeteaseCloudMusicApi;
-using Newtonsoft.Json.Linq;
+﻿#region
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -13,6 +10,13 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.Classes;
+using HyPlayer.Controls;
+using HyPlayer.HyPlayControl;
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json.Linq;
+
+#endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -33,6 +37,15 @@ namespace HyPlayer.Pages
             InitializeComponent();
         }
 
+        public void Dispose()
+        {
+            songs.Clear();
+            Album = null;
+            artists = null;
+            ImageRect.ImageSource = null;
+            GC.SuppressFinalize(this);
+        }
+
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
@@ -41,7 +54,7 @@ namespace HyPlayer.Pages
                 Common.Invoke(async () =>
                 {
                     JObject json;
-                    string albumid = "";
+                    var albumid = "";
                     if (e.Parameter is NCAlbum)
                     {
                         Album = (NCAlbum)e.Parameter;
@@ -102,7 +115,7 @@ namespace HyPlayer.Pages
                 {
                     try
                     {
-                        HyPlayList.AppendNCSongs(songs, HyPlayItemType.Netease);
+                        HyPlayList.AppendNCSongs(songs);
 
                         HyPlayList.SongAppendDone();
 
@@ -138,15 +151,6 @@ namespace HyPlayer.Pages
                 await new ArtistSelectDialog(artists).ShowAsync();
             else
                 Common.NavigatePage(typeof(ArtistPage), artists[0].id);
-        }
-
-        public void Dispose()
-        {
-            songs.Clear();
-            Album = null;
-            artists = null;
-            ImageRect.ImageSource = null;
-            GC.SuppressFinalize(this);
         }
     }
 }

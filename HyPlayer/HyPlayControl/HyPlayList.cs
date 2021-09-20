@@ -1,5 +1,5 @@
-﻿using HyPlayer.Classes;
-using NeteaseCloudMusicApi;
+﻿#region
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,15 +13,16 @@ using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Streams;
+using HyPlayer.Classes;
+using NeteaseCloudMusicApi;
+using File = TagLib.File;
+
+#endregion
 
 namespace HyPlayer.HyPlayControl
 {
     public static class HyPlayList
     {
-        private static int GCCountDown = 5;
-
-        public delegate void TimerTicked();
-
         public delegate void LoginDoneEvent();
 
         public delegate void LyricChangeEvent();
@@ -50,15 +51,11 @@ namespace HyPlayer.HyPlayControl
 
         public delegate void SongMoveNextEvent();
 
+        public delegate void TimerTicked();
+
         public delegate void VolumeChangeEvent(double newVolumn);
 
-        /*********        基本       ********/
-        public static PlayMode NowPlayType
-        {
-            set { Common.Setting.songRollType = ((int)value); }
-
-            get { return (PlayMode)Common.Setting.songRollType; }
-        }
+        private static int GCCountDown = 5;
 
         public static int NowPlaying;
         public static Timer SecTimer = new Timer(1000); // 公用秒表
@@ -74,12 +71,20 @@ namespace HyPlayer.HyPlayControl
 
         public static int lyricpos;
         public static string crashedTime;
-        public static bool isPlaying => Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing;
 
         private static string _lastStorageUrl;
-        private static StorageFile _lastStorageFile;
 
-        public static StorageFile NowPlayingStorageFile => _lastStorageFile;
+        /*********        基本       ********/
+        public static PlayMode NowPlayType
+        {
+            set => Common.Setting.songRollType = (int)value;
+
+            get => (PlayMode)Common.Setting.songRollType;
+        }
+
+        public static bool isPlaying => Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing;
+
+        public static StorageFile NowPlayingStorageFile { get; private set; }
 
 
         public static HyPlayItem NowPlayingItem
@@ -199,7 +204,7 @@ namespace HyPlayer.HyPlayControl
             else
             {
                 crashedTime = NowPlayingItem.PlayItem.url;
-                if ((NowPlayingItem.ItemType == HyPlayItemType.Netease && !NowPlayingItem.PlayItem.isLocalFile) ||
+                if (NowPlayingItem.ItemType == HyPlayItemType.Netease && !NowPlayingItem.PlayItem.isLocalFile ||
                     NowPlayingItem.ItemType == HyPlayItemType.Radio)
                     //TODO FM和普通歌曲一起
                     Common.Invoke(() =>
@@ -233,12 +238,12 @@ namespace HyPlayer.HyPlayControl
                 {
                     if (NowPlayingItem.PlayItem.DontSetLocalStorageFile.FileType != ".ncm")
                     {
-                        _lastStorageFile = NowPlayingItem.PlayItem.DontSetLocalStorageFile;
+                        NowPlayingStorageFile = NowPlayingItem.PlayItem.DontSetLocalStorageFile;
                     }
                     else
                     {
                         // 脑残Music解析
-                        Stream stream = (await NowPlayingItem.PlayItem.DontSetLocalStorageFile.OpenReadAsync())
+                        var stream = (await NowPlayingItem.PlayItem.DontSetLocalStorageFile.OpenReadAsync())
                             .AsStreamForRead();
                         if (NCMFile.IsCorrectNCMFile(stream))
                         {
@@ -246,9 +251,9 @@ namespace HyPlayer.HyPlayControl
                             var CoverStream = NCMFile.GetCoverStream(stream);
                             var encStream = NCMFile.GetEncryptedStream(stream);
                             encStream.Seek(0, SeekOrigin.Begin);
-                            _lastStorageFile = await StorageFile.CreateStreamedFileAsync(
+                            NowPlayingStorageFile = await StorageFile.CreateStreamedFileAsync(
                                 Path.ChangeExtension(NowPlayingItem.PlayItem.DontSetLocalStorageFile.Name,
-                                    Info.format), (t) => { encStream.CopyTo(t.AsStreamForWrite()); },
+                                    Info.format), t => { encStream.CopyTo(t.AsStreamForWrite()); },
                                 RandomAccessStreamReference.CreateFromStream(
                                     CoverStream.AsRandomAccessStream()));
                         }
@@ -257,12 +262,12 @@ namespace HyPlayer.HyPlayControl
                 else
                 {
                     _lastStorageUrl = NowPlayingItem.PlayItem.url;
-                    _lastStorageFile = await StorageFile.GetFileFromPathAsync(NowPlayingItem.PlayItem.url);
+                    NowPlayingStorageFile = await StorageFile.GetFileFromPathAsync(NowPlayingItem.PlayItem.url);
                 }
             }
 
             Player_SourceChanged(null, null);
-            return _lastStorageFile;
+            return NowPlayingStorageFile;
         }
 
         /********        方法         ********/
@@ -424,11 +429,10 @@ namespace HyPlayer.HyPlayControl
                     }
                     else
                     {
-                        string playUrl = NowPlayingItem.PlayItem.url;
+                        var playUrl = NowPlayingItem.PlayItem.url;
                         // 对了,先看看是否要刷新播放链接
                         if (string.IsNullOrEmpty(NowPlayingItem.PlayItem.url) ||
                             Common.Setting.songUrlLazyGet)
-                        {
                             try
                             {
                                 var json = await Common.ncapi.RequestAsync(
@@ -453,10 +457,8 @@ namespace HyPlayer.HyPlayControl
                                 PlayerOnMediaFailed(Player, null); //传一个播放失败\
                                 return;
                             }
-                        }
 
                         if (Common.Setting.enableCache)
-                        {
                             //再检测是否已经缓存且大小正常
                             try
                             {
@@ -476,7 +478,7 @@ namespace HyPlayer.HyPlayControl
                                 try
                                 {
                                     //尝试从DownloadOperation下载
-                                    StorageFile destinationFile =
+                                    var destinationFile =
                                         await (await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync(
                                             "songCache",
                                             CreationCollisionOption.OpenIfExists)).CreateFileAsync(
@@ -493,11 +495,8 @@ namespace HyPlayer.HyPlayControl
                                     ms = MediaSource.CreateFromUri(new Uri(playUrl));
                                 }
                             }
-                        }
                         else
-                        {
                             ms = MediaSource.CreateFromUri(new Uri(playUrl));
-                        }
                     }
 
                     break;
@@ -617,16 +616,13 @@ namespace HyPlayer.HyPlayControl
 
         public static async void LoadLyrics(HyPlayItem hpi)
         {
-            PureLyricInfo lrcs = new PureLyricInfo();
+            var lrcs = new PureLyricInfo();
             if (hpi.ItemType == HyPlayItemType.Netease || hpi.ItemType == HyPlayItemType.Pan)
-            {
                 lrcs = await LoadNCLyric(hpi);
-            }
             else if (hpi.ItemType == HyPlayItemType.Local)
-            {
                 try
                 {
-                    lrcs = new PureLyricInfo()
+                    lrcs = new PureLyricInfo
                     {
                         PureLyrics = await FileIO.ReadTextAsync(
                             await StorageFile.GetFileFromPathAsync(Path.ChangeExtension(NowPlayingItem.PlayItem.url,
@@ -637,7 +633,6 @@ namespace HyPlayer.HyPlayControl
                 {
                     lrcs = new PureLyricInfo();
                 }
-            }
 
             //先进行歌词转换以免被搞
             Lyrics = Utils.ConvertPureLyric(lrcs.PureLyrics);
@@ -654,7 +649,7 @@ namespace HyPlayer.HyPlayControl
         {
             try
             {
-                if ((ncp.ItemType != HyPlayItemType.Netease && ncp.ItemType != HyPlayItemType.Pan) ||
+                if (ncp.ItemType != HyPlayItemType.Netease && ncp.ItemType != HyPlayItemType.Pan ||
                     ncp.PlayItem == null)
                     return new PureLyricInfo
                     {
@@ -732,7 +727,7 @@ namespace HyPlayer.HyPlayControl
                     id = ncSong.sid,
                     Name = ncSong.songname,
                     //url = json["data"][0]["url"].ToString(),
-                    LengthInMilliseconds = ncSong.LengthInMilliseconds,
+                    LengthInMilliseconds = ncSong.LengthInMilliseconds
                     //size = json["data"][0]["size"].ToString(),
                     //md5 = json["data"][0]["md5"].ToString()
                 };
@@ -758,7 +753,7 @@ namespace HyPlayer.HyPlayControl
             var hpi = new HyPlayItem
             {
                 ItemType = ncp.Type,
-                PlayItem = ncp,
+                PlayItem = ncp
             };
             return hpi;
         }
@@ -770,7 +765,7 @@ namespace HyPlayer.HyPlayControl
             if (NCSongs == null)
                 return false;
             if (needRemoveList)
-                HyPlayList.RemoveAllSong();
+                RemoveAllSong();
             try
             {
                 for (var i = 0; i < NCSongs.Count; i++)
@@ -786,7 +781,7 @@ namespace HyPlayer.HyPlayControl
                         id = ncSong.sid,
                         Name = ncSong.songname,
                         //url = token["url"].ToString(),
-                        LengthInMilliseconds = ncSong.LengthInMilliseconds,
+                        LengthInMilliseconds = ncSong.LengthInMilliseconds
                         //size = token["size"].ToString(),
                         //md5 = token["md5"].ToString()
                     };
@@ -815,14 +810,14 @@ namespace HyPlayer.HyPlayControl
              */
             try
             {
-                string prefix = sourceId.Substring(0, 2);
+                var prefix = sourceId.Substring(0, 2);
                 switch (prefix)
                 {
                     case "pl":
                         return await AppendPlayList(sourceId.Substring(2, sourceId.Length - 2));
                     case "ns":
                         var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
-                            new Dictionary<string, object>() { { "ids", sourceId.Substring(2, sourceId.Length - 2) } });
+                            new Dictionary<string, object> { { "ids", sourceId.Substring(2, sourceId.Length - 2) } });
                         _ = AppendNCSong(NCSong.CreateFromJson(json["songs"][0]));
                         return true;
                     case "al":
@@ -854,9 +849,9 @@ namespace HyPlayer.HyPlayControl
 
                 var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
                     new Dictionary<string, object>
-                    { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) }, false);
+                        { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) }, false);
                 var idx = 0;
-                List<NCSong> list = new List<NCSong>();
+                var list = new List<NCSong>();
                 foreach (var jToken in json["songs"])
                 {
                     var ncSong = NCSong.CreateFromJson(jToken);
@@ -868,7 +863,7 @@ namespace HyPlayer.HyPlayControl
                 }
 
                 list.RemoveAll(t => t == null);
-                HyPlayList.AppendNCSongs(list, HyPlayItemType.Netease, false);
+                AppendNCSongs(list, HyPlayItemType.Netease, false);
                 return true;
             }
             catch (Exception ex)
@@ -886,7 +881,7 @@ namespace HyPlayer.HyPlayControl
                 var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Album,
                     new Dictionary<string, object> { { "id", alid } });
 
-                List<NCSong> list = new List<NCSong>();
+                var list = new List<NCSong>();
                 foreach (var song in json["songs"].ToArray())
                 {
                     var ncSong = NCSong.CreateFromJson(song);
@@ -894,7 +889,7 @@ namespace HyPlayer.HyPlayControl
                 }
 
                 list.RemoveAll(t => t == null);
-                HyPlayList.AppendNCSongs(list, HyPlayItemType.Netease, false);
+                AppendNCSongs(list, HyPlayItemType.Netease, false);
 
 
                 return true;
@@ -911,10 +906,9 @@ namespace HyPlayer.HyPlayControl
         {
             try
             {
-                bool hasmore = true;
-                int page = 0;
+                var hasmore = true;
+                var page = 0;
                 while (hasmore)
-                {
                     try
                     {
                         var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.DjProgram,
@@ -933,7 +927,6 @@ namespace HyPlayer.HyPlayControl
                     {
                         Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
                     }
-                }
 
                 return true;
             }
@@ -952,7 +945,7 @@ namespace HyPlayer.HyPlayControl
                 var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
                     new Dictionary<string, object> { { "id", plid } });
 
-                int nowidx = 0;
+                var nowidx = 0;
                 var trackIds = json["playlist"]["trackIds"].Select(t => (int)t["id"]).ToList();
                 while (nowidx * 500 < trackIds.Count)
                 {
@@ -966,14 +959,12 @@ namespace HyPlayer.HyPlayControl
                         var ncSongs = json["songs"].Select(t =>
                         {
                             if (json["privileges"].ToList()[i++]["st"].ToString() == "0")
-                            {
                                 return NCSong.CreateFromJson(t);
-                            }
 
                             return null;
                         }).ToList();
                         ncSongs.RemoveAll(t => t == null);
-                        HyPlayList.AppendNCSongs(ncSongs, HyPlayItemType.Netease, false);
+                        AppendNCSongs(ncSongs, HyPlayItemType.Netease, false);
                     }
                     catch (Exception ex)
                     {
@@ -1003,7 +994,7 @@ namespace HyPlayer.HyPlayControl
             var mdp = await sf.Properties.GetMusicPropertiesAsync();
 
             if (nocheck163 ||
-                !The163KeyHelper.TryGetMusicInfo(TagLib.File.Create(new UwpStorageFileAbstraction(sf)).Tag, out mi))
+                !The163KeyHelper.TryGetMusicInfo(File.Create(new UwpStorageFileAbstraction(sf)).Tag, out mi))
             {
                 //TagLib.File afi = TagLib.File.Create(new UwpStorageFileAbstraction(sf), ReadStyle.Average);
                 string[] contributingArtistsKey = { "System.Music.Artist" };
@@ -1023,11 +1014,11 @@ namespace HyPlayer.HyPlayControl
                         id = null,
                         Name = mdp.Title ?? sf.Name,
                         Type = HyPlayItemType.Local,
-                        Artist = contributingArtists.Select(t => new NCArtist()
+                        Artist = contributingArtists.Select(t => new NCArtist
                         {
                             name = t
                         }).ToList(),
-                        Album = new NCAlbum()
+                        Album = new NCAlbum
                         {
                             name = mdp.Album
                         },
@@ -1072,7 +1063,7 @@ namespace HyPlayer.HyPlayControl
                 .ToList();
             if (sf.Provider.Id == "network")
                 hpi.DontSetLocalStorageFile = sf;
-            return new HyPlayItem()
+            return new HyPlayItem
             {
                 ItemType = HyPlayItemType.Local,
                 PlayItem = hpi

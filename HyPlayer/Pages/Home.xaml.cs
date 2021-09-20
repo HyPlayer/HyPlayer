@@ -1,4 +1,6 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,7 +11,8 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using NeteaseCloudMusicApi;
-using Newtonsoft.Json.Linq;
+
+#endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -123,17 +126,17 @@ namespace HyPlayer.Pages
 
         public async void LoadRanklist()
         {
-            await Task.Run((() =>
+            await Task.Run(() =>
             {
-                Common.Invoke((async () =>
+                Common.Invoke(async () =>
                 {
                     try
                     {
-                        JObject json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Toplist);
+                        var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Toplist);
 
-                        foreach (JToken PlaylistItemJson in json["list"].ToArray())
+                        foreach (var PlaylistItemJson in json["list"].ToArray())
                         {
-                            NCPlayList ncp = NCPlayList.CreateFromJson(PlaylistItemJson);
+                            var ncp = NCPlayList.CreateFromJson(PlaylistItemJson);
                             RankList.Children.Add(new PlaylistItem(ncp));
                         }
                     }
@@ -141,8 +144,8 @@ namespace HyPlayer.Pages
                     {
                         Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
                     }
-                }));
-            }));
+                });
+            });
         }
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
@@ -193,7 +196,6 @@ namespace HyPlayer.Pages
                     {
                         Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
                     }
-
                 });
             });
         }

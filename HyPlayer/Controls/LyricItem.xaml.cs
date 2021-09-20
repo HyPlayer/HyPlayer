@@ -1,4 +1,5 @@
-﻿using System;
+﻿#region
+
 using System.Threading.Tasks;
 using Windows.UI;
 using Windows.UI.Text;
@@ -10,6 +11,8 @@ using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using Kawazu;
 
+#endregion
+
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
 namespace HyPlayer.Controls
@@ -18,9 +21,9 @@ namespace HyPlayer.Controls
     {
         public readonly SongLyric Lrc;
         public bool hiding = false;
+        public Color shadowColor = Color.FromArgb(255, 0, 0, 0);
 
         public bool showing = true;
-        public Color shadowColor = Color.FromArgb(255, 0, 0, 0);
 
 
         public LyricItem(SongLyric lrc)
@@ -86,7 +89,7 @@ namespace HyPlayer.Controls
             TextBoxPureLyric.Foreground = originBrush;
             TextBoxSound.Foreground = originBrush;
             TextBoxTranslation.Foreground = originBrush;
-            shadowColor = (originBrush.Color == Color.FromArgb(255, 0, 0, 0))
+            shadowColor = originBrush.Color == Color.FromArgb(255, 0, 0, 0)
                 ? Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 255, 255, 255)
                 : Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 0, 0, 0);
         }

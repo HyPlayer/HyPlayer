@@ -1,8 +1,11 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Timers;
+using System.Threading.Tasks;
 using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
 using Windows.Storage.Streams;
@@ -12,26 +15,16 @@ using Microsoft.Toolkit.Uwp.Notifications;
 using NeteaseCloudMusicApi;
 using TagLib;
 using File = TagLib.File;
-using System.Threading.Tasks;
-using System.Collections.ObjectModel;
+
+#endregion
 
 namespace HyPlayer.HyPlayControl
 {
     internal class DownloadObject
     {
+        private string _filename;
         private PlayItem dontuseme;
         public DownloadOperation downloadOperation;
-        private string _filename;
-
-        public string filename
-        {
-            set
-            {
-                _filename = value.Replace("\\", "＼").Replace("/", "／").Replace(":", "：").Replace("?", "？")
-                    .Replace("\"", "＂").Replace("<", "＜").Replace(">", "＞").Replace("|", "｜");
-            }
-            get => _filename;
-        }
 
         public string fullpath;
         public ulong HavedSize;
@@ -46,6 +39,14 @@ namespace HyPlayer.HyPlayControl
         public DownloadObject(NCSong song)
         {
             ncsong = song;
+        }
+
+        public string filename
+        {
+            set =>
+                _filename = value.Replace("\\", "＼").Replace("/", "／").Replace(":", "：").Replace("?", "？")
+                    .Replace("\"", "＂").Replace("<", "＜").Replace(">", "＞").Replace("|", "｜");
+            get => _filename;
         }
 
         private void Wc_DownloadFileCompleted()
@@ -224,7 +225,7 @@ namespace HyPlayer.HyPlayControl
                     Type = HyPlayItemType.Netease,
                     url = json["data"][0]["url"].ToString(),
                     LengthInMilliseconds = ncsong.LengthInMilliseconds,
-                    size = json["data"][0]["size"].ToString(),
+                    size = json["data"][0]["size"].ToString()
                     //md5 = json["data"][0]["md5"].ToString()
                 };
                 filename = string.Join(';', ncsong.Artist.Select(t => t.name)) + " - " + ncsong.songname + "." +
@@ -247,7 +248,7 @@ namespace HyPlayer.HyPlayControl
 
     internal static class DownloadManager
     {
-        private static bool Timered = false;
+        private static readonly bool Timered = false;
         public static List<DownloadObject> DownloadLists = new List<DownloadObject>();
         public static BackgroundDownloader Downloader = new BackgroundDownloader();
 
@@ -335,10 +336,7 @@ namespace HyPlayer.HyPlayControl
             if (!CheckDownloadAbilityAndToast()) return;
             if (!Timered)
                 HyPlayList.OnTimerTicked += Timer_Elapsed;
-            foreach(NCSong song in songs)
-            {
-                DownloadLists.Add(new DownloadObject(song));
-            }
+            foreach (var song in songs) DownloadLists.Add(new DownloadObject(song));
         }
     }
 

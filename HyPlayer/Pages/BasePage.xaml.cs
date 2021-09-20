@@ -1,4 +1,6 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -10,10 +12,12 @@ using Windows.Storage.Streams;
 using Windows.System;
 using Windows.System.Profile;
 using Windows.UI;
+using Windows.UI.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
@@ -26,13 +30,16 @@ using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
 using QRCoder;
 using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
+using NavigationViewBackButtonVisible = Microsoft.UI.Xaml.Controls.NavigationViewBackButtonVisible;
 using NavigationViewBackRequestedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewBackRequestedEventArgs;
+using NavigationViewDisplayMode = Microsoft.UI.Xaml.Controls.NavigationViewDisplayMode;
+using NavigationViewDisplayModeChangedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewDisplayModeChangedEventArgs;
 using NavigationViewItem = Microsoft.UI.Xaml.Controls.NavigationViewItem;
+using NavigationViewItemInvokedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs;
+using NavigationViewPaneDisplayMode = Microsoft.UI.Xaml.Controls.NavigationViewPaneDisplayMode;
 using NavigationViewSelectionChangedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewSelectionChangedEventArgs;
-using Microsoft.Toolkit.Uwp.UI.Controls;
-using Windows.UI.Core;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Controls.Primitives;
+
+#endregion
 
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
@@ -44,8 +51,8 @@ namespace HyPlayer.Pages
     /// </summary>
     public sealed partial class BasePage : Page
     {
-        private string nowqrkey;
         private string nowplid;
+        private string nowqrkey;
 
         public BasePage()
         {
@@ -64,7 +71,7 @@ namespace HyPlayer.Pages
             }
             else if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
             {
-                bool result = ApplicationViewScaling.TrySetDisableLayoutScaling(true);
+                var result = ApplicationViewScaling.TrySetDisableLayoutScaling(true);
                 ApplicationView.GetForCurrentView().SetDesiredBoundsMode(ApplicationViewBoundsMode.UseCoreWindow);
             }
 
@@ -334,22 +341,22 @@ namespace HyPlayer.Pages
             HyPlayList.OnMediaEnd += hpi =>
             {
                 // 播放数据
-                _ = Task.Run((() =>
+                _ = Task.Run(() =>
                 {
-                    Common.Invoke((() =>
+                    Common.Invoke(() =>
                     {
                         if (hpi.ItemType != HyPlayItemType.Netease) return;
-                        _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.Scrobble, new Dictionary<string, object>()
+                        _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.Scrobble, new Dictionary<string, object>
                         {
-                            {"id",hpi.PlayItem.id},
-                            {"sourceid","-1"}
+                            { "id", hpi.PlayItem.id },
+                            { "sourceid", "-1" }
                         });
-                    }));
-                }));
+                    });
+                });
             };
 
             HyPlayList.LoginDoneCall();
-            ((App)App.Current).InitializeJumpList();
+            ((App)Application.Current).InitializeJumpList();
             NavMain.SelectedItem = NavItemLogin;
             Common.NavigatePage(typeof(Me));
             return true;
@@ -380,7 +387,7 @@ namespace HyPlayer.Pages
                             Content = jToken["name"].ToString(),
                             Tag = "Playlist" + jToken["id"],
                             IsRightTapEnabled = true,
-                            Icon = new FontIcon()
+                            Icon = new FontIcon
                             {
                                 FontFamily = Application.Current.Resources["SymbolThemeFontFamily"] as FontFamily,
                                 Glyph = "\uE142"
@@ -396,16 +403,16 @@ namespace HyPlayer.Pages
                     }
                     else
                     {
-
                         Common.MySongLists.Add(NCPlayList.CreateFromJson(jToken));
                         if (!isliked)
                         {
                             isliked = true;
                             continue;
                         }
+
                         var item = new NavigationViewItem
                         {
-                            Icon = new FontIcon()
+                            Icon = new FontIcon
                             {
                                 FontFamily = Application.Current.Resources["SymbolThemeFontFamily"] as FontFamily,
                                 Glyph = jToken["privacy"].ToString() == "0" ? "\uE142" : "\uE72E",
@@ -451,17 +458,13 @@ namespace HyPlayer.Pages
                 return;
             }
 
-            if (nowitem.Tag.ToString() == "MusicCloud")
-            {
-                Common.NavigatePage(typeof(MusicCloudPage));
-            }
+            if (nowitem.Tag.ToString() == "MusicCloud") Common.NavigatePage(typeof(MusicCloudPage));
 
             if (nowitem.Tag.ToString() == "DailyRcmd")
-            {
-                Common.NavigatePage(typeof(SongListDetail), new NCPlayList()
+                Common.NavigatePage(typeof(SongListDetail), new NCPlayList
                 {
                     cover = "ms-appx:/Assets/icon.png",
-                    creater = new NCUser()
+                    creater = new NCUser
                     {
                         avatar = "https://p1.music.126.net/KxePid7qTvt6V2iYVy-rYQ==/109951165050882728.jpg",
                         id = "1",
@@ -473,7 +476,6 @@ namespace HyPlayer.Pages
                     name = "每日歌曲推荐",
                     desc = "根据你的口味生成，每天6:00更新"
                 });
-            }
 
             if (nowitem.Tag.ToString() == "SonglistMyLike")
             {
@@ -515,23 +517,23 @@ namespace HyPlayer.Pages
         // Invoked events of not-for-navigation items can be handled separately.
         // Meanwhile we set "SelectsOnInvoked" property of these items "False" to avoid the navigation pane indicator being set to them.
         private async void NavMain_ItemInvoked(NavigationView sender,
-            Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs args)
+            NavigationViewItemInvokedEventArgs args)
         {
-            string invokedItemTag = (args.InvokedItemContainer as NavigationViewItem)?.Tag?.ToString();
+            var invokedItemTag = (args.InvokedItemContainer as NavigationViewItem)?.Tag?.ToString();
             if (invokedItemTag is null || invokedItemTag == string.Empty) return;
             switch (invokedItemTag)
             {
                 case "SonglistCreate":
-                    {
-                        await new CreateSonglistDialog().ShowAsync();
-                        LoadSongList();
-                        break;
-                    }
+                {
+                    await new CreateSonglistDialog().ShowAsync();
+                    LoadSongList();
+                    break;
+                }
                 case "PersonalFM":
-                    {
-                        PersonalFM.InitPersonalFM();
-                        break;
-                    }
+                {
+                    PersonalFM.InitPersonalFM();
+                    break;
+                }
             }
         }
 
@@ -560,13 +562,9 @@ namespace HyPlayer.Pages
         private void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if ((sender as Pivot).SelectedIndex == 1)
-            {
                 LoadQr(null, null);
-            }
             else
-            {
                 InfoBarLoginHint.Title = "登录代表你同意相关条款";
-            }
         }
 
         private async void LoadQr(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
@@ -621,7 +619,6 @@ namespace HyPlayer.Pages
             catch
             {
                 InfoBarLoginHint.Title = "请点击二维码刷新";
-                return;
             }
         }
 
@@ -678,30 +675,22 @@ namespace HyPlayer.Pages
         }
 
         private void NavMain_DisplayModeChanged(NavigationView sender,
-            Microsoft.UI.Xaml.Controls.NavigationViewDisplayModeChangedEventArgs args)
+            NavigationViewDisplayModeChangedEventArgs args)
         {
             const int topIndent = 16;
             const int expandedIndent = 48;
-            int minimalIndent = 104;
-            if (NavMain.IsBackButtonVisible.Equals(Microsoft.UI.Xaml.Controls.NavigationViewBackButtonVisible
+            var minimalIndent = 104;
+            if (NavMain.IsBackButtonVisible.Equals(NavigationViewBackButtonVisible
                 .Collapsed))
-            {
                 minimalIndent = 48;
-            }
 
-            Thickness currMargin = AppTitleBar.Margin;
-            if (sender.PaneDisplayMode == Microsoft.UI.Xaml.Controls.NavigationViewPaneDisplayMode.Top)
-            {
+            var currMargin = AppTitleBar.Margin;
+            if (sender.PaneDisplayMode == NavigationViewPaneDisplayMode.Top)
                 AppTitleBar.Margin = new Thickness(topIndent, currMargin.Top, currMargin.Right, currMargin.Bottom);
-            }
-            else if (sender.DisplayMode == Microsoft.UI.Xaml.Controls.NavigationViewDisplayMode.Minimal)
-            {
+            else if (sender.DisplayMode == NavigationViewDisplayMode.Minimal)
                 AppTitleBar.Margin = new Thickness(minimalIndent, currMargin.Top, currMargin.Right, currMargin.Bottom);
-            }
             else
-            {
                 AppTitleBar.Margin = new Thickness(expandedIndent, currMargin.Top, currMargin.Right, currMargin.Bottom);
-            }
         }
 
         private async void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)
@@ -709,7 +698,7 @@ namespace HyPlayer.Pages
             try
             {
                 await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistPrivacy,
-                    new Dictionary<string, object>()
+                    new Dictionary<string, object>
                     {
                         { "id", nowplid }
                     });
@@ -718,7 +707,7 @@ namespace HyPlayer.Pages
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip("公开歌单失败",ex.Message);
+                Common.ShowTeachingTip("公开歌单失败", ex.Message);
             }
         }
 
@@ -727,7 +716,7 @@ namespace HyPlayer.Pages
             try
             {
                 await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDelete,
-                    new Dictionary<string, object>()
+                    new Dictionary<string, object>
                     {
                         { "ids", nowplid }
                     });
@@ -736,7 +725,7 @@ namespace HyPlayer.Pages
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip("删除失败",ex.Message);
+                Common.ShowTeachingTip("删除失败", ex.Message);
             }
         }
     }

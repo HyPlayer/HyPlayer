@@ -1,4 +1,6 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -9,6 +11,8 @@ using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using NeteaseCloudMusicApi;
 
+#endregion
+
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
 namespace HyPlayer.Pages
@@ -18,14 +22,20 @@ namespace HyPlayer.Pages
     /// </summary>
     public sealed partial class MVPage : Page, IDisposable
     {
+        private readonly List<NCMlog> sources = new List<NCMlog>();
         private string mvid;
         private string mvquality = "1080";
         private string songid;
-        private readonly List<NCMlog> sources = new List<NCMlog>();
 
         public MVPage()
         {
             InitializeComponent();
+        }
+
+        public void Dispose()
+        {
+            MediaPlayerElement.Source = null;
+            sources.Clear();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -85,7 +95,6 @@ namespace HyPlayer.Pages
         private async void LoadVideo()
         {
             if (Regex.IsMatch(mvid, "^[0-9]*$"))
-            {
                 //纯MV
                 try
                 {
@@ -101,9 +110,7 @@ namespace HyPlayer.Pages
                 {
                     Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
                 }
-            }
             else
-            {
                 try
                 {
                     var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.MlogUrl,
@@ -123,7 +130,6 @@ namespace HyPlayer.Pages
                 {
                     Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
                 }
-            }
         }
 
         private async void LoadVideoInfo()
@@ -166,12 +172,6 @@ namespace HyPlayer.Pages
         {
             mvid = (RelativeList.SelectedItem is NCMlog ? (NCMlog)RelativeList.SelectedItem : default).id;
             LoadThings();
-        }
-
-        public void Dispose()
-        {
-            MediaPlayerElement.Source = null;
-            sources.Clear();
         }
     }
 }

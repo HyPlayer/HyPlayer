@@ -1,7 +1,11 @@
-﻿using System.Collections.Generic;
+﻿#region
+
+using System.Collections.Generic;
 using Windows.UI.Xaml.Controls;
 using HyPlayer.Classes;
 using HyPlayer.Pages;
+
+#endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“内容对话框”项模板
 
@@ -28,6 +32,7 @@ namespace HyPlayer.Controls
                 Common.NavigatePage(typeof(BlankPage));
                 Common.BarPlayBar.ButtonCollapse_OnClick(this, null);
             }
+
             Hide();
         }
     }

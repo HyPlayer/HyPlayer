@@ -1,16 +1,19 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
+using System.Threading.Tasks;
 using Windows.Storage;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
-using NeteaseCloudMusicApi;
-using HyPlayer.Classes;
-using System.Threading.Tasks;
+
+#endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -21,10 +24,10 @@ namespace HyPlayer.Pages
     /// </summary>
     public sealed partial class LocalMusicPage : Page
     {
-        private int index;
         private readonly List<HyPlayItem> localHyItems;
         private readonly List<ListViewPlayItem> localItems;
         private Task FileScanTask;
+        private int index;
 
         public LocalMusicPage()
         {
@@ -69,10 +72,7 @@ namespace HyPlayer.Pages
 
         private async void LoadLocalMusic()
         {
-            if (FileScanTask != null)
-            {
-                FileScanTask.Dispose();
-            }
+            if (FileScanTask != null) FileScanTask.Dispose();
 
             var tmp = await KnownFolders.MusicLibrary.GetItemsAsync();
             FileScanTask = Task.Run(() =>
@@ -82,7 +82,7 @@ namespace HyPlayer.Pages
                     FileLoadingIndicateRing.IsActive = true;
                     foreach (var item in tmp) GetSubFiles(item);
                     FileLoadingIndicateRing.IsActive = false;
-                }, Windows.UI.Core.CoreDispatcherPriority.Low);
+                }, CoreDispatcherPriority.Low);
             });
         }
 
@@ -92,7 +92,6 @@ namespace HyPlayer.Pages
             {
                 if (item is StorageFile)
                 {
-                    
                     var file = item as StorageFile;
                     var hyPlayItem = await HyPlayList.LoadStorageFile(file);
                     localHyItems.Add(hyPlayItem);
@@ -103,7 +102,7 @@ namespace HyPlayer.Pages
                 }
                 else if (item is StorageFolder)
                 {
-                    foreach (var subitems in await ((StorageFolder) item).GetItemsAsync())
+                    foreach (var subitems in await ((StorageFolder)item).GetItemsAsync())
                         GetSubFiles(subitems);
                 }
             }
@@ -123,16 +122,14 @@ namespace HyPlayer.Pages
 
         private async void UploadCloud_Click(object sender, RoutedEventArgs e)
         {
-            var sf = await StorageFile.GetFileFromPathAsync(localHyItems[int.Parse((sender as Button).Tag.ToString())].PlayItem.url);
+            var sf = await StorageFile.GetFileFromPathAsync(localHyItems[int.Parse((sender as Button).Tag.ToString())]
+                .PlayItem.url);
             await CloudUpload.UploadMusic(sf);
         }
 
         private void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if ((sender as Pivot).SelectedIndex == 1)
-            {
-                LoadLocalMusic();
-            }
+            if ((sender as Pivot).SelectedIndex == 1) LoadLocalMusic();
         }
     }
 }

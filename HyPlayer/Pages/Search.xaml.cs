@@ -1,6 +1,5 @@
-﻿using HyPlayer.Classes;
-using NeteaseCloudMusicApi;
-using Newtonsoft.Json.Linq;
+﻿#region
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,6 +8,11 @@ using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.Classes;
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json.Linq;
+
+#endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -19,10 +23,10 @@ namespace HyPlayer.Pages
     /// </summary>
     public sealed partial class Search : Page, IDisposable
     {
+        private bool NoResult;
         private int page;
+        private readonly ObservableCollection<NCSong> SongResults;
         private string Text = "";
-        private bool NoResult = false;
-        ObservableCollection<NCSong> SongResults;
 
 
         public Search()
@@ -31,6 +35,11 @@ namespace HyPlayer.Pages
             NavigationViewSelector.SelectedItem = NavigationViewSelector.MenuItems[0];
             SongResults = new ObservableCollection<NCSong>();
             NavigationCacheMode = NavigationCacheMode.Required;
+        }
+
+        public void Dispose()
+        {
+            SearchResultContainer.ListItems.Clear();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -46,10 +55,7 @@ namespace HyPlayer.Pages
                 SearchHistory.Children.Add(btn);
             }
 
-            if (Text != string.Empty)
-            {
-                LoadResult();
-            }
+            if (Text != string.Empty) LoadResult();
         }
 
         protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
@@ -66,6 +72,7 @@ namespace HyPlayer.Pages
                 _ = Launcher.LaunchUriAsync(new Uri(@"http://music.163.com/m/topic/18926801"));
                 return;
             }
+
             NoResult = false;
             HistoryManagement.AddSearchHistory(Text);
             var list = HistoryManagement.GetSearchHistory();
@@ -125,12 +132,13 @@ namespace HyPlayer.Pages
 
         private void LoadLyricResult(JObject json)
         {
-            int i = 0;
+            var i = 0;
             if (json["result"]["songCount"].ToObject<int>() == 0)
             {
                 NoResult = true;
                 return;
             }
+
             foreach (var songJs in json["result"]["songs"].ToArray())
                 SearchResultContainer.ListItems.Add(
                     new SimpleListItem
@@ -155,12 +163,13 @@ namespace HyPlayer.Pages
 
         private void LoadUserResult(JObject json)
         {
-            int i = 0;
+            var i = 0;
             if (json["result"]["userprofileCount"].ToObject<int>() == 0)
             {
                 NoResult = true;
                 return;
             }
+
             foreach (var userJs in json["result"]["userprofiles"].ToArray())
                 SearchResultContainer.ListItems.Add(
                     new SimpleListItem
@@ -185,12 +194,13 @@ namespace HyPlayer.Pages
 
         private void LoadRadioResult(JObject json)
         {
-            int i = 0;
+            var i = 0;
             if (json["result"]["djRadiosCount"].ToObject<int>() == 0)
             {
                 NoResult = true;
                 return;
             }
+
             foreach (var pljs in json["result"]["djRadios"].ToArray())
                 SearchResultContainer.ListItems.Add(
                     new SimpleListItem
@@ -222,12 +232,13 @@ namespace HyPlayer.Pages
 
         private void LoadPlaylistResult(JObject json)
         {
-            int i = 0;
+            var i = 0;
             if (json["result"]["playlistCount"].ToObject<int>() == 0)
             {
                 NoResult = true;
                 return;
             }
+
             foreach (var pljs in json["result"]["playlists"].ToArray())
                 SearchResultContainer.ListItems.Add(new SimpleListItem
                 {
@@ -236,7 +247,7 @@ namespace HyPlayer.Pages
                     LineTwo = pljs["description"].ToString(),
                     LineThree = $"{pljs["trackCount"]}首 | 播放{pljs["playCount"]}次 | 收藏 {pljs["bookCount"]}次",
                     ResourceId = "pl" + pljs["id"],
-                    CoverUri = pljs["coverImgUrl"].ToString() + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                    CoverUri = pljs["coverImgUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
                     Order = i++
                 });
             if (json["result"]["playlistCount"].ToObject<int>() >= (page + 1) * 30)
@@ -251,12 +262,13 @@ namespace HyPlayer.Pages
 
         private void LoadArtistResult(JObject json)
         {
-            int i = 0;
+            var i = 0;
             if (json["result"]["artistCount"].ToObject<int>() == 0)
             {
                 NoResult = true;
                 return;
             }
+
             foreach (var singerjson in json["result"]["artists"].ToArray())
                 SearchResultContainer.ListItems.Add(new SimpleListItem
                 {
@@ -265,7 +277,7 @@ namespace HyPlayer.Pages
                     LineTwo = string.Join(" / ", singerjson["alia"].ToList()),
                     LineThree = $"专辑数 {singerjson["albumSize"]} | MV 数 {singerjson["mvSize"]}",
                     ResourceId = "ar" + singerjson["id"],
-                    CoverUri = singerjson["img1v1Url"].ToString() + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                    CoverUri = singerjson["img1v1Url"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
                     Order = i++
                 });
             if (json["result"]["artistCount"].ToObject<int>() >= (page + 1) * 30)
@@ -280,14 +292,15 @@ namespace HyPlayer.Pages
 
         private void LoadAlbumResult(JObject json)
         {
-            int i = 0;
+            var i = 0;
             if (json["result"]["albumCount"].ToObject<int>() == 0)
             {
                 NoResult = true;
                 return;
             }
+
             foreach (var albumjson in json["result"]["albums"].ToArray())
-                SearchResultContainer.ListItems.Add(new SimpleListItem()
+                SearchResultContainer.ListItems.Add(new SimpleListItem
                 {
                     Title = albumjson["name"].ToString(),
                     LineOne = albumjson["artist"]["name"].ToString(),
@@ -295,8 +308,8 @@ namespace HyPlayer.Pages
                         ? string.Join(" / ", albumjson["alias"].ToArray().Select(t => t.ToString()))
                         : "",
                     LineThree = albumjson.Value<bool>("paid") ? "付费专辑" : "",
-                    ResourceId = "al" + albumjson["id"].ToString(),
-                    CoverUri = albumjson["picUrl"].ToString() + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                    ResourceId = "al" + albumjson["id"],
+                    CoverUri = albumjson["picUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
                     Order = i++
                 });
             if (json["result"]["albumCount"].ToObject<int>() >= (page + 1) * 30)
@@ -316,6 +329,7 @@ namespace HyPlayer.Pages
                 NoResult = true;
                 return;
             }
+
             var idx = 0;
             try
             {
@@ -372,15 +386,9 @@ namespace HyPlayer.Pages
             LoadResult();
         }
 
-        public void Dispose()
-        {
-            SearchResultContainer.ListItems.Clear();
-        }
-
         private async void SearchKeywordBox_GotFocus(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace((sender as AutoSuggestBox)?.Text))
-            {
                 try
                 {
                     var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchHot);
@@ -392,7 +400,6 @@ namespace HyPlayer.Pages
                 {
                     Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
                 }
-            }
         }
 
         private void SearchKeywordBox_LostFocus(object sender, RoutedEventArgs e)

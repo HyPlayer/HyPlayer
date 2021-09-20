@@ -1,7 +1,11 @@
-using HyPlayer.Classes;
+#region
+
 using System.Collections.ObjectModel;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using HyPlayer.Classes;
+
+#endregion
 
 namespace HyPlayer.Controls
 {
@@ -13,15 +17,15 @@ namespace HyPlayer.Controls
             new PropertyMetadata(new ObservableCollection<SimpleListItem>())
         );
 
-        public ObservableCollection<SimpleListItem> ListItems
-        {
-            get { return (ObservableCollection<SimpleListItem>)GetValue(ListItemsProperty); }
-            set { SetValue(ListItemsProperty, value); }
-        }
-
         public SimpleLinerList()
         {
             InitializeComponent();
+        }
+
+        public ObservableCollection<SimpleListItem> ListItems
+        {
+            get => (ObservableCollection<SimpleListItem>)GetValue(ListItemsProperty);
+            set => SetValue(ListItemsProperty, value);
         }
 
         private void ItemList_SelectionChanged(object sender, SelectionChangedEventArgs e)

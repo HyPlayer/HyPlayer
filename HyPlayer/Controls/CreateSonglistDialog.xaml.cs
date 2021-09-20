@@ -1,8 +1,11 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
 using Windows.UI.Xaml.Controls;
 using NeteaseCloudMusicApi;
-using Newtonsoft.Json.Linq;
+
+#endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“内容对话框”项模板
 
@@ -19,7 +22,7 @@ namespace HyPlayer.Controls
             ContentDialogButtonClickEventArgs args)
         {
             // This request would return with a 250 error without RealIP set
-            string realIpBackup = Common.ncapi.RealIP;
+            var realIpBackup = Common.ncapi.RealIP;
             Common.ncapi.RealIP = "118.88.88.88";
             try
             {

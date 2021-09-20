@@ -1,6 +1,5 @@
-using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
-using NeteaseCloudMusicApi;
+#region
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -10,13 +9,18 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
+using NeteaseCloudMusicApi;
+
+#endregion
 
 namespace HyPlayer.Pages
 {
     public sealed partial class RadioPage : Page, IDisposable
     {
         private bool asc;
-        private int i = 0;
+        private int i;
         private int page;
         private NCRadio Radio;
 
@@ -25,6 +29,12 @@ namespace HyPlayer.Pages
         public RadioPage()
         {
             InitializeComponent();
+        }
+
+        public void Dispose()
+        {
+            ImageRect.ImageSource = null;
+            Songs.Clear();
         }
 
         private async void LoadProgram()
@@ -57,7 +67,6 @@ namespace HyPlayer.Pages
         {
             base.OnNavigatedTo(e);
             if (e.Parameter is string rid)
-            {
                 try
                 {
                     var json1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.DjDetail,
@@ -68,12 +77,8 @@ namespace HyPlayer.Pages
                 {
                     Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
                 }
-            }
 
-            if (e.Parameter is NCRadio radio)
-            {
-                Radio = radio;
-            }
+            if (e.Parameter is NCRadio radio) Radio = radio;
 
             TextBoxRadioName.Text = Radio.name;
             TextBoxDJ.Text = Radio.DJ.name;
@@ -98,7 +103,7 @@ namespace HyPlayer.Pages
                 Common.Invoke(() =>
                 {
                     try
-                    { 
+                    {
                         HyPlayList.AppendNCSongs(Songs);
                         HyPlayList.SongAppendDone();
                         HyPlayList.SongMoveTo(0);
@@ -123,12 +128,6 @@ namespace HyPlayer.Pages
             i = 0;
             asc = !asc;
             LoadProgram();
-        }
-
-        public void Dispose()
-        {
-            ImageRect.ImageSource = null;
-            Songs.Clear();
         }
     }
 }
