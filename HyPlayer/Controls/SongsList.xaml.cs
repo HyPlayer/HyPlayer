@@ -59,6 +59,21 @@ namespace HyPlayer.Controls
         public SongsList()
         {
             InitializeComponent();
+            HyPlayList.OnPlayItemChange += HyPlayList_OnPlayItemChange;
+        }
+
+        private void HyPlayList_OnPlayItemChange(HyPlayItem playItem)
+        {
+            if(playItem.ItemType==HyPlayItemType.Netease)
+            {
+                foreach(NCSong song in VisibleSongs)
+                {
+                    if(song.sid==playItem.ToNCSong().sid)
+                    {
+                        GetSongPlayingIndication(song.sid);
+                    }
+                }
+            }
         }
 
         public bool IsMySongList
@@ -101,10 +116,15 @@ namespace HyPlayer.Controls
 
         private void Songs_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            foreach (var item in e.NewItems)
-                if (item is NCSong ncsong)
-                    VisibleSongs.Add(ncsong);
 
+            if (e.NewItems != null)
+            {
+                foreach (var item in e.NewItems)
+                    if (item is NCSong ncsong)
+                        VisibleSongs.Add(ncsong);
+            }
+
+            else VisibleSongs.Clear();
 
         }
 
@@ -266,6 +286,18 @@ namespace HyPlayer.Controls
                    ncsong.Album.name.ToLower().Contains(FilterBox.Text.ToLower()) ||
                    (ncsong.transname ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
                    (ncsong.alias ?? "").ToLower().Contains(FilterBox.Text.ToLower());
+        }
+        private GridLength GetSearchHeight(bool IsEnabled)
+        {
+            if (IsEnabled)
+                return new GridLength(35);
+            else return new GridLength(0);
+        }
+        public static Visibility GetSongPlayingIndication(string sid)
+        {
+            if (sid == HyPlayList.NowPlayingItem.ToNCSong().sid)
+                return Visibility.Visible;
+            else return Visibility.Collapsed;
         }
     }
 }

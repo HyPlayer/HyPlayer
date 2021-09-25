@@ -13,7 +13,7 @@
     mc:Ignorable="d">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="35" />
+            <RowDefinition Height="{x:Bind GetSearchHeight(IsSearchEnabled)}" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid ColumnSpacing="12" Visibility="{x:Bind IsSearchEnabled}">
@@ -53,12 +53,16 @@
                             <ColumnDefinition Width="100" />
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" Orientation="Horizontal">
+
                             <TextBlock
                                 x:Name="OrderId"
                                 Width="30"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
                                 Text="{x:Bind DspOrder}" />
+                            <Grid Width="35">
+                                <SymbolIcon Margin="5" x:Name="IsPlayingIndicator" Symbol="Volume" Visibility="{x:Bind hycontrols:SongsList.GetSongPlayingIndication(sid),Mode=OneWay}"/>
+                            </Grid>
                             <controls:ImageEx
                                 x:Name="ImageRect"
                                 Grid.Column="1"
