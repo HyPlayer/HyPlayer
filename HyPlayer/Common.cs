@@ -32,6 +32,7 @@ using Newtonsoft.Json;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
+using Windows.UI;
 
 #if !DEBUG
 using Microsoft.AppCenter.Crashes;
