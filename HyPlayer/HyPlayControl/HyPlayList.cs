@@ -91,8 +91,7 @@ namespace HyPlayer.HyPlayControl
         {
             get
             {
-                if (List.Count <= NowPlaying || NowPlaying == -1)
-                    return new HyPlayItem { ItemType = HyPlayItemType.Netease };
+                if (List.Count <= NowPlaying || NowPlaying == -1) return new HyPlayItem { ItemType = HyPlayItemType.Netease };
                 return List[NowPlaying];
             }
         }
@@ -195,7 +194,7 @@ namespace HyPlayer.HyPlayControl
             //歌曲崩溃了的话就是这个
             //SongMoveNext();
             //TimeSpan temppos = Player.PlaybackSession.Position;
-            Common.ShowTeachingTip("播放失败 正在重试", args?.ErrorMessage);
+            Common.ShowTeachingTip("播放失败 正在重试", args.ErrorMessage);
             if (crashedTime == NowPlayingItem.PlayItem.url)
             {
                 SongMoveNext();
@@ -265,7 +264,6 @@ namespace HyPlayer.HyPlayControl
                     NowPlayingStorageFile = await StorageFile.GetFileFromPathAsync(NowPlayingItem.PlayItem.url);
                 }
             }
-
             Player_SourceChanged(null, null);
             return NowPlayingStorageFile;
         }
@@ -337,7 +335,6 @@ namespace HyPlayer.HyPlayControl
         public static void RemoveAllSong()
         {
             List.Clear();
-            NowPlaying = -1;
             Player.Source = null;
         }
 
@@ -768,6 +765,7 @@ namespace HyPlayer.HyPlayControl
                 RemoveAllSong();
             try
             {
+
                 for (var i = 0; i < NCSongs.Count; i++)
                 {
                     var ncSong = NCSongs[i];
@@ -861,7 +859,6 @@ namespace HyPlayer.HyPlayControl
                     ncSong.Order = idx++;
                     list.Add(ncSong);
                 }
-
                 list.RemoveAll(t => t == null);
                 AppendNCSongs(list, HyPlayItemType.Netease, false);
                 return true;
@@ -873,7 +870,6 @@ namespace HyPlayer.HyPlayControl
 
             return false;
         }
-
         public static async Task<bool> AppendAlbum(string alid)
         {
             try
@@ -887,7 +883,6 @@ namespace HyPlayer.HyPlayControl
                     var ncSong = NCSong.CreateFromJson(song);
                     list.Add(ncSong);
                 }
-
                 list.RemoveAll(t => t == null);
                 AppendNCSongs(list, HyPlayItemType.Netease, false);
 
@@ -900,6 +895,7 @@ namespace HyPlayer.HyPlayControl
             }
 
             return false;
+
         }
 
         public static async Task<bool> AppendRadioList(string rdid, bool asc = false)

@@ -18,14 +18,21 @@ using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
 using Windows.Storage;
-using Windows.UI;
 using Windows.UI.Core;
-using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using HyPlayer.Classes;
+using HyPlayer.Controls;
+using HyPlayer.Pages;
+using Kawazu;
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
+using Windows.UI;
 
 #if !DEBUG
 using Microsoft.AppCenter.Crashes;
@@ -94,8 +101,8 @@ namespace HyPlayer
         {
             Invoke(() =>
             {
-                GlobalTip.Title = title ?? "";
-                GlobalTip.Subtitle = subtitle ?? "";
+                GlobalTip.Title = title;
+                GlobalTip.Subtitle = subtitle;
                 if (!GlobalTip.IsOpen)
                 {
                     GlobalTip.IsOpen = true;

@@ -1,13 +1,12 @@
 ﻿#region
 
+using HyPlayer.HyPlayControl;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.DataTransfer;
-using Windows.Graphics.Imaging;
+using Windows.Foundation;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
@@ -25,8 +24,11 @@ using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
-using Buffer = Windows.Storage.Streams.Buffer;
 using Point = Windows.Foundation.Point;
+using Buffer = Windows.Storage.Streams.Buffer;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.Graphics.Imaging;
+using System.Text;
 
 #endregion
 
@@ -838,6 +840,11 @@ namespace HyPlayer.Pages
         {
             if (Common.Setting.lyricColor != 0) return Common.Setting.lyricColor == 2;
             if (HyPlayList.NowPlayingItem.PlayItem == null) return false;
+            
+            if (HyPlayList.NowPlayingItem.PlayItem == null)
+            {
+                return false;
+            }
             if (lastSongUrlForBrush == HyPlayList.NowPlayingItem.PlayItem.url) return ForegroundAlbumBrush.Color.R == 0;
             try
             {

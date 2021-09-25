@@ -11,6 +11,12 @@ using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.Classes;
+using HyPlayer.Controls;
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json.Linq;
+using System.Collections.ObjectModel;
+using System.Globalization;
 
 #endregion
 
@@ -34,6 +40,7 @@ namespace HyPlayer.Pages
             NavigationViewSelector.SelectedItem = NavigationViewSelector.MenuItems[0];
             SongResults = new ObservableCollection<NCSong>();
             NavigationCacheMode = NavigationCacheMode.Required;
+            SongResults = new ObservableCollection<NCSong>();
         }
 
         public void Dispose()
@@ -114,12 +121,6 @@ namespace HyPlayer.Pages
                         break;
                     case "1009":
                         LoadRadioResult(json);
-                        break;
-                    case "1002":
-                        LoadUserResult(json);
-                        break;
-                    case "1006":
-                        LoadLyricResult(json);
                         break;
                 }
             }
@@ -208,11 +209,11 @@ namespace HyPlayer.Pages
                         LineOne = pljs["dj"]["nickname"].ToString(),
                         LineTwo = pljs["desc"].ToString(),
                         LineThree = pljs["rcmdText"].ToString(),
-                        ResourceId = "rd" + pljs["id"],
-                        CoverUri = pljs["picUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                        ResourceId = "rd" + json["id"],
+                        CoverUri = json["picUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
                         Order = i++
                     });
-            if (json["result"]["djRadiosCount"].ToObject<int>() >= (page + 1) * 30)
+            if (int.Parse(json["result"]["djRadiosCount"].ToString()) >= (page + 1) * 30)
                 NextPage.Visibility = Visibility.Visible;
             else
                 NextPage.Visibility = Visibility.Collapsed;
@@ -225,7 +226,6 @@ namespace HyPlayer.Pages
         private void Btn_Click(object sender, RoutedEventArgs e)
         {
             Text = (sender as Button).Content.ToString();
-            SearchKeywordBox.Text = Text;
             LoadResult();
         }
 
@@ -249,7 +249,7 @@ namespace HyPlayer.Pages
                     CoverUri = pljs["coverImgUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
                     Order = i++
                 });
-            if (json["result"]["playlistCount"].ToObject<int>() >= (page + 1) * 30)
+            if (int.Parse(json["result"]["playlistCount"].ToString()) >= (page + 1) * 30)
                 NextPage.Visibility = Visibility.Visible;
             else
                 NextPage.Visibility = Visibility.Collapsed;
@@ -279,7 +279,7 @@ namespace HyPlayer.Pages
                     CoverUri = singerjson["img1v1Url"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
                     Order = i++
                 });
-            if (json["result"]["artistCount"].ToObject<int>() >= (page + 1) * 30)
+            if (int.Parse(json["result"]["artistCount"].ToString()) >= (page + 1) * 30)
                 NextPage.Visibility = Visibility.Visible;
             else
                 NextPage.Visibility = Visibility.Collapsed;
@@ -311,7 +311,7 @@ namespace HyPlayer.Pages
                     CoverUri = albumjson["picUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
                     Order = i++
                 });
-            if (json["result"]["albumCount"].ToObject<int>() >= (page + 1) * 30)
+            if (int.Parse(json["result"]["albumCount"].ToString()) >= (page + 1) * 30)
                 NextPage.Visibility = Visibility.Visible;
             else
                 NextPage.Visibility = Visibility.Collapsed;
@@ -339,7 +339,7 @@ namespace HyPlayer.Pages
                     SongResults.Add(ncSong);
                 }
 
-                if (json["result"]["songCount"].ToObject<int>() >= (page + 1) * 30)
+                if (int.Parse(json["result"]["songCount"].ToString()) >= (page + 1) * 30)
                     NextPage.Visibility = Visibility.Visible;
                 else
                     NextPage.Visibility = Visibility.Collapsed;
