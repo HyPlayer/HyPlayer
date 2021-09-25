@@ -26,6 +26,9 @@ using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using Point = Windows.Foundation.Point;
 using Buffer = Windows.Storage.Streams.Buffer;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.Graphics.Imaging;
+using System.Text;
 
 #endregion
 
@@ -834,9 +837,10 @@ namespace HyPlayer.Pages
         }
 
         private async Task<bool> IsBrightAsync()
+        {
             if (Common.Setting.lyricColor != 0) return Common.Setting.lyricColor == 2;
             if (HyPlayList.NowPlayingItem.PlayItem == null) return false;
-            }
+            
             if (HyPlayList.NowPlayingItem.PlayItem == null)
             {
                 return false;

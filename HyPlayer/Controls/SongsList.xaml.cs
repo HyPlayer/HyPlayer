@@ -238,6 +238,7 @@ namespace HyPlayer.Controls
             {
                 if (Filter(song))
                     VisibleSongs.Add(song);
+            }
         }
 
         private bool Filter(NCSong ncsong)
