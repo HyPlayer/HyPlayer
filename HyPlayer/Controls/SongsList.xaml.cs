@@ -102,7 +102,7 @@ namespace HyPlayer.Controls
         private void Songs_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             VisibleSongs.Clear();
-            foreach (var song in Songs) VisibleSongs.Add(song);
+            FilterBox_OnTextChanged(sender, null);
         }
 
         private async void SongContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -233,10 +233,22 @@ namespace HyPlayer.Controls
 
         private void FilterBox_OnTextChanged(object sender, RoutedEventArgs e)
         {
-            VisibleSongs.Clear();
-            foreach (var song in Songs)
-                if (Filter(song))
-                    VisibleSongs.Add(song);
+            int vpos = -1;
+            for (int i = 0; i < Songs.Count; i++)
+            {
+                if (string.IsNullOrWhiteSpace(FilterBox.Text) || Filter(Songs[i]))
+                {
+                    vpos++;
+                    if (!VisibleSongs.Contains(Songs[i]))
+                    {
+                        VisibleSongs.Insert(vpos, Songs[i]);
+                    }
+                }
+                else
+                {
+                    VisibleSongs.Remove(Songs[i]);
+                }
+            }
         }
 
         private bool Filter(NCSong ncsong)
