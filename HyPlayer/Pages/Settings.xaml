@@ -196,7 +196,7 @@
                 </StackPanel>
             </ScrollViewer>
         </PivotItem>
-        <PivotItem FontFamily="Thick" Header="实验室">
+        <PivotItem FontFamily="Thick" Header="实验室🧪">
             <ScrollViewer VerticalScrollMode="Enabled">
                 <StackPanel Orientation="Vertical">
                     <Grid MaxWidth="1000">
@@ -233,6 +233,10 @@
                         x:Name="LazySongUrlGetCheck"
                         Content="是否在播放时才获取播放链接"
                         IsChecked="{x:Bind hyplayer:Common.Setting.songUrlLazyGet, Mode=TwoWay}" />-->
+                    <CheckBox
+                        x:Name="XboxPointerSet"
+                        Content="Xbox上是否隐藏指针（可能减小掉后台概率）"
+                        IsChecked="{x:Bind hyplayer:Common.Setting.xboxHidePointer, Mode=TwoWay}" />
                     <CheckBox
                         x:Name="CBSongCacheEnable"
                         Content="是否开启播放缓存 (可能造成播放前空白)"
@@ -433,7 +437,7 @@
                                 FontSize="15"
                                 FontWeight="Light"
                                 Foreground="Gray">
-                                跨越，跨越，不择手段地跨越！
+                                Solidarity Forever~
                             </TextBlock>
                             <RichTextBlock>
                                 <Paragraph>

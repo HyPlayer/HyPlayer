@@ -324,7 +324,11 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-
+        public bool xboxHidePointer
+        {
+            get => GetSettings("xboxHidePointer", false);
+            set => ApplicationData.Current.LocalSettings.Values["xboxHidePointer"] = value;
+        }
         public int Volume
         {
             get
