@@ -1,15 +1,16 @@
-﻿using System;
+﻿#region
+
 using System.Net;
-using System.Threading.Tasks;
 using Windows.Storage;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Navigation;
-using HyPlayer.HyPlayControl;
-using HyPlayer.Pages;
-using Kawazu;
-using HyPlayer.Controls;
-using HyPlayer.Classes;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Navigation;
+using HyPlayer.Classes;
+using HyPlayer.Controls;
+using HyPlayer.Pages;
+
+#endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x804 上介绍了“空白页”项模板
 
@@ -32,6 +33,7 @@ namespace HyPlayer
                 ElementSoundPlayer.State = ElementSoundPlayerState.Off;
                 ElementSoundPlayer.SpatialAudioMode = ElementSpatialAudioMode.Off;
             }
+
             NavigationCacheMode = NavigationCacheMode.Required;
             InitializeComponent();
         }
@@ -57,13 +59,13 @@ namespace HyPlayer
             }
         }
 
-        private void Page_PointerEntered(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+        private void Page_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
             if (Common.PageExpandedPlayer != null)
                 Common.PageExpandedPlayer.ExpandedPlayer_OnPointerEntered(sender, e);
         }
 
-        private void Page_PointerExited(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+        private void Page_PointerExited(object sender, PointerRoutedEventArgs e)
         {
             if (Common.PageExpandedPlayer != null)
                 Common.PageExpandedPlayer.ExpandedPlayer_OnPointerExited(sender, e);

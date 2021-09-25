@@ -1,4 +1,6 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,6 +13,8 @@ using HyPlayer.Classes;
 using HyPlayer.Pages;
 using NeteaseCloudMusicApi;
 
+#endregion
+
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
 namespace HyPlayer.Controls
@@ -19,7 +23,7 @@ namespace HyPlayer.Controls
     {
         private readonly BitmapImage AvatarSource;
         private readonly Uri AvatarUri;
-        private Comment comment;
+        private readonly Comment comment;
         private string time;
 
         public SingleComment(Comment cmt)

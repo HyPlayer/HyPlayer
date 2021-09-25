@@ -1,67 +1,63 @@
 ﻿<UserControl
+    d:DesignHeight="70"
+    d:DesignWidth="700"
+    mc:Ignorable="d"
     x:Class="HyPlayer.Controls.SingleDownload"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:hyplayer="using:HyPlayer"
-    mc:Ignorable="d"
-    d:DesignHeight="70"
-    d:DesignWidth="700">
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Grid RightTapped="{x:Bind hyplayer:Common.UIElement_RightTapped}">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition
-                Width="30" />
-            <ColumnDefinition
-                Width="*" />
-            <ColumnDefinition
-                Width="200" />
-            <ColumnDefinition
-                Width="100" />
+            <ColumnDefinition Width="30" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="200" />
+            <ColumnDefinition Width="100" />
         </Grid.ColumnDefinitions>
-        <TextBlock
-            Grid.Column="0"
-            Text="{x:Bind order}" />
-        <TextBlock
-            Grid.Column="1"
-            x:Name="DName" />
+        <TextBlock Grid.Column="0" Text="{x:Bind order}" />
+        <TextBlock Grid.Column="1" x:Name="DName" />
         <StackPanel
             Grid.Column="2"
             Orientation="Vertical"
-            Spacing="15"
-            Padding="0,15,0,0">
-            <ProgressBar
-                x:Name="DProg" />
-            <TextBlock
-                x:Name="DProgText" />
+            Padding="0,15,0,0"
+            Spacing="15">
+            <ProgressBar x:Name="DProg" />
+            <TextBlock x:Name="DProgText" />
         </StackPanel>
         <StackPanel
             Grid.Column="3"
+            HorizontalAlignment="Center"
             Orientation="Horizontal"
-            Spacing="15"
-            HorizontalAlignment="Center">
-            <Button Style="{StaticResource ButtonRevealStyle}" 
+            Spacing="15">
+            <Button
                 Click="ButtonPause_Click"
-                ToolTipService.ToolTip="暂停下载"
-             >
+                Style="{StaticResource ButtonRevealStyle}"
+                ToolTipService.ToolTip="暂停下载">
                 <Button.Content>
-                    <SymbolIcon Symbol="Pause"/>
+                    <SymbolIcon Symbol="Pause" />
                 </Button.Content>
             </Button>
-            <Button Style="{StaticResource ButtonRevealStyle}" 
+            <Button
                 Click="ButtonStop_Click"
-                ToolTipService.ToolTip="停止下载"
-               >
+                Style="{StaticResource ButtonRevealStyle}"
+                ToolTipService.ToolTip="停止下载">
                 <Button.Content>
-                    <SymbolIcon Symbol="Stop"/>
+                    <SymbolIcon Symbol="Stop" />
                 </Button.Content>
             </Button>
         </StackPanel>
         <Grid.ContextFlyout>
             <MenuFlyout>
-                <MenuFlyoutItem Style="{StaticResource MenuFlyoutItemRevealStyle}" Text="暂停" Click="ButtonPause_Click"/>
-                <MenuFlyoutItem Style="{StaticResource MenuFlyoutItemRevealStyle}" Text="停止" Click="ButtonStop_Click"/>
+                <MenuFlyoutItem
+                    Click="ButtonPause_Click"
+                    Style="{StaticResource MenuFlyoutItemRevealStyle}"
+                    Text="暂停" />
+                <MenuFlyoutItem
+                    Click="ButtonStop_Click"
+                    Style="{StaticResource MenuFlyoutItemRevealStyle}"
+                    Text="停止" />
             </MenuFlyout>
         </Grid.ContextFlyout>
     </Grid>

@@ -1,31 +1,31 @@
 ﻿<Page
+    mc:Ignorable="d"
     x:Class="HyPlayer.Pages.Home"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel
-            x:Name="MainContainer"
-            Padding="15"
             Orientation="Vertical"
-            Spacing="10">
+            Padding="15"
+            Spacing="10"
+            x:Name="MainContainer">
             <!--  欢迎语  -->
             <StackPanel Orientation="Vertical">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock FontSize="35" Text="Hi~ " />
-                    <TextBlock x:Name="TbHelloUserName" FontSize="35" />
+                    <TextBlock FontSize="35" x:Name="TbHelloUserName" />
                 </StackPanel>
                 <TextBlock
-                    x:Name="TbRamdomWelcome"
                     FontSize="15"
-                    Text="用音乐开启新的一天吧" />
+                    Text="用音乐开启新的一天吧"
+                    x:Name="TbRamdomWelcome" />
             </StackPanel>
             <StackPanel
-                x:Name="LoginedContent"
                 Spacing="12"
-                Visibility="Collapsed">
+                Visibility="Collapsed"
+                x:Name="LoginedContent">
                 <!--  每日推荐  -->
                 <!-- 不加载日推
                 <StackPanel Orientation="Vertical" CornerRadius="8"
@@ -42,46 +42,48 @@
                 -->
                 <!--  功能按钮  -->
                 <Grid
-                    Height="100"
                     Background="{ThemeResource SystemControlBackgroundListLowBrush}"
-                    CornerRadius="8">
-                    <Grid Padding="1" ColumnSpacing="15">
+                    CornerRadius="8"
+                    Height="100">
+                    <Grid ColumnSpacing="15" Padding="1">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition MinWidth="230" />
                             <ColumnDefinition MinWidth="230" />
                         </Grid.ColumnDefinitions>
-                        <Button Style="{StaticResource ButtonRevealStyle}" 
-                            Grid.Column="0"
-                            Padding="15"
-                            HorizontalAlignment="Center"
+                        <Button
                             Click="Button_Click_1"
-                            CornerRadius="8">
+                            CornerRadius="8"
+                            Grid.Column="0"
+                            HorizontalAlignment="Center"
+                            Padding="15"
+                            Style="{StaticResource ButtonRevealStyle}">
                             <StackPanel Orientation="Horizontal" Spacing="10">
                                 <FontIcon
                                     FontFamily="{StaticResource SymbolThemeFontFamily}"
                                     FontSize="45"
                                     Glyph="&#xE93E;" />
                                 <TextBlock
-                                    VerticalAlignment="Center"
                                     FontSize="35"
-                                    Text="私人 FM" />
+                                    Text="私人 FM"
+                                    VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
-                        <Button Style="{StaticResource ButtonRevealStyle}" 
-                            Grid.Column="1"
-                            Padding="15"
-                            HorizontalAlignment="Center"
+                        <Button
                             Click="Button_Click_2"
-                            CornerRadius="8">
+                            CornerRadius="8"
+                            Grid.Column="1"
+                            HorizontalAlignment="Center"
+                            Padding="15"
+                            Style="{StaticResource ButtonRevealStyle}">
                             <StackPanel Orientation="Horizontal" Spacing="10">
                                 <FontIcon
                                     FontFamily="{StaticResource SymbolThemeFontFamily}"
                                     FontSize="45"
                                     Glyph="&#xE95E;" />
                                 <TextBlock
-                                    VerticalAlignment="Center"
                                     FontSize="35"
-                                    Text="心动模式" />
+                                    Text="心动模式"
+                                    VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
                     </Grid>
@@ -89,16 +91,16 @@
 
                 <!--  推荐歌单  -->
                 <StackPanel
-                    x:Name="FirstGrid"
-                    Grid.Row="0"
-                    Grid.Column="0"
                     Background="{ThemeResource SystemControlBackgroundListLowBrush}"
                     CornerRadius="8"
-                    Orientation="Vertical">
+                    Grid.Column="0"
+                    Grid.Row="0"
+                    Orientation="Vertical"
+                    x:Name="FirstGrid">
                     <TextBlock
-                        Margin="5"
                         FontFamily="Black"
                         FontSize="30"
+                        Margin="5"
                         Text="推荐歌单" />
                     <ScrollViewer
                         Height="250"
@@ -107,9 +109,9 @@
                         VerticalScrollBarVisibility="Disabled"
                         VerticalScrollMode="Disabled">
                         <StackPanel
-                            x:Name="RecommendSongListContainer"
                             Orientation="Horizontal"
-                            Spacing="15" />
+                            Spacing="15"
+                            x:Name="RecommendSongListContainer" />
                     </ScrollViewer>
                 </StackPanel>
 
@@ -119,8 +121,8 @@
                     CornerRadius="8"
                     Orientation="Vertical">
                     <TextBlock
-                        Margin="5"
                         FontSize="30"
+                        Margin="5"
                         Text="榜单" />
                     <ScrollViewer
                         Height="250"
@@ -129,36 +131,36 @@
                         VerticalScrollBarVisibility="Disabled"
                         VerticalScrollMode="Disabled">
                         <StackPanel
-                            x:Name="RankPlayList"
                             Orientation="Horizontal"
-                            Spacing="15" />
+                            Spacing="15"
+                            x:Name="RankPlayList" />
                     </ScrollViewer>
                 </StackPanel>
             </StackPanel>
 
             <StackPanel
-                x:Name="UnLoginedContent"
                 HorizontalAlignment="Center"
+                Orientation="Vertical"
                 VerticalAlignment="Center"
-                Orientation="Vertical">
+                x:Name="UnLoginedContent">
                 <TextBlock
-                    HorizontalAlignment="Center"
                     FontSize="35"
+                    HorizontalAlignment="Center"
                     Text="请先点击侧边栏登录以获得更多个性化推荐功能" />
                 <TextBlock
-                    Padding="15,0,0,0"
                     FontFamily="Microsoft YaHei UI"
                     FontSize="40"
+                    Padding="15,0,0,0"
                     Text="排行榜" />
                 <ScrollViewer
                     HorizontalScrollBarVisibility="Auto"
                     HorizontalScrollMode="Enabled"
                     VerticalScrollMode="Disabled">
                     <StackPanel
-                        x:Name="RankList"
-                        Padding="0,0,0,15"
                         Orientation="Horizontal"
-                        Spacing="15" />
+                        Padding="0,0,0,15"
+                        Spacing="15"
+                        x:Name="RankList" />
                 </ScrollViewer>
             </StackPanel>
 

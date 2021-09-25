@@ -1,4 +1,15 @@
-﻿using System;
+﻿#region
+
+using HyPlayer.Classes;
+using HyPlayer.Controls;
+using HyPlayer.HyPlayControl;
+using HyPlayer.Pages;
+using Kawazu;
+using Microsoft.Toolkit.Uwp.UI;
+using Microsoft.UI.Xaml.Controls;
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -20,9 +31,13 @@ using NeteaseCloudMusicApi;
 using Newtonsoft.Json;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Controls;
-using Windows.UI;
-using System.Collections.ObjectModel;
+using Windows.UI.Xaml.Input;
+
+#if !DEBUG
+using Microsoft.AppCenter.Crashes;
+#endif
+
+#endregion
 
 namespace HyPlayer
 {
@@ -41,18 +56,13 @@ namespace HyPlayer
         public static bool ShowLyricTrans = true;
         public static Dictionary<string, object> GLOBAL = new Dictionary<string, object>();
         public static List<string> LikedSongs = new List<string>();
-        public static KawazuConverter KawazuConv = null;
+        public static KawazuConverter KawazuConv;
         public static List<NCPlayList> MySongLists = new List<NCPlayList>();
         public static readonly Stack<NavigationHistoryItem> NavigationHistory = new Stack<NavigationHistoryItem>();
         public static bool isExpanded = false;
         public static TeachingTip GlobalTip;
 
-        public class NavigationHistoryItem
-        {
-            public Type PageType;
-            public object Paratmers;
-            public object Item;
-        }
+        public static bool NavigatingBack;
 
         public static async void Invoke(Action action, CoreDispatcherPriority Priority = CoreDispatcherPriority.Normal)
         {
@@ -61,11 +71,15 @@ namespace HyPlayer
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority,
                     () => { action(); });
             }
+#if DEBUG
+            catch
+            {
+#else
             catch (Exception e)
             {
-#if RELEASE
                 Crashes.TrackError(e);
 #endif
+
                 /*
                 Invoke((async () =>
                 {
@@ -84,12 +98,14 @@ namespace HyPlayer
 
         public static void ShowTeachingTip(string title, string subtitle = "")
         {
-            Common.Invoke(() =>
+            Invoke(() =>
             {
                 GlobalTip.Title = title;
                 GlobalTip.Subtitle = subtitle;
                 if (!GlobalTip.IsOpen)
+                {
                     GlobalTip.IsOpen = true;
+                }
                 else
                 {
                     GlobalTip.IsOpen = false;
@@ -134,7 +150,19 @@ namespace HyPlayer
                     NavigatePage(typeof(RadioPage), resourceId.Substring(2));
                     break;
                 case "ar":
-                    NavigatePage(typeof(ArtistPage),resourceId.Substring(2));
+                    NavigatePage(typeof(ArtistPage), resourceId.Substring(2));
+                    break;
+                case "us":
+                    NavigatePage(typeof(Me), resourceId.Substring(2));
+                    break;
+                case "ns":
+                    Invoke(async () =>
+                    {
+                        await HyPlayList.AppendNCSource(resourceId);
+                        HyPlayList.SongAppendDone();
+                        HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => "ns" + t.PlayItem.id == resourceId));
+                    });
+
                     break;
             }
         }
@@ -146,11 +174,11 @@ namespace HyPlayer
             PageExpandedPlayer?.Dispose();
             PageExpandedPlayer = null;
             PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));
-            _ = Microsoft.Toolkit.Uwp.UI.ImageCache.Instance.ClearAsync();
+            _ = ImageCache.Instance.ClearAsync();
             KawazuConv = null;
         }
 
-        public static void UIElement_RightTapped(object sender, Windows.UI.Xaml.Input.RightTappedRoutedEventArgs e)
+        public static void UIElement_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
             var element = sender as UIElement;
             try
@@ -177,9 +205,9 @@ namespace HyPlayer
                     bak = NavigationHistory.Peek();
                 }
 
-                Common.BaseFrame?.Navigate(bak.PageType, bak.Paratmers);
+                BaseFrame?.Navigate(bak.PageType, bak.Paratmers);
                 NavigatingBack = true;
-                Common.PageBase.NavMain.SelectedItem = bak.Item;
+                PageBase.NavMain.SelectedItem = bak.Item;
                 NavigatingBack = false;
                 GC.Collect();
             }
@@ -188,17 +216,22 @@ namespace HyPlayer
             }
         }
 
-        public static bool NavigatingBack = false;
+        public class NavigationHistoryItem
+        {
+            public object Item;
+            public Type PageType;
+            public object Paratmers;
+        }
     }
 
     internal class ColorHelper
     {
         public static Color GetReversedColor(Color color)
         {
-            double grayLevel = (0.299 * color.R + 0.587 * color.G + 0.114 * color.B) / 255;
+            var grayLevel = (0.299 * color.R + 0.587 * color.G + 0.114 * color.B) / 255;
             if (grayLevel > 0.1)
                 return Colors.Black;
-            else return Colors.White;
+            return Colors.White;
         }
     }
 
@@ -208,7 +241,7 @@ namespace HyPlayer
         {
             get
             {
-                int ret = 0;
+                var ret = 0;
                 if (ApplicationData.Current.LocalSettings.Values.ContainsKey("lyricSize"))
                     if (int.TryParse(ApplicationData.Current.LocalSettings.Values["lyricSize"].ToString(), out ret))
                         return ret;
@@ -223,15 +256,15 @@ namespace HyPlayer
 
         public bool lyricDropshadow
         {
-            get { return GetSettings<bool>("lyricDropshadow", false); }
-            set { ApplicationData.Current.LocalSettings.Values["lyricDropshadow"] = value; }
+            get => GetSettings("lyricDropshadow", false);
+            set => ApplicationData.Current.LocalSettings.Values["lyricDropshadow"] = value;
         }
 
 
         public int lyricColor
         {
-            get { return GetSettings("lyricColor", 0); }
-            set { ApplicationData.Current.LocalSettings.Values["lyricColor"] = value; }
+            get => GetSettings("lyricColor", 0);
+            set => ApplicationData.Current.LocalSettings.Values["lyricColor"] = value;
         }
 
         public bool albumRotate
@@ -254,7 +287,7 @@ namespace HyPlayer
 
         public int romajiSize
         {
-            get { return GetSettings<int>("romajiSize", 15); }
+            get => GetSettings("romajiSize", 15);
             set
             {
                 ApplicationData.Current.LocalSettings.Values["romajiSize"] = value;
@@ -264,7 +297,7 @@ namespace HyPlayer
 
         public bool lyricAlignment
         {
-            get { return GetSettings<bool>("lyricAlignment", false); }
+            get => GetSettings("lyricAlignment", false);
             set
             {
                 ApplicationData.Current.LocalSettings.Values["lyricAlignment"] = value;
@@ -274,7 +307,7 @@ namespace HyPlayer
 
         public bool ancientSMTC
         {
-            get { return GetSettings<bool>("ancientSMTC", false); }
+            get => GetSettings("ancientSMTC", false);
             set
             {
                 ApplicationData.Current.LocalSettings.Values["ancientSMTC"] = value;
@@ -284,7 +317,7 @@ namespace HyPlayer
 
         public string audioRate
         {
-            get { return GetSettings<string>("audioRate", "320000"); }
+            get => GetSettings("audioRate", "320000");
             set
             {
                 ApplicationData.Current.LocalSettings.Values["audioRate"] = value;
@@ -298,7 +331,7 @@ namespace HyPlayer
             {
                 try
                 {
-                    return GetSettings<int>("Volume", 50);
+                    return GetSettings("Volume", 50);
                 }
                 catch
                 {
@@ -315,7 +348,7 @@ namespace HyPlayer
             {
                 try
                 {
-                    return GetSettings<string>("downloadDir", KnownFolders.MusicLibrary
+                    return GetSettings("downloadDir", KnownFolders.MusicLibrary
                         .CreateFolderAsync("HyPlayer", CreationCollisionOption.OpenIfExists).AsTask().Result.Path);
                 }
                 catch
@@ -336,7 +369,7 @@ namespace HyPlayer
             {
                 try
                 {
-                    return GetSettings<string>("cacheDir", ApplicationData.Current.LocalCacheFolder
+                    return GetSettings("cacheDir", ApplicationData.Current.LocalCacheFolder
                         .CreateFolderAsync("songCache", CreationCollisionOption.OpenIfExists).AsTask().GetAwaiter()
                         .GetResult().Path);
                 }
@@ -354,7 +387,7 @@ namespace HyPlayer
 
         public bool fadeInOut
         {
-            get { return GetSettings<bool>("FadeInOut", false); }
+            get => GetSettings("FadeInOut", false);
             set
             {
                 ApplicationData.Current.LocalSettings.Values["FadeInOut"] = value;
@@ -364,7 +397,7 @@ namespace HyPlayer
 
         public bool fadeInOutPause
         {
-            get { return GetSettings<bool>("FadeInOutPause", false); }
+            get => GetSettings("FadeInOutPause", false);
             set
             {
                 ApplicationData.Current.LocalSettings.Values["FadeInOutPause"] = value;
@@ -374,7 +407,7 @@ namespace HyPlayer
 
         public bool notClearMode
         {
-            get { return GetSettings<bool>("notClearMode", true); }
+            get => GetSettings("notClearMode", true);
             set
             {
                 ApplicationData.Current.LocalSettings.Values["notClearMode"] = value;
@@ -418,7 +451,7 @@ namespace HyPlayer
 
         public bool toastLyric
         {
-            get { return GetSettings<bool>("toastLyric", false); }
+            get => GetSettings("toastLyric", false);
             set
             {
                 ApplicationData.Current.LocalSettings.Values["toastLyric"] = value;
@@ -428,7 +461,7 @@ namespace HyPlayer
 
         public bool expandAnimation
         {
-            get { return GetSettings<bool>("expandAnimation", true); }
+            get => GetSettings("expandAnimation", true);
             set
             {
                 ApplicationData.Current.LocalSettings.Values["expandAnimation"] = value ? "true" : "false";
@@ -438,7 +471,7 @@ namespace HyPlayer
 
         public bool uiSound
         {
-            get { return GetSettings<bool>("uiSound", false); }
+            get => GetSettings("uiSound", false);
             set
             {
                 ApplicationData.Current.LocalSettings.Values["uiSound"] = value;
@@ -448,7 +481,7 @@ namespace HyPlayer
 
         public int songRollType
         {
-            get { return GetSettings<int>("songRollType", 0); }
+            get => GetSettings("songRollType", 0);
             set
             {
                 ApplicationData.Current.LocalSettings.Values["songRollType"] = value;
@@ -458,7 +491,7 @@ namespace HyPlayer
 
         public bool songUrlLazyGet
         {
-            get { return GetSettings<bool>("songUrlLazyGet", true); }
+            get => GetSettings("songUrlLazyGet", true);
             set
             {
                 ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"] = value;
@@ -468,7 +501,7 @@ namespace HyPlayer
 
         public bool enableCache
         {
-            get { return GetSettings<bool>("enableCache", false); }
+            get => GetSettings("enableCache", false);
             set
             {
                 ApplicationData.Current.LocalSettings.Values["enableCache"] = value;
@@ -478,7 +511,7 @@ namespace HyPlayer
 
         public bool highQualityCoverInSMTC
         {
-            get { return GetSettings<bool>("highQualityCoverInSMTC", false); }
+            get => GetSettings("highQualityCoverInSMTC", false);
             set
             {
                 ApplicationData.Current.LocalSettings.Values["highQualityCoverInSMTC"] = value;
@@ -489,7 +522,7 @@ namespace HyPlayer
         public int themeRequest
         {
             // 0 - 未设置   1 - 浅色  2 - 深色
-            get { return GetSettings<int>("themeRequest", 0); }
+            get => GetSettings("themeRequest", 0);
             set
             {
                 ApplicationData.Current.LocalSettings.Values["themeRequest"] = value;
@@ -499,7 +532,7 @@ namespace HyPlayer
 
         public int expandedCoverShadowDepth
         {
-            get => GetSettings<int>("expandedCoverShadowDepth", 4);
+            get => GetSettings("expandedCoverShadowDepth", 4);
             set
             {
                 ApplicationData.Current.LocalSettings.Values["expandedCoverShadowDepth"] = value;
@@ -525,18 +558,14 @@ namespace HyPlayer
                     !string.IsNullOrEmpty(ApplicationData.Current.LocalSettings.Values[propertyName].ToString()))
                 {
                     if (typeof(T).ToString() == "System.Boolean")
-                    {
                         return (T)(object)bool.Parse(ApplicationData.Current.LocalSettings.Values[propertyName]
                             .ToString());
-                    }
 
                     //超长的IF
                     return (T)ApplicationData.Current.LocalSettings.Values[propertyName];
                 }
-                else
-                {
-                    return defaultValue;
-                }
+
+                return defaultValue;
             }
             catch
             {

@@ -1,4 +1,6 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
@@ -6,6 +8,8 @@ using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using TagLib;
+
+#endregion
 
 namespace HyPlayer.Classes
 {
@@ -172,7 +176,7 @@ namespace HyPlayer.Classes
                     format = pi.subext.ToLower()
                 };
                 key.artist = pi.Artist.Select(t => new List<object> { t.name, int.Parse(t.id) }).ToList();
-                return TrySetMusicInfo(tag,key);
+                return TrySetMusicInfo(tag, key);
             }
             catch
             {

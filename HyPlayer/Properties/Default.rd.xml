@@ -16,16 +16,16 @@
 -->
 
 <Directives xmlns="http://schemas.microsoft.com/netfx/2013/01/metadata">
-  <Application>
-    <!--
-      Name="*Application*" 的程序集元素将应用到应用程序包中的
- 所有程序集。星号不是通配符。
--->
-    <Assembly Name="*Application*" Dynamic="Required All" />
-    
-    
-    <!-- 在此处添加应用程序特定的运行时指令。-->
+    <Application>
+        <!--
+          Name="*Application*" 的程序集元素将应用到应用程序包中的
+     所有程序集。星号不是通配符。
+    -->
+        <Assembly Name="*Application*" Dynamic="Required All"/>
 
 
-  </Application>
+        <!-- 在此处添加应用程序特定的运行时指令。-->
+
+
+    </Application>
 </Directives>

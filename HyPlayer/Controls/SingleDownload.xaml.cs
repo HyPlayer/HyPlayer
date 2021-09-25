@@ -1,9 +1,10 @@
-﻿using System;
+﻿#region
+
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using HyPlayer.HyPlayControl;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Input;
+
+#endregion
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 

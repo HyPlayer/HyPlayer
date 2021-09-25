@@ -59,11 +59,15 @@
             </NavigationView.MenuItems>
             <Grid>
                 <Grid Margin="0,0,0,150" VerticalAlignment="Stretch">
-                    <hycontrol:SimpleLinerList Margin="30" x:Name="SearchResultContainer" />
+                    <hycontrol:SimpleLinerList x:Name="SearchResultContainer" Margin="0,30,0,0" />
                     <hycontrol:SongsList
-                        Margin="30"
-                        Songs="{x:Bind SongResults}"
-                        x:Name="SongsSearchResultContainer" />
+                        x:Name="SongsSearchResultContainer"
+                        Margin="0,30,0,0"
+                        Songs="{x:Bind SongResults}" />
+                    <TextBlock
+                        x:Name="TBNoRes"
+                        Margin="0,30,0,0"
+                        Text="没有搜索到相关内容" />
                 </Grid>
                 <StackPanel
                     HorizontalAlignment="Center"

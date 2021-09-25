@@ -1,12 +1,19 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Media;
 using Windows.Media.Playback;
+using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
+using Windows.System.Profile;
 using Windows.UI.Notifications;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -21,10 +28,8 @@ using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
 using Microsoft.Toolkit.Uwp.Notifications;
 using NeteaseCloudMusicApi;
-using Windows.Storage;
-using System.IO;
-using Windows.Storage.Streams;
-using System.Threading.Tasks;
+
+#endregion
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -33,10 +38,11 @@ namespace HyPlayer.Controls
     public sealed partial class PlayBar : UserControl
     {
         private bool canslide;
+        public bool FadeSettedVolume;
 
         public PlayMode NowPlayType = PlayMode.DefaultRoll;
+
         private bool realSelectSong;
-        public bool FadeSettedVolume = false;
         /*
         private Storyboard TbSongNameScrollStoryBoard;
         private double lastOffsetX;
@@ -54,7 +60,7 @@ namespace HyPlayer.Controls
             //HyPlayList.OnPlayPositionChange += UpdateMSTC;
             HyPlayList.OnPlayListAddDone += HyPlayList_OnPlayListAdd;
             AlbumImage.Source = new BitmapImage(new Uri("ms-appx:Assets/icon.png"));
-            if (Windows.System.Profile.AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
+            if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
                 ButtonDesktopLyrics.Visibility = Visibility.Collapsed;
             InitializeDesktopLyric();
             Common.Invoke(async () =>
@@ -62,7 +68,7 @@ namespace HyPlayer.Controls
                 try
                 {
                     var list = await HistoryManagement.GetcurPlayingListHistory();
-                    await HyPlayList.AppendNCSongs(list);
+                    HyPlayList.AppendNCSongs(list);
                     if (list.Count > 0)
                     {
                         int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"].ToString(),
@@ -92,7 +98,6 @@ namespace HyPlayer.Controls
             Storyboard.SetTargetProperty(verticalAnimation, "Horizontalofset");
             TbSongNameScrollStoryBoard.Begin();
             */
-
         }
 
 
@@ -184,7 +189,6 @@ namespace HyPlayer.Controls
 
         private void FreshDesktopLyric(TimeSpan ts)
         {
-
             var data = new NotificationData
             {
                 SequenceNumber = 0
@@ -193,15 +197,17 @@ namespace HyPlayer.Controls
             data.Values["PureLyric"] = HyPlayList.Lyrics[HyPlayList.lyricpos].PureLyric;
             // TODO 此处有点冒险的报错,请注意测试
             data.Values["Translation"] = HyPlayList.Lyrics[HyPlayList.lyricpos].Translation is null
-                ? ((HyPlayList.Lyrics.Count > HyPlayList.lyricpos + 1)
+                ? HyPlayList.Lyrics.Count > HyPlayList.lyricpos + 1
                     ? HyPlayList.Lyrics[HyPlayList.lyricpos + 1].PureLyric
-                    : "")
+                    : ""
                 : HyPlayList.Lyrics[HyPlayList.lyricpos].Translation;
             data.Values["TotalValueString"] =
-                TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds).ToString(@"hh\:mm\:ss");
+                TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds)
+                    .ToString(@"hh\:mm\:ss");
             data.Values["CurrentValueString"] = HyPlayList.Player.PlaybackSession.Position.ToString(@"hh\:mm\:ss");
             data.Values["CurrentValue"] = (HyPlayList.Player.PlaybackSession.Position /
-                                           TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds)).ToString();
+                                           TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.PlayItem
+                                               .LengthInMilliseconds)).ToString();
             var res = ToastNotificationManager.CreateToastNotifier()
                 .Update(data, "HyPlayerDesktopLyrics");
         }
@@ -210,7 +216,7 @@ namespace HyPlayer.Controls
         {
             RefreshSongList();
             HistoryManagement.SetcurPlayingListHistory(HyPlayList.List
-                    .Where(t => t.ItemType == HyPlayItemType.Netease).Select(t => t.PlayItem.id).ToList());
+                .Where(t => t.ItemType == HyPlayItemType.Netease).Select(t => t.PlayItem.id).ToList());
         }
 
         private async void TestFile()
@@ -226,11 +232,10 @@ namespace HyPlayer.Controls
             HyPlayList.RemoveAllSong();
 
             foreach (var file in files)
-            {
                 if (Path.GetExtension(file.Path) == ".ncm")
                 {
                     //脑残Music
-                    Stream stream = await file.OpenStreamForReadAsync();
+                    var stream = await file.OpenStreamForReadAsync();
                     if (NCMFile.IsCorrectNCMFile(stream))
                     {
                         var Info = NCMFile.GetNCMMusicInfo(stream);
@@ -264,18 +269,19 @@ namespace HyPlayer.Controls
                                 tag = file.Provider.DisplayName + " NCM"
                             }
                         };
-                        hyitem.PlayItem.Artist = Info.artist.Select(t => new NCArtist { name = t[0].ToString(), id = t[1].ToString() })
+                        hyitem.PlayItem.Artist = Info.artist.Select(t => new NCArtist
+                                { name = t[0].ToString(), id = t[1].ToString() })
                             .ToList();
 
                         HyPlayList.List.Add(hyitem);
                     }
+
                     stream.Dispose();
                 }
                 else
                 {
                     await HyPlayList.AppendStorageFile(file);
                 }
-            }
 
             HyPlayList.SongAppendDone();
             HyPlayList.SongMoveTo(0);
@@ -283,53 +289,65 @@ namespace HyPlayer.Controls
 
         public void OnPlayPositionChange(TimeSpan ts)
         {
-            Common.Invoke((Action)(() =>
-           {
-               try
-               {
-                   if (HyPlayList.NowPlayingItem?.PlayItem == null) return;
-                   TbSingerName.Content = HyPlayList.NowPlayingItem.PlayItem.ArtistString;
-                   TbAlbumName.Content = HyPlayList.NowPlayingItem.PlayItem.AlbumString;
-                   TbSongName.Text = HyPlayList.NowPlayingItem.PlayItem.Name;
-                   canslide = false;
-                   SliderProgress.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
-                   canslide = true;
-                   TextBlockTotalTime.Text =
-                       TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds).ToString(@"hh\:mm\:ss");
-                   TextBlockNowTime.Text =
-                       HyPlayList.Player.PlaybackSession.Position.ToString(@"hh\:mm\:ss");
-                   PlayStateIcon.Glyph =
-                       HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
-                           ? "\uEDB4"
-                           : "\uEDB5";
+            Common.Invoke(() =>
+            {
+                try
+                {
+                    if (HyPlayList.NowPlayingItem?.PlayItem == null) return;
+                    TbSingerName.Content = HyPlayList.NowPlayingItem.PlayItem.ArtistString;
+                    TbAlbumName.Content = HyPlayList.NowPlayingItem.PlayItem.AlbumString;
+                    TbSongName.Text = HyPlayList.NowPlayingItem.PlayItem.Name;
+                    canslide = false;
+                    SliderProgress.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
+                    canslide = true;
+                    TextBlockTotalTime.Text =
+                        TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds)
+                            .ToString(@"hh\:mm\:ss");
+                    TextBlockNowTime.Text =
+                        HyPlayList.Player.PlaybackSession.Position.ToString(@"hh\:mm\:ss");
+                    PlayStateIcon.Glyph =
+                        HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
+                            ? "\uEDB4"
+                            : "\uEDB5";
 
-                   if (Common.Setting.fadeInOut)
-                   {
-                       if (HyPlayList.Player.PlaybackSession.Position.TotalSeconds <= Common.Setting.fadeInOutTime)
-                       {
-                           FadeSettedVolume = true;
-                           int vol = Common.Setting.Volume;
-                           HyPlayList.Player.Volume = HyPlayList.Player.PlaybackSession.Position.TotalSeconds / Common.Setting.fadeInOutTime * vol / 100;
-                           System.Diagnostics.Debug.WriteLine(HyPlayList.Player.PlaybackSession.Position.TotalSeconds / Common.Setting.fadeInOutTime * vol / 100);
-                       }
-                       else if (HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds / 1000 - HyPlayList.Player.PlaybackSession.Position.TotalSeconds <= Common.Setting.fadeInOutTime)
-                       {
-                           FadeSettedVolume = true;
-                           HyPlayList.Player.Volume = (HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds / 1000 - HyPlayList.Player.PlaybackSession.Position.TotalSeconds) / Common.Setting.fadeInOutTime * Common.Setting.Volume / 100;
-                           System.Diagnostics.Debug.WriteLine((HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds / 1000 - HyPlayList.Player.PlaybackSession.Position.TotalSeconds) / Common.Setting.fadeInOutTime * Common.Setting.Volume / 100);
-                       }
-                       else
-                           FadeSettedVolume = false;
-                   }
-                   
-                  
-                   //SliderAudioRate.Value = mp.Volume;
-               }
-               catch
-               {
-                   //ignore
-               }
-           }));
+                    if (Common.Setting.fadeInOut)
+                    {
+                        if (HyPlayList.Player.PlaybackSession.Position.TotalSeconds <= Common.Setting.fadeInOutTime)
+                        {
+                            FadeSettedVolume = true;
+                            var vol = Common.Setting.Volume;
+                            HyPlayList.Player.Volume = HyPlayList.Player.PlaybackSession.Position.TotalSeconds /
+                                Common.Setting.fadeInOutTime * vol / 100;
+                            Debug.WriteLine(HyPlayList.Player.PlaybackSession.Position.TotalSeconds /
+                                Common.Setting.fadeInOutTime * vol / 100);
+                        }
+                        else if (HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds / 1000 -
+                            HyPlayList.Player.PlaybackSession.Position.TotalSeconds <= Common.Setting.fadeInOutTime)
+                        {
+                            FadeSettedVolume = true;
+                            HyPlayList.Player.Volume =
+                                (HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds / 1000 -
+                                 HyPlayList.Player.PlaybackSession.Position.TotalSeconds) /
+                                Common.Setting.fadeInOutTime * Common.Setting.Volume / 100;
+                            Debug.WriteLine(
+                                (HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds / 1000 -
+                                 HyPlayList.Player.PlaybackSession.Position.TotalSeconds) /
+                                Common.Setting.fadeInOutTime * Common.Setting.Volume / 100);
+                        }
+                        else
+                        {
+                            FadeSettedVolume = false;
+                        }
+                    }
+
+
+                    //SliderAudioRate.Value = mp.Volume;
+                }
+                catch
+                {
+                    //ignore
+                }
+            });
         }
 
 
@@ -438,15 +456,15 @@ namespace HyPlayer.Controls
                 if (Common.Setting.fadeInOutPause)
                 {
                     FadeSettedVolume = true;
-                    int vol = Common.Setting.Volume;
-                    double curtime = HyPlayList.Player.PlaybackSession.Position.TotalSeconds;
-                    for (; ; )
-                    {
+                    var vol = Common.Setting.Volume;
+                    var curtime = HyPlayList.Player.PlaybackSession.Position.TotalSeconds;
+                    for (;;)
                         try
                         {
                             await Task.Delay(50);
-                            double curvol = (1 - (HyPlayList.Player.PlaybackSession.Position.TotalSeconds - curtime) / (Common.Setting.fadeInOutTimePause / 10)) * vol / 100;
-                            System.Diagnostics.Debug.WriteLine(HyPlayList.Player.Volume);
+                            var curvol = (1 - (HyPlayList.Player.PlaybackSession.Position.TotalSeconds - curtime) /
+                                (Common.Setting.fadeInOutTimePause / 10)) * vol / 100;
+                            Debug.WriteLine(HyPlayList.Player.Volume);
                             if (curvol <= 0)
                             {
                                 HyPlayList.Player.Volume = 0;
@@ -455,6 +473,7 @@ namespace HyPlayer.Controls
                                 FadeSettedVolume = false;
                                 break;
                             }
+
                             HyPlayList.Player.Volume = curvol;
                         }
                         catch
@@ -465,51 +484,49 @@ namespace HyPlayer.Controls
                             FadeSettedVolume = false;
                             break;
                         }
-                    }
                 }
+
                 HyPlayList.Player.Pause();
                 PlayStateIcon.Glyph = HyPlayList.isPlaying ? "\uEDB5" : "\uEDB4";
                 return;
             }
-            else if (!HyPlayList.isPlaying)
+
+            if (!HyPlayList.isPlaying)
             {
                 HyPlayList.Player.Play();
                 if (Common.Setting.fadeInOutPause)
                 {
                     FadeSettedVolume = true;
-                    int vol = Common.Setting.Volume;
+                    var vol = Common.Setting.Volume;
                     HyPlayList.Player.Volume = 0;
-                    double curtime = HyPlayList.Player.PlaybackSession.Position.TotalSeconds;
-                    for (; ; )
+                    var curtime = HyPlayList.Player.PlaybackSession.Position.TotalSeconds;
+                    for (;;)
                     {
                         await Task.Delay(50);
-                        double curvol = (HyPlayList.Player.PlaybackSession.Position.TotalSeconds - curtime) / (Common.Setting.fadeInOutTimePause / 10) * vol / 100;
+                        var curvol = (HyPlayList.Player.PlaybackSession.Position.TotalSeconds - curtime) /
+                            (Common.Setting.fadeInOutTimePause / 10) * vol / 100;
                         if (curvol >= (double)vol / 100)
                         {
                             curvol = (double)vol / 100;
                             HyPlayList.Player.Volume = curvol;
                             break;
                         }
+
                         if (curtime < HyPlayList.Player.PlaybackSession.Position.TotalSeconds)
                             HyPlayList.Player.Volume = curvol;
                         else HyPlayList.Player.Volume = (double)vol / 100;
-                        System.Diagnostics.Debug.WriteLine(HyPlayList.Player.Volume);
+                        Debug.WriteLine(HyPlayList.Player.Volume);
                         if (HyPlayList.Player.Volume >= (double)vol / 100)
                         {
                             HyPlayList.Player.Volume = (double)vol / 100;
                             break;
-
                         }
-
                     }
+
                     FadeSettedVolume = false;
                     PlayStateIcon.Glyph = HyPlayList.isPlaying ? "\uEDB5" : "\uEDB4";
-                    return;
                 }
-
             }
-
-
         }
 
         private void SliderAudioRate_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
@@ -544,6 +561,7 @@ namespace HyPlayer.Controls
                 realSelectSong)
                 HyPlayList.SongMoveTo(ListBoxPlayList.SelectedIndex);
         }
+
         public void ShowExpandedPlayer()
         {
             ButtonExpand.Visibility = Visibility.Collapsed;
@@ -700,7 +718,7 @@ namespace HyPlayer.Controls
             {
                 _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.ResourceLike,
                     new Dictionary<string, object>
-                        {{"type", "4"}, {"t", "1"}, {"id", HyPlayList.NowPlayingItem.PlayItem.id}});
+                        { { "type", "4" }, { "t", "1" }, { "id", HyPlayList.NowPlayingItem.PlayItem.id } });
             }
             else
             {
@@ -829,8 +847,6 @@ namespace HyPlayer.Controls
         {
             ButtonExpand_OnClick(sender, e);
         }
-
-
     }
 
 
@@ -853,9 +869,6 @@ namespace HyPlayer.Controls
         {
             return Artist + " - " + Name;
         }
-
-
-
     }
 
     public class ThumbConverter : DependencyObject, IValueConverter
@@ -884,5 +897,4 @@ namespace HyPlayer.Controls
             throw new NotImplementedException();
         }
     }
-
 }

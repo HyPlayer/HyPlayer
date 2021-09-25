@@ -1,17 +1,19 @@
-﻿using System;
+﻿#region
+
+using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using HyPlayer.Classes;
-using HyPlayer.Pages;
-using System.Collections.Generic;
-using NeteaseCloudMusicApi;
-using System.Linq;
-using Newtonsoft.Json.Linq;
 using HyPlayer.HyPlayControl;
-using Windows.UI.Xaml;
+using HyPlayer.Pages;
+using NeteaseCloudMusicApi;
+
+#endregion
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -38,6 +40,12 @@ namespace HyPlayer.Controls
             StoryboardIn.Begin();
         }
 
+        public void Dispose()
+        {
+            playList = null;
+            ImageContainer.Source = null;
+        }
+
         private void UIElement_OnTapped(object sender, TappedRoutedEventArgs e)
         {
             ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongListExpand", ImageContainer);
@@ -60,7 +68,7 @@ namespace HyPlayer.Controls
             StoryboardIn.Begin();
         }
 
-        private async void PlayAllBtn_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        private async void PlayAllBtn_Click(object sender, RoutedEventArgs e)
         {
             //播放全部歌曲
             HyPlayList.List.Clear();
@@ -71,18 +79,12 @@ namespace HyPlayer.Controls
             HyPlayList.SongMoveNext();
         }
 
-        public void Dispose()
-        {
-            playList = null;
-            ImageContainer.Source = null;
-        }
-
         private async void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistPrivacy,
-                    new Dictionary<string, object>()
+                    new Dictionary<string, object>
                     {
                         { "id", playList.plid }
                     });
@@ -102,7 +104,7 @@ namespace HyPlayer.Controls
             try
             {
                 await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDelete,
-                    new Dictionary<string, object>()
+                    new Dictionary<string, object>
                     {
                         { "ids", playList.plid }
                     });
@@ -113,7 +115,7 @@ namespace HyPlayer.Controls
                 Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
 
-            
+
             Common.PageBase.LoadSongList();
             Common.NavigateRefresh();
         }

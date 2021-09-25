@@ -1,6 +1,10 @@
+#region
+
 using System.Collections.Generic;
 using Windows.UI.Xaml.Controls;
 using NeteaseCloudMusicApi;
+
+#endregion
 
 namespace HyPlayer.Controls
 {
@@ -20,9 +24,9 @@ namespace HyPlayer.Controls
         {
             await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistTracks, new Dictionary<string, object>
             {
-                {"op", "add"},
-                {"pid", Common.MySongLists[ListViewSongList.SelectedIndex].plid},
-                {"tracks", sid}
+                { "op", "add" },
+                { "pid", Common.MySongLists[ListViewSongList.SelectedIndex].plid },
+                { "tracks", sid }
             });
             Hide();
         }

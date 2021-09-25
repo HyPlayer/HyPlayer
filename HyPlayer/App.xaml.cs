@@ -1,26 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
+﻿#region
+
+using System;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.ApplicationModel.Core;
+using Windows.ApplicationModel.ExtendedExecution;
+using Windows.Security.ExchangeActiveSyncProvisioning;
 using Windows.Storage;
+using Windows.System;
+using Windows.UI.Core;
 using Windows.UI.StartScreen;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using HyPlayer.HyPlayControl;
+using HyPlayer.Pages;
+using Kawazu;
 using Microsoft.AppCenter;
 using Microsoft.AppCenter.Analytics;
 using Microsoft.AppCenter.Crashes;
 using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
-using Windows.ApplicationModel.ExtendedExecution;
-using Windows.System;
-using Windows.System.Profile;
-using HyPlayer.Pages;
-using Kawazu;
-using HyPlayer.Classes;
-using Windows.Security.ExchangeActiveSyncProvisioning;
+
+#endregion
 
 namespace HyPlayer
 {
@@ -33,9 +35,9 @@ namespace HyPlayer
         ///     初始化单一实例应用程序对象。这是执行的创作代码的第一行，
         ///     已执行，逻辑上等同于 main() 或 WinMain()。
         /// </summary>
-        ExtendedExecutionSession executionSession = null;
+        private ExtendedExecutionSession executionSession;
 
-        private bool isInBackground = false;
+        private bool isInBackground;
 
         public App()
         {
@@ -55,7 +57,7 @@ namespace HyPlayer
             AppCenter.Start("8e88eab0-1627-4ff9-9ee7-7fd46d0629cf",
                 typeof(Analytics), typeof(Crashes));
             AppCenter.SetEnabledAsync(true);
-            EasClientDeviceInformation deviceInfo = new EasClientDeviceInformation();
+            var deviceInfo = new EasClientDeviceInformation();
             AppCenter.SetUserId(deviceInfo.Id.ToString());
             MemoryManager.AppMemoryUsageIncreased += MemoryManagerOnAppMemoryUsageIncreased;
             MemoryManager.AppMemoryUsageLimitChanging += MemoryManagerOnAppMemoryUsageLimitChanging;
@@ -75,9 +77,7 @@ namespace HyPlayer
                     Common.CollectGarbage();
                     GC.Collect();
                 }
-
             });
-
         }
 
         private void MemoryManagerOnAppMemoryUsageIncreased(object sender, object e)
@@ -140,7 +140,7 @@ namespace HyPlayer
             var delaySession = new ExtendedExecutionSession();
             delaySession.Reason = ExtendedExecutionReason.Unspecified;
             delaySession.Revoked += SessionRevoked;
-            ExtendedExecutionResult result = await delaySession.RequestExtensionAsync();
+            var result = await delaySession.RequestExtensionAsync();
             switch (result)
             {
                 case ExtendedExecutionResult.Allowed:
@@ -175,8 +175,8 @@ namespace HyPlayer
 
         private async void SessionRevoked(object sender, ExtendedExecutionRevokedEventArgs args)
         {
-            await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
-                Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
+                CoreDispatcherPriority.Normal, () =>
                 {
                     switch (args.Reason)
                     {
@@ -216,13 +216,13 @@ namespace HyPlayer
                     Common.BarPlayBar.InitializeDesktopLyric();
                     if (!Common.isExpanded)
                     {
-                        bool animation = Common.Setting.expandAnimation;
+                        var animation = Common.Setting.expandAnimation;
                         await Task.Run(() =>
                         {
                             Common.Setting.expandAnimation = false;
                             Common.Invoke(() => Common.BarPlayBar.ShowExpandedPlayer());
                         });
-                        bool a = Common.Setting.expandAnimation;
+                        var a = Common.Setting.expandAnimation;
                         Common.Setting.expandAnimation = animation;
                     }
                 }

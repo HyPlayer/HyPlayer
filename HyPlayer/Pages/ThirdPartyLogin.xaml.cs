@@ -1,8 +1,13 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Net;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using Windows.Web.Http.Filters;
+
+#endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -57,7 +62,7 @@ namespace HyPlayer.Pages
         {
             if (sender.Source.ToString().StartsWith("https://music.163.com/back/sns"))
             {
-                LoadingRingContainer.Visibility = Windows.UI.Xaml.Visibility.Visible;
+                LoadingRingContainer.Visibility = Visibility.Visible;
                 var cookies =
                     new HttpBaseProtocolFilter().CookieManager.GetCookies(
                         new Uri("https://music.163.com"));
@@ -71,7 +76,7 @@ namespace HyPlayer.Pages
                     rescookie.Domain = cookie.Domain;
                     rescookie.Secure = cookie.Secure;
                     if (cookie.Expires != null)
-                        rescookie.Expires = ((DateTimeOffset) cookie.Expires).DateTime;
+                        rescookie.Expires = ((DateTimeOffset)cookie.Expires).DateTime;
                     rescookie.Path = cookie.Path;
                     Common.ncapi.Cookies.Add(rescookie);
                 }
@@ -88,7 +93,7 @@ namespace HyPlayer.Pages
                 ThirdPartyLoginWebview.Navigate(new Uri("http://music.163.com/api/sns/authorize?snsType=" + LoginType +
                                                         "&clientType=mobile&callbackType=Login"));
                 Navigated = true;
-                LoadingRingContainer.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
+                LoadingRingContainer.Visibility = Visibility.Collapsed;
             }
         }
     }

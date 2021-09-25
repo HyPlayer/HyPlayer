@@ -1,11 +1,16 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
@@ -13,10 +18,8 @@ using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
-using Windows.UI.Xaml.Media;
-using Windows.UI;
-using HyPlayer.Controls;
-using System.Collections.ObjectModel;
+
+#endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -29,13 +32,17 @@ namespace HyPlayer.Pages
     {
         private int page;
         private NCPlayList playList;
-        private bool IsManualSelect = true;
         public ObservableCollection<NCSong> Songs;
 
         public SongListDetail()
         {
             InitializeComponent();
             Songs = new ObservableCollection<NCSong>();
+        }
+
+        public void Dispose()
+        {
+            ImageRect.ImageSource = null;
         }
 
         public void LoadSongListDetail()
@@ -66,10 +73,10 @@ namespace HyPlayer.Pages
                     {
                         try
                         {
-
                             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
-                            new Dictionary<string, object> { { "id", playList.plid } });
-                            var trackIds = json["playlist"]["trackIds"].Select(t => (int)t["id"]).Skip(page * 500).Take(500)
+                                new Dictionary<string, object> { { "id", playList.plid } });
+                            var trackIds = json["playlist"]["trackIds"].Select(t => (int)t["id"]).Skip(page * 500)
+                                .Take(500)
                                 .ToArray();
 
                             if (trackIds.Length >= 500)
@@ -78,7 +85,8 @@ namespace HyPlayer.Pages
                                 NextPage.Visibility = Visibility.Collapsed;
 
 
-                            if (json["playlist"]["specialType"].ToString() == "5" && json["playlist"]["userId"].ToString() == Common.LoginedUser.id)
+                            if (json["playlist"]["specialType"].ToString() == "5" &&
+                                json["playlist"]["userId"].ToString() == Common.LoginedUser.id)
                                 Common.Invoke(() => { ButtonIntel.Visibility = Visibility.Visible; });
                             if (json["playlist"]["userId"].ToString() == Common.LoginedUser.id)
                                 SongsList.IsMySongList = true;
@@ -104,7 +112,6 @@ namespace HyPlayer.Pages
                             {
                                 Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
                             }
-
                         }
                         catch (Exception ex)
                         {
@@ -114,22 +121,21 @@ namespace HyPlayer.Pages
                     else
                     {
                         Common.Invoke(() =>
-                        { //每日推荐
-                        ButtonIntel.Visibility = Visibility.Collapsed;
+                        {
+                            //每日推荐
+                            ButtonIntel.Visibility = Visibility.Collapsed;
                         });
                         try
                         {
                             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendSongs);
                             if (json["data"]["dailySongs"][0]["alg"].ToString() == "birthDaySong")
-                            {
                                 Common.Invoke(() =>
                                 {
-                                // 诶呀,没想到还过生了,吼吼
-                                TextBlockDesc.Text = "生日快乐~ 今天也要开心哦!";
+                                    // 诶呀,没想到还过生了,吼吼
+                                    TextBlockDesc.Text = "生日快乐~ 今天也要开心哦!";
                                     TextBlockDesc.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 0, 0));
                                     TextBlockDesc.FontSize = 25;
                                 });
-                            }
 
                             var idx = 0;
                             foreach (var song in json["data"]["dailySongs"])
@@ -138,7 +144,6 @@ namespace HyPlayer.Pages
                                 ncSong.IsAvailable = true;
                                 ncSong.Order = idx++;
                                 Common.Invoke(() => { Songs.Add(ncSong); });
-
                             }
                         }
                         catch (Exception ex)
@@ -204,6 +209,7 @@ namespace HyPlayer.Pages
                             }
                         }
                     }
+
                     SongsList.ListSource = "pl" + playList.plid;
                     LoadSongListDetail();
                     LoadSongListItem();
@@ -251,11 +257,11 @@ namespace HyPlayer.Pages
                     {
                         var jsona = await Common.ncapi.RequestAsync(
                             CloudMusicApiProviders.PlaymodeIntelligenceList,
-                            new Dictionary<string, object> { { "pid", playList.plid }, { "id", Songs[0].sid }/*, { "sid", Songs[0].sid }*/ });
+                            new Dictionary<string, object>
+                                { { "pid", playList.plid }, { "id", Songs[0].sid } /*, { "sid", Songs[0].sid }*/ });
                         var IntSongs = new List<NCSong>();
                         IntSongs.Add(Songs[new Random().Next(0, Songs.Count)]);
                         foreach (var token in jsona["data"])
-                        {
                             try
                             {
                                 if (token["songInfo"] != null)
@@ -269,11 +275,9 @@ namespace HyPlayer.Pages
                                 //ignore
                             }
 
-                        }
-
                         try
                         {
-                            await HyPlayList.AppendNCSongs(IntSongs);
+                            HyPlayList.AppendNCSongs(IntSongs);
 
                             HyPlayList.SongAppendDone();
 
@@ -321,12 +325,5 @@ namespace HyPlayer.Pages
             playList.desc = NewDesc.Text;
             LoadSongListDetail();
         }
-
-        public void Dispose()
-        {
-            ImageRect.ImageSource = null;
-        }
-
-
     }
 }

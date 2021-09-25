@@ -1,11 +1,16 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
+using Windows.ApplicationModel.Core;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Networking.BackgroundTransfer;
+using Windows.Security.ExchangeActiveSyncProvisioning;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
@@ -15,11 +20,8 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using Kawazu;
 using Microsoft.UI.Xaml.Controls;
-using Windows.Security.ExchangeActiveSyncProvisioning;
-using Microsoft.AppCenter.Crashes;
-using Windows.ApplicationModel.DataTransfer;
-using Windows.ApplicationModel.Core;
-using Windows.System.Profile;
+
+#endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -32,8 +34,8 @@ namespace HyPlayer.Pages
     {
         private int _elapse = 10;
 
-        private LyricItem _lyricItem;
-        private bool isbyprogram;
+        private readonly LyricItem _lyricItem;
+        private readonly bool isbyprogram;
 
         public Settings()
         {
@@ -55,7 +57,7 @@ namespace HyPlayer.Pages
             VersionCode.Text = string.Format("Version {0}.{1}.{2}.{3}  (Package ID: {4})", version.Major, version.Minor,
                 version.Build, version.Revision, packageId.Name);
             if (version.Revision != 0) VersionCode.Text += " Preview";
-            EasClientDeviceInformation deviceInfo = new EasClientDeviceInformation();
+            var deviceInfo = new EasClientDeviceInformation();
             DeviceInfo.Text = "设备识别码: " + deviceInfo.Id;
             _lyricItem = new LyricItem(new SongLyric
             {
@@ -98,7 +100,8 @@ namespace HyPlayer.Pages
 
                     var sf = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("RomajiData.zip");
                     var downloader = new BackgroundDownloader();
-                    var dl = downloader.CreateDownload(new Uri("https://api.kengwang.com.cn/hyplayer/getromaji.php"), sf);
+                    var dl = downloader.CreateDownload(new Uri("https://api.kengwang.com.cn/hyplayer/getromaji.php"),
+                        sf);
                     HandleDownloadAsync(dl, true);
                 });
             });
@@ -110,7 +113,6 @@ namespace HyPlayer.Pages
             try
             {
                 await dl.StartAsync().AsTask(process);
-
             }
             catch (Exception E)
             {
@@ -122,11 +124,13 @@ namespace HyPlayer.Pages
         {
             if (obj.Progress.TotalBytesToReceive == 0)
             {
-                RomajiStatus.Text = "下载错误 " + obj.CurrentWebErrorStatus.ToString();
+                RomajiStatus.Text = "下载错误 " + obj.CurrentWebErrorStatus;
                 return;
             }
+
             RomajiStatus.Text = $"正在下载资源文件 ({obj.Progress.BytesReceived * 100 / obj.Progress.TotalBytesToReceive:D}%)";
-            if (obj.Progress.BytesReceived == obj.Progress.TotalBytesToReceive && obj.Progress.TotalBytesToReceive > 5000)
+            if (obj.Progress.BytesReceived == obj.Progress.TotalBytesToReceive &&
+                obj.Progress.TotalBytesToReceive > 5000)
                 _ = Task.Run(() =>
                 {
                     Common.Invoke(async () =>
@@ -204,7 +208,6 @@ namespace HyPlayer.Pages
         }
 
 
-
         private void ControlSoundChecked(object sender, RoutedEventArgs e)
         {
             if (isbyprogram) return;
@@ -229,8 +232,8 @@ namespace HyPlayer.Pages
 
         private void CopyDeviceCode_Click(object sender, RoutedEventArgs e)
         {
-            EasClientDeviceInformation deviceInfo = new EasClientDeviceInformation();
-            DataPackage dp = new DataPackage();
+            var deviceInfo = new EasClientDeviceInformation();
+            var dp = new DataPackage();
             dp.SetText(deviceInfo.Id.ToString());
             Clipboard.SetContent(dp);
         }
@@ -238,7 +241,7 @@ namespace HyPlayer.Pages
         private void LyricSize_OnValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
         {
             if (isbyprogram) return;
-            int size = 18;
+            var size = 18;
             if (int.TryParse(LyricSize.Text, out size))
             {
                 Common.Setting.lyricSize = size;
@@ -257,13 +260,10 @@ namespace HyPlayer.Pages
         private void NBShadowDepth_OnValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
         {
             if (isbyprogram) return;
-            int size = 4;
+            var size = 4;
             if (int.TryParse(NBShadowDepth.Value.ToString(), out size))
-            {
                 Common.Setting.expandedCoverShadowDepth = Math.Max(0, size);
-            }
         }
-
 
 
         private async void ButtonCacheSelect_OnClick(object sender, RoutedEventArgs e)

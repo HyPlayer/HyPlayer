@@ -1,33 +1,33 @@
 ﻿<Page
+    mc:Ignorable="d"
     x:Class="HyPlayer.Pages.Settings"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:Microsoft.UI.Xaml.Controls"
     xmlns:controls1="using:HyPlayer.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hyplayer="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <Pivot
-        Title="设置"
+        FontFamily="Black"
         Margin="0,0,0,150"
-        FontFamily="Black">
+        Title="设置">
         <PivotItem
-            Margin="30,10,0,0"
             FontFamily="Thick"
-            Header="歌词设置">
+            Header="歌词设置"
+            Margin="30,10,0,0">
             <ScrollViewer VerticalScrollMode="Enabled">
-                <StackPanel x:Name="StackPanelLyricSet" Orientation="Vertical">
+                <StackPanel Orientation="Vertical" x:Name="StackPanelLyricSet">
                     <TextBlock FontSize="36" Text="罗马音设置" />
                     <TextBlock
-                        x:Name="RomajiStatus"
                         Margin="0,10,0,0"
-                        Text="获取中" />
+                        Text="获取中"
+                        x:Name="RomajiStatus" />
                     <Button
-                        Margin="0,10,0,0"
                         Click="ButtonBase_OnClick"
                         Content="获取罗马音资源文件"
+                        Margin="0,10,0,0"
                         Style="{StaticResource ButtonRevealStyle}" />
                     <TextBlock FontSize="36" Text="歌词大小设置" />
                     <Grid ColumnSpacing="12">
@@ -35,17 +35,17 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock VerticalAlignment="Center" Text="歌词大小 (负数为自动)" />
+                        <TextBlock Text="歌词大小 (负数为自动)" VerticalAlignment="Center" />
                         <controls:NumberBox
-                            x:Name="LyricSize"
                             Grid.Column="1"
-                            Width="100"
-                            Margin="0,10,0,0"
                             LargeChange="5"
+                            Margin="0,10,0,0"
                             SmallChange="1"
                             SpinButtonPlacementMode="Compact"
+                            Value="{x:Bind hyplayer:Common.Setting.lyricSize, Mode=OneTime}"
                             ValueChanged="LyricSize_OnValueChanged"
-                            Value="{x:Bind hyplayer:Common.Setting.lyricSize, Mode=OneTime}" />
+                            Width="100"
+                            x:Name="LyricSize" />
                     </Grid>
 
                     <Grid ColumnSpacing="12">
@@ -53,21 +53,21 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock VerticalAlignment="Center" Text="罗马音大小 (默认为 15)" />
+                        <TextBlock Text="罗马音大小 (默认为 15)" VerticalAlignment="Center" />
                         <controls:NumberBox
-                            x:Name="RomajiSize"
                             Grid.Column="1"
-                            Width="100"
-                            Margin="0,10,0,0"
                             LargeChange="5"
+                            Margin="0,10,0,0"
                             SmallChange="1"
                             SpinButtonPlacementMode="Compact"
-                            Value="{x:Bind hyplayer:Common.Setting.romajiSize, Mode=TwoWay}" />
+                            Value="{x:Bind hyplayer:Common.Setting.romajiSize, Mode=TwoWay}"
+                            Width="100"
+                            x:Name="RomajiSize" />
                     </Grid>
                     <CheckBox
-                        x:Name="CheckBoxAlignment"
                         Content="是否左对齐"
-                        IsChecked="{x:Bind hyplayer:Common.Setting.lyricAlignment, Mode=TwoWay}" />
+                        IsChecked="{x:Bind hyplayer:Common.Setting.lyricAlignment, Mode=TwoWay}"
+                        x:Name="CheckBoxAlignment" />
                     <!--<CheckBox
                         x:Name="CheckBoxLyricShadow"
                         Content="是否产生阴影"
@@ -88,10 +88,10 @@
             <ScrollViewer VerticalScrollMode="Enabled">
                 <StackPanel Orientation="Vertical">
                     <controls:RadioButtons
-                        x:Name="RadioButtonsSongBr"
                         FontSize="20"
                         Header="在线播放音质:"
-                        MaxColumns="4">
+                        MaxColumns="4"
+                        x:Name="RadioButtonsSongBr">
                         <RadioButton
                             Checked="RadioButton_Checked"
                             Content="标准 (128k)"
@@ -110,42 +110,42 @@
                             Tag="999000" />
                     </controls:RadioButtons>
                     <ToggleSwitch
-                        x:Name="FadeInOut"
                         Header="切歌渐入渐出："
-                        IsOn="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=TwoWay}" />
+                        IsOn="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=TwoWay}"
+                        x:Name="FadeInOut" />
                     <Slider
-                        x:Name="FadeTime"
-                        Width="300"
-                        HorizontalAlignment="Left"
                         Header="切歌渐入渐出时间 单位: s"
+                        HorizontalAlignment="Left"
                         Maximum="6"
                         Minimum="0"
                         ToolTipService.ToolTip="{x:Bind FadeTime.Value}"
+                        Value="{x:Bind hyplayer:Common.Setting.fadeInOutTime, Mode=TwoWay}"
                         Visibility="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=OneWay}"
-                        Value="{x:Bind hyplayer:Common.Setting.fadeInOutTime, Mode=TwoWay}" />
+                        Width="300"
+                        x:Name="FadeTime" />
                     <ToggleSwitch Header="播放暂停渐入渐出" IsOn="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=TwoWay}" />
                     <Slider
-                        x:Name="FadeTimePause"
-                        Width="300"
-                        HorizontalAlignment="Left"
                         Header="渐入渐出时间 单位: 0.1s"
+                        HorizontalAlignment="Left"
                         Maximum="10"
                         Minimum="0"
                         ToolTipService.ToolTip="{x:Bind FadeTimePause.Value}"
+                        Value="{x:Bind hyplayer:Common.Setting.fadeInOutTimePause, Mode=TwoWay}"
                         Visibility="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=OneWay}"
-                        Value="{x:Bind hyplayer:Common.Setting.fadeInOutTimePause, Mode=TwoWay}" />
+                        Width="300"
+                        x:Name="FadeTimePause" />
                     <Border Height="15" />
                     <CheckBox Content="圆形唱片" IsChecked="{x:Bind hyplayer:Common.Setting.albumRound, Mode=TwoWay}" />
                     <CheckBox Content="唱片旋转" IsChecked="{x:Bind hyplayer:Common.Setting.albumRotate, Mode=TwoWay}" />
                     <Slider
-                        x:Name="SliderAlbumBorderLength"
-                        Width="300"
-                        HorizontalAlignment="Left"
                         Header="唱片边框厚度 (0 为无边框)"
+                        HorizontalAlignment="Left"
                         Maximum="280"
                         Minimum="0"
                         ToolTipService.ToolTip="{x:Bind SliderAlbumBorderLength.Value}"
-                        Value="{x:Bind hyplayer:Common.Setting.albumBorderLength, Mode=TwoWay}" />
+                        Value="{x:Bind hyplayer:Common.Setting.albumBorderLength, Mode=TwoWay}"
+                        Width="300"
+                        x:Name="SliderAlbumBorderLength" />
                 </StackPanel>
             </ScrollViewer>
         </PivotItem>
@@ -160,15 +160,15 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="下载路径" />
                         <TextBlock
-                            x:Name="TextBoxDownloadDir"
                             Grid.Column="1"
-                            Text="{x:Bind hyplayer:Common.Setting.downloadDir, Mode=TwoWay}" />
+                            Text="{x:Bind hyplayer:Common.Setting.downloadDir, Mode=TwoWay}"
+                            x:Name="TextBoxDownloadDir" />
                         <Button
-                            x:Name="ButtonDownloadSelect"
-                            Grid.Column="2"
                             Click="ButtonDownloadSelect_OnClick"
                             Content="选择"
-                            Style="{StaticResource ButtonRevealStyle}" />
+                            Grid.Column="2"
+                            Style="{StaticResource ButtonRevealStyle}"
+                            x:Name="ButtonDownloadSelect" />
                     </Grid>
                     <Grid MaxWidth="1000" Visibility="{x:Bind hyplayer:Common.Setting.enableCache, Mode=OneWay}">
                         <Grid.ColumnDefinitions>
@@ -178,21 +178,21 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="缓存路径" />
                         <TextBlock
-                            x:Name="TextBoxCacheDir"
                             Grid.Column="1"
-                            Text="{x:Bind hyplayer:Common.Setting.cacheDir, Mode=TwoWay}" />
+                            Text="{x:Bind hyplayer:Common.Setting.cacheDir, Mode=TwoWay}"
+                            x:Name="TextBoxCacheDir" />
                         <Button
-                            x:Name="ButtonCacheSelect"
-                            Grid.Column="2"
                             Click="ButtonCacheSelect_OnClick"
                             Content="选择"
-                            Style="{StaticResource ButtonRevealStyle}" />
+                            Grid.Column="2"
+                            Style="{StaticResource ButtonRevealStyle}"
+                            x:Name="ButtonCacheSelect" />
                     </Grid>
                     <Button
-                        x:Name="ClearHistory"
                         Click="ClearHistory_Click"
                         Content="清除历史记录"
-                        Style="{StaticResource ButtonRevealStyle}" />
+                        Style="{StaticResource ButtonRevealStyle}"
+                        x:Name="ClearHistory" />
                 </StackPanel>
             </ScrollViewer>
         </PivotItem>
@@ -206,13 +206,13 @@
                             <ColumnDefinition Width="50" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="X-Real-IP (置空不设置)" />
-                        <TextBox x:Name="TextBoxXREALIP" Grid.Column="1" />
+                        <TextBox Grid.Column="1" x:Name="TextBoxXREALIP" />
                         <Button
-                            x:Name="ButtonXREALIPSave"
-                            Grid.Column="2"
                             Click="ButtonXREALIPSave_OnClick"
                             Content="设置"
-                            Style="{StaticResource ButtonRevealStyle}" />
+                            Grid.Column="2"
+                            Style="{StaticResource ButtonRevealStyle}"
+                            x:Name="ButtonXREALIPSave" />
                     </Grid>
                     <Grid MaxWidth="1000">
                         <Grid.ColumnDefinitions>
@@ -221,76 +221,76 @@
                             <ColumnDefinition Width="50" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" Text="代理服务器 (置空不设置)" />
-                        <TextBox x:Name="TextBoxPROXY" Grid.Column="1" />
+                        <TextBox Grid.Column="1" x:Name="TextBoxPROXY" />
                         <Button
-                            x:Name="ButtonPROXYSave"
-                            Grid.Column="2"
                             Click="ButtonPROXYSave_OnClick"
                             Content="设置"
-                            Style="{StaticResource ButtonRevealStyle}" />
+                            Grid.Column="2"
+                            Style="{StaticResource ButtonRevealStyle}"
+                            x:Name="ButtonPROXYSave" />
                     </Grid>
                     <!--<CheckBox
                         x:Name="LazySongUrlGetCheck"
                         Content="是否在播放时才获取播放链接"
                         IsChecked="{x:Bind hyplayer:Common.Setting.songUrlLazyGet, Mode=TwoWay}" />-->
                     <CheckBox
-                        x:Name="CBSongCacheEnable"
                         Content="是否开启播放缓存 (可能造成播放前空白)"
-                        IsChecked="{x:Bind hyplayer:Common.Setting.enableCache, Mode=TwoWay}" />
+                        IsChecked="{x:Bind hyplayer:Common.Setting.enableCache, Mode=TwoWay}"
+                        x:Name="CBSongCacheEnable" />
                     <CheckBox
-                        x:Name="ControlSoundCheck"
                         Checked="ControlSoundChecked"
                         Content="是否开启 UI 音效"
                         IsChecked="{x:Bind hyplayer:Common.Setting.uiSound, Mode=TwoWay}"
-                        Unchecked="ControlSoundUnChecked" />
+                        Unchecked="ControlSoundUnChecked"
+                        x:Name="ControlSoundCheck" />
                     <CheckBox
-                        x:Name="CBOldSMTC"
                         Content="是否同时开启传统SMTC控制 (可能会减小后台闪退几率,重启后生效)"
-                        IsChecked="{x:Bind hyplayer:Common.Setting.ancientSMTC, Mode=TwoWay}" />
+                        IsChecked="{x:Bind hyplayer:Common.Setting.ancientSMTC, Mode=TwoWay}"
+                        x:Name="CBOldSMTC" />
                     <CheckBox
-                        x:Name="HighQualityCoverInSMTC"
                         Content="是否输出高清图片到SMTC"
-                        IsChecked="{x:Bind hyplayer:Common.Setting.highQualityCoverInSMTC, Mode=TwoWay}" />
+                        IsChecked="{x:Bind hyplayer:Common.Setting.highQualityCoverInSMTC, Mode=TwoWay}"
+                        x:Name="HighQualityCoverInSMTC" />
                     <controls:RadioButtons
-                        x:Name="RadioButtonsTheme"
                         FontSize="20"
                         Header="颜色模式: (修改将在重启 HyPlayer 后生效)"
                         MaxColumns="3"
                         SelectedIndex="{x:Bind hyplayer:Common.Setting.themeRequest, Mode=TwoWay}"
-                        SelectionChanged="RadioButtonsTheme_SelectionChanged">
+                        SelectionChanged="RadioButtonsTheme_SelectionChanged"
+                        x:Name="RadioButtonsTheme">
                         <RadioButton Content="跟随系统" />
                         <RadioButton Content="亮色" />
                         <RadioButton Content="暗色" />
                     </controls:RadioButtons>
                     <Button
-                        x:Name="RestartBtn"
-                        VerticalAlignment="Center"
                         Click="RestartBtn_Click"
                         Content="立即重启"
                         Style="{StaticResource ButtonRevealStyle}"
-                        Visibility="Collapsed" />
+                        VerticalAlignment="Center"
+                        Visibility="Collapsed"
+                        x:Name="RestartBtn" />
 
                     <Grid ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock VerticalAlignment="Center" Text="歌词页面封面阴影强度 (0为无阴影)" />
+                        <TextBlock Text="歌词页面封面阴影强度 (0为无阴影)" VerticalAlignment="Center" />
                         <controls:NumberBox
-                            x:Name="NBShadowDepth"
                             Grid.Column="1"
-                            Width="100"
                             LargeChange="5"
                             SmallChange="1"
                             SpinButtonPlacementMode="Compact"
+                            Value="{x:Bind hyplayer:Common.Setting.expandedCoverShadowDepth, Mode=OneTime}"
                             ValueChanged="NBShadowDepth_OnValueChanged"
-                            Value="{x:Bind hyplayer:Common.Setting.expandedCoverShadowDepth, Mode=OneTime}" />
+                            Width="100"
+                            x:Name="NBShadowDepth" />
                     </Grid>
                     <Button
-                        x:Name="BtnXboxReserve"
                         Click="BtnXboxReserve_Click"
                         Content="Xbox 进后台模式"
-                        Style="{StaticResource ButtonRevealStyle}" />
+                        Style="{StaticResource ButtonRevealStyle}"
+                        x:Name="BtnXboxReserve" />
                     <CheckBox Content="完整模式 (显示发现及评论入口)" IsChecked="{x:Bind hyplayer:Common.Setting.notClearMode, Mode=TwoWay}" />
                 </StackPanel>
             </ScrollViewer>
@@ -299,15 +299,15 @@
             <ScrollViewer VerticalScrollMode="Enabled">
                 <StackPanel Orientation="Vertical">
                     <Image
-                        Width="100"
                         Height="100"
                         HorizontalAlignment="Left"
-                        Source="/Assets/icon.png" />
+                        Source="/Assets/icon.png"
+                        Width="100" />
                     <RichTextBlock>
                         <Paragraph
-                            Margin="0,10,0,0"
                             FontFamily="Thick"
-                            FontSize="25">
+                            FontSize="25"
+                            Margin="0,10,0,0">
                             HyPlayer
                         </Paragraph>
                         <Paragraph Margin="0,5,0,0">This is an open-source project under GPL-v3 Licence</Paragraph>
@@ -323,7 +323,7 @@
                         <Paragraph>HyPlayer is licensed under the GNU General Public License v3.0</Paragraph>
                     </RichTextBlock>
                     <TextBlock x:Name="VersionCode" />
-                    <TextBlock x:Name="DeviceInfo" RightTapped="DeviceInfo_RightTapped">
+                    <TextBlock RightTapped="DeviceInfo_RightTapped" x:Name="DeviceInfo">
                         <TextBlock.ContextFlyout>
                             <MenuFlyout>
                                 <MenuFlyoutItem
@@ -339,8 +339,8 @@
                         FontSize="25"
                         Text="开发者" />
                     <StackPanel
-                        Margin="10,20,0,0"
                         DoubleTapped="StackPanel_DoubleTapped"
+                        Margin="10,20,0,0"
                         Orientation="Horizontal"
                         Tapped="UIElement_OnTapped">
                         <PersonPicture ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=GibeJPa6pAcRMKgoHC9ibI4w&amp;s=100" />
@@ -379,8 +379,8 @@
                         </StackPanel>
                     </StackPanel>
                     <StackPanel
-                        Margin="10,20,0,0"
                         DoubleTapped="StackPanel_DoubleTapped"
+                        Margin="10,20,0,0"
                         Orientation="Horizontal"
                         Tapped="UIElement_OnTapped">
                         <PersonPicture ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=eHh3SVVDUJKHf1I5XD7CPg&amp;s=100" />
@@ -413,8 +413,8 @@
                         </StackPanel>
                     </StackPanel>
                     <StackPanel
-                        Margin="10,20,0,0"
                         DoubleTapped="StackPanel_DoubleTapped"
+                        Margin="10,20,0,0"
                         Orientation="Horizontal"
                         Tapped="UIElement_OnTapped">
                         <PersonPicture ProfilePicture="https://himg.bdimg.com/sys/portraitn/item/0fd16570303132303134g930801000000" />

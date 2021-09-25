@@ -1,5 +1,8 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
@@ -7,10 +10,10 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
-using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using NeteaseCloudMusicApi;
-using System.Collections.ObjectModel;
+
+#endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -21,10 +24,10 @@ namespace HyPlayer.Pages
     /// </summary>
     public sealed partial class ArtistPage : Page
     {
-        private NCArtist artist;
-        private readonly ObservableCollection<NCSong> hotSongs = new ObservableCollection<NCSong>();
         private readonly ObservableCollection<NCSong> allSongs = new ObservableCollection<NCSong>();
-        private int page = 0;
+        private readonly ObservableCollection<NCSong> hotSongs = new ObservableCollection<NCSong>();
+        private NCArtist artist;
+        private int page;
 
         public ArtistPage()
         {
@@ -140,11 +143,11 @@ namespace HyPlayer.Pages
         {
             Task.Run(() =>
             {
-                Common.Invoke(async () =>
+                Common.Invoke(() =>
                 {
                     try
                     {
-                        await HyPlayList.AppendNCSongs(hotSongs);
+                        HyPlayList.AppendNCSongs(hotSongs);
 
                         HyPlayList.SongAppendDone();
 
@@ -175,7 +178,7 @@ namespace HyPlayer.Pages
                     new Dictionary<string, object> { { "id", artist.id }, { "limit", 50 }, { "offset", page * 50 } });
 
                 AlbumContainer.ListItems = new ObservableCollection<SimpleListItem>();
-                int i = 0;
+                var i = 0;
                 foreach (var albumjson in j1["hotAlbums"].ToArray())
                     AlbumContainer.ListItems.Add(new SimpleListItem
                     {
@@ -185,8 +188,8 @@ namespace HyPlayer.Pages
                             ? string.Join(" / ", albumjson["alias"].ToArray().Select(t => t.ToString()))
                             : "",
                         LineThree = albumjson.Value<bool>("paid") ? "付费专辑" : "",
-                        ResourceId = "al"+albumjson["id"].ToString(),
-                        CoverUri = albumjson["picUrl"].ToString()+"?param="+StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                        ResourceId = "al" + albumjson["id"],
+                        CoverUri = albumjson["picUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
                         Order = i++
                     });
                 if (int.Parse(j1["artist"]["albumSize"].ToString()) >= (page + 1) * 50)

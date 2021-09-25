@@ -1,16 +1,16 @@
 ﻿<UserControl
+    d:DesignHeight="300"
+    mc:Ignorable="d"
     x:Class="HyPlayer.Controls.SongsList"
+    x:Name="SongListRoot"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:classes="using:HyPlayer.Classes"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hycontrols="using:HyPlayer.Controls"
     xmlns:local="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    x:Name="SongListRoot"
-    d:DesignHeight="300"
-    mc:Ignorable="d">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="35" />
@@ -23,23 +23,23 @@
                 <ColumnDefinition Width="50" />
             </Grid.ColumnDefinitions>
             <Button
-                x:Name="SearchToggle"
+                Click="FilterBox_OnTextChanged"
                 Grid.Column="2"
                 controls:DockPanel.Dock="Right"
-                Click="FilterBox_OnTextChanged">
+                x:Name="SearchToggle">
                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE721;" />
             </Button>
             <TextBox
-                x:Name="FilterBox"
                 Grid.Column="1"
                 Width="150"
-                controls:DockPanel.Dock="Right" />
+                controls:DockPanel.Dock="Right"
+                x:Name="FilterBox" />
         </Grid>
         <ListView
-            Name="SongContainer"
             Grid.Row="1"
-            Padding="10"
             ItemsSource="{x:Bind VisibleSongs}"
+            Name="SongContainer"
+            Padding="10"
             SelectionChanged="SongContainer_SelectionChanged"
             ShowsScrollingPlaceholders="True">
             <ListView.ItemTemplate>
@@ -50,23 +50,23 @@
                         Tag="{x:Bind Order}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock
-                                x:Name="OrderId"
-                                Width="30"
                                 HorizontalAlignment="Center"
+                                Text="{x:Bind DspOrder}"
                                 VerticalAlignment="Center"
-                                Text="{x:Bind DspOrder}" />
+                                Width="30"
+                                x:Name="OrderId" />
                             <controls:ImageEx
-                                x:Name="ImageRect"
-                                Grid.Column="1"
-                                Width="75"
-                                Height="75"
-                                x:Phase="4"
                                 CornerRadius="4"
                                 EnableLazyLoading="True"
+                                Grid.Column="1"
+                                Height="75"
                                 IsCacheEnabled="False"
                                 IsEnabled="{x:Bind IsAvailable}"
                                 Source="{x:Bind Cover}"
-                                Stretch="UniformToFill" />
+                                Stretch="UniformToFill"
+                                Width="75"
+                                x:Name="ImageRect"
+                                x:Phase="4" />
                             <Grid Padding="7,0,0,0">
                                 <Grid.RowDefinitions>
                                     <RowDefinition />
@@ -79,41 +79,41 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Row="0" Orientation="Horizontal">
                                     <TextBlock
-                                        Name="TextBlockSongname"
-                                        x:Phase="0"
                                         FontSize="20"
                                         Foreground="{x:Bind hycontrols:SongsList.GetBrush(IsAvailable)}"
-                                        Text="{x:Bind songname}" />
+                                        Name="TextBlockSongname"
+                                        Text="{x:Bind songname}"
+                                        x:Phase="0" />
                                     <TextBlock
-                                        Name="TextBlockTransName"
-                                        Margin="5,0,0,0"
-                                        x:Phase="0"
                                         FontSize="20"
                                         Foreground="Gray"
-                                        Text="{x:Bind ConvertTranslate(transname)}" />
+                                        Margin="5,0,0,0"
+                                        Name="TextBlockTransName"
+                                        Text="{x:Bind ConvertTranslate(transname)}"
+                                        x:Phase="0" />
                                 </StackPanel>
                                 <TextBlock
-                                    Name="TextBlockAlia"
-                                    Grid.Row="1"
-                                    Margin="0,2,0,-6"
-                                    x:Phase="2"
                                     FontSize="12"
                                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                    Grid.Row="1"
+                                    Margin="0,2,0,-6"
+                                    Name="TextBlockAlia"
                                     Text="{x:Bind alias}"
-                                    Visibility="Visible" />
+                                    Visibility="Visible"
+                                    x:Phase="2" />
                                 <TextBlock
-                                    Name="TextBlockArtist"
-                                    Grid.Row="2"
-                                    Margin="0,7,0,-6"
                                     FontSize="12"
                                     Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
+                                    Grid.Row="2"
+                                    Margin="0,7,0,-6"
+                                    Name="TextBlockArtist"
                                     Text="{x:Bind ArtistString}" />
                                 <TextBlock
-                                    Name="TextBlockAlbum"
-                                    Grid.Row="3"
-                                    Margin="0,7,0,0"
                                     FontSize="13"
                                     Foreground="Gray"
+                                    Grid.Row="3"
+                                    Margin="0,7,0,0"
+                                    Name="TextBlockAlbum"
                                     Text="{x:Bind Album.name}" />
                             </Grid>
                         </StackPanel>
@@ -122,115 +122,115 @@
                             Orientation="Horizontal"
                             Spacing="8">
                             <Button
-                                x:Name="BtnPlay"
-                                x:Phase="1"
                                 Background="Transparent"
                                 Click="BtnPlay_Click"
                                 Style="{StaticResource ButtonRevealStyle}"
                                 Tag="{x:Bind Order}"
                                 ToolTipService.ToolTip="播放"
-                                Visibility="{x:Bind IsAvailable}">
+                                Visibility="{x:Bind IsAvailable}"
+                                x:Name="BtnPlay"
+                                x:Phase="1">
                                 <FontIcon
-                                    Name="PlayStateIcon"
                                     FontFamily="{StaticResource SymbolThemeFontFamily}"
-                                    Glyph="&#xEDB5;" />
+                                    Glyph="&#xEDB5;"
+                                    Name="PlayStateIcon" />
                             </Button>
                             <Button
-                                x:Name="More"
-                                x:Phase="3"
                                 Background="Transparent"
                                 Click="More_Click"
                                 Style="{StaticResource ButtonRevealStyle}"
                                 Tag="{x:Bind Order}"
-                                ToolTipService.ToolTip="更多">
+                                ToolTipService.ToolTip="更多"
+                                x:Name="More"
+                                x:Phase="3">
                                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE10C;" />
                             </Button>
                         </StackPanel>
                         <Grid.ContextFlyout>
                             <MenuFlyout>
                                 <MenuFlyoutItem
-                                    x:Name="FlyoutItemPlay"
                                     Click="FlyoutItemPlay_Click"
                                     Style="{StaticResource MenuFlyoutItemRevealStyle}"
-                                    Text="立即播放">
+                                    Text="立即播放"
+                                    x:Name="FlyoutItemPlay">
                                     <MenuFlyoutItem.Icon>
                                         <SymbolIcon Symbol="Play" />
                                     </MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
                                 <MenuFlyoutItem
-                                    x:Name="FlyoutItemPlayNext"
                                     Click="FlyoutItemPlayNext_Click"
                                     Style="{StaticResource MenuFlyoutItemRevealStyle}"
-                                    Text="下一首播放">
+                                    Text="下一首播放"
+                                    x:Name="FlyoutItemPlayNext">
                                     <MenuFlyoutItem.Icon>
                                         <SymbolIcon Symbol="Next" />
                                     </MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
                                 <MenuFlyoutSeparator />
                                 <MenuFlyoutItem
-                                    x:Name="FlyoutItemSinger"
                                     Click="FlyoutItemSinger_Click"
                                     Style="{StaticResource MenuFlyoutItemRevealStyle}"
-                                    Text="歌手">
+                                    Text="歌手"
+                                    x:Name="FlyoutItemSinger">
                                     <MenuFlyoutItem.Icon>
                                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE716;" />
                                     </MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
                                 <MenuFlyoutItem
-                                    x:Name="FlyoutItemAlbum"
                                     Click="FlyoutItemAlbum_Click"
                                     Style="{StaticResource MenuFlyoutItemRevealStyle}"
-                                    Text="专辑">
+                                    Text="专辑"
+                                    x:Name="FlyoutItemAlbum">
                                     <MenuFlyoutItem.Icon>
                                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE93C;" />
                                     </MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
                                 <MenuFlyoutSeparator />
                                 <MenuFlyoutItem
-                                    x:Name="FlyoutItemComments"
                                     Click="FlyoutItemComments_Click"
                                     Style="{StaticResource MenuFlyoutItemRevealStyle}"
                                     Text="评论"
-                                    Visibility="{x:Bind local:Common.Setting.notClearMode, Mode=OneWay}">
+                                    Visibility="{x:Bind local:Common.Setting.notClearMode, Mode=OneWay}"
+                                    x:Name="FlyoutItemComments">
                                     <MenuFlyoutItem.Icon>
                                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8F2;" />
                                     </MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
                                 <MenuFlyoutItem
-                                    x:Name="FlyoutItemDownload"
                                     Click="FlyoutItemDownload_Click"
                                     Style="{StaticResource MenuFlyoutItemRevealStyle}"
-                                    Text="下载">
+                                    Text="下载"
+                                    x:Name="FlyoutItemDownload">
                                     <MenuFlyoutItem.Icon>
                                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE118;" />
                                     </MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
                                 <MenuFlyoutItem
-                                    x:Name="BtnMV"
                                     Click="BtnMV_Click"
                                     Style="{StaticResource MenuFlyoutItemRevealStyle}"
                                     Text="视频"
-                                    Visibility="{x:Bind local:Common.Setting.notClearMode, Mode=OneWay}">
+                                    Visibility="{x:Bind local:Common.Setting.notClearMode, Mode=OneWay}"
+                                    x:Name="BtnMV">
                                     <MenuFlyoutItem.Icon>
                                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE173;" />
                                     </MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
                                 <MenuFlyoutItem
-                                    x:Name="FlyoutCollection"
                                     Click="FlyoutCollection_Click"
                                     Style="{StaticResource MenuFlyoutItemRevealStyle}"
-                                    Text="收藏">
+                                    Text="收藏"
+                                    x:Name="FlyoutCollection">
                                     <MenuFlyoutItem.Icon>
                                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE1DA;" />
                                     </MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
                                 <MenuFlyoutItem
-                                    x:Name="Btn_Del"
                                     Click="Btn_Del_Click"
                                     Foreground="Red"
                                     Style="{StaticResource MenuFlyoutItemRevealStyle}"
                                     Text="删除"
-                                    Visibility="{Binding ElementName=SongListRoot, Path=IsMySongList}">
+                                    Visibility="{Binding ElementName=SongListRoot, Path=IsMySongList}"
+                                    x:Name="Btn_Del">
                                     <MenuFlyoutItem.Icon>
                                         <FontIcon
                                             FontFamily="{StaticResource SymbolThemeFontFamily}"

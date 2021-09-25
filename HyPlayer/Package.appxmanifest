@@ -1,82 +1,84 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 
 <Package
-  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
-  xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
-  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
-  xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
-  IgnorableNamespaces="uap mp uap3">
+        xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
+        xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+        xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
+        xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+        IgnorableNamespaces="uap mp uap3">
 
-  <Identity
-    Name="48848aaaaaaccd.HyPlayer"
-    Publisher="CN=C23FC254-B9D2-439F-BE7C-7849EE55BEB2"
-    Version="2.0.30.0" />
+    <Identity
+            Name="48848aaaaaaccd.HyPlayer"
+            Publisher="CN=C23FC254-B9D2-439F-BE7C-7849EE55BEB2"
+            Version="2.1.0.0"/>
 
-  <mp:PhoneIdentity PhoneProductId="f59825c1-7418-4bf0-9515-cbd8b69f70ac" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+    <mp:PhoneIdentity PhoneProductId="f59825c1-7418-4bf0-9515-cbd8b69f70ac"
+                      PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
-  <Properties>
-    <DisplayName>HyPlayer</DisplayName>
-    <PublisherDisplayName>aaaaaaccd</PublisherDisplayName>
-    <Logo>Assets\StoreLogo.png</Logo>
-  </Properties>
+    <Properties>
+        <DisplayName>HyPlayer</DisplayName>
+        <PublisherDisplayName>aaaaaaccd</PublisherDisplayName>
+        <Logo>Assets\StoreLogo.png</Logo>
+    </Properties>
 
-  <Dependencies>
-    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.0.0" MaxVersionTested="10.0.0.0" />
-  </Dependencies>
+    <Dependencies>
+        <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.0.0" MaxVersionTested="10.0.0.0"/>
+    </Dependencies>
 
-  <Resources>
-    <Resource Language="x-generate"/>
-  </Resources>
+    <Resources>
+        <Resource Language="x-generate"/>
+    </Resources>
 
-  <Applications>
-    <Application Id="App"
-      Executable="$targetnametoken$.exe"
-      EntryPoint="HyPlayer.App">
-      <uap:VisualElements
-        DisplayName="HyPlayer"
-        Square150x150Logo="Assets\Square150x150Logo.png"
-        Square44x44Logo="Assets\Square44x44Logo.png"
-        Description="HyPlayer"
-        BackgroundColor="transparent">
+    <Applications>
+        <Application Id="App"
+                     Executable="$targetnametoken$.exe"
+                     EntryPoint="HyPlayer.App">
+            <uap:VisualElements
+                    DisplayName="HyPlayer"
+                    Square150x150Logo="Assets\Square150x150Logo.png"
+                    Square44x44Logo="Assets\Square44x44Logo.png"
+                    Description="HyPlayer"
+                    BackgroundColor="transparent">
 
-        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square71x71Logo="Assets\SmallTile.png" Square310x310Logo="Assets\LargeTile.png">
-          <uap:ShowNameOnTiles>
-            <uap:ShowOn Tile = "square150x150Logo" />
-            <uap:ShowOn Tile = "wide310x150Logo"/>
-            <uap:ShowOn Tile = "square310x310Logo" />
-          </uap:ShowNameOnTiles>
-        </uap:DefaultTile>
-        <uap:SplashScreen Image="Assets\SplashScreen.png" />
-        <uap:LockScreen BadgeLogo="Assets\BadgeLogo.png" Notification="badgeAndTileText"/>
-      </uap:VisualElements>
-      <Extensions>
-        <uap:Extension Category="windows.fileTypeAssociation">
-          <uap:FileTypeAssociation Name=".txt">
-            <uap:SupportedFileTypes>
-              <uap:FileType>.mp3</uap:FileType>
-              <uap:FileType>.flac</uap:FileType>
-              <uap:FileType>.wav</uap:FileType>
-            </uap:SupportedFileTypes>
-          </uap:FileTypeAssociation>
-        </uap:Extension>
-        <uap:Extension Category="windows.mediaPlayback">
-          <uap:MediaPlayback>
-            <uap:Codec Name="flac"/>
-            <uap:Codec Name="mp3"/>
-            <uap:Codec Name="H.264"/>
-            <uap:Codec Name="ogg"/>
-            <uap:Codec Name="H.265"/>
-          </uap:MediaPlayback>
-        </uap:Extension>
-      </Extensions>
-    </Application>
-  </Applications>
+                <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square71x71Logo="Assets\SmallTile.png"
+                                 Square310x310Logo="Assets\LargeTile.png">
+                    <uap:ShowNameOnTiles>
+                        <uap:ShowOn Tile="square150x150Logo"/>
+                        <uap:ShowOn Tile="wide310x150Logo"/>
+                        <uap:ShowOn Tile="square310x310Logo"/>
+                    </uap:ShowNameOnTiles>
+                </uap:DefaultTile>
+                <uap:SplashScreen Image="Assets\SplashScreen.png"/>
+                <uap:LockScreen BadgeLogo="Assets\BadgeLogo.png" Notification="badgeAndTileText"/>
+            </uap:VisualElements>
+            <Extensions>
+                <uap:Extension Category="windows.fileTypeAssociation">
+                    <uap:FileTypeAssociation Name=".txt">
+                        <uap:SupportedFileTypes>
+                            <uap:FileType>.mp3</uap:FileType>
+                            <uap:FileType>.flac</uap:FileType>
+                            <uap:FileType>.wav</uap:FileType>
+                        </uap:SupportedFileTypes>
+                    </uap:FileTypeAssociation>
+                </uap:Extension>
+                <uap:Extension Category="windows.mediaPlayback">
+                    <uap:MediaPlayback>
+                        <uap:Codec Name="flac"/>
+                        <uap:Codec Name="mp3"/>
+                        <uap:Codec Name="H.264"/>
+                        <uap:Codec Name="ogg"/>
+                        <uap:Codec Name="H.265"/>
+                    </uap:MediaPlayback>
+                </uap:Extension>
+            </Extensions>
+        </Application>
+    </Applications>
 
-  <Capabilities>
-    <Capability Name="internetClient" />
-    <uap3:Capability Name="backgroundMediaPlayback"/>
-    <uap:Capability Name="removableStorage"/>
-    <uap:Capability Name="musicLibrary"/>
-    <Capability Name="privateNetworkClientServer"/>
-  </Capabilities>
+    <Capabilities>
+        <Capability Name="internetClient"/>
+        <uap3:Capability Name="backgroundMediaPlayback"/>
+        <uap:Capability Name="removableStorage"/>
+        <uap:Capability Name="musicLibrary"/>
+        <Capability Name="privateNetworkClientServer"/>
+    </Capabilities>
 </Package>

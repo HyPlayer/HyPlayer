@@ -1,11 +1,13 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Windows.Storage;
-using HyPlayer.HyPlayControl;
-using Newtonsoft.Json.Linq;
 using Windows.UI.Xaml.Media.Imaging;
-using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
+
+#endregion
 
 namespace HyPlayer.Classes
 {
@@ -36,11 +38,6 @@ namespace HyPlayer.Classes
 
     public class SongLyric
     {
-        public string PureLyric;
-        public string Translation;
-        public bool HaveTranslation;
-        public TimeSpan LyricTime;
-
         public static SongLyric PureSong = new SongLyric
             { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏" };
 
@@ -49,18 +46,23 @@ namespace HyPlayer.Classes
 
         public static SongLyric LoadingLyric = new SongLyric
             { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..." };
+
+        public bool HaveTranslation;
+        public TimeSpan LyricTime;
+        public string PureLyric;
+        public string Translation;
     }
 
 
     public class NCRadio
     {
-        public string name;
-        public string id;
-        public bool subed;
-        public string desc;
         public string cover;
+        public string desc;
         public NCUser DJ;
+        public string id;
         public string lastProgramName;
+        public string name;
+        public bool subed;
 
         public static NCRadio CreateFromJson(JToken json)
         {
@@ -96,7 +98,7 @@ namespace HyPlayer.Classes
         public string RadioId;
         public string RadioName;
 
-        public static new NCFmItem CreateFromJson(JToken song)
+        public new static NCFmItem CreateFromJson(JToken song)
         {
             return new NCFmItem
             {
@@ -139,26 +141,26 @@ namespace HyPlayer.Classes
         public NCAlbum Album;
         public string alias;
         public List<NCArtist> Artist;
+        public bool IsAvailable = true;
+
+        public double LengthInMilliseconds;
+
+        public bool LoadList = false;
+        public int mvid;
         public int Order = 0;
+        public string sid;
+        public string songname;
+        public string transname;
+        public HyPlayItemType Type;
         public int DspOrder => Order + 1;
 
         public BitmapImage Cover =>
             new BitmapImage(new Uri(Album.cover + "?param=" + StaticSource.PICSIZE_SINGLENCSONG_COVER));
 
-        public bool LoadList = false;
-        public bool IsAvailable = true;
-
         public string ArtistString
         {
             get { return string.Join(" / ", Artist.Select(t => t.name)); }
         }
-
-        public double LengthInMilliseconds;
-        public int mvid;
-        public string sid;
-        public string songname;
-        public string transname;
-        public HyPlayItemType Type;
 
         public static NCSong CreateFromJson(JToken song)
         {
@@ -202,39 +204,39 @@ namespace HyPlayer.Classes
 
     public class SimpleListItem
     {
-        public string Title;
-        public string LineOne;
-        public string LineTwo;
-        public string LineThree;
-        public string ResourceId;
         public string CoverUri;
-        public BitmapImage Cover => new BitmapImage(new Uri(CoverUri));
+        public string LineOne;
+        public string LineThree;
+        public string LineTwo;
         public int Order = 0;
+        public string ResourceId;
+        public string Title;
+        public BitmapImage Cover => new BitmapImage(new Uri(CoverUri));
         public int DspOrder => Order + 1;
     }
 
     public class PlayItem
     {
-        public bool isLocalFile;
-        public StorageFile DontSetLocalStorageFile; //如非特殊原因请不要设置这个东西!
-        public int bitrate;
-        public string tag;
-        public string id;
-        public string Name;
-        public HyPlayItemType Type;
+        public NCAlbum Album;
         public List<NCArtist> Artist;
+        public int bitrate;
+        public StorageFile DontSetLocalStorageFile; //如非特殊原因请不要设置这个东西!
+        public string id;
+        public bool isLocalFile;
+        public double LengthInMilliseconds;
+        public string Name;
+        public string size;
+        public string subext;
+        public string tag;
+        public HyPlayItemType Type;
+        public string url;
 
         public string ArtistString
         {
             get { return string.Join(" / ", Artist.Select(t => t.name)); }
         }
 
-        public NCAlbum Album;
         public string AlbumString => Album.name;
-        public string url;
-        public string subext;
-        public string size;
-        public double LengthInMilliseconds;
 
         public NCSong ToNCSong()
         {
@@ -252,15 +254,15 @@ namespace HyPlayer.Classes
 
     public class NCPlayList
     {
-        public string plid;
+        public long bookCount;
         public string cover;
-        public string name;
-        public string desc;
         public NCUser creater;
+        public string desc;
+        public string name;
+        public long playCount;
+        public string plid;
         public bool subscribed;
         public long trackCount;
-        public long playCount;
-        public long bookCount;
 
         public static NCPlayList CreateFromJson(JToken json)
         {
@@ -302,9 +304,9 @@ namespace HyPlayer.Classes
 
     public class NCUser
     {
+        public string avatar;
         public string id;
         public string name;
-        public string avatar;
         public string signature;
 
         public static NCUser CreateFromJson(JToken user)
@@ -333,11 +335,11 @@ namespace HyPlayer.Classes
 
     public class NCMlog
     {
+        public string cover;
+        public string description;
+        public int duration;
         public string id;
         public string title;
-        public string description;
-        public string cover;
-        public int duration;
 
         public static NCMlog CreateFromJson(JToken json)
         {
@@ -354,12 +356,12 @@ namespace HyPlayer.Classes
 
     public class NCArtist
     {
-        public HyPlayItemType Type;
+        public string alias;
+        public string avatar;
         public string id;
         public string name;
-        public string avatar;
         public string transname;
-        public string alias;
+        public HyPlayItemType Type;
 
         public static NCArtist CreateFromJson(JToken artist)
         {
@@ -381,11 +383,11 @@ namespace HyPlayer.Classes
     public class NCAlbum
     {
         public HyPlayItemType AlbumType;
+        public string alias;
+        public string cover;
+        public string description;
         public string id;
         public string name;
-        public string cover;
-        public string alias;
-        public string description;
 
         public static NCAlbum CreateFromJson(JToken album)
         {
@@ -405,18 +407,18 @@ namespace HyPlayer.Classes
 
     public class Comment
     {
-        public string resourceId;
-        public int resourceType;
-        public string cid;
-        public string uid;
         public Uri AvatarUri;
-        public string Nickname;
+        public string cid;
         public string content;
         public bool HasLiked;
-        public DateTime SendTime;
         public int likedCount;
-        public bool IsByMyself => uid == Common.LoginedUser.id;
+        public string Nickname;
         public int ReplyCount;
+        public string resourceId;
+        public int resourceType;
+        public DateTime SendTime;
+        public string uid;
+        public bool IsByMyself => uid == Common.LoginedUser.id;
 
         public static Comment CreateFromJson(JToken comment, string resourceId, int resourceType)
         {

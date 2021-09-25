@@ -1,5 +1,9 @@
-﻿using System;
+﻿#region
+
+using HyPlayer.HyPlayControl;
+using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Foundation;
@@ -20,11 +24,10 @@ using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
+using Point = Windows.Foundation.Point;
 using Buffer = Windows.Storage.Streams.Buffer;
-using Windows.ApplicationModel.DataTransfer;
-using System.Text;
-using Windows.Graphics.Imaging;
-using Windows.UI;
+
+#endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -36,27 +39,30 @@ namespace HyPlayer.Pages
     public sealed partial class ExpandedPlayer : Page, IDisposable
     {
         private readonly bool loaded;
+
+        public SolidColorBrush ForegroundAlbumBrush =
+            Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush;
+
         private bool iscompact;
+        public bool jumpedLyrics;
         public double lastChangedLyricWidth;
-        private ExpandedWindowMode WindowMode;
-        private bool ManualChangeMode = false;
-        int offset = 0;
+        private int lastheight;
 
         private LyricItem lastitem;
         private int lastlrcid;
-        private int lastwidth;
-        private List<LyricItem> LyricList = new List<LyricItem>();
-        private int sclock;
-        private int nowwidth;
-        private int nowheight;
-        private int needRedesign = 1;
-        private int lastheight;
-        private bool realclick = false;
-        private bool programClick = false;
-        public bool jumpedLyrics = false;
 
         public string lastSongUrlForBrush = "";
-        public SolidColorBrush ForegroundAlbumBrush = Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush;
+        private int lastwidth;
+        private List<LyricItem> LyricList = new List<LyricItem>();
+        private bool ManualChangeMode;
+        private int needRedesign = 1;
+        private int nowheight;
+        private int nowwidth;
+        private int offset;
+        private bool programClick;
+        private bool realclick;
+        private int sclock;
+        private ExpandedWindowMode WindowMode;
 
 
         public ExpandedPlayer()
@@ -99,49 +105,14 @@ namespace HyPlayer.Pages
             ImageAlbum.BorderThickness = new Thickness(Common.Setting.albumBorderLength);
 
             if (Common.Setting.albumRotate)
-            {
                 //网易云音乐圆形唱片
                 if (HyPlayList.isPlaying)
                     RotateAnimationSet.StartAsync();
-            }
-        }
-
-        private void HyPlayList_OnPlay()
-        {
-            if (Common.Setting.albumRotate)
-            {
-                //网易云音乐圆形唱片
-                RotateAnimationSet.StartAsync();
-            }
-        }
-
-        private void HyPlayList_OnPause()
-        {
-            if (Common.Setting.albumRotate)
-                RotateAnimationSet.Stop();
-        }
-
-        private void HyPlayList_OnTimerTicked()
-        {
-            if (sclock > 0)
-            {
-                sclock--;
-            }
-            if (needRedesign > 0)
-            {
-                needRedesign--;
-                Redesign();
-            }
         }
 
         public double showsize { get; set; }
         public double LyricWidth { get; set; }
 
-
-        protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
-        {
-            Dispose();
-        }
         public void Dispose()
         {
             Common.Invoke(() =>
@@ -164,6 +135,35 @@ namespace HyPlayer.Pages
                         RotateAnimationSet.Stop();
                 });
             });
+        }
+
+        private void HyPlayList_OnPlay()
+        {
+            if (Common.Setting.albumRotate)
+                //网易云音乐圆形唱片
+                RotateAnimationSet.StartAsync();
+        }
+
+        private void HyPlayList_OnPause()
+        {
+            if (Common.Setting.albumRotate)
+                RotateAnimationSet.Stop();
+        }
+
+        private void HyPlayList_OnTimerTicked()
+        {
+            if (sclock > 0) sclock--;
+            if (needRedesign > 0)
+            {
+                needRedesign--;
+                Redesign();
+            }
+        }
+
+
+        protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
+        {
+            Dispose();
         }
 
         ~ExpandedPlayer()
@@ -196,7 +196,9 @@ namespace HyPlayer.Pages
                     LyricWidth = nowwidth * 0.4;
                 else
                     LyricWidth = nowwidth - 15;
-                showsize = Common.Setting.lyricSize <= 0 ? Math.Max(nowwidth / 66, iscompact ? 16 : 23) : Common.Setting.lyricSize;
+                showsize = Common.Setting.lyricSize <= 0
+                    ? Math.Max(nowwidth / 66, iscompact ? 16 : 23)
+                    : Common.Setting.lyricSize;
 
                 lastwidth = nowwidth;
                 needRedesign += 2;
@@ -255,9 +257,8 @@ namespace HyPlayer.Pages
                     LyricBox.Margin = new Thickness(15);
                     LyricBoxContainer.Height = AlbumDropShadow.ActualHeight + 170;
                     break;
-                default:
-                    break;
             }
+
             realclick = true;
         }
 
@@ -324,10 +325,10 @@ namespace HyPlayer.Pages
             }
 
 
-
-            if (SongInfo.ActualOffset.Y + SongInfo.ActualHeight > MainGrid.ActualHeight && WindowMode != ExpandedWindowMode.LyricOnly)
+            if (SongInfo.ActualOffset.Y + SongInfo.ActualHeight > MainGrid.ActualHeight &&
+                WindowMode != ExpandedWindowMode.LyricOnly)
             {
-                float? size = (float?)(MainGrid.ActualHeight / (SongInfo.ActualOffset.Y + SongInfo.ActualHeight));
+                var size = (float?)(MainGrid.ActualHeight / (SongInfo.ActualOffset.Y + SongInfo.ActualHeight));
                 UIAugmentationSys.ChangeView(0, 0, size);
             }
             else
@@ -377,15 +378,14 @@ namespace HyPlayer.Pages
                     WindowMode = ExpandedWindowMode.Both;
                     ChangeWindowMode();
                 }
-
             }
+
             LyricList.ForEach(t =>
             {
                 t.Width = LyricWidth;
                 t.RefreshFontSize();
             });
         }
-
 
 
         protected override async void OnNavigatedFrom(NavigationEventArgs e)
@@ -407,10 +407,12 @@ namespace HyPlayer.Pages
                 ToggleButtonTranslation.HorizontalAlignment = HorizontalAlignment.Left;
                 ToggleButtonSound.HorizontalAlignment = HorizontalAlignment.Left;
             }
+
             //LeftPanel.Visibility = Visibility.Collapsed;
             programClick = true;
             BtnToggleFullScreen.IsChecked = ApplicationView.GetForCurrentView().IsFullScreenMode;
-            BtnToggleTinyMode.IsChecked = ApplicationView.GetForCurrentView().ViewMode == ApplicationViewMode.CompactOverlay;
+            BtnToggleTinyMode.IsChecked =
+                ApplicationView.GetForCurrentView().ViewMode == ApplicationViewMode.CompactOverlay;
             programClick = false;
             try
             {
@@ -442,9 +444,8 @@ namespace HyPlayer.Pages
                 return;
 
             var transform = item?.TransformToVisual((UIElement)LyricBoxContainer.Content);
-            var position = transform?.TransformPoint(new Windows.Foundation.Point(0, 0));
+            var position = transform?.TransformPoint(new Point(0, 0));
             LyricBoxContainer.ChangeView(null, position?.Y - MainGrid.ActualHeight / 4, null, false);
-
         }
 
         public void LoadLyricsBox()
@@ -500,20 +501,23 @@ namespace HyPlayer.Pages
                         {
                             var img = new BitmapImage();
                             await img.SetSourceAsync(
-                                await HyPlayList.NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999));
+                                await HyPlayList.NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.SingleItem,
+                                    9999));
                             ImageAlbum.Source = img;
                         }
                         else
                         {
-                            ImageAlbum.PlaceholderSource = new BitmapImage(new Uri(mpi.PlayItem.Album.cover + "?param=" +
+                            ImageAlbum.PlaceholderSource = new BitmapImage(new Uri(mpi.PlayItem.Album.cover +
+                                "?param=" +
                                 StaticSource.PICSIZE_EXPANDEDPLAYER_PREVIEWALBUMCOVER));
                             ImageAlbum.Source = new BitmapImage(new Uri(mpi.PlayItem.Album.cover));
                         }
+
                         TextBlockSinger.Content = mpi.PlayItem.ArtistString;
                         TextBlockSongTitle.Text = mpi.PlayItem.Name;
                         TextBlockAlbum.Content = mpi.PlayItem.AlbumString;
                         Background = new ImageBrush
-                        { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                            { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                         ProgressBarPlayProg.Maximum = mpi.PlayItem.LengthInMilliseconds;
                         SliderVolumn.Value = HyPlayList.Player.Volume * 100;
 
@@ -632,21 +636,15 @@ namespace HyPlayer.Pages
                 //小窗模式
                 StackPanelTiny.Visibility = Visibility.Visible;
                 PageContainer.Background = Application.Current.Resources["ExpandedPlayerMask"] as AcrylicBrush;
-
             }
         }
 
         public void ExpandedPlayer_OnPointerExited(object sender, PointerRoutedEventArgs e)
         {
             if (nowheight <= 300)
-            {
                 //小窗模式
                 PageContainer.Background = null;
-            }
-            if (nowheight <= 300 || !iscompact)
-            {
-                StackPanelTiny.Visibility = Visibility.Collapsed;
-            }
+            if (nowheight <= 300 || !iscompact) StackPanelTiny.Visibility = Visibility.Collapsed;
         }
 
         private void ToggleButtonTranslation_OnClick(object sender, RoutedEventArgs e)
@@ -677,6 +675,7 @@ namespace HyPlayer.Pages
                             Common.NavigatePage(typeof(AlbumPage),
                                 HyPlayList.NowPlayingItem.PlayItem.Album.id);
                     }
+
                     Common.NavigatePage(typeof(BlankPage));
                     Common.BarPlayBar.ButtonCollapse_OnClick(this, null);
                 }
@@ -700,12 +699,14 @@ namespace HyPlayer.Pages
                     {
                         if (HyPlayList.NowPlayingItem.PlayItem.Artist.Count > 1)
                         {
-                            await new ArtistSelectDialog(HyPlayList.NowPlayingItem.PlayItem.Artist).ShowAsync(); return;
+                            await new ArtistSelectDialog(HyPlayList.NowPlayingItem.PlayItem.Artist).ShowAsync();
+                            return;
                         }
-                        else
-                            Common.NavigatePage(typeof(ArtistPage),
-                                HyPlayList.NowPlayingItem.PlayItem.Artist[0].id);
+
+                        Common.NavigatePage(typeof(ArtistPage),
+                            HyPlayList.NowPlayingItem.PlayItem.Artist[0].id);
                     }
+
                     Common.NavigatePage(typeof(BlankPage));
                     Common.BarPlayBar.ButtonCollapse_OnClick(this, null);
                 }
@@ -739,17 +740,10 @@ namespace HyPlayer.Pages
             if (!realclick) return;
             ManualChangeMode = true;
             if (BtnToggleAlbum.IsChecked && BtnToggleLyric.IsChecked)
-            {
                 WindowMode = ExpandedWindowMode.Both;
-            }
             else if (BtnToggleAlbum.IsChecked)
-            {
                 WindowMode = ExpandedWindowMode.CoverOnly;
-            }
-            else if (BtnToggleLyric.IsChecked)
-            {
-                WindowMode = ExpandedWindowMode.LyricOnly;
-            }
+            else if (BtnToggleLyric.IsChecked) WindowMode = ExpandedWindowMode.LyricOnly;
             ChangeWindowMode();
         }
 
@@ -763,6 +757,7 @@ namespace HyPlayer.Pages
                     BtnToggleTinyMode.IsChecked = false;
                     WindowMode = ExpandedWindowMode.Both;
                 }
+
                 ApplicationView.GetForCurrentView().TryEnterFullScreenMode();
                 ApplicationView.PreferredLaunchWindowingMode = ApplicationViewWindowingMode.FullScreen;
                 ChangeWindowMode();
@@ -792,7 +787,7 @@ namespace HyPlayer.Pages
 
         private void CopySongName_Click(object sender, RoutedEventArgs e)
         {
-            DataPackage dataPackage = new DataPackage();
+            var dataPackage = new DataPackage();
             dataPackage.SetText(TextBlockSongTitle.Text);
             Clipboard.SetContent(dataPackage);
         }
@@ -804,10 +799,10 @@ namespace HyPlayer.Pages
 
         private async void BtnLoadLocalLyric(object sender, RoutedEventArgs e)
         {
-            FileOpenPicker fop = new FileOpenPicker();
+            var fop = new FileOpenPicker();
             fop.FileTypeFilter.Add(".lrc");
             // register provider - by default encoding is not supported 
-            Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             HyPlayList.Lyrics = Utils.ConvertPureLyric(await FileIO.ReadTextAsync(await fop.PickSingleFileAsync()));
             LoadLyricsBox();
         }
@@ -831,32 +826,36 @@ namespace HyPlayer.Pages
                     WindowMode = ExpandedWindowMode.CoverOnly;
                     ChangeWindowMode();
                 }
-                else jumpedLyrics = false;
+                else
+                {
+                    jumpedLyrics = false;
+                }
             }
         }
 
         private async Task<bool> IsBrightAsync()
-        {
-            if (Common.Setting.lyricColor != 0)
+            if (Common.Setting.lyricColor != 0) return Common.Setting.lyricColor == 2;
+            if (HyPlayList.NowPlayingItem.PlayItem == null) return false;
+            }
+            if (HyPlayList.NowPlayingItem.PlayItem == null)
             {
-                return Common.Setting.lyricColor == 2;
+                return false;
             }
             if (lastSongUrlForBrush == HyPlayList.NowPlayingItem.PlayItem.url) return ForegroundAlbumBrush.Color.R == 0;
             try
             {
                 BitmapDecoder decoder;
                 if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Local)
-                {
-                    decoder = await BitmapDecoder.CreateAsync(await HyPlayList.NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 1));
-                }
+                    decoder = await BitmapDecoder.CreateAsync(
+                        await HyPlayList.NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 1));
                 else
-                {
-                    decoder = await BitmapDecoder.CreateAsync(await RandomAccessStreamReference.CreateFromUri(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=1y1")).OpenReadAsync());
-                }
+                    decoder = await BitmapDecoder.CreateAsync(await RandomAccessStreamReference
+                        .CreateFromUri(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=1y1"))
+                        .OpenReadAsync());
                 var data = await decoder.GetPixelDataAsync();
                 var bytes = data.DetachPixelData();
-                System.Drawing.Color c = GetPixel(bytes, 0, 0, decoder.PixelWidth, decoder.PixelHeight);
-                double Y = 0.299 * c.R + 0.587 * c.G + 0.114 * c.B;
+                var c = GetPixel(bytes, 0, 0, decoder.PixelWidth, decoder.PixelHeight);
+                var Y = 0.299 * c.R + 0.587 * c.G + 0.114 * c.B;
                 lastSongUrlForBrush = HyPlayList.NowPlayingItem.PlayItem.url;
                 return Y >= 150;
             }
@@ -866,39 +865,41 @@ namespace HyPlayer.Pages
             }
         }
 
-        public static System.Drawing.Color GetPixel(byte[] pixels, int x, int y, uint width, uint height)
+        public static Color GetPixel(byte[] pixels, int x, int y, uint width, uint height)
         {
-            int i = x;
-            int j = y;
-            int k = (i * (int)width + j) * 3;
+            var i = x;
+            var j = y;
+            var k = (i * (int)width + j) * 3;
             var r = pixels[k + 0];
             var g = pixels[k + 1];
             var b = pixels[k + 2];
-            return System.Drawing.Color.FromArgb(0, r, g, b);
+            return Color.FromArgb(0, r, g, b);
         }
 
         private void LyricOffsetAdd_Click(object sender, RoutedEventArgs e)
         {
             HyPlayList.LyricOffset = TimeSpan.FromMilliseconds(--offset * 100);
-            TbOffset.Text = (HyPlayList.LyricOffset > TimeSpan.Zero ? "-" : "") + HyPlayList.LyricOffset.ToString("ss\\.ff");
+            TbOffset.Text = (HyPlayList.LyricOffset > TimeSpan.Zero ? "-" : "") +
+                            HyPlayList.LyricOffset.ToString("ss\\.ff");
         }
 
         private void LyricOffsetMin_Click(object sender, RoutedEventArgs e)
         {
             HyPlayList.LyricOffset = TimeSpan.FromMilliseconds(++offset * 100);
-            TbOffset.Text = (HyPlayList.LyricOffset > TimeSpan.Zero ? "-" : "") + HyPlayList.LyricOffset.ToString("ss\\.ff");
-
+            TbOffset.Text = (HyPlayList.LyricOffset > TimeSpan.Zero ? "-" : "") +
+                            HyPlayList.LyricOffset.ToString("ss\\.ff");
         }
 
         private void LyricOffsetUnset_Click(object sender, RoutedEventArgs e)
         {
             HyPlayList.LyricOffset = TimeSpan.Zero;
             offset = 0;
-            TbOffset.Text = (HyPlayList.LyricOffset < TimeSpan.Zero ? "-" : "") + HyPlayList.LyricOffset.ToString("ss\\.ff");
+            TbOffset.Text = (HyPlayList.LyricOffset < TimeSpan.Zero ? "-" : "") +
+                            HyPlayList.LyricOffset.ToString("ss\\.ff");
         }
     }
 
-    enum ExpandedWindowMode
+    internal enum ExpandedWindowMode
     {
         Both,
         CoverOnly,

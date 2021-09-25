@@ -1,4 +1,6 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,6 +12,8 @@ using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using NeteaseCloudMusicApi;
+
+#endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -25,6 +29,13 @@ namespace HyPlayer.Pages
         public Me()
         {
             InitializeComponent();
+        }
+
+        public void Dispose()
+        {
+            ImageRect.ImageSource = null;
+            GridContainerMy.Children.Clear();
+            GridContainerSub.Children.Clear();
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -127,18 +138,11 @@ namespace HyPlayer.Pages
                 Common.ncapi = new CloudMusicApi();
                 Common.PageMain.MainFrame.Navigate(typeof(BlankPage));
                 Common.PageMain.MainFrame.Navigate(typeof(BasePage));
-                ((App)App.Current).InitializeJumpList();
+                ((App)Application.Current).InitializeJumpList();
             }
             catch
             {
             }
-        }
-
-        public void Dispose()
-        {
-            ImageRect.ImageSource = null;
-            GridContainerMy.Children.Clear();
-            GridContainerSub.Children.Clear();
         }
     }
 }

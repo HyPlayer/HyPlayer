@@ -1,11 +1,15 @@
-﻿using HyPlayer.Classes;
-using NeteaseCloudMusicApi;
+﻿#region
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.Classes;
+using NeteaseCloudMusicApi;
+
+#endregion
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -16,12 +20,17 @@ namespace HyPlayer.Pages
     /// </summary>
     public sealed partial class PageFavorite : Page, IDisposable
     {
+        private int i;
         private int page;
-        int i = 0;
 
         public PageFavorite()
         {
             InitializeComponent();
+        }
+
+        public void Dispose()
+        {
+            ItemContainer.ListItems.Clear();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -65,18 +74,16 @@ namespace HyPlayer.Pages
                     });
                 BtnLoadMore.Visibility = json["hasMore"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
                 foreach (var pljs in json["djRadios"])
-                {
-                    ItemContainer.ListItems.Add(new SimpleListItem()
+                    ItemContainer.ListItems.Add(new SimpleListItem
                     {
                         Title = pljs["name"].ToString(),
                         LineOne = pljs["dj"]["nickname"].ToString(),
                         LineTwo = pljs["desc"].ToString(),
-                        LineThree = "最后一个节目: " + pljs["lastProgramName"].ToString(),
+                        LineThree = "最后一个节目: " + pljs["lastProgramName"],
                         ResourceId = "rd" + pljs["id"],
-                        CoverUri = pljs["picUrl"].ToString() + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                        CoverUri = pljs["picUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
                         Order = i++
                     });
-                }
             }
             catch (Exception ex)
             {
@@ -100,10 +107,11 @@ namespace HyPlayer.Pages
                     {
                         Title = singerjson["name"].ToString(),
                         LineOne = singerjson["trans"].ToString(),
-                        LineTwo = string.Join(" / ", singerjson["alia"]?.Select(t => t.ToString()) ?? new List<string>()),
+                        LineTwo = string.Join(" / ",
+                            singerjson["alia"]?.Select(t => t.ToString()) ?? new List<string>()),
                         LineThree = $"专辑数 {singerjson["albumSize"]} | MV 数 {singerjson["mvSize"]}",
                         ResourceId = "ar" + singerjson["id"],
-                        CoverUri = singerjson["img1v1Url"].ToString() + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                        CoverUri = singerjson["img1v1Url"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
                         Order = i++
                     });
             }
@@ -124,8 +132,7 @@ namespace HyPlayer.Pages
                     });
                 BtnLoadMore.Visibility = json["hasMore"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
                 foreach (var albumjson in json["data"])
-                {
-                    ItemContainer.ListItems.Add(new SimpleListItem()
+                    ItemContainer.ListItems.Add(new SimpleListItem
                     {
                         Title = albumjson["name"].ToString(),
                         LineOne = string.Join(" / ", albumjson["artists"].Select(t => t["name"].ToString())),
@@ -133,11 +140,10 @@ namespace HyPlayer.Pages
                             ? string.Join(" / ", albumjson["alias"].ToArray().Select(t => t.ToString()))
                             : "",
                         LineThree = albumjson.Value<bool>("paid") ? "付费专辑" : "",
-                        ResourceId = "al" + albumjson["id"].ToString(),
-                        CoverUri = albumjson["picUrl"].ToString() + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                        ResourceId = "al" + albumjson["id"],
+                        CoverUri = albumjson["picUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
                         Order = i++
                     });
-                }
             }
             catch (Exception ex)
             {
@@ -149,11 +155,6 @@ namespace HyPlayer.Pages
         {
             page++;
             RealLoad();
-        }
-
-        public void Dispose()
-        {
-            ItemContainer.ListItems.Clear();
         }
     }
 }
