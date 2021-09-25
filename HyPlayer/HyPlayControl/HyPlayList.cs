@@ -1,5 +1,7 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,8 +15,6 @@ using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Streams;
-using HyPlayer.Classes;
-using NeteaseCloudMusicApi;
 using File = TagLib.File;
 
 #endregion
@@ -231,7 +231,7 @@ namespace HyPlayer.HyPlayControl
         private static async Task<StorageFile> LoadLocalFile()
         {
             // 此处可以改进
-            if (_lastStorageUrl != NowPlayingItem.PlayItem.url)
+            if (/*_lastStorageUrl != NowPlayingItem.PlayItem.url*/ true)
             {
                 if (NowPlayingItem.PlayItem.DontSetLocalStorageFile != null)
                 {
@@ -408,7 +408,6 @@ namespace HyPlayer.HyPlayControl
                 return;
             }
 
-            Player_SourceChanged(null, null);
             MediaSource ms;
             switch (NowPlayingItem.ItemType)
             {
@@ -513,7 +512,7 @@ namespace HyPlayer.HyPlayControl
                     ms = null;
                     break;
             }
-
+            Player_SourceChanged(null, null);
             MediaSystemControls.IsEnabled = true;
             Player.Source = ms;
             //Player.Play();
@@ -537,11 +536,19 @@ namespace HyPlayer.HyPlayControl
             Common.Invoke(() => OnPlayItemChange?.Invoke(NowPlayingItem));
             //加载歌词
             LoadLyrics(NowPlayingItem);
-            ControlsDisplayUpdater.Thumbnail = NowPlayingItem.ItemType == HyPlayItemType.Local
+            try
+            {
+                ControlsDisplayUpdater.Thumbnail = NowPlayingItem.ItemType == HyPlayItemType.Local
                 ? RandomAccessStreamReference.CreateFromStream(
-                    await NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999))
+                    await NowPlayingStorageFile?.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999))
                 : RandomAccessStreamReference.CreateFromUri(new Uri(NowPlayingItem.PlayItem.Album.cover + "?param=" +
                                                                     StaticSource.PICSIZE_AUDIO_PLAYER_COVER));
+            }
+            catch (Exception)
+            {
+                //ignore
+            }
+
             ControlsDisplayUpdater.Update();
         }
 
@@ -847,7 +854,7 @@ namespace HyPlayer.HyPlayControl
 
                 var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
                     new Dictionary<string, object>
-                        { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) }, false);
+                    { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) }, false);
                 var idx = 0;
                 var list = new List<NCSong>();
                 foreach (var jToken in json["songs"])
@@ -1008,7 +1015,7 @@ namespace HyPlayer.HyPlayControl
                         bitrate = (int)mdp.Bitrate,
                         tag = sf.Provider.DisplayName,
                         id = null,
-                        Name = mdp.Title ?? sf.Name,
+                        Name = string.IsNullOrWhiteSpace(mdp.Title) ? sf.Name : mdp.Title,
                         Type = HyPlayItemType.Local,
                         Artist = contributingArtists.Select(t => new NCArtist
                         {
@@ -1025,7 +1032,7 @@ namespace HyPlayer.HyPlayControl
                     },
                     ItemType = HyPlayItemType.Local
                 };
-                if (sf.Provider.Id == "network")
+                if (sf.Provider.Id == "network" || Common.Setting.safeFileAccess)
                     hyPlayItem.PlayItem.DontSetLocalStorageFile = sf;
                 return hyPlayItem;
             }

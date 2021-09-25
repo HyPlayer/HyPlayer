@@ -1,5 +1,10 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
+using HyPlayer.Pages;
+using Microsoft.Toolkit.Uwp.Notifications;
+using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -23,11 +28,6 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
-using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
-using HyPlayer.Pages;
-using Microsoft.Toolkit.Uwp.Notifications;
-using NeteaseCloudMusicApi;
 
 #endregion
 
@@ -225,6 +225,9 @@ namespace HyPlayer.Controls
             fop.FileTypeFilter.Add(".flac");
             fop.FileTypeFilter.Add(".mp3");
             fop.FileTypeFilter.Add(".ncm");
+            fop.FileTypeFilter.Add(".ape");
+            fop.FileTypeFilter.Add(".m4a");
+            fop.FileTypeFilter.Add(".wav");
 
 
             var files =
@@ -270,7 +273,7 @@ namespace HyPlayer.Controls
                             }
                         };
                         hyitem.PlayItem.Artist = Info.artist.Select(t => new NCArtist
-                                { name = t[0].ToString(), id = t[1].ToString() })
+                        { name = t[0].ToString(), id = t[1].ToString() })
                             .ToList();
 
                         HyPlayList.List.Add(hyitem);
@@ -385,18 +388,27 @@ namespace HyPlayer.Controls
                 TbSingerName.Content = HyPlayList.NowPlayingItem.PlayItem.ArtistString;
                 TbSongName.Text = HyPlayList.NowPlayingItem.PlayItem.Name;
                 TbAlbumName.Content = HyPlayList.NowPlayingItem.PlayItem.AlbumString;
-                if (mpi.ItemType == HyPlayItemType.Local)
+                try
                 {
-                    var img = new BitmapImage();
-                    await img.SetSourceAsync(
-                        await HyPlayList.NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999));
-                    AlbumImage.Source = img;
+
+
+                    if (mpi.ItemType == HyPlayItemType.Local)
+                    {
+                        var img = new BitmapImage();
+                        await img.SetSourceAsync(
+                            await HyPlayList.NowPlayingStorageFile?.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999));
+                        AlbumImage.Source = img;
+                    }
+                    else
+                    {
+                        AlbumImage.Source =
+                            new BitmapImage(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=" +
+                                                    StaticSource.PICSIZE_PLAYBAR_ALBUMCOVER));
+                    }
                 }
-                else
+                catch (Exception)
                 {
-                    AlbumImage.Source =
-                        new BitmapImage(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=" +
-                                                StaticSource.PICSIZE_PLAYBAR_ALBUMCOVER));
+                    //IGNORE
                 }
 
                 //SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
@@ -458,7 +470,7 @@ namespace HyPlayer.Controls
                     FadeSettedVolume = true;
                     var vol = Common.Setting.Volume;
                     var curtime = HyPlayList.Player.PlaybackSession.Position.TotalSeconds;
-                    for (;;)
+                    for (; ; )
                         try
                         {
                             await Task.Delay(50);
@@ -500,7 +512,7 @@ namespace HyPlayer.Controls
                     var vol = Common.Setting.Volume;
                     HyPlayList.Player.Volume = 0;
                     var curtime = HyPlayList.Player.PlaybackSession.Position.TotalSeconds;
-                    for (;;)
+                    for (; ; )
                     {
                         await Task.Delay(50);
                         var curvol = (HyPlayList.Player.PlaybackSession.Position.TotalSeconds - curtime) /

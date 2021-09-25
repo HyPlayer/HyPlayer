@@ -1,11 +1,11 @@
 ﻿#region
 
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Windows.Storage;
 using Windows.UI.Xaml.Media.Imaging;
-using Newtonsoft.Json.Linq;
 
 #endregion
 
@@ -39,13 +39,13 @@ namespace HyPlayer.Classes
     public class SongLyric
     {
         public static SongLyric PureSong = new SongLyric
-            { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏" };
+        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏" };
 
         public static SongLyric NoLyric = new SongLyric
-            { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏" };
+        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏" };
 
         public static SongLyric LoadingLyric = new SongLyric
-            { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..." };
+        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..." };
 
         public bool HaveTranslation;
         public TimeSpan LyricTime;
@@ -155,7 +155,7 @@ namespace HyPlayer.Classes
         public int DspOrder => Order + 1;
 
         public BitmapImage Cover =>
-            new BitmapImage(new Uri(Album.cover + "?param=" + StaticSource.PICSIZE_SINGLENCSONG_COVER));
+            new BitmapImage(new Uri(Album.cover ??= "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg" + "?param=" + StaticSource.PICSIZE_SINGLENCSONG_COVER));
 
         public string ArtistString
         {
@@ -183,7 +183,10 @@ namespace HyPlayer.Classes
                 Artist = new List<NCArtist>(),
                 LengthInMilliseconds = double.Parse(song[dtpath].ToString())
             };
-            song[arpath].ToList().ForEach(t => { NCSong.Artist.Add(NCArtist.CreateFromJson(t)); });
+            if (song[arpath].HasValues)
+                song[arpath].ToList().ForEach(t => { NCSong.Artist.Add(NCArtist.CreateFromJson(t)); });
+            else
+                NCSong.Artist.Add(new NCArtist());
             if (song["mv"] != null) NCSong.mvid = song["mv"].ToObject<int>();
 
             if (song["alia"] != null)
@@ -236,7 +239,7 @@ namespace HyPlayer.Classes
             get { return string.Join(" / ", Artist.Select(t => t.name)); }
         }
 
-        public string AlbumString => Album.name;
+        public string AlbumString => Album.name ?? "未知专辑";
 
         public NCSong ToNCSong()
         {
@@ -391,6 +394,7 @@ namespace HyPlayer.Classes
 
         public static NCAlbum CreateFromJson(JToken album)
         {
+            if (!album.HasValues) return new NCAlbum();
             return new NCAlbum
             {
                 AlbumType = HyPlayItemType.Netease,

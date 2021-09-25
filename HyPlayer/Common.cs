@@ -18,21 +18,14 @@ using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
 using Windows.Storage;
+using Windows.UI;
 using Windows.UI.Core;
-using Windows.UI.Xaml.Controls;
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using HyPlayer.Pages;
-using Kawazu;
-using NeteaseCloudMusicApi;
-using Newtonsoft.Json;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
-using Windows.UI;
 
 #if !DEBUG
 using Microsoft.AppCenter.Crashes;
@@ -259,6 +252,12 @@ namespace HyPlayer
         {
             get => GetSettings("lyricDropshadow", false);
             set => ApplicationData.Current.LocalSettings.Values["lyricDropshadow"] = value;
+        }
+
+        public bool safeFileAccess
+        {
+            get => GetSettings("safeFileAccess", false);
+            set => ApplicationData.Current.LocalSettings.Values["safeFileAccess"] = value;
         }
 
 

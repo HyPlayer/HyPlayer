@@ -1,5 +1,8 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
+using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -8,9 +11,6 @@ using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
-using NeteaseCloudMusicApi;
 
 #endregion
 
@@ -29,6 +29,8 @@ namespace HyPlayer.Pages
         public MusicCloudPage()
         {
             InitializeComponent();
+            SongContainer.ListSource = "content";
+            SongContainer.Songs = Items;
         }
 
         public void Dispose()
@@ -46,21 +48,30 @@ namespace HyPlayer.Pages
                         { "limit", 200 },
                         { "offset", page * 200 }
                     });
+                int idx = page * 200;
                 foreach (var jToken in json["data"])
                 {
-                    var ret = NCSong.CreateFromJson(jToken["simpleSong"]);
-                    if (ret.Artist[0].id == "0")
+                    try
                     {
-                        //不是标准歌曲
-                        ret.Album.name = jToken["album"].ToString();
-                        ret.Artist.Clear();
-                        ret.Artist.Add(new NCArtist
+                        var ret = NCSong.CreateFromJson(jToken["simpleSong"]);
+                        if (ret.Artist[0].id == "0")
                         {
-                            name = jToken["artist"].ToString()
-                        });
+                            //不是标准歌曲
+                            ret.Album.name = jToken["album"]?.ToString();
+                            ret.Artist.Clear();
+                            ret.Artist.Add(new NCArtist
+                            {
+                                name = jToken["artist"]?.ToString()
+                            });
+                        }
+                        ret.Type = HyPlayItemType.Pan;
+                        ret.Order = idx++;
+                        SongContainer.Songs.Add(ret);
                     }
-
-                    Items.Add(ret);
+                    catch
+                    {
+                        //ignore
+                    }
                 }
 
                 NextPage.Visibility = json["hasMore"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
@@ -79,30 +90,9 @@ namespace HyPlayer.Pages
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            SongContainer.ItemsSource = Items;
             await Task.Run(() => { Common.Invoke(() => { LoadMusicCloudItem(); }); });
         }
 
-
-        private void SongContainer_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            Task.Run(() =>
-            {
-                Common.Invoke(() =>
-                {
-                    try
-                    {
-                        HyPlayList.AppendNCSongs(Items.ToList());
-                        HyPlayList.SongAppendDone();
-                        HyPlayList.SongMoveTo(SongContainer.SelectedIndex);
-                    }
-                    catch (Exception ex)
-                    {
-                        Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
-                    }
-                });
-            });
-        }
 
 
         private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
