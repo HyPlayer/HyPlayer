@@ -61,7 +61,7 @@
                                 VerticalAlignment="Center"
                                 Text="{x:Bind DspOrder}" />
                             <Grid Width="35">
-                                <SymbolIcon Margin="5" x:Name="IsPlayingIndicator" Symbol="Volume" Visibility="{x:Bind hycontrols:SongsList.GetSongPlayingIndication(sid),Mode=OneWay}"/>
+                                <SymbolIcon Margin="5" x:Name="IsPlayingIndicator" Symbol="Volume" Visibility="{x:Bind IsNowPlaying,Mode=OneWay}"/>
                             </Grid>
                             <controls:ImageEx
                                 x:Name="ImageRect"

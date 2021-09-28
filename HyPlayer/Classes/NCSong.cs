@@ -3,8 +3,12 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using Windows.ApplicationModel.Core;
 using Windows.Storage;
+using Windows.UI.Core;
 using Windows.UI.Xaml.Media.Imaging;
 
 #endregion
@@ -138,8 +142,26 @@ namespace HyPlayer.Classes
         }
     }
 
-    public class NCSong
+    public class NCSong : INotifyPropertyChanged
     {
+        public NCSong()
+        {
+            HyPlayControl.HyPlayList.OnPlayItemChange += HyPlayList_OnPlayItemChange;
+        }
+
+        private void HyPlayList_OnPlayItemChange(HyPlayItem playItem)
+        {
+            if (playItem.ItemType == HyPlayItemType.Netease)
+            {
+                if (playItem.ToNCSong().sid == this.sid)
+                {
+                    IsNowPlaying = true;
+                    return;
+                }
+            }
+            IsNowPlaying = false;
+        }
+
         public NCAlbum Album;
         public string alias;
         public List<NCArtist> Artist;
@@ -155,6 +177,19 @@ namespace HyPlayer.Classes
         public string transname;
         public HyPlayItemType Type;
         public int DspOrder => Order + 1;
+        public bool IsNowPlaying
+        {
+            get
+            {
+                return this.sid == HyPlayControl.HyPlayList.NowPlayingItem.ToNCSong().sid;
+            }
+            set
+            {
+                OnPropertyChanged("IsNowPlaying");
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public BitmapImage Cover =>
             new BitmapImage(new Uri(Album.cover ??= "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg" + "?param=" + StaticSource.PICSIZE_SINGLENCSONG_COVER));
@@ -204,6 +239,14 @@ namespace HyPlayer.Classes
         public string ConvertTranslate(string source)
         {
             return source == null ? "" : "(" + source + ")";
+        }
+        public void OnPropertyChanged([CallerMemberName] string propertyName = "")
+        {
+            PropertyChangedEventHandler handler = PropertyChanged;
+            if (handler != null)
+            {
+                handler(this, new PropertyChangedEventArgs(propertyName));
+            }
         }
     }
 
