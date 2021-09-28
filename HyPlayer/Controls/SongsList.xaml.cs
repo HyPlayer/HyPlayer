@@ -59,22 +59,9 @@ namespace HyPlayer.Controls
         public SongsList()
         {
             InitializeComponent();
-            HyPlayList.OnPlayItemChange += HyPlayList_OnPlayItemChange;
         }
 
-        private void HyPlayList_OnPlayItemChange(HyPlayItem playItem)
-        {
-            if(playItem.ItemType==HyPlayItemType.Netease)
-            {
-                foreach(NCSong song in VisibleSongs)
-                {
-                    if(song.sid==playItem.ToNCSong().sid)
-                    {
-                        GetSongPlayingIndication(song.sid);
-                    }
-                }
-            }
-        }
+
 
         public bool IsMySongList
         {

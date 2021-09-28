@@ -18,7 +18,9 @@ namespace HyPlayer.Classes
 
         public NCSong ToNCSong()
         {
-            return PlayItem.ToNCSong();
+            if (PlayItem != null)
+                return PlayItem.ToNCSong();
+            else return new NCSong();
         }
     }
 
