@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Linq;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -53,14 +54,27 @@ namespace HyPlayer.Controls
         );
 
         public bool IsManualSelect = true;
+        private NCSong lastPlayingNcSong;
 
         private readonly ObservableCollection<NCSong> VisibleSongs = new ObservableCollection<NCSong>();
 
         public SongsList()
         {
             InitializeComponent();
+            HyPlayList.OnPlayItemChange += HyPlayListOnOnPlayItemChange;
         }
 
+        private void HyPlayListOnOnPlayItemChange(HyPlayItem playitem)
+        {
+            if (playitem.ItemType == HyPlayItemType.Local) return;
+            int idx = VisibleSongs.ToList().FindIndex(t => t.sid == playitem.PlayItem.id);
+            if (idx != -1)
+            {
+                IsManualSelect = false;
+                SongContainer.SelectedIndex = idx;
+                IsManualSelect = true;
+            }
+        }
 
 
         public bool IsMySongList
@@ -103,7 +117,6 @@ namespace HyPlayer.Controls
 
         private void Songs_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-
             if (e.NewItems != null)
             {
                 foreach (var item in e.NewItems)
@@ -112,7 +125,6 @@ namespace HyPlayer.Controls
             }
 
             else VisibleSongs.Clear();
-
         }
 
         private async void SongContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -249,6 +261,7 @@ namespace HyPlayer.Controls
                 if (!Songs.Contains(VisibleSongs[b]))
                     VisibleSongs.RemoveAt(b);
             }
+
             for (int i = 0; i < Songs.Count; i++)
             {
                 if (string.IsNullOrWhiteSpace(FilterBox.Text) || Filter(Songs[i]))
@@ -274,17 +287,12 @@ namespace HyPlayer.Controls
                    (ncsong.transname ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
                    (ncsong.alias ?? "").ToLower().Contains(FilterBox.Text.ToLower());
         }
+
         private GridLength GetSearchHeight(bool IsEnabled)
         {
             if (IsEnabled)
                 return new GridLength(35);
             else return new GridLength(0);
-        }
-        public static Visibility GetSongPlayingIndication(string sid)
-        {
-            if (sid == HyPlayList.NowPlayingItem.ToNCSong().sid)
-                return Visibility.Visible;
-            else return Visibility.Collapsed;
         }
     }
 }

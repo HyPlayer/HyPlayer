@@ -34,6 +34,7 @@ namespace HyPlayer.Pages
         private NCPlayList playList;
         public ObservableCollection<NCSong> Songs;
 
+       
         public SongListDetail()
         {
             InitializeComponent();
