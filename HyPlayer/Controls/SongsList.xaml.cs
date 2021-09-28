@@ -22,7 +22,7 @@ using Windows.UI.Xaml.Media;
 
 namespace HyPlayer.Controls
 {
-    public sealed partial class SongsList : UserControl
+    public sealed partial class SongsList : UserControl, IDisposable
     {
         public static readonly DependencyProperty IsSearchEnabledProperty = DependencyProperty.Register(
             "IsSearchEnabled", typeof(bool)
@@ -54,7 +54,6 @@ namespace HyPlayer.Controls
         );
 
         public bool IsManualSelect = true;
-        private NCSong lastPlayingNcSong;
 
         private readonly ObservableCollection<NCSong> VisibleSongs = new ObservableCollection<NCSong>();
 
@@ -293,6 +292,13 @@ namespace HyPlayer.Controls
             if (IsEnabled)
                 return new GridLength(35);
             else return new GridLength(0);
+        }
+
+        public void Dispose()
+        {
+            HyPlayList.OnPlayItemChange -= HyPlayListOnOnPlayItemChange;
+            VisibleSongs.Clear();
+            Songs.Clear();
         }
     }
 }

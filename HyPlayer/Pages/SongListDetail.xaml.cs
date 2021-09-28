@@ -1,5 +1,9 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -14,10 +18,6 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
-using NeteaseCloudMusicApi;
-using Newtonsoft.Json.Linq;
 
 #endregion
 
@@ -34,7 +34,7 @@ namespace HyPlayer.Pages
         private NCPlayList playList;
         public ObservableCollection<NCSong> Songs;
 
-       
+
         public SongListDetail()
         {
             InitializeComponent();
@@ -74,6 +74,7 @@ namespace HyPlayer.Pages
                     {
                         try
                         {
+                            SongsList.ListSource = "content";
                             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
                                 new Dictionary<string, object> { { "id", playList.plid } });
                             var trackIds = json["playlist"]["trackIds"].Select(t => (int)t["id"]).Skip(page * 500)
@@ -159,6 +160,7 @@ namespace HyPlayer.Pages
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
+            SongsList.Dispose();
             ImageRect.ImageSource = null;
         }
 
@@ -225,12 +227,22 @@ namespace HyPlayer.Pages
             {
                 Common.Invoke(async () =>
                 {
-                    HyPlayList.List.Clear();
-                    HyPlayList.SongAppendDone();
-                    await HyPlayList.AppendPlayList(playList.plid);
-                    HyPlayList.SongAppendDone();
-                    HyPlayList.NowPlaying = -1;
-                    HyPlayList.SongMoveNext();
+                    if (playList.plid != "-666")
+                    {
+                        HyPlayList.List.Clear();
+                        HyPlayList.SongAppendDone();
+                        await HyPlayList.AppendPlayList(playList.plid);
+                        HyPlayList.SongAppendDone();
+                        HyPlayList.NowPlaying = -1;
+                        HyPlayList.SongMoveNext();
+                    }
+                    else
+                    {
+                        HyPlayList.AppendNCSongs(Songs.ToList());
+                        HyPlayList.SongAppendDone();
+                        HyPlayList.NowPlaying = -1;
+                        HyPlayList.SongMoveNext();
+                    }
                 });
             });
         }
