@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using System.Threading.Tasks;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -57,10 +58,45 @@ namespace HyPlayer.Controls
 
         private readonly ObservableCollection<NCSong> VisibleSongs = new ObservableCollection<NCSong>();
 
+        private NCSong PlayingSong = new NCSong();
         public SongsList()
         {
             InitializeComponent();
             HyPlayList.OnPlayItemChange += HyPlayListOnOnPlayItemChange;
+            VisibleSongs.CollectionChanged += VisibleSongs_CollectionChanged;
+        }
+
+        private async Task UITask()
+        {
+            await Task.Delay(TimeSpan.FromSeconds(2));
+            IsManualSelect = false;
+            Common.Invoke(() => SongContainer.SelectedIndex = VisibleSongs.IndexOf(PlayingSong));
+            IsManualSelect = true;
+        }
+
+
+        private void VisibleSongs_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            HyPlayItem playitem = HyPlayControl.HyPlayList.NowPlayingItem;
+            if (playitem != null)
+            {
+                if (e.NewItems != null)
+                {
+                    foreach (var item in e.NewItems)
+                    {
+                        if (item is NCSong ncsong)
+                        {
+                            if (ncsong.sid == playitem.ToNCSong().sid)
+                            {
+                                PlayingSong = ncsong;
+                                Task.Factory.StartNew(UITask);
+
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         private void HyPlayListOnOnPlayItemChange(HyPlayItem playitem)
