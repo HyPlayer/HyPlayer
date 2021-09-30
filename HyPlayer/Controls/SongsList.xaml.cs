@@ -26,22 +26,19 @@ namespace HyPlayer.Controls
     public sealed partial class SongsList : UserControl, IDisposable
     {
         public static readonly DependencyProperty IsSearchEnabledProperty = DependencyProperty.Register(
-            "IsSearchEnabled", typeof(bool)
-            ,
+            "IsSearchEnabled", typeof(bool),
             typeof(SongsList),
             new PropertyMetadata(null)
         );
 
         public static readonly DependencyProperty SongsProperty = DependencyProperty.Register(
-            "Songs", typeof(ObservableCollection<NCSong>)
-            ,
+            "Songs", typeof(ObservableCollection<NCSong>),
             typeof(SongsList),
             new PropertyMetadata(null)
         );
 
         public static readonly DependencyProperty ListSourceProperty = DependencyProperty.Register(
-            "ListSource", typeof(string)
-            ,
+            "ListSource", typeof(string),
             typeof(SongsList),
             new PropertyMetadata(null)
         );
@@ -58,49 +55,37 @@ namespace HyPlayer.Controls
 
         private readonly ObservableCollection<NCSong> VisibleSongs = new ObservableCollection<NCSong>();
 
-        private NCSong PlayingSong = new NCSong();
         public SongsList()
         {
             InitializeComponent();
             HyPlayList.OnPlayItemChange += HyPlayListOnOnPlayItemChange;
-            VisibleSongs.CollectionChanged += VisibleSongs_CollectionChanged;
-        }
+            Task.Run((() =>
+           {
+               Common.Invoke(async () =>
+               {
+                   int tryCount = 5;
+                   while (--tryCount > 0)
+                   {
+                       await Task.Delay(TimeSpan.FromSeconds(2));
+                       try
+                       {
 
-        private async Task UITask()
-        {
-            await Task.Delay(TimeSpan.FromSeconds(2));
-            IsManualSelect = false;
-            Common.Invoke(() => SongContainer.SelectedIndex = VisibleSongs.IndexOf(PlayingSong));
-            IsManualSelect = true;
-        }
-
-
-        private void VisibleSongs_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            HyPlayItem playitem = HyPlayControl.HyPlayList.NowPlayingItem;
-            if (playitem != null)
-            {
-                if (e.NewItems != null)
-                {
-                    foreach (var item in e.NewItems)
-                    {
-                        if (item is NCSong ncsong)
-                        {
-                            if (ncsong.sid == playitem.ToNCSong().sid)
-                            {
-                                PlayingSong = ncsong;
-                                Task.Factory.StartNew(UITask);
-
-                                return;
-                            }
-                        }
-                    }
-                }
-            }
+                           HyPlayListOnOnPlayItemChange(HyPlayList.NowPlayingItem);
+                           break;
+                       }
+                       catch (Exception e)
+                       {
+                           continue;
+                       }
+                   }
+               });
+           }));
         }
 
         private void HyPlayListOnOnPlayItemChange(HyPlayItem playitem)
         {
+
+
             if (playitem.ItemType == HyPlayItemType.Local) return;
             int idx = VisibleSongs.ToList().FindIndex(t => t.sid == playitem.PlayItem.id);
             if (idx != -1)
@@ -109,6 +94,7 @@ namespace HyPlayer.Controls
                 SongContainer.SelectedIndex = idx;
                 IsManualSelect = true;
             }
+
         }
 
 
@@ -143,6 +129,7 @@ namespace HyPlayer.Controls
                 }
             }
         }
+
 
         public string ListSource
         {
