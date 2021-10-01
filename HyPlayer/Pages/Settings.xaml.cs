@@ -1,5 +1,9 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using HyPlayer.Controls;
+using Kawazu;
+using Microsoft.UI.Xaml.Controls;
 using System;
 using System.IO;
 using System.IO.Compression;
@@ -16,10 +20,6 @@ using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using Kawazu;
-using Microsoft.UI.Xaml.Controls;
 
 #endregion
 
@@ -45,6 +45,8 @@ namespace HyPlayer.Pages
             RadioButtonsSongBr.SelectedIndex =
                 RadioButtonsSongBr.Items.IndexOf(RadioButtonsSongBr.Items.First(t =>
                     ((RadioButton)t).Tag.ToString() == Common.Setting.audioRate));
+            RadioButtonsSongDownloadBr.SelectedIndex = RadioButtonsSongDownloadBr.Items.IndexOf(RadioButtonsSongDownloadBr.Items.First(t =>
+                    ((RadioButton)t).Tag.ToString() == Common.Setting.downloadAudioRate));
             TextBoxXREALIP.Text = ApplicationData.Current.LocalSettings.Values["xRealIp"] != null
                 ? ApplicationData.Current.LocalSettings.Values["xRealIp"].ToString()
                 : "";
@@ -80,6 +82,12 @@ namespace HyPlayer.Pages
         {
             if (isbyprogram) return;
             Common.Setting.audioRate = ((RadioButton)sender).Tag.ToString();
+        }
+
+        private void RadioButton1_Checked(object sender, RoutedEventArgs e)
+        {
+            if (isbyprogram) return;
+            Common.Setting.downloadAudioRate = ((RadioButton)sender).Tag.ToString();
         }
 
         private void GetRomaji()

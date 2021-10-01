@@ -1,19 +1,19 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using Microsoft.Toolkit.Uwp.Notifications;
+using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using TagLib;
 using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.UI.Notifications;
-using HyPlayer.Classes;
-using Microsoft.Toolkit.Uwp.Notifications;
-using NeteaseCloudMusicApi;
-using TagLib;
 using File = TagLib.File;
 
 #endregion
@@ -205,7 +205,7 @@ namespace HyPlayer.HyPlayControl
             try
             {
                 var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                    new Dictionary<string, object> { { "id", ncsong.sid } });
+                    new Dictionary<string, object> { { "id", ncsong.sid } , { "br", Common.Setting.downloadAudioRate } });
 
                 if (json["data"][0]["code"].ToString() != "200")
                 {

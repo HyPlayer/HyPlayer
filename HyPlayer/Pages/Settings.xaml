@@ -109,6 +109,28 @@
                             Content="无损 (VIP)"
                             Tag="999000" />
                     </controls:RadioButtons>
+                    <controls:RadioButtons
+                        x:Name="RadioButtonsSongDownloadBr"
+                        FontSize="20"
+                        Header="歌曲下载音质:"
+                        MaxColumns="4">
+                        <RadioButton
+                            Checked="RadioButton1_Checked"
+                            Content="标准 (128k)"
+                            Tag="128000" />
+                        <RadioButton
+                            Checked="RadioButton1_Checked"
+                            Content="较高 (192k)"
+                            Tag="192000" />
+                        <RadioButton
+                            Checked="RadioButton1_Checked"
+                            Content="极高 (320k)"
+                            Tag="320000" />
+                        <RadioButton
+                            Checked="RadioButton1_Checked"
+                            Content="无损 (VIP)"
+                            Tag="999000" />
+                    </controls:RadioButtons>
                     <ToggleSwitch
                         x:Name="FadeInOut"
                         Header="切歌渐入渐出："

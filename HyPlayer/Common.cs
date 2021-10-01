@@ -324,6 +324,17 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+
+        public string downloadAudioRate
+        {
+            get => GetSettings("downloadAudioRate", "999000");
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["audioRate"] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool xboxHidePointer
         {
             get => GetSettings("xboxHidePointer", false);
