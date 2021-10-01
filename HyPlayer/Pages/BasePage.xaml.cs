@@ -416,14 +416,14 @@ namespace HyPlayer.Pages
                             {
                                 FontFamily = Application.Current.Resources["SymbolThemeFontFamily"] as FontFamily,
                                 Glyph = jToken["privacy"].ToString() == "0" ? "\uE142" : "\uE72E",
-                                Foreground = jToken["privacy"].ToString() == "0"
-                                    ? new SolidColorBrush(Color.FromArgb(255, 255, 255, 255))
-                                    : new SolidColorBrush(Color.FromArgb(255, 255, 214, 133))
                             },
                             Content = jToken["name"].ToString(),
                             Tag = "Playlist" + jToken["id"],
                             IsRightTapEnabled = true
                         };
+                        if (jToken["privacy"].ToString() != "0"){
+                            item.Icon.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 214, 133));
+                        }
                         item.RightTapped += (_, __) =>
                         {
                             nowplid = jToken["id"].ToString();
