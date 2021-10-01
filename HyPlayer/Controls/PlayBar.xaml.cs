@@ -232,9 +232,10 @@ namespace HyPlayer.Controls
 
             var files =
                 await fop.PickMultipleFilesAsync();
-            HyPlayList.RemoveAllSong();
-
+            //HyPlayList.RemoveAllSong();
+            bool isFirstLoad = true;
             foreach (var file in files)
+            {
                 if (Path.GetExtension(file.Path) == ".ncm")
                 {
                     //脑残Music
@@ -285,7 +286,12 @@ namespace HyPlayer.Controls
                 {
                     await HyPlayList.AppendStorageFile(file);
                 }
-
+                if (isFirstLoad){
+                    HyPlayList.SongAppendDone();
+                    isFirstLoad = false;
+                    HyPlayList.SongMoveTo(HyPlayList.List.Count - 1);
+                }
+            }
             HyPlayList.SongAppendDone();
             HyPlayList.SongMoveTo(0);
         }
