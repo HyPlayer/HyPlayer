@@ -35,11 +35,11 @@ using Windows.UI.Xaml.Media.Imaging;
 
 namespace HyPlayer.Controls
 {
-    public sealed partial class PlayBar : UserControl
+    public sealed partial class PlayBar
     {
         private bool canslide;
         public bool FadeSettedVolume;
-
+        public ObservableCollection<HyPlayItem> PlayItems = new ObservableCollection<HyPlayItem>();
         public PlayMode NowPlayType = PlayMode.DefaultRoll;
 
         private bool realSelectSong;
@@ -63,6 +63,9 @@ namespace HyPlayer.Controls
             if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
                 ButtonDesktopLyrics.Visibility = Visibility.Collapsed;
             InitializeDesktopLyric();
+            realSelectSong = false;
+            ListBoxPlayList.ItemsSource = PlayItems;
+            realSelectSong = true;
             Common.Invoke(async () =>
             {
                 try
@@ -396,8 +399,6 @@ namespace HyPlayer.Controls
                 TbAlbumName.Content = HyPlayList.NowPlayingItem.PlayItem.AlbumString;
                 try
                 {
-
-
                     if (mpi.ItemType == HyPlayItemType.Local)
                     {
                         var img = new BitmapImage();
@@ -449,16 +450,29 @@ namespace HyPlayer.Controls
         {
             try
             {
-                var Contacts = new ObservableCollection<ListViewPlayItem>();
-                for (var i = 0; i < HyPlayList.List.Count; i++)
-                    Contacts.Add(new ListViewPlayItem(HyPlayList.List[i].PlayItem.Name, i,
-                        HyPlayList.List[i].PlayItem.ArtistString));
+                int vpos = -1;
+                for (int b = 0; b < PlayItems.Count; b++)
+                {
+                    if (!HyPlayList.List.Contains(PlayItems[b]))
+                        PlayItems.RemoveAt(b);
+                }
 
-                realSelectSong = false;
-                ListBoxPlayList.ItemsSource = Contacts;
-                ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
-                realSelectSong = true;
-                PlayListTitle.Text = "播放列表 (共" + HyPlayList.List.Count + "首)";
+                foreach (var t in HyPlayList.List)
+                {
+                    vpos++;
+                    if (!PlayItems.Contains(t))
+                    {
+                        PlayItems.Insert(vpos, t);
+                    }
+                }
+
+                if (HyPlayList.NowPlaying != -1 && HyPlayList.NowPlaying < PlayItems.Count)
+                {
+                    realSelectSong = false;
+                    ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
+                    realSelectSong = true;
+                    PlayListTitle.Text = "播放列表 (共" + HyPlayList.List.Count + "首)";
+                }
             }
             catch
             {
@@ -656,7 +670,6 @@ namespace HyPlayer.Controls
         private void ButtonCleanAll_OnClick(object sender, RoutedEventArgs e)
         {
             HyPlayList.RemoveAllSong();
-            ListBoxPlayList.ItemsSource = new ObservableCollection<ListViewPlayItem>();
             HyPlayList.SongAppendDone();
         }
 
@@ -676,7 +689,7 @@ namespace HyPlayer.Controls
             {
                 if (sender is Button btn)
                 {
-                    HyPlayList.RemoveSong(int.Parse(btn.Tag.ToString()));
+                    HyPlayList.RemoveSong(HyPlayList.List.FindIndex(t=>t.PlayItem == btn.Tag));
                     RefreshSongList();
                 }
             }
@@ -865,29 +878,14 @@ namespace HyPlayer.Controls
         {
             ButtonExpand_OnClick(sender, e);
         }
-    }
 
-
-    public class ListViewPlayItem
-    {
-        public ListViewPlayItem(string name, int index, string artist)
+        private void ButtonPlayList_OnClick(object sender, RoutedEventArgs e)
         {
-            Name = name;
-            Artist = artist;
-            this.index = index;
-        }
-
-        public string Name { get; }
-        public string Artist { get; }
-        public string DisplayName => Artist + " - " + Name;
-
-        public int index { get; }
-
-        public override string ToString()
-        {
-            return Artist + " - " + Name;
+            
+            ListBoxPlayList.ScrollIntoView(PlayItems[HyPlayList.NowPlaying]);
         }
     }
+    
 
     public class ThumbConverter : DependencyObject, IValueConverter
     {

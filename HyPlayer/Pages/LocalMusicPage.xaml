@@ -1,13 +1,13 @@
 ﻿<Page
-    mc:Ignorable="d"
     x:Class="HyPlayer.Pages.LocalMusicPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local1="using:HyPlayer.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:pages="using:HyPlayer.Pages"
+    mc:Ignorable="d">
 
-    <Pivot SelectionChanged="Pivot_SelectionChanged" Title="本地和下载">
+    <Pivot Title="本地和下载" SelectionChanged="Pivot_SelectionChanged">
 
         <PivotItem Header="下载管理">
             <Frame x:Name="DownloadPageFrame" />
@@ -21,18 +21,18 @@
                 </Grid.RowDefinitions>
                 <StackPanel
                     Grid.Row="0"
-                    Orientation="Horizontal"
-                    Padding="15">
+                    Padding="15"
+                    Orientation="Horizontal">
                     <Button
+                        x:Name="Playall"
                         Click="Playall_Click"
                         Content="播放全部"
-                        Style="{StaticResource ButtonRevealStyle}"
-                        x:Name="Playall" />
+                        Style="{StaticResource ButtonRevealStyle}" />
                     <Button
+                        x:Name="Refresh"
                         Click="Refresh_Click"
                         Content="加载"
-                        Style="{StaticResource ButtonRevealStyle}"
-                        x:Name="Refresh" />
+                        Style="{StaticResource ButtonRevealStyle}" />
                 </StackPanel>
                 <Grid Grid.Row="1">
                     <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalScrollMode="Enabled">
@@ -43,22 +43,22 @@
                             SelectionChanged="ListBoxLocalMusicContainer_SelectionChanged"
                             SelectionMode="Single">
                             <ListView.ItemTemplate>
-                                <DataTemplate x:DataType="local1:ListViewPlayItem">
+                                <DataTemplate x:DataType="pages:ListViewPlayItem">
                                     <Grid>
                                         <StackPanel
+                                            Width="340"
                                             HorizontalAlignment="Left"
-                                            Orientation="Vertical"
-                                            Width="340">
+                                            Orientation="Vertical">
                                             <TextBlock Text="{x:Bind Name}" />
                                             <TextBlock Foreground="Gray" Text="{x:Bind Artist}" />
                                         </StackPanel>
                                         <Button
-                                            Click="UploadCloud_Click"
+                                            x:Name="UploadCloud"
                                             HorizontalAlignment="Right"
+                                            Click="UploadCloud_Click"
                                             Style="{StaticResource ButtonRevealStyle}"
                                             Tag="{x:Bind index}"
-                                            ToolTipService.ToolTip="上传到云盘"
-                                            x:Name="UploadCloud">
+                                            ToolTipService.ToolTip="上传到云盘">
                                             <Button.Content>
                                                 <SymbolIcon Symbol="Upload" />
                                             </Button.Content>
@@ -69,10 +69,10 @@
                         </ListView>
                     </ScrollViewer>
                     <ProgressRing
-                        Height="100"
-                        IsActive="False"
+                        x:Name="FileLoadingIndicateRing"
                         Width="100"
-                        x:Name="FileLoadingIndicateRing" />
+                        Height="100"
+                        IsActive="False" />
                 </Grid>
             </Grid>
         </PivotItem>

@@ -132,4 +132,25 @@ namespace HyPlayer.Pages
             if ((sender as Pivot).SelectedIndex == 1) LoadLocalMusic();
         }
     }
+    
+    public class ListViewPlayItem
+    {
+        public ListViewPlayItem(string name, int index, string artist)
+        {
+            Name = name;
+            Artist = artist;
+            this.index = index;
+        }
+
+        public string Name { get; }
+        public string Artist { get; }
+        public string DisplayName => Artist + " - " + Name;
+
+        public int index { get; }
+
+        public override string ToString()
+        {
+            return Artist + " - " + Name;
+        }
+    }
 }
