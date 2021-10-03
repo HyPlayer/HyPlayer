@@ -86,7 +86,7 @@ namespace HyPlayer.Controls
         {
 
 
-            if (playitem.ItemType == HyPlayItemType.Local) return;
+            if (playitem.ItemType == HyPlayItemType.Local || playitem.PlayItem == null) return;
             int idx = VisibleSongs.ToList().FindIndex(t => t.sid == playitem.PlayItem.Id);
             if (idx != -1)
             {
