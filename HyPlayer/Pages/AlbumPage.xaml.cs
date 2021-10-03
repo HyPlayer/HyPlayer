@@ -115,7 +115,7 @@ namespace HyPlayer.Pages
                 {
                     try
                     {
-                        HyPlayList.AppendNCSongs(songs);
+                        HyPlayList.AppendNcSongs(songs);
 
                         HyPlayList.SongAppendDone();
 

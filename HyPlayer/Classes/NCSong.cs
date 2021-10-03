@@ -223,17 +223,17 @@ namespace HyPlayer.Classes
     {
         public NCAlbum Album;
         public List<NCArtist> Artist;
-        public int bitrate;
+        public int Bitrate;
         public StorageFile DontSetLocalStorageFile; //如非特殊原因请不要设置这个东西!
-        public string id;
-        public bool isLocalFile;
+        public string Id;
+        public bool IsLocalFile;
         public double LengthInMilliseconds;
         public string Name;
-        public string size;
-        public string subext;
-        public string tag;
+        public string Size;
+        public string SubExt;
+        public string Tag;
         public HyPlayItemType Type;
-        public string url;
+        public string Url;
 
         public string ArtistString
         {
@@ -250,7 +250,7 @@ namespace HyPlayer.Classes
                 Album = Album,
                 Artist = Artist,
                 LengthInMilliseconds = LengthInMilliseconds,
-                sid = id,
+                sid = Id,
                 songname = Name
             };
         }

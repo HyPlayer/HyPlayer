@@ -431,14 +431,14 @@ namespace HyPlayer.Pages
 
         private void RefreshLyricTime()
         {
-            if (HyPlayList.lyricpos < 0 || HyPlayList.lyricpos >= LyricList.Count) return;
-            if (HyPlayList.lyricpos == -1)
+            if (HyPlayList.LyricPos < 0 || HyPlayList.LyricPos >= LyricList.Count) return;
+            if (HyPlayList.LyricPos == -1)
             {
                 lastitem?.OnHind();
                 LyricBoxContainer.ChangeView(null, 0, null, false);
             }
 
-            var item = LyricList[HyPlayList.lyricpos];
+            var item = LyricList[HyPlayList.LyricPos];
             if (item == null) return;
             lastitem?.OnHind();
             item?.OnShow();
@@ -845,7 +845,7 @@ namespace HyPlayer.Pages
             {
                 return false;
             }
-            if (lastSongUrlForBrush == HyPlayList.NowPlayingItem.PlayItem.url) return ForegroundAlbumBrush.Color.R == 0;
+            if (lastSongUrlForBrush == HyPlayList.NowPlayingItem.PlayItem.Url) return ForegroundAlbumBrush.Color.R == 0;
             try
             {
                 BitmapDecoder decoder;
@@ -860,7 +860,7 @@ namespace HyPlayer.Pages
                 var bytes = data.DetachPixelData();
                 var c = GetPixel(bytes, 0, 0, decoder.PixelWidth, decoder.PixelHeight);
                 var Y = 0.299 * c.R + 0.587 * c.G + 0.114 * c.B;
-                lastSongUrlForBrush = HyPlayList.NowPlayingItem.PlayItem.url;
+                lastSongUrlForBrush = HyPlayList.NowPlayingItem.PlayItem.Url;
                 return Y >= 150;
             }
             catch

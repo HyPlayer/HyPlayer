@@ -215,17 +215,17 @@ namespace HyPlayer.HyPlayControl
 
                 dontuseme = new PlayItem
                 {
-                    bitrate = json["data"][0]["br"].ToObject<int>(),
-                    tag = "下载",
+                    Bitrate = json["data"][0]["br"].ToObject<int>(),
+                    Tag = "下载",
                     Album = ncsong.Album,
                     Artist = ncsong.Artist,
-                    subext = json["data"][0]["type"].ToString().ToLowerInvariant(),
-                    id = ncsong.sid,
+                    SubExt = json["data"][0]["type"].ToString().ToLowerInvariant(),
+                    Id = ncsong.sid,
                     Name = ncsong.songname,
                     Type = HyPlayItemType.Netease,
-                    url = json["data"][0]["url"].ToString(),
+                    Url = json["data"][0]["url"].ToString(),
                     LengthInMilliseconds = ncsong.LengthInMilliseconds,
-                    size = json["data"][0]["size"].ToString()
+                    Size = json["data"][0]["size"].ToString()
                     //md5 = json["data"][0]["md5"].ToString()
                 };
                 filename = string.Join(';', ncsong.Artist.Select(t => t.name)) + " - " + ncsong.songname + "." +

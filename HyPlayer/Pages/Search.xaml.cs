@@ -11,12 +11,6 @@ using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using NeteaseCloudMusicApi;
-using Newtonsoft.Json.Linq;
-using System.Collections.ObjectModel;
-using System.Globalization;
 
 #endregion
 

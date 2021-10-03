@@ -238,7 +238,7 @@ namespace HyPlayer.Pages
                     }
                     else
                     {
-                        HyPlayList.AppendNCSongs(Songs.ToList());
+                        HyPlayList.AppendNcSongs(Songs.ToList());
                         HyPlayList.SongAppendDone();
                         HyPlayList.NowPlaying = -1;
                         HyPlayList.SongMoveNext();
@@ -290,7 +290,7 @@ namespace HyPlayer.Pages
 
                         try
                         {
-                            HyPlayList.AppendNCSongs(IntSongs);
+                            HyPlayList.AppendNcSongs(IntSongs);
 
                             HyPlayList.SongAppendDone();
 

@@ -1,5 +1,13 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using HyPlayer.Controls;
+using HyPlayer.HyPlayControl;
+using Microsoft.AppCenter.Crashes;
+using Microsoft.UI.Xaml.Controls;
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json.Linq;
+using QRCoder;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,14 +29,6 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using HyPlayer.HyPlayControl;
-using Microsoft.AppCenter.Crashes;
-using Microsoft.UI.Xaml.Controls;
-using NeteaseCloudMusicApi;
-using Newtonsoft.Json.Linq;
-using QRCoder;
 using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
 using NavigationViewBackButtonVisible = Microsoft.UI.Xaml.Controls.NavigationViewBackButtonVisible;
 using NavigationViewBackRequestedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewBackRequestedEventArgs;
@@ -348,7 +348,7 @@ namespace HyPlayer.Pages
                         if (hpi.ItemType != HyPlayItemType.Netease) return;
                         _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.Scrobble, new Dictionary<string, object>
                         {
-                            { "id", hpi.PlayItem.id },
+                            { "id", hpi.PlayItem.Id },
                             { "sourceid", "-1" }
                         });
                     });
@@ -421,7 +421,8 @@ namespace HyPlayer.Pages
                             Tag = "Playlist" + jToken["id"],
                             IsRightTapEnabled = true
                         };
-                        if (jToken["privacy"].ToString() != "0"){
+                        if (jToken["privacy"].ToString() != "0")
+                        {
                             item.Icon.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 214, 133));
                         }
                         item.RightTapped += (_, __) =>
@@ -524,16 +525,16 @@ namespace HyPlayer.Pages
             switch (invokedItemTag)
             {
                 case "SonglistCreate":
-                {
-                    await new CreateSonglistDialog().ShowAsync();
-                    LoadSongList();
-                    break;
-                }
+                    {
+                        await new CreateSonglistDialog().ShowAsync();
+                        LoadSongList();
+                        break;
+                    }
                 case "PersonalFM":
-                {
-                    PersonalFM.InitPersonalFM();
-                    break;
-                }
+                    {
+                        PersonalFM.InitPersonalFM();
+                        break;
+                    }
             }
         }
 

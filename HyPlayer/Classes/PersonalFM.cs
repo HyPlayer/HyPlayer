@@ -45,8 +45,8 @@ namespace HyPlayer.Classes
                     var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PersonalFm);
                     var song1 = json["data"][0];
                     var song2 = json["data"][1];
-                    var item1 = HyPlayList.AppendNCSong(NCSong.CreateFromJson(song1));
-                    var item2 = HyPlayList.AppendNCSong(NCSong.CreateFromJson(song2));
+                    var item1 = HyPlayList.AppendNcSong(NCSong.CreateFromJson(song1));
+                    var item2 = HyPlayList.AppendNcSong(NCSong.CreateFromJson(song2));
                     item1.ItemType = HyPlayItemType.Netease;
                     item2.ItemType = HyPlayItemType.Netease;
                 }

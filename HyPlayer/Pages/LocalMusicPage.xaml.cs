@@ -123,7 +123,7 @@ namespace HyPlayer.Pages
         private async void UploadCloud_Click(object sender, RoutedEventArgs e)
         {
             var sf = await StorageFile.GetFileFromPathAsync(localHyItems[int.Parse((sender as Button).Tag.ToString())]
-                .PlayItem.url);
+                .PlayItem.Url);
             await CloudUpload.UploadMusic(sf);
         }
 

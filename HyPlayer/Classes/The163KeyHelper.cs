@@ -168,12 +168,12 @@ namespace HyPlayer.Classes
                     album = pi.Album.name,
                     albumId = int.Parse(pi.Album.id),
                     albumPic = pi.Album.cover,
-                    bitrate = pi.bitrate,
+                    bitrate = pi.Bitrate,
                     artist = null,
                     duration = pi.LengthInMilliseconds,
-                    musicId = int.Parse(pi.id),
+                    musicId = int.Parse(pi.Id),
                     musicName = pi.Name,
-                    format = pi.subext.ToLower()
+                    format = pi.SubExt.ToLower()
                 };
                 key.artist = pi.Artist.Select(t => new List<object> { t.name, int.Parse(t.id) }).ToList();
                 return TrySetMusicInfo(tag, key);

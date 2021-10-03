@@ -71,7 +71,7 @@ namespace HyPlayer.Controls
                 try
                 {
                     var list = await HistoryManagement.GetcurPlayingListHistory();
-                    HyPlayList.AppendNCSongs(list);
+                    HyPlayList.AppendNcSongs(list);
                     if (list.Count > 0)
                     {
                         int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"].ToString(),
@@ -84,6 +84,10 @@ namespace HyPlayer.Controls
                 {
                 }
             });
+
+
+            if (Common.isExpanded)
+                Common.BarPlayBar.ShowExpandedPlayer();
             /*
             verticalAnimation = new DoubleAnimation();
 
@@ -197,13 +201,13 @@ namespace HyPlayer.Controls
                 SequenceNumber = 0
             };
             data.Values["Title"] = HyPlayList.NowPlayingItem.PlayItem.Name;
-            data.Values["PureLyric"] = HyPlayList.Lyrics[HyPlayList.lyricpos].PureLyric;
+            data.Values["PureLyric"] = HyPlayList.Lyrics[HyPlayList.LyricPos].PureLyric;
             // TODO 此处有点冒险的报错,请注意测试
-            data.Values["Translation"] = HyPlayList.Lyrics[HyPlayList.lyricpos].Translation is null
-                ? HyPlayList.Lyrics.Count > HyPlayList.lyricpos + 1
-                    ? HyPlayList.Lyrics[HyPlayList.lyricpos + 1].PureLyric
+            data.Values["Translation"] = HyPlayList.Lyrics[HyPlayList.LyricPos].Translation is null
+                ? HyPlayList.Lyrics.Count > HyPlayList.LyricPos + 1
+                    ? HyPlayList.Lyrics[HyPlayList.LyricPos + 1].PureLyric
                     : ""
-                : HyPlayList.Lyrics[HyPlayList.lyricpos].Translation;
+                : HyPlayList.Lyrics[HyPlayList.LyricPos].Translation;
             data.Values["TotalValueString"] =
                 TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds)
                     .ToString(@"hh\:mm\:ss");
@@ -219,7 +223,7 @@ namespace HyPlayer.Controls
         {
             RefreshSongList();
             HistoryManagement.SetcurPlayingListHistory(HyPlayList.List
-                .Where(t => t.ItemType == HyPlayItemType.Netease).Select(t => t.PlayItem.id).ToList());
+                .Where(t => t.ItemType == HyPlayItemType.Netease).Select(t => t.PlayItem.Id).ToList());
         }
 
         private async void TestFile()
@@ -258,13 +262,13 @@ namespace HyPlayer.Controls
                                     id = Info.albumId.ToString(),
                                     cover = Info.albumPic
                                 },
-                                url = file.Path,
-                                subext = Info.format,
-                                bitrate = Info.bitrate,
-                                isLocalFile = true,
+                                Url = file.Path,
+                                SubExt = Info.format,
+                                Bitrate = Info.bitrate,
+                                IsLocalFile = true,
                                 Type = HyPlayItemType.Netease,
                                 LengthInMilliseconds = Info.duration,
-                                id = Info.musicId.ToString(),
+                                Id = Info.musicId.ToString(),
                                 Artist = null,
                                 /*
                                 size = sf.GetBasicPropertiesAsync()
@@ -273,7 +277,7 @@ namespace HyPlayer.Controls
                                     .Size.ToString(),
                                 */
                                 Name = Info.musicName,
-                                tag = file.Provider.DisplayName + " NCM"
+                                Tag = file.Provider.DisplayName + " NCM"
                             }
                         };
                         hyitem.PlayItem.Artist = Info.artist.Select(t => new NCArtist
@@ -289,12 +293,15 @@ namespace HyPlayer.Controls
                 {
                     await HyPlayList.AppendStorageFile(file);
                 }
-                if (isFirstLoad){
+
+                if (isFirstLoad)
+                {
                     HyPlayList.SongAppendDone();
                     isFirstLoad = false;
                     HyPlayList.SongMoveTo(HyPlayList.List.Count - 1);
                 }
             }
+
             HyPlayList.SongAppendDone();
             HyPlayList.SongMoveTo(0);
         }
@@ -426,14 +433,14 @@ namespace HyPlayer.Controls
                 canslide = true;
                 if (mpi.ItemType == HyPlayItemType.Netease)
                 {
-                    BtnLike.IsChecked = Common.LikedSongs.Contains(mpi.PlayItem.id);
-                    HistoryManagement.AddNCSongHistory(mpi.PlayItem.id);
+                    BtnLike.IsChecked = Common.LikedSongs.Contains(mpi.PlayItem.Id);
+                    HistoryManagement.AddNCSongHistory(mpi.PlayItem.Id);
                 }
 
                 realSelectSong = false;
                 ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
                 realSelectSong = true;
-                TbSongTag.Text = HyPlayList.NowPlayingItem.PlayItem.tag;
+                TbSongTag.Text = HyPlayList.NowPlayingItem.PlayItem.Tag;
                 Btn_Share.IsEnabled = HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease;
                 /*
                 verticalAnimation.To = TbSongName.ActualWidth - TbSongName.Tb.ActualWidth;
@@ -605,12 +612,19 @@ namespace HyPlayer.Controls
                 new EntranceNavigationTransitionInfo());
             if (Common.Setting.expandAnimation && GridSongInfoContainer.Visibility == Visibility.Visible)
             {
-                ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TbSongName);
-                if (GridSongInfoContainer.Visibility == Visibility.Visible)
-                    ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", AlbumImage);
+                try
+                {
+                    ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TbSongName);
+                    if (GridSongInfoContainer.Visibility == Visibility.Visible)
+                        ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", AlbumImage);
 
-                ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TbSingerName);
-                Common.PageExpandedPlayer.StartExpandAnimation();
+                    ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TbSingerName);
+                    Common.PageExpandedPlayer.StartExpandAnimation();
+                }
+                catch (Exception)
+                {
+                    //ignore
+                }
             }
 
             Common.NavigatePage(typeof(BlankPage));
@@ -670,6 +684,7 @@ namespace HyPlayer.Controls
         private void ButtonCleanAll_OnClick(object sender, RoutedEventArgs e)
         {
             HyPlayList.RemoveAllSong();
+            PlayItems.Clear();
             HyPlayList.SongAppendDone();
         }
 
@@ -689,7 +704,7 @@ namespace HyPlayer.Controls
             {
                 if (sender is Button btn)
                 {
-                    HyPlayList.RemoveSong(HyPlayList.List.FindIndex(t=>t.PlayItem == btn.Tag));
+                    HyPlayList.RemoveSong(HyPlayList.List.FindIndex(t => t.PlayItem == btn.Tag));
                     RefreshSongList();
                 }
             }
@@ -727,7 +742,7 @@ namespace HyPlayer.Controls
             else
             {
                 _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.FmTrash,
-                    new Dictionary<string, object> { { "id", HyPlayList.NowPlayingItem.PlayItem.id } });
+                    new Dictionary<string, object> { { "id", HyPlayList.NowPlayingItem.PlayItem.Id } });
                 PersonalFM.LoadNextFM();
             }
         }
@@ -736,20 +751,20 @@ namespace HyPlayer.Controls
         {
             if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
             {
-                Api.LikeSong(HyPlayList.NowPlayingItem.PlayItem.id,
-                    !Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.id));
-                if (Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.id))
-                    Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.id);
+                Api.LikeSong(HyPlayList.NowPlayingItem.PlayItem.Id,
+                    !Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id));
+                if (Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id))
+                    Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.Id);
                 else
-                    Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.id);
+                    Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.Id);
 
-                BtnLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.id);
+                BtnLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
             }
             else if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Radio)
             {
                 _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.ResourceLike,
                     new Dictionary<string, object>
-                        { { "type", "4" }, { "t", "1" }, { "id", HyPlayList.NowPlayingItem.PlayItem.id } });
+                        { { "type", "4" }, { "t", "1" }, { "id", HyPlayList.NowPlayingItem.PlayItem.Id } });
             }
             else
             {
@@ -815,7 +830,7 @@ namespace HyPlayer.Controls
         private async void Btn_Sub_OnClick(object sender, RoutedEventArgs e)
         {
             if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
-                await new SongListSelect(HyPlayList.NowPlayingItem.PlayItem.id).ShowAsync();
+                await new SongListSelect(HyPlayList.NowPlayingItem.PlayItem.Id).ShowAsync();
         }
 
         private void Btn_Down_OnClick(object sender, RoutedEventArgs e)
@@ -833,7 +848,7 @@ namespace HyPlayer.Controls
         private void Btn_Comment_OnClick(object sender, RoutedEventArgs e)
         {
             if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
-                Common.NavigatePage(typeof(Comments), "sg" + HyPlayList.NowPlayingItem.PlayItem.id);
+                Common.NavigatePage(typeof(Comments), "sg" + HyPlayList.NowPlayingItem.PlayItem.Id);
             else
                 Common.NavigatePage(typeof(Comments), "fm" + HyPlayList.NowPlayingItem.PlayItem.Album.alias);
             Common.NavigatePage(typeof(BlankPage));
@@ -850,7 +865,7 @@ namespace HyPlayer.Controls
             {
                 var dataPackage = new DataPackage();
                 dataPackage.SetWebLink(new Uri("https://music.163.com/#/song?id=" +
-                                               HyPlayList.NowPlayingItem.PlayItem.id));
+                                               HyPlayList.NowPlayingItem.PlayItem.Id));
                 dataPackage.Properties.Title = HyPlayList.NowPlayingItem.PlayItem.Name;
                 dataPackage.Properties.Description =
                     "歌手: " + string.Join(';',
@@ -881,11 +896,11 @@ namespace HyPlayer.Controls
 
         private void ButtonPlayList_OnClick(object sender, RoutedEventArgs e)
         {
-            
-            ListBoxPlayList.ScrollIntoView(PlayItems[HyPlayList.NowPlaying]);
+            if (HyPlayList.NowPlaying >= 0 && HyPlayList.NowPlaying < PlayItems.Count)
+                ListBoxPlayList.ScrollIntoView(PlayItems[HyPlayList.NowPlaying]);
         }
     }
-    
+
 
     public class ThumbConverter : DependencyObject, IValueConverter
     {

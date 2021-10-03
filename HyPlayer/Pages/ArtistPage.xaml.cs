@@ -147,7 +147,7 @@ namespace HyPlayer.Pages
                 {
                     try
                     {
-                        HyPlayList.AppendNCSongs(hotSongs);
+                        HyPlayList.AppendNcSongs(hotSongs);
 
                         HyPlayList.SongAppendDone();
 

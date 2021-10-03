@@ -152,9 +152,9 @@ namespace HyPlayer
                 case "ns":
                     Invoke(async () =>
                     {
-                        await HyPlayList.AppendNCSource(resourceId);
+                        await HyPlayList.AppendNcSource(resourceId);
                         HyPlayList.SongAppendDone();
-                        HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => "ns" + t.PlayItem.id == resourceId));
+                        HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => "ns" + t.PlayItem.Id == resourceId));
                     });
 
                     break;

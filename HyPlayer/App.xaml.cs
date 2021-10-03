@@ -1,5 +1,11 @@
 ﻿#region
 
+using HyPlayer.HyPlayControl;
+using HyPlayer.Pages;
+using Kawazu;
+using Microsoft.AppCenter;
+using Microsoft.AppCenter.Analytics;
+using Microsoft.AppCenter.Crashes;
 using System;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
@@ -14,12 +20,6 @@ using Windows.UI.StartScreen;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.HyPlayControl;
-using HyPlayer.Pages;
-using Kawazu;
-using Microsoft.AppCenter;
-using Microsoft.AppCenter.Analytics;
-using Microsoft.AppCenter.Crashes;
 using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
 
 #endregion
@@ -43,7 +43,7 @@ namespace HyPlayer
         {
             InitializeComponent();
 
-            if(Common.Setting.xboxHidePointer)
+            if (Common.Setting.xboxHidePointer)
             {
                 this.RequiresPointerMode = Windows.UI.Xaml.ApplicationRequiresPointerMode.WhenRequested;
                 this.FocusVisualKind = FocusVisualKind.Reveal;
@@ -113,6 +113,7 @@ namespace HyPlayer
         {
             Common.Invoke(async () =>
             {
+
                 try
                 {
                     var sf = await ApplicationData.Current.LocalCacheFolder.GetFolderAsync("Romaji");
@@ -294,6 +295,8 @@ namespace HyPlayer
         protected override async void OnFileActivated(FileActivatedEventArgs args)
         {
             InitializeJumpList();
+            Common.isExpanded = true;
+            ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = "[]";
             var rootFrame = Window.Current.Content as Frame;
             if (rootFrame == null)
             {
@@ -303,6 +306,8 @@ namespace HyPlayer
 
             rootFrame.Navigate(typeof(MainPage));
             Window.Current.Activate();
+            if (HyPlayList.Player == null)
+                HyPlayList.InitializeHyPlaylist();
             HyPlayList.RemoveAllSong();
             foreach (StorageFile file in args.Files) await HyPlayList.AppendStorageFile(file);
             HyPlayList.SongAppendDone();

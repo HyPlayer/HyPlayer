@@ -87,7 +87,7 @@ namespace HyPlayer.Controls
 
 
             if (playitem.ItemType == HyPlayItemType.Local) return;
-            int idx = VisibleSongs.ToList().FindIndex(t => t.sid == playitem.PlayItem.id);
+            int idx = VisibleSongs.ToList().FindIndex(t => t.sid == playitem.PlayItem.Id);
             if (idx != -1)
             {
                 IsManualSelect = false;
@@ -157,10 +157,10 @@ namespace HyPlayer.Controls
                 {
                     HyPlayList.List.Clear();
                     HyPlayList.Player.Pause();
-                    await HyPlayList.AppendNCSource(ListSource);
+                    await HyPlayList.AppendNcSource(ListSource);
                     HyPlayList.SongAppendDone();
                     HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t =>
-                        t.PlayItem?.id == VisibleSongs[SongContainer.SelectedIndex].sid));
+                        t.PlayItem?.Id == VisibleSongs[SongContainer.SelectedIndex].sid));
                 }
                 //else if (ListSource == null)
                 //{
@@ -171,7 +171,7 @@ namespace HyPlayer.Controls
                 //}
                 else
                 {
-                    HyPlayList.AppendNCSongs(VisibleSongs);
+                    HyPlayList.AppendNcSongs(VisibleSongs);
                     HyPlayList.SongAppendDone();
                     HyPlayList.SongMoveTo(SongContainer.SelectedIndex);
                 }
@@ -180,8 +180,8 @@ namespace HyPlayer.Controls
         private void BtnPlay_Click(object sender, RoutedEventArgs e)
         {
             var ncsong = VisibleSongs[int.Parse((sender as Button).Tag.ToString())];
-            _ = HyPlayList.AppendNCSong(ncsong);
-            HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
+            _ = HyPlayList.AppendNcSong(ncsong);
+            HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.Id == ncsong.sid));
             HyPlayList.SongAppendDone();
         }
 
@@ -196,12 +196,12 @@ namespace HyPlayer.Controls
         private void FlyoutItemPlay_Click(object sender, RoutedEventArgs e)
         {
             var ncsong = VisibleSongs[SongContainer.SelectedIndex];
-            _ = HyPlayList.AppendNCSong(ncsong, HyPlayList.NowPlaying + 1);
+            _ = HyPlayList.AppendNcSong(ncsong, HyPlayList.NowPlaying + 1);
         }
 
         private void FlyoutItemPlayNext_Click(object sender, RoutedEventArgs e)
         {
-            HyPlayList.AppendNCSong(VisibleSongs[SongContainer.SelectedIndex], HyPlayList.NowPlaying + 1);
+            HyPlayList.AppendNcSong(VisibleSongs[SongContainer.SelectedIndex], HyPlayList.NowPlaying + 1);
             HyPlayList.SongAppendDone();
         }
 
