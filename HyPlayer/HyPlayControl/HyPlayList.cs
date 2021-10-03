@@ -1145,8 +1145,8 @@ namespace HyPlayer.HyPlayControl
                         {
                             lyrics.ForEach(t => t.PureLyric = " " + t.PureLyric);
                         }
-
                         spaceBeforeLyric = false;
+
                     }
                 }
 
@@ -1171,19 +1171,7 @@ namespace HyPlayer.HyPlayControl
                 });
             }
 
-            lyrics = lyrics.OrderBy(lyric => lyric.LyricTime.TotalMilliseconds).ToList();
-            if (lyrics[0].LyricTime != TimeSpan.Zero)
-            {
-                lyrics = lyrics.Prepend(new SongLyric
-                {
-                    HaveTranslation = false,
-                    LyricTime = TimeSpan.Zero,
-                    PureLyric = null,
-                    Translation = null
-                }).ToList();
-            }
-
-            return lyrics;
+            return lyrics.OrderBy(lyric => lyric.LyricTime.TotalMilliseconds).ToList();
         }
 
         public static void ConvertTranslation(string lyricAllText, List<SongLyric> lyrics)

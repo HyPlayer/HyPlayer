@@ -260,6 +260,15 @@ namespace HyPlayer
             set => ApplicationData.Current.LocalSettings.Values["safeFileAccess"] = value;
         }
 
+        public List<string> scanLocalFolder
+        {
+            get
+            {
+                var folders = GetSettings("scanLocalFolder", KnownFolders.MusicLibrary.Path);
+                return folders.Split("\r\n").ToList();
+            }
+            set => ApplicationData.Current.LocalSettings.Values["safeFileAccess"] = string.Join("\r\n", value);
+        }
 
         public int lyricColor
         {
