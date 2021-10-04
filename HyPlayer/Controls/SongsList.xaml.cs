@@ -84,8 +84,6 @@ namespace HyPlayer.Controls
 
         private void HyPlayListOnOnPlayItemChange(HyPlayItem playitem)
         {
-
-
             if (playitem.ItemType == HyPlayItemType.Local || playitem.PlayItem == null) return;
             int idx = VisibleSongs.ToList().FindIndex(t => t.sid == playitem.PlayItem.Id);
             if (idx != -1)
@@ -152,29 +150,31 @@ namespace HyPlayer.Controls
         private async void SongContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (SongContainer.SelectedIndex == -1) return;
-            if (IsManualSelect)
-                if (ListSource != null && ListSource != "content" && Songs.Count == VisibleSongs.Count)
-                {
-                    HyPlayList.List.Clear();
-                    HyPlayList.Player.Pause();
-                    await HyPlayList.AppendNcSource(ListSource);
-                    HyPlayList.SongAppendDone();
-                    HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t =>
-                        t.PlayItem?.Id == VisibleSongs[SongContainer.SelectedIndex].sid));
-                }
-                //else if (ListSource == null)
-                //{
-                //    var ncsong = VisibleSongs[SongContainer.SelectedIndex];
-                //    _ = HyPlayList.AppendNCSong(ncsong);
-                //    HyPlayList.SongAppendDone();
-                //    HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
-                //}
-                else
-                {
-                    HyPlayList.AppendNcSongs(VisibleSongs);
-                    HyPlayList.SongAppendDone();
-                    HyPlayList.SongMoveTo(SongContainer.SelectedIndex);
-                }
+
+            if (!IsManualSelect) return;
+            if (VisibleSongs[SongContainer.SelectedIndex].sid == HyPlayList.NowPlayingItem.PlayItem.Id) return;
+            if (ListSource != null && ListSource != "content" && Songs.Count == VisibleSongs.Count)
+            {
+                HyPlayList.List.Clear();
+                HyPlayList.Player.Pause();
+                await HyPlayList.AppendNcSource(ListSource);
+                HyPlayList.SongAppendDone();
+                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t =>
+                    t.PlayItem?.Id == VisibleSongs[SongContainer.SelectedIndex].sid));
+            }
+            //else if (ListSource == null)
+            //{
+            //    var ncsong = VisibleSongs[SongContainer.SelectedIndex];
+            //    _ = HyPlayList.AppendNCSong(ncsong);
+            //    HyPlayList.SongAppendDone();
+            //    HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
+            //}
+            else
+            {
+                HyPlayList.AppendNcSongs(VisibleSongs);
+                HyPlayList.SongAppendDone();
+                HyPlayList.SongMoveTo(SongContainer.SelectedIndex);
+            }
         }
 
         private void BtnPlay_Click(object sender, RoutedEventArgs e)
