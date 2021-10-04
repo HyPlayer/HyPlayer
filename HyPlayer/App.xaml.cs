@@ -131,9 +131,13 @@ namespace HyPlayer
         private void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)
         {
             isInBackground = false;
-            InitializeThings();
+            if (Common.Setting.forceMemoryGarbage)
+            {
+                InitializeThings();
+                Common.NavigateBack();
+            }
             ClearExtendedExecution(executionSession);
-            Common.NavigateBack();
+
         }
 
         private async void App_EnteredBackground(object sender, EnteredBackgroundEventArgs e)
@@ -147,7 +151,8 @@ namespace HyPlayer
             {
                 case ExtendedExecutionResult.Allowed:
                     executionSession = delaySession;
-                    _ = Task.Run(() => Common.Invoke(async () =>
+                    if (Common.Setting.forceMemoryGarbage)
+                        _ = Task.Run(() => Common.Invoke(async () =>
                     {
                         Common.CollectGarbage();
                         await Task.Delay(1000);

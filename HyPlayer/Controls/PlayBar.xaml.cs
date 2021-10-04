@@ -626,8 +626,8 @@ namespace HyPlayer.Controls
                     //ignore
                 }
             }
-
-            Common.NavigatePage(typeof(BlankPage));
+            if (Common.Setting.forceMemoryGarbage)
+                Common.NavigatePage(typeof(BlankPage));
             Common.isExpanded = true;
             GridSongInfo.Visibility = Visibility.Collapsed;
             GridSongAdvancedOperation.Visibility = Visibility.Visible;
@@ -639,6 +639,11 @@ namespace HyPlayer.Controls
         }
 
         public void ButtonCollapse_OnClick(object sender, RoutedEventArgs e)
+        {
+            CollapseExpandedPlayer();
+        }
+
+        public void CollapseExpandedPlayer()
         {
             Common.PageExpandedPlayer.StartCollapseAnimation();
             GridSongAdvancedOperation.Visibility = Visibility.Collapsed;
@@ -666,8 +671,8 @@ namespace HyPlayer.Controls
                     //ignore
                 }
             }
-
-            Common.NavigateBack();
+            if (Common.Setting.forceMemoryGarbage)
+                Common.NavigateBack();
             ButtonExpand.Visibility = Visibility.Visible;
             ButtonCollapse.Visibility = Visibility.Collapsed;
             Common.PageExpandedPlayer.Dispose();

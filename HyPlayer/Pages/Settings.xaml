@@ -257,8 +257,12 @@
                         IsChecked="{x:Bind hyplayer:Common.Setting.songUrlLazyGet, Mode=TwoWay}" />-->
                     <CheckBox
                         x:Name="XboxPointerSet"
-                        Content="Xbox上是否隐藏指针（可能减小掉后台概率）"
+                        Content="Xbox上是否隐藏指针（不要开启!）"
                         IsChecked="{x:Bind hyplayer:Common.Setting.xboxHidePointer, Mode=TwoWay}" />
+                    <CheckBox
+                        x:Name="ForceMemoryCollect"
+                        Content="是否频繁内存回收 (开启后可能会频繁出现页面重载现象)"
+                        IsChecked="{x:Bind hyplayer:Common.Setting.forceMemoryGarbage, Mode=TwoWay}" />
                     <CheckBox
                         x:Name="CBSongCacheEnable"
                         Content="是否开启播放缓存 (可能造成播放前空白)"

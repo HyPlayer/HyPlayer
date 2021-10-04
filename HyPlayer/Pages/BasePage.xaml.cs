@@ -77,7 +77,7 @@ namespace HyPlayer.Pages
 
             ApplicationView.TerminateAppOnFinalViewClose = false;
             Common.BaseFrame = BaseFrame;
-            BaseFrame.IsNavigationStackEnabled = false;
+            BaseFrame.IsNavigationStackEnabled = !Common.Setting.forceMemoryGarbage;
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
         }

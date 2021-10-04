@@ -110,17 +110,23 @@ namespace HyPlayer
 
         public static void NavigatePage(Type SourcePageType, object paratmer = null, object ignore = null)
         {
-            if (NavigationHistory.Count >= 1 && PageBase.NavMain.SelectedItem == NavigationHistory.Peek().Item)
-                PageBase.NavMain.SelectedItem = PageBase.ItemMain;
-            NavigationHistory.Push(new NavigationHistoryItem
+            if (Common.Setting.forceMemoryGarbage)
             {
-                PageType = SourcePageType,
-                Paratmers = paratmer,
-                Item = PageBase.NavMain.SelectedItem
-            });
-            BaseFrame?.Navigate(SourcePageType, paratmer);
-
-            GC.Collect();
+                if (NavigationHistory.Count >= 1 && PageBase.NavMain.SelectedItem == NavigationHistory.Peek().Item)
+                    PageBase.NavMain.SelectedItem = PageBase.ItemMain;
+                NavigationHistory.Push(new NavigationHistoryItem
+                {
+                    PageType = SourcePageType,
+                    Paratmers = paratmer,
+                    Item = PageBase.NavMain.SelectedItem
+                });
+                BaseFrame?.Navigate(SourcePageType, paratmer);
+                GC.Collect();
+            }
+            else
+            {
+                BaseFrame?.Navigate(SourcePageType, paratmer);
+            }
         }
 
         public static void NavigateRefresh()
@@ -188,26 +194,35 @@ namespace HyPlayer
 
         public static void NavigateBack()
         {
-            if (NavigationHistory.Count > 1)
-                NavigationHistory.Pop();
-            try
+            if (Common.Setting.forceMemoryGarbage)
             {
-                var bak = NavigationHistory.Peek();
-                while (bak.PageType == typeof(BlankPage))
-                {
+                if (NavigationHistory.Count > 1)
                     NavigationHistory.Pop();
-                    bak = NavigationHistory.Peek();
-                }
+                try
+                {
+                    var bak = NavigationHistory.Peek();
+                    while (bak.PageType == typeof(BlankPage))
+                    {
+                        NavigationHistory.Pop();
+                        bak = NavigationHistory.Peek();
+                    }
 
-                BaseFrame?.Navigate(bak.PageType, bak.Paratmers);
-                NavigatingBack = true;
-                PageBase.NavMain.SelectedItem = bak.Item;
-                NavigatingBack = false;
-                GC.Collect();
+                    BaseFrame?.Navigate(bak.PageType, bak.Paratmers);
+                    NavigatingBack = true;
+                    PageBase.NavMain.SelectedItem = bak.Item;
+                    NavigatingBack = false;
+                    GC.Collect();
+                }
+                catch
+                {
+                }
             }
-            catch
+            else
             {
+                if (BaseFrame != null && BaseFrame.CanGoBack)
+                    BaseFrame?.GoBack();
             }
+
         }
 
         public class NavigationHistoryItem
@@ -246,6 +261,12 @@ namespace HyPlayer
                 ApplicationData.Current.LocalSettings.Values["lyricSize"] = value;
                 OnPropertyChanged();
             }
+        }
+
+        public bool forceMemoryGarbage
+        {
+            get => GetSettings("forceMemoryGarbage", false);
+            set => ApplicationData.Current.LocalSettings.Values["forceMemoryGarbage"] = value;
         }
 
         public bool lyricDropshadow
