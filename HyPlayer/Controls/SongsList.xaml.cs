@@ -51,6 +51,19 @@ namespace HyPlayer.Controls
             new PropertyMetadata(null)
         );
 
+        public static readonly DependencyProperty ListHeaderProperty = DependencyProperty.Register(
+            "ListHeader", typeof(UIElement), typeof(SongsList), new PropertyMetadata(default(UIElement)));
+
+        public UIElement ListHeader
+        {
+            get { return (UIElement)GetValue(ListHeaderProperty); }
+            set
+            {
+                HeaderPanel.Padding = new Thickness(0, 0, 0, 25);
+                SetValue(ListHeaderProperty, value);
+            }
+        }
+
         public bool IsManualSelect = true;
 
         private readonly ObservableCollection<NCSong> VisibleSongs = new ObservableCollection<NCSong>();
@@ -60,26 +73,25 @@ namespace HyPlayer.Controls
             InitializeComponent();
             HyPlayList.OnPlayItemChange += HyPlayListOnOnPlayItemChange;
             Task.Run((() =>
-           {
-               Common.Invoke(async () =>
-               {
-                   int tryCount = 5;
-                   while (--tryCount > 0)
-                   {
-                       await Task.Delay(TimeSpan.FromSeconds(2));
-                       try
-                       {
-
-                           HyPlayListOnOnPlayItemChange(HyPlayList.NowPlayingItem);
-                           break;
-                       }
-                       catch (Exception e)
-                       {
-                           continue;
-                       }
-                   }
-               });
-           }));
+            {
+                Common.Invoke(async () =>
+                {
+                    int tryCount = 5;
+                    while (--tryCount > 0)
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(2));
+                        try
+                        {
+                            HyPlayListOnOnPlayItemChange(HyPlayList.NowPlayingItem);
+                            break;
+                        }
+                        catch (Exception e)
+                        {
+                            continue;
+                        }
+                    }
+                });
+            }));
         }
 
         private void HyPlayListOnOnPlayItemChange(HyPlayItem playitem)
@@ -92,7 +104,6 @@ namespace HyPlayer.Controls
                 SongContainer.SelectedIndex = idx;
                 IsManualSelect = true;
             }
-
         }
 
 
@@ -105,7 +116,12 @@ namespace HyPlayer.Controls
         public bool IsSearchEnabled
         {
             get => (bool)GetValue(IsSearchEnabledProperty);
-            set => SetValue(IsSearchEnabledProperty, value);
+            set
+            {
+                if (value)
+                    HeaderPanel.Padding = new Thickness(0, 0, 0, 25);
+                SetValue(IsSearchEnabledProperty, value);
+            }
         }
 
         public ObservableCollection<NCSong> Songs
@@ -152,10 +168,10 @@ namespace HyPlayer.Controls
             if (SongContainer.SelectedIndex == -1) return;
 
             if (!IsManualSelect) return;
-            if (VisibleSongs[SongContainer.SelectedIndex].sid == HyPlayList.NowPlayingItem.PlayItem.Id) return;
+            if (VisibleSongs[SongContainer.SelectedIndex].sid == HyPlayList.NowPlayingItem.PlayItem?.Id) return;
             if (ListSource != null && ListSource != "content" && Songs.Count == VisibleSongs.Count)
             {
-                HyPlayList.List.Clear();
+                HyPlayList.RemoveAllSong();
                 HyPlayList.Player.Pause();
                 await HyPlayList.AppendNcSource(ListSource);
                 HyPlayList.SongAppendDone();

@@ -86,7 +86,7 @@ namespace HyPlayer.Pages
         {
             if (args.CurrentPoint.Properties.IsXButton1Pressed)
                 if (Common.isExpanded)
-                    Common.BarPlayBar.ButtonCollapse_OnClick(null, null);
+                    Common.BarPlayBar.CollapseExpandedPlayer();
                 else
                     Common.NavigateBack();
         }
@@ -96,7 +96,7 @@ namespace HyPlayer.Pages
             if (args.VirtualKey == VirtualKey.GamepadB)
             {
                 if (Common.isExpanded)
-                    Common.BarPlayBar.ButtonCollapse_OnClick(null, null);
+                    Common.BarPlayBar.CollapseExpandedPlayer();
                 else
                     Common.NavigateBack();
                 args.Handled = true;
@@ -109,7 +109,7 @@ namespace HyPlayer.Pages
 
             if (args.VirtualKey == VirtualKey.Escape)
                 if (Common.isExpanded)
-                    Common.BarPlayBar.ButtonCollapse_OnClick(null, null);
+                    Common.BarPlayBar.CollapseExpandedPlayer();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)

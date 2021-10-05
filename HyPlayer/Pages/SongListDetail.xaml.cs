@@ -229,7 +229,7 @@ namespace HyPlayer.Pages
                 {
                     if (playList.plid != "-666")
                     {
-                        HyPlayList.List.Clear();
+                        HyPlayList.RemoveAllSong();
                         HyPlayList.SongAppendDone();
                         await HyPlayList.AppendPlayList(playList.plid);
                         HyPlayList.SongAppendDone();

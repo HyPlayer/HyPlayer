@@ -1,7 +1,10 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Storage;
@@ -9,9 +12,6 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using NeteaseCloudMusicApi;
 
 #endregion
 
@@ -25,6 +25,8 @@ namespace HyPlayer.Pages
     public sealed partial class Me : Page, IDisposable
     {
         private string uid = "";
+        ObservableCollection<SimpleListItem> myPlayList = new ObservableCollection<SimpleListItem>();
+        ObservableCollection<SimpleListItem> likedPlayList = new ObservableCollection<SimpleListItem>();
 
         public Me()
         {
@@ -34,15 +36,14 @@ namespace HyPlayer.Pages
         public void Dispose()
         {
             ImageRect.ImageSource = null;
-            GridContainerMy.Children.Clear();
-            GridContainerSub.Children.Clear();
+            myPlayList.Clear();
+            likedPlayList.Clear();
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
-            GridContainerMy.Children.Clear();
-            GridContainerSub.Children.Clear();
+            Dispose();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -72,13 +73,38 @@ namespace HyPlayer.Pages
                         new Dictionary<string, object> { ["uid"] = uid });
 
 
+                    int myListIdx = 0;
+                    int subListIdx = 0;
                     foreach (var PlaylistItemJson in json["playlist"].ToArray())
                     {
                         var ncp = NCPlayList.CreateFromJson(PlaylistItemJson);
                         if (PlaylistItemJson["subscribed"].ToString() == "True")
-                            GridContainerSub.Children.Add(new PlaylistItem(ncp));
+                            //GridContainerSub.Children.Add(new PlaylistItem(ncp));
+                            likedPlayList.Add(
+                                new SimpleListItem
+                                {
+                                    CoverUri = ncp.cover + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                                    LineOne = ncp.creater.name,
+                                    LineThree = null,
+                                    LineTwo = null,
+                                    Order = myListIdx++,
+                                    ResourceId = "pl" + ncp.plid,
+                                    Title = ncp.name
+                                }
+                            );
                         else
-                            GridContainerMy.Children.Add(new PlaylistItem(ncp));
+                            myPlayList.Add(
+                                new SimpleListItem
+                                {
+                                    CoverUri = ncp.cover + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                                    LineOne = ncp.creater.name,
+                                    LineThree = null,
+                                    LineTwo = null,
+                                    Order = subListIdx++,
+                                    ResourceId = "pl" + ncp.plid,
+                                    Title = ncp.name
+                                }
+                            );
                     }
                 }
                 catch (Exception ex)

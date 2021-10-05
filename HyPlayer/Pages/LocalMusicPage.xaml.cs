@@ -114,7 +114,7 @@ namespace HyPlayer.Pages
 
         private void ListBoxLocalMusicContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            HyPlayList.List.Clear();
+            HyPlayList.RemoveAllSong();
             localHyItems.ForEach(t => HyPlayList.List.Add(t));
             HyPlayList.SongAppendDone();
             HyPlayList.SongMoveTo(ListBoxLocalMusicContainer.SelectedIndex);

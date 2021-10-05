@@ -360,7 +360,7 @@ namespace HyPlayer
             get => GetSettings("downloadAudioRate", "999000");
             set
             {
-                ApplicationData.Current.LocalSettings.Values["audioRate"] = value;
+                ApplicationData.Current.LocalSettings.Values["downloadAudioRate"] = value;
                 OnPropertyChanged();
             }
         }

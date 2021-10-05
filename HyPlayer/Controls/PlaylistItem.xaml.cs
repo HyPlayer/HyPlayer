@@ -71,7 +71,7 @@ namespace HyPlayer.Controls
         private async void PlayAllBtn_Click(object sender, RoutedEventArgs e)
         {
             //播放全部歌曲
-            HyPlayList.List.Clear();
+            HyPlayList.RemoveAllSong();
             HyPlayList.SongAppendDone();
             await HyPlayList.AppendPlayList(playList.plid);
             HyPlayList.SongAppendDone();

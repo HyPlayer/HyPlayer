@@ -17,6 +17,16 @@ namespace HyPlayer.Controls
             new PropertyMetadata(new ObservableCollection<SimpleListItem>())
         );
 
+        public static readonly DependencyProperty ListHeaderProperty = DependencyProperty.Register(
+            "ListHeader", typeof(UIElement), typeof(SimpleLinerList), new PropertyMetadata(default(UIElement)));
+
+        public UIElement ListHeader
+        {
+            get { return (UIElement)GetValue(ListHeaderProperty); }
+            set { SetValue(ListHeaderProperty, value); }
+        }
+        
+
         public SimpleLinerList()
         {
             InitializeComponent();
@@ -33,5 +43,7 @@ namespace HyPlayer.Controls
             if (ItemList.SelectedIndex >= 0)
                 Common.NavigatePageResource(ListItems[ItemList.SelectedIndex].ResourceId);
         }
+        
+        
     }
 }

@@ -1,9 +1,10 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <AcrylicBrush
+        x:Key="ExpandedPlayerMask"
         BackgroundSource="Backdrop"
         FallbackColor="{StaticResource SystemChromeMediumColor}"
         TintColor="#FFAAAAAA"
         TintLuminosityOpacity="0.4"
-        TintOpacity="0.6"
-        x:Key="ExpandedPlayerMask" />
+        TintOpacity="0.6" />
+    <SolidColorBrush x:Key="FakeMicaBackgroundColor" Color="#F9F9F9FF" />
 </ResourceDictionary>

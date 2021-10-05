@@ -281,7 +281,7 @@ namespace HyPlayer.Controls
                             }
                         };
                         hyitem.PlayItem.Artist = Info.artist.Select(t => new NCArtist
-                        { name = t[0].ToString(), id = t[1].ToString() })
+                                { name = t[0].ToString(), id = t[1].ToString() })
                             .ToList();
 
                         HyPlayList.List.Add(hyitem);
@@ -497,7 +497,7 @@ namespace HyPlayer.Controls
                     FadeSettedVolume = true;
                     var vol = Common.Setting.Volume;
                     var curtime = HyPlayList.Player.PlaybackSession.Position.TotalSeconds;
-                    for (; ; )
+                    for (;;)
                         try
                         {
                             await Task.Delay(50);
@@ -539,7 +539,7 @@ namespace HyPlayer.Controls
                     var vol = Common.Setting.Volume;
                     HyPlayList.Player.Volume = 0;
                     var curtime = HyPlayList.Player.PlaybackSession.Position.TotalSeconds;
-                    for (; ; )
+                    for (;;)
                     {
                         await Task.Delay(50);
                         var curvol = (HyPlayList.Player.PlaybackSession.Position.TotalSeconds - curtime) /
@@ -626,6 +626,7 @@ namespace HyPlayer.Controls
                     //ignore
                 }
             }
+
             if (Common.Setting.forceMemoryGarbage)
                 Common.NavigatePage(typeof(BlankPage));
             Common.isExpanded = true;
@@ -671,6 +672,7 @@ namespace HyPlayer.Controls
                     //ignore
                 }
             }
+
             if (Common.Setting.forceMemoryGarbage)
                 Common.NavigateBack();
             ButtonExpand.Visibility = Visibility.Visible;
@@ -801,7 +803,7 @@ namespace HyPlayer.Controls
                                 HyPlayList.NowPlayingItem.PlayItem.Artist[0].id);
                     }
 
-                    //ButtonCollapse_OnClick(this, null);
+                    //CollapseExpandedPlayer();
                 }
             }
             catch
@@ -856,8 +858,9 @@ namespace HyPlayer.Controls
                 Common.NavigatePage(typeof(Comments), "sg" + HyPlayList.NowPlayingItem.PlayItem.Id);
             else
                 Common.NavigatePage(typeof(Comments), "fm" + HyPlayList.NowPlayingItem.PlayItem.Album.alias);
-            Common.NavigatePage(typeof(BlankPage));
-            ButtonCollapse_OnClick(this, e);
+            if (Common.Setting.forceMemoryGarbage)
+                Common.NavigatePage(typeof(BlankPage));
+            CollapseExpandedPlayer();
         }
 
         private void Btn_Share_OnClick(object sender, RoutedEventArgs e)

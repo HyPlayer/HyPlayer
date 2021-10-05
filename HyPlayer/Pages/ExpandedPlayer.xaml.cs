@@ -679,8 +679,9 @@ namespace HyPlayer.Pages
                                 HyPlayList.NowPlayingItem.PlayItem.Album.id);
                     }
 
-                    Common.NavigatePage(typeof(BlankPage));
-                    Common.BarPlayBar.ButtonCollapse_OnClick(this, null);
+                    if (Common.Setting.forceMemoryGarbage)
+                        Common.NavigatePage(typeof(BlankPage));
+                    Common.BarPlayBar.CollapseExpandedPlayer();
                 }
             }
             catch
@@ -710,8 +711,9 @@ namespace HyPlayer.Pages
                             HyPlayList.NowPlayingItem.PlayItem.Artist[0].id);
                     }
 
-                    Common.NavigatePage(typeof(BlankPage));
-                    Common.BarPlayBar.ButtonCollapse_OnClick(this, null);
+                    if (Common.Setting.forceMemoryGarbage)
+                        Common.NavigatePage(typeof(BlankPage));
+                    Common.BarPlayBar.CollapseExpandedPlayer();
                 }
             }
             catch
@@ -840,11 +842,12 @@ namespace HyPlayer.Pages
         {
             if (Common.Setting.lyricColor != 0) return Common.Setting.lyricColor == 2;
             if (HyPlayList.NowPlayingItem.PlayItem == null) return false;
-            
+
             if (HyPlayList.NowPlayingItem.PlayItem == null)
             {
                 return false;
             }
+
             if (lastSongUrlForBrush == HyPlayList.NowPlayingItem.PlayItem.Url) return ForegroundAlbumBrush.Color.R == 0;
             try
             {

@@ -862,7 +862,7 @@ namespace HyPlayer.HyPlayControl
 
                 var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
                     new Dictionary<string, object>
-                    { ["ids"] = string.Join(",", (j1["songs"] ?? new JArray()).ToList().Select(t => t["id"])) },
+                        { ["ids"] = string.Join(",", (j1["songs"] ?? new JArray()).ToList().Select(t => t["id"])) },
                     false);
                 var idx = 0;
                 var list = new List<NCSong>();
@@ -1145,29 +1145,33 @@ namespace HyPlayer.HyPlayControl
                         {
                             lyrics.ForEach(t => t.PureLyric = " " + t.PureLyric);
                         }
-                        spaceBeforeLyric = false;
 
+                        spaceBeforeLyric = false;
                     }
                 }
 
-                /*
-                //NLyric 的双语歌词
+                bool haveTranslation = false;
                 string translation = null;
-                if (LyricTextLine.IndexOf('「') != -1 && LyricTextLine.IndexOf('」') != -1)
+                //NLyric 的双语歌词
+                if (lrcText.EndsWith('」'))
                 {
-                    translation = LyricTextLine.Substring(LyricTextLine.IndexOf('「') + 1,
-                        LyricTextLine.IndexOf('」') - LyricTextLine.IndexOf('「') - 1);
-                    lrcText = lrcText.Substring(0, lrcText.IndexOf('「'));
+                    if (lrcText.LastIndexOf('「') != -1 && lrcText.LastIndexOf('」') != -1)
+                    {
+                        translation = lrcText.Substring(lrcText.IndexOf('「') + 1,
+                            lrcText.IndexOf('」') - lrcText.IndexOf('「') - 1);
+                        lrcText = lrcText.Substring(0, lrcText.IndexOf('「'));
+                    }
+
+                    haveTranslation = !string.IsNullOrEmpty(translation);
                 }
-                var HaveTranslation = !string.IsNullOrEmpty(translation);
-                */
+
 
                 lyrics.Add(new SongLyric
                 {
                     LyricTime = time + offset,
                     PureLyric = lrcText,
-                    Translation = null,
-                    HaveTranslation = false
+                    Translation = translation,
+                    HaveTranslation = haveTranslation
                 });
             }
 
@@ -1216,6 +1220,10 @@ namespace HyPlayer.HyPlayControl
                     var songLyric = lyrics[i];
                     if (songLyric.LyricTime == time + offset)
                     {
+                        if (songLyric.HaveTranslation)
+                        {
+                            songLyric.PureLyric += "「" + songLyric.Translation + "」";
+                        }
                         songLyric.Translation = lrcText;
                         songLyric.HaveTranslation = true;
                         lyrics[i] = songLyric;

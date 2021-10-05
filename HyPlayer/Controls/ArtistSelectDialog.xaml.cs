@@ -29,8 +29,9 @@ namespace HyPlayer.Controls
             Common.NavigatePage(typeof(ArtistPage), aartists[ListViewArtists.SelectedIndex].id);
             if (Common.isExpanded)
             {
-                Common.NavigatePage(typeof(BlankPage));
-                Common.BarPlayBar.ButtonCollapse_OnClick(this, null);
+                if (Common.Setting.forceMemoryGarbage)
+                    Common.NavigatePage(typeof(BlankPage));
+                Common.BarPlayBar.CollapseExpandedPlayer();
             }
 
             Hide();
