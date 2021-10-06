@@ -1,5 +1,7 @@
 ﻿#region
 
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,8 +13,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.Storage;
-using NeteaseCloudMusicApi;
-using Newtonsoft.Json.Linq;
 
 #endregion
 
@@ -80,7 +80,7 @@ namespace HyPlayer.Classes
                     content.Headers.ContentLength = (long)basicprop.Size;
 
                     await request.PostAsync(
-                        "http://45.127.129.8/ymusic/" + objkey + "?offset=0&complete=true&version=1.0",
+                        "http://45.127.129.8/jd-musicrep-privatecloud-audio-public/" + objkey + "?offset=0&complete=true&version=1.0",
                         content);
                 }
 

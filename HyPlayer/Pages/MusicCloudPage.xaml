@@ -16,12 +16,18 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <TextBlock
-            Grid.Row="0"
-            FontSize="36"
-            FontWeight="Medium"
-            Text="我的云盘"
-            TextWrapping="Wrap" />
+        <StackPanel Orientation="Horizontal" Spacing="20">
+            <TextBlock
+                Grid.Row="0"
+                FontSize="36"
+                FontWeight="Medium"
+                Text="我的云盘"
+                TextWrapping="Wrap" />
+            <Button
+                x:Name="BtnUpload"
+                Click="BtnUpload_Click"
+                Content="上传本地" />
+        </StackPanel>
         <controls1:SongsList x:Name="SongContainer" Grid.Row="1" />
 
         <Button

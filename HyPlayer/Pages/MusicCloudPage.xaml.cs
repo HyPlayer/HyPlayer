@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -104,6 +105,28 @@ namespace HyPlayer.Pages
         private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
         {
             DownloadManager.AddDownload(Items.ToList());
+        }
+
+        private async void BtnUpload_Click(object sender, RoutedEventArgs e)
+        {
+            var fop = new FileOpenPicker();
+            fop.FileTypeFilter.Add(".flac");
+            fop.FileTypeFilter.Add(".mp3");
+            fop.FileTypeFilter.Add(".ncm");
+            fop.FileTypeFilter.Add(".ape");
+            fop.FileTypeFilter.Add(".m4a");
+            fop.FileTypeFilter.Add(".wav");
+
+
+            var files =
+                await fop.PickMultipleFilesAsync();
+            Common.ShowTeachingTip("请稍等", "正在上传 " + files.Count + " 个音乐文件");
+            for (int i = 0; i < files.Count; i++)
+            {
+                Common.ShowTeachingTip("正在上传共 " + files.Count + " 个音乐文件", "正在上传 第" + i + " 个音乐文件");
+                await CloudUpload.UploadMusic(files[i]);
+            }
+            Common.ShowTeachingTip("上传完成", "请重新加载云盘页面");
         }
     }
 }
