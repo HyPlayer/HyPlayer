@@ -121,6 +121,14 @@
                                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xEFA9;" />
                             </muxc:NavigationViewItem.Icon>
                         </muxc:NavigationViewItem>
+                        <muxc:NavigationViewItem
+                            Content="心动模式"
+                            SelectsOnInvoked="False"
+                            Tag="HeartBeat">
+                            <muxc:NavigationViewItem.Icon>
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE95E;" />
+                            </muxc:NavigationViewItem.Icon>
+                        </muxc:NavigationViewItem>
                     </muxc:NavigationViewItem.MenuItems>
                 </muxc:NavigationViewItem>
                 <muxc:NavigationViewItem Content="离线音乐" Tag="PageLocal">

@@ -59,6 +59,7 @@ namespace HyPlayer.Controls
             HyPlayList.OnPlayPositionChange += OnPlayPositionChange;
             //HyPlayList.OnPlayPositionChange += UpdateMSTC;
             HyPlayList.OnPlayListAddDone += HyPlayList_OnPlayListAdd;
+            HyPlayList.OnSongRemoveAll += HyPlayListOnOnSongRemoveAll;
             AlbumImage.Source = new BitmapImage(new Uri("ms-appx:Assets/icon.png"));
             if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
                 ButtonDesktopLyrics.Visibility = Visibility.Collapsed;
@@ -105,6 +106,12 @@ namespace HyPlayer.Controls
             Storyboard.SetTargetProperty(verticalAnimation, "Horizontalofset");
             TbSongNameScrollStoryBoard.Begin();
             */
+        }
+
+        private void HyPlayListOnOnSongRemoveAll()
+        {
+            PlayItems.Clear();
+            PlayListTitle.Text = "播放列表";
         }
 
 
@@ -223,7 +230,7 @@ namespace HyPlayer.Controls
         {
             RefreshSongList();
             HistoryManagement.SetcurPlayingListHistory(HyPlayList.List
-                .Where(t => t.ItemType == HyPlayItemType.Netease).Select(t => t.PlayItem.Id).ToList());
+                .Where(t => t.ItemType == HyPlayItemType.Netease || t.ItemType == HyPlayItemType.Pan).Select(t => t.PlayItem.Id).ToList());
         }
 
         private async void TestFile()
@@ -691,8 +698,6 @@ namespace HyPlayer.Controls
         private void ButtonCleanAll_OnClick(object sender, RoutedEventArgs e)
         {
             HyPlayList.RemoveAllSong();
-            PlayItems.Clear();
-            HyPlayList.SongAppendDone();
         }
 
         private void ButtonAddLocal_OnClick(object sender, RoutedEventArgs e)

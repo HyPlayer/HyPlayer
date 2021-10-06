@@ -20,11 +20,12 @@
         <TextBlock
             Grid.Row="0"
             Margin="30,0,30,0"
-            FontSize="60"
+            FontSize="25"
             Text="最近播放" />
         <NavigationView
             x:Name="HisModeNavView"
             Grid.Row="1"
+            Margin="30,0,30,0"
             VerticalAlignment="Stretch"
             IsBackButtonVisible="Collapsed"
             IsBackEnabled="False"

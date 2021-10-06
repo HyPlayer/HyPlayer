@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Windows.Storage;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media.Imaging;
 
 #endregion
@@ -144,6 +145,8 @@ namespace HyPlayer.Classes
         public string alias;
         public List<NCArtist> Artist;
         public bool IsAvailable = true;
+        public bool IsVip = false;
+        public bool IsCloud => Type == HyPlayItemType.Pan;
 
         public double LengthInMilliseconds;
 
@@ -155,8 +158,11 @@ namespace HyPlayer.Classes
         public string transname;
         public HyPlayItemType Type;
         public int DspOrder => Order + 1;
+
         public BitmapImage Cover =>
-            new BitmapImage(new Uri(Album.cover ??= "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg" + "?param=" + StaticSource.PICSIZE_SINGLENCSONG_COVER));
+            new BitmapImage(new Uri(Album.cover ??=
+                "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg" + "?param=" +
+                StaticSource.PICSIZE_SINGLENCSONG_COVER));
 
         public string ArtistString
         {
@@ -177,7 +183,8 @@ namespace HyPlayer.Classes
                 dtpath = "dt";
             var NCSong = new NCSong
             {
-                Type = HyPlayItemType.Netease,
+                IsVip = song["fee"]?.ToString() == "1",
+                Type = song["s_id"]?.ToString() != "0" ? HyPlayItemType.Pan : HyPlayItemType.Netease,
                 Album = NCAlbum.CreateFromJson(song[alpath]),
                 sid = song["id"].ToString(),
                 songname = song["name"].ToString(),

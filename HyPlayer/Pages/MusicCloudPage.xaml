@@ -19,12 +19,13 @@
         <StackPanel Orientation="Horizontal" Spacing="20">
             <TextBlock
                 Grid.Row="0"
-                FontSize="36"
-                FontWeight="Medium"
+                Margin="30,0,0,0"
+                FontSize="25"
                 Text="我的云盘"
                 TextWrapping="Wrap" />
             <Button
                 x:Name="BtnUpload"
+                Margin="0,-20,0,0"
                 Click="BtnUpload_Click"
                 Content="上传本地" />
         </StackPanel>

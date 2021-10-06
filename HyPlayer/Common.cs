@@ -95,7 +95,7 @@ namespace HyPlayer
             Invoke(() =>
             {
                 GlobalTip.Title = title;
-                GlobalTip.Subtitle = subtitle;
+                GlobalTip.Subtitle = subtitle ?? "";
                 if (!GlobalTip.IsOpen)
                 {
                     GlobalTip.IsOpen = true;

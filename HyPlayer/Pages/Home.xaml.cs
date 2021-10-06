@@ -1,5 +1,9 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using HyPlayer.Controls;
+using HyPlayer.HyPlayControl;
+using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,10 +11,6 @@ using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using HyPlayer.HyPlayControl;
-using NeteaseCloudMusicApi;
 
 #endregion
 
@@ -151,53 +151,6 @@ namespace HyPlayer.Pages
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
             PersonalFM.InitPersonalFM();
-        }
-
-        private void Button_Click_2(object sender, RoutedEventArgs e)
-        {
-            _ = Task.Run(() =>
-            {
-                Common.Invoke(async () =>
-                {
-                    HyPlayList.RemoveAllSong();
-                    try
-                    {
-                        var jsoon = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
-                            new Dictionary<string, object> { { "id", Common.MySongLists[0].plid } });
-                        var jsona = await Common.ncapi.RequestAsync(
-                            CloudMusicApiProviders.PlaymodeIntelligenceList,
-                            new Dictionary<string, object>
-                            {
-                                { "pid", Common.MySongLists[0].plid },
-                                { "id", jsoon["playlist"]["trackIds"][0]["id"].ToString() }
-                            });
-
-                        var Songs = new List<NCSong>();
-                        foreach (var token in jsona["data"])
-                        {
-                            var ncSong = NCSong.CreateFromJson(token["songInfo"]);
-                            Songs.Add(ncSong);
-                        }
-
-                        try
-                        {
-                            HyPlayList.AppendNcSongs(Songs);
-
-                            HyPlayList.SongAppendDone();
-
-                            HyPlayList.SongMoveTo(0);
-                        }
-                        catch (Exception ex)
-                        {
-                            Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
-                    }
-                });
-            });
         }
     }
 }

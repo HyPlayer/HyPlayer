@@ -9,473 +9,486 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Pivot
-        Title="设置"
-        Margin="0,0,0,150"
-        FontFamily="Black">
-        <PivotItem
-            Margin="30,10,0,0"
-            FontFamily="Thick"
-            Header="歌词设置">
-            <ScrollViewer VerticalScrollMode="Enabled">
-                <StackPanel x:Name="StackPanelLyricSet" Orientation="Vertical">
-                    <TextBlock FontSize="36" Text="罗马音设置" />
-                    <TextBlock
-                        x:Name="RomajiStatus"
-                        Margin="0,10,0,0"
-                        Text="获取中" />
-                    <Button
-                        Margin="0,10,0,0"
-                        Click="ButtonBase_OnClick"
-                        Content="获取罗马音资源文件"
-                        Style="{StaticResource ButtonRevealStyle}" />
-                    <TextBlock FontSize="36" Text="歌词大小设置" />
-                    <Grid ColumnSpacing="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock VerticalAlignment="Center" Text="歌词大小 (负数为自动)" />
-                        <controls:NumberBox
-                            x:Name="LyricSize"
-                            Grid.Column="1"
-                            Width="100"
+    <Grid Margin="0,0,0,150">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <TextBlock
+            Grid.Row="0"
+            Margin="30,0,30,0"
+            FontSize="25"
+            Text="设置" />
+        <Pivot
+            Grid.Row="1"
+            Margin="15,10,0,0"
+            FontFamily="Black">
+            <PivotItem FontFamily="Thick" Header="歌词设置">
+                <ScrollViewer VerticalScrollMode="Enabled">
+                    <StackPanel x:Name="StackPanelLyricSet" Orientation="Vertical">
+                        <TextBlock FontSize="20" Text="罗马音设置" />
+                        <TextBlock
+                            x:Name="RomajiStatus"
                             Margin="0,10,0,0"
-                            LargeChange="5"
-                            SmallChange="1"
-                            SpinButtonPlacementMode="Compact"
-                            ValueChanged="LyricSize_OnValueChanged"
-                            Value="{x:Bind hyplayer:Common.Setting.lyricSize, Mode=OneTime}" />
-                    </Grid>
+                            Text="获取中" />
+                        <Button
+                            Margin="0,10,0,0"
+                            Click="ButtonBase_OnClick"
+                            Content="获取罗马音资源文件"
+                            Style="{StaticResource ButtonRevealStyle}" />
+                        <TextBlock
+                            Margin="0,20,0,0"
+                            FontSize="20"
+                            Text="歌词大小设置" />
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock VerticalAlignment="Center" Text="歌词大小 (负数为自动)" />
+                            <controls:NumberBox
+                                x:Name="LyricSize"
+                                Grid.Column="1"
+                                Width="100"
+                                Margin="0,10,0,0"
+                                LargeChange="5"
+                                SmallChange="1"
+                                SpinButtonPlacementMode="Compact"
+                                ValueChanged="LyricSize_OnValueChanged"
+                                Value="{x:Bind hyplayer:Common.Setting.lyricSize, Mode=OneTime}" />
+                        </Grid>
 
-                    <Grid ColumnSpacing="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock VerticalAlignment="Center" Text="罗马音大小 (默认为 15)" />
-                        <controls:NumberBox
-                            x:Name="RomajiSize"
-                            Grid.Column="1"
-                            Width="100"
-                            Margin="0,10,0,0"
-                            LargeChange="5"
-                            SmallChange="1"
-                            SpinButtonPlacementMode="Compact"
-                            Value="{x:Bind hyplayer:Common.Setting.romajiSize, Mode=TwoWay}" />
-                    </Grid>
-                    <CheckBox
-                        x:Name="CheckBoxAlignment"
-                        Content="是否左对齐"
-                        IsChecked="{x:Bind hyplayer:Common.Setting.lyricAlignment, Mode=TwoWay}" />
-                    <!--<CheckBox
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock VerticalAlignment="Center" Text="罗马音大小 (默认为 15)" />
+                            <controls:NumberBox
+                                x:Name="RomajiSize"
+                                Grid.Column="1"
+                                Width="100"
+                                Margin="0,10,0,0"
+                                LargeChange="5"
+                                SmallChange="1"
+                                SpinButtonPlacementMode="Compact"
+                                Value="{x:Bind hyplayer:Common.Setting.romajiSize, Mode=TwoWay}" />
+                        </Grid>
+                        <CheckBox
+                            x:Name="CheckBoxAlignment"
+                            Content="是否左对齐"
+                            IsChecked="{x:Bind hyplayer:Common.Setting.lyricAlignment, Mode=TwoWay}" />
+                        <!--<CheckBox
                         x:Name="CheckBoxLyricShadow"
                         Content="是否产生阴影"
                         IsChecked="{x:Bind hyplayer:Common.Setting.lyricDropshadow, Mode=TwoWay}" />-->
-                    <controls:RadioButtons
-                        FontSize="20"
-                        Header="歌词颜色"
-                        MaxColumns="4"
-                        SelectedIndex="{x:Bind hyplayer:Common.Setting.lyricColor, Mode=TwoWay}">
-                        <RadioButton Content="自动" />
-                        <RadioButton Content="白色" />
-                        <RadioButton Content="黑色" />
-                    </controls:RadioButtons>
-                </StackPanel>
-            </ScrollViewer>
-        </PivotItem>
-        <PivotItem FontFamily="Thick" Header="播放设置">
-            <ScrollViewer VerticalScrollMode="Enabled">
-                <StackPanel Orientation="Vertical">
-                    <controls:RadioButtons
-                        x:Name="RadioButtonsSongBr"
-                        FontSize="20"
-                        Header="在线播放音质:"
-                        MaxColumns="4">
-                        <RadioButton
-                            Checked="RadioButton_Checked"
-                            Content="标准 (128k)"
-                            Tag="128000" />
-                        <RadioButton
-                            Checked="RadioButton_Checked"
-                            Content="较高 (192k)"
-                            Tag="192000" />
-                        <RadioButton
-                            Checked="RadioButton_Checked"
-                            Content="极高 (320k)"
-                            Tag="320000" />
-                        <RadioButton
-                            Checked="RadioButton_Checked"
-                            Content="无损 (VIP)"
-                            Tag="999000" />
-                    </controls:RadioButtons>
-                    <controls:RadioButtons
-                        x:Name="RadioButtonsSongDownloadBr"
-                        FontSize="20"
-                        Header="歌曲下载音质:"
-                        MaxColumns="4">
-                        <RadioButton
-                            Checked="RadioButton1_Checked"
-                            Content="标准 (128k)"
-                            Tag="128000" />
-                        <RadioButton
-                            Checked="RadioButton1_Checked"
-                            Content="较高 (192k)"
-                            Tag="192000" />
-                        <RadioButton
-                            Checked="RadioButton1_Checked"
-                            Content="极高 (320k)"
-                            Tag="320000" />
-                        <RadioButton
-                            Checked="RadioButton1_Checked"
-                            Content="无损 (VIP)"
-                            Tag="999000" />
-                    </controls:RadioButtons>
-                    <ToggleSwitch
-                        x:Name="FadeInOut"
-                        Header="切歌渐入渐出："
-                        IsOn="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=TwoWay}" />
-                    <Slider
-                        x:Name="FadeTime"
-                        Width="300"
-                        HorizontalAlignment="Left"
-                        Header="切歌渐入渐出时间 单位: s"
-                        Maximum="6"
-                        Minimum="0"
-                        ToolTipService.ToolTip="{x:Bind FadeTime.Value}"
-                        Visibility="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=OneWay}"
-                        Value="{x:Bind hyplayer:Common.Setting.fadeInOutTime, Mode=TwoWay}" />
-                    <ToggleSwitch Header="播放暂停渐入渐出" IsOn="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=TwoWay}" />
-                    <Slider
-                        x:Name="FadeTimePause"
-                        Width="300"
-                        HorizontalAlignment="Left"
-                        Header="渐入渐出时间 单位: 0.1s"
-                        Maximum="10"
-                        Minimum="0"
-                        ToolTipService.ToolTip="{x:Bind FadeTimePause.Value}"
-                        Visibility="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=OneWay}"
-                        Value="{x:Bind hyplayer:Common.Setting.fadeInOutTimePause, Mode=TwoWay}" />
-                    <Border Height="15" />
-                    <CheckBox Content="圆形唱片" IsChecked="{x:Bind hyplayer:Common.Setting.albumRound, Mode=TwoWay}" />
-                    <CheckBox Content="唱片旋转" IsChecked="{x:Bind hyplayer:Common.Setting.albumRotate, Mode=TwoWay}" />
-                    <Slider
-                        x:Name="SliderAlbumBorderLength"
-                        Width="300"
-                        HorizontalAlignment="Left"
-                        Header="唱片边框厚度 (0 为无边框)"
-                        Maximum="280"
-                        Minimum="0"
-                        ToolTipService.ToolTip="{x:Bind SliderAlbumBorderLength.Value}"
-                        Value="{x:Bind hyplayer:Common.Setting.albumBorderLength, Mode=TwoWay}" />
-                </StackPanel>
-            </ScrollViewer>
-        </PivotItem>
-        <PivotItem FontFamily="Thick" Header="存储设置">
-            <ScrollViewer VerticalScrollMode="Enabled">
-                <StackPanel Orientation="Vertical">
-                    <Grid MaxWidth="1000">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="100" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="50" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="下载路径" />
-                        <TextBlock
-                            x:Name="TextBoxDownloadDir"
-                            Grid.Column="1"
-                            Text="{x:Bind hyplayer:Common.Setting.downloadDir, Mode=TwoWay}" />
+                        <controls:RadioButtons
+                            Margin="0,20,0,0"
+                            FontSize="20"
+                            Header="歌词颜色"
+                            MaxColumns="4"
+                            SelectedIndex="{x:Bind hyplayer:Common.Setting.lyricColor, Mode=TwoWay}">
+                            <RadioButton Content="自动" />
+                            <RadioButton Content="白色" />
+                            <RadioButton Content="黑色" />
+                        </controls:RadioButtons>
+                    </StackPanel>
+                </ScrollViewer>
+            </PivotItem>
+            <PivotItem FontFamily="Thick" Header="播放设置">
+                <ScrollViewer VerticalScrollMode="Enabled">
+                    <StackPanel Orientation="Vertical">
+                        <controls:RadioButtons
+                            x:Name="RadioButtonsSongBr"
+                            FontSize="20"
+                            Header="在线播放音质:"
+                            MaxColumns="4">
+                            <RadioButton
+                                Checked="RadioButton_Checked"
+                                Content="标准 (128k)"
+                                Tag="128000" />
+                            <RadioButton
+                                Checked="RadioButton_Checked"
+                                Content="较高 (192k)"
+                                Tag="192000" />
+                            <RadioButton
+                                Checked="RadioButton_Checked"
+                                Content="极高 (320k)"
+                                Tag="320000" />
+                            <RadioButton
+                                Checked="RadioButton_Checked"
+                                Content="无损 (VIP)"
+                                Tag="999000" />
+                        </controls:RadioButtons>
+                        <controls:RadioButtons
+                            x:Name="RadioButtonsSongDownloadBr"
+                            Margin="0,20,0,0"
+                            FontSize="20"
+                            Header="歌曲下载音质:"
+                            MaxColumns="4">
+                            <RadioButton
+                                Checked="RadioButton1_Checked"
+                                Content="标准 (128k)"
+                                Tag="128000" />
+                            <RadioButton
+                                Checked="RadioButton1_Checked"
+                                Content="较高 (192k)"
+                                Tag="192000" />
+                            <RadioButton
+                                Checked="RadioButton1_Checked"
+                                Content="极高 (320k)"
+                                Tag="320000" />
+                            <RadioButton
+                                Checked="RadioButton1_Checked"
+                                Content="无损 (VIP)"
+                                Tag="999000" />
+                        </controls:RadioButtons>
+                        <ToggleSwitch
+                            x:Name="FadeInOut"
+                            Header="切歌渐入渐出："
+                            IsOn="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=TwoWay}" />
+                        <Slider
+                            x:Name="FadeTime"
+                            Width="300"
+                            HorizontalAlignment="Left"
+                            Header="切歌渐入渐出时间 单位: s"
+                            Maximum="6"
+                            Minimum="0"
+                            ToolTipService.ToolTip="{x:Bind FadeTime.Value}"
+                            Visibility="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=OneWay}"
+                            Value="{x:Bind hyplayer:Common.Setting.fadeInOutTime, Mode=TwoWay}" />
+                        <ToggleSwitch Header="播放暂停渐入渐出" IsOn="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=TwoWay}" />
+                        <Slider
+                            x:Name="FadeTimePause"
+                            Width="300"
+                            HorizontalAlignment="Left"
+                            Header="渐入渐出时间 单位: 0.1s"
+                            Maximum="10"
+                            Minimum="0"
+                            ToolTipService.ToolTip="{x:Bind FadeTimePause.Value}"
+                            Visibility="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=OneWay}"
+                            Value="{x:Bind hyplayer:Common.Setting.fadeInOutTimePause, Mode=TwoWay}" />
+                        <Border Height="15" />
+                        <CheckBox Content="圆形唱片" IsChecked="{x:Bind hyplayer:Common.Setting.albumRound, Mode=TwoWay}" />
+                        <CheckBox Content="唱片旋转" IsChecked="{x:Bind hyplayer:Common.Setting.albumRotate, Mode=TwoWay}" />
+                        <Slider
+                            x:Name="SliderAlbumBorderLength"
+                            Width="300"
+                            HorizontalAlignment="Left"
+                            Header="唱片边框厚度 (0 为无边框)"
+                            Maximum="280"
+                            Minimum="0"
+                            ToolTipService.ToolTip="{x:Bind SliderAlbumBorderLength.Value}"
+                            Value="{x:Bind hyplayer:Common.Setting.albumBorderLength, Mode=TwoWay}" />
+                    </StackPanel>
+                </ScrollViewer>
+            </PivotItem>
+            <PivotItem FontFamily="Thick" Header="存储设置">
+                <ScrollViewer VerticalScrollMode="Enabled">
+                    <StackPanel Orientation="Vertical">
+                        <Grid MaxWidth="1000">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="100" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="50" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="下载路径" />
+                            <TextBlock
+                                x:Name="TextBoxDownloadDir"
+                                Grid.Column="1"
+                                Text="{x:Bind hyplayer:Common.Setting.downloadDir, Mode=TwoWay}" />
+                            <Button
+                                x:Name="ButtonDownloadSelect"
+                                Grid.Column="2"
+                                Click="ButtonDownloadSelect_OnClick"
+                                Content="选择"
+                                Style="{StaticResource ButtonRevealStyle}" />
+                        </Grid>
+                        <Grid MaxWidth="1000" Visibility="{x:Bind hyplayer:Common.Setting.enableCache, Mode=OneWay}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="100" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="50" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="缓存路径" />
+                            <TextBlock
+                                x:Name="TextBoxCacheDir"
+                                Grid.Column="1"
+                                Text="{x:Bind hyplayer:Common.Setting.cacheDir, Mode=TwoWay}" />
+                            <Button
+                                x:Name="ButtonCacheSelect"
+                                Grid.Column="2"
+                                Click="ButtonCacheSelect_OnClick"
+                                Content="选择"
+                                Style="{StaticResource ButtonRevealStyle}" />
+                        </Grid>
                         <Button
-                            x:Name="ButtonDownloadSelect"
-                            Grid.Column="2"
-                            Click="ButtonDownloadSelect_OnClick"
-                            Content="选择"
+                            x:Name="ClearHistory"
+                            Click="ClearHistory_Click"
+                            Content="清除历史记录"
                             Style="{StaticResource ButtonRevealStyle}" />
-                    </Grid>
-                    <Grid MaxWidth="1000" Visibility="{x:Bind hyplayer:Common.Setting.enableCache, Mode=OneWay}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="100" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="50" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="缓存路径" />
-                        <TextBlock
-                            x:Name="TextBoxCacheDir"
-                            Grid.Column="1"
-                            Text="{x:Bind hyplayer:Common.Setting.cacheDir, Mode=TwoWay}" />
-                        <Button
-                            x:Name="ButtonCacheSelect"
-                            Grid.Column="2"
-                            Click="ButtonCacheSelect_OnClick"
-                            Content="选择"
-                            Style="{StaticResource ButtonRevealStyle}" />
-                    </Grid>
-                    <Button
-                        x:Name="ClearHistory"
-                        Click="ClearHistory_Click"
-                        Content="清除历史记录"
-                        Style="{StaticResource ButtonRevealStyle}" />
-                </StackPanel>
-            </ScrollViewer>
-        </PivotItem>
-        <PivotItem FontFamily="Thick" Header="实验室🧪">
-            <ScrollViewer VerticalScrollMode="Enabled">
-                <StackPanel Orientation="Vertical">
-                    <Grid MaxWidth="1000">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="150" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="50" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="X-Real-IP (置空不设置)" />
-                        <TextBox x:Name="TextBoxXREALIP" Grid.Column="1" />
-                        <Button
-                            x:Name="ButtonXREALIPSave"
-                            Grid.Column="2"
-                            Click="ButtonXREALIPSave_OnClick"
-                            Content="设置"
-                            Style="{StaticResource ButtonRevealStyle}" />
-                    </Grid>
-                    <Grid MaxWidth="1000">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="150" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="50" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="代理服务器 (置空不设置)" />
-                        <TextBox x:Name="TextBoxPROXY" Grid.Column="1" />
-                        <Button
-                            x:Name="ButtonPROXYSave"
-                            Grid.Column="2"
-                            Click="ButtonPROXYSave_OnClick"
-                            Content="设置"
-                            Style="{StaticResource ButtonRevealStyle}" />
-                    </Grid>
-                    <!--<CheckBox
+                    </StackPanel>
+                </ScrollViewer>
+            </PivotItem>
+            <PivotItem FontFamily="Thick" Header="实验室🧪">
+                <ScrollViewer VerticalScrollMode="Enabled">
+                    <StackPanel Orientation="Vertical">
+                        <Grid MaxWidth="1000">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="50" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="X-Real-IP (置空不设置)" />
+                            <TextBox x:Name="TextBoxXREALIP" Grid.Column="1" />
+                            <Button
+                                x:Name="ButtonXREALIPSave"
+                                Grid.Column="2"
+                                Click="ButtonXREALIPSave_OnClick"
+                                Content="设置"
+                                Style="{StaticResource ButtonRevealStyle}" />
+                        </Grid>
+                        <Grid MaxWidth="1000">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="50" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="代理服务器 (置空不设置)" />
+                            <TextBox x:Name="TextBoxPROXY" Grid.Column="1" />
+                            <Button
+                                x:Name="ButtonPROXYSave"
+                                Grid.Column="2"
+                                Click="ButtonPROXYSave_OnClick"
+                                Content="设置"
+                                Style="{StaticResource ButtonRevealStyle}" />
+                        </Grid>
+                        <!--<CheckBox
                         x:Name="LazySongUrlGetCheck"
                         Content="是否在播放时才获取播放链接"
                         IsChecked="{x:Bind hyplayer:Common.Setting.songUrlLazyGet, Mode=TwoWay}" />-->
-                    <CheckBox
-                        x:Name="XboxPointerSet"
-                        Content="Xbox上是否隐藏指针（不要开启!）"
-                        IsChecked="{x:Bind hyplayer:Common.Setting.xboxHidePointer, Mode=TwoWay}" />
-                    <CheckBox
-                        x:Name="ForceMemoryCollect"
-                        Content="是否频繁内存回收 (开启后可能会频繁出现页面重载现象)"
-                        IsChecked="{x:Bind hyplayer:Common.Setting.forceMemoryGarbage, Mode=TwoWay}" />
-                    <CheckBox
-                        x:Name="CBSongCacheEnable"
-                        Content="是否开启播放缓存 (可能造成播放前空白)"
-                        IsChecked="{x:Bind hyplayer:Common.Setting.enableCache, Mode=TwoWay}" />
-                    <CheckBox
-                        x:Name="ControlSoundCheck"
-                        Checked="ControlSoundChecked"
-                        Content="是否开启 UI 音效"
-                        IsChecked="{x:Bind hyplayer:Common.Setting.uiSound, Mode=TwoWay}"
-                        Unchecked="ControlSoundUnChecked" />
-                    <CheckBox
-                        x:Name="CBOldSMTC"
-                        Content="是否同时开启传统SMTC控制 (可能会减小后台闪退几率,重启后生效)"
-                        IsChecked="{x:Bind hyplayer:Common.Setting.ancientSMTC, Mode=TwoWay}" />
-                    <CheckBox Content="是否启用安全本地文件访问 (可能会提高内存占用)" IsChecked="{x:Bind hyplayer:Common.Setting.safeFileAccess, Mode=TwoWay}" />
-                    <CheckBox
-                        x:Name="HighQualityCoverInSMTC"
-                        Content="是否输出高清图片到SMTC"
-                        IsChecked="{x:Bind hyplayer:Common.Setting.highQualityCoverInSMTC, Mode=TwoWay}" />
-                    <controls:RadioButtons
-                        x:Name="RadioButtonsTheme"
-                        FontSize="20"
-                        Header="颜色模式: (修改将在重启 HyPlayer 后生效)"
-                        MaxColumns="3"
-                        SelectedIndex="{x:Bind hyplayer:Common.Setting.themeRequest, Mode=TwoWay}"
-                        SelectionChanged="RadioButtonsTheme_SelectionChanged">
-                        <RadioButton Content="跟随系统" />
-                        <RadioButton Content="亮色" />
-                        <RadioButton Content="暗色" />
-                    </controls:RadioButtons>
-                    <Button
-                        x:Name="RestartBtn"
-                        VerticalAlignment="Center"
-                        Click="RestartBtn_Click"
-                        Content="立即重启"
-                        Style="{StaticResource ButtonRevealStyle}"
-                        Visibility="Collapsed" />
+                        <CheckBox
+                            x:Name="XboxPointerSet"
+                            Content="Xbox上是否隐藏指针（不要开启!）"
+                            IsChecked="{x:Bind hyplayer:Common.Setting.xboxHidePointer, Mode=TwoWay}" />
+                        <CheckBox
+                            x:Name="ForceMemoryCollect"
+                            Content="是否频繁内存回收 (开启后可能会频繁出现页面重载现象)"
+                            IsChecked="{x:Bind hyplayer:Common.Setting.forceMemoryGarbage, Mode=TwoWay}" />
+                        <CheckBox
+                            x:Name="CBSongCacheEnable"
+                            Content="是否开启播放缓存 (可能造成播放前空白)"
+                            IsChecked="{x:Bind hyplayer:Common.Setting.enableCache, Mode=TwoWay}" />
+                        <CheckBox
+                            x:Name="ControlSoundCheck"
+                            Checked="ControlSoundChecked"
+                            Content="是否开启 UI 音效"
+                            IsChecked="{x:Bind hyplayer:Common.Setting.uiSound, Mode=TwoWay}"
+                            Unchecked="ControlSoundUnChecked" />
+                        <CheckBox
+                            x:Name="CBOldSMTC"
+                            Content="是否同时开启传统SMTC控制 (可能会减小后台闪退几率,重启后生效)"
+                            IsChecked="{x:Bind hyplayer:Common.Setting.ancientSMTC, Mode=TwoWay}" />
+                        <CheckBox Content="是否启用安全本地文件访问 (可能会提高内存占用)" IsChecked="{x:Bind hyplayer:Common.Setting.safeFileAccess, Mode=TwoWay}" />
+                        <CheckBox
+                            x:Name="HighQualityCoverInSMTC"
+                            Content="是否输出高清图片到SMTC"
+                            IsChecked="{x:Bind hyplayer:Common.Setting.highQualityCoverInSMTC, Mode=TwoWay}" />
+                        <controls:RadioButtons
+                            x:Name="RadioButtonsTheme"
+                            FontSize="20"
+                            Header="颜色模式: (修改将在重启 HyPlayer 后生效)"
+                            MaxColumns="3"
+                            SelectedIndex="{x:Bind hyplayer:Common.Setting.themeRequest, Mode=TwoWay}"
+                            SelectionChanged="RadioButtonsTheme_SelectionChanged">
+                            <RadioButton Content="跟随系统" />
+                            <RadioButton Content="亮色" />
+                            <RadioButton Content="暗色" />
+                        </controls:RadioButtons>
+                        <Button
+                            x:Name="RestartBtn"
+                            VerticalAlignment="Center"
+                            Click="RestartBtn_Click"
+                            Content="立即重启"
+                            Style="{StaticResource ButtonRevealStyle}"
+                            Visibility="Collapsed" />
 
-                    <Grid ColumnSpacing="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock VerticalAlignment="Center" Text="歌词页面封面阴影强度 (0为无阴影)" />
-                        <controls:NumberBox
-                            x:Name="NBShadowDepth"
-                            Grid.Column="1"
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock VerticalAlignment="Center" Text="歌词页面封面阴影强度 (0为无阴影)" />
+                            <controls:NumberBox
+                                x:Name="NBShadowDepth"
+                                Grid.Column="1"
+                                Width="100"
+                                LargeChange="5"
+                                SmallChange="1"
+                                SpinButtonPlacementMode="Compact"
+                                ValueChanged="NBShadowDepth_OnValueChanged"
+                                Value="{x:Bind hyplayer:Common.Setting.expandedCoverShadowDepth, Mode=OneTime}" />
+                        </Grid>
+                        <Button
+                            x:Name="BtnXboxReserve"
+                            Click="BtnXboxReserve_Click"
+                            Content="Xbox 进后台模式"
+                            Style="{StaticResource ButtonRevealStyle}" />
+                        <CheckBox Content="完整模式 (显示发现及评论入口)" IsChecked="{x:Bind hyplayer:Common.Setting.notClearMode, Mode=TwoWay}" />
+                    </StackPanel>
+                </ScrollViewer>
+            </PivotItem>
+            <PivotItem FontFamily="Thick" Header="关于">
+                <ScrollViewer VerticalScrollMode="Enabled">
+                    <StackPanel Orientation="Vertical">
+                        <Image
                             Width="100"
-                            LargeChange="5"
-                            SmallChange="1"
-                            SpinButtonPlacementMode="Compact"
-                            ValueChanged="NBShadowDepth_OnValueChanged"
-                            Value="{x:Bind hyplayer:Common.Setting.expandedCoverShadowDepth, Mode=OneTime}" />
-                    </Grid>
-                    <Button
-                        x:Name="BtnXboxReserve"
-                        Click="BtnXboxReserve_Click"
-                        Content="Xbox 进后台模式"
-                        Style="{StaticResource ButtonRevealStyle}" />
-                    <CheckBox Content="完整模式 (显示发现及评论入口)" IsChecked="{x:Bind hyplayer:Common.Setting.notClearMode, Mode=TwoWay}" />
-                </StackPanel>
-            </ScrollViewer>
-        </PivotItem>
-        <PivotItem FontFamily="Thick" Header="关于">
-            <ScrollViewer VerticalScrollMode="Enabled">
-                <StackPanel Orientation="Vertical">
-                    <Image
-                        Width="100"
-                        Height="100"
-                        HorizontalAlignment="Left"
-                        Source="/Assets/icon.png" />
-                    <RichTextBlock>
-                        <Paragraph
-                            Margin="0,10,0,0"
+                            Height="100"
+                            HorizontalAlignment="Left"
+                            Source="/Assets/icon.png" />
+                        <RichTextBlock>
+                            <Paragraph
+                                Margin="0,10,0,0"
+                                FontFamily="Thick"
+                                FontSize="25">
+                                HyPlayer
+                            </Paragraph>
+                            <Paragraph Margin="0,5,0,0">This is an open-source project under GPL-v3 Licence</Paragraph>
+                            <Paragraph Margin="0,5,0,0">
+                                <Hyperlink NavigateUri="https://github.com/HyPlayer/HyPlayer">
+                                    Github
+                                </Hyperlink>
+                                |<Hyperlink NavigateUri="https://gitee.com/kengwang/HyPlayer">
+                                    Gitee
+                                </Hyperlink>
+                            </Paragraph>
+                            <Paragraph Margin="0,5,0,0">Copyright © HyPlayer Develop Team 2021</Paragraph>
+                            <Paragraph>HyPlayer is licensed under the GNU General Public License v3.0</Paragraph>
+                        </RichTextBlock>
+                        <TextBlock x:Name="VersionCode" />
+                        <TextBlock x:Name="DeviceInfo" RightTapped="DeviceInfo_RightTapped">
+                            <TextBlock.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem
+                                        Click="CopyDeviceCode_Click"
+                                        Icon="Copy"
+                                        Style="{StaticResource MenuFlyoutItemRevealStyle}"
+                                        Text="复制设备识别码" />
+                                </MenuFlyout>
+                            </TextBlock.ContextFlyout>
+                        </TextBlock>
+                        <TextBlock
                             FontFamily="Thick"
-                            FontSize="25">
-                            HyPlayer
-                        </Paragraph>
-                        <Paragraph Margin="0,5,0,0">This is an open-source project under GPL-v3 Licence</Paragraph>
-                        <Paragraph Margin="0,5,0,0">
-                            <Hyperlink NavigateUri="https://github.com/HyPlayer/HyPlayer">
-                                Github
-                            </Hyperlink>
-                            |<Hyperlink NavigateUri="https://gitee.com/kengwang/HyPlayer">
-                                Gitee
-                            </Hyperlink>
-                        </Paragraph>
-                        <Paragraph Margin="0,5,0,0">Copyright © HyPlayer Develop Team 2021</Paragraph>
-                        <Paragraph>HyPlayer is licensed under the GNU General Public License v3.0</Paragraph>
-                    </RichTextBlock>
-                    <TextBlock x:Name="VersionCode" />
-                    <TextBlock x:Name="DeviceInfo" RightTapped="DeviceInfo_RightTapped">
-                        <TextBlock.ContextFlyout>
-                            <MenuFlyout>
-                                <MenuFlyoutItem
-                                    Click="CopyDeviceCode_Click"
-                                    Icon="Copy"
-                                    Style="{StaticResource MenuFlyoutItemRevealStyle}"
-                                    Text="复制设备识别码" />
-                            </MenuFlyout>
-                        </TextBlock.ContextFlyout>
-                    </TextBlock>
-                    <TextBlock
-                        FontFamily="Thick"
-                        FontSize="25"
-                        Text="开发者" />
-                    <StackPanel
-                        Margin="10,20,0,0"
-                        DoubleTapped="StackPanel_DoubleTapped"
-                        Orientation="Horizontal"
-                        Tapped="UIElement_OnTapped">
-                        <PersonPicture ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=GibeJPa6pAcRMKgoHC9ibI4w&amp;s=100" />
-                        <StackPanel Margin="15,0,0,0" Orientation="Vertical">
-                            <TextBlock FontSize="18" FontWeight="Medium">
-                                Kengwang
-                            </TextBlock>
-                            <TextBlock
-                                FontSize="15"
-                                FontWeight="Medium"
-                                Foreground="Gray">
-                                Developer
-                            </TextBlock>
-                            <TextBlock
-                                FontSize="15"
-                                FontWeight="Light"
-                                Foreground="Gray">
-                                Stay Cool~
-                            </TextBlock>
-                            <RichTextBlock>
-                                <Paragraph>
-                                    <Hyperlink NavigateUri="https://github.com/kengwang">
-                                        Github
-                                    </Hyperlink>
-                                    |<Hyperlink NavigateUri="https://blog.kengwang.co">
-                                        博客
-                                    </Hyperlink>
-                                    |<Hyperlink NavigateUri="http://www.coolapk.com/u/1683034">
-                                        酷安@kengwang
-                                    </Hyperlink>
-                                    |<Hyperlink NavigateUri="https://afdian.net/@kengwang">
-                                        爱发电打赏
-                                    </Hyperlink>
-                                </Paragraph>
-                            </RichTextBlock>
+                            FontSize="25"
+                            Text="开发者" />
+                        <StackPanel
+                            Margin="10,20,0,0"
+                            DoubleTapped="StackPanel_DoubleTapped"
+                            Orientation="Horizontal"
+                            Tapped="UIElement_OnTapped">
+                            <PersonPicture ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=GibeJPa6pAcRMKgoHC9ibI4w&amp;s=100" />
+                            <StackPanel Margin="15,0,0,0" Orientation="Vertical">
+                                <TextBlock FontSize="18" FontWeight="Medium">
+                                    Kengwang
+                                </TextBlock>
+                                <TextBlock
+                                    FontSize="15"
+                                    FontWeight="Medium"
+                                    Foreground="Gray">
+                                    Developer
+                                </TextBlock>
+                                <TextBlock
+                                    FontSize="15"
+                                    FontWeight="Light"
+                                    Foreground="Gray">
+                                    Stay Cool~
+                                </TextBlock>
+                                <RichTextBlock>
+                                    <Paragraph>
+                                        <Hyperlink NavigateUri="https://github.com/kengwang">
+                                            Github
+                                        </Hyperlink>
+                                        |<Hyperlink NavigateUri="https://blog.kengwang.co">
+                                            博客
+                                        </Hyperlink>
+                                        |<Hyperlink NavigateUri="http://www.coolapk.com/u/1683034">
+                                            酷安@kengwang
+                                        </Hyperlink>
+                                        |<Hyperlink NavigateUri="https://afdian.net/@kengwang">
+                                            爱发电打赏
+                                        </Hyperlink>
+                                    </Paragraph>
+                                </RichTextBlock>
+                            </StackPanel>
+                        </StackPanel>
+                        <StackPanel
+                            Margin="10,20,0,0"
+                            DoubleTapped="StackPanel_DoubleTapped"
+                            Orientation="Horizontal"
+                            Tapped="UIElement_OnTapped">
+                            <PersonPicture ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=eHh3SVVDUJKHf1I5XD7CPg&amp;s=100" />
+                            <StackPanel Margin="15,0,0,0" Orientation="Vertical">
+                                <TextBlock FontSize="18" FontWeight="Medium">
+                                    aaaaaaccd
+                                </TextBlock>
+                                <TextBlock
+                                    FontSize="15"
+                                    FontWeight="Medium"
+                                    Foreground="Gray">
+                                    Design
+                                </TextBlock>
+                                <TextBlock
+                                    FontSize="15"
+                                    FontWeight="Light"
+                                    Foreground="Gray">
+                                    HyPlayer Team EasyCraft Team Waifu2X4A
+                                </TextBlock>
+                                <RichTextBlock>
+                                    <Paragraph>
+                                        <Hyperlink NavigateUri="https://github.com/aaaaaaccd">
+                                            Github
+                                        </Hyperlink>
+                                        |<Hyperlink NavigateUri="https://www.coolapk.com/u/2409682">
+                                            酷安@一只老白
+                                        </Hyperlink>
+                                    </Paragraph>
+                                </RichTextBlock>
+                            </StackPanel>
+                        </StackPanel>
+                        <StackPanel
+                            Margin="10,20,0,0"
+                            DoubleTapped="StackPanel_DoubleTapped"
+                            Orientation="Horizontal"
+                            Tapped="UIElement_OnTapped">
+                            <PersonPicture ProfilePicture="https://himg.bdimg.com/sys/portraitn/item/0fd16570303132303134g930801000000" />
+                            <StackPanel Margin="15,0,0,0" Orientation="Vertical">
+                                <TextBlock FontSize="18" FontWeight="Medium">
+                                    EP012014
+                                </TextBlock>
+                                <TextBlock
+                                    FontSize="15"
+                                    FontWeight="Medium"
+                                    Foreground="Gray">
+                                    Developer
+                                </TextBlock>
+                                <TextBlock
+                                    FontSize="15"
+                                    FontWeight="Light"
+                                    Foreground="Gray">
+                                    Solidarity Forever~
+                                </TextBlock>
+                                <RichTextBlock>
+                                    <Paragraph>
+                                        <Hyperlink NavigateUri="https://github.com/EP012014">
+                                            Github
+                                        </Hyperlink>
+                                        |</Paragraph>
+                                </RichTextBlock>
+                            </StackPanel>
                         </StackPanel>
                     </StackPanel>
-                    <StackPanel
-                        Margin="10,20,0,0"
-                        DoubleTapped="StackPanel_DoubleTapped"
-                        Orientation="Horizontal"
-                        Tapped="UIElement_OnTapped">
-                        <PersonPicture ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=eHh3SVVDUJKHf1I5XD7CPg&amp;s=100" />
-                        <StackPanel Margin="15,0,0,0" Orientation="Vertical">
-                            <TextBlock FontSize="18" FontWeight="Medium">
-                                aaaaaaccd
-                            </TextBlock>
-                            <TextBlock
-                                FontSize="15"
-                                FontWeight="Medium"
-                                Foreground="Gray">
-                                Design
-                            </TextBlock>
-                            <TextBlock
-                                FontSize="15"
-                                FontWeight="Light"
-                                Foreground="Gray">
-                                HyPlayer Team EasyCraft Team Waifu2X4A
-                            </TextBlock>
-                            <RichTextBlock>
-                                <Paragraph>
-                                    <Hyperlink NavigateUri="https://github.com/aaaaaaccd">
-                                        Github
-                                    </Hyperlink>
-                                    |<Hyperlink NavigateUri="https://www.coolapk.com/u/2409682">
-                                        酷安@一只老白
-                                    </Hyperlink>
-                                </Paragraph>
-                            </RichTextBlock>
-                        </StackPanel>
-                    </StackPanel>
-                    <StackPanel
-                        Margin="10,20,0,0"
-                        DoubleTapped="StackPanel_DoubleTapped"
-                        Orientation="Horizontal"
-                        Tapped="UIElement_OnTapped">
-                        <PersonPicture ProfilePicture="https://himg.bdimg.com/sys/portraitn/item/0fd16570303132303134g930801000000" />
-                        <StackPanel Margin="15,0,0,0" Orientation="Vertical">
-                            <TextBlock FontSize="18" FontWeight="Medium">
-                                EP012014
-                            </TextBlock>
-                            <TextBlock
-                                FontSize="15"
-                                FontWeight="Medium"
-                                Foreground="Gray">
-                                Developer
-                            </TextBlock>
-                            <TextBlock
-                                FontSize="15"
-                                FontWeight="Light"
-                                Foreground="Gray">
-                                Solidarity Forever~
-                            </TextBlock>
-                            <RichTextBlock>
-                                <Paragraph>
-                                    <Hyperlink NavigateUri="https://github.com/EP012014">
-                                        Github
-                                    </Hyperlink>
-                                    |</Paragraph>
-                            </RichTextBlock>
-                        </StackPanel>
-                    </StackPanel>
-                </StackPanel>
-            </ScrollViewer>
-        </PivotItem>
-    </Pivot>
+                </ScrollViewer>
+            </PivotItem>
+        </Pivot>
+    </Grid>
 </Page>

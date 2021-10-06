@@ -184,7 +184,7 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Row="0" Orientation="Horizontal">
+                                <StackPanel Grid.Row="0" Spacing="5" Orientation="Horizontal">
                                     <TextBlock
                                         Name="TextBlockSongname"
                                         x:Phase="0"
@@ -193,11 +193,12 @@
                                         Text="{x:Bind songname}" />
                                     <TextBlock
                                         Name="TextBlockTransName"
-                                        Margin="5,0,0,0"
                                         x:Phase="0"
                                         FontSize="20"
                                         Foreground="Gray"
                                         Text="{x:Bind ConvertTranslate(transname)}" />
+                                    <Image Height="20" Source="/Assets/cloud.png" Visibility="{x:Bind IsCloud}" />
+                                    <Image Height="20" Source="/Assets/vip.png" Visibility="{x:Bind IsVip}" />
                                 </StackPanel>
                                 <TextBlock
                                     Name="TextBlockAlia"

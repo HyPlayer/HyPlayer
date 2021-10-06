@@ -251,6 +251,7 @@
     <Content Include="Assets\BadgeLogo.scale-150.png" />
     <Content Include="Assets\BadgeLogo.scale-200.png" />
     <Content Include="Assets\BadgeLogo.scale-400.png" />
+    <Content Include="Assets\cloud.png" />
     <Content Include="Assets\icon.png" />
     <Content Include="Assets\JumpListIcons\JumplistAccount.png" />
     <Content Include="Assets\JumpListIcons\JumplistLikedSongs.png" />
@@ -300,6 +301,7 @@
     <Content Include="Assets\ThirdPartyIcons\WX.png" />
     <Content Include="Assets\ThirdPartyIcons\QQ.png" />
     <Content Include="Assets\ThirdPartyIcons\SinaWB.png" />
+    <Content Include="Assets\vip.png" />
     <Content Include="Assets\Wide310x150Logo.scale-100.png" />
     <Content Include="Assets\Wide310x150Logo.scale-125.png" />
     <Content Include="Assets\Wide310x150Logo.scale-150.png" />

@@ -535,7 +535,52 @@ namespace HyPlayer.Pages
                         PersonalFM.InitPersonalFM();
                         break;
                     }
+                case "HeartBeat":
+                    LoadHeartBeat();
+                    break;
             }
+        }
+
+        private async void LoadHeartBeat()
+        {
+            HyPlayList.RemoveAllSong();
+            try
+            {
+                var jsoon = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
+                    new Dictionary<string, object> { { "id", Common.MySongLists[0].plid } });
+                var jsona = await Common.ncapi.RequestAsync(
+                    CloudMusicApiProviders.PlaymodeIntelligenceList,
+                    new Dictionary<string, object>
+                    {
+                                { "pid", Common.MySongLists[0].plid },
+                                { "id", jsoon["playlist"]["trackIds"][0]["id"].ToString() }
+                    });
+
+                var Songs = new List<NCSong>();
+                foreach (var token in jsona["data"])
+                {
+                    var ncSong = NCSong.CreateFromJson(token["songInfo"]);
+                    Songs.Add(ncSong);
+                }
+
+                try
+                {
+                    HyPlayList.AppendNcSongs(Songs);
+
+                    HyPlayList.SongAppendDone();
+
+                    HyPlayList.SongMoveTo(0);
+                }
+                catch (Exception ex)
+                {
+                    Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            }
+
         }
 
         private void OnNavigateBack(NavigationView sender, NavigationViewBackRequestedEventArgs args)
