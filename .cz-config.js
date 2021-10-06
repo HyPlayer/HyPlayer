@@ -80,8 +80,12 @@ module.exports = {
         },
         {
             value: '⚡️ Improve',
-            name: '⚡️ Improve     Improve performance'
-        }
+            name: '⚡️Improve    Improve performance'
+        },
+		{
+			value: '📝 Note',
+			name: '📝 Note       Update README or other explanatory document'
+		}
     ],
 
     scopes: [],

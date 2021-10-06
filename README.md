@@ -18,9 +18,13 @@
 
 **本软件仅供学习交流使用  请勿用于其他用途**
 
-用户交流 QQ 群: <a href="https://jq.qq.com/?_wv=1027&k=cQ73ZhqY">1145646224</a>  欢迎加入
+## 反馈 & 交流
 
+用户交流 QQ 群: <a href="https://jq.qq.com/?_wv=1027&k=cQ73ZhqY">1145646224</a>
 
+Telegram 群组: https://t.me/joinchat/6tJqI3m-b402NDRl
+
+Telegram 频道: https://t.me/hyplayer
 
 ## 下载
 
@@ -51,7 +55,9 @@ Azure 编译包会编译 Commit 并发布 Release: [查看Release](https://githu
 
 本软件非盈利性软件,且遵循 [**GPL-v3**](LICENCE) 协议,请勿将此软件用于商业用途.
 
-本软件仅学习交流使用. 如有侵权,请发 Issue 提出. 因为作者忙于学业,通常只会在周末处理相关事情
+本软件仅学习交流使用. 如有侵权,请发 Issue 提出.
+
+因为作者忙于学业,通常只会在周末处理相关事情
 
 ### 关于无版权
 
