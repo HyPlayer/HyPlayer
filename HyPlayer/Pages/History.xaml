@@ -25,7 +25,7 @@
         <NavigationView
             x:Name="HisModeNavView"
             Grid.Row="1"
-            Margin="30,0,30,0"
+            Margin="15,0,30,0"
             VerticalAlignment="Stretch"
             IsBackButtonVisible="Collapsed"
             IsBackEnabled="False"
