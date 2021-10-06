@@ -26,6 +26,8 @@ Telegram 群组: https://t.me/joinchat/6tJqI3m-b402NDRl
 
 Telegram 频道: https://t.me/hyplayer
 
+Skype 群组: https://join.skype.com/umOViUQNItVd
+
 ## 下载
 
 目前已经上架 Microsoft Store,但是更新速度较为缓慢
