@@ -53,7 +53,7 @@
                     <TextBlock
                         Margin="5"
                         FontFamily="Black"
-                        FontSize="30"
+                        FontSize="20"
                         Text="推荐歌单" />
                     <ScrollViewer
                         Height="250"
@@ -75,7 +75,7 @@
                     Orientation="Vertical">
                     <TextBlock
                         Margin="5"
-                        FontSize="30"
+                        FontSize="20"
                         Text="榜单" />
                     <ScrollViewer
                         Height="250"
@@ -103,7 +103,7 @@
                 <TextBlock
                     Padding="15,0,0,0"
                     FontFamily="Microsoft YaHei UI"
-                    FontSize="40"
+                    FontSize="13"
                     Text="排行榜" />
                 <ScrollViewer
                     HorizontalScrollBarVisibility="Auto"

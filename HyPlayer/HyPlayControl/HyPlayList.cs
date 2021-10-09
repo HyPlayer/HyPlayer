@@ -37,7 +37,7 @@ namespace HyPlayer.HyPlayControl
         public delegate void PauseEvent();
 
         public delegate void PlayEvent();
-        
+
         public delegate void SongRemoveAllEvent();
 
 
@@ -706,7 +706,8 @@ namespace HyPlayer.HyPlayControl
                     if (json["uncollected"]?.ToString().ToLower() == "true")
                     {
 
-
+                        /*
+                         * 此接口失效
                         //Ask for Cloud Pan
                         json = await Common.ncapi.RequestAsync(
                             CloudMusicApiProviders.CloudLyric,
@@ -718,6 +719,7 @@ namespace HyPlayer.HyPlayControl
                                 PureLyrics = json["lrc"]?.ToString(),
                                 TrLyrics = null
                             };
+                        */
                         return new PureLyricInfo
                         {
                             PureLyrics = "[00:00.000] 无歌词 请欣赏",
