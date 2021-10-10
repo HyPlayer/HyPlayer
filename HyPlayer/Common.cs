@@ -26,6 +26,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Media.Animation;
 
 #if !DEBUG
 using Microsoft.AppCenter.Crashes;
@@ -120,12 +121,12 @@ namespace HyPlayer
                     Paratmers = paratmer,
                     Item = PageBase.NavMain.SelectedItem
                 });
-                BaseFrame?.Navigate(SourcePageType, paratmer);
+                BaseFrame?.Navigate(SourcePageType, paratmer, new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromRight });
                 GC.Collect();
             }
             else
             {
-                BaseFrame?.Navigate(SourcePageType, paratmer);
+                BaseFrame?.Navigate(SourcePageType, paratmer, new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromRight });
             }
         }
 
@@ -207,7 +208,7 @@ namespace HyPlayer
                         bak = NavigationHistory.Peek();
                     }
 
-                    BaseFrame?.Navigate(bak.PageType, bak.Paratmers);
+                    BaseFrame?.Navigate(bak.PageType, bak.Paratmers, new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromLeft });
                     NavigatingBack = true;
                     PageBase.NavMain.SelectedItem = bak.Item;
                     NavigatingBack = false;

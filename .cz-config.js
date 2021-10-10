@@ -8,51 +8,51 @@ module.exports = {
         },
         {
             value: '✨ Feat',
-            name: '✨ feat:      A new feature'
+            name: '✨ Feat:      A new feature'
         },
         {
             value: '➕ Add',
-            name: '➕ add:       A new settings, layout, etc.'
+            name: '➕ Add:       A new settings, layout, etc.'
         },
         {
             value: '⛓️ Dep',
-            name: '⛓️ dep:       Fix dependency problems'
+            name: '⛓️ Dep:       Fix dependency problems'
         },
         {
             value: '🐞 Fixed',
-            name: '🐞 fixed:     A bug fix'
+            name: '🐞 Fixed:     A bug fix'
         },
         {
-            value: '🛠 Refactor',
-            name: '🛠 refactor:   A code change that neither fixes a bug nor adds a feature'
+            value: '🛠️ Refactor',
+            name: '🛠️ Refactor:  A code change that neither fixes a bug nor adds a feature'
         },
         {
             value: '📚 Docs',
-            name: '📚 docs:      Documentation only changes'
+            name: '📚 Docs:      Documentation only changes'
         },
         {
             value: '🧪 Test',
-            name: '🧪 test:      Add a testing function'
+            name: '🧪 Test:      Add a testing function'
         },
         {
-            value: '🗯 Chore',
-            name: '🗯 chore:      Changes that don\'t modify src or test files. Such as updating build tasks, package manager'
+            value: '🗯️ Chore',
+            name: '🗯️ Chore:     Changes that don\'t modify src or test files. Such as updating build tasks, package manager'
         },
         {
             value: '💅 Reformat',
-            name: '💅 reformat:  Do the code reformat'
+            name: '💅 Reformat:  Do the code reformat'
         },
         {
             value: '📦 Dump',
-            name: '📦 dump:      New release version'
+            name: '📦 Dump:      New release version'
         },
         {
             value: '⏪ Revert',
-            name: '⏪ revert:    Revert to a commit'
+            name: '⏪ Revert:    Revert to a commit'
         },
         {
             value: '🗺️ Roadmap',
-            name: '🗺️ roadmap:   Decide what will you done'
+            name: '🗺️ Roadmap:   Decide what will you done'
         },
         {
             value: '🎉 Init',
@@ -60,11 +60,11 @@ module.exports = {
         },
         {
             value: '🗑️ Remove',
-            name: '🗑️ remove     Remove some obsolote code'
+            name: '🗑️ Remove     Remove some obsolote code'
         },
         {
             value: '🥚 Egg',
-            name: '🥚 egg        Add an egg~'
+            name: '🥚 Egg        Add an egg~'
         },
         {
             value: '📸 Snapshot',
@@ -79,8 +79,12 @@ module.exports = {
             name: '✏️ Typo       Fix a typo'
         },
         {
-            value: '⚡️ Improve',
-            name: '⚡️Improve    Improve performance'
+            value: '⚡ Improve',
+            name: '⚡ Improve    Improve performance'
+        },
+		{
+            value: '🖼️ UI',
+            name: '🖼️ UI         Improve performance'
         },
 		{
 			value: '📝 Note',
