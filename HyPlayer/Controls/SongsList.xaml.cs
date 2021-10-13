@@ -14,6 +14,7 @@ using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 
@@ -25,6 +26,21 @@ namespace HyPlayer.Controls
 {
     public sealed partial class SongsList : UserControl, IDisposable
     {
+
+
+
+        public bool MultiSelect
+        {
+            get { return (bool)GetValue(MultiSelectProperty); }
+            set { SetValue(MultiSelectProperty, value); /*SongContainer.SelectionMode = (value? ListViewSelectionMode.Multiple : ListViewSelectionMode.Single);*/ }
+        }
+
+        // Using a DependencyProperty as the backing store for MultiSelect.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty MultiSelectProperty =
+            DependencyProperty.Register("MultiSelect", typeof(bool), typeof(SongsList), new PropertyMetadata(false));
+
+
+
         public static readonly DependencyProperty IsSearchEnabledProperty = DependencyProperty.Register(
             "IsSearchEnabled", typeof(bool),
             typeof(SongsList),
@@ -72,6 +88,7 @@ namespace HyPlayer.Controls
         {
             InitializeComponent();
             HyPlayList.OnPlayItemChange += HyPlayListOnOnPlayItemChange;
+            MultiSelect = false;
             Task.Run((() =>
             {
                 Common.Invoke(async () =>
@@ -166,7 +183,7 @@ namespace HyPlayer.Controls
         private async void SongContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (SongContainer.SelectedIndex == -1) return;
-
+            if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
             if (!IsManualSelect) return;
             if (VisibleSongs[SongContainer.SelectedIndex].sid == HyPlayList.NowPlayingItem.PlayItem?.Id) return;
             if (ListSource != null && ListSource != "content" && Songs.Count == VisibleSongs.Count)
@@ -205,19 +222,23 @@ namespace HyPlayer.Controls
         {
             IsManualSelect = false;
             SongContainer.SelectedIndex = int.Parse((sender as Button).Tag.ToString());
-            (((sender as Button).Parent as StackPanel).Parent as Grid).ContextFlyout.ShowAt(sender as Button);
+            SongContainer.ContextFlyout.ShowAt(sender as Button);
             IsManualSelect = true;
         }
 
         private void FlyoutItemPlay_Click(object sender, RoutedEventArgs e)
         {
-            var ncsong = VisibleSongs[SongContainer.SelectedIndex];
-            _ = HyPlayList.AppendNcSong(ncsong, HyPlayList.NowPlaying + 1);
+            int origidx = HyPlayList.NowPlaying + 1;
+            foreach (NCSong ncsong in SongContainer.SelectedItems)
+                _ = HyPlayList.AppendNcSong(ncsong);
+            HyPlayList.SongAppendDone();
+            HyPlayList.SongMoveTo(origidx);
         }
 
         private void FlyoutItemPlayNext_Click(object sender, RoutedEventArgs e)
         {
-            HyPlayList.AppendNcSong(VisibleSongs[SongContainer.SelectedIndex], HyPlayList.NowPlaying + 1);
+            foreach (NCSong ncsong in SongContainer.SelectedItems)
+                _ = HyPlayList.AppendNcSong(ncsong);
             HyPlayList.SongAppendDone();
         }
 
@@ -248,7 +269,8 @@ namespace HyPlayer.Controls
 
         private void FlyoutItemDownload_Click(object sender, RoutedEventArgs e)
         {
-            DownloadManager.AddDownload(VisibleSongs[SongContainer.SelectedIndex]);
+            foreach (NCSong ncsong in SongContainer.SelectedItems)
+                DownloadManager.AddDownload(ncsong);
         }
 
         private void BtnMV_Click(object sender, RoutedEventArgs e)
@@ -278,10 +300,14 @@ namespace HyPlayer.Controls
         private void Grid_RightTapped(object sender, RightTappedRoutedEventArgs e)
         {
             var element = sender as Grid;
-            IsManualSelect = false;
-            SongContainer.SelectedIndex = int.Parse(element.Tag.ToString());
-            element.ContextFlyout.ShowAt(element, new FlyoutShowOptions { Position = e.GetPosition(element) });
-            IsManualSelect = true;
+            if (SongContainer.SelectionMode == ListViewSelectionMode.Single)
+            {
+                IsManualSelect = false;
+                SongContainer.SelectedIndex = int.Parse(element.Tag.ToString());
+                IsManualSelect = true;
+            }
+            SongContainer.ContextFlyout.ShowAt(element, new FlyoutShowOptions { Position = e.GetPosition(element) });
+
         }
 
         public static Brush GetBrush(bool IsAvailable)
@@ -338,6 +364,21 @@ namespace HyPlayer.Controls
             HyPlayList.OnPlayItemChange -= HyPlayListOnOnPlayItemChange;
             VisibleSongs.Clear();
             Songs.Clear();
+        }
+    }
+
+    public class SongListSelectModeConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value != null)
+                return (bool)value ? ListViewSelectionMode.Multiple : ListViewSelectionMode.Single;
+            return SelectionMode.Single;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -70,9 +70,9 @@ namespace HyPlayer
             catch
             {
 #else
-            catch (Exception e)
+            catch(Exception e)
             {
-                Crashes.TrackError(e);
+                Crashes.TrackError(e,null,ErrorAttachmentLog.AttachmentWithText(e.InnerException?.ToString(),"inner"));
 #endif
 
                 /*
@@ -121,12 +121,14 @@ namespace HyPlayer
                     Paratmers = paratmer,
                     Item = PageBase.NavMain.SelectedItem
                 });
-                BaseFrame?.Navigate(SourcePageType, paratmer, new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromRight });
+                BaseFrame?.Navigate(SourcePageType, paratmer,
+                    new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromRight });
                 GC.Collect();
             }
             else
             {
-                BaseFrame?.Navigate(SourcePageType, paratmer, new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromRight });
+                BaseFrame?.Navigate(SourcePageType, paratmer,
+                    new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromRight });
             }
         }
 
@@ -208,7 +210,8 @@ namespace HyPlayer
                         bak = NavigationHistory.Peek();
                     }
 
-                    BaseFrame?.Navigate(bak.PageType, bak.Paratmers, new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromLeft });
+                    BaseFrame?.Navigate(bak.PageType, bak.Paratmers,
+                        new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromLeft });
                     NavigatingBack = true;
                     PageBase.NavMain.SelectedItem = bak.Item;
                     NavigatingBack = false;
@@ -223,7 +226,6 @@ namespace HyPlayer
                 if (BaseFrame != null && BaseFrame.CanGoBack)
                     BaseFrame?.GoBack();
             }
-
         }
 
         public class NavigationHistoryItem
@@ -371,6 +373,7 @@ namespace HyPlayer
             get => GetSettings("xboxHidePointer", false);
             set => ApplicationData.Current.LocalSettings.Values["xboxHidePointer"] = value;
         }
+
         public int Volume
         {
             get

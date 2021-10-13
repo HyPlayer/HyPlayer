@@ -1,5 +1,8 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
+using Kawazu;
 using System.Threading.Tasks;
 using Windows.UI;
 using Windows.UI.Text;
@@ -7,9 +10,6 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
-using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
-using Kawazu;
 
 #endregion
 

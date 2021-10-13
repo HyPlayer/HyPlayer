@@ -109,23 +109,24 @@ namespace HyPlayer
         }
 
 
-        private void InitializeThings()
+        private async void InitializeThings()
         {
-            Common.Invoke(async () =>
+            try
             {
+                var sf = await ApplicationData.Current.LocalCacheFolder.GetFolderAsync("Romaji");
+                Common.KawazuConv = new KawazuConverter(sf.Path);
+            }
+            catch
+            {
+                // ignored
+            }
 
-                try
+            if (Common.isExpanded)
+                Common.Invoke((() =>
                 {
-                    var sf = await ApplicationData.Current.LocalCacheFolder.GetFolderAsync("Romaji");
-                    Common.KawazuConv = new KawazuConverter(sf.Path);
-                }
-                catch
-                {
-                }
-
-                if (Common.isExpanded)
                     Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer));
-            });
+                }));
+
         }
 
         private void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)
@@ -136,8 +137,8 @@ namespace HyPlayer
                 InitializeThings();
                 Common.NavigateBack();
             }
-            ClearExtendedExecution(executionSession);
 
+            ClearExtendedExecution(executionSession);
         }
 
         private async void App_EnteredBackground(object sender, EnteredBackgroundEventArgs e)
@@ -153,11 +154,11 @@ namespace HyPlayer
                     executionSession = delaySession;
                     if (Common.Setting.forceMemoryGarbage)
                         _ = Task.Run(() => Common.Invoke(async () =>
-                    {
-                        Common.CollectGarbage();
-                        await Task.Delay(1000);
-                        GC.Collect();
-                    }));
+                        {
+                            Common.CollectGarbage();
+                            await Task.Delay(1000);
+                            GC.Collect();
+                        }));
 
                     break;
                 case ExtendedExecutionResult.Denied:

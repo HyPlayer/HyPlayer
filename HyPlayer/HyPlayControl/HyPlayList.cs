@@ -330,6 +330,7 @@ namespace HyPlayer.HyPlayControl
         {
             List.Clear();
             Player.Source = null;
+            NowPlaying = -1;
             OnSongRemoveAll?.Invoke();
             SongAppendDone();
         }
