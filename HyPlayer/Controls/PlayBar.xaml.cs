@@ -899,7 +899,7 @@ namespace HyPlayer.Controls
 
         private void BtnPlayStateChange_KeyUp(object sender, KeyRoutedEventArgs e)
         {
-            BtnPlayStateChange_OnClick(sender, e);
+            //BtnPlayStateChange_OnClick(sender, e);
         }
 
         private void ImageContainer_Tapped(object sender, TappedRoutedEventArgs e)
