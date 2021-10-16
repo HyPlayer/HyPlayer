@@ -27,6 +27,7 @@ using Buffer = Windows.Storage.Streams.Buffer;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Graphics.Imaging;
 using System.Text;
+using Windows.UI.Xaml.Data;
 
 #endregion
 
@@ -96,13 +97,10 @@ namespace HyPlayer.Pages
             Current_SizeChanged(null, null);
             ToggleButtonSound.IsChecked = Common.ShowLyricSound;
             ToggleButtonTranslation.IsChecked = Common.ShowLyricTrans;
-            AlbumDropShadow.ShadowOpacity = (double)Common.Setting.expandedCoverShadowDepth / 10;
             if (Common.Setting.albumRound)
             {
                 ImageAlbum.CornerRadius = new CornerRadius(300);
-                AlbumDropShadow.ShadowOpacity = 0;
             }
-
             ImageAlbum.BorderThickness = new Thickness(Common.Setting.albumBorderLength);
 
             if (Common.Setting.albumRotate)
@@ -256,7 +254,7 @@ namespace HyPlayer.Pages
                     RightPanel.SetValue(Grid.ColumnProperty, 0);
                     RightPanel.SetValue(Grid.ColumnSpanProperty, 2);
                     LyricBox.Margin = new Thickness(15);
-                    LyricBoxContainer.Height = AlbumDropShadow.ActualHeight + 170;
+                    LyricBoxContainer.Height = ImageAlbum.ActualHeight + 170;
                     break;
             }
 
@@ -268,7 +266,7 @@ namespace HyPlayer.Pages
             if (needRedesign > 5) needRedesign = 5;
             // 这个函数里面放无法用XAML实现的页面布局方式
             var lyricMargin = LyricBoxContainer.Margin;
-            lyricMargin.Top = AlbumDropShadow.ActualOffset.Y;
+            lyricMargin.Top = ImageAlbum.ActualOffset.Y;
             LyricBoxContainer.Margin = lyricMargin;
             if (WindowMode == ExpandedWindowMode.Both)
                 LyricBoxContainer.Height = SongInfo.ActualOffset.Y + 80;
@@ -305,23 +303,23 @@ namespace HyPlayer.Pages
 
             if (iscompact)
             {
-                AlbumDropShadow.Width = double.NaN;
+                ImageAlbum.Width = double.NaN;
                 LeftPanel.HorizontalAlignment = HorizontalAlignment.Left;
-                AlbumDropShadow.HorizontalAlignment = HorizontalAlignment.Left;
+                ImageAlbum.HorizontalAlignment = HorizontalAlignment.Left;
             }
             else
             {
                 if (550 > nowwidth && !iscompact)
                 {
-                    AlbumDropShadow.Width = nowwidth - AlbumDropShadow.ActualOffset.X - 15;
+                    ImageAlbum.Width = nowwidth - ImageAlbum.ActualOffset.X - 15;
                     LeftPanel.HorizontalAlignment = HorizontalAlignment.Left;
-                    AlbumDropShadow.HorizontalAlignment = HorizontalAlignment.Left;
+                    ImageAlbum.HorizontalAlignment = HorizontalAlignment.Left;
                 }
                 else
                 {
-                    AlbumDropShadow.Width = double.NaN;
+                    ImageAlbum.Width = double.NaN;
                     LeftPanel.HorizontalAlignment = HorizontalAlignment.Center;
-                    AlbumDropShadow.HorizontalAlignment = HorizontalAlignment.Center;
+                    ImageAlbum.HorizontalAlignment = HorizontalAlignment.Center;
                 }
             }
 
@@ -901,6 +899,19 @@ namespace HyPlayer.Pages
             offset = 0;
             TbOffset.Text = (HyPlayList.LyricOffset < TimeSpan.Zero ? "-" : "") +
                             HyPlayList.LyricOffset.ToString("ss\\.ff");
+        }
+    }
+
+    public class AlbumShadowConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            return Common.Setting.albumRound ? 0 : (double)Common.Setting.expandedCoverShadowDepth / 10;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
         }
     }
 

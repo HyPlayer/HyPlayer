@@ -7,18 +7,35 @@
     xmlns:ctl="using:HyPlayer.HyPlayControl"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hyplayer="using:HyPlayer"
+    xmlns:pages="using:HyPlayer.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:ui="using:Microsoft.Toolkit.Uwp.UI"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
+    <Page.Resources>
+        <pages:AlbumShadowConverter
+            x:Key="ShadowConverter" />
+        <ui:AttachedDropShadow
+            CastTo="{x:Bind ShadowTarget}"
+            x:Key="AlbumDropShadow"
+            BlurRadius="20"
+            IsMasked="False"
+            Color="Black"
+            Offset="0,4"
+            Opacity="{x:Bind hyplayer:Common.Setting.expandedCoverShadowDepth, Converter={StaticResource ShadowConverter}}" />
+    </Page.Resources>
     <!--  Grid Beam~  -->
-    <Grid x:Name="PageContainer" Background="{ThemeResource ExpandedPlayerMask}">
+    <Grid
+        x:Name="PageContainer"
+        Background="{ThemeResource ExpandedPlayerMask}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="30" />
+            <RowDefinition
+                Height="30" />
             <!--  Title Bar  -->
-            <RowDefinition Height="*" />
-            <RowDefinition Height="30" />
+            <RowDefinition
+                Height="*" />
+            <RowDefinition
+                Height="30" />
         </Grid.RowDefinitions>
         <Grid
             x:Name="AppTitleBar"
@@ -52,7 +69,9 @@
                 Click="BtnPreSong_OnClick"
                 CornerRadius="30"
                 Style="{StaticResource ButtonRevealStyle}">
-                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE892;" />
+                <FontIcon
+                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                    Glyph="&#xE892;" />
             </Button>
             <Button
                 Name="BtnPlayStateChange"
@@ -83,7 +102,9 @@
                 Click="BtnNextSong_OnClick"
                 CornerRadius="30"
                 Style="{StaticResource ButtonRevealStyle}">
-                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE101;" />
+                <FontIcon
+                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                    Glyph="&#xE101;" />
             </Button>
             <Slider
                 Name="SliderVolumn"
@@ -122,12 +143,15 @@
                     MaxWidth="600"
                     HorizontalAlignment="Stretch">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="10*" />
+                        <RowDefinition
+                            Height="*" />
+                        <RowDefinition
+                            Height="Auto" />
+                        <RowDefinition
+                            Height="10*" />
                     </Grid.RowDefinitions>
-                    <controls:DropShadowPanel
-                        x:Name="AlbumDropShadow"
+                    <Border Grid.Row="1" x:Name="ShadowTarget" />
+                    <controls:ImageEx
                         Grid.Row="1"
                         MaxWidth="600"
                         MaxHeight="600"
@@ -135,14 +159,21 @@
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
                         ui:VisualExtensions.NormalizedCenterPoint="0.5"
-                        BlurRadius="20"
-                        IsMasked="True"
-                        OffsetX="0"
-                        OffsetY="4"
-                        ShadowOpacity="0.4"
-                        Color="Black">
+                        x:Name="ImageAlbum"
+                        x:FieldModifier="public"
+                        BorderBrush="Black"
+                        BorderThickness="80"
+                        CornerRadius="12"
+                        IsCacheEnabled="False"
+                        ui:Effects.Shadow="{StaticResource AlbumDropShadow}"
+                        PlaceholderStretch="Uniform"
+                        RightTapped="{x:Bind hyplayer:Common.UIElement_RightTapped}"
+                        Source="/Assets/icon.png"
+                        Stretch="Uniform"
+                        Tapped="ImageAlbum_Tapped">
                         <ani:Explicit.Animations>
-                            <ani:AnimationSet x:Name="RotateAnimationSet">
+                            <ani:AnimationSet
+                                x:Name="RotateAnimationSet">
                                 <ani:RotationInDegreesAnimation
                                     x:Name="AlbumRotateAnimation"
                                     EasingMode="EaseOut"
@@ -153,34 +184,21 @@
                                     Duration="0:0:20" />
                             </ani:AnimationSet>
                         </ani:Explicit.Animations>
-                        <controls:ImageEx
-                            x:Name="ImageAlbum"
-                            x:FieldModifier="public"
-                            BorderBrush="Black"
-                            BorderThickness="80"
-                            CornerRadius="12"
-                            IsCacheEnabled="False"
-                            PlaceholderStretch="Uniform"
-                            RightTapped="{x:Bind hyplayer:Common.UIElement_RightTapped}"
-                            Source="/Assets/icon.png"
-                            Stretch="Uniform"
-                            Tapped="ImageAlbum_Tapped">
-                            <controls:ImageEx.ContextFlyout>
-                                <MenuFlyout>
-                                    <MenuFlyoutItem
-                                        Click="SaveAlbumImage_Click"
-                                        Icon="Save"
-                                        Style="{StaticResource MenuFlyoutItemRevealStyle}"
-                                        Text="保存图片" />
-                                    <MenuFlyoutItem
-                                        Click="CopySongName_Click"
-                                        Icon="Copy"
-                                        Style="{StaticResource MenuFlyoutItemRevealStyle}"
-                                        Text="复制歌名" />
-                                </MenuFlyout>
-                            </controls:ImageEx.ContextFlyout>
-                        </controls:ImageEx>
-                    </controls:DropShadowPanel>
+                        <controls:ImageEx.ContextFlyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem
+                                    Click="SaveAlbumImage_Click"
+                                    Icon="Save"
+                                    Style="{StaticResource MenuFlyoutItemRevealStyle}"
+                                    Text="保存图片" />
+                                <MenuFlyoutItem
+                                    Click="CopySongName_Click"
+                                    Icon="Copy"
+                                    Style="{StaticResource MenuFlyoutItemRevealStyle}"
+                                    Text="复制歌名" />
+                            </MenuFlyout>
+                        </controls:ImageEx.ContextFlyout>
+                    </controls:ImageEx>
                     <StackPanel
                         x:Name="SongInfo"
                         Grid.Row="2"
@@ -215,7 +233,9 @@
                                 Click="TextBlockSinger_OnTapped"
                                 FontSize="18" />
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Spacing="5">
+                        <StackPanel
+                            Orientation="Horizontal"
+                            Spacing="5">
                             <TextBlock
                                 Padding="0,6,0,6"
                                 FontSize="18"
@@ -231,7 +251,9 @@
                     </StackPanel>
                 </Grid>
             </ScrollViewer>
-            <Grid x:Name="RightPanel" Grid.Column="1">
+            <Grid
+                x:Name="RightPanel"
+                Grid.Column="1">
                 <ScrollViewer
                     x:Name="LyricBoxContainer"
                     HorizontalAlignment="Stretch"
@@ -247,15 +269,21 @@
                                 Style="{StaticResource MenuFlyoutItemRevealStyle}"
                                 Text="加载本地歌词">
                                 <MenuFlyoutItem.Icon>
-                                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE160;" />
+                                    <FontIcon
+                                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                        Glyph="&#xE160;" />
                                 </MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
                             <MenuFlyoutSeparator />
-                            <MenuFlyoutItem IsEnabled="false" Text="歌词偏移" />
+                            <MenuFlyoutItem
+                                IsEnabled="false"
+                                Text="歌词偏移" />
                             <MenuFlyoutItem>
                                 <MenuFlyoutItem.Template>
-                                    <ControlTemplate TargetType="MenuFlyoutItem">
-                                        <controls:DockPanel LastChildFill="True">
+                                    <ControlTemplate
+                                        TargetType="MenuFlyoutItem">
+                                        <controls:DockPanel
+                                            LastChildFill="True">
                                             <Button
                                                 x:Name="LyricOffsetMin"
                                                 controls:DockPanel.Dock="Left"
@@ -289,8 +317,12 @@
                             ScrollViewer.VerticalScrollBarVisibility="Auto"
                             Spacing="15"
                             Tapped="LyricBox_Tapped">
-                            <StackPanel Orientation="Horizontal" Spacing="5">
-                                <TextBlock HorizontalAlignment="Center" Text="当前暂未播放歌曲" />
+                            <StackPanel
+                                Orientation="Horizontal"
+                                Spacing="5">
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    Text="当前暂未播放歌曲" />
                             </StackPanel>
                         </StackPanel>
                     </ScrollViewer.Content>
@@ -317,7 +349,9 @@
                             Click="ToggleButtonTranslation_OnClick"
                             Text="显示翻译">
                             <ToggleMenuFlyoutItem.Icon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE982;" />
+                                <FontIcon
+                                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                    Glyph="&#xE982;" />
                             </ToggleMenuFlyoutItem.Icon>
                         </ToggleMenuFlyoutItem>
                         <ToggleMenuFlyoutItem
@@ -325,7 +359,9 @@
                             Click="ToggleButtonSound_OnClick"
                             Text="转罗马音">
                             <ToggleMenuFlyoutItem.Icon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE986;" />
+                                <FontIcon
+                                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                    Glyph="&#xE986;" />
                             </ToggleMenuFlyoutItem.Icon>
                         </ToggleMenuFlyoutItem>
                         <MenuFlyoutSeparator />
@@ -336,7 +372,9 @@
                             Click="BtnToggleFullScreen_Checked"
                             Text="全屏模式">
                             <ToggleMenuFlyoutItem.Icon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE1D9;" />
+                                <FontIcon
+                                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                    Glyph="&#xE1D9;" />
                             </ToggleMenuFlyoutItem.Icon>
                         </ToggleMenuFlyoutItem>
                         <ToggleMenuFlyoutItem
@@ -346,7 +384,9 @@
                             Click="BtnToggleFullScreen_Checked"
                             Text="小窗模式">
                             <ToggleMenuFlyoutItem.Icon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE2B3;" />
+                                <FontIcon
+                                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                    Glyph="&#xE2B3;" />
                             </ToggleMenuFlyoutItem.Icon>
                         </ToggleMenuFlyoutItem>
                         <MenuFlyoutSeparator />
@@ -357,7 +397,9 @@
                             Click="BtnToggleWindowsMode_Checked"
                             Text="专辑封面">
                             <ToggleMenuFlyoutItem.Icon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE15A;" />
+                                <FontIcon
+                                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                    Glyph="&#xE15A;" />
                             </ToggleMenuFlyoutItem.Icon>
                         </ToggleMenuFlyoutItem>
                         <ToggleMenuFlyoutItem
@@ -367,13 +409,17 @@
                             Click="BtnToggleWindowsMode_Checked"
                             Text="歌词界面">
                             <ToggleMenuFlyoutItem.Icon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE1A1;" />
+                                <FontIcon
+                                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                    Glyph="&#xE1A1;" />
                             </ToggleMenuFlyoutItem.Icon>
                         </ToggleMenuFlyoutItem>
                     </MenuFlyout>
                 </Button.Flyout>
                 <Button.Content>
-                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xEDE3;" />
+                    <FontIcon
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        Glyph="&#xEDE3;" />
                 </Button.Content>
             </Button>
         </Grid>
