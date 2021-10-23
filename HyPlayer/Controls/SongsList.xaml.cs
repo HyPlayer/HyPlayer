@@ -10,7 +10,10 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
+using Windows.Devices.Input;
+using Windows.Foundation;
 using Windows.UI;
+using Windows.UI.Input;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -26,19 +29,19 @@ namespace HyPlayer.Controls
 {
     public sealed partial class SongsList : UserControl, IDisposable
     {
-
-
-
         public bool MultiSelect
         {
             get { return (bool)GetValue(MultiSelectProperty); }
-            set { SetValue(MultiSelectProperty, value); /*SongContainer.SelectionMode = (value? ListViewSelectionMode.Multiple : ListViewSelectionMode.Single);*/ }
+            set
+            {
+                SetValue(MultiSelectProperty,
+                    value); /*SongContainer.SelectionMode = (value? ListViewSelectionMode.Multiple : ListViewSelectionMode.Single);*/
+            }
         }
 
         // Using a DependencyProperty as the backing store for MultiSelect.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty MultiSelectProperty =
             DependencyProperty.Register("MultiSelect", typeof(bool), typeof(SongsList), new PropertyMetadata(false));
-
 
 
         public static readonly DependencyProperty IsSearchEnabledProperty = DependencyProperty.Register(
@@ -220,10 +223,7 @@ namespace HyPlayer.Controls
 
         private void More_Click(object sender, RoutedEventArgs e)
         {
-            IsManualSelect = false;
-            SongContainer.SelectedIndex = int.Parse((sender as Button).Tag.ToString());
-            SongContainer.ContextFlyout.ShowAt(sender as Button);
-            IsManualSelect = true;
+            Grid_RightTapped(((StackPanel)((Button)sender)?.Parent)?.Parent, null);
         }
 
         private void FlyoutItemPlay_Click(object sender, RoutedEventArgs e)
@@ -306,8 +306,9 @@ namespace HyPlayer.Controls
                 SongContainer.SelectedIndex = int.Parse(element.Tag.ToString());
                 IsManualSelect = true;
             }
-            SongContainer.ContextFlyout.ShowAt(element, new FlyoutShowOptions { Position = e.GetPosition(element) });
 
+            SongContainer.ContextFlyout.ShowAt(element,
+                new FlyoutShowOptions { Position = e?.GetPosition(element) ?? new Point(element?.ActualWidth ?? 0, 0) });
         }
 
         public static Brush GetBrush(bool IsAvailable)

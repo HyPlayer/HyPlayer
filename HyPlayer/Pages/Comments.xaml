@@ -23,8 +23,10 @@
                     </Grid.ColumnDefinitions>
                     <TextBox
                         x:Name="CommentEdit"
+                        Height="80"
                         Grid.Column="0"
                         Margin="15"
+                        AcceptsReturn="True"
                         HorizontalAlignment="Stretch"
                         MaxLength="140"
                         PlaceholderText="发表评论"
@@ -50,7 +52,7 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock
                         Margin="15"
-                        FontSize="40"
+                        FontSize="23"
                         Text="热评" />
 
                 </Grid>
@@ -68,7 +70,7 @@
                         <TextBlock
                             x:Name="AllCmtsTB"
                             Margin="15"
-                            FontSize="40"
+                            FontSize="23"
                             Text="所有评论" />
                         <ComboBox
                             x:Name="ComboBoxSortType"

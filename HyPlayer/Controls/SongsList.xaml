@@ -19,6 +19,7 @@
     </UserControl.Resources>
     <Grid>
         <ListView
+            HorizontalContentAlignment="Stretch"
             Name="SongContainer"
             Padding="10"
             ItemsSource="{x:Bind VisibleSongs}"
@@ -73,6 +74,11 @@
                     </Grid>
                 </StackPanel>
             </ListView.Header>
+            <ListView.ItemContainerStyle> 
+                <Style TargetType="ListViewItem"> 
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" /> 
+                </Style> 
+            </ListView.ItemContainerStyle> 
             <ListView.ContextFlyout>
                 <MenuFlyout>
                     <MenuFlyoutItem
@@ -185,6 +191,7 @@
                 <DataTemplate
                     x:DataType="classes:NCSong">
                     <Grid
+                        HorizontalAlignment="Stretch"
                         IsRightTapEnabled="True"
                         RightTapped="Grid_RightTapped"
                         Tag="{x:Bind Order}">
@@ -205,7 +212,6 @@
                                 Text="{x:Bind DspOrder}" />
                             <controls:ImageEx
                                 x:Name="ImageRect"
-                                Grid.Column="1"
                                 Width="75"
                                 Height="75"
                                 x:Phase="4"
