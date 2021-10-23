@@ -74,7 +74,6 @@ namespace HyPlayer.Pages
                     {
                         try
                         {
-                            SongsList.ListSource = "content";
                             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
                                 new Dictionary<string, object> { { "id", playList.plid } });
                             var trackIds = json["playlist"]["trackIds"].Select(t => (int)t["id"]).Skip(page * 500)
@@ -122,6 +121,7 @@ namespace HyPlayer.Pages
                     }
                     else
                     {
+                        SongsList.ListSource = "content";
                         Common.Invoke(() =>
                         {
                             //每日推荐
