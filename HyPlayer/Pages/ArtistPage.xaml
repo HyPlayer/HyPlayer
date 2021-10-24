@@ -75,30 +75,50 @@
                 <controls1:SongsList
                     x:Name="AllSongContainer"
                     Margin="20,10,0,0"
-                    Songs="{x:Bind allSongs, Mode=OneWay}" />
+                    Songs="{x:Bind allSongs, Mode=OneWay}" >
+                    <controls1:SongsList.Footer>
+                        <StackPanel
+                            Grid.Row="3"
+                            HorizontalAlignment="Center"
+                            Orientation="Horizontal">
+                            <Button
+                                Click="PrevPage_Click"
+                                Content="上一页"
+                                Style="{StaticResource ButtonRevealStyle}"
+                                Visibility="Collapsed" />
+                            <Button
+                                Click="NextPage_Click"
+                                Content="下一页"
+                                Style="{StaticResource ButtonRevealStyle}"
+                                Visibility="Collapsed" />
+                        </StackPanel>
+                    </controls1:SongsList.Footer>
+                </controls1:SongsList>
             </PivotItem>
             <PivotItem Header="专辑">
-                <controls1:SimpleLinerList x:Name="AlbumContainer" Margin="20,10,0,0" />
+                <controls1:SimpleLinerList x:Name="AlbumContainer" Margin="20,10,0,0" >
+                    <controls1:SimpleLinerList.Footer>
+                        <StackPanel
+                            Grid.Row="3"
+                            HorizontalAlignment="Center"
+                            Orientation="Horizontal">
+                            <Button
+                                x:Name="PrevPage"
+                                Click="PrevPage_Click"
+                                Content="上一页"
+                                Style="{StaticResource ButtonRevealStyle}"
+                                Visibility="Collapsed" />
+                            <Button
+                                x:Name="NextPage"
+                                Click="NextPage_Click"
+                                Content="下一页"
+                                Style="{StaticResource ButtonRevealStyle}"
+                                Visibility="Collapsed" />
+                        </StackPanel>
+                    </controls1:SimpleLinerList.Footer>
+                </controls1:SimpleLinerList>
             </PivotItem>
         </Pivot>
-        <StackPanel
-            Grid.Row="3"
-            HorizontalAlignment="Center"
-            Orientation="Horizontal">
-            <Button
-                x:Name="PrevPage"
-                Click="PrevPage_Click"
-                Content="上一页"
-                Style="{StaticResource ButtonRevealStyle}"
-                Visibility="Collapsed" />
-            <TextBlock x:Name="PageIndicator" />
-            <Button
-                x:Name="NextPage"
-                Click="NextPage_Click"
-                Content="下一页"
-                Style="{StaticResource ButtonRevealStyle}"
-                Visibility="Collapsed" />
-        </StackPanel>
     </Grid>
 
 

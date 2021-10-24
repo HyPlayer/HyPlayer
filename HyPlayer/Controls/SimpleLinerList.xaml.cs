@@ -25,7 +25,15 @@ namespace HyPlayer.Controls
             get { return (UIElement)GetValue(ListHeaderProperty); }
             set { SetValue(ListHeaderProperty, value); }
         }
-        
+
+        public static readonly DependencyProperty FooterProperty = DependencyProperty.Register(
+            "Footer", typeof(UIElement), typeof(SimpleLinerList), new PropertyMetadata(default(UIElement)));
+
+        public UIElement Footer
+        {
+            get => (UIElement)GetValue(FooterProperty);
+            set => SetValue(FooterProperty, value);
+        }
 
         public SimpleLinerList()
         {

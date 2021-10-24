@@ -12,7 +12,6 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="150" />
         </Grid.RowDefinitions>
         <controls:DockPanel
             Grid.Row="0"
@@ -84,14 +83,6 @@
             Margin="20,30,0,0"
             Songs="{x:Bind songs}"
             x:Name="SongContainer" />
-        <Button
-            Click="NextPage_OnClickPage_OnClick"
-            Content="加载更多"
-            Grid.Row="2"
-            HorizontalAlignment="Center"
-            Style="{StaticResource ButtonRevealStyle}"
-            Visibility="Collapsed"
-            x:Name="NextPage" />
     </Grid>
 
 

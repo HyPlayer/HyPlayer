@@ -28,6 +28,9 @@
             <interactivity:Interaction.Behaviors>
                 <behaviors:QuickReturnHeaderBehavior />
             </interactivity:Interaction.Behaviors>
+            <ListView.Footer>
+                <ContentControl Margin="0,0,0,130" Content="{x:Bind Footer}" />
+            </ListView.Footer>
             <ListView.Header>
                 <StackPanel
                     x:Name="HeaderPanel"
@@ -181,11 +184,11 @@
                     </MenuFlyoutItem>
                 </MenuFlyout>
             </ListView.ContextFlyout>
-            <ListView.ItemContainerStyle>
+            <ListView.Resources>
                 <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <Setter Property="HorizontalAlignment" Value="Stretch" />
                 </Style>
-            </ListView.ItemContainerStyle>
+            </ListView.Resources>
             <ListView.ItemTemplate>
                 <DataTemplate
                     x:DataType="classes:NCSong">

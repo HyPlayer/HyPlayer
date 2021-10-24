@@ -7,7 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid Margin="0,0,0,150">
+    <Grid>
         <TextBlock
             Grid.Row="0"
             Margin="30,0,30,0"
@@ -33,14 +33,17 @@
                     <NavigationViewItem Content="电台" Tag="Radio" />
                 </NavigationView.MenuItems>
             </NavigationView>
-            <controls:SimpleLinerList x:Name="ItemContainer" Grid.Row="1" />
-            <Button
-                x:Name="BtnLoadMore"
-                Grid.Row="2"
-                HorizontalAlignment="Center"
-                Click="BtnLoadMore_OnClick"
-                Content="加载更多"
-                Style="{StaticResource ButtonRevealStyle}" />
+            <controls:SimpleLinerList x:Name="ItemContainer" Grid.Row="1">
+                <controls:SimpleLinerList.Footer>
+                    <Button
+                        x:Name="BtnLoadMore"
+                        Grid.Row="2"
+                        HorizontalAlignment="Center"
+                        Click="BtnLoadMore_OnClick"
+                        Content="加载更多"
+                        Style="{StaticResource ButtonRevealStyle}" />
+                </controls:SimpleLinerList.Footer>
+            </controls:SimpleLinerList>
         </Grid>
     </Grid>
 

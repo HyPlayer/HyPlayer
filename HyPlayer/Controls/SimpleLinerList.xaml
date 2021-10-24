@@ -24,6 +24,9 @@
         <interactivity:Interaction.Behaviors>
             <behaviors:QuickReturnHeaderBehavior />
         </interactivity:Interaction.Behaviors>
+        <ListView.Footer>
+            <ContentControl Margin="0,0,0,130" Content="{x:Bind Footer}" />
+        </ListView.Footer>
         <ListView.ItemTemplate>
             <DataTemplate x:DataType="classes:SimpleListItem">
                 <Grid Tag="{x:Bind ResourceId}">

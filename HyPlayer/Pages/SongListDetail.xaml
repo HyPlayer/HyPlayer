@@ -21,7 +21,7 @@
             x:Name="SongsList"
             Grid.Row="0"
             Grid.RowSpan="2"
-            Margin="20,20,0,150"
+            Margin="20,20,0,0"
             VerticalAlignment="Stretch"
             CornerRadius="15"
             IsSearchEnabled="True"
@@ -154,17 +154,18 @@
                     </VisualStateManager.VisualStateGroups>
                 </controls:DockPanel>
             </controls1:SongsList.ListHeader>
+            <controls1:SongsList.Footer>
+                <Button
+                    x:Name="NextPage"
+                    Grid.Row="1"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    Click="NextPage_OnClickPage_OnClick"
+                    Content="加载更多"
+                    Style="{StaticResource ButtonRevealStyle}"
+                    Visibility="Visible" />
+            </controls1:SongsList.Footer>
         </controls1:SongsList>
-
-        <Button
-            x:Name="NextPage"
-            Grid.Row="1"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Top"
-            Click="NextPage_OnClickPage_OnClick"
-            Content="加载更多"
-            Style="{StaticResource ButtonRevealStyle}"
-            Visibility="Visible" />
     </Grid>
 
 

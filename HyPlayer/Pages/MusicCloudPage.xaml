@@ -10,7 +10,7 @@
     xmlns:pages="using:HyPlayer.Pages"
     mc:Ignorable="d">
 
-    <Grid Margin="0,0,0,150">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="50" />
             <RowDefinition Height="*" />
@@ -29,17 +29,18 @@
                 Click="BtnUpload_Click"
                 Content="上传本地" />
         </StackPanel>
-        <controls1:SongsList x:Name="SongContainer" Grid.Row="1" />
-
-        <Button
-            x:Name="NextPage"
-            Grid.Row="2"
-            HorizontalAlignment="Center"
-            Click="NextPage_OnClickPage_OnClick"
-            Content="加载更多"
-            Style="{StaticResource ButtonRevealStyle}"
-            Visibility="Collapsed" />
-        <Grid Height="150" />
+        <controls1:SongsList x:Name="SongContainer" Grid.Row="1">
+            <controls1:SongsList.Footer>
+                <Button
+                    x:Name="NextPage"
+                    Grid.Row="2"
+                    HorizontalAlignment="Center"
+                    Click="NextPage_OnClickPage_OnClick"
+                    Content="加载更多"
+                    Style="{StaticResource ButtonRevealStyle}"
+                    Visibility="Collapsed" />
+            </controls1:SongsList.Footer>
+        </controls1:SongsList>
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState>

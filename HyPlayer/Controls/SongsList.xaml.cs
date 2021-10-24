@@ -75,12 +75,21 @@ namespace HyPlayer.Controls
 
         public UIElement ListHeader
         {
-            get { return (UIElement)GetValue(ListHeaderProperty); }
+            get => (UIElement)GetValue(ListHeaderProperty);
             set
             {
                 HeaderPanel.Padding = new Thickness(0, 0, 0, 25);
                 SetValue(ListHeaderProperty, value);
             }
+        }
+
+        public static readonly DependencyProperty FooterProperty = DependencyProperty.Register(
+            "Footer", typeof(UIElement), typeof(SongsList), new PropertyMetadata(default(UIElement)));
+
+        public UIElement Footer
+        {
+            get => (UIElement)GetValue(FooterProperty);
+            set => SetValue(FooterProperty, value);
         }
 
         public bool IsManualSelect = true;
@@ -92,6 +101,7 @@ namespace HyPlayer.Controls
             InitializeComponent();
             HyPlayList.OnPlayItemChange += HyPlayListOnOnPlayItemChange;
             MultiSelect = false;
+            
             Task.Run((() =>
             {
                 Common.Invoke(async () =>

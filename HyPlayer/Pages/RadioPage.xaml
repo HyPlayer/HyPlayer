@@ -12,7 +12,6 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="150" />
         </Grid.RowDefinitions>
         <controls:DockPanel
             x:Name="GridPersonalInformation"
@@ -79,15 +78,19 @@
             x:Name="SongContainer"
             Grid.Row="1"
             Margin="20,30,0,0"
-            Songs="{x:Bind Songs, Mode=OneWay}" />
-        <Button
-            x:Name="NextPage"
-            Grid.Row="2"
-            HorizontalAlignment="Center"
-            Click="NextPage_OnClickPage_OnClick"
-            Content="加载更多"
-            Style="{StaticResource ButtonRevealStyle}"
-            Visibility="Collapsed" />
+            Songs="{x:Bind Songs, Mode=OneWay}" >
+            <controls1:SongsList.Footer>
+                <Button
+                    x:Name="NextPage"
+                    Grid.Row="2"
+                    HorizontalAlignment="Center"
+                    Click="NextPage_OnClickPage_OnClick"
+                    Content="加载更多"
+                    Style="{StaticResource ButtonRevealStyle}"
+                    Visibility="Collapsed" />
+            </controls1:SongsList.Footer>
+        </controls1:SongsList>
+
 
 
         <VisualStateManager.VisualStateGroups>
