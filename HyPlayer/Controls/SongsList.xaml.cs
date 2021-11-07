@@ -317,7 +317,7 @@ namespace HyPlayer.Controls
 
             SongContainer.ContextFlyout.ShowAt(element,
                 new FlyoutShowOptions
-                    { Position = e?.GetPosition(element) ?? new Point(element?.ActualWidth ?? 0, 0) });
+                    { Position = e?.GetPosition(element) ?? new Point(element?.ActualWidth ?? 0, 80) });
         }
 
         public static Brush GetBrush(bool IsAvailable)

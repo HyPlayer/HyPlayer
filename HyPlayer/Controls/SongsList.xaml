@@ -193,6 +193,7 @@
                 <DataTemplate
                     x:DataType="classes:NCSong">
                     <Grid
+                        Background="Transparent"
                         HorizontalAlignment="Stretch"
                         IsRightTapEnabled="True"
                         RightTapped="Grid_RightTapped"
