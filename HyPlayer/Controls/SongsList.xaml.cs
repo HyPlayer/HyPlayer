@@ -101,7 +101,7 @@ namespace HyPlayer.Controls
             InitializeComponent();
             HyPlayList.OnPlayItemChange += HyPlayListOnOnPlayItemChange;
             MultiSelect = false;
-            
+
             Task.Run((() =>
             {
                 Common.Invoke(async () =>
@@ -293,17 +293,15 @@ namespace HyPlayer.Controls
             await new SongListSelect(VisibleSongs[SongContainer.SelectedIndex].sid).ShowAsync();
         }
 
-        private void Btn_Del_Click(object sender, RoutedEventArgs e)
+        private async void Btn_Del_Click(object sender, RoutedEventArgs e)
         {
-            Common.Invoke(() =>
-            {
-                Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistTracks, new Dictionary<string, object>
+            await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistTracks,
+                new Dictionary<string, object>
                 {
                     { "op", "del" },
                     { "pid", ListSource.Substring(2, ListSource.Length - 2) },
                     { "tracks", VisibleSongs[SongContainer.SelectedIndex].sid }
                 });
-            });
             VisibleSongs.RemoveAt(SongContainer.SelectedIndex);
         }
 
@@ -318,7 +316,8 @@ namespace HyPlayer.Controls
             }
 
             SongContainer.ContextFlyout.ShowAt(element,
-                new FlyoutShowOptions { Position = e?.GetPosition(element) ?? new Point(element?.ActualWidth ?? 0, 0) });
+                new FlyoutShowOptions
+                    { Position = e?.GetPosition(element) ?? new Point(element?.ActualWidth ?? 0, 0) });
         }
 
         public static Brush GetBrush(bool IsAvailable)
