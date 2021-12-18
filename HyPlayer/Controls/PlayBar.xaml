@@ -232,7 +232,7 @@
                     Click="BtnLike_OnClick"
                     CornerRadius="30"
                     Style="{StaticResource ToggleButtonRevealStyle}">
-                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE00B;" />
+                    <FontIcon x:Name="IconLiked" FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE00B;" />
                 </ToggleButton>
             </Grid>
             <Grid Grid.Row="1">

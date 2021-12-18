@@ -19,6 +19,7 @@ using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
 using Windows.System.Profile;
+using Windows.UI;
 using Windows.UI.Notifications;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -440,7 +441,7 @@ namespace HyPlayer.Controls
                 canslide = true;
                 if (mpi.ItemType == HyPlayItemType.Netease)
                 {
-                    BtnLike.IsChecked = Common.LikedSongs.Contains(mpi.PlayItem.Id);
+                    IconLiked.Foreground = Common.LikedSongs.Contains(mpi.PlayItem.Id) ? new SolidColorBrush(Colors.Red) : Resources["TextFillColorPrimaryBrush"] as Brush;
                     HistoryManagement.AddNCSongHistory(mpi.PlayItem.Id);
                 }
 
@@ -769,8 +770,8 @@ namespace HyPlayer.Controls
                     Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.Id);
                 else
                     Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.Id);
-
-                BtnLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
+                
+                IconLiked.Foreground = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id) ? new SolidColorBrush(Colors.Red) : Resources["TextFillColorPrimaryBrush"] as Brush;
             }
             else if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Radio)
             {
@@ -780,7 +781,8 @@ namespace HyPlayer.Controls
             }
             else
             {
-                BtnLike.IsChecked = false;
+                IconLiked.Foreground = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id) ? new SolidColorBrush(Colors.Red) : Resources["TextFillColorPrimaryBrush"] as Brush;
+
             }
         }
 
