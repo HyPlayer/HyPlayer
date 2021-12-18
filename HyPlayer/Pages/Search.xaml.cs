@@ -204,7 +204,7 @@ namespace HyPlayer.Pages
                         LineTwo = pljs["desc"].ToString(),
                         LineThree = pljs["rcmdText"].ToString(),
                         ResourceId = "rd" + json["id"],
-                        CoverUri = json["picUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                        CoverUri = pljs["picUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
                         Order = i++
                     });
             if (int.Parse(json["result"]["djRadiosCount"].ToString()) >= (page + 1) * 30)
