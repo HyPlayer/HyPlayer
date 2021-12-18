@@ -219,6 +219,14 @@ namespace HyPlayer.Pages
                 var queries = new Dictionary<string, object>();
                 var account = TextBoxAccount.Text;
                 var isPhone = Regex.Match(account, "^[0-9]+$").Success;
+                if (account.StartsWith('+'))
+                {
+                    isPhone = true;
+                    // get the string between '+' and ' '
+                    queries["countrycode"] = account.Substring(1, account.IndexOf(' ') - 1);
+                    account = account.Substring(account.IndexOf(' ') + 1);
+                }
+
                 queries[isPhone ? "phone" : "email"] = account;
                 queries["password"] = TextBoxPassword.Password;
                 json = await Common.ncapi.RequestAsync(
@@ -425,6 +433,7 @@ namespace HyPlayer.Pages
                         {
                             item.Icon.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 214, 133));
                         }
+
                         item.RightTapped += (_, __) =>
                         {
                             nowplid = jToken["id"].ToString();
@@ -525,16 +534,16 @@ namespace HyPlayer.Pages
             switch (invokedItemTag)
             {
                 case "SonglistCreate":
-                    {
-                        await new CreateSonglistDialog().ShowAsync();
-                        LoadSongList();
-                        break;
-                    }
+                {
+                    await new CreateSonglistDialog().ShowAsync();
+                    LoadSongList();
+                    break;
+                }
                 case "PersonalFM":
-                    {
-                        PersonalFM.InitPersonalFM();
-                        break;
-                    }
+                {
+                    PersonalFM.InitPersonalFM();
+                    break;
+                }
                 case "HeartBeat":
                     LoadHeartBeat();
                     break;
@@ -552,8 +561,8 @@ namespace HyPlayer.Pages
                     CloudMusicApiProviders.PlaymodeIntelligenceList,
                     new Dictionary<string, object>
                     {
-                                { "pid", Common.MySongLists[0].plid },
-                                { "id", jsoon["playlist"]["trackIds"][0]["id"].ToString() }
+                        { "pid", Common.MySongLists[0].plid },
+                        { "id", jsoon["playlist"]["trackIds"][0]["id"].ToString() }
                     });
 
                 var Songs = new List<NCSong>();
@@ -580,7 +589,6 @@ namespace HyPlayer.Pages
             {
                 Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
-
         }
 
         private void OnNavigateBack(NavigationView sender, NavigationViewBackRequestedEventArgs args)
@@ -727,7 +735,7 @@ namespace HyPlayer.Pages
             const int expandedIndent = 48;
             var minimalIndent = 104;
             if (NavMain.IsBackButtonVisible.Equals(NavigationViewBackButtonVisible
-                .Collapsed))
+                    .Collapsed))
                 minimalIndent = 48;
 
             var currMargin = AppTitleBar.Margin;
