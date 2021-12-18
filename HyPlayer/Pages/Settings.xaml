@@ -354,9 +354,13 @@
                                 HyPlayer
                             </Paragraph>
                             <Paragraph Margin="0,5,0,0">This is an open-source project under GPL-v3 Licence</Paragraph>
+                            <Paragraph Margin="0,5,0,0">HyPlayer 即将迎来重构, 更加稳定, 更加轻便, 更加美观。欢迎持续关注</Paragraph>
                             <Paragraph Margin="0,5,0,0">
-                                <Hyperlink NavigateUri="https://github.com/HyPlayer/HyPlayer">
-                                    Github
+                                <Hyperlink NavigateUri="https://github.com/HyPlayer/HyPlayer.UWP">
+                                    重构版本 Github
+                                </Hyperlink>
+                                |<Hyperlink NavigateUri="https://github.com/HyPlayer/HyPlayer">
+                                    原版 Github (正在使用的)
                                 </Hyperlink>
                                 |<Hyperlink NavigateUri="https://gitee.com/kengwang/HyPlayer">
                                     Gitee
