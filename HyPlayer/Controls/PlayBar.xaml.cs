@@ -439,9 +439,9 @@ namespace HyPlayer.Controls
                 SliderProgress.Maximum = HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds;
                 SliderProgress.Value = 0;
                 canslide = true;
-                if (mpi.ItemType == HyPlayItemType.Netease)
+                if (mpi.ItemType != HyPlayItemType.Local)
                 {
-                    IconLiked.Foreground = Common.LikedSongs.Contains(mpi.PlayItem.Id) ? new SolidColorBrush(Colors.Red) : Resources["TextFillColorPrimaryBrush"] as Brush;
+                    IconLiked.Foreground = Common.LikedSongs.Contains(mpi.PlayItem.Id) ? new SolidColorBrush(Colors.Red) : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
                     HistoryManagement.AddNCSongHistory(mpi.PlayItem.Id);
                 }
 
