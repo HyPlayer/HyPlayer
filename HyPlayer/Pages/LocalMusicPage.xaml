@@ -7,7 +7,7 @@
     xmlns:pages="using:HyPlayer.Pages"
     mc:Ignorable="d">
 
-    <StackPanel>
+    <Grid>
         <TextBlock
             Grid.Row="0"
             Margin="30,0,30,0"
@@ -83,5 +83,5 @@
                 </Grid>
             </PivotItem>
         </Pivot>
-    </StackPanel>
+    </Grid>
 </Page>

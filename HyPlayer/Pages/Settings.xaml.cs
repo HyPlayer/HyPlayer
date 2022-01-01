@@ -16,6 +16,7 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.Networking.BackgroundTransfer;
 using Windows.Security.ExchangeActiveSyncProvisioning;
 using Windows.Storage;
+using Windows.Storage.AccessCache;
 using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -204,6 +205,7 @@ namespace HyPlayer.Pages
             var folder = await folderPicker.PickSingleFolderAsync();
             if (folder != null)
             {
+                StorageApplicationPermissions.FutureAccessList.AddOrReplace("downloadFolder", folder);
                 Common.Setting.downloadDir = folder.Path;
                 TextBoxDownloadDir.Text = Common.Setting.downloadDir;
             }

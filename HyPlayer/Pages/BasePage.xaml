@@ -40,7 +40,7 @@
         <muxc:TeachingTip
             x:Name="TheTeachingTip"
             Title="一个弹窗, 两个弹窗, 三个弹窗, 四个弹窗...zzzzzz"
-            IsLightDismissEnabled="True"
+            IsLightDismissEnabled="False"
             PreferredPlacement="TopRight" />
         <Border
             x:Name="AppTitleBar"

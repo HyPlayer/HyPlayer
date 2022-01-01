@@ -16,6 +16,7 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.Media;
 using Windows.Media.Playback;
 using Windows.Storage;
+using Windows.Storage.AccessCache;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
 using Windows.System.Profile;
@@ -231,7 +232,8 @@ namespace HyPlayer.Controls
         {
             RefreshSongList();
             HistoryManagement.SetcurPlayingListHistory(HyPlayList.List
-                .Where(t => t.ItemType == HyPlayItemType.Netease || t.ItemType == HyPlayItemType.Pan).Select(t => t.PlayItem.Id).ToList());
+                .Where(t => t.ItemType == HyPlayItemType.Netease || t.ItemType == HyPlayItemType.Pan)
+                .Select(t => t.PlayItem.Id).ToList());
         }
 
         private async void TestFile()
@@ -251,6 +253,9 @@ namespace HyPlayer.Controls
             bool isFirstLoad = true;
             foreach (var file in files)
             {
+                var folder = await file.GetParentAsync();
+                if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(folder.Path))
+                    StorageApplicationPermissions.FutureAccessList.AddOrReplace(file.FolderRelativeId, folder);
                 if (Path.GetExtension(file.Path) == ".ncm")
                 {
                     //脑残Music
@@ -349,7 +354,8 @@ namespace HyPlayer.Controls
                                 Common.Setting.fadeInOutTime * vol / 100);
                         }
                         else if (HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds / 1000 -
-                            HyPlayList.Player.PlaybackSession.Position.TotalSeconds <= Common.Setting.fadeInOutTime)
+                                 HyPlayList.Player.PlaybackSession.Position.TotalSeconds <=
+                                 Common.Setting.fadeInOutTime)
                         {
                             FadeSettedVolume = true;
                             HyPlayList.Player.Volume =
@@ -441,10 +447,15 @@ namespace HyPlayer.Controls
                 canslide = true;
                 if (mpi.ItemType != HyPlayItemType.Local)
                 {
-                    IconLiked.Foreground = Common.LikedSongs.Contains(mpi.PlayItem.Id) ? new SolidColorBrush(Colors.Red) : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-                    IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id) ? "\uE00B;" : "\uEB51";
+                    IconLiked.Foreground = Common.LikedSongs.Contains(mpi.PlayItem.Id)
+                        ? new SolidColorBrush(Colors.Red)
+                        : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+                    IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
+                        ? "\uE00B;"
+                        : "\uEB51";
                     HistoryManagement.AddNCSongHistory(mpi.PlayItem.Id);
                 }
+
                 realSelectSong = false;
                 ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
                 realSelectSong = true;
@@ -770,9 +781,13 @@ namespace HyPlayer.Controls
                     Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.Id);
                 else
                     Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.Id);
-                
-                IconLiked.Foreground = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id) ? new SolidColorBrush(Colors.Red) : Resources["TextFillColorPrimaryBrush"] as Brush;
-                IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id) ? "\uE00B;" : "\uEB51";
+
+                IconLiked.Foreground = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
+                    ? new SolidColorBrush(Colors.Red)
+                    : Resources["TextFillColorPrimaryBrush"] as Brush;
+                IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
+                    ? "\uE00B;"
+                    : "\uEB51";
             }
             else if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Radio)
             {
@@ -782,8 +797,12 @@ namespace HyPlayer.Controls
             }
             else
             {
-                IconLiked.Foreground = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id) ? new SolidColorBrush(Colors.Red) : Resources["TextFillColorPrimaryBrush"] as Brush;
-                IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id) ? "\uE00B;" : "\uEB51";
+                IconLiked.Foreground = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
+                    ? new SolidColorBrush(Colors.Red)
+                    : Resources["TextFillColorPrimaryBrush"] as Brush;
+                IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
+                    ? "\uE00B;"
+                    : "\uEB51";
             }
         }
 

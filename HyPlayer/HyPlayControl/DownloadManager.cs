@@ -79,10 +79,16 @@ namespace HyPlayer.HyPlayControl
                             }));
                             await FileIO.WriteTextAsync(sf, lrctxt);
                         }
-
+                    }
+                    catch (Exception ex)
+                    {
+                        Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                    }
+                    try
+                    {
 
                         var file = File.Create(
-                            new UwpStorageFileAbstraction(await StorageFile.GetFileFromPathAsync(fullpath)));
+                                new UwpStorageFileAbstraction(await StorageFile.GetFileFromPathAsync(fullpath)));
                         The163KeyHelper.TrySetMusicInfo(file.Tag, dontuseme);
                         if (string.IsNullOrEmpty(file.Tag.Title))
                         {
@@ -205,7 +211,7 @@ namespace HyPlayer.HyPlayControl
             try
             {
                 var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                    new Dictionary<string, object> { { "id", ncsong.sid } , { "br", Common.Setting.downloadAudioRate } });
+                    new Dictionary<string, object> { { "id", ncsong.sid }, { "br", Common.Setting.downloadAudioRate } });
 
                 if (json["data"][0]["code"].ToString() != "200")
                 {
