@@ -442,9 +442,9 @@ namespace HyPlayer.Controls
                 if (mpi.ItemType != HyPlayItemType.Local)
                 {
                     IconLiked.Foreground = Common.LikedSongs.Contains(mpi.PlayItem.Id) ? new SolidColorBrush(Colors.Red) : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+                    IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id) ? "\uE00B;" : "\uEB51";
                     HistoryManagement.AddNCSongHistory(mpi.PlayItem.Id);
                 }
-
                 realSelectSong = false;
                 ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
                 realSelectSong = true;
@@ -772,6 +772,7 @@ namespace HyPlayer.Controls
                     Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.Id);
                 
                 IconLiked.Foreground = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id) ? new SolidColorBrush(Colors.Red) : Resources["TextFillColorPrimaryBrush"] as Brush;
+                IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id) ? "\uE00B;" : "\uEB51";
             }
             else if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Radio)
             {
@@ -782,7 +783,7 @@ namespace HyPlayer.Controls
             else
             {
                 IconLiked.Foreground = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id) ? new SolidColorBrush(Colors.Red) : Resources["TextFillColorPrimaryBrush"] as Brush;
-
+                IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id) ? "\uE00B;" : "\uEB51";
             }
         }
 
