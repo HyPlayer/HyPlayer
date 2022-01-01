@@ -69,7 +69,8 @@ namespace HyPlayer.HyPlayControl
                                     Path.GetFileName(Path.ChangeExtension(fullpath, "lrc")),
                                     CreationCollisionOption.ReplaceExisting);
                             var lrc = Utils.ConvertPureLyric(json["lrc"]["lyric"].ToString());
-                            Utils.ConvertTranslation(json["tlyric"]["lyric"].ToString(), lrc);
+                            if (json["tlyric"]?["lyric"] != null)
+                                Utils.ConvertTranslation(json["tlyric"]["lyric"].ToString(), lrc);
                             var lrctxt = string.Join("\r\n", lrc.Select(t =>
                             {
                                 if (t.HaveTranslation && !string.IsNullOrEmpty(t.Translation))
