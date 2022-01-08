@@ -74,7 +74,9 @@ namespace HyPlayer.Pages
         {
             if (FileScanTask != null) FileScanTask.Dispose();
 
-            var tmp = await KnownFolders.MusicLibrary.GetItemsAsync();
+            StorageFolder folderName = await StorageFolder.GetFolderFromPathAsync(Common.Setting.searchingDir);
+            var tmp = await folderName.GetItemsAsync();
+            
             FileScanTask = Task.Run(() =>
             {
                 Common.Invoke(() =>
@@ -86,11 +88,24 @@ namespace HyPlayer.Pages
             });
         }
 
+        private bool CheckFileExtensionName(string fileName)
+        {
+            string[] supportedFormats = new string[] { ".flac", ".mp3", ".ncm", ".ape", ".m4a", ".wav" };
+            foreach (string format in supportedFormats)
+            {
+                if (fileName.EndsWith(format))//检测扩展名是否支持
+                {
+                    return true;
+                    break;
+                }
+            }
+            return false;
+        }
         private async void GetSubFiles(IStorageItem item)
         {
             try
             {
-                if (item is StorageFile)
+                if ((item is StorageFile) && (CheckFileExtensionName(item.Name.ToString())))//检查文件扩展名，符合条件的才会在本地列表中显示
                 {
                     var file = item as StorageFile;
                     var hyPlayItem = await HyPlayList.LoadStorageFile(file);
