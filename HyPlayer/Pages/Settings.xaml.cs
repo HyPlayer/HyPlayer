@@ -210,6 +210,19 @@ namespace HyPlayer.Pages
                 TextBoxDownloadDir.Text = Common.Setting.downloadDir;
             }
         }
+        private async void ButtonSearchingSelect_OnClick(object sender, RoutedEventArgs e)
+        {
+            var folderPicker = new FolderPicker();
+            folderPicker.SuggestedStartLocation = PickerLocationId.Desktop;
+            folderPicker.FileTypeFilter.Add("*");
+            var folder = await folderPicker.PickSingleFolderAsync();
+            if (folder != null)
+            {
+                StorageApplicationPermissions.FutureAccessList.AddOrReplace("searchingFolder", folder);
+                Common.Setting.searchingDir = folder.Path;
+                TextBoxSearchingDir.Text = Common.Setting.searchingDir;
+            }
+        }
 
 
         private void UIElement_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)

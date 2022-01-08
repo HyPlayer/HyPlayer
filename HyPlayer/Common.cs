@@ -411,6 +411,25 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        public string searchingDir
+        {
+            get
+            {
+                try
+                {
+                    return GetSettings("searchingDir", KnownFolders.MusicLibrary.Path);
+                }
+                catch
+                {
+                    return ApplicationData.Current.LocalCacheFolder.Path;
+                }
+            }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["searchingDir"] = value;
+                OnPropertyChanged();
+            }
+        }
 
         public string cacheDir
         {
