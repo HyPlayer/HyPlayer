@@ -216,7 +216,8 @@ namespace HyPlayer.HyPlayControl
 
                 if (json["data"][0]["code"].ToString() != "200")
                 {
-                    Status = 0;
+                    Common.ShowTeachingTip("无法下载", "无法下载歌曲 " + ncsong.songname + "\n已自动将其从下载列表中移除");
+                    DownloadManager.DownloadLists.Remove(DownloadManager.DownloadLists.FirstOrDefault());
                     return; //未获取到
                 }
 
