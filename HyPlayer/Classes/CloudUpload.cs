@@ -114,7 +114,7 @@ namespace HyPlayer.Classes
             }
             catch (Exception e)
             {
-                Common.ShowTeachingTip(e.Message, (e.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists(e.Message, (e.InnerException ?? new Exception()).Message);
                 return null;
             }
         }

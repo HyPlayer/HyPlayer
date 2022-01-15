@@ -87,7 +87,7 @@ namespace HyPlayer.Pages
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
 
@@ -117,7 +117,7 @@ namespace HyPlayer.Pages
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
 
@@ -147,7 +147,7 @@ namespace HyPlayer.Pages
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
 

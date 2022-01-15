@@ -192,7 +192,7 @@ namespace HyPlayer.HyPlayControl
         {
             //歌曲崩溃了的话就是这个
             //SongMoveNext();
-            Common.ShowTeachingTip("播放失败 正在重试", "歌曲" + NowPlayingItem.PlayItem.Name + "\r\nMsg:" + args?.ErrorMessage);
+            Common.AddToTeachingTipLists("播放失败 正在重试", "歌曲" + NowPlayingItem.PlayItem.Name + "\r\nMsg:" + args?.ErrorMessage);
             if (_crashedTime == NowPlayingItem.PlayItem.Url)
             {
                 SongMoveNext();
@@ -743,7 +743,7 @@ namespace HyPlayer.HyPlayControl
                 }
                 catch (Exception ex)
                 {
-                    Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
                 }
             }
             catch
@@ -789,7 +789,7 @@ namespace HyPlayer.HyPlayControl
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
 
             return null;
@@ -840,7 +840,7 @@ namespace HyPlayer.HyPlayControl
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
 
@@ -879,7 +879,7 @@ namespace HyPlayer.HyPlayControl
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
                 return false;
             }
         }
@@ -913,7 +913,7 @@ namespace HyPlayer.HyPlayControl
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
 
             return false;
@@ -941,7 +941,7 @@ namespace HyPlayer.HyPlayControl
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
 
             return false;
@@ -970,14 +970,14 @@ namespace HyPlayer.HyPlayControl
                     }
                     catch (Exception ex)
                     {
-                        Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                        Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
                     }
 
                 return true;
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
 
             return false;
@@ -1014,7 +1014,7 @@ namespace HyPlayer.HyPlayControl
                     }
                     catch (Exception ex)
                     {
-                        Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                        Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
                     }
                 }
 
@@ -1022,7 +1022,7 @@ namespace HyPlayer.HyPlayControl
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
 
             return false;

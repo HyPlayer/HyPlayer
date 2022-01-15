@@ -83,7 +83,7 @@ namespace HyPlayer.HyPlayControl
                     }
                     catch (Exception ex)
                     {
-                        Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                        Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
                     }
                     try
                     {
@@ -141,11 +141,11 @@ namespace HyPlayer.HyPlayControl
                         toast.Data.SequenceNumber = 0;
                         var notifier = ToastNotificationManager.CreateToastNotifier();
                         notifier.Show(toast);
-                        Common.ShowTeachingTip(filename + "下载完成");
+                        Common.AddToTeachingTipLists(filename + "下载完成");
                     }
                     catch (Exception ex)
                     {
-                        Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                        Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
                     }
                 });
             });
@@ -202,7 +202,7 @@ namespace HyPlayer.HyPlayControl
             toast.Data.SequenceNumber = 0;
             var notifier = ToastNotificationManager.CreateToastNotifier();
             notifier.Show(toast);
-            Common.ShowTeachingTip("下载开始", "歌曲" + songname + "下载开始");
+            Common.AddToTeachingTipLists("下载开始", "歌曲" + songname + "下载开始");
         }
 
         public async void StartDownload()
@@ -216,7 +216,7 @@ namespace HyPlayer.HyPlayControl
 
                 if (json["data"][0]["code"].ToString() != "200")
                 {
-                    Common.ShowTeachingTip("无法下载", "无法下载歌曲 " + ncsong.songname + "\n已自动将其从下载列表中移除");
+                    Common.AddToTeachingTipLists("无法下载", "无法下载歌曲 " + ncsong.songname + "\n已自动将其从下载列表中移除");
                     DownloadManager.DownloadLists.Remove(DownloadManager.DownloadLists.FirstOrDefault());
                     return; //未获取到
                 }
@@ -249,7 +249,7 @@ namespace HyPlayer.HyPlayControl
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
     }
@@ -322,7 +322,7 @@ namespace HyPlayer.HyPlayControl
                     toast.Data.SequenceNumber = 0;
                     var notifier = ToastNotificationManager.CreateToastNotifier();
                     notifier.Show(toast);
-                    Common.ShowTeachingTip("下载全部完成");
+                    Common.AddToTeachingTipLists("下载全部完成");
                 }
 
                 return;

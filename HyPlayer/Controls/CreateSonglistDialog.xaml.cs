@@ -32,11 +32,11 @@ namespace HyPlayer.Controls
             }
             catch (Exception e)
             {
-                Common.ShowTeachingTip("创建失败", e.Message);
+                Common.AddToTeachingTipLists("创建失败", e.Message);
                 return;
             }
 
-            Common.ShowTeachingTip("创建成功");
+            Common.AddToTeachingTipLists("创建成功");
             Common.PageBase.LoadSongList();
             Common.ncapi.RealIP = realIpBackup; // Restore user setting
         }

@@ -79,7 +79,7 @@ namespace HyPlayer.Pages
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
 
@@ -120,13 +120,13 @@ namespace HyPlayer.Pages
 
             var files =
                 await fop.PickMultipleFilesAsync();
-            Common.ShowTeachingTip("请稍等", "正在上传 " + files.Count + " 个音乐文件");
+            Common.AddToTeachingTipLists("请稍等", "正在上传 " + files.Count + " 个音乐文件");
             for (int i = 0; i < files.Count; i++)
             {
-                Common.ShowTeachingTip("正在上传共 " + files.Count + " 个音乐文件", "正在上传 第" + i + " 个音乐文件");
+                Common.AddToTeachingTipLists("正在上传共 " + files.Count + " 个音乐文件", "正在上传 第" + i + " 个音乐文件");
                 await CloudUpload.UploadMusic(files[i]);
             }
-            Common.ShowTeachingTip("上传完成", "请重新加载云盘页面");
+            Common.AddToTeachingTipLists("上传完成", "请重新加载云盘页面");
         }
     }
 }

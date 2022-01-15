@@ -91,11 +91,11 @@ namespace HyPlayer.Controls
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip("公开歌单失败", ex.Message);
+                Common.AddToTeachingTipLists("公开歌单失败", ex.Message);
                 return;
             }
 
-            Common.ShowTeachingTip("成功公开歌单");
+            Common.AddToTeachingTipLists("成功公开歌单");
             Common.PageBase.LoadSongList();
         }
 
@@ -108,11 +108,11 @@ namespace HyPlayer.Controls
                     {
                         { "ids", playList.plid }
                     });
-                Common.ShowTeachingTip("成功删除");
+                Common.AddToTeachingTipLists("成功删除");
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
 
 

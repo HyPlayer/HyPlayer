@@ -56,6 +56,8 @@ namespace HyPlayer
         public static readonly Stack<NavigationHistoryItem> NavigationHistory = new Stack<NavigationHistoryItem>();
         public static bool isExpanded = false;
         public static TeachingTip GlobalTip;
+        public static List<string> titleLists = new List<string>();
+        public static List<string> subTitleLists = new List<string>();
 
         public static bool NavigatingBack;
 
@@ -91,22 +93,43 @@ namespace HyPlayer
         }
 
 
-        public static void ShowTeachingTip(string title, string subtitle = "")
+        public static async void AddToTeachingTipLists(string title, string subtitle = "")
         {
-            Invoke(() =>
+            if ((titleLists.Count == 0) || subTitleLists.Count == 0) {
+                titleLists.Add(title);
+                subTitleLists.Add(subtitle);
+                await Task.Run(() => Common.DisplayTeachingTip());
+            }
+            else
             {
-                GlobalTip.Title = title;
-                GlobalTip.Subtitle = subtitle ?? "";
-                if (!GlobalTip.IsOpen)
+                titleLists.Add(title);
+                subTitleLists.Add(subtitle);
+            }
+            
+        }
+        public static async void DisplayTeachingTip()
+        {
+            while ((titleLists.Count != 0) || subTitleLists.Count != 0) 
+            {
+                Invoke(() =>
                 {
-                    GlobalTip.IsOpen = true;
-                }
-                else
-                {
-                    GlobalTip.IsOpen = false;
-                    GlobalTip.IsOpen = true;
-                }
-            });
+                    GlobalTip.Title = titleLists.First() ?? "";
+                    GlobalTip.Subtitle = subTitleLists.First() ?? "";
+                    if (!GlobalTip.IsOpen)
+                    {
+                        GlobalTip.IsOpen = true;
+                    }
+                    else
+                    {
+                        GlobalTip.IsOpen = false;
+                        GlobalTip.IsOpen = true;
+                    }
+                });
+                await Task.Delay(2500);
+                titleLists.Remove(titleLists.First());
+                subTitleLists.Remove(subTitleLists.First());
+            }
+                
         }
 
         public static void NavigatePage(Type SourcePageType, object paratmer = null, object ignore = null)
@@ -740,7 +763,7 @@ namespace HyPlayer
             }
             catch (Exception e)
             {
-                Common.ShowTeachingTip(e.Message, (e.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists(e.Message, (e.InnerException ?? new Exception()).Message);
             }
 
             return new List<NCSong>();
@@ -771,7 +794,7 @@ namespace HyPlayer
             }
             catch (Exception e)
             {
-                Common.ShowTeachingTip(e.Message, (e.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists(e.Message, (e.InnerException ?? new Exception()).Message);
             }
 
             return ret;
@@ -801,7 +824,7 @@ namespace HyPlayer
             }
             catch (Exception e)
             {
-                Common.ShowTeachingTip(e.Message, (e.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists(e.Message, (e.InnerException ?? new Exception()).Message);
             }
 
             return new List<NCSong>();

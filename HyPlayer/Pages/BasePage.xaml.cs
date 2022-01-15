@@ -277,7 +277,7 @@ namespace HyPlayer.Pages
             }
             catch (Exception e)
             {
-                Common.ShowTeachingTip(e.Message, (e.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists(e.Message, (e.InnerException ?? new Exception()).Message);
                 return false;
             }
 
@@ -327,7 +327,7 @@ namespace HyPlayer.Pages
                     }
                     catch (Exception ex)
                     {
-                        Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                        Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
                     }
                 });
             });
@@ -447,7 +447,7 @@ namespace HyPlayer.Pages
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
 
@@ -582,12 +582,12 @@ namespace HyPlayer.Pages
                 }
                 catch (Exception ex)
                 {
-                    Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
                 }
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
 
@@ -646,7 +646,7 @@ namespace HyPlayer.Pages
                         }
                         catch (Exception ex)
                         {
-                            Common.ShowTeachingTip(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
                         }
                     }
                     else if (res["code"].ToString() == "801")
@@ -756,12 +756,12 @@ namespace HyPlayer.Pages
                     {
                         { "id", nowplid }
                     });
-                Common.ShowTeachingTip("成功公开歌单");
+                Common.AddToTeachingTipLists("成功公开歌单");
                 LoadSongList();
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip("公开歌单失败", ex.Message);
+                Common.AddToTeachingTipLists("公开歌单失败", ex.Message);
             }
         }
 
@@ -774,12 +774,12 @@ namespace HyPlayer.Pages
                     {
                         { "ids", nowplid }
                     });
-                Common.ShowTeachingTip("成功删除");
+                Common.AddToTeachingTipLists("成功删除");
                 LoadSongList();
             }
             catch (Exception ex)
             {
-                Common.ShowTeachingTip("删除失败", ex.Message);
+                Common.AddToTeachingTipLists("删除失败", ex.Message);
             }
         }
     }
