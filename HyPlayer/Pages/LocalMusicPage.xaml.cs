@@ -96,7 +96,6 @@ namespace HyPlayer.Pages
                 if (fileName.EndsWith(format))//检测扩展名是否支持
                 {
                     return true;
-                    break;
                 }
             }
             return false;
