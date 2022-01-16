@@ -24,8 +24,8 @@ namespace HyPlayer.Pages
     /// </summary>
     public sealed partial class ArtistPage : Page
     {
-        private readonly ObservableCollection<NCSong> allSongs = new ObservableCollection<NCSong>();
-        private readonly ObservableCollection<NCSong> hotSongs = new ObservableCollection<NCSong>();
+        private readonly ObservableCollection<NCSong> allSongs = new();
+        private readonly ObservableCollection<NCSong> hotSongs = new();
         private NCArtist artist;
         private int page;
 

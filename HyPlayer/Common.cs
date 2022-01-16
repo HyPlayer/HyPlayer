@@ -1,5 +1,6 @@
 ﻿#region
 
+#nullable enable
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
@@ -38,7 +39,7 @@ namespace HyPlayer
 {
     internal class Common
     {
-        public static CloudMusicApi ncapi = new CloudMusicApi();
+        public static CloudMusicApi ncapi = new();
         public static bool Logined = false;
         public static NCUser LoginedUser;
         public static ExpandedPlayer PageExpandedPlayer;
@@ -46,20 +47,20 @@ namespace HyPlayer
         public static PlayBar BarPlayBar;
         public static Frame BaseFrame;
         public static BasePage PageBase;
-        public static Setting Setting = new Setting();
+        public static Setting Setting = new();
         public static bool ShowLyricSound = true;
         public static bool ShowLyricTrans = true;
-        public static Dictionary<string, object> GLOBAL = new Dictionary<string, object>();
-        public static List<string> LikedSongs = new List<string>();
+        public static Dictionary<string, object> GLOBAL = new();
+        public static List<string> LikedSongs = new();
         public static KawazuConverter KawazuConv;
-        public static List<NCPlayList> MySongLists = new List<NCPlayList>();
-        public static readonly Stack<NavigationHistoryItem> NavigationHistory = new Stack<NavigationHistoryItem>();
+        public static List<NCPlayList> MySongLists = new();
+        public static readonly Stack<NavigationHistoryItem> NavigationHistory = new();
         public static bool isExpanded = false;
         public static TeachingTip GlobalTip;
-        public static List<string> titleLists = new List<string>();
-        public static List<string> subTitleLists = new List<string>();
+        public static readonly Stack<KeyValuePair<string, string?>> TeachingTipList = new();
 
         public static bool NavigatingBack;
+        private static int _teachingTipSecondCounter = 3;
 
         public static async void Invoke(Action action, CoreDispatcherPriority Priority = CoreDispatcherPriority.Normal)
         {
@@ -93,45 +94,38 @@ namespace HyPlayer
         }
 
 
-        public static async void AddToTeachingTipLists(string title, string subtitle = "")
+        public static void AddToTeachingTipLists(string title, string subtitle = "")
         {
-            if ((titleLists.Count == 0) || subTitleLists.Count == 0) //如果TeachingTipLists中没有数据 则将显示内容加入列表的同时显示TeachingTip
-            { 
-                titleLists.Add(title);
-                subTitleLists.Add(subtitle);
-                await Task.Run(() => DisplayTeachingTip());//异步显示TeachingTip
-            }
-            else //如果有数据则仅加入显示列表
-            {
-                titleLists.Add(title);
-                subTitleLists.Add(subtitle);
-            }
-            
+            TeachingTipList.Push(new KeyValuePair<string, string?>(title, subtitle));
+            if (!GlobalTip.IsOpen)
+                RollTeachingTip(false);
         }
-        public static async void DisplayTeachingTip()
+
+        public static async void RollTeachingTip(bool passiveRoll = true)
         {
-            while ((titleLists.Count != 0) || subTitleLists.Count != 0) 
+            if (passiveRoll && _teachingTipSecondCounter-- > 0) return;
+            _teachingTipSecondCounter = 3;
+            if (TeachingTipList.Count == 0)
             {
-                Invoke(() =>
-                {
-                    GlobalTip.Title = titleLists.First() ?? "";
-                    GlobalTip.Subtitle = subTitleLists.First() ?? "";
-                    if (!GlobalTip.IsOpen)
-                    {
-                        GlobalTip.IsOpen = true;
-                    }
-                    else
-                    {
-                        GlobalTip.IsOpen = false;
-                        GlobalTip.IsOpen = true;
-                    }
-                });
-                await Task.Delay(2500);
-                titleLists.Remove(titleLists.First());
-                subTitleLists.Remove(subTitleLists.First());
+                Invoke(() => GlobalTip.IsOpen = false); //在显示完列表中所有的TeachingTip之后关闭TeachingTip
+                return;
             }
-            Invoke(() => GlobalTip.IsOpen = false);//在显示完列表中所有的TeachingTip之后关闭TeachingTip
-                
+
+            Invoke(() =>
+            {
+                var (title, subtitle) = TeachingTipList.Pop(); // deconstruction
+                GlobalTip.Title = title;
+                GlobalTip.Subtitle = subtitle ?? "";
+                if (!GlobalTip.IsOpen)
+                {
+                    GlobalTip.IsOpen = true;
+                }
+                else
+                {
+                    GlobalTip.IsOpen = false;
+                    GlobalTip.IsOpen = true;
+                }
+            });
         }
 
         public static void NavigatePage(Type SourcePageType, object paratmer = null, object ignore = null)
@@ -436,6 +430,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+
         public string searchingDir
         {
             get
@@ -776,7 +771,7 @@ namespace HyPlayer
             var i = 0;
             var queries = new Dictionary<string, object>();
             foreach (var plid in JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
-                .Values["songlistHistory"].ToString()))
+                         .Values["songlistHistory"].ToString()))
                 queries["/api/v6/playlist/detail" + new string('/', i++)] = JsonConvert.SerializeObject(
                     new Dictionary<string, object>
                     {

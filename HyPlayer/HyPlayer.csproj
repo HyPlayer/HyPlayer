@@ -2,7 +2,7 @@
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>latest</LangVersion>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProjectGuid>{DDD54862-21FE-4810-B8EC-74BF0447E000}</ProjectGuid>
@@ -230,6 +230,9 @@
     <Compile Include="Pages\SongListDetail.xaml.cs">
       <DependentUpon>SongListDetail.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\TestPage.xaml.cs">
+      <DependentUpon>TestPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Pages\ThirdPartyLogin.xaml.cs">
       <DependentUpon>ThirdPartyLogin.xaml</DependentUpon>
     </Compile>
@@ -436,6 +439,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Pages\SongListDetail.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\TestPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

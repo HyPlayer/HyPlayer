@@ -55,7 +55,7 @@ namespace HyPlayer.Pages
 
         public string lastSongUrlForBrush = "";
         private int lastwidth;
-        private List<LyricItem> LyricList = new List<LyricItem>();
+        private List<LyricItem> LyricList = new();
         private bool ManualChangeMode;
         private int needRedesign = 1;
         private int nowheight;

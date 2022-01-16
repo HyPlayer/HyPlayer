@@ -22,7 +22,7 @@ namespace HyPlayer.Pages
     /// </summary>
     public sealed partial class MVPage : Page, IDisposable
     {
-        private readonly List<NCMlog> sources = new List<NCMlog>();
+        private readonly List<NCMlog> sources = new();
         private string mvid;
         private string mvquality = "1080";
         private string songid;

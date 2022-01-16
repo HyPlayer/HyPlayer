@@ -59,6 +59,7 @@ namespace HyPlayer.Pages
             InitializeComponent();
             Common.PageBase = this;
             Common.GlobalTip = TheTeachingTip;
+            HyPlayList.OnTimerTicked += () => Common.RollTeachingTip();
             if (HyPlayList.Player == null)
                 HyPlayList.InitializeHyPlaylist();
             if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Desktop")

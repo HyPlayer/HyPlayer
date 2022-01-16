@@ -41,7 +41,7 @@ namespace HyPlayer.Controls
     {
         private bool canslide;
         public bool FadeSettedVolume;
-        public ObservableCollection<HyPlayItem> PlayItems = new ObservableCollection<HyPlayItem>();
+        public ObservableCollection<HyPlayItem> PlayItems = new();
         public PlayMode NowPlayType = PlayMode.DefaultRoll;
 
         private bool realSelectSong;

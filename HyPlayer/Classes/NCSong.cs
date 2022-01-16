@@ -41,14 +41,11 @@ namespace HyPlayer.Classes
 
     public class SongLyric
     {
-        public static SongLyric PureSong = new SongLyric
-        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏" };
+        public static SongLyric PureSong = new() { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏" };
 
-        public static SongLyric NoLyric = new SongLyric
-        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏" };
+        public static SongLyric NoLyric = new() { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏" };
 
-        public static SongLyric LoadingLyric = new SongLyric
-        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..." };
+        public static SongLyric LoadingLyric = new() { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..." };
 
         public bool HaveTranslation;
         public TimeSpan LyricTime;
@@ -110,7 +107,7 @@ namespace HyPlayer.Classes
                 songname = song["name"].ToString(),
                 Artist = new List<NCArtist>
                 {
-                    new NCArtist
+                    new()
                     {
                         Type = HyPlayItemType.Radio,
                         id = song["dj"]["userId"].ToString(),
@@ -160,7 +157,7 @@ namespace HyPlayer.Classes
         public int DspOrder => Order + 1;
 
         public BitmapImage Cover =>
-            new BitmapImage(new Uri(Album.cover ??=
+            new(new Uri(Album.cover ??=
                 "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg" + "?param=" +
                 StaticSource.PICSIZE_SINGLENCSONG_COVER));
 
@@ -222,7 +219,7 @@ namespace HyPlayer.Classes
         public int Order = 0;
         public string ResourceId;
         public string Title;
-        public BitmapImage Cover => new BitmapImage(new Uri(CoverUri));
+        public BitmapImage Cover => new(new Uri(CoverUri));
         public int DspOrder => Order + 1;
     }
 

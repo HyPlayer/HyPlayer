@@ -23,7 +23,7 @@ namespace HyPlayer.Pages
     /// </summary>
     public sealed partial class Home : Page
     {
-        private static List<string> RandomSlogen = new List<string>
+        private static List<string> RandomSlogen = new()
         {
             "用音乐开启新的一天吧",
             "戴上耳机 享受新的一天吧"

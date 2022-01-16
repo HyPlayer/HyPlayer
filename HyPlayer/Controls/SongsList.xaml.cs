@@ -94,7 +94,7 @@ namespace HyPlayer.Controls
 
         public bool IsManualSelect = true;
 
-        private readonly ObservableCollection<NCSong> VisibleSongs = new ObservableCollection<NCSong>();
+        private readonly ObservableCollection<NCSong> VisibleSongs = new();
 
         public SongsList()
         {

@@ -24,7 +24,7 @@ namespace HyPlayer.Pages
         private int page;
         private NCRadio Radio;
 
-        public ObservableCollection<NCSong> Songs = new ObservableCollection<NCSong>();
+        public ObservableCollection<NCSong> Songs = new();
 
         public RadioPage()
         {

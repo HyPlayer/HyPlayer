@@ -27,9 +27,9 @@ namespace HyPlayer.Pages
     /// </summary>
     public sealed partial class AlbumPage : Page, IDisposable
     {
-        private readonly ObservableCollection<NCSong> songs = new ObservableCollection<NCSong>();
+        private readonly ObservableCollection<NCSong> songs = new();
         private NCAlbum Album;
-        private List<NCArtist> artists = new List<NCArtist>();
+        private List<NCArtist> artists = new();
         private int page;
 
         public AlbumPage()

@@ -25,8 +25,8 @@ namespace HyPlayer.Pages
     public sealed partial class Me : Page, IDisposable
     {
         private string uid = "";
-        ObservableCollection<SimpleListItem> myPlayList = new ObservableCollection<SimpleListItem>();
-        ObservableCollection<SimpleListItem> likedPlayList = new ObservableCollection<SimpleListItem>();
+        ObservableCollection<SimpleListItem> myPlayList = new();
+        ObservableCollection<SimpleListItem> likedPlayList = new();
 
         public Me()
         {

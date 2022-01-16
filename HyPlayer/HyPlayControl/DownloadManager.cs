@@ -257,8 +257,8 @@ namespace HyPlayer.HyPlayControl
     internal static class DownloadManager
     {
         private static readonly bool Timered = false;
-        public static List<DownloadObject> DownloadLists = new List<DownloadObject>();
-        public static BackgroundDownloader Downloader = new BackgroundDownloader();
+        public static List<DownloadObject> DownloadLists = new();
+        public static BackgroundDownloader Downloader = new();
 
         public static bool CheckDownloadAbilityAndToast()
         {

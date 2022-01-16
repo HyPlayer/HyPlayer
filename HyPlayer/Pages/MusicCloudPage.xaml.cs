@@ -24,7 +24,7 @@ namespace HyPlayer.Pages
     /// </summary>
     public sealed partial class MusicCloudPage : Page, IDisposable
     {
-        private ObservableCollection<NCSong> Items = new ObservableCollection<NCSong>();
+        private ObservableCollection<NCSong> Items = new();
         private int page;
 
         public MusicCloudPage()

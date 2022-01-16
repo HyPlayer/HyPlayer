@@ -62,16 +62,16 @@ namespace HyPlayer.HyPlayControl
         private static int _gcCountDown = 5;
 
         public static int NowPlaying;
-        private static readonly Timer SecTimer = new Timer(1000); // 公用秒表
-        public static readonly List<HyPlayItem> List = new List<HyPlayItem>();
-        public static List<SongLyric> Lyrics = new List<SongLyric>();
+        private static readonly Timer SecTimer = new(1000); // 公用秒表
+        public static readonly List<HyPlayItem> List = new();
+        public static List<SongLyric> Lyrics = new();
         public static TimeSpan LyricOffset = TimeSpan.Zero;
 
         /********        API        ********/
         public static MediaPlayer Player;
         public static SystemMediaTransportControls MediaSystemControls;
         private static SystemMediaTransportControlsDisplayUpdater _controlsDisplayUpdater;
-        private static readonly BackgroundDownloader Downloader = new BackgroundDownloader();
+        private static readonly BackgroundDownloader Downloader = new();
 
         public static int LyricPos;
         private static string _crashedTime;
