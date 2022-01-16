@@ -95,12 +95,13 @@ namespace HyPlayer
 
         public static async void AddToTeachingTipLists(string title, string subtitle = "")
         {
-            if ((titleLists.Count == 0) || subTitleLists.Count == 0) {
+            if ((titleLists.Count == 0) || subTitleLists.Count == 0) //如果TeachingTipLists中没有数据 则将显示内容加入列表的同时显示TeachingTip
+            { 
                 titleLists.Add(title);
                 subTitleLists.Add(subtitle);
-                await Task.Run(() => Common.DisplayTeachingTip());
+                await Task.Run(() => DisplayTeachingTip());//异步显示TeachingTip
             }
-            else
+            else //如果有数据则仅加入显示列表
             {
                 titleLists.Add(title);
                 subTitleLists.Add(subtitle);
@@ -129,6 +130,7 @@ namespace HyPlayer
                 titleLists.Remove(titleLists.First());
                 subTitleLists.Remove(subTitleLists.First());
             }
+            Invoke(() => GlobalTip.IsOpen = false);//在显示完列表中所有的TeachingTip之后关闭TeachingTip
                 
         }
 
