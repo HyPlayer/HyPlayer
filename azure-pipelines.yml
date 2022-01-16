@@ -7,7 +7,7 @@ trigger:
 - master
 
 pool:
-  vmImage: 'windows-latest'
+  vmImage: 'windows-2022'
 
 variables:
   solution: 'HyPlayer.sln'
@@ -19,6 +19,18 @@ steps:
 
 - checkout: self
   submodules: true
+
+# Add this Command to Include the .NET 6 SDK
+- task: UseDotNet@2
+  displayName: Use .NET 6.0
+  inputs:
+    packageType: 'sdk'
+    version: '6.0.x'
+
+# Add a Command To List the Current .NET SDKs (Sanity Check)
+- task: CmdLine@2
+  inputs:
+    script: 'dotnet --list-sdks'
 
 - task: NuGetToolInstaller@1
 
