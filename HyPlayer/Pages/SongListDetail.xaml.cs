@@ -35,6 +35,15 @@ public sealed partial class SongListDetail : Page, IDisposable
     public ObservableCollection<NCSong> Songs;
 
 
+    public static readonly DependencyProperty IsLoadingProperty = DependencyProperty.Register(
+        "IsLoading", typeof(bool), typeof(SongListDetail), new PropertyMetadata(true));
+
+    public bool IsLoading
+    {
+        get => (bool)GetValue(IsLoadingProperty);
+        set => SetValue(IsLoadingProperty, value);
+    }
+
     public SongListDetail()
     {
         InitializeComponent();
@@ -66,6 +75,7 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     public async void LoadSongListItem()
     {
+        Common.Invoke(() => { IsLoading = true; });
         await Task.Run(() =>
         {
             Common.Invoke(async () =>
@@ -153,6 +163,8 @@ public sealed partial class SongListDetail : Page, IDisposable
                         Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
                     }
                 }
+
+                Common.Invoke(() => { IsLoading = false; });
             });
         });
     }

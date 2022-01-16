@@ -8,6 +8,7 @@
     xmlns:hyplayer="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="using:HyPlayer.Pages"
+    xmlns:controls2="using:Microsoft.UI.Xaml.Controls"
     d:DataContext="{d:DesignInstance Type=pages:SongListDetail}"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
@@ -16,6 +17,7 @@
             <RowDefinition />
             <RowDefinition Height="175" />
         </Grid.RowDefinitions>
+        <controls2:ProgressRing Grid.Row="0" IsActive="True" Visibility="{x:Bind IsLoading, Mode = OneWay}" />
         <controls1:SongsList
             x:Name="SongsList"
             Grid.Row="0"
