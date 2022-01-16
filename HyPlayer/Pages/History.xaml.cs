@@ -13,90 +13,89 @@ using NeteaseCloudMusicApi;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
-namespace HyPlayer.Pages
+namespace HyPlayer.Pages;
+
+/// <summary>
+///     可用于自身或导航至 Frame 内部的空白页。
+/// </summary>
+public sealed partial class History : Page
 {
-    /// <summary>
-    ///     可用于自身或导航至 Frame 内部的空白页。
-    /// </summary>
-    public sealed partial class History : Page
+    private readonly ObservableCollection<NCSong> Songs;
+
+    public History()
     {
-        private readonly ObservableCollection<NCSong> Songs;
+        InitializeComponent();
+        Songs = new ObservableCollection<NCSong>();
+        HisModeNavView.SelectedItem = SongHis;
+    }
 
-        public History()
+    private async void NavigationView_SelectionChanged(NavigationView sender,
+        NavigationViewSelectionChangedEventArgs args)
+    {
+        switch ((sender.SelectedItem as NavigationViewItem).Name)
         {
-            InitializeComponent();
-            Songs = new ObservableCollection<NCSong>();
-            HisModeNavView.SelectedItem = SongHis;
-        }
+            case "SongHis":
+                Songs.Clear();
+                var Songsl = await HistoryManagement.GetNCSongHistory();
+                var songorder = 0;
+                foreach (var song in Songsl)
+                {
+                    song.Order = songorder++;
+                    Songs.Add(song);
+                }
 
-        private async void NavigationView_SelectionChanged(NavigationView sender,
-            NavigationViewSelectionChangedEventArgs args)
-        {
-            switch ((sender.SelectedItem as NavigationViewItem).Name)
-            {
-                case "SongHis":
-                    Songs.Clear();
-                    var Songsl = await HistoryManagement.GetNCSongHistory();
-                    var songorder = 0;
-                    foreach (var song in Songsl)
+                break;
+            case "SongRankWeek":
+                //听歌排行加载部分 - 优先级靠下
+                Songs.Clear();
+                try
+                {
+                    await Task.Run(async () =>
                     {
-                        song.Order = songorder++;
-                        Songs.Add(song);
-                    }
+                        var ret2 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserRecord,
+                            new Dictionary<string, object> { { "uid", Common.LoginedUser.id }, { "type", "1" } });
 
-                    break;
-                case "SongRankWeek":
-                    //听歌排行加载部分 - 优先级靠下
-                    Songs.Clear();
-                    try
-                    {
-                        await Task.Run(async () =>
+                        var weekData = ret2["weekData"].ToArray();
+
+                        for (var i = 0; i < weekData.Length; i++)
                         {
-                            var ret2 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserRecord,
-                                new Dictionary<string, object> { { "uid", Common.LoginedUser.id }, { "type", "1" } });
+                            var song = NCSong.CreateFromJson(weekData[i]["song"]);
+                            song.Order = i;
+                            Common.Invoke(() => { Songs.Add(song); });
+                        }
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                }
 
-                            var weekData = ret2["weekData"].ToArray();
-
-                            for (var i = 0; i < weekData.Length; i++)
-                            {
-                                var song = NCSong.CreateFromJson(weekData[i]["song"]);
-                                song.Order = i;
-                                Common.Invoke(() => { Songs.Add(song); });
-                            }
-                        });
-                    }
-                    catch (Exception ex)
+                break;
+            case "SongRankAll":
+                //听歌排行加载部分 - 优先级靠下
+                Songs.Clear();
+                try
+                {
+                    await Task.Run(async () =>
                     {
-                        Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-                    }
+                        var ret3 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserRecord,
+                            new Dictionary<string, object> { { "uid", Common.LoginedUser.id }, { "type", "0" } });
 
-                    break;
-                case "SongRankAll":
-                    //听歌排行加载部分 - 优先级靠下
-                    Songs.Clear();
-                    try
-                    {
-                        await Task.Run(async () =>
+                        var weekData = ret3["allData"].ToArray();
+                        for (var i = 0; i < weekData.Length; i++)
                         {
-                            var ret3 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserRecord,
-                                new Dictionary<string, object> { { "uid", Common.LoginedUser.id }, { "type", "0" } });
+                            var song = NCSong.CreateFromJson(weekData[i]["song"]);
+                            song.Order = i;
+                            Common.Invoke(() => { Songs.Add(song); });
+                        }
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                }
 
-                            var weekData = ret3["allData"].ToArray();
-                            for (var i = 0; i < weekData.Length; i++)
-                            {
-                                var song = NCSong.CreateFromJson(weekData[i]["song"]);
-                                song.Order = i;
-                                Common.Invoke(() => { Songs.Add(song); });
-                            }
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-                    }
-
-                    break;
-            }
+                break;
         }
     }
 }

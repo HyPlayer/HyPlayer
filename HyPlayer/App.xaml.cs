@@ -1,11 +1,5 @@
 ﻿#region
 
-using HyPlayer.HyPlayControl;
-using HyPlayer.Pages;
-using Kawazu;
-using Microsoft.AppCenter;
-using Microsoft.AppCenter.Analytics;
-using Microsoft.AppCenter.Crashes;
 using System;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
@@ -20,289 +14,198 @@ using Windows.UI.StartScreen;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.HyPlayControl;
+using HyPlayer.Pages;
+using Kawazu;
+using Microsoft.AppCenter;
+using Microsoft.AppCenter.Analytics;
+using Microsoft.AppCenter.Crashes;
 using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
 
 #endregion
 
-namespace HyPlayer
+namespace HyPlayer;
+
+/// <summary>
+///     提供特定于应用程序的行为，以补充默认的应用程序类。
+/// </summary>
+sealed partial class App : Application
 {
     /// <summary>
-    ///     提供特定于应用程序的行为，以补充默认的应用程序类。
+    ///     初始化单一实例应用程序对象。这是执行的创作代码的第一行，
+    ///     已执行，逻辑上等同于 main() 或 WinMain()。
     /// </summary>
-    sealed partial class App : Application
+    private ExtendedExecutionSession executionSession;
+
+    private bool isInBackground;
+
+    public App()
     {
-        /// <summary>
-        ///     初始化单一实例应用程序对象。这是执行的创作代码的第一行，
-        ///     已执行，逻辑上等同于 main() 或 WinMain()。
-        /// </summary>
-        private ExtendedExecutionSession executionSession;
+        InitializeComponent();
 
-        private bool isInBackground;
-
-        public App()
+        if (Common.Setting.xboxHidePointer)
         {
-            InitializeComponent();
+            RequiresPointerMode = ApplicationRequiresPointerMode.WhenRequested;
+            FocusVisualKind = FocusVisualKind.Reveal;
+        }
 
-            if (Common.Setting.xboxHidePointer)
+
+        Suspending += OnSuspending;
+        UnhandledException += App_UnhandledException;
+        EnteredBackground += App_EnteredBackground;
+        LeavingBackground += App_LeavingBackground;
+        AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+        AppCenter.Start("8e88eab0-1627-4ff9-9ee7-7fd46d0629cf",
+            typeof(Analytics), typeof(Crashes));
+        AppCenter.SetEnabledAsync(true);
+        var deviceInfo = new EasClientDeviceInformation();
+        AppCenter.SetUserId(deviceInfo.Id.ToString());
+        MemoryManager.AppMemoryUsageIncreased += MemoryManagerOnAppMemoryUsageIncreased;
+        MemoryManager.AppMemoryUsageLimitChanging += MemoryManagerOnAppMemoryUsageLimitChanging;
+        if (Common.Setting.themeRequest != 0)
+            RequestedTheme = Common.Setting.themeRequest == 1 ? ApplicationTheme.Light : ApplicationTheme.Dark;
+        InitializeThings();
+    }
+
+    private void MemoryManagerOnAppMemoryUsageLimitChanging(object sender, AppMemoryUsageLimitChangingEventArgs e)
+    {
+        Common.Invoke(() =>
+        {
+            // Xbox 求你行行好,别杀我~ QAQ
+            if (isInBackground)
             {
-                this.RequiresPointerMode = Windows.UI.Xaml.ApplicationRequiresPointerMode.WhenRequested;
-                this.FocusVisualKind = FocusVisualKind.Reveal;
+                // 内存占用达到某个值
+                Common.CollectGarbage();
+                GC.Collect();
+            }
+        });
+    }
+
+    private void MemoryManagerOnAppMemoryUsageIncreased(object sender, object e)
+    {
+        Common.Invoke(() =>
+        {
+            if (isInBackground)
+            {
+                // 内存占用达到某个值
+                Common.CollectGarbage();
+                GC.Collect();
             }
 
-
-            Suspending += OnSuspending;
-            UnhandledException += App_UnhandledException;
-            EnteredBackground += App_EnteredBackground;
-            LeavingBackground += App_LeavingBackground;
-            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-            AppCenter.Start("8e88eab0-1627-4ff9-9ee7-7fd46d0629cf",
-                typeof(Analytics), typeof(Crashes));
-            AppCenter.SetEnabledAsync(true);
-            var deviceInfo = new EasClientDeviceInformation();
-            AppCenter.SetUserId(deviceInfo.Id.ToString());
-            MemoryManager.AppMemoryUsageIncreased += MemoryManagerOnAppMemoryUsageIncreased;
-            MemoryManager.AppMemoryUsageLimitChanging += MemoryManagerOnAppMemoryUsageLimitChanging;
-            if (Common.Setting.themeRequest != 0)
-                RequestedTheme = Common.Setting.themeRequest == 1 ? ApplicationTheme.Light : ApplicationTheme.Dark;
-            InitializeThings();
-        }
-
-        private void MemoryManagerOnAppMemoryUsageLimitChanging(object sender, AppMemoryUsageLimitChangingEventArgs e)
-        {
-            Common.Invoke(() =>
-            {
-                // Xbox 求你行行好,别杀我~ QAQ
-                if (isInBackground)
-                {
-                    // 内存占用达到某个值
-                    Common.CollectGarbage();
-                    GC.Collect();
-                }
-            });
-        }
-
-        private void MemoryManagerOnAppMemoryUsageIncreased(object sender, object e)
-        {
-            Common.Invoke(() =>
-            {
-                if (isInBackground)
-                {
-                    // 内存占用达到某个值
-                    Common.CollectGarbage();
-                    GC.Collect();
-                }
-
-                /*
-                                // 追踪代码
-                                Crashes.TrackError(new Exception("MemoryManagerOnAppMemoryUsageIncreased"), new Dictionary<string, string>()
-                            {
-                                {"ListCount", HyPlayList.List.Count.ToString()},
-                                {"NowMemory", MemoryManager.AppMemoryUsage.ToString()},
-                                {"DesireMemory", MemoryManager.AppMemoryUsageLimit.ToString()},
-                                {"TotalCommitLimit", MemoryManager.GetAppMemoryReport().TotalCommitLimit.ToString()},
-                                {"IsInBackground", isInBackground.ToString()},
-                                {"DeviceFamily",AnalyticsInfo.VersionInfo.DeviceFamily},
-                                {"DeviceFamilyVersion",AnalyticsInfo.VersionInfo.DeviceFamilyVersion}
-                            });
-                            */
-            });
-        }
-
-
-        private async void InitializeThings()
-        {
-            try
-            {
-                var sf = await ApplicationData.Current.LocalCacheFolder.GetFolderAsync("Romaji");
-                Common.KawazuConv = new KawazuConverter(sf.Path);
-            }
-            catch
-            {
-                // ignored
-            }
-
-            if (Common.isExpanded)
-                Common.Invoke((() =>
-                {
-                    Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer));
-                }));
-
-        }
-
-        private void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)
-        {
-            isInBackground = false;
-            if (Common.Setting.forceMemoryGarbage)
-            {
-                InitializeThings();
-                Common.NavigateBack();
-            }
-
-            ClearExtendedExecution(executionSession);
-        }
-
-        private async void App_EnteredBackground(object sender, EnteredBackgroundEventArgs e)
-        {
-            isInBackground = true;
-            var delaySession = new ExtendedExecutionSession();
-            delaySession.Reason = ExtendedExecutionReason.Unspecified;
-            delaySession.Revoked += SessionRevoked;
-            var result = await delaySession.RequestExtensionAsync();
-            switch (result)
-            {
-                case ExtendedExecutionResult.Allowed:
-                    executionSession = delaySession;
-                    if (Common.Setting.forceMemoryGarbage)
-                        _ = Task.Run(() => Common.Invoke(async () =>
-                        {
-                            Common.CollectGarbage();
-                            await Task.Delay(1000);
-                            GC.Collect();
-                        }));
-
-                    break;
-                case ExtendedExecutionResult.Denied:
-                    /*
-                    var toast = new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder();
-                    toast.AddText("应用程序进入后台，有可能关闭");
-                    toast.Show();
-                    */
-                    break;
-            }
-        }
-
-        private void ClearExtendedExecution(ExtendedExecutionSession session)
-        {
-            if (session != null)
-            {
-                session.Revoked -= SessionRevoked;
-                session.Dispose();
-                session = null;
-            }
-        }
-
-        private async void SessionRevoked(object sender, ExtendedExecutionRevokedEventArgs args)
-        {
-            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
-                CoreDispatcherPriority.Normal, () =>
-                {
-                    switch (args.Reason)
-                    {
-                        case ExtendedExecutionRevokedReason.Resumed:
-                            executionSession.Revoked -= SessionRevoked;
-                            executionSession.Dispose();
-                            executionSession = null;
-                            break;
-
-                        case ExtendedExecutionRevokedReason.SystemPolicy:
-                            /*
-                            var toast = new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder();
-                            toast.AddText("应用程序进入后台，有可能关闭");
-                            toast.Show();
-                            */
-                            break;
-                    }
-                });
-        }
-
-        protected override async void OnActivated(IActivatedEventArgs args)
-        {
-            base.OnActivated(args);
-            if (args.Kind == ActivationKind.ToastNotification) //如果用户点击了桌面歌词通知，则代表通知已经关闭，需要重新初始化推送
-            {
-                var rootFrame = Window.Current.Content as Frame;
-                if (rootFrame == null)
-                {
-                    rootFrame = new Frame();
-                    Window.Current.Content = rootFrame;
-                }
-
-                rootFrame.Navigate(typeof(MainPage));
-                Window.Current.Activate();
-                if (Common.BarPlayBar != null)
-                {
-                    Common.BarPlayBar.InitializeDesktopLyric();
-                    if (!Common.isExpanded)
-                    {
-                        var animation = Common.Setting.expandAnimation;
-                        await Task.Run(() =>
-                        {
-                            Common.Setting.expandAnimation = false;
-                            Common.Invoke(() => Common.BarPlayBar.ShowExpandedPlayer());
-                        });
-                        var a = Common.Setting.expandAnimation;
-                        Common.Setting.expandAnimation = animation;
-                    }
-                }
-            }
-        }
-
-        private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
-        {
-#if RELEASE
-            Crashes.TrackError((Exception)e.ExceptionObject);
-#endif
-            Common.Invoke(async () =>
-            {
-                var Dialog = new ContentDialog
-                {
-                    Title = "遇到了错误",
-                    Content = e.ExceptionObject.ToString(),
-                    PrimaryButtonText = "退出"
-                };
-                var result = await Dialog.ShowAsync();
-                Environment.Exit(0);
-            });
-        }
-
-        private void App_UnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
-        {
-#if RELEASE
-            Crashes.TrackError(e.Exception);
-#endif
-            e.Handled = true;
             /*
-            await new ContentDialog
-            {
-                Title = "发生错误",
-                Content = "Error: " + e.Message + "\r\n" + e.Exception.StackTrace,
-                CloseButtonText = "关闭",
-                DefaultButton = ContentDialogButton.Close
-            }.ShowAsync();
-            */
+                            // 追踪代码
+                            Crashes.TrackError(new Exception("MemoryManagerOnAppMemoryUsageIncreased"), new Dictionary<string, string>()
+                        {
+                            {"ListCount", HyPlayList.List.Count.ToString()},
+                            {"NowMemory", MemoryManager.AppMemoryUsage.ToString()},
+                            {"DesireMemory", MemoryManager.AppMemoryUsageLimit.ToString()},
+                            {"TotalCommitLimit", MemoryManager.GetAppMemoryReport().TotalCommitLimit.ToString()},
+                            {"IsInBackground", isInBackground.ToString()},
+                            {"DeviceFamily",AnalyticsInfo.VersionInfo.DeviceFamily},
+                            {"DeviceFamilyVersion",AnalyticsInfo.VersionInfo.DeviceFamilyVersion}
+                        });
+                        */
+        });
+    }
+
+
+    private async void InitializeThings()
+    {
+        try
+        {
+            var sf = await ApplicationData.Current.LocalCacheFolder.GetFolderAsync("Romaji");
+            Common.KawazuConv = new KawazuConverter(sf.Path);
+        }
+        catch
+        {
+            // ignored
         }
 
-        public async void InitializeJumpList()
+        if (Common.isExpanded)
+            Common.Invoke(() => { Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer)); });
+    }
+
+    private void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)
+    {
+        isInBackground = false;
+        if (Common.Setting.forceMemoryGarbage)
         {
-            var jumpList = await JumpList.LoadCurrentAsync();
-            jumpList.Items.Clear();
-
-            var item1 = JumpListItem.CreateWithArguments("search", "搜索");
-            item1.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistSearch.png");
-            if (Common.Logined)
-            {
-                var item2 = JumpListItem.CreateWithArguments("account", "账户");
-                item2.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistAccount.png");
-                var item3 = JumpListItem.CreateWithArguments("likedsongs", "我喜欢的音乐");
-                item3.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistLikedSongs.png");
-                jumpList.Items.Add(item2);
-                jumpList.Items.Add(item3);
-            }
-
-            var item4 = JumpListItem.CreateWithArguments("local", "本地音乐");
-            item4.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistLocal.png");
-
-            jumpList.Items.Add(item1);
-
-            jumpList.Items.Add(item4);
-            await jumpList.SaveAsync();
+            InitializeThings();
+            Common.NavigateBack();
         }
 
-        protected override async void OnFileActivated(FileActivatedEventArgs args)
+        ClearExtendedExecution(executionSession);
+    }
+
+    private async void App_EnteredBackground(object sender, EnteredBackgroundEventArgs e)
+    {
+        isInBackground = true;
+        var delaySession = new ExtendedExecutionSession();
+        delaySession.Reason = ExtendedExecutionReason.Unspecified;
+        delaySession.Revoked += SessionRevoked;
+        var result = await delaySession.RequestExtensionAsync();
+        switch (result)
         {
-            InitializeJumpList();
-            Common.isExpanded = true;
-            ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = "[]";
+            case ExtendedExecutionResult.Allowed:
+                executionSession = delaySession;
+                if (Common.Setting.forceMemoryGarbage)
+                    _ = Task.Run(() => Common.Invoke(async () =>
+                    {
+                        Common.CollectGarbage();
+                        await Task.Delay(1000);
+                        GC.Collect();
+                    }));
+
+                break;
+            case ExtendedExecutionResult.Denied:
+                /*
+                var toast = new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder();
+                toast.AddText("应用程序进入后台，有可能关闭");
+                toast.Show();
+                */
+                break;
+        }
+    }
+
+    private void ClearExtendedExecution(ExtendedExecutionSession session)
+    {
+        if (session != null)
+        {
+            session.Revoked -= SessionRevoked;
+            session.Dispose();
+            session = null;
+        }
+    }
+
+    private async void SessionRevoked(object sender, ExtendedExecutionRevokedEventArgs args)
+    {
+        await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
+            CoreDispatcherPriority.Normal, () =>
+            {
+                switch (args.Reason)
+                {
+                    case ExtendedExecutionRevokedReason.Resumed:
+                        executionSession.Revoked -= SessionRevoked;
+                        executionSession.Dispose();
+                        executionSession = null;
+                        break;
+
+                    case ExtendedExecutionRevokedReason.SystemPolicy:
+                        /*
+                        var toast = new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder();
+                        toast.AddText("应用程序进入后台，有可能关闭");
+                        toast.Show();
+                        */
+                        break;
+                }
+            });
+    }
+
+    protected override async void OnActivated(IActivatedEventArgs args)
+    {
+        base.OnActivated(args);
+        if (args.Kind == ActivationKind.ToastNotification) //如果用户点击了桌面歌词通知，则代表通知已经关闭，需要重新初始化推送
+        {
             var rootFrame = Window.Current.Content as Frame;
             if (rootFrame == null)
             {
@@ -312,73 +215,165 @@ namespace HyPlayer
 
             rootFrame.Navigate(typeof(MainPage));
             Window.Current.Activate();
-            if (HyPlayList.Player == null)
-                HyPlayList.InitializeHyPlaylist();
-            HyPlayList.RemoveAllSong();
-            foreach (StorageFile file in args.Files) await HyPlayList.AppendStorageFile(file);
-            HyPlayList.SongAppendDone();
-            HyPlayList.SongMoveTo(0);
-        }
-
-        /// <summary>
-        ///     在应用程序由最终用户正常启动时进行调用。
-        ///     将在启动应用程序以打开特定文件等情况下使用。
-        /// </summary>
-        /// <param name="e">有关启动请求和过程的详细信息。</param>
-        protected override void OnLaunched(LaunchActivatedEventArgs e)
-        {
-            InitializeJumpList();
-            var rootFrame = Window.Current.Content as Frame;
-
-            // 不要在窗口已包含内容时重复应用程序初始化，
-            // 只需确保窗口处于活动状态
-            if (rootFrame == null)
+            if (Common.BarPlayBar != null)
             {
-                // 创建要充当导航上下文的框架，并导航到第一页
-                rootFrame = new Frame();
-
-                rootFrame.NavigationFailed += OnNavigationFailed;
-
-                if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
+                Common.BarPlayBar.InitializeDesktopLyric();
+                if (!Common.isExpanded)
                 {
-                    //TODO: 从之前挂起的应用程序加载状态
+                    var animation = Common.Setting.expandAnimation;
+                    await Task.Run(() =>
+                    {
+                        Common.Setting.expandAnimation = false;
+                        Common.Invoke(() => Common.BarPlayBar.ShowExpandedPlayer());
+                    });
+                    var a = Common.Setting.expandAnimation;
+                    Common.Setting.expandAnimation = animation;
                 }
-
-                // 将框架放在当前窗口中
-                Window.Current.Content = rootFrame;
             }
+        }
+    }
 
-            if (e.PrelaunchActivated == false)
+    private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+    {
+#if RELEASE
+            Crashes.TrackError((Exception)e.ExceptionObject);
+#endif
+        Common.Invoke(async () =>
+        {
+            var Dialog = new ContentDialog
             {
-                rootFrame.Navigate(typeof(MainPage), e.Arguments);
+                Title = "遇到了错误",
+                Content = e.ExceptionObject.ToString(),
+                PrimaryButtonText = "退出"
+            };
+            var result = await Dialog.ShowAsync();
+            Environment.Exit(0);
+        });
+    }
 
-                // 确保当前窗口处于活动状态
-                Window.Current.Activate();
+    private void App_UnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
+    {
+#if RELEASE
+            Crashes.TrackError(e.Exception);
+#endif
+        e.Handled = true;
+        /*
+        await new ContentDialog
+        {
+            Title = "发生错误",
+            Content = "Error: " + e.Message + "\r\n" + e.Exception.StackTrace,
+            CloseButtonText = "关闭",
+            DefaultButton = ContentDialogButton.Close
+        }.ShowAsync();
+        */
+    }
+
+    public async void InitializeJumpList()
+    {
+        var jumpList = await JumpList.LoadCurrentAsync();
+        jumpList.Items.Clear();
+
+        var item1 = JumpListItem.CreateWithArguments("search", "搜索");
+        item1.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistSearch.png");
+        if (Common.Logined)
+        {
+            var item2 = JumpListItem.CreateWithArguments("account", "账户");
+            item2.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistAccount.png");
+            var item3 = JumpListItem.CreateWithArguments("likedsongs", "我喜欢的音乐");
+            item3.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistLikedSongs.png");
+            jumpList.Items.Add(item2);
+            jumpList.Items.Add(item3);
+        }
+
+        var item4 = JumpListItem.CreateWithArguments("local", "本地音乐");
+        item4.Logo = new Uri("ms-appx:///Assets/JumpListIcons/JumplistLocal.png");
+
+        jumpList.Items.Add(item1);
+
+        jumpList.Items.Add(item4);
+        await jumpList.SaveAsync();
+    }
+
+    protected override async void OnFileActivated(FileActivatedEventArgs args)
+    {
+        InitializeJumpList();
+        Common.isExpanded = true;
+        ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = "[]";
+        var rootFrame = Window.Current.Content as Frame;
+        if (rootFrame == null)
+        {
+            rootFrame = new Frame();
+            Window.Current.Content = rootFrame;
+        }
+
+        rootFrame.Navigate(typeof(MainPage));
+        Window.Current.Activate();
+        if (HyPlayList.Player == null)
+            HyPlayList.InitializeHyPlaylist();
+        HyPlayList.RemoveAllSong();
+        foreach (StorageFile file in args.Files) await HyPlayList.AppendStorageFile(file);
+        HyPlayList.SongAppendDone();
+        HyPlayList.SongMoveTo(0);
+    }
+
+    /// <summary>
+    ///     在应用程序由最终用户正常启动时进行调用。
+    ///     将在启动应用程序以打开特定文件等情况下使用。
+    /// </summary>
+    /// <param name="e">有关启动请求和过程的详细信息。</param>
+    protected override void OnLaunched(LaunchActivatedEventArgs e)
+    {
+        InitializeJumpList();
+        var rootFrame = Window.Current.Content as Frame;
+
+        // 不要在窗口已包含内容时重复应用程序初始化，
+        // 只需确保窗口处于活动状态
+        if (rootFrame == null)
+        {
+            // 创建要充当导航上下文的框架，并导航到第一页
+            rootFrame = new Frame();
+
+            rootFrame.NavigationFailed += OnNavigationFailed;
+
+            if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
+            {
+                //TODO: 从之前挂起的应用程序加载状态
             }
+
+            // 将框架放在当前窗口中
+            Window.Current.Content = rootFrame;
         }
 
-        /// <summary>
-        ///     导航到特定页失败时调用
-        /// </summary>
-        /// <param name="sender">导航失败的框架</param>
-        /// <param name="e">有关导航失败的详细信息</param>
-        private void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
+        if (e.PrelaunchActivated == false)
         {
-            throw new Exception("Failed to load Page " + e.SourcePageType.FullName);
-        }
+            rootFrame.Navigate(typeof(MainPage), e.Arguments);
 
-        /// <summary>
-        ///     在将要挂起应用程序执行时调用。  在不知道应用程序
-        ///     无需知道应用程序会被终止还是会恢复，
-        ///     并让内存内容保持不变。
-        /// </summary>
-        /// <param name="sender">挂起的请求的源。</param>
-        /// <param name="e">有关挂起请求的详细信息。</param>
-        private void OnSuspending(object sender, SuspendingEventArgs e)
-        {
-            var deferral = e.SuspendingOperation.GetDeferral();
-            //TODO: 保存应用程序状态并停止任何后台活动
-            deferral.Complete();
+            // 确保当前窗口处于活动状态
+            Window.Current.Activate();
         }
+    }
+
+    /// <summary>
+    ///     导航到特定页失败时调用
+    /// </summary>
+    /// <param name="sender">导航失败的框架</param>
+    /// <param name="e">有关导航失败的详细信息</param>
+    private void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
+    {
+        throw new Exception("Failed to load Page " + e.SourcePageType.FullName);
+    }
+
+    /// <summary>
+    ///     在将要挂起应用程序执行时调用。  在不知道应用程序
+    ///     无需知道应用程序会被终止还是会恢复，
+    ///     并让内存内容保持不变。
+    /// </summary>
+    /// <param name="sender">挂起的请求的源。</param>
+    /// <param name="e">有关挂起请求的详细信息。</param>
+    private void OnSuspending(object sender, SuspendingEventArgs e)
+    {
+        var deferral = e.SuspendingOperation.GetDeferral();
+        //TODO: 保存应用程序状态并停止任何后台活动
+        deferral.Complete();
     }
 }

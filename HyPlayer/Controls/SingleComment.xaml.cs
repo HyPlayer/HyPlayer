@@ -17,140 +17,139 @@ using NeteaseCloudMusicApi;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
-namespace HyPlayer.Controls
+namespace HyPlayer.Controls;
+
+public sealed partial class SingleComment : UserControl
 {
-    public sealed partial class SingleComment : UserControl
+    private readonly BitmapImage AvatarSource;
+    private readonly Uri AvatarUri;
+    private readonly Comment comment;
+    private string time;
+
+    public SingleComment(Comment cmt)
     {
-        private readonly BitmapImage AvatarSource;
-        private readonly Uri AvatarUri;
-        private readonly Comment comment;
-        private string time;
+        InitializeComponent();
+        comment = cmt;
+        AvatarUri = comment.AvatarUri;
+        AvatarSource = new BitmapImage();
+        AvatarSource.UriSource = AvatarUri;
+        ReplyBtn.Visibility = Visibility.Visible;
+    }
 
-        public SingleComment(Comment cmt)
+    private async void LoadFloorComments()
+    {
+        try
         {
-            InitializeComponent();
-            comment = cmt;
-            AvatarUri = comment.AvatarUri;
-            AvatarSource = new BitmapImage();
-            AvatarSource.UriSource = AvatarUri;
-            ReplyBtn.Visibility = Visibility.Visible;
+            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentFloor,
+                new Dictionary<string, object>
+                {
+                    { "parentCommentId", comment.cid }, { "id", comment.resourceId },
+                    { "type", comment.resourceType },
+                    { "time", time }
+                });
+            foreach (var floorcomment in json["data"]["comments"].ToArray())
+                SubCmts.Children.Add(
+                    new SingleComment(
+                            Comment.CreateFromJson(floorcomment, comment.resourceId, comment.resourceType))
+                        { Margin = new Thickness { Left = 5, Right = 5, Top = 5, Bottom = 5 } });
+            time = json["data"]["time"].ToString();
+            if (json["data"]["hasMore"].ToString() == "True")
+                LoadMore.Visibility = Visibility.Visible;
+            else LoadMore.Visibility = Visibility.Collapsed;
         }
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+        }
+    }
 
-        private async void LoadFloorComments()
+    private void Copy_Click(object sender, RoutedEventArgs e)
+    {
+        var dataPackage = new DataPackage();
+        dataPackage.SetText(comment.content);
+        Clipboard.Clear();
+        Clipboard.SetContent(dataPackage);
+    }
+
+    private async void Like_Click(object sender, RoutedEventArgs e)
+    {
+        await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentLike,
+            new Dictionary<string, object>
+            {
+                { "id", comment.resourceId }, { "cid", comment.cid }, { "type", comment.resourceType },
+                { "t", comment.HasLiked ? "0" : "1" }
+            });
+        comment.likedCount += comment.HasLiked ? -1 : 1;
+        LikeCountTB.Text = comment.likedCount.ToString();
+    }
+
+    private async void Delete_Click(object sender, RoutedEventArgs e)
+    {
+        await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment,
+            new Dictionary<string, object>
+            {
+                { "id", comment.resourceId }, { "t", "0" }, { "type", comment.resourceType },
+                { "commentId", comment.cid }
+            });
+        (Parent as StackPanel).Children.Remove(this);
+    }
+
+    private void NavToUser_Click(object sender, RoutedEventArgs e)
+    {
+        Common.NavigatePage(typeof(Me), comment.uid);
+    }
+
+    private async void SendReply_Click(object sender, RoutedEventArgs e)
+    {
+        if (!string.IsNullOrWhiteSpace(ReplyText.Text) && Common.Logined)
         {
             try
             {
-                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentFloor,
+                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment,
                     new Dictionary<string, object>
                     {
-                        { "parentCommentId", comment.cid }, { "id", comment.resourceId },
+                        { "id", comment.resourceId }, { "commentId", comment.cid },
                         { "type", comment.resourceType },
-                        { "time", time }
+                        { "t", "2" }, { "content", ReplyText.Text }
                     });
-                foreach (var floorcomment in json["data"]["comments"].ToArray())
-                    SubCmts.Children.Add(
-                        new SingleComment(
-                                Comment.CreateFromJson(floorcomment, comment.resourceId, comment.resourceType))
-                            { Margin = new Thickness { Left = 5, Right = 5, Top = 5, Bottom = 5 } });
-                time = json["data"]["time"].ToString();
-                if (json["data"]["hasMore"].ToString() == "True")
-                    LoadMore.Visibility = Visibility.Visible;
-                else LoadMore.Visibility = Visibility.Collapsed;
+                ReplyText.Text = string.Empty;
+                await Task.Delay(1000);
+                LoadFloorComments();
             }
             catch (Exception ex)
             {
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-            }
-        }
-
-        private void Copy_Click(object sender, RoutedEventArgs e)
-        {
-            var dataPackage = new DataPackage();
-            dataPackage.SetText(comment.content);
-            Clipboard.Clear();
-            Clipboard.SetContent(dataPackage);
-        }
-
-        private async void Like_Click(object sender, RoutedEventArgs e)
-        {
-            await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentLike,
-                new Dictionary<string, object>
-                {
-                    { "id", comment.resourceId }, { "cid", comment.cid }, { "type", comment.resourceType },
-                    { "t", comment.HasLiked ? "0" : "1" }
-                });
-            comment.likedCount += comment.HasLiked ? -1 : 1;
-            LikeCountTB.Text = comment.likedCount.ToString();
-        }
-
-        private async void Delete_Click(object sender, RoutedEventArgs e)
-        {
-            await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment,
-                new Dictionary<string, object>
-                {
-                    { "id", comment.resourceId }, { "t", "0" }, { "type", comment.resourceType },
-                    { "commentId", comment.cid }
-                });
-            (Parent as StackPanel).Children.Remove(this);
-        }
-
-        private void NavToUser_Click(object sender, RoutedEventArgs e)
-        {
-            Common.NavigatePage(typeof(Me), comment.uid);
-        }
-
-        private async void SendReply_Click(object sender, RoutedEventArgs e)
-        {
-            if (!string.IsNullOrWhiteSpace(ReplyText.Text) && Common.Logined)
-            {
-                try
-                {
-                    var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment,
-                        new Dictionary<string, object>
-                        {
-                            { "id", comment.resourceId }, { "commentId", comment.cid },
-                            { "type", comment.resourceType },
-                            { "t", "2" }, { "content", ReplyText.Text }
-                        });
-                    ReplyText.Text = string.Empty;
-                    await Task.Delay(1000);
-                    LoadFloorComments();
-                }
-                catch (Exception ex)
-                {
-                    var dlg = new MessageDialog(ex.Message, "出现问题，评论失败");
-                    await dlg.ShowAsync();
-                }
-            }
-            else if (string.IsNullOrWhiteSpace(ReplyText.Text))
-            {
-                var dlg = new MessageDialog("评论不能为空");
-                await dlg.ShowAsync();
-            }
-            else
-            {
-                var dlg = new MessageDialog("请先登录");
+                var dlg = new MessageDialog(ex.Message, "出现问题，评论失败");
                 await dlg.ShowAsync();
             }
         }
-
-        private void LoadMore_Click(object sender, RoutedEventArgs e)
+        else if (string.IsNullOrWhiteSpace(ReplyText.Text))
         {
+            var dlg = new MessageDialog("评论不能为空");
+            await dlg.ShowAsync();
+        }
+        else
+        {
+            var dlg = new MessageDialog("请先登录");
+            await dlg.ShowAsync();
+        }
+    }
+
+    private void LoadMore_Click(object sender, RoutedEventArgs e)
+    {
+        LoadFloorComments();
+    }
+
+    private void ReplyBtn_Click(object sender, RoutedEventArgs e)
+    {
+        if (ReplyBtn.IsChecked.Value)
+        {
+            time = null;
+            SubCmtsConainer.Visibility = Visibility.Visible;
             LoadFloorComments();
         }
-
-        private void ReplyBtn_Click(object sender, RoutedEventArgs e)
+        else
         {
-            if (ReplyBtn.IsChecked.Value)
-            {
-                time = null;
-                SubCmtsConainer.Visibility = Visibility.Visible;
-                LoadFloorComments();
-            }
-            else
-            {
-                SubCmtsConainer.Visibility = Visibility.Collapsed;
-            }
+            SubCmtsConainer.Visibility = Visibility.Collapsed;
         }
     }
 }

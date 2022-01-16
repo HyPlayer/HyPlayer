@@ -22,7 +22,6 @@
         <Grid
             x:Name="GridSongInfoContainer"
             Grid.Column="0"
-            Grid.ColumnSpan="1"
             HorizontalAlignment="Left"
             x:FieldModifier="public"
             Canvas.ZIndex="2">

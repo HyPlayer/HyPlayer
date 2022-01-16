@@ -75,7 +75,7 @@
                 <controls1:SongsList
                     x:Name="AllSongContainer"
                     Margin="20,10,0,0"
-                    Songs="{x:Bind allSongs, Mode=OneWay}" >
+                    Songs="{x:Bind allSongs, Mode=OneWay}">
                     <controls1:SongsList.Footer>
                         <StackPanel
                             Grid.Row="3"
@@ -96,7 +96,7 @@
                 </controls1:SongsList>
             </PivotItem>
             <PivotItem Header="专辑">
-                <controls1:SimpleLinerList x:Name="AlbumContainer" Margin="20,10,0,0" >
+                <controls1:SimpleLinerList x:Name="AlbumContainer" Margin="20,10,0,0">
                     <controls1:SimpleLinerList.Footer>
                         <StackPanel
                             Grid.Row="3"

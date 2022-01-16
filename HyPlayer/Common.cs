@@ -1,15 +1,6 @@
 ﻿#region
 
 #nullable enable
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using HyPlayer.HyPlayControl;
-using HyPlayer.Pages;
-using Kawazu;
-using Microsoft.Toolkit.Uwp.UI;
-using Microsoft.UI.Xaml.Controls;
-using NeteaseCloudMusicApi;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -28,7 +19,15 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Animation;
-
+using HyPlayer.Classes;
+using HyPlayer.Controls;
+using HyPlayer.HyPlayControl;
+using HyPlayer.Pages;
+using Kawazu;
+using Microsoft.Toolkit.Uwp.UI;
+using Microsoft.UI.Xaml.Controls;
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json;
 #if !DEBUG
 using Microsoft.AppCenter.Crashes;
 #endif
@@ -130,7 +129,7 @@ namespace HyPlayer
 
         public static void NavigatePage(Type SourcePageType, object paratmer = null, object ignore = null)
         {
-            if (Common.Setting.forceMemoryGarbage)
+            if (Setting.forceMemoryGarbage)
             {
                 if (NavigationHistory.Count >= 1 && PageBase.NavMain.SelectedItem == NavigationHistory.Peek().Item)
                     PageBase.NavMain.SelectedItem = PageBase.ItemMain;
@@ -141,20 +140,20 @@ namespace HyPlayer
                     Item = PageBase.NavMain.SelectedItem
                 });
                 BaseFrame?.Navigate(SourcePageType, paratmer,
-                    new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromRight });
+                    new SlideNavigationTransitionInfo { Effect = SlideNavigationTransitionEffect.FromRight });
                 GC.Collect();
             }
             else
             {
                 BaseFrame?.Navigate(SourcePageType, paratmer,
-                    new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromRight });
+                    new SlideNavigationTransitionInfo { Effect = SlideNavigationTransitionEffect.FromRight });
             }
         }
 
         public static void NavigateRefresh()
         {
             var peek = NavigationHistory.Peek();
-            BaseFrame?.Navigate(peek.PageType, peek.Paratmers);
+            BaseFrame.Navigate(peek.PageType, peek.Paratmers);
             GC.Collect();
         }
 
@@ -193,11 +192,11 @@ namespace HyPlayer
         {
             NavigatePage(typeof(BlankPage));
             BaseFrame.Content = null;
-            PageExpandedPlayer?.Dispose();
+            PageExpandedPlayer.Dispose();
             PageExpandedPlayer = null;
             PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));
             _ = ImageCache.Instance.ClearAsync();
-            KawazuConv = null;
+            KawazuConv.Dispose();
         }
 
         public static void UIElement_RightTapped(object sender, RightTappedRoutedEventArgs e)
@@ -205,18 +204,18 @@ namespace HyPlayer
             var element = sender as UIElement;
             try
             {
-                element.ContextFlyout.ShowAt(element, new FlyoutShowOptions { Position = e.GetPosition(element) });
+                element?.ContextFlyout.ShowAt(element, new FlyoutShowOptions { Position = e.GetPosition(element) });
             }
             catch
             {
-                var flyout = FlyoutBase.GetAttachedFlyout((FrameworkElement)element);
+                var flyout = FlyoutBase.GetAttachedFlyout((FrameworkElement)element!);
                 flyout.ShowAt(element, new FlyoutShowOptions { Position = e.GetPosition(element) });
             }
         }
 
         public static void NavigateBack()
         {
-            if (Common.Setting.forceMemoryGarbage)
+            if (Setting.forceMemoryGarbage)
             {
                 if (NavigationHistory.Count > 1)
                     NavigationHistory.Pop();
@@ -230,7 +229,7 @@ namespace HyPlayer
                     }
 
                     BaseFrame?.Navigate(bak.PageType, bak.Paratmers,
-                        new SlideNavigationTransitionInfo() { Effect = SlideNavigationTransitionEffect.FromLeft });
+                        new SlideNavigationTransitionInfo { Effect = SlideNavigationTransitionEffect.FromLeft });
                     NavigatingBack = true;
                     PageBase.NavMain.SelectedItem = bak.Item;
                     NavigatingBack = false;

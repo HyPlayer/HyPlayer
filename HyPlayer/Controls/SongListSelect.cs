@@ -6,29 +6,28 @@ using NeteaseCloudMusicApi;
 
 #endregion
 
-namespace HyPlayer.Controls
+namespace HyPlayer.Controls;
+
+public sealed partial class SongListSelect : ContentDialog
 {
-    public sealed partial class SongListSelect : ContentDialog
+    private readonly string sid;
+
+    public SongListSelect(string songid)
     {
-        private readonly string sid;
+        InitializeComponent();
+        sid = songid;
+        ListViewSongList.Items?.Clear();
+        Common.MySongLists.ForEach(t => ListViewSongList.Items?.Add(t.name));
+    }
 
-        public SongListSelect(string songid)
+    private async void ListViewSongList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistTracks, new Dictionary<string, object>
         {
-            InitializeComponent();
-            sid = songid;
-            ListViewSongList.Items?.Clear();
-            Common.MySongLists.ForEach(t => ListViewSongList.Items?.Add(t.name));
-        }
-
-        private async void ListViewSongList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistTracks, new Dictionary<string, object>
-            {
-                { "op", "add" },
-                { "pid", Common.MySongLists[ListViewSongList.SelectedIndex].plid },
-                { "tracks", sid }
-            });
-            Hide();
-        }
+            { "op", "add" },
+            { "pid", Common.MySongLists[ListViewSongList.SelectedIndex].plid },
+            { "tracks", sid }
+        });
+        Hide();
     }
 }

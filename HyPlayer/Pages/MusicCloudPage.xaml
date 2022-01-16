@@ -2,12 +2,9 @@
     x:Class="HyPlayer.Pages.MusicCloudPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:classes="using:HyPlayer.Classes"
-    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:controls1="using:HyPlayer.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:pages="using:HyPlayer.Pages"
     mc:Ignorable="d">
 
     <Grid>
@@ -18,7 +15,6 @@
         </Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal" Spacing="20">
             <TextBlock
-                Grid.Row="0"
                 Margin="30,0,0,0"
                 FontSize="25"
                 Text="我的云盘"
@@ -66,8 +62,6 @@
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
     </Grid>
-
-
 
 
 </Page>

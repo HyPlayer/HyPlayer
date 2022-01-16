@@ -13,69 +13,68 @@ using HyPlayer.HyPlayControl;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
-namespace HyPlayer.Pages
+namespace HyPlayer.Pages;
+
+/// <summary>
+///     可用于自身或导航至 Frame 内部的空白页。
+/// </summary>
+public sealed partial class DownloadPage : Page, IDisposable
 {
-    /// <summary>
-    ///     可用于自身或导航至 Frame 内部的空白页。
-    /// </summary>
-    public sealed partial class DownloadPage : Page, IDisposable
+    public DownloadPage()
     {
-        public DownloadPage()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
+    }
 
-        public void Dispose()
-        {
-            DLList.Children.Clear();
-        }
+    public void Dispose()
+    {
+        DLList.Children.Clear();
+    }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
-        {
-            base.OnNavigatedTo(e);
-            HyPlayList.OnTimerTicked += DownloadPage_Elapsed;
-        }
+    protected override void OnNavigatedTo(NavigationEventArgs e)
+    {
+        base.OnNavigatedTo(e);
+        HyPlayList.OnTimerTicked += DownloadPage_Elapsed;
+    }
 
-        protected override void OnNavigatedFrom(NavigationEventArgs e)
-        {
-            base.OnNavigatedFrom(e);
-            HyPlayList.OnTimerTicked -= DownloadPage_Elapsed;
-        }
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+        HyPlayList.OnTimerTicked -= DownloadPage_Elapsed;
+    }
 
-        private void DownloadPage_Elapsed()
+    private void DownloadPage_Elapsed()
+    {
+        Common.Invoke(() =>
         {
-            Common.Invoke(() =>
+            if (DLList.Children.Count != DownloadManager.DownloadLists.Count)
             {
-                if (DLList.Children.Count != DownloadManager.DownloadLists.Count)
-                {
-                    while (DLList.Children.Count > DownloadManager.DownloadLists.Count)
-                        DLList.Children.RemoveAt(DLList.Children.Count - 1);
+                while (DLList.Children.Count > DownloadManager.DownloadLists.Count)
+                    DLList.Children.RemoveAt(DLList.Children.Count - 1);
 
-                    while (DLList.Children.Count < DownloadManager.DownloadLists.Count)
-                        DLList.Children.Add(new SingleDownload(DLList.Children.Count));
-                }
+                while (DLList.Children.Count < DownloadManager.DownloadLists.Count)
+                    DLList.Children.Add(new SingleDownload(DLList.Children.Count));
+            }
 
-                foreach (var uiElement in DLList.Children)
-                {
-                    var dl = (SingleDownload)uiElement;
-                    dl.UpdateUI();
-                }
-            });
-        }
-
-        private void Button_Cleanall_Click(object sender, RoutedEventArgs e)
-        {
-            DownloadManager.DownloadLists.ForEach(t =>
+            foreach (var uiElement in DLList.Children)
             {
-                if (t.Status == 1)
-                    t.downloadOperation = null;
-            });
-            DownloadManager.DownloadLists = new List<DownloadObject>();
-        }
+                var dl = (SingleDownload)uiElement;
+                dl.UpdateUI();
+            }
+        });
+    }
 
-        private async void OpenDownloadFolder_Click(object sender, RoutedEventArgs e)
+    private void Button_Cleanall_Click(object sender, RoutedEventArgs e)
+    {
+        DownloadManager.DownloadLists.ForEach(t =>
         {
-            await Launcher.LaunchFolderPathAsync(Common.Setting.downloadDir);
-        }
+            if (t.Status == 1)
+                t.downloadOperation = null;
+        });
+        DownloadManager.DownloadLists = new List<DownloadObject>();
+    }
+
+    private async void OpenDownloadFolder_Click(object sender, RoutedEventArgs e)
+    {
+        await Launcher.LaunchFolderPathAsync(Common.Setting.downloadDir);
     }
 }

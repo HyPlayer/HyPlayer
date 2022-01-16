@@ -13,148 +13,147 @@ using NeteaseCloudMusicApi;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
-namespace HyPlayer.Pages
+namespace HyPlayer.Pages;
+
+/// <summary>
+///     An empty page that can be used on its own or navigated to within a Frame.
+/// </summary>
+public sealed partial class PageFavorite : Page, IDisposable
 {
-    /// <summary>
-    ///     An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
-    public sealed partial class PageFavorite : Page, IDisposable
+    private int i;
+    private int page;
+
+    public PageFavorite()
     {
-        private int i;
-        private int page;
+        InitializeComponent();
+    }
 
-        public PageFavorite()
+    public void Dispose()
+    {
+        ItemContainer.ListItems.Clear();
+    }
+
+    protected override void OnNavigatedTo(NavigationEventArgs e)
+    {
+        base.OnNavigatedTo(e);
+        NavView.SelectedItem = NavView.MenuItems[0];
+    }
+
+    private void NavView_OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+    {
+        page = 0;
+        i = 0;
+        ItemContainer.ListItems.Clear();
+        RealLoad();
+    }
+
+    private void RealLoad()
+    {
+        switch ((NavView.SelectedItem as NavigationViewItem)?.Tag.ToString())
         {
-            InitializeComponent();
+            case "Album":
+                LoadAlbumResult();
+                break;
+            case "Artist":
+                LoadArtistResult();
+                break;
+            case "Radio":
+                LoadRadioResult();
+                break;
         }
+    }
 
-        public void Dispose()
+    private async void LoadRadioResult()
+    {
+        try
         {
-            ItemContainer.ListItems.Clear();
+            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.DjSublist,
+                new Dictionary<string, object>
+                {
+                    { "offset", page * 25 }
+                });
+            BtnLoadMore.Visibility = json["hasMore"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
+            foreach (var pljs in json["djRadios"])
+                ItemContainer.ListItems.Add(new SimpleListItem
+                {
+                    Title = pljs["name"].ToString(),
+                    LineOne = pljs["dj"]["nickname"].ToString(),
+                    LineTwo = pljs["desc"].ToString(),
+                    LineThree = "最后一个节目: " + pljs["lastProgramName"],
+                    ResourceId = "rd" + pljs["id"],
+                    CoverUri = pljs["picUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                    Order = i++
+                });
         }
-
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        catch (Exception ex)
         {
-            base.OnNavigatedTo(e);
-            NavView.SelectedItem = NavView.MenuItems[0];
+            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
+    }
 
-        private void NavView_OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+    private async void LoadArtistResult()
+    {
+        try
         {
-            page = 0;
-            i = 0;
-            ItemContainer.ListItems.Clear();
-            RealLoad();
-        }
+            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistSublist,
+                new Dictionary<string, object>
+                {
+                    { "offset", page * 25 }
+                });
 
-        private void RealLoad()
+            BtnLoadMore.Visibility = json["hasMore"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
+            foreach (var singerjson in json["data"])
+                ItemContainer.ListItems.Add(new SimpleListItem
+                {
+                    Title = singerjson["name"].ToString(),
+                    LineOne = singerjson["trans"].ToString(),
+                    LineTwo = string.Join(" / ",
+                        singerjson["alia"]?.Select(t => t.ToString()) ?? new List<string>()),
+                    LineThree = $"专辑数 {singerjson["albumSize"]} | MV 数 {singerjson["mvSize"]}",
+                    ResourceId = "ar" + singerjson["id"],
+                    CoverUri = singerjson["img1v1Url"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                    Order = i++
+                });
+        }
+        catch (Exception ex)
         {
-            switch ((NavView.SelectedItem as NavigationViewItem)?.Tag.ToString())
-            {
-                case "Album":
-                    LoadAlbumResult();
-                    break;
-                case "Artist":
-                    LoadArtistResult();
-                    break;
-                case "Radio":
-                    LoadRadioResult();
-                    break;
-            }
+            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
+    }
 
-        private async void LoadRadioResult()
+    private async void LoadAlbumResult()
+    {
+        try
         {
-            try
-            {
-                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.DjSublist,
-                    new Dictionary<string, object>
-                    {
-                        { "offset", page * 25 }
-                    });
-                BtnLoadMore.Visibility = json["hasMore"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
-                foreach (var pljs in json["djRadios"])
-                    ItemContainer.ListItems.Add(new SimpleListItem
-                    {
-                        Title = pljs["name"].ToString(),
-                        LineOne = pljs["dj"]["nickname"].ToString(),
-                        LineTwo = pljs["desc"].ToString(),
-                        LineThree = "最后一个节目: " + pljs["lastProgramName"],
-                        ResourceId = "rd" + pljs["id"],
-                        CoverUri = pljs["picUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
-                        Order = i++
-                    });
-            }
-            catch (Exception ex)
-            {
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-            }
+            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.AlbumSublist,
+                new Dictionary<string, object>
+                {
+                    { "offset", page * 25 }
+                });
+            BtnLoadMore.Visibility = json["hasMore"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
+            foreach (var albumjson in json["data"])
+                ItemContainer.ListItems.Add(new SimpleListItem
+                {
+                    Title = albumjson["name"].ToString(),
+                    LineOne = string.Join(" / ", albumjson["artists"].Select(t => t["name"].ToString())),
+                    LineTwo = albumjson["alias"] != null
+                        ? string.Join(" / ", albumjson["alias"].ToArray().Select(t => t.ToString()))
+                        : "",
+                    LineThree = albumjson.Value<bool>("paid") ? "付费专辑" : "",
+                    ResourceId = "al" + albumjson["id"],
+                    CoverUri = albumjson["picUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                    Order = i++
+                });
         }
-
-        private async void LoadArtistResult()
+        catch (Exception ex)
         {
-            try
-            {
-                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistSublist,
-                    new Dictionary<string, object>
-                    {
-                        { "offset", page * 25 }
-                    });
-
-                BtnLoadMore.Visibility = json["hasMore"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
-                foreach (var singerjson in json["data"])
-                    ItemContainer.ListItems.Add(new SimpleListItem
-                    {
-                        Title = singerjson["name"].ToString(),
-                        LineOne = singerjson["trans"].ToString(),
-                        LineTwo = string.Join(" / ",
-                            singerjson["alia"]?.Select(t => t.ToString()) ?? new List<string>()),
-                        LineThree = $"专辑数 {singerjson["albumSize"]} | MV 数 {singerjson["mvSize"]}",
-                        ResourceId = "ar" + singerjson["id"],
-                        CoverUri = singerjson["img1v1Url"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
-                        Order = i++
-                    });
-            }
-            catch (Exception ex)
-            {
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-            }
+            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
+    }
 
-        private async void LoadAlbumResult()
-        {
-            try
-            {
-                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.AlbumSublist,
-                    new Dictionary<string, object>
-                    {
-                        { "offset", page * 25 }
-                    });
-                BtnLoadMore.Visibility = json["hasMore"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
-                foreach (var albumjson in json["data"])
-                    ItemContainer.ListItems.Add(new SimpleListItem
-                    {
-                        Title = albumjson["name"].ToString(),
-                        LineOne = string.Join(" / ", albumjson["artists"].Select(t => t["name"].ToString())),
-                        LineTwo = albumjson["alias"] != null
-                            ? string.Join(" / ", albumjson["alias"].ToArray().Select(t => t.ToString()))
-                            : "",
-                        LineThree = albumjson.Value<bool>("paid") ? "付费专辑" : "",
-                        ResourceId = "al" + albumjson["id"],
-                        CoverUri = albumjson["picUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
-                        Order = i++
-                    });
-            }
-            catch (Exception ex)
-            {
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-            }
-        }
-
-        private void BtnLoadMore_OnClick(object sender, RoutedEventArgs e)
-        {
-            page++;
-            RealLoad();
-        }
+    private void BtnLoadMore_OnClick(object sender, RoutedEventArgs e)
+    {
+        page++;
+        RealLoad();
     }
 }

@@ -6,21 +6,20 @@ using NeteaseCloudMusicApi;
 
 #endregion
 
-namespace HyPlayer.Classes
+namespace HyPlayer.Classes;
+
+internal class Api
 {
-    internal class Api
+    public static async void LikeSong(string songid, bool like)
     {
-        public static async void LikeSong(string songid, bool like)
+        try
         {
-            try
-            {
-                await Common.ncapi.RequestAsync(CloudMusicApiProviders.Like,
-                    new Dictionary<string, object> { { "id", songid }, { "like", like ? "true" : "false" } });
-            }
-            catch (Exception ex)
-            {
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-            }
+            await Common.ncapi.RequestAsync(CloudMusicApiProviders.Like,
+                new Dictionary<string, object> { { "id", songid }, { "like", like ? "true" : "false" } });
+        }
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
 }

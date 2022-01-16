@@ -45,8 +45,6 @@
                 <!--  推荐歌单  -->
                 <StackPanel
                     x:Name="FirstGrid"
-                    Grid.Row="0"
-                    Grid.Column="0"
                     Background="{ThemeResource SystemControlBackgroundListLowBrush}"
                     CornerRadius="8"
                     Orientation="Vertical">

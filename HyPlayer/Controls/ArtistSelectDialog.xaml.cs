@@ -9,32 +9,31 @@ using HyPlayer.Pages;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“内容对话框”项模板
 
-namespace HyPlayer.Controls
+namespace HyPlayer.Controls;
+
+public sealed partial class ArtistSelectDialog : ContentDialog
 {
-    public sealed partial class ArtistSelectDialog : ContentDialog
+    private readonly List<NCArtist> aartists;
+
+    public ArtistSelectDialog(List<NCArtist> artists)
     {
-        private readonly List<NCArtist> aartists;
+        aartists = artists;
+        InitializeComponent();
+        ListViewArtists.Items?.Clear();
+        artists.ForEach(t => ListViewArtists.Items?.Add(t.name));
+    }
 
-        public ArtistSelectDialog(List<NCArtist> artists)
+
+    private void ListViewArtists_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        Common.NavigatePage(typeof(ArtistPage), aartists[ListViewArtists.SelectedIndex].id);
+        if (Common.isExpanded)
         {
-            aartists = artists;
-            InitializeComponent();
-            ListViewArtists.Items?.Clear();
-            artists.ForEach(t => ListViewArtists.Items?.Add(t.name));
+            if (Common.Setting.forceMemoryGarbage)
+                Common.NavigatePage(typeof(BlankPage));
+            Common.BarPlayBar.CollapseExpandedPlayer();
         }
 
-
-        private void ListViewArtists_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            Common.NavigatePage(typeof(ArtistPage), aartists[ListViewArtists.SelectedIndex].id);
-            if (Common.isExpanded)
-            {
-                if (Common.Setting.forceMemoryGarbage)
-                    Common.NavigatePage(typeof(BlankPage));
-                Common.BarPlayBar.CollapseExpandedPlayer();
-            }
-
-            Hide();
-        }
+        Hide();
     }
 }
