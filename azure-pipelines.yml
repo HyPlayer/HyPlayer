@@ -34,16 +34,14 @@ steps:
  
 - task: VSBuild@1
   inputs:
-    platform: 'x64'
     solution: '$(solution)'
+    vsVersion: '17.0'
+    msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)"  /p:AppxPackageDir="$(appxPackageDir)"  /p:AppxBundle=Auto  /p:PackageCertificateThumbprint=""  /p:UapAppxPackageBuildMode=SideloadOnly  /p:AppxPackageSigningEnabled=true  /p:PackageCertificateKeyFile="$(signingCert.secureFilePath)"'
+    platform: 'x64'
     configuration: '$(buildConfiguration)'
-    msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)" 
-                  /p:AppxPackageDir="$(appxPackageDir)" 
-                  /p:AppxBundle=Auto 
-                  /p:PackageCertificateThumbprint="" 
-                  /p:UapAppxPackageBuildMode=SideloadOnly 
-                  /p:AppxPackageSigningEnabled=true 
-                  /p:PackageCertificateKeyFile="$(signingCert.secureFilePath)"'
+    clean: true
+    msbuildArchitecture: 'x64'
+    customVersion: 'latest'
 
 - task: CopyFiles@2
   displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
@@ -75,7 +73,7 @@ steps:
     tag: 'azure-build'
     title: 'Azure Build $(Build.BuildNumber)'
     releaseNotesSource: 'inline'
-    releaseNotesInline: '> 这是 Azure DevOps 的自动编译,将会在每次Commit之后进行编译. 内容可能稳定,如非特别需要,请使用商店版. 使用此版本出现的问题概不负责'
+    releaseNotesInline: '> 这是 Azure DevOps 的自动编译,将会在每次Commit之后进行编译. 内容可能不稳定,如非特别需要,请使用商店版. 使用此版本出现的问题概不负责'
     assets: '$(Build.ArtifactStagingDirectory)/drop.zip'
     isPreRelease: true
     changeLogCompareToRelease: 'lastFullRelease'
