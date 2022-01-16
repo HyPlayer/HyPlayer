@@ -430,6 +430,16 @@ namespace HyPlayer
             }
         }
 
+        public string downloadFileName
+        {
+            get => GetSettings("downloadFileName", "{$SINGER} - {$SONGNAME}");
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["downloadFileName"] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public string searchingDir
         {
             get

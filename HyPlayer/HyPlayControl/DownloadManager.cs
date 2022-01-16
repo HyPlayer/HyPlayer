@@ -22,7 +22,6 @@ namespace HyPlayer.HyPlayControl;
 
 internal class DownloadObject
 {
-    private string _filename;
     private PlayItem dontuseme;
     public DownloadOperation downloadOperation;
 
@@ -41,13 +40,7 @@ internal class DownloadObject
         ncsong = song;
     }
 
-    public string filename
-    {
-        set =>
-            _filename = value.Replace("\\", "＼").Replace("/", "／").Replace(":", "：").Replace("?", "？")
-                .Replace("\"", "＂").Replace("<", "＜").Replace(">", "＞").Replace("|", "｜");
-        get => _filename;
-    }
+    public string filename;
 
     private void Wc_DownloadFileCompleted()
     {
@@ -64,10 +57,6 @@ internal class DownloadObject
                     if (!(json.ContainsKey("nolyric") && json["nolyric"].ToString().ToLower() == "true") &&
                         !(json.ContainsKey("uncollected") && json["uncollected"].ToString().ToLower() == "true"))
                     {
-                        var sf = await (await StorageFolder.GetFolderFromPathAsync(Common.Setting.downloadDir))
-                            .CreateFileAsync(
-                                Path.GetFileName(Path.ChangeExtension(fullpath, "lrc")),
-                                CreationCollisionOption.ReplaceExisting);
                         var lrc = Utils.ConvertPureLyric(json["lrc"]["lyric"].ToString());
                         if (json["tlyric"]?["lyric"] != null)
                             Utils.ConvertTranslation(json["tlyric"]["lyric"].ToString(), lrc);
@@ -78,6 +67,10 @@ internal class DownloadObject
                                        t.Translation + "」";
                             return "[" + t.LyricTime.ToString(@"mm\:ss\.ff") + "]" + t.PureLyric;
                         }));
+                        var sf = await (await StorageFolder.GetFolderFromPathAsync(Common.Setting.downloadDir))
+                            .CreateFileAsync(
+                                Path.GetFileName(Path.ChangeExtension(fullpath, "lrc")),
+                                CreationCollisionOption.ReplaceExisting);
                         await FileIO.WriteTextAsync(sf, lrctxt);
                     }
                 }
@@ -236,7 +229,12 @@ internal class DownloadObject
                 Size = json["data"][0]["size"].ToString()
                 //md5 = json["data"][0]["md5"].ToString()
             };
-            filename = string.Join(';', ncsong.Artist.Select(t => t.name)) + " - " + ncsong.songname + "." +
+            filename = Common.Setting.downloadFileName
+                           .Replace("{$SINGER}", string.Join(';', ncsong.Artist.Select(t => t.name)))
+                           .Replace("{$SONGNAME}", ncsong.songname)
+                           .Replace("{$ALBUM}", ncsong.Album.name)
+                           .Replace("{$INDEX}", (ncsong.Order + 1).ToString())
+                           .EscapeForPath() + "." +
                        json["data"][0]["type"].ToString().ToLowerInvariant();
             downloadOperation = DownloadManager.Downloader.CreateDownload(
                 new Uri(json["data"][0]["url"].ToString()),

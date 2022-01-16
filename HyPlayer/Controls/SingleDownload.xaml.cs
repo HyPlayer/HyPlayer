@@ -1,5 +1,6 @@
 ﻿#region
 
+using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using HyPlayer.HyPlayControl;
@@ -22,13 +23,27 @@ public sealed partial class SingleDownload : UserControl
 
     private DownloadObject dobj => DownloadManager.DownloadLists[order];
 
+    public static string GetSize(double size)
+    {
+        string[] units = { "B", "KB", "MB", "GB", "TB", "PB" };
+        double mod = 1024.0;
+        int i = 0;
+        while (size >= mod)
+        {
+            size /= mod;
+            i++;
+        }
+
+        return Math.Round(size, 2) + units[i];
+    }
+
     public void UpdateUI()
     {
         if (DownloadManager.DownloadLists.Count <= order) return;
-        DName.Text = dobj.ncsong.songname;
+        DName.Text = dobj.ncsong.ArtistString + " - " + dobj.ncsong.songname;
         DProg.Value = dobj.progress;
         if (dobj.Status == 1)
-            DProgText.Text = $"{dobj.HavedSize} / {dobj.TotalSize}";
+            DProgText.Text = $"{GetSize(dobj.HavedSize)} / {GetSize(dobj.TotalSize)}";
         else if (dobj.Status == 0)
             DProgText.Text = "排队中";
         else if (dobj.Status == 3) DProgText.Text = "暂停中";
