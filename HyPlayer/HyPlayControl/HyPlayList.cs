@@ -422,7 +422,11 @@ public static class HyPlayList
                     else
                         tag = $"{bitrate / 1000}K";
                     if (bitrate == 0) tag = "在线";
-                    Common.BarPlayBar.TbSongTag.Text = tag;
+                    Common.Invoke(() =>
+                    {
+                        Common.BarPlayBar.TbSongTag.Text = tag;
+                    });
+                    
                 }
                 else
                     PlayerOnMediaFailed(Player, null); //传一个播放失败
