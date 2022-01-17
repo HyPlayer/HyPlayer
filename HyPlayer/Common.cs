@@ -283,6 +283,19 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        
+        public int lyricScaleSize
+        {
+            get
+            {
+                return GetSettings("lyricScaleSize", 0);
+            }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["lyricScaleSize"] = value;
+                OnPropertyChanged();
+            }
+        }
 
         public bool forceMemoryGarbage
         {

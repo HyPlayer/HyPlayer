@@ -73,8 +73,8 @@ public sealed partial class LyricItem : UserControl
         TextBoxPureLyric.TextAlignment = LyricAlignment;
         TextBoxTranslation.TextAlignment = LyricAlignment;
         TextBoxSound.TextAlignment = LyricAlignment;
-        TextBoxPureLyric.FontSize = actualsize;
-        TextBoxTranslation.FontSize = actualsize;
+        TextBoxPureLyric.FontSize = showing ? actualsize + Common.Setting.lyricScaleSize : actualsize;
+        TextBoxTranslation.FontSize = showing ? actualsize + Common.Setting.lyricScaleSize : actualsize;
         TextBoxSound.FontSize = Common.Setting.romajiSize;
     }
 
@@ -84,6 +84,8 @@ public sealed partial class LyricItem : UserControl
             //RefreshFontSize();
             return;
         showing = true;
+        TextBoxPureLyric.FontSize = actualsize + Common.Setting.lyricScaleSize;
+        TextBoxTranslation.FontSize = actualsize + Common.Setting.lyricScaleSize;
         TextBoxPureLyric.FontWeight = FontWeights.SemiBold;
         TextBoxTranslation.FontWeight = FontWeights.SemiBold;
         TextBoxPureLyric.Foreground = originBrush;
@@ -100,6 +102,8 @@ public sealed partial class LyricItem : UserControl
             //RefreshFontSize();
             return;
         showing = false;
+        TextBoxPureLyric.FontSize = actualsize;
+        TextBoxTranslation.FontSize = actualsize;
         TextBoxPureLyric.FontWeight = FontWeights.Normal;
         TextBoxTranslation.FontWeight = FontWeights.Normal;
         TextBoxPureLyric.Foreground = Application.Current.Resources["TextFillColorDisabledBrush"] as Brush;

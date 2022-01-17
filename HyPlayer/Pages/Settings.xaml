@@ -73,6 +73,24 @@
                                 SpinButtonPlacementMode="Compact"
                                 Value="{x:Bind hyplayer:Common.Setting.romajiSize, Mode=TwoWay}" />
                         </Grid>
+
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock VerticalAlignment="Center" Text="当前歌词放大大小" />
+                            <controls:NumberBox
+                                x:Name="LyricScaleSize"
+                                Grid.Column="1"
+                                Width="100"
+                                Margin="0,10,0,0"
+                                LargeChange="5"
+                                SmallChange="1"
+                                SpinButtonPlacementMode="Compact"
+                                Value="{x:Bind hyplayer:Common.Setting.lyricScaleSize ,Mode = TwoWay}" />
+                        </Grid>
+
                         <CheckBox
                             x:Name="CheckBoxAlignment"
                             Content="是否左对齐"
