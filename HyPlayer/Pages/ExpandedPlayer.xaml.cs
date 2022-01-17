@@ -188,7 +188,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         if (lastwidth != nowwidth)
         {
             //这段不要放出去了
-            if (nowwidth > 800)
+            if (nowwidth > 800 || WindowMode == ExpandedWindowMode.Both)
                 LyricWidth = nowwidth * 0.4;
             else
                 LyricWidth = nowwidth - 15;
@@ -254,7 +254,10 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 LyricBoxContainer.Height = ImageAlbum.ActualHeight + 170;
                 break;
         }
-
+        if (nowwidth > 800 || WindowMode == ExpandedWindowMode.Both)
+            LyricWidth = nowwidth * 0.4;
+        else
+            LyricWidth = nowwidth - 15;
         realclick = true;
     }
 
