@@ -254,8 +254,8 @@ public sealed partial class PlayBar
         foreach (var file in files)
         {
             var folder = await file.GetParentAsync();
-            if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(folder.Path))
-                StorageApplicationPermissions.FutureAccessList.AddOrReplace(file.FolderRelativeId, folder);
+            if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(folder.Path.GetHashCode().ToString()))
+                StorageApplicationPermissions.FutureAccessList.AddOrReplace(folder.Path.GetHashCode().ToString(), folder);
             if (Path.GetExtension(file.Path) == ".ncm")
             {
                 //脑残Music
@@ -459,7 +459,8 @@ public sealed partial class PlayBar
             realSelectSong = false;
             ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
             realSelectSong = true;
-            TbSongTag.Text = HyPlayList.NowPlayingItem.PlayItem.Tag;
+            if (HyPlayList.NowPlayingItem.PlayItem.Tag != "在线")
+                TbSongTag.Text = HyPlayList.NowPlayingItem.PlayItem.Tag;
             Btn_Share.IsEnabled = HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease;
             /*
             verticalAnimation.To = TbSongName.ActualWidth - TbSongName.Tb.ActualWidth;

@@ -781,4 +781,9 @@ public sealed partial class BasePage : Page
             Common.AddToTeachingTipLists("删除失败", ex.Message);
         }
     }
+
+    private void BtnLoginHelp_Click(object sender, RoutedEventArgs e)
+    {
+        _ = Launcher.LaunchUriAsync(new Uri(@"https://blog.kengwang.com.cn/hyplayer-login-help"));
+    }
 }

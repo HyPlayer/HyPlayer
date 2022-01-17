@@ -275,57 +275,73 @@
                     Title="登录代表你同意相关条款"
                     IsClosable="False"
                     IsOpen="True" />
-                <Button
-                    HorizontalAlignment="Center"
-                    Background="Transparent"
-                    Content="第三方账号登录"
-                    Style="{StaticResource ButtonRevealStyle}">
-                    <Button.Flyout>
-                        <Flyout>
-                            <StackPanel
-                                Height="50"
-                                Orientation="Horizontal"
-                                Spacing="10">
-                                <Button
-                                    x:Name="QQLogin"
-                                    MinWidth="48"
-                                    MinHeight="48"
-                                    Click="ThirdPartyLogin_Click"
-                                    CornerRadius="5"
-                                    Style="{StaticResource ButtonRevealStyle}"
-                                    Tag="QQ">
-                                    <Button.Content>
-                                        <Image Source="/Assets/ThirdPartyIcons/QQ.png" Stretch="Fill" />
-                                    </Button.Content>
-                                </Button>
-                                <Button
-                                    x:Name="WXLogin"
-                                    MinWidth="48"
-                                    MinHeight="48"
-                                    Click="ThirdPartyLogin_Click"
-                                    CornerRadius="5"
-                                    Style="{StaticResource ButtonRevealStyle}"
-                                    Tag="WX">
-                                    <Button.Content>
-                                        <Image Source="/Assets/ThirdPartyIcons/WX.png" Stretch="Fill" />
-                                    </Button.Content>
-                                </Button>
-                                <Button
-                                    x:Name="WBLogin"
-                                    MinWidth="48"
-                                    MinHeight="48"
-                                    Click="ThirdPartyLogin_Click"
-                                    CornerRadius="5"
-                                    Style="{StaticResource ButtonRevealStyle}"
-                                    Tag="WB">
-                                    <Button.Content>
-                                        <Image Source="/Assets/ThirdPartyIcons/SinaWB.png" Stretch="Fill" />
-                                    </Button.Content>
-                                </Button>
-                            </StackPanel>
-                        </Flyout>
-                    </Button.Flyout>
-                </Button>
+                <Grid Margin="0,5,0,0" RowSpacing="5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Button
+                        Grid.Column="0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Content="第三方账号登录">
+                        <Button.Flyout>
+                            <Flyout>
+                                <StackPanel
+                                    Height="50"
+                                    Orientation="Horizontal"
+                                    Spacing="10">
+                                    <Button
+                                        x:Name="QQLogin"
+                                        MinWidth="48"
+                                        MinHeight="48"
+                                        Click="ThirdPartyLogin_Click"
+                                        CornerRadius="5"
+                                        Style="{StaticResource ButtonRevealStyle}"
+                                        Tag="QQ">
+                                        <Button.Content>
+                                            <Image Source="/Assets/ThirdPartyIcons/QQ.png" Stretch="Fill" />
+                                        </Button.Content>
+                                    </Button>
+                                    <Button
+                                        x:Name="WXLogin"
+                                        MinWidth="48"
+                                        MinHeight="48"
+                                        Click="ThirdPartyLogin_Click"
+                                        CornerRadius="5"
+                                        Style="{StaticResource ButtonRevealStyle}"
+                                        Tag="WX">
+                                        <Button.Content>
+                                            <Image Source="/Assets/ThirdPartyIcons/WX.png" Stretch="Fill" />
+                                        </Button.Content>
+                                    </Button>
+                                    <Button
+                                        x:Name="WBLogin"
+                                        MinWidth="48"
+                                        MinHeight="48"
+                                        Click="ThirdPartyLogin_Click"
+                                        CornerRadius="5"
+                                        Style="{StaticResource ButtonRevealStyle}"
+                                        Tag="WB">
+                                        <Button.Content>
+                                            <Image Source="/Assets/ThirdPartyIcons/SinaWB.png" Stretch="Fill" />
+                                        </Button.Content>
+                                    </Button>
+                                </StackPanel>
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+                    <Button
+                        x:Name="BtnLoginHelp"
+                        Grid.Column="1"
+                        HorizontalAlignment="Right"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Click="BtnLoginHelp_Click">
+                        无法登录?
+                    </Button>
+                </Grid>
+
 
             </StackPanel>
         </ContentDialog>

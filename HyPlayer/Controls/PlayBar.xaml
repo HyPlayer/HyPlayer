@@ -108,6 +108,7 @@
                             BorderThickness="1">
                             <TextBlock
                                 Name="TbSongTag"
+                                x:FieldModifier="public"
                                 FontSize="12"
                                 FontWeight="Medium"
                                 Foreground="Red"
