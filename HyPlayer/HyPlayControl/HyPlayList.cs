@@ -193,14 +193,14 @@ public static class HyPlayList
         //SongMoveNext();
         Common.AddToTeachingTipLists("播放失败 正在重试",
             "歌曲" + NowPlayingItem.PlayItem.Name + "\r\nMsg:" + args?.ErrorMessage);
-        if (_crashedTime == NowPlayingItem.PlayItem.Url)
+        if (_crashedTime == NowPlayingItem.PlayItem.Id)
         {
             SongMoveNext();
             _crashedTime = "jump";
         }
         else
         {
-            _crashedTime = NowPlayingItem.PlayItem.Url;
+            _crashedTime = NowPlayingItem.PlayItem.Id;
             if (NowPlayingItem.ItemType == HyPlayItemType.Netease && !NowPlayingItem.PlayItem.IsLocalFile ||
                 NowPlayingItem.ItemType == HyPlayItemType.Radio || NowPlayingItem.ItemType == HyPlayItemType.Pan)
                 Common.Invoke(() =>
@@ -627,7 +627,6 @@ public static class HyPlayList
         switch (Player.PlaybackSession.PlaybackState)
         {
             case MediaPlaybackState.Playing:
-                _crashedTime = "playing";
                 MediaSystemControls.PlaybackStatus = MediaPlaybackStatus.Playing;
                 break;
             case MediaPlaybackState.Paused:
