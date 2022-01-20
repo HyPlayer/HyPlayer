@@ -10,11 +10,11 @@
 
 **暗色模式未裁剪**
 
-![暗色模式未裁剪](Design.Assets\Background_Dark - Original.jpg)
+![暗色模式未裁剪](Design.Assets/Background_Dark%20-%20Original.jpg)
 
 **暗色模式裁剪**
 
-![Background_Dark](Design.Assets\Background_Dark.jpg)
+![Background_Dark](Design.Assets/Background_Dark.jpg)
 
 > 图片自 @aaaaaaccd 的摄影
 >
@@ -22,7 +22,7 @@
 >
 > @kengwang: 很美的天空
 
-![BJC09076-Pano](Design.Assets\BJC09076-Pano.jpg)
+![BJC09076-Pano](Design.Assets/BJC09076-Pano.jpg)
 
 ## 210714 - 新的主页设计
 
