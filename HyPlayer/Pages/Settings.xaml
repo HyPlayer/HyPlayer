@@ -284,6 +284,9 @@
                                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE897;" />
                             </Button>
                         </Grid>
+                        <CheckBox
+                            Content="是否下载歌词"
+                            IsChecked="{x:Bind hyplayer:Common.Setting.downloadLyric, Mode=TwoWay}" />
                         <Button
                             x:Name="ClearHistory"
                             Click="ClearHistory_Click"

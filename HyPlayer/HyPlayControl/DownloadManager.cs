@@ -67,7 +67,7 @@ internal class DownloadObject
                                        t.Translation + "」";
                             return "[" + t.LyricTime.ToString(@"mm\:ss\.ff") + "]" + t.PureLyric;
                         }));
-                        var sf = await (await StorageFolder.GetFolderFromPathAsync(Common.Setting.downloadDir))
+                        var sf = await (await StorageFolder.GetFolderFromPathAsync(Path.GetDirectoryName(fullpath)))
                             .CreateFileAsync(
                                 Path.GetFileName(Path.ChangeExtension(fullpath, "lrc")),
                                 CreationCollisionOption.ReplaceExisting);
@@ -230,16 +230,26 @@ internal class DownloadObject
                 //md5 = json["data"][0]["md5"].ToString()
             };
             filename = Common.Setting.downloadFileName
-                           .Replace("{$SINGER}", string.Join(';', ncsong.Artist.Select(t => t.name)))
-                           .Replace("{$SONGNAME}", ncsong.songname)
-                           .Replace("{$ALBUM}", ncsong.Album.name)
-                           .Replace("{$INDEX}", (ncsong.Order + 1).ToString())
-                           .EscapeForPath() + "." +
+                           .Replace("{$SINGER}", string.Join(';', ncsong.Artist.Select(t => t.name)).EscapeForPath())
+                           .Replace("{$SONGNAME}", ncsong.songname.EscapeForPath())
+                           .Replace("{$ALBUM}", ncsong.Album.name.EscapeForPath())
+                           .Replace("{$INDEX}", (ncsong.Order + 1).ToString().EscapeForPath())
+                       + "." +
                        json["data"][0]["type"].ToString().ToLowerInvariant();
+            string folderName = Common.Setting.downloadDir;
+            var nowFolder = await StorageFolder.GetFolderFromPathAsync(folderName);
+            var ses = filename.Replace('\\', '/').Split('/');
+            for (var index = 0; index < ses.Length - 1; index++)
+            {
+                var s = ses[index];
+                folderName += "/" + s;
+                nowFolder = await nowFolder.CreateFolderAsync(s, CreationCollisionOption.OpenIfExists);
+            }
+
             downloadOperation = DownloadManager.Downloader.CreateDownload(
                 new Uri(json["data"][0]["url"].ToString()),
-                await (await StorageFolder.GetFolderFromPathAsync(Common.Setting.downloadDir)).CreateFileAsync(
-                    filename, CreationCollisionOption.ReplaceExisting));
+                await nowFolder.CreateFileAsync(Path.GetFileName(filename))
+            );
             fullpath = downloadOperation.ResultFile.Path;
             var process = new Progress<DownloadOperation>(Wc_DownloadProgressChanged);
             _ = downloadOperation.StartAsync().AsTask(process);

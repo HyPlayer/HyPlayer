@@ -283,6 +283,16 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+
+        public bool downloadLyric
+        {
+            get => GetSettings("downloadLyric", true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["downloadLyric"] = value;
+                OnPropertyChanged();
+            }
+        }
         
         public int lyricScaleSize
         {
