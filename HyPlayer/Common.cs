@@ -344,13 +344,19 @@ namespace HyPlayer
         public bool albumRotate
         {
             get => GetSettings("albumRotate", false);
-            set => ApplicationData.Current.LocalSettings.Values["albumRotate"] = value;
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["albumRotate"] = value;
+                if (value)
+                    albumRound = true;
+                OnPropertyChanged();
+            }
         }
 
         public bool albumRound
         {
             get => GetSettings("albumRound", false);
-            set => ApplicationData.Current.LocalSettings.Values["albumRound"] = value;
+            set { ApplicationData.Current.LocalSettings.Values["albumRound"] = value; OnPropertyChanged(); }
         }
 
         public int albumBorderLength
