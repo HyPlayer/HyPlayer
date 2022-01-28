@@ -44,6 +44,8 @@ public sealed partial class SongListDetail : Page, IDisposable
         set => SetValue(IsLoadingProperty, value);
     }
 
+    private bool isDescExpanded = false;
+
     public SongListDetail()
     {
         InitializeComponent();
@@ -69,8 +71,6 @@ public sealed partial class SongListDetail : Page, IDisposable
         TextBlockDesc.Text = playList.desc;
         TextBoxAuthor.Text = playList.creater.name;
         ToggleButtonLike.IsChecked = playList.subscribed;
-        if (playList.creater.id == Common.LoginedUser.id)
-            Edit.Visibility = Visibility.Visible;
     }
 
     public async void LoadSongListItem()
@@ -338,16 +338,19 @@ public sealed partial class SongListDetail : Page, IDisposable
         Common.NavigatePage(typeof(Me), playList.creater.id);
     }
 
-    private void Edit_Click(object sender, RoutedEventArgs e)
+    private void ExpandDescriptionBtn_Click(object sender, RoutedEventArgs e)
     {
-        FlyoutBase.ShowAttachedFlyout(TextBlockDesc);
-    }
+        if (isDescExpanded)
+        {
+            DescriptionWrapper.MaxLines = 7;
+            ExpandDescBtn.Content = "展开";
+        }
+        else
+        {
+            DescriptionWrapper.MaxLines = 999;
+            ExpandDescBtn.Content = "收起";
+        }
 
-    private async void Confirm_Click(object sender, RoutedEventArgs e)
-    {
-        await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDescUpdate,
-            new Dictionary<string, object> { { "id", playList.plid }, { "desc", NewDesc.Text } });
-        playList.desc = NewDesc.Text;
-        LoadSongListDetail();
+        isDescExpanded = !isDescExpanded;
     }
 }

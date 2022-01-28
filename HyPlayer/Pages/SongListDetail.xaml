@@ -28,7 +28,7 @@
             IsSearchEnabled="True"
             Songs="{x:Bind Songs}">
             <controls1:SongsList.ListHeader>
-                <controls:DockPanel x:Name="GridPersonalInformation" LastChildFill="True">
+                <controls:DockPanel x:Name="GridPersonalInformation" HorizontalAlignment="Stretch" LastChildFill="True">
                     <Rectangle
                         x:Name="RectangleImage"
                         Width="200"
@@ -92,41 +92,19 @@
                                 Style="{StaticResource ButtonRevealStyle}"
                                 Visibility="Collapsed" />
                         </StackPanel>
-                        <StackPanel Orientation="Vertical">
-                            <TextBlock
-                                x:Name="TextBlockDesc"
-                                MaxWidth="300"
+                        <StackPanel HorizontalAlignment="Stretch" Orientation="Vertical">
+                            <RichTextBlock
+                                x:Name="DescriptionWrapper"
                                 Margin="0,5,0,0"
-                                HorizontalAlignment="Left"
                                 FontSize="13"
                                 Foreground="{ThemeResource SystemControlForegroundChromeHighBrush}"
                                 MaxLines="7"
-                                Text="歌单简介"
                                 TextWrapping="WrapWholeWords">
-                                <FlyoutBase.AttachedFlyout>
-                                    <Flyout>
-                                        <StackPanel Orientation="Vertical">
-                                            <TextBox
-                                                x:Name="NewDesc"
-                                                MaxWidth="400"
-                                                x:DefaultBindMode="OneWay"
-                                                AcceptsReturn="True"
-                                                Text="{x:Bind TextBlockDesc.Text}"
-                                                TextWrapping="Wrap" />
-                                            <Button
-                                                x:Name="Confirm"
-                                                Click="Confirm_Click"
-                                                Content="确认"
-                                                Style="{StaticResource ButtonRevealStyle}" />
-                                        </StackPanel>
-                                    </Flyout>
-                                </FlyoutBase.AttachedFlyout>
-                            </TextBlock>
-                            <HyperlinkButton
-                                x:Name="Edit"
-                                Click="Edit_Click"
-                                Content="编辑简介"
-                                Visibility="Collapsed" />
+                                <Paragraph >
+                                    <Run x:Name="TextBlockDesc" />
+                                </Paragraph>
+                            </RichTextBlock>
+                            <HyperlinkButton x:Name="ExpandDescBtn" Click="ExpandDescriptionBtn_Click">展开</HyperlinkButton>
                         </StackPanel>
                     </StackPanel>
                     <VisualStateManager.VisualStateGroups>
