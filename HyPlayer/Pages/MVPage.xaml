@@ -6,7 +6,8 @@
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls1="using:HyPlayer.Controls">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <ScrollViewer.Resources>
@@ -27,17 +28,12 @@
                             FontSize="14"
                             FontWeight="SemiBold"
                             HorizontalAlignment="Left"
-                            LineHeight="20"
                             Margin="0,0,0,6"
-                            Style="{ThemeResource BaseTextBlockStyle}"
                             Text="{x:Bind title}" />
                         <TextBlock
-                            FontFamily="Segoe UI"
                             FontWeight="Normal"
                             MaxLines="1"
-                            Style="{ThemeResource BodyTextBlockStyle}"
                             Text="{x:Bind description}"
-                            TextTrimming="CharacterEllipsis"
                             Width="350" />
                     </StackPanel>
                 </Grid>
@@ -85,21 +81,21 @@
                     Orientation="Vertical"
                     Spacing="15"
                     x:Name="SecondGrid">
-                    <TextBlock
+                    <controls1:SelectableTextBox
                         FontSize="35"
                         FontWeight="Bold"
                         TextWrapping="Wrap"
                         x:Name="TextBoxVideoName" />
-                    <TextBlock
+                    <controls1:SelectableTextBox
                         FontSize="18"
                         Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                         x:Name="TextBoxSinger" />
-                    <TextBlock
+                    <controls1:ExpandableTextBox
                         FontSize="15"
                         Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                         TextWrapping="Wrap"
                         x:Name="TextBoxDesc" />
-                    <TextBlock
+                    <controls1:SelectableTextBox
                         FontSize="15"
                         Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                         TextWrapping="Wrap"

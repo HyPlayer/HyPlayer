@@ -81,7 +81,7 @@ public sealed partial class RadioPage : Page, IDisposable
         if (e.Parameter is NCRadio radio) Radio = radio;
 
         TextBoxRadioName.Text = Radio.name;
-        TextBoxDJ.Text = Radio.DJ.name;
+        TextBoxDJ.Content = Radio.DJ.name;
         TextBlockDesc.Text = Radio.desc;
         ImageRect.ImageSource =
             new BitmapImage(new Uri(Radio.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
@@ -116,7 +116,7 @@ public sealed partial class RadioPage : Page, IDisposable
         });
     }
 
-    private void TextBoxDJ_OnTapped(object sender, TappedRoutedEventArgs e)
+    private void TextBoxDJ_OnTapped(object sender, RoutedEventArgs routedEventArgs)
     {
         Common.NavigatePage(typeof(Me), Radio.DJ.id);
     }

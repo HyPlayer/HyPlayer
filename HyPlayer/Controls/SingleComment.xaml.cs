@@ -63,14 +63,6 @@ public sealed partial class SingleComment : UserControl
         }
     }
 
-    private void Copy_Click(object sender, RoutedEventArgs e)
-    {
-        var dataPackage = new DataPackage();
-        dataPackage.SetText(comment.content);
-        Clipboard.Clear();
-        Clipboard.SetContent(dataPackage);
-    }
-
     private async void Like_Click(object sender, RoutedEventArgs e)
     {
         await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentLike,

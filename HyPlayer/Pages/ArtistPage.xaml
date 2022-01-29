@@ -34,31 +34,30 @@
                 Name="StackPanelUserInfo"
                 Margin="15,15,144,0"
                 Orientation="Vertical">
-                <TextBlock
-                    Name="TextBoxArtistName"
-                    Margin="0,0,0,0"
+                <controls1:SelectableTextBox
+                    x:Name="TextBoxArtistName"
                     FontSize="40"
                     FontWeight="ExtraBold"
                     Text="歌手名"
                     TextWrapping="Wrap" />
-                <TextBlock
-                    Name="TextboxArtistNameTranslated"
+                <controls1:SelectableTextBox
+                    x:Name="TextboxArtistNameTranslated"
                     Margin="0,2,0,0"
                     FontSize="25"
                     Text="歌手别名" />
-                <TextBlock
+                <controls1:SelectableTextBox
+                    x:Name="TextBlockInfo"
+                    Margin="0,10,0,0"
+                    FontSize="15"
+                    MaxLines="7"
+                    Text="歌手简略信息" />
+                <controls1:ExpandableTextBox
                     x:Name="TextBlockDesc"
                     Margin="0,5,0,0"
                     FontSize="15"
                     MaxLines="7"
                     Text="歌手简介"
                     TextWrapping="WrapWholeWords" />
-                <TextBlock
-                    x:Name="TextBlockInfo"
-                    Margin="0,10,0,0"
-                    FontSize="15"
-                    MaxLines="7"
-                    Text="歌手简略信息" />
             </StackPanel>
         </controls:DockPanel>
         <Pivot

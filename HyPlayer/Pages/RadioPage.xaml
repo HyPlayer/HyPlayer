@@ -37,20 +37,23 @@
                 Name="StackPanelUserInfo"
                 Margin="15,15,144,0"
                 Orientation="Vertical">
-                <TextBlock
-                    Name="TextBoxRadioName"
+                <controls1:SelectableTextBox
+                    x:Name="TextBoxRadioName"
                     Margin="0,0,0,0"
                     FontSize="36"
                     FontWeight="Medium"
                     Text="电台名"
                     TextWrapping="Wrap" />
-                <TextBlock
-                    Name="TextBoxDJ"
-                    Margin="0,2,0,0"
-                    FontSize="18"
-                    Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
-                    Tapped="TextBoxDJ_OnTapped"
-                    Text="电台创建者" />
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Padding="0,8,0,3" FontSize="18" Foreground="Gray" Text="电台创建者:" />
+                    <HyperlinkButton
+                        FontSize="18"
+                        Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
+                        Margin="0,2,0,0"
+                        x:Name="TextBoxDJ"
+                        Click="TextBoxDJ_OnTapped"
+                        Content="电台创建者" />
+                </StackPanel>
                 <StackPanel
                     Margin="0,10,0,0"
                     Orientation="Horizontal"

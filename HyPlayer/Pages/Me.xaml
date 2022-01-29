@@ -36,13 +36,13 @@
                     </Rectangle.Fill>
                 </Rectangle>
                 <StackPanel Name="StackPanelUserInfo" Orientation="Vertical">
-                    <TextBlock
-                        Name="TextBoxUserName"
+                    <controls1:SelectableTextBox
+                        x:Name="TextBoxUserName"
                         FontSize="40"
                         FontWeight="Medium"
                         Text="用户名" />
-                    <TextBlock
-                        Name="TextBoxSignature"
+                    <controls1:SelectableTextBox
+                        x:Name="TextBoxSignature"
                         FontSize="18"
                         Text="签名" />
                     <Button

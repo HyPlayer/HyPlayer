@@ -9,6 +9,7 @@
     xmlns:pages="using:HyPlayer.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:ui="using:Microsoft.Toolkit.Uwp.UI"
+    xmlns:controls1="using:HyPlayer.Controls"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
     <Page.Resources>
@@ -207,14 +208,13 @@
                         CornerRadius="12"
                         Orientation="Vertical"
                         Spacing="5">
-                        <TextBlock
-                            Name="TextBlockSongTitle"
+                        <controls1:SelectableTextBox
+                            x:Name="TextBlockSongTitle"
                             HorizontalAlignment="Stretch"
                             x:FieldModifier="public"
                             FontSize="35"
                             FontWeight="Bold"
                             Text="歌曲名"
-                            TextAlignment="Left"
                             TextWrapping="Wrap" />
                         <StackPanel
                             x:Name="SongInfoContainer"

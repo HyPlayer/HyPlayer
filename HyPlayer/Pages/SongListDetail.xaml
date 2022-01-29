@@ -30,10 +30,11 @@
             <controls1:SongsList.ListHeader>
                 <controls:DockPanel x:Name="GridPersonalInformation" HorizontalAlignment="Stretch" LastChildFill="True">
                     <Rectangle
+                        VerticalAlignment="Top"
                         x:Name="RectangleImage"
                         Width="200"
                         Height="200"
-                        Margin="15,0,15,0"
+                        Margin="15,15,15,0"
                         controls:DockPanel.Dock="Left"
                         RadiusX="10"
                         RadiusY="10">
@@ -49,20 +50,23 @@
                         Name="StackPanelUserInfo"
                         Margin="15,15,0,0"
                         Orientation="Vertical">
-                        <TextBlock
-                            Name="TextBoxPLName"
+                        <controls1:SelectableTextBox
+                            x:Name="TextBoxPLName"
+                            Foreground="{ThemeResource DefaultTextForegroundThemeBrush}"
                             Margin="0,0,0,0"
                             FontSize="36"
                             FontWeight="Medium"
                             Text="歌单名"
                             TextWrapping="Wrap" />
-                        <TextBlock
-                            Name="TextBoxAuthor"
-                            Margin="0,2,0,0"
-                            FontSize="18"
-                            Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
-                            Tapped="TextBoxAuthor_Tapped"
-                            Text="歌单创建者" />
+                        <StackPanel Margin="0,2,0,0" Orientation="Horizontal">
+                            <TextBlock Padding="0,8,0,3" FontSize="18" Foreground="Gray" Text="创建者:" />
+                            <HyperlinkButton
+                                x:Name="TextBoxAuthor"
+                                FontSize="18"
+                                Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
+                                Click="TextBoxAuthor_Tapped"
+                                Content="歌单创建者" />
+                        </StackPanel>
                         <StackPanel
                             Margin="0,10,0,0"
                             Orientation="Horizontal"
@@ -92,20 +96,13 @@
                                 Style="{StaticResource ButtonRevealStyle}"
                                 Visibility="Collapsed" />
                         </StackPanel>
-                        <StackPanel HorizontalAlignment="Stretch" Orientation="Vertical">
-                            <RichTextBlock
-                                x:Name="DescriptionWrapper"
-                                Margin="0,5,0,0"
-                                FontSize="13"
-                                Foreground="{ThemeResource SystemControlForegroundChromeHighBrush}"
-                                MaxLines="7"
-                                TextWrapping="WrapWholeWords">
-                                <Paragraph >
-                                    <Run x:Name="TextBlockDesc" />
-                                </Paragraph>
-                            </RichTextBlock>
-                            <HyperlinkButton x:Name="ExpandDescBtn" Click="ExpandDescriptionBtn_Click">展开</HyperlinkButton>
-                        </StackPanel>
+                        <controls1:ExpandableTextBox
+                            HorizontalAlignment="Stretch"
+                            x:Name="DescriptionWrapper"
+                            Margin="0,5,0,0"
+                            FontSize="13"
+                            Foreground="{ThemeResource SystemControlForegroundChromeHighBrush}"
+                            MaxLines="7" />
                     </StackPanel>
                     <VisualStateManager.VisualStateGroups>
                         <VisualStateGroup>

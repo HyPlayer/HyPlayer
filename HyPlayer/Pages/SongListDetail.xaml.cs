@@ -68,8 +68,8 @@ public sealed partial class SongListDetail : Page, IDisposable
 
 
         TextBoxPLName.Text = playList.name;
-        TextBlockDesc.Text = playList.desc;
-        TextBoxAuthor.Text = playList.creater.name;
+        DescriptionWrapper.Text = playList.desc;
+        TextBoxAuthor.Content = playList.creater.name;
         ToggleButtonLike.IsChecked = playList.subscribed;
     }
 
@@ -144,9 +144,9 @@ public sealed partial class SongListDetail : Page, IDisposable
                             Common.Invoke(() =>
                             {
                                 // 诶呀,没想到还过生了,吼吼
-                                TextBlockDesc.Text = "生日快乐~ 今天也要开心哦!";
-                                TextBlockDesc.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 0, 0));
-                                TextBlockDesc.FontSize = 25;
+                                DescriptionWrapper.Text = "生日快乐~ 今天也要开心哦!";
+                                DescriptionWrapper.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 0, 0));
+                                DescriptionWrapper.FontSize = 25;
                             });
 
                         var idx = 0;
@@ -333,24 +333,8 @@ public sealed partial class SongListDetail : Page, IDisposable
         playList.subscribed = !playList.subscribed;
     }
 
-    private void TextBoxAuthor_Tapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
+    private void TextBoxAuthor_Tapped(object sender, RoutedEventArgs routedEventArgs)
     {
         Common.NavigatePage(typeof(Me), playList.creater.id);
-    }
-
-    private void ExpandDescriptionBtn_Click(object sender, RoutedEventArgs e)
-    {
-        if (isDescExpanded)
-        {
-            DescriptionWrapper.MaxLines = 7;
-            ExpandDescBtn.Content = "展开";
-        }
-        else
-        {
-            DescriptionWrapper.MaxLines = 999;
-            ExpandDescBtn.Content = "收起";
-        }
-
-        isDescExpanded = !isDescExpanded;
     }
 }

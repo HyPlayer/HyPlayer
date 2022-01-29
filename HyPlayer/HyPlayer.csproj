@@ -145,6 +145,9 @@
     <Compile Include="Controls\CreateSonglistDialog.xaml.cs">
       <DependentUpon>CreateSonglistDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\ExpandableTextBox.xaml.cs">
+      <DependentUpon>ExpandableTextBox.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\LyricItem.xaml.cs">
       <DependentUpon>LyricItem.xaml</DependentUpon>
     </Compile>
@@ -153,6 +156,9 @@
     </Compile>
     <Compile Include="Controls\ScrollingTextBlock.xaml.cs">
       <DependentUpon>ScrollingTextBlock.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\SelectableTextBox.xaml.cs">
+      <DependentUpon>SelectableTextBox.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\SimpleLinerList.xaml.cs">
       <DependentUpon>SimpleLinerList.xaml</DependentUpon>
@@ -312,7 +318,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\ExpandableTextBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\ScrollingTextBlock.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\SelectableTextBox.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

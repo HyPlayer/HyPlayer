@@ -82,7 +82,7 @@ public sealed partial class AlbumPage : Page, IDisposable
                         id = t["id"].ToString(),
                         name = t["name"].ToString()
                     }).ToList();
-                    TextBoxAuthor.Text = string.Join(" / ", artists.Select(t => t.name));
+                    TextBoxAuthor.Content = string.Join(" / ", artists.Select(t => t.name));
                     TextBlockDesc.Text = (json["album"]["alias"].HasValues
                                              ? string.Join(" / ",
                                                    json["album"]["alias"].ToArray().Select(t => t.ToString())) +
@@ -145,7 +145,7 @@ public sealed partial class AlbumPage : Page, IDisposable
         Common.NavigatePage(typeof(Comments), "al" + Album.id);
     }
 
-    private async void TextBoxAuthor_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
+    private async void TextBoxAuthor_OnTapped(object sender, RoutedEventArgs routedEventArgs)
     {
         if (artists.Count > 1)
             await new ArtistSelectDialog(artists).ShowAsync();
