@@ -62,7 +62,7 @@
                 <NavigationViewItem Content="歌词" Tag="1006" />
                 <NavigationViewItem Content="电台" Tag="1009" />
                 <NavigationViewItem Content="视频" Tag="1014" />
-                <NavigationViewItem Content="综合" Tag="1018" />
+                <!-- <NavigationViewItem Content="综合" Tag="1018" /> -->
             </NavigationView.MenuItems>
             <Grid>
                 <Grid VerticalAlignment="Stretch">

@@ -304,7 +304,21 @@ public sealed partial class BasePage : Page
         }
 
         ApplicationData.Current.LocalSettings.Values["cookie"] = cookiestr;
-        Common.LoginedUser = NCUser.CreateFromJson(LoginStatus["profile"]);
+        if (LoginStatus?["profile"].HasValues ?? false)
+        {
+            Common.LoginedUser = NCUser.CreateFromJson(LoginStatus["profile"]);
+        }
+        else
+        {
+            Common.LoginedUser = new NCUser
+            {
+                avatar = "ms-appx:///Assets/icon.png",
+                id = LoginStatus["account"]["id"].ToString(),
+                name = LoginStatus["account"]["userName"].ToString(),
+                signature = "此账号未进行手机号验证, 请使用网易云音乐客户端登录后再继续操作"
+            };
+        }
+
         Common.Logined = true;
         NavItemLogin.Content = Common.LoginedUser.name;
         NavItemLogin.Icon = new BitmapIcon

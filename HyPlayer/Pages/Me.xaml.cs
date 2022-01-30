@@ -65,8 +65,6 @@ public sealed partial class Me : Page, IDisposable
 
     public async void LoadPlayList()
     {
-        try
-        {
             try
             {
                 var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
@@ -112,28 +110,31 @@ public sealed partial class Me : Page, IDisposable
                 Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.ToString());
-        }
-    }
 
     public async void LoadInfo()
     {
-        try
+        if (uid == Common.LoginedUser.id)
         {
-            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserDetail,
-                new Dictionary<string, object> { ["uid"] = uid });
-
-            TextBoxUserName.Text = json["profile"]["nickname"].ToString();
-            TextBoxSignature.Text = json["profile"]["signature"].ToString();
-            ImageRect.ImageSource = new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
+            TextBoxUserName.Text = Common.LoginedUser.name;
+            TextBoxSignature.Text = Common.LoginedUser.signature;
+            ImageRect.ImageSource = new BitmapImage(new Uri(Common.LoginedUser.avatar, UriKind.RelativeOrAbsolute));
         }
-        catch (Exception ex)
+        else
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-        }
+            try
+            {
+                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserDetail,
+                    new Dictionary<string, object> { ["uid"] = uid });
 
+                TextBoxUserName.Text = json["profile"]["nickname"].ToString();
+                TextBoxSignature.Text = json["profile"]["signature"].ToString();
+                ImageRect.ImageSource = new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
+            }
+            catch (Exception ex)
+            {
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            }
+        }
         /*
         (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserLevel);
         if (isok)
