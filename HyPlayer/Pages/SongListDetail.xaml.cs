@@ -75,98 +75,97 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     public async void LoadSongListItem()
     {
-        Common.Invoke(() => { IsLoading = true; });
-        await Task.Run(() =>
+        IsLoading = true;
+        if (playList.plid != "-666")
         {
-            Common.Invoke(async () =>
+            await LoadPlayListItems();
+        }
+        else
+        {
+            ButtonIntel.Visibility = Visibility.Collapsed;
+            await LoadDailyRcmdItems();
+        }
+
+        IsLoading = false;
+    }
+
+    private async Task LoadDailyRcmdItems()
+    {
+        SongsList.ListSource = "content";
+        try
+        {
+            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendSongs);
+            if (json["data"]["dailySongs"][0]["alg"].ToString() == "birthDaySong")
             {
-                if (playList.plid != "-666")
+                // 诶呀,没想到还过生了,吼吼
+                DescriptionWrapper.Text = "生日快乐~ 今天也要开心哦!";
+                DescriptionWrapper.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 0, 0));
+                DescriptionWrapper.FontSize = 25;
+            }
+
+            var idx = 0;
+            foreach (var song in json["data"]["dailySongs"])
+            {
+                var ncSong = NCSong.CreateFromJson(song);
+                ncSong.IsAvailable = true;
+                ncSong.Order = idx++;
+                Songs.Add(ncSong);
+            }
+        }
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+        }
+    }
+
+    private async Task LoadPlayListItems()
+    {
+        try
+        {
+            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
+                new Dictionary<string, object> { { "id", playList.plid } });
+            var trackIds = json["playlist"]["trackIds"].Select(t => (int)t["id"]).Skip(page * 500)
+                .Take(500)
+                .ToArray();
+
+            if (trackIds.Length >= 500)
+                NextPage.Visibility = Visibility.Visible;
+            else
+                NextPage.Visibility = Visibility.Collapsed;
+
+
+            if (json["playlist"]["specialType"].ToString() == "5" &&
+                json["playlist"]["userId"].ToString() == Common.LoginedUser.id)
+                ButtonIntel.Visibility = Visibility.Visible;
+            if (json["playlist"]["userId"].ToString() == Common.LoginedUser.id)
+                SongsList.IsMySongList = true;
+            try
+            {
+                json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
+                    new Dictionary<string, object> { ["ids"] = string.Join(",", trackIds) });
+                var idx = page * 500;
+                var i = 0;
+                foreach (var jToken in json["songs"])
                 {
-                    try
-                    {
-                        var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
-                            new Dictionary<string, object> { { "id", playList.plid } });
-                        var trackIds = json["playlist"]["trackIds"].Select(t => (int)t["id"]).Skip(page * 500)
-                            .Take(500)
-                            .ToArray();
+                    var song = (JObject)jToken;
 
-                        if (trackIds.Length >= 500)
-                            NextPage.Visibility = Visibility.Visible;
-                        else
-                            NextPage.Visibility = Visibility.Collapsed;
-
-
-                        if (json["playlist"]["specialType"].ToString() == "5" &&
-                            json["playlist"]["userId"].ToString() == Common.LoginedUser.id)
-                            Common.Invoke(() => { ButtonIntel.Visibility = Visibility.Visible; });
-                        if (json["playlist"]["userId"].ToString() == Common.LoginedUser.id)
-                            SongsList.IsMySongList = true;
-                        try
-                        {
-                            json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
-                                new Dictionary<string, object> { ["ids"] = string.Join(",", trackIds) });
-                            var idx = page * 500;
-                            var i = 0;
-                            foreach (var jToken in json["songs"])
-                            {
-                                var song = (JObject)jToken;
-
-                                var ncSong = NCSong.CreateFromJson(song);
-                                ncSong.IsAvailable =
-                                    json["privileges"].ToList()[i++]["st"].ToString() == "0";
-                                ncSong.Order = idx++;
-                                Common.Invoke(() => { Songs.Add(ncSong); });
-                            }
-                        }
-
-                        catch (Exception ex)
-                        {
-                            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-                    }
+                    var ncSong = NCSong.CreateFromJson(song);
+                    ncSong.IsAvailable =
+                        json["privileges"].ToList()[i++]["st"].ToString() == "0";
+                    ncSong.Order = idx++;
+                    Songs.Add(ncSong);
                 }
-                else
-                {
-                    SongsList.ListSource = "content";
-                    Common.Invoke(() =>
-                    {
-                        //每日推荐
-                        ButtonIntel.Visibility = Visibility.Collapsed;
-                    });
-                    try
-                    {
-                        var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendSongs);
-                        if (json["data"]["dailySongs"][0]["alg"].ToString() == "birthDaySong")
-                            Common.Invoke(() =>
-                            {
-                                // 诶呀,没想到还过生了,吼吼
-                                DescriptionWrapper.Text = "生日快乐~ 今天也要开心哦!";
-                                DescriptionWrapper.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 0, 0));
-                                DescriptionWrapper.FontSize = 25;
-                            });
+            }
 
-                        var idx = 0;
-                        foreach (var song in json["data"]["dailySongs"])
-                        {
-                            var ncSong = NCSong.CreateFromJson(song);
-                            ncSong.IsAvailable = true;
-                            ncSong.Order = idx++;
-                            Common.Invoke(() => { Songs.Add(ncSong); });
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-                    }
-                }
-
-                Common.Invoke(() => { IsLoading = false; });
-            });
-        });
+            catch (Exception ex)
+            {
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+        }
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -179,84 +178,55 @@ public sealed partial class SongListDetail : Page, IDisposable
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        _ = Task.Run(() =>
+
+        if (e.Parameter != null)
         {
-            Common.Invoke(() =>
+            if (e.Parameter is NCPlayList)
             {
+                playList = (NCPlayList)e.Parameter;
+            }
+            else
+            {
+                var pid = e.Parameter.ToString();
+
                 try
                 {
-                    var anim = ConnectedAnimationService.GetForCurrentView()
-                        .GetAnimation("SongListExpand");
-                    var anim1 = ConnectedAnimationService.GetForCurrentView()
-                        .GetAnimation("SongListExpandAcrylic");
-                    anim1?.TryStart(GridPersonalInformation);
-                    anim?.TryStart(RectangleImage);
+                    var json = await Common.ncapi.RequestAsync(
+                        CloudMusicApiProviders.PlaylistDetail,
+                        new Dictionary<string, object> { { "id", pid } });
+                    playList = NCPlayList.CreateFromJson(json["playlist"]);
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
                 }
-            });
-        });
-        await Task.Run(() =>
-        {
-            Common.Invoke(async () =>
-            {
-                if (e.Parameter != null)
-                {
-                    if (e.Parameter is NCPlayList)
-                    {
-                        playList = (NCPlayList)e.Parameter;
-                    }
-                    else
-                    {
-                        var pid = e.Parameter.ToString();
+            }
+        }
 
-                        try
-                        {
-                            var json = await Common.ncapi.RequestAsync(
-                                CloudMusicApiProviders.PlaylistDetail,
-                                new Dictionary<string, object> { { "id", pid } });
-                            playList = NCPlayList.CreateFromJson(json["playlist"]);
-                        }
-                        catch (Exception ex)
-                        {
-                            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-                        }
-                    }
-                }
-
-                SongsList.ListSource = "pl" + playList.plid;
-                LoadSongListDetail();
-                LoadSongListItem();
-            });
-        });
+        SongsList.ListSource = "pl" + playList.plid;
+        LoadSongListDetail();
+        LoadSongListItem();
     }
 
 
-    private void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
+    private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
-        Task.Run(() =>
+        if (playList.plid != "-666")
         {
-            Common.Invoke(async () =>
-            {
-                if (playList.plid != "-666")
-                {
-                    HyPlayList.RemoveAllSong();
-                    HyPlayList.SongAppendDone();
-                    await HyPlayList.AppendPlayList(playList.plid);
-                    HyPlayList.SongAppendDone();
-                    HyPlayList.NowPlaying = -1;
-                    HyPlayList.SongMoveNext();
-                }
-                else
-                {
-                    HyPlayList.AppendNcSongs(Songs.ToList());
-                    HyPlayList.SongAppendDone();
-                    HyPlayList.NowPlaying = -1;
-                    HyPlayList.SongMoveNext();
-                }
-            });
-        });
+            HyPlayList.RemoveAllSong();
+            HyPlayList.SongAppendDone();
+            await HyPlayList.AppendPlayList(playList.plid);
+            HyPlayList.SongAppendDone();
+            HyPlayList.NowPlaying = -1;
+            HyPlayList.SongMoveNext();
+        }
+        else
+        {
+            HyPlayList.AppendNcSongs(Songs.ToList());
+            HyPlayList.SongAppendDone();
+            HyPlayList.NowPlaying = -1;
+            HyPlayList.SongMoveNext();
+        }
     }
 
 
@@ -271,54 +241,48 @@ public sealed partial class SongListDetail : Page, IDisposable
         Common.NavigatePage(typeof(Comments), "pl" + playList.plid);
     }
 
-    private void ButtonHeartBeat_OnClick(object sender, RoutedEventArgs e)
+    private async void ButtonHeartBeat_OnClick(object sender, RoutedEventArgs e)
     {
-        _ = Task.Run(() =>
+        HyPlayList.RemoveAllSong();
+        try
         {
-            Common.Invoke(async () =>
-            {
-                HyPlayList.RemoveAllSong();
+            var jsona = await Common.ncapi.RequestAsync(
+                CloudMusicApiProviders.PlaymodeIntelligenceList,
+                new Dictionary<string, object>
+                    { { "pid", playList.plid }, { "id", Songs[0].sid } /*, { "sid", Songs[0].sid }*/ });
+            var IntSongs = new List<NCSong>();
+            IntSongs.Add(Songs[new Random().Next(0, Songs.Count)]);
+            foreach (var token in jsona["data"])
                 try
                 {
-                    var jsona = await Common.ncapi.RequestAsync(
-                        CloudMusicApiProviders.PlaymodeIntelligenceList,
-                        new Dictionary<string, object>
-                            { { "pid", playList.plid }, { "id", Songs[0].sid } /*, { "sid", Songs[0].sid }*/ });
-                    var IntSongs = new List<NCSong>();
-                    IntSongs.Add(Songs[new Random().Next(0, Songs.Count)]);
-                    foreach (var token in jsona["data"])
-                        try
-                        {
-                            if (token["songInfo"] != null)
-                            {
-                                var ncSong = NCSong.CreateFromJson(token["songInfo"]);
-                                IntSongs.Add(ncSong);
-                            }
-                        }
-                        catch
-                        {
-                            //ignore
-                        }
-
-                    try
+                    if (token["songInfo"] != null)
                     {
-                        HyPlayList.AppendNcSongs(IntSongs);
-
-                        HyPlayList.SongAppendDone();
-
-                        HyPlayList.SongMoveTo(0);
-                    }
-                    catch (Exception ex)
-                    {
-                        Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                        var ncSong = NCSong.CreateFromJson(token["songInfo"]);
+                        IntSongs.Add(ncSong);
                     }
                 }
-                catch (Exception ex)
+                catch
                 {
-                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                    //ignore
                 }
-            });
-        });
+
+            try
+            {
+                HyPlayList.AppendNcSongs(IntSongs);
+
+                HyPlayList.SongAppendDone();
+
+                HyPlayList.SongMoveTo(0);
+            }
+            catch (Exception ex)
+            {
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+        }
     }
 
     private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)

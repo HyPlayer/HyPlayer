@@ -98,22 +98,16 @@ public sealed partial class RadioPage : Page, IDisposable
 
     private void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
-        Task.Run(() =>
+        try
         {
-            Common.Invoke(() =>
-            {
-                try
-                {
-                    HyPlayList.AppendNcSongs(Songs);
-                    HyPlayList.SongAppendDone();
-                    HyPlayList.SongMoveTo(0);
-                }
-                catch (Exception ex)
-                {
-                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-                }
-            });
-        });
+            HyPlayList.AppendNcSongs(Songs);
+            HyPlayList.SongAppendDone();
+            HyPlayList.SongMoveTo(0);
+        }
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+        }
     }
 
     private void TextBoxDJ_OnTapped(object sender, RoutedEventArgs routedEventArgs)

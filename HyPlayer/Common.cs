@@ -51,7 +51,7 @@ namespace HyPlayer
         public static bool ShowLyricTrans = true;
         public static Dictionary<string, object> GLOBAL = new();
         public static List<string> LikedSongs = new();
-        public static KawazuConverter KawazuConv;
+        public static KawazuConverter? KawazuConv;
         public static List<NCPlayList> MySongLists = new();
         public static readonly Stack<NavigationHistoryItem> NavigationHistory = new();
         public static bool isExpanded = false;
@@ -192,11 +192,12 @@ namespace HyPlayer
         {
             NavigatePage(typeof(BlankPage));
             BaseFrame.Content = null;
-            PageExpandedPlayer.Dispose();
+            PageExpandedPlayer?.Dispose();
             PageExpandedPlayer = null;
             PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));
             _ = ImageCache.Instance.ClearAsync();
-            KawazuConv.Dispose();
+            KawazuConv?.Dispose();
+            KawazuConv = null;
         }
 
         public static void UIElement_RightTapped(object sender, RightTappedRoutedEventArgs e)

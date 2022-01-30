@@ -57,7 +57,7 @@ namespace HyPlayer.Controls
         }
 
         public static readonly DependencyProperty MaxLinesProperty = DependencyProperty.Register(
-            "MaxLines", typeof(int), typeof(SelectableTextBox), new PropertyMetadata(default(int)));
+            "MaxLines", typeof(int), typeof(SelectableTextBox), new PropertyMetadata(3));
 
         public int MaxLines
         {
@@ -98,6 +98,7 @@ namespace HyPlayer.Controls
         public ExpandableTextBox()
         {
             this.InitializeComponent();
+            ActualMaxLine = MaxLines;
         }
 
         private void ExpandOrCollapseText(object sender, RoutedEventArgs e)

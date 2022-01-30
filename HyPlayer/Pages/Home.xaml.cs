@@ -126,26 +126,20 @@ public sealed partial class Home : Page
 
     public async void LoadRanklist()
     {
-        await Task.Run(() =>
+        try
         {
-            Common.Invoke(async () =>
-            {
-                try
-                {
-                    var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Toplist);
+            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Toplist);
 
-                    foreach (var PlaylistItemJson in json["list"].ToArray())
-                    {
-                        var ncp = NCPlayList.CreateFromJson(PlaylistItemJson);
-                        RankList.Children.Add(new PlaylistItem(ncp));
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-                }
-            });
-        });
+            foreach (var PlaylistItemJson in json["list"].ToArray())
+            {
+                var ncp = NCPlayList.CreateFromJson(PlaylistItemJson);
+                RankList.Children.Add(new PlaylistItem(ncp));
+            }
+        }
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+        }
     }
 
     private void Button_Click_1(object sender, RoutedEventArgs e)

@@ -45,7 +45,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     public SolidColorBrush ForegroundAlbumBrush =
         Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush;
 
-    private bool iscompact;
     public bool jumpedLyrics;
     public double lastChangedLyricWidth;
     private int lastheight;
@@ -70,7 +69,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     public ExpandedPlayer()
     {
         InitializeComponent();
-        SliderVolumn.Value = HyPlayList.Player.Volume * 100;
         loaded = true;
         Common.PageExpandedPlayer = this;
         HyPlayList.OnPause += HyPlayList_OnPause;
@@ -78,7 +76,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         HyPlayList.OnLyricChange += RefreshLyricTime;
         HyPlayList.OnPlayItemChange += OnSongChange;
         HyPlayList.OnLyricLoaded += HyPlayList_OnLyricLoaded;
-        HyPlayList.OnPlayPositionChange += HyPlayList_OnPlayPositionChange;
         Window.Current.SizeChanged += Current_SizeChanged;
         HyPlayList.OnTimerTicked += HyPlayList_OnTimerTicked;
         ImageAlbum.ImageExOpened += async (a, b) =>
@@ -116,7 +113,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             HyPlayList.OnLyricChange -= RefreshLyricTime;
             HyPlayList.OnPlayItemChange -= OnSongChange;
             HyPlayList.OnLyricLoaded -= HyPlayList_OnLyricLoaded;
-            HyPlayList.OnPlayPositionChange -= HyPlayList_OnPlayPositionChange;
             HyPlayList.OnTimerTicked -= HyPlayList_OnTimerTicked;
             ImageAlbum.Source = null;
             ImageAlbum.PlaceholderSource = null;
@@ -167,14 +163,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         Dispose();
     }
 
-    private void HyPlayList_OnPlayPositionChange(TimeSpan Position)
-    {
-        //暂停按钮
-        PlayStateIcon.Glyph = HyPlayList.isPlaying ? "\uEDB4" : "\uEDB5";
-        //播放进度
-        ProgressBarPlayProg.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
-    }
-
     private void HyPlayList_OnLyricLoaded()
     {
         LoadLyricsBox();
@@ -193,7 +181,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             else
                 LyricWidth = nowwidth - 15;
             showsize = Common.Setting.lyricSize <= 0
-                ? Math.Max(nowwidth / 66, iscompact ? 16 : 23)
+                ? Math.Max(nowwidth / 66, 23)
                 : Common.Setting.lyricSize;
 
             lastwidth = nowwidth;
@@ -210,16 +198,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     {
         realclick = false;
         needRedesign++;
-        if (!iscompact)
-        {
-            StackPanelTiny.Visibility = Visibility.Collapsed;
-            ImageAlbum.Visibility = Visibility.Visible;
-        }
-        else
-        {
-            SongInfo.Visibility = Visibility.Collapsed;
-        }
-
         switch (WindowMode)
         {
             case ExpandedWindowMode.Both:
@@ -251,9 +229,9 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 RightPanel.SetValue(Grid.ColumnProperty, 0);
                 RightPanel.SetValue(Grid.ColumnSpanProperty, 2);
                 LyricBox.Margin = new Thickness(15);
-                LyricBoxContainer.Height = ImageAlbum.ActualHeight + 170;
                 break;
         }
+
         if (nowwidth > 800 || WindowMode == ExpandedWindowMode.Both)
             LyricWidth = nowwidth * 0.4;
         else
@@ -268,12 +246,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         var lyricMargin = LyricBoxContainer.Margin;
         lyricMargin.Top = ImageAlbum.ActualOffset.Y;
         LyricBoxContainer.Margin = lyricMargin;
-        if (WindowMode == ExpandedWindowMode.Both)
-            LyricBoxContainer.Height = SongInfo.ActualOffset.Y + 80;
-        else if (iscompact)
-            LyricBoxContainer.Height = Math.Max(RightPanel.ActualHeight, 101) - 100;
-        else
-            LyricBoxContainer.Height = RightPanel.ActualHeight;
 
 
         if (600 > Math.Min(LeftPanel.ActualHeight, MainGrid.ActualHeight))
@@ -293,34 +265,23 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         }
         else
         {
-            if (!iscompact)
-                SongInfo.Visibility = Visibility.Visible;
             ImageAlbum.Width = double.NaN;
             ImageAlbum.Height = double.NaN;
             SongInfo.Width = double.NaN;
         }
 
 
-        if (iscompact)
+        if (550 > nowwidth)
         {
-            ImageAlbum.Width = double.NaN;
+            ImageAlbum.Width = nowwidth - ImageAlbum.ActualOffset.X - 15;
             LeftPanel.HorizontalAlignment = HorizontalAlignment.Left;
             ImageAlbum.HorizontalAlignment = HorizontalAlignment.Left;
         }
         else
         {
-            if (550 > nowwidth && !iscompact)
-            {
-                ImageAlbum.Width = nowwidth - ImageAlbum.ActualOffset.X - 15;
-                LeftPanel.HorizontalAlignment = HorizontalAlignment.Left;
-                ImageAlbum.HorizontalAlignment = HorizontalAlignment.Left;
-            }
-            else
-            {
-                ImageAlbum.Width = double.NaN;
-                LeftPanel.HorizontalAlignment = HorizontalAlignment.Center;
-                ImageAlbum.HorizontalAlignment = HorizontalAlignment.Center;
-            }
+            ImageAlbum.Width = double.NaN;
+            LeftPanel.HorizontalAlignment = HorizontalAlignment.Center;
+            ImageAlbum.HorizontalAlignment = HorizontalAlignment.Center;
         }
 
 
@@ -348,6 +309,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         //    SongInfo.Background = null;
         //}
 
+        /*
+         // 小窗下的背景替换
         if ((nowwidth <= 300 || nowheight <= 300) && iscompact && StackPanelTiny.Visibility == Visibility.Collapsed)
         {
             ImageAlbum.Visibility = Visibility.Collapsed;
@@ -358,7 +321,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             ImageAlbum.Visibility = Visibility.Visible;
             PageContainer.Background = Application.Current.Resources["ExpandedPlayerMask"] as AcrylicBrush;
         }
-
+        */
         lastChangedLyricWidth = LyricWidth;
 
         //歌词宽度
@@ -410,8 +373,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         //LeftPanel.Visibility = Visibility.Collapsed;
         programClick = true;
         BtnToggleFullScreen.IsChecked = ApplicationView.GetForCurrentView().IsFullScreenMode;
-        BtnToggleTinyMode.IsChecked =
-            ApplicationView.GetForCurrentView().ViewMode == ApplicationViewMode.CompactOverlay;
         programClick = false;
         try
         {
@@ -478,14 +439,13 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         LyricBox.Children.Add(new Grid { Height = blanksize });
         LyricList = LyricBox.Children.OfType<LyricItem>().ToList();
         lastlrcid = HyPlayList.NowPlayingItem.GetHashCode();
-        Task.Run(() =>
-        {
-            Common.Invoke(async () =>
-            {
-                await Task.Delay(500);
-                RefreshLyricTime();
-            });
-        });
+        InitLyricTime();
+    }
+
+    private async void InitLyricTime()
+    {
+        await Task.Delay(500);
+        RefreshLyricTime();
     }
 
 
@@ -518,8 +478,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     TextBlockAlbum.Content = mpi.PlayItem.AlbumString;
                     Background = new ImageBrush
                         { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
-                    ProgressBarPlayProg.Maximum = mpi.PlayItem.LengthInMilliseconds;
-                    SliderVolumn.Value = HyPlayList.Player.Volume * 100;
 
                     if (lastlrcid != HyPlayList.NowPlayingItem.GetHashCode())
                     {
@@ -548,31 +506,25 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     public void StartExpandAnimation()
     {
-        Task.Run(() =>
+        ImageAlbum.Visibility = Visibility.Visible;
+        TextBlockSinger.Visibility = Visibility.Visible;
+        TextBlockSongTitle.Visibility = Visibility.Visible;
+        var anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
+        var anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
+        var anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
+        if (anim2 != null) anim3.Configuration = new DirectConnectedAnimationConfiguration();
+        if (anim2 != null) anim2.Configuration = new DirectConnectedAnimationConfiguration();
+        if (anim2 != null) anim1.Configuration = new DirectConnectedAnimationConfiguration();
+        try
         {
-            Common.Invoke(() =>
-            {
-                ImageAlbum.Visibility = Visibility.Visible;
-                TextBlockSinger.Visibility = Visibility.Visible;
-                TextBlockSongTitle.Visibility = Visibility.Visible;
-                var anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
-                var anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
-                var anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
-                if (anim2 != null) anim3.Configuration = new DirectConnectedAnimationConfiguration();
-                if (anim2 != null) anim2.Configuration = new DirectConnectedAnimationConfiguration();
-                if (anim2 != null) anim1.Configuration = new DirectConnectedAnimationConfiguration();
-                try
-                {
-                    //anim3?.TryStart(TextBlockSinger);
-                    //anim1?.TryStart(TextBlockSongTitle);
-                    anim2?.TryStart(ImageAlbum);
-                }
-                catch
-                {
-                    //ignore
-                }
-            });
-        });
+            //anim3?.TryStart(TextBlockSinger);
+            //anim1?.TryStart(TextBlockSongTitle);
+            anim2?.TryStart(ImageAlbum);
+        }
+        catch
+        {
+            //ignore
+        }
     }
 
     public void StartCollapseAnimation()
@@ -606,8 +558,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             HyPlayList.Player.Pause();
         else
             HyPlayList.Player.Play();
-
-        PlayStateIcon.Glyph = HyPlayList.isPlaying ? "\uEDB5" : "\uEDB4";
     }
 
     private void BtnNextSong_OnClick(object sender, RoutedEventArgs e)
@@ -627,24 +577,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             Common.BarPlayBar.SliderAudioRate.Value = e.NewValue;
             HyPlayList.Player.Volume = e.NewValue / 100;
         }
-    }
-
-    public void ExpandedPlayer_OnPointerEntered(object sender, PointerRoutedEventArgs e)
-    {
-        if (nowheight <= 300 && iscompact)
-        {
-            //小窗模式
-            StackPanelTiny.Visibility = Visibility.Visible;
-            PageContainer.Background = Application.Current.Resources["ExpandedPlayerMask"] as AcrylicBrush;
-        }
-    }
-
-    public void ExpandedPlayer_OnPointerExited(object sender, PointerRoutedEventArgs e)
-    {
-        if (nowheight <= 300)
-            //小窗模式
-            PageContainer.Background = null;
-        if (nowheight <= 300 || !iscompact) StackPanelTiny.Visibility = Visibility.Collapsed;
     }
 
     private void ToggleButtonTranslation_OnClick(object sender, RoutedEventArgs e)
@@ -754,12 +686,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         if (programClick) return;
         if (BtnToggleFullScreen.IsChecked)
         {
-            if (BtnToggleTinyMode.IsChecked)
-            {
-                BtnToggleTinyMode.IsChecked = false;
-                WindowMode = ExpandedWindowMode.Both;
-            }
-
             ApplicationView.GetForCurrentView().TryEnterFullScreenMode();
             ApplicationView.PreferredLaunchWindowingMode = ApplicationViewWindowingMode.FullScreen;
             ChangeWindowMode();
@@ -768,21 +694,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         {
             ApplicationView.GetForCurrentView().ExitFullScreenMode();
             ApplicationView.PreferredLaunchWindowingMode = ApplicationViewWindowingMode.Auto;
-            ChangeWindowMode();
-        }
-
-        if (BtnToggleTinyMode.IsChecked)
-        {
-            WindowMode = ExpandedWindowMode.CoverOnly;
-            iscompact = true;
-            _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.CompactOverlay);
-            ChangeWindowMode();
-        }
-        else if (ApplicationView.GetForCurrentView().ViewMode == ApplicationViewMode.CompactOverlay)
-        {
-            iscompact = false;
-            WindowMode = ExpandedWindowMode.Both;
-            _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
             ChangeWindowMode();
         }
     }

@@ -120,37 +120,27 @@ public sealed partial class Me : Page, IDisposable
 
     public async void LoadInfo()
     {
-        await Task.Run(() =>
+        try
         {
-            Common.Invoke(async () =>
-            {
-                try
-                {
-                    var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserDetail,
-                        new Dictionary<string, object> { ["uid"] = uid });
+            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserDetail,
+                new Dictionary<string, object> { ["uid"] = uid });
 
-                    TextBoxUserName.Text = json["profile"]["nickname"].ToString();
-                    TextBoxSignature.Text = json["profile"]["signature"].ToString();
-                    ImageRect.ImageSource = new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
-                }
-                catch (Exception ex)
-                {
-                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-                }
-            });
-        });
-        /*
-        await Task.Run(() =>
+            TextBoxUserName.Text = json["profile"]["nickname"].ToString();
+            TextBoxSignature.Text = json["profile"]["signature"].ToString();
+            ImageRect.ImageSource = new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
+        }
+        catch (Exception ex)
         {
-            this.Invoke(async () =>
-            {
-                (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserLevel);
-                if (isok)
-                {
-                    TextBlockLevel.Text = "LV. "+json["data"]["level"].ToString();
-                }
-            });
-        });*/
+            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+        }
+
+        /*
+        (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserLevel);
+        if (isok)
+        {
+            TextBlockLevel.Text = "LV. " + json["data"]["level"].ToString();
+        }
+        */
     }
 
     private async void Logout_OnClick(object sender, RoutedEventArgs e)

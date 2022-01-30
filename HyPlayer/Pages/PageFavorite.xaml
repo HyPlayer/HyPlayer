@@ -5,6 +5,7 @@
     xmlns:controls="using:HyPlayer.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    NavigationCacheMode="Disabled"
     mc:Ignorable="d">
 
     <Grid>
@@ -30,7 +31,7 @@
                 <NavigationView.MenuItems>
                     <NavigationViewItem Content="专辑" Tag="Album" />
                     <NavigationViewItem Content="歌手" Tag="Artist" />
-                    <NavigationViewItem Content="电台" Tag="Radio" />
+                    <NavigationViewItem Content="播客" Tag="Radio" />
                 </NavigationView.MenuItems>
             </NavigationView>
             <controls:SimpleLinerList x:Name="ItemContainer" Grid.Row="1">

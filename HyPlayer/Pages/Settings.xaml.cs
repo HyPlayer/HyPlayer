@@ -91,29 +91,24 @@ public sealed partial class Settings : Page
         Common.Setting.downloadAudioRate = ((RadioButton)sender).Tag.ToString();
     }
 
-    private void GetRomaji()
+    private async void GetRomaji()
     {
-        Task.Run(() =>
+        RomajiStatus.Text = "正在下载资源文件 请稍等";
+        try
         {
-            Common.Invoke(async () =>
-            {
-                RomajiStatus.Text = "正在下载资源文件 请稍等";
-                try
-                {
-                    await (await ApplicationData.Current.LocalCacheFolder.GetFileAsync("RomajiData.zip"))
-                        .DeleteAsync();
-                }
-                catch
-                {
-                }
+            await (await ApplicationData.Current.LocalCacheFolder.GetFileAsync("RomajiData.zip"))
+                .DeleteAsync();
+        }
+        catch
+        {
+            // ignored
+        }
 
-                var sf = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("RomajiData.zip");
-                var downloader = new BackgroundDownloader();
-                var dl = downloader.CreateDownload(new Uri("https://api.kengwang.com.cn/hyplayer/getromaji.php"),
-                    sf);
-                HandleDownloadAsync(dl, true);
-            });
-        });
+        var sf = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("RomajiData.zip");
+        var downloader = new BackgroundDownloader();
+        var dl = downloader.CreateDownload(new Uri("https://api.kengwang.com.cn/hyplayer/getromaji.php"),
+            sf);
+        HandleDownloadAsync(dl, true);
     }
 
     private async void HandleDownloadAsync(DownloadOperation dl, bool b)
@@ -140,40 +135,39 @@ public sealed partial class Settings : Page
         RomajiStatus.Text = $"正在下载资源文件 ({obj.Progress.BytesReceived * 100 / obj.Progress.TotalBytesToReceive:D}%)";
         if (obj.Progress.BytesReceived == obj.Progress.TotalBytesToReceive &&
             obj.Progress.TotalBytesToReceive > 5000)
-            _ = Task.Run(() =>
-            {
-                Common.Invoke(async () =>
-                {
-                    try
-                    {
-                        //下载完成
-                        //unzip
-                        RomajiStatus.Text = "正在解压,请稍等......";
-                        await Task.Delay(1000);
-                        var path =
-                            (await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("Romaji",
-                                CreationCollisionOption.OpenIfExists)).Path;
-                        //Read the file stream
-                        var a = await obj.ResultFile.OpenStreamForReadAsync();
+            OnRomajiDownloadDone(obj);
+    }
 
-                        //unzip
-                        var archive = new ZipArchive(a);
-                        archive.ExtractToDirectory(path);
-                        _ = obj.ResultFile.DeleteAsync();
+    private async void OnRomajiDownloadDone(DownloadOperation obj)
+    {
+        try
+        {
+            //下载完成
+            //unzip
+            RomajiStatus.Text = "正在解压,请稍等......";
+            await Task.Delay(1000);
+            var path =
+                (await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("Romaji",
+                    CreationCollisionOption.OpenIfExists)).Path;
+            //Read the file stream
+            var a = await obj.ResultFile.OpenStreamForReadAsync();
 
-                        Common.KawazuConv = new KawazuConverter(path);
-                    }
-                    catch (Exception e)
-                    {
-                        RomajiStatus.Text = "罗马音文件解压错误: " + e.Message;
-                    }
-                    finally
-                    {
-                        RomajiStatus.Text =
-                            "当前日语转罗马音状态: " + (Common.KawazuConv == null ? "无法转换 请尝试重新下载资源文件" : "可以转换");
-                    }
-                });
-            });
+            //unzip
+            var archive = new ZipArchive(a);
+            archive.ExtractToDirectory(path);
+            _ = obj.ResultFile.DeleteAsync();
+
+            Common.KawazuConv = new KawazuConverter(path);
+        }
+        catch (Exception e)
+        {
+            RomajiStatus.Text = "罗马音文件解压错误: " + e.Message;
+        }
+        finally
+        {
+            RomajiStatus.Text =
+                "当前日语转罗马音状态: " + (Common.KawazuConv == null ? "无法转换 请尝试重新下载资源文件" : "可以转换");
+        }
     }
 
     private void ButtonBase_OnClick(object sender, RoutedEventArgs e)

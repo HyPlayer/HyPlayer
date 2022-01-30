@@ -102,7 +102,7 @@
                             Margin="0,5,0,0"
                             FontSize="13"
                             Foreground="{ThemeResource SystemControlForegroundChromeHighBrush}"
-                            MaxLines="7" />
+                            MaxLines="3" />
                     </StackPanel>
                     <VisualStateManager.VisualStateGroups>
                         <VisualStateGroup>

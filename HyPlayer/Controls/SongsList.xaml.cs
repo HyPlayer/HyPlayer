@@ -73,26 +73,25 @@ public sealed partial class SongsList : UserControl, IDisposable
         InitializeComponent();
         HyPlayList.OnPlayItemChange += HyPlayListOnOnPlayItemChange;
         MultiSelect = false;
+        IndicateNowPlayingItem();
+    }
 
-        Task.Run(() =>
+    private async void IndicateNowPlayingItem()
+    {
+        var tryCount = 5;
+        while (--tryCount > 0)
         {
-            Common.Invoke(async () =>
+            await Task.Delay(TimeSpan.FromSeconds(2));
+            try
             {
-                var tryCount = 5;
-                while (--tryCount > 0)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(2));
-                    try
-                    {
-                        HyPlayListOnOnPlayItemChange(HyPlayList.NowPlayingItem);
-                        break;
-                    }
-                    catch (Exception e)
-                    {
-                    }
-                }
-            });
-        });
+                HyPlayListOnOnPlayItemChange(HyPlayList.NowPlayingItem);
+                break;
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+        }
     }
 
     public bool MultiSelect
@@ -201,7 +200,7 @@ public sealed partial class SongsList : UserControl, IDisposable
 
     private async void SongContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (SongContainer.SelectedIndex == -1) return;
+        if (SongContainer.SelectedIndex < 0) return;
         if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
         if (!IsManualSelect) return;
         if (VisibleSongs[SongContainer.SelectedIndex].sid == HyPlayList.NowPlayingItem.PlayItem?.Id) return;

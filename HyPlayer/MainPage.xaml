@@ -6,8 +6,6 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hyPlayerPage="using:HyPlayer.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    PointerEntered="Page_PointerEntered"
-    PointerExited="Page_PointerExited"
     mc:Ignorable="d">
     <Grid>
         <VisualStateManager.VisualStateGroups>

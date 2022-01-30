@@ -1,5 +1,6 @@
 ﻿#region
 
+using System;
 using System.Threading.Tasks;
 using Windows.UI;
 using Windows.UI.Text;
@@ -39,21 +40,24 @@ public sealed partial class LyricItem : UserControl
             TextBoxTranslation.Visibility = Visibility.Collapsed;
 
         if (Common.KawazuConv != null && Common.ShowLyricSound)
-            Task.Run(() =>
-            {
-                Common.Invoke(async () =>
-                {
-                    if (Utilities.HasKana(Lrc.PureLyric))
-                        TextBoxSound.Text =
-                            await Common.KawazuConv.Convert(Lrc.PureLyric, To.Romaji, Mode.Separated);
-                    else
-                        TextBoxSound.Visibility = Visibility.Collapsed;
-                });
-            });
+            LoadRomaji();
         else
             TextBoxSound.Visibility = Visibility.Collapsed;
+
         RefreshFontSize();
         OnHind();
+    }
+
+    private async void LoadRomaji()
+    {
+        if (Utilities.HasKana(Lrc.PureLyric))
+            TextBoxSound.Text =
+                await Common.KawazuConv?.Convert(Lrc.PureLyric, To.Romaji, Mode.Separated)! ?? string.Empty;
+        // 这个地方是实在懒得改才用的 异步当同步
+        else
+            TextBoxSound.Visibility = Visibility.Collapsed;
+        if (string.IsNullOrEmpty(TextBoxSound.Text))
+            TextBoxSound.Visibility = Visibility.Collapsed;
     }
 
 

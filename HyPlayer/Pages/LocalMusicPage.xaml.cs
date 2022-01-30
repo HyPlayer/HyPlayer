@@ -100,20 +100,25 @@ public sealed partial class LocalMusicPage : Page
     {
         try
         {
-            if (item is StorageFile && CheckFileExtensionName(item.Name)) //检查文件扩展名，符合条件的才会在本地列表中显示
+            switch (item)
             {
-                var file = item as StorageFile;
-                var hyPlayItem = await HyPlayList.LoadStorageFile(file);
-                localHyItems.Add(hyPlayItem);
-                var listViewPlay = new ListViewPlayItem(hyPlayItem.PlayItem.Name, index++,
-                    hyPlayItem.PlayItem.ArtistString);
-                localItems.Add(listViewPlay);
-                if (ListBoxLocalMusicContainer.Items != null) ListBoxLocalMusicContainer.Items.Add(listViewPlay);
-            }
-            else if (item is StorageFolder)
-            {
-                foreach (var subitems in await ((StorageFolder)item).GetItemsAsync())
-                    GetSubFiles(subitems);
+                //检查文件扩展名，符合条件的才会在本地列表中显示
+                case StorageFile file when CheckFileExtensionName(file.Name):
+                {
+                    var hyPlayItem = await HyPlayList.LoadStorageFile(file);
+                    localHyItems.Add(hyPlayItem);
+                    var listViewPlay = new ListViewPlayItem(hyPlayItem.PlayItem.Name, index++,
+                        hyPlayItem.PlayItem.ArtistString);
+                    localItems.Add(listViewPlay);
+                    ListBoxLocalMusicContainer.Items?.Add(listViewPlay);
+                    break;
+                }
+                case StorageFolder folder:
+                {
+                    foreach (var subitems in await folder.GetItemsAsync())
+                        GetSubFiles(subitems);
+                    break;
+                }
             }
         }
         catch (Exception ex)

@@ -90,7 +90,7 @@ public sealed partial class MusicCloudPage : Page, IDisposable
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        await Task.Run(() => { Common.Invoke(() => { LoadMusicCloudItem(); }); });
+        LoadMusicCloudItem();
     }
 
 

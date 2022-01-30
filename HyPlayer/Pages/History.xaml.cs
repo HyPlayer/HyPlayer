@@ -47,55 +47,57 @@ public sealed partial class History : Page
                 break;
             case "SongRankWeek":
                 //听歌排行加载部分 - 优先级靠下
-                Songs.Clear();
-                try
-                {
-                    await Task.Run(async () =>
-                    {
-                        var ret2 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserRecord,
-                            new Dictionary<string, object> { { "uid", Common.LoginedUser.id }, { "type", "1" } });
-
-                        var weekData = ret2["weekData"].ToArray();
-
-                        for (var i = 0; i < weekData.Length; i++)
-                        {
-                            var song = NCSong.CreateFromJson(weekData[i]["song"]);
-                            song.Order = i;
-                            Common.Invoke(() => { Songs.Add(song); });
-                        }
-                    });
-                }
-                catch (Exception ex)
-                {
-                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-                }
-
+                LoadRankWeek();
                 break;
             case "SongRankAll":
                 //听歌排行加载部分 - 优先级靠下
-                Songs.Clear();
-                try
-                {
-                    await Task.Run(async () =>
-                    {
-                        var ret3 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserRecord,
-                            new Dictionary<string, object> { { "uid", Common.LoginedUser.id }, { "type", "0" } });
-
-                        var weekData = ret3["allData"].ToArray();
-                        for (var i = 0; i < weekData.Length; i++)
-                        {
-                            var song = NCSong.CreateFromJson(weekData[i]["song"]);
-                            song.Order = i;
-                            Common.Invoke(() => { Songs.Add(song); });
-                        }
-                    });
-                }
-                catch (Exception ex)
-                {
-                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-                }
-
+                LoadRankAll();
                 break;
+        }
+    }
+
+    private async void LoadRankAll()
+    {
+        Songs.Clear();
+        try
+        {
+            var ret3 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserRecord,
+                new Dictionary<string, object> { { "uid", Common.LoginedUser.id }, { "type", "0" } });
+
+            var weekData = ret3["allData"].ToArray();
+            for (var i = 0; i < weekData.Length; i++)
+            {
+                var song = NCSong.CreateFromJson(weekData[i]["song"]);
+                song.Order = i;
+                Songs.Add(song);
+            }
+        }
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+        }
+    }
+
+    private async void LoadRankWeek()
+    {
+        Songs.Clear();
+        try
+        {
+            var ret2 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserRecord,
+                new Dictionary<string, object> { { "uid", Common.LoginedUser.id }, { "type", "1" } });
+
+            var weekData = ret2["weekData"].ToArray();
+
+            for (var i = 0; i < weekData.Length; i++)
+            {
+                var song = NCSong.CreateFromJson(weekData[i]["song"]);
+                song.Order = i;
+                Songs.Add(song);
+            }
+        }
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
 }

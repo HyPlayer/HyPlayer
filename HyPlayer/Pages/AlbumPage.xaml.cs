@@ -29,6 +29,7 @@ public sealed partial class AlbumPage : Page, IDisposable
 {
     private readonly ObservableCollection<NCSong> songs = new();
     private NCAlbum Album;
+    private string albumid;
     private List<NCArtist> artists = new();
     private int page;
 
@@ -46,94 +47,82 @@ public sealed partial class AlbumPage : Page, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    protected override async void OnNavigatedTo(NavigationEventArgs e)
+    protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        await Task.Run(() =>
+        JObject json;
+        switch (e.Parameter)
         {
-            Common.Invoke(async () =>
+            case NCAlbum album:
+                Album = album;
+                albumid = Album.id;
+                break;
+            case string:
+                albumid = e.Parameter.ToString();
+                break;
+        }
+        LoadAlbumInfo();
+    }
+
+    private async void LoadAlbumInfo()
+    {
+        JObject json;
+        try
+        {
+            json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Album,
+                new Dictionary<string, object> { { "id", albumid } });
+            Album = NCAlbum.CreateFromJson(json["album"]);
+            ImageRect.ImageSource =
+                new BitmapImage(
+                    new Uri(Album.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
+            TextBoxAlbumName.Text = Album.name;
+
+            TextBoxAlbumName.Text = json["album"]["name"].ToString();
+            artists = json["album"]["artists"].ToArray().Select(t => new NCArtist
             {
-                JObject json;
-                var albumid = "";
-                if (e.Parameter is NCAlbum)
-                {
-                    Album = (NCAlbum)e.Parameter;
-                    albumid = Album.id;
-                }
-                else if (e.Parameter is string)
-                {
-                    albumid = e.Parameter.ToString();
-                }
-
-                try
-                {
-                    json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Album,
-                        new Dictionary<string, object> { { "id", albumid } });
-                    Album = NCAlbum.CreateFromJson(json["album"]);
-                    ImageRect.ImageSource =
-                        new BitmapImage(
-                            new Uri(Album.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
-                    TextBoxAlbumName.Text = Album.name;
-
-                    TextBoxAlbumName.Text = json["album"]["name"].ToString();
-                    artists = json["album"]["artists"].ToArray().Select(t => new NCArtist
-                    {
-                        avatar = t["picUrl"].ToString(),
-                        id = t["id"].ToString(),
-                        name = t["name"].ToString()
-                    }).ToList();
-                    TextBoxAuthor.Content = string.Join(" / ", artists.Select(t => t.name));
-                    TextBlockDesc.Text = (json["album"]["alias"].HasValues
-                                             ? string.Join(" / ",
-                                                   json["album"]["alias"].ToArray().Select(t => t.ToString())) +
-                                               "\r\n"
-                                             : "")
-                                         + json["album"]["description"];
-                    var idx = 0;
-                    SongContainer.ListSource = "al" + Album.id;
-                    foreach (var song in json["songs"].ToArray())
-                    {
-                        var ncSong = NCSong.CreateFromJson(song);
-                        ncSong.Order = idx++;
-                        songs.Add(ncSong);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-                }
-            });
-        });
+                avatar = t["picUrl"].ToString(),
+                id = t["id"].ToString(),
+                name = t["name"].ToString()
+            }).ToList();
+            TextBoxAuthor.Content = string.Join(" / ", artists.Select(t => t.name));
+            TextBlockDesc.Text = (json["album"]["alias"].HasValues
+                                     ? string.Join(" / ",
+                                           json["album"]["alias"].ToArray().Select(t => t.ToString())) +
+                                       "\r\n"
+                                     : "")
+                                 + json["album"]["description"];
+            var idx = 0;
+            SongContainer.ListSource = "al" + Album.id;
+            foreach (var song in json["songs"].ToArray())
+            {
+                var ncSong = NCSong.CreateFromJson(song);
+                ncSong.Order = idx++;
+                songs.Add(ncSong);
+            }
+        }
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+        }
     }
 
 
     private void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
-        Task.Run(() =>
+        try
         {
-            Common.Invoke(() =>
-            {
-                try
-                {
-                    HyPlayList.AppendNcSongs(songs);
+            HyPlayList.AppendNcSongs(songs);
 
-                    HyPlayList.SongAppendDone();
+            HyPlayList.SongAppendDone();
 
-                    HyPlayList.SongMoveTo(0);
-                }
-                catch (Exception ex)
-                {
-                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-                }
-            });
-        });
+            HyPlayList.SongMoveTo(0);
+        }
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+        }
     }
 
-
-    private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
-    {
-        page++;
-    }
 
     private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
     {

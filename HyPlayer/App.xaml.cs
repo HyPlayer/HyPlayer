@@ -149,12 +149,10 @@ sealed partial class App : Application
             case ExtendedExecutionResult.Allowed:
                 executionSession = delaySession;
                 if (Common.Setting.forceMemoryGarbage)
-                    _ = Task.Run(() => Common.Invoke(async () =>
-                    {
-                        Common.CollectGarbage();
-                        await Task.Delay(1000);
-                        GC.Collect();
-                    }));
+                {
+                    Common.CollectGarbage();
+                    GC.Collect();
+                }
 
                 break;
             case ExtendedExecutionResult.Denied:
@@ -201,54 +199,41 @@ sealed partial class App : Application
             });
     }
 
-    protected override async void OnActivated(IActivatedEventArgs args)
+    protected override void OnActivated(IActivatedEventArgs args)
     {
         base.OnActivated(args);
-        if (args.Kind == ActivationKind.ToastNotification) //如果用户点击了桌面歌词通知，则代表通知已经关闭，需要重新初始化推送
+        if (args.Kind != ActivationKind.ToastNotification) return;
+        var rootFrame = Window.Current.Content as Frame;
+        if (rootFrame == null)
         {
-            var rootFrame = Window.Current.Content as Frame;
-            if (rootFrame == null)
-            {
-                rootFrame = new Frame();
-                Window.Current.Content = rootFrame;
-            }
-
-            rootFrame.Navigate(typeof(MainPage));
-            Window.Current.Activate();
-            if (Common.BarPlayBar != null)
-            {
-                Common.BarPlayBar.InitializeDesktopLyric();
-                if (!Common.isExpanded)
-                {
-                    var animation = Common.Setting.expandAnimation;
-                    await Task.Run(() =>
-                    {
-                        Common.Setting.expandAnimation = false;
-                        Common.Invoke(() => Common.BarPlayBar.ShowExpandedPlayer());
-                    });
-                    var a = Common.Setting.expandAnimation;
-                    Common.Setting.expandAnimation = animation;
-                }
-            }
+            rootFrame = new Frame();
+            Window.Current.Content = rootFrame;
         }
+
+        rootFrame.Navigate(typeof(MainPage));
+        Window.Current.Activate();
+        Common.BarPlayBar.InitializeDesktopLyric();
+        if (Common.isExpanded) return;
+        var animation = Common.Setting.expandAnimation;
+        Common.Setting.expandAnimation = false;
+        Common.BarPlayBar.ShowExpandedPlayer();
+        var a = Common.Setting.expandAnimation;
+        Common.Setting.expandAnimation = animation;
     }
 
-    private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+    private async void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
 #if RELEASE
             Crashes.TrackError((Exception)e.ExceptionObject);
 #endif
-        Common.Invoke(async () =>
+
+        var Dialog = new ContentDialog
         {
-            var Dialog = new ContentDialog
-            {
-                Title = "遇到了错误",
-                Content = e.ExceptionObject.ToString(),
-                PrimaryButtonText = "退出"
-            };
-            var result = await Dialog.ShowAsync();
-            Environment.Exit(0);
-        });
+            Title = "遇到了错误",
+            Content = e.ExceptionObject.ToString(),
+            PrimaryButtonText = "退出"
+        };
+        var result = await Dialog.ShowAsync();
     }
 
     private void App_UnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)

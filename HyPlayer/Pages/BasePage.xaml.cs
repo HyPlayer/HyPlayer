@@ -316,51 +316,20 @@ public sealed partial class BasePage : Page
         InfoBarLoginHint.Message = "欢迎 " + Common.LoginedUser.name;
         DialogLogin.Hide();
         //加载我喜欢的歌
-        _ = Task.Run(() =>
-        {
-            Common.Invoke(async () =>
-            {
-                try
-                {
-                    var js = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Likelist,
-                        new Dictionary<string, object> { { "uid", Common.LoginedUser.id } });
-                    Common.LikedSongs = js["ids"].ToObject<List<string>>();
-                }
-                catch (Exception ex)
-                {
-                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-                }
-            });
-        });
-
+        LoadMyLikelist();
         LoadSongList();
 
         // 执行签到操作
-        _ = Task.Run(() =>
-        {
-            Common.Invoke(() =>
-            {
-                _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.DailySignin);
-                _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.DailySignin,
-                    new Dictionary<string, object> { { "type", 1 } });
-                //刷播放量不?
-            });
-        });
+        DoDailySign();
 
         HyPlayList.OnMediaEnd += hpi =>
         {
             // 播放数据
-            _ = Task.Run(() =>
+            if (hpi.ItemType != HyPlayItemType.Netease) return;
+            _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.Scrobble, new Dictionary<string, object>
             {
-                Common.Invoke(() =>
-                {
-                    if (hpi.ItemType != HyPlayItemType.Netease) return;
-                    _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.Scrobble, new Dictionary<string, object>
-                    {
-                        { "id", hpi.PlayItem.Id },
-                        { "sourceid", "-1" }
-                    });
-                });
+                { "id", hpi.PlayItem.Id },
+                { "sourceid", "-1" }
             });
         };
 
@@ -369,6 +338,27 @@ public sealed partial class BasePage : Page
         NavMain.SelectedItem = NavItemLogin;
         Common.NavigatePage(typeof(Me));
         return true;
+    }
+
+    private static void DoDailySign()
+    {
+        _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.DailySignin);
+        _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.DailySignin,
+            new Dictionary<string, object> { { "type", 1 } });
+    }
+
+    private static async void LoadMyLikelist()
+    {
+        try
+        {
+            var js = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Likelist,
+                new Dictionary<string, object> { { "uid", Common.LoginedUser.id } });
+            Common.LikedSongs = js["ids"].ToObject<List<string>>();
+        }
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+        }
     }
 
     public async void LoadSongList()

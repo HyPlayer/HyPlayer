@@ -141,24 +141,18 @@ public sealed partial class ArtistPage : Page
 
     private void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
-        Task.Run(() =>
+        try
         {
-            Common.Invoke(() =>
-            {
-                try
-                {
-                    HyPlayList.AppendNcSongs(hotSongs);
+            HyPlayList.AppendNcSongs(hotSongs);
 
-                    HyPlayList.SongAppendDone();
+            HyPlayList.SongAppendDone();
 
-                    HyPlayList.SongMoveTo(0);
-                }
-                catch (Exception ex)
-                {
-                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-                }
-            });
-        });
+            HyPlayList.SongMoveTo(0);
+        }
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+        }
     }
 
     private void NextPage_Click(object sender, RoutedEventArgs e)
