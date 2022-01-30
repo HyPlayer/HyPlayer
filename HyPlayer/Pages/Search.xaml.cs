@@ -113,14 +113,92 @@ public sealed partial class Search : Page, IDisposable
                 case "1000":
                     LoadPlaylistResult(json);
                     break;
+                case "1002":
+                    LoadUserResult(json);
+                    break;
+                case "1004":
+                    LoadMVResult(json);
+                    break;
+                case "1006":
+                    LoadLyricResult(json);
+                    break;
                 case "1009":
                     LoadRadioResult(json);
+                    break;
+                case "1014":
+                    LoadMlogResult(json);
                     break;
             }
         }
         catch (Exception ex)
         {
             Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+        }
+    }
+
+    private void LoadMVResult(JObject json)
+    {
+        var i = 0;
+        if (json["result"]["mvCount"].ToObject<int>() == 0)
+        {
+            TBNoRes.Visibility = Visibility.Visible;
+            return;
+        }
+
+        foreach (var item in json["result"]["mvs"])
+        {
+            SearchResultContainer.ListItems.Add(
+                new SimpleListItem
+                {
+                    Title = item["name"].ToString(),
+                    LineOne = item["artistName"].ToString(),
+                    LineTwo = item["briefDesc"]?.ToString(),
+                    LineThree = item["transNames"]?.ToString(),
+                    ResourceId = "ml" + item["id"],
+                    CoverUri = item["cover"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                    Order = i++
+                });
+            if (json["result"]["mvCount"].ToObject<int>() >= (page + 1) * 30)
+                NextPage.Visibility = Visibility.Visible;
+            else
+                NextPage.Visibility = Visibility.Collapsed;
+            if (page > 0)
+                PrevPage.Visibility = Visibility.Visible;
+            else
+                PrevPage.Visibility = Visibility.Collapsed;
+        }
+    }
+    
+    private void LoadMlogResult(JObject json)
+    {
+        var i = 0;
+        if (json["result"]["videoCount"].ToObject<int>() == 0)
+        {
+            TBNoRes.Visibility = Visibility.Visible;
+            return;
+        }
+
+        foreach (var item in json["result"]["videos"])
+        {
+            SearchResultContainer.ListItems.Add(
+                new SimpleListItem
+                {
+                    Title = item["title"]?.ToString(),
+                    LineOne = item["aliaName"]?.ToString(),
+                    LineTwo = item["transName"]?.ToString(),
+                    LineThree = item["creator"]?.First?["userName"]?.ToString(),
+                    ResourceId = "ml" + item["vid"],
+                    CoverUri = item["coverUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                    Order = i++
+                });
+            if (json["result"]["videoCount"].ToObject<int>() >= (page + 1) * 30)
+                NextPage.Visibility = Visibility.Visible;
+            else
+                NextPage.Visibility = Visibility.Collapsed;
+            if (page > 0)
+                PrevPage.Visibility = Visibility.Visible;
+            else
+                PrevPage.Visibility = Visibility.Collapsed;
         }
     }
 

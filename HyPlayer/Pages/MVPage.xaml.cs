@@ -41,10 +41,18 @@ public sealed partial class MVPage : Page, IDisposable
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        var input = e.Parameter as NCSong;
-        mvid = input.mvid.ToString();
-        songid = input.sid;
-        LoadRelateive();
+        if (e.Parameter is NCSong input)
+        {
+            mvid = input.mvid.ToString();
+            songid = input.sid;
+            LoadRelateive();
+        }
+        else
+        {
+            mvid = e.Parameter.ToString();
+            LoadThings();
+        }
+
     }
 
     private void LoadThings()

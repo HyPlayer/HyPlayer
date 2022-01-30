@@ -185,6 +185,9 @@ namespace HyPlayer
                     });
 
                     break;
+                case "ml":
+                    NavigatePage(typeof(MVPage),resourceId.Substring(2));
+                    break;
             }
         }
 
