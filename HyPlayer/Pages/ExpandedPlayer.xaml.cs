@@ -809,6 +809,35 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         TbOffset.Text = (HyPlayList.LyricOffset < TimeSpan.Zero ? "-" : "") +
                         HyPlayList.LyricOffset.ToString("ss\\.ff");
     }
+
+    public static readonly DependencyProperty NowPlaybackSpeedProperty = DependencyProperty.Register(
+        "NowPlaybackSpeed", typeof(string), typeof(ExpandedPlayer),
+        new PropertyMetadata("x" + HyPlayList.Player.PlaybackSession.PlaybackRate));
+
+    public string NowPlaybackSpeed
+    {
+        get => (string)GetValue(NowPlaybackSpeedProperty);
+        set => SetValue(NowPlaybackSpeedProperty, value);
+    }
+
+    private void BtnSpeedMinusClick(object sender, RoutedEventArgs e)
+    {
+        if (HyPlayList.Player.PlaybackSession.PlaybackRate <= 0.2) return;
+        HyPlayList.Player.PlaybackSession.PlaybackRate -= 0.1;
+        NowPlaybackSpeed = "x" + HyPlayList.Player.PlaybackSession.PlaybackRate;
+    }
+
+    private void BtnSpeedPlusClick(object sender, RoutedEventArgs e)
+    {
+        HyPlayList.Player.PlaybackSession.PlaybackRate += 0.1;
+        NowPlaybackSpeed = "x" + HyPlayList.Player.PlaybackSession.PlaybackRate;
+    }
+
+    private void TbNowSpeed_OnTapped(object sender, RoutedEventArgs routedEventArgs)
+    {
+        HyPlayList.Player.PlaybackSession.PlaybackRate = 1.0;
+        NowPlaybackSpeed = "x" + HyPlayList.Player.PlaybackSession.PlaybackRate;
+    }
 }
 
 public class AlbumShadowConverter : IValueConverter

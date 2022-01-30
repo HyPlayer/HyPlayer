@@ -333,6 +333,25 @@
                                     Glyph="&#xE1A1;" />
                             </ToggleMenuFlyoutItem.Icon>
                         </ToggleMenuFlyoutItem>
+                        <MenuFlyoutSeparator />
+                        <MenuFlyoutItem
+                            IsEnabled="False"
+                            Text="播放速度" />
+                        <MenuFlyoutItem
+                            Click="TbNowSpeed_OnTapped"
+                            Text="恢复 x1" />
+                        <MenuFlyoutItem DataContext="{x:Bind NowPlaybackSpeed, Mode = OneWay}">
+                            <MenuFlyoutItem.Template>
+                                <ControlTemplate>
+                                    <controls:DockPanel
+                                        LastChildFill="True">
+                                        <Button controls:DockPanel.Dock="Left" Click="BtnSpeedMinusClick">-</Button>
+                                        <Button controls:DockPanel.Dock="Right" Click="BtnSpeedPlusClick">+</Button>
+                                        <TextBlock TextAlignment="Center" x:Name="TbNowSpeed" Text="{TemplateBinding MenuFlyoutItem.DataContext}" />
+                                    </controls:DockPanel>
+                                </ControlTemplate>
+                            </MenuFlyoutItem.Template>
+                        </MenuFlyoutItem>
                     </MenuFlyout>
                 </Button.Flyout>
                 <Button.Content>
