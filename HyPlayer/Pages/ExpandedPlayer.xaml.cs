@@ -838,6 +838,11 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         HyPlayList.Player.PlaybackSession.PlaybackRate = 1.0;
         NowPlaybackSpeed = "x" + HyPlayList.Player.PlaybackSession.PlaybackRate;
     }
+
+    private void BtnCopyLyricClicked(object sender, RoutedEventArgs e)
+    {
+        new LyricShareDialog() { Lyrics = HyPlayList.Lyrics }.ShowAsync();
+    }
 }
 
 public class AlbumShadowConverter : IValueConverter

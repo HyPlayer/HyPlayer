@@ -1,0 +1,108 @@
+﻿<ContentDialog
+    x:Class="HyPlayer.Controls.LyricShareDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:HyPlayer.Controls"
+    Title="复制歌词"
+    PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
+    PrimaryButtonText="复制"
+    SecondaryButtonClick="ContentDialog_SecondaryButtonClick"
+    SecondaryButtonText="取消">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <ListView
+            x:Name="MainListView"
+            Grid.Row="0"
+            ItemsSource="{x:Bind ShareLyricItem}"
+            SelectionMode="Multiple">
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="local:LyricShareItem">
+                    <TextBlock Text="{x:Bind Text}" />
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Button
+                Grid.Column="0"
+                Click="SelectOriginal"
+                Content="选中原文" />
+            <Button
+                Grid.Column="1"
+                Click="SelectTranslation"
+                Content="选中翻译" />
+            <Button
+                Grid.Column="2"
+                Click="CleanSelection"
+                Content="清空选中" />
+            <Button
+                Grid.Column="3"
+                Click="ReverseSelection"
+                Content="反向选择" />
+            <Button
+                Grid.Column="4"
+                Click="NoSelectEmpty"
+                Content="不选空行" />
+        </Grid>
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <CheckBox
+                x:Name="CheckBoxLoadRomaji"
+                Grid.Column="0"
+                Checked="LoadRomaji"
+                Content="加载罗马音" />
+            <Button
+                Grid.Column="1"
+                Click="SelectRomaji"
+                Content="选择罗马音" />
+        </Grid>
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="输出格式: " />
+            <TextBox
+                x:Name="TextBoxOutputFormat"
+                Grid.Column="1"
+                PlaceholderText="输出格式"
+                Text="{}{$ORIGINAL}{$NEWLINE}{$TRANSLATION}{$NEWLINE}" />
+            <Button Grid.Column="2" Content="?">
+                <Button.Flyout>
+                    <Flyout>
+                        <RichTextBlock>
+                            <Paragraph>
+                                &#x27A4;<Bold>{$ORIGINAL}</Bold>
+                                : 原文<LineBreak />
+                                &#x27A4;<Bold>{$TRANSLATION}</Bold>
+                                : 翻译<LineBreak />
+                                &#x27A4;<Bold>{$ROMAJI}</Bold>
+                                : 罗马音<LineBreak />
+                                &#x27A4;<Bold>{$TIME}</Bold>
+                                : 时间<LineBreak />
+                                &#x27A4;<Bold>{$NEWLINE}</Bold>
+                                : 换行<LineBreak />
+                                <LineBreak />
+                                例如: [{$TIME}]{$ORIGINAL}「{$TRANSLATION}」{$NEWLINE} 为默认的 lrc 输出格式</Paragraph>
+                        </RichTextBlock>
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
+        </Grid>
+    </Grid>
+</ContentDialog>
