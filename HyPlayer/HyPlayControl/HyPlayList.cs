@@ -852,8 +852,8 @@ public static class HyPlayList
 
     public static async Task<bool> AppendNcSource(string sourceId)
     {
-        /*  歌单: pl+歌单ID (e.g. pl123456)
-         *  单曲: ns+歌曲ID (e.g. ns1515584)
+        /*  歌单: pl + 歌单ID (e.g. pl123456)
+         *  单曲: ns + 歌曲ID (e.g. ns1515584)
          *  专辑: al + 专辑ID(e.g.al552255)
          *  歌手热门: sh + 歌手ID(e.g sh25151)
          *  歌手全部: sa + 歌手ID e.g.sa245144
@@ -866,7 +866,8 @@ public static class HyPlayList
             switch (prefix)
             {
                 case "pl":
-                    return await AppendPlayList(sourceId.Substring(2, sourceId.Length - 2));
+                    await AppendPlayList(sourceId.Substring(2, sourceId.Length - 2));
+                    return true;
                 case "ns":
                     var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
                         new Dictionary<string, object>
@@ -874,12 +875,17 @@ public static class HyPlayList
                     _ = AppendNcSong(NCSong.CreateFromJson(json["songs"]?[0]));
                     return true;
                 case "al":
-                    return await AppendAlbum(sourceId.Substring(2, sourceId.Length - 2));
+                    await AppendAlbum(sourceId.Substring(2, sourceId.Length - 2));
+                    return true;
                 case "sh":
-                    return await AppendSingerHot(sourceId.Substring(2, sourceId.Length - 2));
+                    await AppendSingerHot(sourceId.Substring(2, sourceId.Length - 2));
+                    return true;
                 case "sa":
+                    await AppendSingerHot(sourceId.Substring(2, sourceId.Length - 2));
+                    return true;
                 case "rd":
-                    return await AppendRadioList(sourceId.Substring(2, sourceId.Length - 2));
+                    await AppendRadioList(sourceId.Substring(2, sourceId.Length - 2));
+                    return true;
                 default:
                     return false;
             }

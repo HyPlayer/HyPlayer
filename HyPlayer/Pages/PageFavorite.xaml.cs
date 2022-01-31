@@ -82,7 +82,8 @@ public sealed partial class PageFavorite : Page, IDisposable
                     LineThree = "最后一个节目: " + pljs["lastProgramName"],
                     ResourceId = "rd" + pljs["id"],
                     CoverUri = pljs["picUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
-                    Order = i++
+                    Order = i++,
+                    CanPlay = true
                 });
         }
         catch (Exception ex)
@@ -112,7 +113,8 @@ public sealed partial class PageFavorite : Page, IDisposable
                     LineThree = $"专辑数 {singerjson["albumSize"]} | MV 数 {singerjson["mvSize"]}",
                     ResourceId = "ar" + singerjson["id"],
                     CoverUri = singerjson["img1v1Url"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
-                    Order = i++
+                    Order = i++,
+                    CanPlay = true
                 });
         }
         catch (Exception ex)
@@ -142,7 +144,8 @@ public sealed partial class PageFavorite : Page, IDisposable
                     LineThree = albumjson.Value<bool>("paid") ? "付费专辑" : "",
                     ResourceId = "al" + albumjson["id"],
                     CoverUri = albumjson["picUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
-                    Order = i++
+                    Order = i++,
+                    CanPlay = true
                 });
         }
         catch (Exception ex)

@@ -184,7 +184,8 @@ public sealed partial class ArtistPage : Page
                     LineThree = albumjson.Value<bool>("paid") ? "付费专辑" : "",
                     ResourceId = "al" + albumjson["id"],
                     CoverUri = albumjson["picUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
-                    Order = i++
+                    Order = i++,
+                    CanPlay = true
                 });
             if (int.Parse(j1["artist"]["albumSize"].ToString()) >= (page + 1) * 50)
                 NextPage.Visibility = Visibility.Visible;

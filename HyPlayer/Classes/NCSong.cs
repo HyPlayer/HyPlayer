@@ -220,6 +220,7 @@ public class SimpleListItem
     public int Order = 0;
     public string ResourceId;
     public string Title;
+    public bool CanPlay;
     public BitmapImage Cover => new(new Uri(CoverUri));
     public int DspOrder => Order + 1;
 }

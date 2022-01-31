@@ -87,7 +87,8 @@ public sealed partial class Me : Page, IDisposable
                                 LineTwo = null,
                                 Order = myListIdx++,
                                 ResourceId = "pl" + ncp.plid,
-                                Title = ncp.name
+                                Title = ncp.name,
+                                CanPlay = true
                             }
                         );
                     else
@@ -100,7 +101,8 @@ public sealed partial class Me : Page, IDisposable
                                 LineTwo = null,
                                 Order = subListIdx++,
                                 ResourceId = "pl" + ncp.plid,
-                                Title = ncp.name
+                                Title = ncp.name,
+                                CanPlay = true
                             }
                         );
                 }

@@ -283,7 +283,8 @@ public sealed partial class Search : Page, IDisposable
                     LineThree = pljs["rcmdText"].ToString(),
                     ResourceId = "rd" + json["id"],
                     CoverUri = pljs["picUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
-                    Order = i++
+                    Order = i++,
+                    CanPlay = true
                 });
         if (int.Parse(json["result"]["djRadiosCount"].ToString()) >= (page + 1) * 30)
             NextPage.Visibility = Visibility.Visible;
@@ -319,7 +320,8 @@ public sealed partial class Search : Page, IDisposable
                 LineThree = $"{pljs["trackCount"]}首 | 播放{pljs["playCount"]}次 | 收藏 {pljs["bookCount"]}次",
                 ResourceId = "pl" + pljs["id"],
                 CoverUri = pljs["coverImgUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
-                Order = i++
+                Order = i++,
+                CanPlay = true
             });
         if (int.Parse(json["result"]["playlistCount"].ToString()) >= (page + 1) * 30)
             NextPage.Visibility = Visibility.Visible;
@@ -382,7 +384,8 @@ public sealed partial class Search : Page, IDisposable
                 LineThree = albumjson.Value<bool>("paid") ? "付费专辑" : "",
                 ResourceId = "al" + albumjson["id"],
                 CoverUri = albumjson["picUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
-                Order = i++
+                Order = i++,
+                CanPlay = true
             });
         if (int.Parse(json["result"]["albumCount"].ToString()) >= (page + 1) * 30)
             NextPage.Visibility = Visibility.Visible;

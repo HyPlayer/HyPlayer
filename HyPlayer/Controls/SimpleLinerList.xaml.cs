@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
 
 #endregion
 
@@ -50,5 +51,14 @@ public partial class SimpleLinerList : UserControl
     {
         if (ItemList.SelectedIndex >= 0)
             Common.NavigatePageResource(ListItems[ItemList.SelectedIndex].ResourceId);
+    }
+
+    private async  void BtnPlayClick(object sender, RoutedEventArgs e)
+    {
+        HyPlayList.RemoveAllSong();
+        await HyPlayList.AppendNcSource(((Button)sender).Tag.ToString());
+        HyPlayList.SongAppendDone();
+        HyPlayList.NowPlaying = -1;
+        HyPlayList.SongMoveNext();
     }
 }

@@ -5,12 +5,8 @@
     xmlns:behaviors="using:Microsoft.Toolkit.Uwp.UI.Behaviors"
     xmlns:classes="using:HyPlayer.Classes"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    x:Name="SongListRoot"
-    d:DesignHeight="300"
-    mc:Ignorable="d">
+    x:Name="SongListRoot">
 
     <ListView
         Name="ItemList"
@@ -28,7 +24,11 @@
         <ListView.ItemTemplate>
             <DataTemplate x:DataType="classes:SimpleListItem">
                 <Grid Tag="{x:Bind ResourceId}">
-                    <StackPanel Orientation="Horizontal">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="100" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
                         <TextBlock
                             x:Name="OrderId"
                             Width="30"
@@ -92,6 +92,17 @@
                                 ToolTipService.ToolTip="{x:Bind LineThree}" />
                         </Grid>
                     </StackPanel>
+                    <Button
+                        Grid.Column="1"
+                        Click="BtnPlayClick"
+                        Tag="{x:Bind ResourceId}"
+                        ToolTipService.ToolTip="播放"
+                        Visibility="{x:Bind CanPlay}">
+                        <FontIcon
+                            Name="PlayStateIcon"
+                            FontFamily="{StaticResource SymbolThemeFontFamily}"
+                            Glyph="&#xEDB5;" />
+                    </Button>
                 </Grid>
             </DataTemplate>
         </ListView.ItemTemplate>
