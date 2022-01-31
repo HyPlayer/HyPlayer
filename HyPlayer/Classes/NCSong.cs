@@ -157,7 +157,7 @@ public class NCSong
     public int DspOrder => Order + 1;
 
     public BitmapImage Cover =>
-        new(new Uri(Album.cover ??=
+        Common.Setting.noImage ? null : new BitmapImage(new Uri(Album.cover ??=
             "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg" + "?param=" +
             StaticSource.PICSIZE_SINGLENCSONG_COVER));
 
@@ -182,7 +182,7 @@ public class NCSong
         {
             IsVip = song["fee"]?.ToString() == "1",
             IsCloud = song["s_id"]?.ToString() != "0",
-            Type =  HyPlayItemType.Netease,
+            Type = HyPlayItemType.Netease,
             Album = NCAlbum.CreateFromJson(song[alpath]),
             sid = song["id"].ToString(),
             songname = song["name"].ToString(),
@@ -221,7 +221,7 @@ public class SimpleListItem
     public string ResourceId;
     public string Title;
     public bool CanPlay;
-    public BitmapImage Cover => new(new Uri(CoverUri));
+    public BitmapImage Cover => Common.Setting.noImage ? null : new BitmapImage(new Uri(CoverUri));
     public int DspOrder => Order + 1;
 }
 

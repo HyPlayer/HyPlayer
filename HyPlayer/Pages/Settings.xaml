@@ -3,7 +3,8 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:Microsoft.UI.Xaml.Controls"
-    xmlns:hyplayer="using:HyPlayer" xmlns:controls1="using:HyPlayer.Controls"
+    xmlns:controls1="using:HyPlayer.Controls"
+    xmlns:hyplayer="using:HyPlayer"
     NavigationCacheMode="Disabled">
 
     <Grid Margin="0,0,0,150">
@@ -338,6 +339,7 @@
                             Content="是否频繁内存回收 (开启后可能会频繁出现页面重载现象)"
                             IsChecked="{x:Bind hyplayer:Common.Setting.forceMemoryGarbage, Mode=TwoWay}" />
                         <CheckBox Content="使用 亚克力背景 (否则为一般模糊)" IsChecked="{x:Bind hyplayer:Common.Setting.useAcrylic, Mode=TwoWay}" />
+                        <CheckBox Content="无图模式 (开启后需重启应用)" IsChecked="{x:Bind hyplayer:Common.Setting.noImage, Mode=TwoWay}" />
                         <CheckBox
                             x:Name="CBSongCacheEnable"
                             Content="是否开启播放缓存 (可能造成播放前空白)"

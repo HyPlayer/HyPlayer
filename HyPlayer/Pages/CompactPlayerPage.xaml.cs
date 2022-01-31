@@ -77,17 +77,18 @@ namespace HyPlayer.Pages
 
         public async void OnChangePlayItem(HyPlayItem item)
         {
-            BitmapImage img;
-            if (item.ItemType == HyPlayItemType.Local)
-            {
-                img = new BitmapImage();
-                await img.SetSourceAsync(
-                    await HyPlayList.NowPlayingStorageFile?.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999));
-            }
-            else
-            {
-                img = new BitmapImage(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover));
-            }
+            BitmapImage img = null;
+            if (!Common.Setting.noImage)
+                if (item.ItemType == HyPlayItemType.Local)
+                {
+                    img = new BitmapImage();
+                    await img.SetSourceAsync(
+                        await HyPlayList.NowPlayingStorageFile?.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999));
+                }
+                else
+                {
+                    img = new BitmapImage(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover));
+                }
 
             TotalProgress = item.PlayItem.LengthInMilliseconds;
             AlbumCover = new ImageBrush() { ImageSource = img };

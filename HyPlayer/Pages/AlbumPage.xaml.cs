@@ -73,7 +73,7 @@ public sealed partial class AlbumPage : Page, IDisposable
                 new Dictionary<string, object> { { "id", albumid } });
             Album = NCAlbum.CreateFromJson(json["album"]);
             ImageRect.ImageSource =
-                new BitmapImage(
+                Common.Setting.noImage ? null : new BitmapImage(
                     new Uri(Album.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
             TextBoxAlbumName.Text = Album.name;
 

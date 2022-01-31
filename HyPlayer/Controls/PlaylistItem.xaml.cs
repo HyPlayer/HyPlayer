@@ -28,7 +28,7 @@ public sealed partial class PlaylistItem : UserControl, IDisposable
         InitializeComponent();
         this.playList = playList;
         ImageContainer.Source =
-            new BitmapImage(new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_PLAYLIST_ITEM_COVER));
+            Common.Setting.noImage ? null : new BitmapImage(new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_PLAYLIST_ITEM_COVER));
         TextBlockPLName.Text = playList.name;
         TextBlockPLAuthor.Text = playList.creater.name;
         StoryboardIn.Begin();

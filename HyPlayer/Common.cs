@@ -384,6 +384,12 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        
+        public bool noImage
+        {
+            get => GetSettings("noImage", false);
+            set => ApplicationData.Current.LocalSettings.Values["noImage"] = value;
+        }
 
         public bool lyricAlignment
         {

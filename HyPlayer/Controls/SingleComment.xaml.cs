@@ -31,8 +31,12 @@ public sealed partial class SingleComment : UserControl
         InitializeComponent();
         comment = cmt;
         AvatarUri = comment.AvatarUri;
-        AvatarSource = new BitmapImage();
-        AvatarSource.UriSource = AvatarUri;
+        if (!Common.Setting.noImage)
+        {
+            AvatarSource = new BitmapImage();
+            AvatarSource.UriSource = AvatarUri;
+        }
+
         ReplyBtn.Visibility = Visibility.Visible;
     }
 

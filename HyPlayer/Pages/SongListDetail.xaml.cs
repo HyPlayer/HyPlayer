@@ -61,10 +61,10 @@ public sealed partial class SongListDetail : Page, IDisposable
     {
         if (playList.cover.StartsWith("http"))
             ImageRect.ImageSource =
-                new BitmapImage(new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
+                Common.Setting.noImage ? null : new BitmapImage(new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
         else
             ImageRect.ImageSource =
-                new BitmapImage(new Uri(playList.cover));
+                Common.Setting.noImage ? null : new BitmapImage(new Uri(playList.cover));
 
 
         TextBoxPLName.Text = playList.name;

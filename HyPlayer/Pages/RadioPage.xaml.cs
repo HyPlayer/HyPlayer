@@ -84,7 +84,7 @@ public sealed partial class RadioPage : Page, IDisposable
         TextBoxDJ.Content = Radio.DJ.name;
         TextBlockDesc.Text = Radio.desc;
         ImageRect.ImageSource =
-            new BitmapImage(new Uri(Radio.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
+            Common.Setting.noImage ? null : new BitmapImage(new Uri(Radio.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
         Songs.Clear();
         SongContainer.ListSource = "rd" + Radio.id;
         LoadProgram();

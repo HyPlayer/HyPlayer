@@ -424,19 +424,20 @@ public sealed partial class PlayBar
             TbAlbumName.Content = HyPlayList.NowPlayingItem.PlayItem.AlbumString;
             try
             {
-                if (mpi.ItemType == HyPlayItemType.Local)
-                {
-                    var img = new BitmapImage();
-                    await img.SetSourceAsync(
-                        await HyPlayList.NowPlayingStorageFile?.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999));
-                    AlbumImage.Source = img;
-                }
-                else
-                {
-                    AlbumImage.Source =
-                        new BitmapImage(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=" +
-                                                StaticSource.PICSIZE_PLAYBAR_ALBUMCOVER));
-                }
+                if (!Common.Setting.noImage)
+                    if (mpi.ItemType == HyPlayItemType.Local)
+                    {
+                        var img = new BitmapImage();
+                        await img.SetSourceAsync(
+                            await HyPlayList.NowPlayingStorageFile?.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999));
+                        AlbumImage.Source = img;
+                    }
+                    else
+                    {
+                        AlbumImage.Source =
+                            new BitmapImage(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=" +
+                                                    StaticSource.PICSIZE_PLAYBAR_ALBUMCOVER));
+                    }
             }
             catch (Exception)
             {
