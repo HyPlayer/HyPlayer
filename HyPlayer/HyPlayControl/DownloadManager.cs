@@ -129,7 +129,7 @@ internal class DownloadObject
                     Utils.ConvertTranslation(json["tlyric"]["lyric"].ToString(), lrc);
                 var lrctxt = string.Join("\r\n", lrc.Select(t =>
                 {
-                    if (t.HaveTranslation && !string.IsNullOrEmpty(t.Translation))
+                    if (t.HaveTranslation && !string.IsNullOrWhiteSpace(t.Translation))
                         return "[" + t.LyricTime.ToString(@"mm\:ss\.ff") + "]" + t.PureLyric + " 「" +
                                t.Translation + "」";
                     return "[" + t.LyricTime.ToString(@"mm\:ss\.ff") + "]" + t.PureLyric;

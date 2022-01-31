@@ -232,7 +232,7 @@ public sealed partial class PlayBar
     {
         RefreshSongList();
         HistoryManagement.SetcurPlayingListHistory(HyPlayList.List
-            .Where(t => t.ItemType == HyPlayItemType.Netease || t.ItemType == HyPlayItemType.Pan)
+            .Where(t => t.ItemType == HyPlayItemType.Netease)
             .Select(t => t.PlayItem.Id).ToList());
     }
 

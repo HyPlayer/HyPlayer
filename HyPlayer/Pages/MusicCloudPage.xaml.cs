@@ -65,7 +65,7 @@ public sealed partial class MusicCloudPage : Page, IDisposable
                         });
                     }
 
-                    ret.Type = HyPlayItemType.Pan;
+                    ret.IsCloud = true;
                     ret.Order = idx++;
                     SongContainer.Songs.Add(ret);
                 }

@@ -28,7 +28,6 @@ public enum HyPlayItemType
 {
     Local,
     Netease,
-    Pan,
     Radio
 }
 
@@ -154,7 +153,7 @@ public class NCSong
     public string songname;
     public string transname;
     public HyPlayItemType Type;
-    public bool IsCloud => Type == HyPlayItemType.Pan;
+    public bool IsCloud;
     public int DspOrder => Order + 1;
 
     public BitmapImage Cover =>
@@ -182,7 +181,8 @@ public class NCSong
         var NCSong = new NCSong
         {
             IsVip = song["fee"]?.ToString() == "1",
-            Type = song["s_id"]?.ToString() != "0" ? HyPlayItemType.Pan : HyPlayItemType.Netease,
+            IsCloud = song["s_id"]?.ToString() != "0",
+            Type =  HyPlayItemType.Netease,
             Album = NCAlbum.CreateFromJson(song[alpath]),
             sid = song["id"].ToString(),
             songname = song["name"].ToString(),

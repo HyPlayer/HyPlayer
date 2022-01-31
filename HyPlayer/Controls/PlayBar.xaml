@@ -4,14 +4,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:classes="using:HyPlayer.Classes"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hy="using:HyPlayer"
     xmlns:local="using:HyPlayer.Controls"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    d:DesignHeight="100"
-    d:DesignWidth="1080"
-    Background="{ThemeResource SystemControlAcrylicElementMediumHighBrush}"
-    mc:Ignorable="d">
+    Background="{ThemeResource SystemControlAcrylicElementMediumHighBrush}">
     <Grid Name="GridThis">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -114,7 +109,7 @@
                                 Foreground="Red"
                                 Text="无歌曲" />
                         </Grid>
-                        <TextBlock
+                        <local:SelectableTextBox
                             x:Name="TbSongName"
                             Margin="5,0,0,0"
                             HorizontalAlignment="Stretch"
@@ -232,7 +227,10 @@
                     Click="BtnLike_OnClick"
                     CornerRadius="30"
                     Style="{StaticResource ToggleButtonRevealStyle}">
-                    <FontIcon x:Name="IconLiked" FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE00B;" />
+                    <FontIcon
+                        x:Name="IconLiked"
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        Glyph="&#xE00B;" />
                 </ToggleButton>
             </Grid>
             <Grid Grid.Row="1">

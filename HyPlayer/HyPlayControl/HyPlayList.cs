@@ -202,7 +202,7 @@ public static class HyPlayList
         {
             _crashedTime = NowPlayingItem.PlayItem.Id;
             if (NowPlayingItem.ItemType == HyPlayItemType.Netease && !NowPlayingItem.PlayItem.IsLocalFile ||
-                NowPlayingItem.ItemType == HyPlayItemType.Radio || NowPlayingItem.ItemType == HyPlayItemType.Pan)
+                NowPlayingItem.ItemType == HyPlayItemType.Radio)
                 Common.Invoke(() =>
                 {
                     List[NowPlaying] = LoadNcSong(new NCSong
@@ -452,7 +452,6 @@ public static class HyPlayList
         {
             case HyPlayItemType.Netease:
             case HyPlayItemType.Radio: //FM伪加载为普通歌曲
-            case HyPlayItemType.Pan: //云盘接口也是这个
                 //先看看是不是本地文件
                 //本地文件的话尝试加载
                 //cnm的NCM,我试试其他方式
@@ -657,22 +656,28 @@ public static class HyPlayList
     private static async void LoadLyrics(HyPlayItem hpi)
     {
         var pureLyricInfo = new PureLyricInfo();
-        if (hpi.ItemType == HyPlayItemType.Netease || hpi.ItemType == HyPlayItemType.Pan)
-            pureLyricInfo = await LoadNcLyric(hpi);
-        else if (hpi.ItemType == HyPlayItemType.Local)
-            try
-            {
-                pureLyricInfo = new PureLyricInfo
+        switch (hpi.ItemType)
+        {
+            case HyPlayItemType.Netease:
+                pureLyricInfo = await LoadNcLyric(hpi);
+                break;
+            case HyPlayItemType.Local:
+                try
                 {
-                    PureLyrics = await FileIO.ReadTextAsync(
-                        await StorageFile.GetFileFromPathAsync(Path.ChangeExtension(NowPlayingItem.PlayItem.Url,
-                            "lrc")))
-                };
-            }
-            catch
-            {
-                pureLyricInfo = new PureLyricInfo();
-            }
+                    pureLyricInfo = new PureLyricInfo
+                    {
+                        PureLyrics = await FileIO.ReadTextAsync(
+                            await StorageFile.GetFileFromPathAsync(Path.ChangeExtension(NowPlayingItem.PlayItem.Url,
+                                "lrc")))
+                    };
+                }
+                catch
+                {
+                    pureLyricInfo = new PureLyricInfo();
+                }
+
+                break;
+        }
 
         //先进行歌词转换以免被搞
         Lyrics = Utils.ConvertPureLyric(pureLyricInfo.PureLyrics);
@@ -689,7 +694,7 @@ public static class HyPlayList
     {
         try
         {
-            if (ncp.ItemType != HyPlayItemType.Netease && ncp.ItemType != HyPlayItemType.Pan ||
+            if (ncp.ItemType != HyPlayItemType.Netease ||
                 ncp.PlayItem == null)
                 return new PureLyricInfo
                 {
