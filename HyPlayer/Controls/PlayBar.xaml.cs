@@ -928,6 +928,16 @@ public sealed partial class PlayBar
         if (HyPlayList.NowPlaying >= 0 && HyPlayList.NowPlaying < PlayItems.Count)
             ListBoxPlayList.ScrollIntoView(PlayItems[HyPlayList.NowPlaying]);
     }
+
+    private void ImageContainer_OnPointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        AlbumImageHover.Visibility = Visibility.Visible;
+    }
+
+    private void ImageContainer_OnPointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        AlbumImageHover.Visibility = Visibility.Collapsed;
+    }
 }
 
 public class ThumbConverter : DependencyObject, IValueConverter

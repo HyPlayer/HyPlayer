@@ -6,6 +6,7 @@
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:hy="using:HyPlayer"
     xmlns:local="using:HyPlayer.Controls"
+    xmlns:media="using:Microsoft.Toolkit.Uwp.UI.Media"
     Background="{ThemeResource SystemControlAcrylicElementMediumHighBrush}">
     <Grid Name="GridThis">
         <Grid.ColumnDefinitions>
@@ -86,7 +87,20 @@
                     HorizontalAlignment="Left"
                     BorderThickness="0"
                     IsTapEnabled="True"
+                    PointerEntered="ImageContainer_OnPointerEntered"
+                    PointerExited="ImageContainer_OnPointerExited"
                     Tapped="ImageContainer_Tapped">
+                    <Border
+                        x:Name="AlbumImageHover"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        Canvas.ZIndex="15"
+                        Visibility="Collapsed">
+                        <Border.Background>
+                            <media:BackdropBlurBrush Amount="10" />
+                        </Border.Background>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE70E;" />
+                    </Border>
                     <controls:ImageEx
                         x:Name="AlbumImage"
                         EnableLazyLoading="True"
