@@ -29,6 +29,7 @@ using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
 using Microsoft.Toolkit.Uwp.Notifications;
+using Microsoft.Toolkit.Uwp.UI.Media;
 using NeteaseCloudMusicApi;
 
 #endregion
@@ -91,6 +92,8 @@ public sealed partial class PlayBar
 
         if (Common.isExpanded)
             Common.BarPlayBar.ShowExpandedPlayer();
+        if (!Common.Setting.useAcrylic)
+            Common.PageMain.GridPlayBar.Background = new BackdropBlurBrush() { Amount = 30.0 };
         /*
         verticalAnimation = new DoubleAnimation();
 
@@ -255,7 +258,8 @@ public sealed partial class PlayBar
         {
             var folder = await file.GetParentAsync();
             if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(folder.Path.GetHashCode().ToString()))
-                StorageApplicationPermissions.FutureAccessList.AddOrReplace(folder.Path.GetHashCode().ToString(), folder);
+                StorageApplicationPermissions.FutureAccessList.AddOrReplace(folder.Path.GetHashCode().ToString(),
+                    folder);
             if (Path.GetExtension(file.Path) == ".ncm")
             {
                 //脑残Music
@@ -695,8 +699,11 @@ public sealed partial class PlayBar
         Common.PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));
         //Common.PageMain.MainFrame.Visibility = Visibility.Visible;
         Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
-        Common.PageMain.GridPlayBar.Background =
-            Application.Current.Resources["SystemControlAcrylicElementMediumHighBrush"] as Brush;
+        if (Common.Setting.useAcrylic)
+            Common.PageMain.GridPlayBar.Background =
+                Application.Current.Resources["SystemControlAcrylicElementMediumHighBrush"] as Brush;
+        else
+            Common.PageMain.GridPlayBar.Background = new BackdropBlurBrush() { Amount = 30.0 };
         Window.Current.SetTitleBar(Common.PageBase.AppTitleBar);
         Common.isExpanded = false;
     }
