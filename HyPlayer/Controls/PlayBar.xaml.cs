@@ -386,7 +386,7 @@ public sealed partial class PlayBar
 
     public void LoadPlayingFile(HyPlayItem mpi)
     {
-        if (Common.GLOBAL["PERSONALFM"].ToString() == "true")
+        if (Common.IsInFm.ToString() == "true")
         {
             IconPrevious.Glyph = "\uE7E8";
             IconPlayType.Glyph = "\uE107";
@@ -598,7 +598,7 @@ public sealed partial class PlayBar
 
     private void BtnPreviousSong_OnClick(object sender, RoutedEventArgs e)
     {
-        if (Common.GLOBAL["PERSONALFM"].ToString() == "true")
+        if (Common.IsInFm.ToString() == "true")
             PersonalFM.ExitFm();
         else
             HyPlayList.SongMovePrevious();
@@ -733,7 +733,7 @@ public sealed partial class PlayBar
 
     private void BtnPlayRollType_OnClick(object sender, RoutedEventArgs e)
     {
-        if (Common.GLOBAL["PERSONALFM"].ToString() != "true")
+        if (Common.IsInFm.ToString() != "true")
         {
             switch (NowPlayType)
             {

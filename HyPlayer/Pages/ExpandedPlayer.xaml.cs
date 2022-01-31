@@ -357,6 +357,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             await ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
         if (ApplicationView.GetForCurrentView().IsFullScreenMode)
             ApplicationView.GetForCurrentView().ExitFullScreenMode();
+        Common.PageExpandedPlayer = null;
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -842,6 +843,12 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private void BtnCopyLyricClicked(object sender, RoutedEventArgs e)
     {
         new LyricShareDialog() { Lyrics = HyPlayList.Lyrics }.ShowAsync();
+    }
+
+    private void BtnToggleTinyModeClick(object sender, RoutedEventArgs e)
+    {
+        ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.CompactOverlay);
+        Common.PageMain.ExpandedPlayer.Navigate(typeof(CompactPlayerPage));
     }
 }
 

@@ -3,12 +3,68 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:HyPlayer.Pages"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    Background="{x:Bind AlbumCover, Mode=OneWay}"
+    PointerEntered="CompactPlayerPage_OnPointerEntered"
+    PointerExited="CompactPlayerPage_OnPointerExited">
 
-    <Grid>
-
+    <Grid
+        Background="{x:Bind ControlHover, Mode=OneWay}"
+        DoubleTapped="ExitCompactMode"
+        IsTapEnabled="True">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="5" />
+            <!--  Progress Bar  -->
+        </Grid.RowDefinitions>
+        <Grid x:Name="GridBtns" Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="5*" />
+                <ColumnDefinition Width="3*" />
+            </Grid.ColumnDefinitions>
+            <Button
+                Grid.Column="0"
+                Height="70"
+                Margin="2"
+                Padding="0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Click="MovePrevious"
+                Style="{StaticResource ButtonRevealStyle}">
+                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE892;" />
+            </Button>
+            <Button
+                Name="BtnPlayStateChange"
+                Grid.Column="1"
+                Height="70"
+                Margin="2"
+                Padding="0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                AutomationProperties.AcceleratorKey="Space"
+                Click="ChangePlayState"
+                Style="{StaticResource ButtonRevealStyle}">
+                <FontIcon
+                    Name="PlayStateIcon"
+                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                    Glyph="&#xEDB5;" />
+                <!--  EDB4  -->
+            </Button>
+            <Button
+                Grid.Column="2"
+                Height="70"
+                Margin="2"
+                Padding="0"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Click="MoveNext"
+                Style="{StaticResource ButtonRevealStyle}">
+                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE893;" />
+            </Button>
+        </Grid>
+        <ProgressBar
+            Grid.Row="1"
+            Maximum="{x:Bind TotalProgress, Mode=OneWay}"
+            Value="{x:Bind NowProgress, Mode=OneWay}" />
     </Grid>
 </Page>

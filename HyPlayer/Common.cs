@@ -40,8 +40,9 @@ namespace HyPlayer
     {
         public static CloudMusicApi ncapi = new();
         public static bool Logined = false;
+        public static bool IsInFm = false;
         public static NCUser LoginedUser;
-        public static ExpandedPlayer PageExpandedPlayer;
+        public static ExpandedPlayer? PageExpandedPlayer;
         public static MainPage PageMain;
         public static PlayBar BarPlayBar;
         public static Frame BaseFrame;
@@ -49,7 +50,6 @@ namespace HyPlayer
         public static Setting Setting = new();
         public static bool ShowLyricSound = true;
         public static bool ShowLyricTrans = true;
-        public static Dictionary<string, object> GLOBAL = new();
         public static List<string> LikedSongs = new();
         public static KawazuConverter? KawazuConv;
         public static List<NCPlayList> MySongLists = new();

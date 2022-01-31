@@ -168,7 +168,7 @@ public static class HyPlayList
             });
         };
         HistoryManagement.InitializeHistoryTrack();
-        Common.GLOBAL["PERSONALFM"] = "false";
+        Common.IsInFm = false;
     }
 
 
@@ -265,7 +265,7 @@ public static class HyPlayList
     /********        方法         ********/
     public static void SongAppendDone()
     {
-        Common.GLOBAL["PERSONALFM"] = "false";
+        Common.IsInFm = false;
         Common.Invoke(() => OnPlayListAddDone?.Invoke());
     }
 

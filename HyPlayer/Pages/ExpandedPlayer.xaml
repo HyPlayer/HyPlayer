@@ -275,7 +275,7 @@
                             x:Name="BtnToggleTinyMode"
                             HorizontalAlignment="Center"
                             Background="Transparent"
-                            Click="BtnToggleFullScreen_Checked"
+                            Click="BtnToggleTinyModeClick"
                             Text="小窗模式">
                             <ToggleMenuFlyoutItem.Icon>
                                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE2B3;" />
