@@ -27,7 +27,6 @@ namespace HyPlayer.Controls;
 
 public sealed partial class SongsList : UserControl, IDisposable
 {
-    // Using a DependencyProperty as the backing store for MultiSelect.  This enables animation, styling, binding, etc...
     public static readonly DependencyProperty MultiSelectProperty =
         DependencyProperty.Register("MultiSelect", typeof(bool), typeof(SongsList), new PropertyMetadata(false));
 
@@ -353,9 +352,10 @@ public sealed partial class SongsList : UserControl, IDisposable
 
     private bool Filter(NCSong ncsong)
     {
-        return ncsong.songname.ToLower().Contains(FilterBox.Text.ToLower()) ||
-               ncsong.ArtistString.ToLower().Contains(FilterBox.Text.ToLower()) ||
-               ncsong.Album.name.ToLower().Contains(FilterBox.Text.ToLower()) ||
+        if (ncsong == null) return false;
+        return (ncsong.songname??"").ToLower().Contains(FilterBox.Text.ToLower()) ||
+               (ncsong.ArtistString??"").ToLower().Contains(FilterBox.Text.ToLower()) ||
+               (ncsong.Album?.name??"").ToLower().Contains(FilterBox.Text.ToLower()) ||
                (ncsong.transname ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
                (ncsong.alias ?? "").ToLower().Contains(FilterBox.Text.ToLower());
     }

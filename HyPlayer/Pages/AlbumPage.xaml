@@ -1,13 +1,10 @@
 ﻿<Page
-    mc:Ignorable="d"
     x:Class="HyPlayer.Pages.AlbumPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:controls1="using:HyPlayer.Controls"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    NavigationCacheMode="Disabled"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    NavigationCacheMode="Disabled">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -15,25 +12,26 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <controls1:SongsList
+            x:Name="SongContainer"
             Grid.Row="1"
             Margin="20,30,0,0"
-            Songs="{x:Bind songs}"
-            x:Name="SongContainer">
+            IsSearchEnabled="True"
+            Songs="{x:Bind songs}">
             <controls1:SongsList.ListHeader>
                 <controls:DockPanel
+                    x:Name="GridPersonalInformation"
                     Grid.Row="0"
-                    LastChildFill="True"
-                    x:Name="GridPersonalInformation">
+                    LastChildFill="True">
                     <Rectangle
+                        x:Name="RectangleImage"
+                        Width="250"
                         Height="250"
                         Margin="15"
-                        RadiusX="10"
-                        RadiusY="10"
-                        Width="250"
                         controls:DockPanel.Dock="Left"
-                        x:Name="RectangleImage">
+                        RadiusX="10"
+                        RadiusY="10">
                         <Rectangle.Fill>
-                            <ImageBrush Stretch="UniformToFill" x:Name="ImageRect">
+                            <ImageBrush x:Name="ImageRect" Stretch="UniformToFill">
                                 <ImageBrush.ImageSource>
                                     <BitmapImage UriSource="/Assets/icon.png" />
                                 </ImageBrush.ImageSource>
@@ -41,23 +39,27 @@
                         </Rectangle.Fill>
                     </Rectangle>
                     <StackPanel
-                        Margin="15,15,144,0"
                         x:Name="StackPanelUserInfo"
+                        Margin="15,15,144,0"
                         Orientation="Vertical">
                         <controls1:SelectableTextBox
+                            x:Name="TextBoxAlbumName"
                             FontSize="36"
                             FontWeight="Medium"
-                            x:Name="TextBoxAlbumName"
                             TextWrapping="Wrap" />
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Padding="0,8,0,3" FontSize="18" Foreground="Gray" Text="艺术家:" />
-                            <HyperlinkButton
+                            <TextBlock
+                                Padding="0,8,0,3"
                                 FontSize="18"
-                                Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
-                                Margin="0,2,0,0"
+                                Foreground="Gray"
+                                Text="艺术家:" />
+                            <HyperlinkButton
                                 x:Name="TextBoxAuthor"
+                                Margin="0,2,0,0"
                                 Click="TextBoxAuthor_OnTapped"
-                                Content="歌手" />
+                                Content="歌手"
+                                FontSize="18"
+                                Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}" />
                         </StackPanel>
                         <StackPanel
                             Margin="0,10,0,0"
@@ -77,13 +79,13 @@
                                 Style="{StaticResource ButtonRevealStyle}" />
                         </StackPanel>
                         <controls1:ExpandableTextBox
+                            x:Name="TextBlockDesc"
+                            Margin="0,5,0,0"
                             FontSize="13"
                             Foreground="{ThemeResource SystemControlForegroundChromeHighBrush}"
-                            Margin="0,5,0,0"
                             MaxLines="7"
                             Text="专辑简介"
-                            TextWrapping="WrapWholeWords"
-                            x:Name="TextBlockDesc" />
+                            TextWrapping="WrapWholeWords" />
                     </StackPanel>
                 </controls:DockPanel>
             </controls1:SongsList.ListHeader>

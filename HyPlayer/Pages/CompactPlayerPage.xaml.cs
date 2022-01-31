@@ -57,7 +57,8 @@ namespace HyPlayer.Pages
         }
 
         public static readonly DependencyProperty ControlHoverProperty = DependencyProperty.Register(
-            "ControlHover", typeof(Brush), typeof(CompactPlayerPage), new PropertyMetadata(new SolidColorBrush(Colors.Transparent)));
+            "ControlHover", typeof(Brush), typeof(CompactPlayerPage),
+            new PropertyMetadata(new SolidColorBrush(Colors.Transparent)));
 
         public Brush ControlHover
         {
@@ -130,7 +131,7 @@ namespace HyPlayer.Pages
 
         private void CompactPlayerPage_OnPointerEntered(object sender, PointerRoutedEventArgs e)
         {
-            ControlHover = new SolidColorBrush(Colors.Gray);
+            ControlHover = new Microsoft.Toolkit.Uwp.UI.Media.BackdropBlurBrush() { Amount = 10.0 };
             GridBtns.Visibility = Visibility.Visible;
         }
 
