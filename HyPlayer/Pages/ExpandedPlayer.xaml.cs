@@ -26,6 +26,7 @@ using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
+using Microsoft.Toolkit.Uwp.UI.Media;
 using Buffer = Windows.Storage.Streams.Buffer;
 using Point = Windows.Foundation.Point;
 
@@ -52,7 +53,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private LyricItem lastitem;
     private int lastlrcid;
 
-    public string lastSongUrlForBrush = "";
+    public PlayItem lastSongForBrush;
     private int lastwidth;
     private List<LyricItem> LyricList = new();
     private bool ManualChangeMode;
@@ -78,19 +79,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         HyPlayList.OnLyricLoaded += HyPlayList_OnLyricLoaded;
         Window.Current.SizeChanged += Current_SizeChanged;
         HyPlayList.OnTimerTicked += HyPlayList_OnTimerTicked;
-        ImageAlbum.ImageExOpened += async (a, b) =>
-        {
-            if (await IsBrightAsync())
-            {
-                ForegroundAlbumBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0, 0, 0));
-                TextBlockSongTitle.Foreground = ForegroundAlbumBrush;
-            }
-            else
-            {
-                ForegroundAlbumBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
-                TextBlockSongTitle.Foreground = ForegroundAlbumBrush;
-            }
-        };
         Current_SizeChanged(null, null);
         ToggleButtonSound.IsChecked = Common.ShowLyricSound;
         ToggleButtonTranslation.IsChecked = Common.ShowLyricTrans;
@@ -385,6 +373,11 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         catch
         {
         }
+
+        if (!Common.Setting.useAcrylic)
+        {
+            PageContainer.Background = new BackdropBlurBrush() { Amount = 50.0 };
+        }
     }
 
     private void RefreshLyricTime()
@@ -498,6 +491,16 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     }
 
                     needRedesign++;
+                    if (await IsBrightAsync())
+                    {
+                        ForegroundAlbumBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0, 0, 0));
+                        TextBlockSongTitle.Foreground = ForegroundAlbumBrush;
+                    }
+                    else
+                    {
+                        ForegroundAlbumBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
+                        TextBlockSongTitle.Foreground = ForegroundAlbumBrush;
+                    }
                 }
                 catch (Exception)
                 {
@@ -754,7 +757,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
         if (HyPlayList.NowPlayingItem.PlayItem == null) return false;
 
-        if (lastSongUrlForBrush == HyPlayList.NowPlayingItem.PlayItem.Url) return ForegroundAlbumBrush.Color.R == 0;
+        if (lastSongForBrush == HyPlayList.NowPlayingItem.PlayItem) return ForegroundAlbumBrush.Color.R == 0;
         try
         {
             BitmapDecoder decoder;
@@ -769,7 +772,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             var bytes = data.DetachPixelData();
             var c = GetPixel(bytes, 0, 0, decoder.PixelWidth, decoder.PixelHeight);
             var Y = 0.299 * c.R + 0.587 * c.G + 0.114 * c.B;
-            lastSongUrlForBrush = HyPlayList.NowPlayingItem.PlayItem.Url;
+            lastSongForBrush = HyPlayList.NowPlayingItem.PlayItem;
             return Y >= 150;
         }
         catch

@@ -316,6 +316,12 @@ namespace HyPlayer
             get => GetSettings("forceMemoryGarbage", false);
             set => ApplicationData.Current.LocalSettings.Values["forceMemoryGarbage"] = value;
         }
+        
+        public bool useAcrylic
+        {
+            get => GetSettings("useAcrylic", true);
+            set => ApplicationData.Current.LocalSettings.Values["useAcrylic"] = value;
+        }
 
         public bool lyricDropshadow
         {
