@@ -85,6 +85,8 @@ public static class HyPlayList
 
     public static bool isPlaying => Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing;
 
+    public static string PlaySourceId;
+
     public static StorageFile NowPlayingStorageFile { get; private set; }
 
 
@@ -266,6 +268,7 @@ public static class HyPlayList
     public static void SongAppendDone()
     {
         Common.IsInFm = false;
+        HyPlayList.PlaySourceId = null;
         Common.Invoke(() => OnPlayListAddDone?.Invoke());
     }
 

@@ -318,7 +318,6 @@ public sealed partial class PlayBar
                 HyPlayList.SongMoveTo(HyPlayList.List.Count - 1);
             }
         }
-
         HyPlayList.SongAppendDone();
         HyPlayList.SongMoveTo(0);
     }

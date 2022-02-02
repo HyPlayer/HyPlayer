@@ -209,6 +209,11 @@ public sealed partial class SongsList : UserControl, IDisposable
             HyPlayList.Player.Pause();
             await HyPlayList.AppendNcSource(ListSource);
             HyPlayList.SongAppendDone();
+            if (ListSource.Substring(0,2) == "pl" ||
+                ListSource.Substring(0,2) == "al")
+            {
+                HyPlayList.PlaySourceId = ListSource.Substring(2);
+            }
             HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t =>
                 t.PlayItem?.Id == VisibleSongs[SongContainer.SelectedIndex].sid));
         }
@@ -223,6 +228,11 @@ public sealed partial class SongsList : UserControl, IDisposable
         {
             HyPlayList.AppendNcSongs(VisibleSongs);
             HyPlayList.SongAppendDone();
+            if (ListSource?.Substring(0,2) == "pl" ||
+                ListSource?.Substring(0,2) == "al")
+            {
+                HyPlayList.PlaySourceId = ListSource.Substring(2);
+            }
             HyPlayList.SongMoveTo(SongContainer.SelectedIndex);
         }
     }
@@ -231,8 +241,13 @@ public sealed partial class SongsList : UserControl, IDisposable
     {
         var ncsong = VisibleSongs[int.Parse((sender as Button).Tag.ToString())];
         _ = HyPlayList.AppendNcSong(ncsong);
-        HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.Id == ncsong.sid));
         HyPlayList.SongAppendDone();
+        HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.Id == ncsong.sid));
+        if (ListSource.Substring(0,2) == "pl" ||
+            ListSource.Substring(0,2) == "al")
+        {
+            HyPlayList.PlaySourceId = ListSource.Substring(2);
+        }
     }
 
     private void More_Click(object sender, RoutedEventArgs e)
@@ -246,6 +261,11 @@ public sealed partial class SongsList : UserControl, IDisposable
         foreach (NCSong ncsong in SongContainer.SelectedItems)
             _ = HyPlayList.AppendNcSong(ncsong);
         HyPlayList.SongAppendDone();
+        if (ListSource.Substring(0,2) == "pl" ||
+            ListSource.Substring(0,2) == "al")
+        {
+            HyPlayList.PlaySourceId = ListSource.Substring(2);
+        }
         HyPlayList.SongMoveTo(origidx);
     }
 

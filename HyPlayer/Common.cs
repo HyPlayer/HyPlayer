@@ -96,8 +96,11 @@ namespace HyPlayer
         public static void AddToTeachingTipLists(string title, string subtitle = "")
         {
             TeachingTipList.Push(new KeyValuePair<string, string?>(title, subtitle));
-            if (!GlobalTip.IsOpen)
-                RollTeachingTip(false);
+            Common.Invoke((() =>
+            {
+                if (!GlobalTip.IsOpen)
+                    RollTeachingTip(false);
+            }));
         }
 
         public static async void RollTeachingTip(bool passiveRoll = true)

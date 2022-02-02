@@ -336,22 +336,27 @@ public sealed partial class BasePage : Page
         // 执行签到操作
         DoDailySign();
 
-        HyPlayList.OnMediaEnd += hpi =>
-        {
-            // 播放数据
-            if (hpi.ItemType != HyPlayItemType.Netease) return;
-            _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.Scrobble, new Dictionary<string, object>
-            {
-                { "id", hpi.PlayItem.Id },
-                { "sourceid", "-1" }
-            });
-        };
+        // 播放信息记录
+        HyPlayList.OnMediaEnd += Scrobble;
 
         HyPlayList.LoginDoneCall();
         ((App)Application.Current).InitializeJumpList();
         NavMain.SelectedItem = NavItemLogin;
         Common.NavigatePage(typeof(Me));
         return true;
+    }
+
+    public async void Scrobble(HyPlayItem item)
+    {
+        // 播放数据记录
+        if (item.ItemType != HyPlayItemType.Netease /* || Common.IsInFm ||
+            string.IsNullOrEmpty(HyPlayList.PlaySourceId)*/) return;
+        var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Scrobble, new Dictionary<string, object>
+        {
+            { "id", item.PlayItem.Id },
+            { "sourceId", HyPlayList.PlaySourceId ?? "-1" },
+            { "time", TimeSpan.FromMilliseconds(item.PlayItem.LengthInMilliseconds).TotalSeconds }
+        });
     }
 
     private static void DoDailySign()
@@ -578,9 +583,7 @@ public sealed partial class BasePage : Page
             try
             {
                 HyPlayList.AppendNcSongs(Songs);
-
                 HyPlayList.SongAppendDone();
-
                 HyPlayList.SongMoveTo(0);
             }
             catch (Exception ex)

@@ -61,6 +61,7 @@ public sealed partial class AlbumPage : Page, IDisposable
                 albumid = e.Parameter.ToString();
                 break;
         }
+
         LoadAlbumInfo();
     }
 
@@ -73,8 +74,10 @@ public sealed partial class AlbumPage : Page, IDisposable
                 new Dictionary<string, object> { { "id", albumid } });
             Album = NCAlbum.CreateFromJson(json["album"]);
             ImageRect.ImageSource =
-                Common.Setting.noImage ? null : new BitmapImage(
-                    new Uri(Album.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
+                Common.Setting.noImage
+                    ? null
+                    : new BitmapImage(
+                        new Uri(Album.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
             TextBoxAlbumName.Text = Album.name;
 
             TextBoxAlbumName.Text = json["album"]["name"].ToString();
@@ -112,9 +115,8 @@ public sealed partial class AlbumPage : Page, IDisposable
         try
         {
             HyPlayList.AppendNcSongs(songs);
-
             HyPlayList.SongAppendDone();
-
+            HyPlayList.PlaySourceId = albumid;
             HyPlayList.SongMoveTo(0);
         }
         catch (Exception ex)

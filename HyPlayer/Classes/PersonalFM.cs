@@ -50,7 +50,6 @@ internal static class PersonalFM
                 item1.ItemType = HyPlayItemType.Netease;
                 item2.ItemType = HyPlayItemType.Netease;
             }
-
             HyPlayList.SongAppendDone();
             HyPlayList.SongMoveTo(0);
             Common.IsInFm = true;

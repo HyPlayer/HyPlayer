@@ -144,9 +144,7 @@ public sealed partial class ArtistPage : Page
         try
         {
             HyPlayList.AppendNcSongs(hotSongs);
-
             HyPlayList.SongAppendDone();
-
             HyPlayList.SongMoveTo(0);
         }
         catch (Exception ex)
