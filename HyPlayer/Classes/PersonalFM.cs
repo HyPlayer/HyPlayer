@@ -28,7 +28,7 @@ internal static class PersonalFM
 
     private static void HyPlayList_OnMediaEnd(HyPlayItem hpi)
     {
-        if (Common.IsInFm.ToString() == "true")
+        if (Common.IsInFm)
             LoadNextFM();
     }
 
@@ -63,7 +63,7 @@ internal static class PersonalFM
 
     private static void HyPlayList_OnSongMoveNext()
     {
-        if (Common.IsInFm.ToString() == "true")
+        if (Common.IsInFm)
             LoadNextFM();
     }
 }

@@ -390,7 +390,7 @@ public sealed partial class PlayBar
 
     public void LoadPlayingFile(HyPlayItem mpi)
     {
-        if (Common.IsInFm.ToString() == "true")
+        if (Common.IsInFm)
         {
             IconPrevious.Glyph = "\uE7E8";
             IconPlayType.Glyph = "\uE107";
@@ -603,7 +603,7 @@ public sealed partial class PlayBar
 
     private void BtnPreviousSong_OnClick(object sender, RoutedEventArgs e)
     {
-        if (Common.IsInFm.ToString() == "true")
+        if (Common.IsInFm)
             PersonalFM.ExitFm();
         else
             HyPlayList.SongMovePrevious();
