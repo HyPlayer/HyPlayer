@@ -349,7 +349,7 @@ public sealed partial class BasePage : Page
     public async void Scrobble(HyPlayItem item)
     {
         // 播放数据记录
-        if (item.ItemType != HyPlayItemType.Netease /* || Common.IsInFm ||
+        if (item.ItemType != HyPlayItemType.Netease && Common.Setting.doScrobble /* || Common.IsInFm ||
             string.IsNullOrEmpty(HyPlayList.PlaySourceId)*/) return;
         var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Scrobble, new Dictionary<string, object>
         {

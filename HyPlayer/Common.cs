@@ -301,6 +301,16 @@ namespace HyPlayer
             }
         }
         
+        public bool doScrobble
+        {
+            get => GetSettings("doScrobble", true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["doScrobble"] = value;
+                OnPropertyChanged();
+            }
+        }
+        
         public int lyricScaleSize
         {
             get
