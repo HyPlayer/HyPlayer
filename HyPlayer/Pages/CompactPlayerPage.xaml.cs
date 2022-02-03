@@ -85,7 +85,7 @@ namespace HyPlayer.Pages
         }
 
         public static readonly DependencyProperty LyricTranslationProperty =
-            DependencyProperty.Register("LyricTranslation", typeof(string), typeof(CompactPlayerPage), new PropertyMetadata("Double Click to Go Back"));
+            DependencyProperty.Register("LyricTranslation", typeof(string), typeof(CompactPlayerPage), new PropertyMetadata("右键可切换模糊保留"));
 
 
 
@@ -110,7 +110,7 @@ namespace HyPlayer.Pages
             DependencyProperty.Register("NowPlayingArtists", typeof(string), typeof(CompactPlayerPage), new PropertyMetadata(string.Empty));
 
 
-
+        bool forceBlur = true;
 
         public CompactPlayerPage()
         {
@@ -146,7 +146,7 @@ namespace HyPlayer.Pages
                 }
 
             TotalProgress = item.PlayItem.LengthInMilliseconds;
-            AlbumCover = new ImageBrush() { ImageSource = img , Stretch = Stretch.UniformToFill };
+            AlbumCover = new ImageBrush() { ImageSource = img, Stretch = Stretch.UniformToFill };
         }
 
         private void MovePrevious(object sender, RoutedEventArgs e)
@@ -194,8 +194,14 @@ namespace HyPlayer.Pages
 
         private void CompactPlayerPage_OnPointerExited(object sender, PointerRoutedEventArgs e)
         {
-            ControlHover = new SolidColorBrush(Colors.Transparent);
+            if (!forceBlur)
+                ControlHover = new SolidColorBrush(Colors.Transparent);
             GridBtns.Visibility = Visibility.Collapsed;
+        }
+
+        private void OnRightTapped(object sender, RightTappedRoutedEventArgs e)
+        {
+            forceBlur = !forceBlur;
         }
     }
 }
