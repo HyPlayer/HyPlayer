@@ -23,7 +23,7 @@
         </ListView.Footer>
         <ListView.ItemTemplate>
             <DataTemplate x:DataType="classes:SimpleListItem">
-                <Grid Tag="{x:Bind ResourceId}">
+                <Grid HorizontalAlignment="Stretch" Tag="{x:Bind ResourceId}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="100" />
