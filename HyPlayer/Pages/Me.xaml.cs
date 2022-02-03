@@ -68,7 +68,7 @@ public sealed partial class Me : Page, IDisposable
             try
             {
                 var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
-                    new Dictionary<string, object> { ["uid"] = uid });
+                    new Dictionary<string, object> { ["uid"] = uid, ["limit"] = 999 });
 
 
                 var myListIdx = 0;
@@ -115,7 +115,7 @@ public sealed partial class Me : Page, IDisposable
 
     public async void LoadInfo()
     {
-        if (uid == Common.LoginedUser.id)
+        if (uid == Common.LoginedUser?.id)
         {
             TextBoxUserName.Text = Common.LoginedUser.name;
             TextBoxSignature.Text = Common.LoginedUser.signature;

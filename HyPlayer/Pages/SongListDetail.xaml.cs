@@ -135,10 +135,11 @@ public sealed partial class SongListDetail : Page, IDisposable
 
 
             if (json["playlist"]["specialType"].ToString() == "5" &&
-                json["playlist"]["userId"].ToString() == Common.LoginedUser.id)
+                json["playlist"]["userId"].ToString() == Common.LoginedUser?.id)
+            {
                 ButtonIntel.Visibility = Visibility.Visible;
-            if (json["playlist"]["userId"].ToString() == Common.LoginedUser.id)
                 SongsList.IsMySongList = true;
+            }
             try
             {
                 json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,

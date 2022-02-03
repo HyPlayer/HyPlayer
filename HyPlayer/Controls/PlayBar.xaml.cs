@@ -663,6 +663,7 @@ public sealed partial class PlayBar
 
     public void CollapseExpandedPlayer()
     {
+        if (Common.PageExpandedPlayer == null) return;
         Common.PageExpandedPlayer.StartCollapseAnimation();
         GridSongAdvancedOperation.Visibility = Visibility.Collapsed;
         GridSongInfo.Visibility = Visibility.Visible;

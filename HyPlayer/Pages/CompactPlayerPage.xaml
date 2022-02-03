@@ -2,21 +2,51 @@
     x:Class="HyPlayer.Pages.CompactPlayerPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:HyPlayer.Pages"
-    Background="{x:Bind AlbumCover, Mode=OneWay}"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:Background="White"
+    d:DesignHeight="250"
+    d:DesignWidth="250"
+    Background="{x:Bind Mode=OneWay, Path=AlbumCover}"
     PointerEntered="CompactPlayerPage_OnPointerEntered"
-    PointerExited="CompactPlayerPage_OnPointerExited">
+    PointerExited="CompactPlayerPage_OnPointerExited"
+    mc:Ignorable="d">
 
     <Grid
-        Background="{x:Bind ControlHover, Mode=OneWay}"
+        Background="{x:Bind Mode=OneWay, Path=ControlHover}"
         DoubleTapped="ExitCompactMode"
         IsTapEnabled="True">
         <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="5" />
+            <!--  Placeholder  -->
+            <RowDefinition Height="32" />
+            <RowDefinition Height="5*" />
+            <RowDefinition Height="38" />
             <!--  Progress Bar  -->
+            <RowDefinition Height="4" />
         </Grid.RowDefinitions>
-        <Grid x:Name="GridBtns" Grid.Row="0">
+        <Grid
+            x:Name="SongNameContainer"
+            Grid.Row="0"
+            Background="{ThemeResource PlaybackAcrylicInAppLuminosity}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="2*" />
+                <RowDefinition Height="3*" />
+            </Grid.RowDefinitions>
+            <TextBlock
+                Grid.Row="0"
+                FontSize="12"
+                Foreground="White"
+                Text="{x:Bind NowPlayingArtists, Mode=OneWay}"
+                TextAlignment="Center" />
+            <TextBlock
+                Grid.Row="1"
+                Foreground="White"
+                Text="{x:Bind NowPlayingName, Mode=OneWay}"
+                TextAlignment="Center" />
+        </Grid>
+        <Grid x:Name="GridBtns" Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="3*" />
                 <ColumnDefinition Width="5*" />
@@ -34,7 +64,7 @@
                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE892;" />
             </Button>
             <Button
-                Name="BtnPlayStateChange"
+                x:Name="BtnPlayStateChange"
                 Grid.Column="1"
                 Height="70"
                 Margin="2"
@@ -45,7 +75,7 @@
                 Click="ChangePlayState"
                 Style="{StaticResource ButtonRevealStyle}">
                 <FontIcon
-                    Name="PlayStateIcon"
+                    x:Name="PlayStateIcon"
                     FontFamily="{StaticResource SymbolThemeFontFamily}"
                     Glyph="&#xEDB5;" />
                 <!--  EDB4  -->
@@ -62,9 +92,42 @@
                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE893;" />
             </Button>
         </Grid>
+        <Grid x:Name="GridLyrics" Grid.Row="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <controls:DropShadowPanel
+                Grid.Row="0"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                BlurRadius="10"
+                IsMasked="True"
+                ShadowOpacity="15"
+                Color="Black">
+                <TextBlock
+                    Foreground="White"
+                    Text="{x:Bind LyricText, Mode=OneWay}"
+                    TextAlignment="Center" />
+            </controls:DropShadowPanel>
+            <controls:DropShadowPanel
+                Grid.Row="1"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                BlurRadius="10"
+                IsMasked="True"
+                ShadowOpacity="15"
+                Color="Black">
+                <TextBlock
+                    Foreground="White"
+                    Text="{x:Bind LyricTranslation, Mode=OneWay}"
+                    TextAlignment="Center" />
+            </controls:DropShadowPanel>
+        </Grid>
         <ProgressBar
-            Grid.Row="1"
-            Maximum="{x:Bind TotalProgress, Mode=OneWay}"
-            Value="{x:Bind NowProgress, Mode=OneWay}" />
+            Grid.Row="3"
+            d:Value="62"
+            Maximum="{x:Bind Mode=OneWay, Path=TotalProgress}"
+            Value="{x:Bind Mode=OneWay, Path=NowProgress}" />
     </Grid>
 </Page>

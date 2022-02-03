@@ -66,6 +66,52 @@ namespace HyPlayer.Pages
             set => SetValue(ControlHoverProperty, value);
         }
 
+
+
+        public string LyricText
+        {
+            get { return (string)GetValue(LyricTextProperty); }
+            set { SetValue(LyricTextProperty, value); }
+        }
+        public static readonly DependencyProperty LyricTextProperty =
+            DependencyProperty.Register("LyricText", typeof(string), typeof(CompactPlayerPage), new PropertyMetadata("双击此处即可恢复"));
+
+
+
+        public string LyricTranslation
+        {
+            get { return (string)GetValue(LyricTranslationProperty); }
+            set { SetValue(LyricTranslationProperty, value); }
+        }
+
+        public static readonly DependencyProperty LyricTranslationProperty =
+            DependencyProperty.Register("LyricTranslation", typeof(string), typeof(CompactPlayerPage), new PropertyMetadata("Double Click to Go Back"));
+
+
+
+        public string NowPlayingName
+        {
+            get { return (string)GetValue(NowPlayingNameProperty); }
+            set { SetValue(NowPlayingNameProperty, value); }
+        }
+
+        public static readonly DependencyProperty NowPlayingNameProperty =
+            DependencyProperty.Register("NowPlayingName", typeof(string), typeof(CompactPlayerPage), new PropertyMetadata(string.Empty));
+
+
+
+        public string NowPlayingArtists
+        {
+            get { return (string)GetValue(NowPlayingArtistsProperty); }
+            set { SetValue(NowPlayingArtistsProperty, value); }
+        }
+
+        public static readonly DependencyProperty NowPlayingArtistsProperty =
+            DependencyProperty.Register("NowPlayingArtists", typeof(string), typeof(CompactPlayerPage), new PropertyMetadata(string.Empty));
+
+
+
+
         public CompactPlayerPage()
         {
             this.InitializeComponent();
@@ -73,10 +119,19 @@ namespace HyPlayer.Pages
             HyPlayList.OnPlayItemChange += OnChangePlayItem;
             HyPlayList.OnPlay += () => PlayStateIcon.Glyph = "\uEDB4";
             HyPlayList.OnPause += () => PlayStateIcon.Glyph = "\uEDB5";
+            HyPlayList.OnLyricChange += OnLyricChanged;
+        }
+
+        private void OnLyricChanged()
+        {
+            LyricText = HyPlayList.Lyrics[HyPlayList.LyricPos].PureLyric;
+            LyricTranslation = HyPlayList.Lyrics[HyPlayList.LyricPos].Translation;
         }
 
         public async void OnChangePlayItem(HyPlayItem item)
         {
+            NowPlayingName = item.PlayItem.Name;
+            NowPlayingArtists = item.PlayItem.ArtistString;
             BitmapImage img = null;
             if (!Common.Setting.noImage)
                 if (item.ItemType == HyPlayItemType.Local)
@@ -91,7 +146,7 @@ namespace HyPlayer.Pages
                 }
 
             TotalProgress = item.PlayItem.LengthInMilliseconds;
-            AlbumCover = new ImageBrush() { ImageSource = img };
+            AlbumCover = new ImageBrush() { ImageSource = img , Stretch = Stretch.UniformToFill };
         }
 
         private void MovePrevious(object sender, RoutedEventArgs e)
@@ -116,6 +171,7 @@ namespace HyPlayer.Pages
             OnChangePlayItem(HyPlayList.NowPlayingItem);
             PlayStateIcon.Glyph = HyPlayList.isPlaying ? "\uEDB4" : "\uEDB5";
             Common.BarPlayBar.Visibility = Visibility.Collapsed;
+            Window.Current.SetTitleBar(SongNameContainer);
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
