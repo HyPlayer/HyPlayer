@@ -195,6 +195,8 @@ public sealed partial class SongListDetail : Page, IDisposable
                     var json = await Common.ncapi.RequestAsync(
                         CloudMusicApiProviders.PlaylistDetail,
                         new Dictionary<string, object> { { "id", pid } });
+                    if (json["code"].ToString() != "200")
+                        throw new Exception(json["message"]?.ToString());
                     playList = NCPlayList.CreateFromJson(json["playlist"]);
                 }
                 catch (Exception ex)
@@ -204,7 +206,7 @@ public sealed partial class SongListDetail : Page, IDisposable
             }
         }
 
-        SongsList.ListSource = "pl" + playList.plid;
+        SongsList.ListSource = "pl" + playList?.plid;
         LoadSongListDetail();
         LoadSongListItem();
     }

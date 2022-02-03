@@ -28,6 +28,7 @@ using Microsoft.Toolkit.Uwp.UI;
 using Microsoft.UI.Xaml.Controls;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 #if !DEBUG
 using Microsoft.AppCenter.Crashes;
 #endif
@@ -189,7 +190,7 @@ namespace HyPlayer
 
                     break;
                 case "ml":
-                    NavigatePage(typeof(MVPage),resourceId.Substring(2));
+                    NavigatePage(typeof(MVPage), resourceId.Substring(2));
                     break;
             }
         }
@@ -300,7 +301,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
         public bool doScrobble
         {
             get => GetSettings("doScrobble", true);
@@ -310,7 +311,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
         public int lyricScaleSize
         {
             get
@@ -329,7 +330,7 @@ namespace HyPlayer
             get => GetSettings("forceMemoryGarbage", false);
             set => ApplicationData.Current.LocalSettings.Values["forceMemoryGarbage"] = value;
         }
-        
+
         public bool useAcrylic
         {
             get => GetSettings("useAcrylic", true);
@@ -397,7 +398,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
         public bool noImage
         {
             get => GetSettings("noImage", false);
@@ -566,6 +567,16 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values["notClearMode"] = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool advancedMusicHistoryStorage
+        {
+            get => GetSettings("advancedMusicHistoryStorage", true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["advancedMusicHistoryStorage"] = value;
                 OnPropertyChanged();
             }
         }
@@ -796,19 +807,29 @@ namespace HyPlayer
             ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
         }
 
-        public static void SetcurPlayingListHistory(List<string> songids)
+        public static async void SetcurPlayingListHistory(List<string> songids)
         {
-            //现在暂存100首,之后引入高级数据库会多加点
-            ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] =
-                JsonConvert.SerializeObject(songids.Count > 100 ? songids.GetRange(0, 100) : songids);
+
+            if (Common.Setting.advancedMusicHistoryStorage)
+            {
+                var file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("songPlayHistory", CreationCollisionOption.OpenIfExists);
+                await FileIO.WriteTextAsync(file, string.Join("\r\n", songids));
+            }
+            else
+            {
+                //低级音乐存储
+                ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = JsonConvert.SerializeObject(songids.Count > 100 ? songids.GetRange(0, 100) : songids);
+            }
+
         }
 
-        public static void ClearHistory()
+        public static async void ClearHistory()
         {
             var list = new List<string>();
             ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
             ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonConvert.SerializeObject(list);
             ApplicationData.Current.LocalSettings.Values["searchHistory"] = JsonConvert.SerializeObject(list);
+            await (await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("songPlayHistory", CreationCollisionOption.OpenIfExists)).DeleteAsync();
         }
 
         public static async Task<List<NCSong>> GetNCSongHistory()
@@ -873,25 +894,49 @@ namespace HyPlayer
         public static async Task<List<NCSong>> GetcurPlayingListHistory()
         {
             var retsongs = new List<NCSong>();
-            var hisSongs = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
-                .Values["curPlayingListHistory"].ToString());
-            if (hisSongs == null || hisSongs.Count == 0)
-                return retsongs;
-            try
+            List<string> trackIds = new();
+            if (Common.Setting.advancedMusicHistoryStorage)
             {
-                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
-                    new Dictionary<string, object>
-                    {
-                        ["ids"] = string.Join(",", hisSongs)
-                    });
-                return json["songs"].ToArray().Select(t => NCSong.CreateFromJson(t)).ToList();
+                trackIds = (await FileIO.ReadTextAsync(await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("songPlayHistory", CreationCollisionOption.OpenIfExists))).Split("\r\n").ToList();
             }
-            catch (Exception e)
+            else
             {
-                Common.AddToTeachingTipLists(e.Message, (e.InnerException ?? new Exception()).Message);
+                //低级音乐存储
+                trackIds = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"].ToString()) ?? new();
             }
 
-            return new List<NCSong>();
+            if (trackIds == null || trackIds.Count == 0)
+                return retsongs;
+            int nowIndex = 0;
+            while (nowIndex * 500 < trackIds.Count)
+            {
+                var nowIds = trackIds.GetRange(nowIndex * 500,
+                    Math.Min(500, trackIds.Count - nowIndex * 500));
+                try
+                {
+                    var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
+                        new Dictionary<string, object> { ["ids"] = string.Join(",", nowIds) });
+                    nowIndex++;
+                    var i = 0;
+                    var ncSongs = (json["songs"] ?? new JArray()).Select(t =>
+                    {
+                        if (json["privileges"] == null) return null;
+                        if (json["privileges"].ToList()[i++]["st"]?.ToString() == "0")
+                            return NCSong.CreateFromJson(t);
+
+                        return null;
+                    }).ToList();
+                    ncSongs.RemoveAll(t => t == null);
+                    retsongs.AddRange(ncSongs);
+                }
+                catch (Exception ex)
+                {
+                    Common.AddToTeachingTipLists(ex.Message,
+                        (ex.InnerException ?? new Exception()).Message);
+                }
+            }
+
+            return retsongs;
         }
     }
 
