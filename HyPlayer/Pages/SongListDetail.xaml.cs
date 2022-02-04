@@ -124,14 +124,12 @@ public sealed partial class SongListDetail : Page, IDisposable
         {
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
                 new Dictionary<string, object> { { "id", playList.plid } });
+            if (!json["playlist"]["trackIds"].HasValues) return;
             var trackIds = json["playlist"]["trackIds"].Select(t => (int)t["id"]).Skip(page * 500)
                 .Take(500)
                 .ToArray();
 
-            if (trackIds.Length >= 500)
-                NextPage.Visibility = Visibility.Visible;
-            else
-                NextPage.Visibility = Visibility.Collapsed;
+            NextPage.Visibility = trackIds.Length >= 500 ? Visibility.Visible : Visibility.Collapsed;
 
 
             if (json["playlist"]["specialType"].ToString() == "5" &&

@@ -597,6 +597,7 @@ public sealed partial class PlayBar
     {
         HyPlayList.Player.IsMuted = !HyPlayList.Player.IsMuted;
         BtnMuteIcon.Glyph = HyPlayList.Player.IsMuted ? "\uE198" : "\uE15D";
+        BtnVolIcon.Glyph = HyPlayList.Player.IsMuted ? "\uE198" : "\uE15D";
         //SliderAudioRate.Visibility = HyPlayList.Player.IsMuted ? Visibility.Collapsed : Visibility.Visible;
     }
 
@@ -775,36 +776,38 @@ public sealed partial class PlayBar
 
     private void BtnLike_OnClick(object sender, RoutedEventArgs e)
     {
-        if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
+        switch (HyPlayList.NowPlayingItem.ItemType)
         {
-            Api.LikeSong(HyPlayList.NowPlayingItem.PlayItem.Id,
-                !Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id));
-            if (Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id))
-                Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.Id);
-            else
-                Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.Id);
+            case HyPlayItemType.Netease:
+            {
+                Api.LikeSong(HyPlayList.NowPlayingItem.PlayItem.Id,
+                    !Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id));
+                if (Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id))
+                    Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.Id);
+                else
+                    Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.Id);
 
-            IconLiked.Foreground = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
-                ? new SolidColorBrush(Colors.Red)
-                : Resources["TextFillColorPrimaryBrush"] as Brush;
-            IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
-                ? "\uE00B;"
-                : "\uEB51";
-        }
-        else if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Radio)
-        {
-            _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.ResourceLike,
-                new Dictionary<string, object>
-                    { { "type", "4" }, { "t", "1" }, { "id", HyPlayList.NowPlayingItem.PlayItem.Id } });
-        }
-        else
-        {
-            IconLiked.Foreground = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
-                ? new SolidColorBrush(Colors.Red)
-                : Resources["TextFillColorPrimaryBrush"] as Brush;
-            IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
-                ? "\uE00B;"
-                : "\uEB51";
+                IconLiked.Foreground = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
+                    ? new SolidColorBrush(Colors.Red)
+                    : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+                IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
+                    ? "\uE00B;"
+                    : "\uEB51";
+                break;
+            }
+            case HyPlayItemType.Radio:
+                _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.ResourceLike,
+                    new Dictionary<string, object>
+                        { { "type", "4" }, { "t", "1" }, { "id", HyPlayList.NowPlayingItem.PlayItem.Id } });
+                break;
+            default:
+                IconLiked.Foreground = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
+                    ? new SolidColorBrush(Colors.Red)
+                    : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+                IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
+                    ? "\uE00B;"
+                    : "\uEB51";
+                break;
         }
     }
 

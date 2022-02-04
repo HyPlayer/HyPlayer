@@ -22,9 +22,9 @@
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
     <GenerateTestArtifacts>True</GenerateTestArtifacts>
     <AppxBundle>Always</AppxBundle>
-    <AppxBundlePlatforms>x86|x64|arm|arm64</AppxBundlePlatforms>
+    <AppxBundlePlatforms>x64</AppxBundlePlatforms>
     <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
-    <AppxPackageDir>D:\Workspace\Personal\HyPlayer\HyPlayer\HyPlayer\AppPackages\2.1.11</AppxPackageDir>
+    <AppxPackageDir>D:\Workspace\Personal\HyPlayer\HyPlayer\HyPlayer\AppPackages\2.1.12</AppxPackageDir>
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
     <PackageCertificateThumbprint>BE6DBF29FE69892E2F45644F534FB6CACFE36DF9</PackageCertificateThumbprint>
     <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
@@ -496,6 +496,9 @@
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.2.13</Version>
     </PackageReference>
+    <PackageReference Include="Microsoft.Services.Store.Engagement">
+      <Version>10.1901.28001</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications">
       <Version>7.1.2</Version>
     </PackageReference>
@@ -530,6 +533,11 @@
       <Project>{c20d7ea5-6db8-42b3-855d-75470cbe667f}</Project>
       <Name>NeteaseCloudMusicApi</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <SDKReference Include="Microsoft.Services.Store.Engagement, Version=10.0">
+      <Name>Microsoft Engagement Framework</Name>
+    </SDKReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

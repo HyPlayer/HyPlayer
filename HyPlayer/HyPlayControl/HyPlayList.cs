@@ -193,8 +193,6 @@ public static class HyPlayList
     {
         //歌曲崩溃了的话就是这个
         //SongMoveNext();
-        Common.AddToTeachingTipLists("播放失败 正在重试",
-            "歌曲" + NowPlayingItem.PlayItem.Name + "\r\nMsg:" + args?.ErrorMessage);
         if (_crashedTime == NowPlayingItem.PlayItem.Id)
         {
             SongMoveNext();
@@ -220,8 +218,12 @@ public static class HyPlayList
                     Player.Play();
                 });
             else
+            {
                 //本地歌曲炸了的话就Move下一首吧
+                Common.AddToTeachingTipLists("播放失败 切到下一曲",
+                    "歌曲" + NowPlayingItem.PlayItem.Name + "\r\n" + args?.ErrorMessage);
                 SongMoveNext();
+            }
         }
     }
 

@@ -281,7 +281,7 @@ public sealed partial class Search : Page, IDisposable
                     LineOne = pljs["dj"]["nickname"].ToString(),
                     LineTwo = pljs["desc"].ToString(),
                     LineThree = pljs["rcmdText"].ToString(),
-                    ResourceId = "rd" + json["id"],
+                    ResourceId = "rd" + pljs["id"],
                     CoverUri = pljs["picUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
                     Order = i++,
                     CanPlay = true

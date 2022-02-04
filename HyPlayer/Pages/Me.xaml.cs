@@ -76,7 +76,7 @@ public sealed partial class Me : Page, IDisposable
                 foreach (var PlaylistItemJson in json["playlist"].ToArray())
                 {
                     var ncp = NCPlayList.CreateFromJson(PlaylistItemJson);
-                    if (PlaylistItemJson["subscribed"].ToString() == "True")
+                    if (ncp.creater.id != uid)
                         //GridContainerSub.Children.Add(new PlaylistItem(ncp));
                         likedPlayList.Add(
                             new SimpleListItem

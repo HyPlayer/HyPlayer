@@ -231,7 +231,7 @@
                     Style="{StaticResource ButtonRevealStyle}">
                     <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE101;" />
                 </Button>
-                <ToggleButton
+                <Button
                     Name="BtnLike"
                     Grid.Column="6"
                     Width="45"
@@ -240,12 +240,12 @@
                     Background="Transparent"
                     Click="BtnLike_OnClick"
                     CornerRadius="30"
-                    Style="{StaticResource ToggleButtonRevealStyle}">
+                    Style="{StaticResource ButtonRevealStyle}">
                     <FontIcon
                         x:Name="IconLiked"
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
                         Glyph="&#xE00B;" />
-                </ToggleButton>
+                </Button>
             </Grid>
             <Grid Grid.Row="1">
                 <controls:DockPanel LastChildFill="True">
@@ -299,7 +299,7 @@
                 Background="Transparent"
                 CornerRadius="20"
                 Style="{StaticResource ButtonRevealStyle}">
-                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE15D;" />
+                <FontIcon x:Name="BtnVolIcon" FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE15D;" />
                 <!--  E198  -->
                 <Button.Flyout>
                     <Flyout>
@@ -309,7 +309,7 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <FontIcon
-                                Name="BtnMuteIcon"
+                                x:Name="BtnMuteIcon"
                                 Grid.Column="0"
                                 FontFamily="{StaticResource SymbolThemeFontFamily}"
                                 Glyph="&#xE15D;"

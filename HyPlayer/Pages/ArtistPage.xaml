@@ -33,7 +33,9 @@
             </Rectangle>
             <StackPanel
                 Name="StackPanelUserInfo"
-                Margin="15,15,144,0"
+                MaxWidth="1000"
+                HorizontalAlignment="Left"
+                Margin="15,15,0,0"
                 Orientation="Vertical">
                 <controls1:SelectableTextBox
                     x:Name="TextBoxArtistName"

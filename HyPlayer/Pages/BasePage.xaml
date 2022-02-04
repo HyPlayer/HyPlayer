@@ -182,25 +182,20 @@
                     IsExpanded="True"
                     Visibility="Collapsed" />
             </muxc:NavigationView.MenuItems>
-            <muxc:NavigationView.PaneFooter>
-                <StackPanel
-                    x:Name="FooterStackPanel"
-                    Margin="0,0,0,120"
-                    Orientation="Vertical"
-                    Visibility="Visible">
-                    <muxc:NavigationViewItem
-                        x:Name="NavItemLogin"
-                        Content="登录"
-                        Icon="Contact"
-                        Tag="PageMe"
-                        Tapped="NavigationViewItem_Tapped" />
-                    <muxc:NavigationViewItem
-                        Content="设置"
-                        Icon="Setting"
-                        Tag="PageSettings"
-                        Tapped="NavigationViewItem_Tapped" />
-                </StackPanel>
-            </muxc:NavigationView.PaneFooter>
+            <muxc:NavigationView.FooterMenuItems>
+                <muxc:NavigationViewItem
+                    x:Name="NavItemLogin"
+                    Content="登录"
+                    Icon="Contact"
+                    Tag="PageMe"
+                    Tapped="NavigationViewItem_Tapped" />
+                <muxc:NavigationViewItem
+                    Content="设置"
+                    Icon="Setting"
+                    Tag="PageSettings"
+                    Tapped="NavigationViewItem_Tapped" />
+                <muxc:NavigationViewItem IsEnabled="False" Height="120" />
+            </muxc:NavigationView.FooterMenuItems>
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="30" />

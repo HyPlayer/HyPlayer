@@ -196,6 +196,22 @@
                             Minimum="0"
                             ToolTipService.ToolTip="{x:Bind SliderAlbumBorderLength.Value}"
                             Value="{x:Bind hyplayer:Common.Setting.albumBorderLength, Mode=TwoWay}" />
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock VerticalAlignment="Center" Text="歌词页面封面阴影强度 (0为无阴影)" />
+                            <controls:NumberBox
+                                x:Name="NBShadowDepth"
+                                Grid.Column="1"
+                                Width="100"
+                                LargeChange="5"
+                                SmallChange="1"
+                                SpinButtonPlacementMode="Compact"
+                                ValueChanged="NBShadowDepth_OnValueChanged"
+                                Value="{x:Bind hyplayer:Common.Setting.expandedCoverShadowDepth}" />
+                        </Grid>
                     </StackPanel>
                 </ScrollViewer>
             </PivotItem>
@@ -379,23 +395,6 @@
                             Content="立即重启"
                             Style="{StaticResource ButtonRevealStyle}"
                             Visibility="Collapsed" />
-
-                        <Grid ColumnSpacing="12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock VerticalAlignment="Center" Text="歌词页面封面阴影强度 (0为无阴影)" />
-                            <controls:NumberBox
-                                x:Name="NBShadowDepth"
-                                Grid.Column="1"
-                                Width="100"
-                                LargeChange="5"
-                                SmallChange="1"
-                                SpinButtonPlacementMode="Compact"
-                                ValueChanged="NBShadowDepth_OnValueChanged"
-                                Value="{x:Bind hyplayer:Common.Setting.expandedCoverShadowDepth}" />
-                        </Grid>
                         <Button
                             x:Name="BtnXboxReserve"
                             Click="BtnXboxReserve_Click"

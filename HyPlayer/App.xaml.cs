@@ -21,6 +21,9 @@ using Microsoft.AppCenter;
 using Microsoft.AppCenter.Analytics;
 using Microsoft.AppCenter.Crashes;
 using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
+#if !DEBUG
+using Microsoft.Services.Store.Engagement;
+#endif
 
 #endregion
 
@@ -65,7 +68,18 @@ sealed partial class App : Application
         if (Common.Setting.themeRequest != 0)
             RequestedTheme = Common.Setting.themeRequest == 1 ? ApplicationTheme.Light : ApplicationTheme.Dark;
         InitializeThings();
+#if !DEBUG
+        LoadMicrosoftStoreSDK();
+#endif
     }
+#if !DEBUG
+    private async void LoadMicrosoftStoreSDK()
+    {
+
+        StoreServicesEngagementManager engagementManager = StoreServicesEngagementManager.GetDefault();
+        await engagementManager.RegisterNotificationChannelAsync();
+    }
+#endif
 
     private void MemoryManagerOnAppMemoryUsageLimitChanging(object sender, AppMemoryUsageLimitChangingEventArgs e)
     {

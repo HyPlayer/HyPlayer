@@ -42,8 +42,6 @@ public sealed partial class PlaylistItem : UserControl, IDisposable
 
     private void UIElement_OnTapped(object sender, TappedRoutedEventArgs e)
     {
-        ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongListExpand", ImageContainer);
-        ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongListExpandAcrylic", GridInfo);
         Common.NavigatePage(typeof(SongListDetail), playList, new DrillInNavigationTransitionInfo());
     }
 

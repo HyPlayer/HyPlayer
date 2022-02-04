@@ -74,7 +74,7 @@ namespace HyPlayer.Pages
             set { SetValue(LyricTextProperty, value); }
         }
         public static readonly DependencyProperty LyricTextProperty =
-            DependencyProperty.Register("LyricText", typeof(string), typeof(CompactPlayerPage), new PropertyMetadata("双击此处即可恢复"));
+            DependencyProperty.Register("LyricText", typeof(string), typeof(CompactPlayerPage), new PropertyMetadata("双击此处回正常窗口"));
 
 
 

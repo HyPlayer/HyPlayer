@@ -371,8 +371,7 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values["albumRotate"] = value;
-                if (value)
-                    albumRound = true;
+                if (value) albumRound = true;
                 OnPropertyChanged();
             }
         }

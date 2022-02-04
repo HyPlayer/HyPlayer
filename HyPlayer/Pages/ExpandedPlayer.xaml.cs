@@ -378,6 +378,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         {
             PageContainer.Background = new BackdropBlurBrush() { Amount = 50.0 };
         }
+        NowPlaybackSpeed = "x" + HyPlayList.Player.PlaybackSession.PlaybackRate;
     }
 
     private void RefreshLyricTime()
