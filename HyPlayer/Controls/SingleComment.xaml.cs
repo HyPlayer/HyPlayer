@@ -76,6 +76,7 @@ public sealed partial class SingleComment : UserControl
                 { "t", comment.HasLiked ? "0" : "1" }
             });
         comment.likedCount += comment.HasLiked ? -1 : 1;
+        comment.HasLiked = !comment.HasLiked;
         LikeCountTB.Text = comment.likedCount.ToString();
     }
 
