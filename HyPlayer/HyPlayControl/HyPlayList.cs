@@ -476,9 +476,9 @@ public static class HyPlayList
                             var sf =
                                 await (await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir))
                                     .GetFileAsync(NowPlayingItem.PlayItem.Id +
-                                                  "." + NowPlayingItem.PlayItem.SubExt);
+                                                  ".cache");
                             if ((await sf.GetBasicPropertiesAsync()).Size.ToString() ==
-                                NowPlayingItem.PlayItem.Size)
+                                NowPlayingItem.PlayItem.Size || NowPlayingItem.PlayItem.Size == null)
                                 ms = MediaSource.CreateFromStorageFile(sf);
                             else
                                 throw new Exception("File Size Not Match");
@@ -496,7 +496,7 @@ public static class HyPlayList
                                             "songCache",
                                             CreationCollisionOption.OpenIfExists)).CreateFileAsync(
                                             NowPlayingItem.PlayItem.Id +
-                                            "." + NowPlayingItem.PlayItem.SubExt,
+                                            ".cache",
                                             CreationCollisionOption.ReplaceExisting);
                                     var downloadOperation =
                                         Downloader.CreateDownload(new Uri(playUrl), destinationFile);
