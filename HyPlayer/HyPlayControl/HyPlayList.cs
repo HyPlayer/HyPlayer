@@ -61,8 +61,10 @@ public static class HyPlayList
     private static int _gcCountDown = 5;
 
     public static int NowPlaying;
+    public static int ShuffleNowPlaying;
     private static readonly Timer SecTimer = new(1000); // 公用秒表
     public static readonly List<HyPlayItem> List = new();
+    public static readonly List<HyPlayItem> ShuffleList = new();
     public static List<SongLyric> Lyrics = new();
     public static TimeSpan LyricOffset = TimeSpan.Zero;
 
@@ -377,7 +379,14 @@ public static class HyPlayList
                 break;
             case PlayMode.Shuffled:
                 //随机播放
-                NowPlaying = new Random().Next(List.Count - 1);
+                if (ShuffleNowPlaying + 1 >= List.Count) 
+                {
+                    CreateShufflePlayLists();
+                    ShuffleNowPlaying = 1;
+                }
+                    
+                else
+                    NowPlaying++;
                 break;
             case PlayMode.SinglePlay:
                 if (realNext)
@@ -1143,7 +1152,24 @@ public static class HyPlayList
             PlayItem = hpi
         };
     }
+
+    public static void CreateShufflePlayLists()
+    {
+        int targetPosition = 0;
+        for (var originalPosition = 10; originalPosition < List.Count; originalPosition++)
+        {
+            byte[] buffer = Guid.NewGuid().ToByteArray();
+            int iSeed = BitConverter.ToInt32(buffer, 0);
+            Random random = new Random(iSeed);
+            while (ShuffleList[targetPosition] != null)
+            {
+                targetPosition = random.Next(1, List.Count);
+            }
+            ShuffleList[targetPosition] = List[originalPosition];
+        }
+    }
 }
+
 
 public enum PlayMode
 {

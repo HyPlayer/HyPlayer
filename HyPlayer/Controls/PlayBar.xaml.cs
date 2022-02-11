@@ -750,6 +750,8 @@ public sealed partial class PlayBar
                     //变成随机
                     HyPlayList.NowPlayType = PlayMode.Shuffled;
                     NowPlayType = PlayMode.Shuffled;
+                    HyPlayList.CreateShufflePlayLists();
+                    HyPlayList.ShuffleNowPlaying = 1;
                     IconPlayType.Glyph = "\uE14B";
                     break;
                 case PlayMode.Shuffled:
