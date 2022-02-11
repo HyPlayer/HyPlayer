@@ -73,6 +73,11 @@
                                 Click="ButtonDownloadAll_OnClick"
                                 Content="下载全部"
                                 Style="{StaticResource ButtonRevealStyle}" />
+                            <ToggleButton
+                                x:Name="BtnSub"
+                                Click="BtnSub_Click"
+                                Content="收藏"
+                                Style="{StaticResource ToggleButtonRevealStyle}" />
                             <Button
                                 Click="ButtonComment_OnClick"
                                 Content="评论"

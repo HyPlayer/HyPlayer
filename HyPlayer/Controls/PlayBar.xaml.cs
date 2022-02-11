@@ -257,9 +257,21 @@ public sealed partial class PlayBar
         foreach (var file in files)
         {
             var folder = await file.GetParentAsync();
-            if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(folder.Path.GetHashCode().ToString()))
-                StorageApplicationPermissions.FutureAccessList.AddOrReplace(folder.Path.GetHashCode().ToString(),
-                    folder);
+            if (folder != null)
+            {
+                if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(folder.Path.GetHashCode().ToString()))
+                    StorageApplicationPermissions.FutureAccessList.AddOrReplace(folder.Path.GetHashCode().ToString(),
+                        folder);
+            }
+            else
+            {
+                if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(file.Path.GetHashCode().ToString()))
+                {
+                    StorageApplicationPermissions.FutureAccessList.AddOrReplace(file.Path.GetHashCode().ToString(),
+                        file);
+                }
+            }
+
             if (Path.GetExtension(file.Path) == ".ncm")
             {
                 //脑残Music
@@ -298,7 +310,7 @@ public sealed partial class PlayBar
                         }
                     };
                     hyitem.PlayItem.Artist = Info.artist.Select(t => new NCArtist
-                    { name = t[0].ToString(), id = t[1].ToString() })
+                            { name = t[0].ToString(), id = t[1].ToString() })
                         .ToList();
 
                     HyPlayList.List.Add(hyitem);
@@ -311,15 +323,14 @@ public sealed partial class PlayBar
                 await HyPlayList.AppendStorageFile(file);
             }
 
-            if (isFirstLoad)
-            {
-                HyPlayList.SongAppendDone();
-                isFirstLoad = false;
-                HyPlayList.SongMoveTo(HyPlayList.List.Count - 1);
-            }
+            if (!isFirstLoad) continue;
+            HyPlayList.SongAppendDone();
+            isFirstLoad = false;
+            HyPlayList.SongMoveTo(HyPlayList.List.Count - 1);
         }
+
         HyPlayList.SongAppendDone();
-        HyPlayList.SongMoveTo(0);
+        //HyPlayList.SongMoveTo(0);
     }
 
     public void OnPlayPositionChange(TimeSpan ts)
@@ -516,7 +527,7 @@ public sealed partial class PlayBar
                 FadeSettedVolume = true;
                 var vol = Common.Setting.Volume;
                 var curtime = HyPlayList.Player.PlaybackSession.Position.TotalSeconds;
-                for (; ; )
+                for (;;)
                     try
                     {
                         await Task.Delay(50);
@@ -558,7 +569,7 @@ public sealed partial class PlayBar
                 var vol = Common.Setting.Volume;
                 HyPlayList.Player.Volume = 0;
                 var curtime = HyPlayList.Player.PlaybackSession.Position.TotalSeconds;
-                for (; ; )
+                for (;;)
                 {
                     await Task.Delay(50);
                     var curvol = (HyPlayList.Player.PlaybackSession.Position.TotalSeconds - curtime) /
@@ -779,22 +790,22 @@ public sealed partial class PlayBar
         switch (HyPlayList.NowPlayingItem.ItemType)
         {
             case HyPlayItemType.Netease:
-                {
-                    Api.LikeSong(HyPlayList.NowPlayingItem.PlayItem.Id,
-                        !Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id));
-                    if (Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id))
-                        Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.Id);
-                    else
-                        Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.Id);
+            {
+                Api.LikeSong(HyPlayList.NowPlayingItem.PlayItem.Id,
+                    !Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id));
+                if (Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id))
+                    Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.Id);
+                else
+                    Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.Id);
 
-                    IconLiked.Foreground = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
-                        ? new SolidColorBrush(Colors.Red)
-                        : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-                    IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
-                        ? "\uE00B;"
-                        : "\uEB51";
-                    break;
-                }
+                IconLiked.Foreground = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
+                    ? new SolidColorBrush(Colors.Red)
+                    : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+                IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
+                    ? "\uE00B;"
+                    : "\uEB51";
+                break;
+            }
             case HyPlayItemType.Radio:
                 _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.ResourceLike,
                     new Dictionary<string, object>

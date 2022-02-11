@@ -63,6 +63,15 @@ public sealed partial class AlbumPage : Page, IDisposable
         }
 
         LoadAlbumInfo();
+        LoadAlbumDynamic();
+
+    }
+
+    private async void LoadAlbumDynamic()
+    {
+        var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.AlbumDetailDynamic,
+            new Dictionary<string, object>() { { "id", albumid } });
+        BtnSub.IsChecked = json["isSub"].ToObject<bool>();
     }
 
     private async void LoadAlbumInfo()
@@ -142,5 +151,11 @@ public sealed partial class AlbumPage : Page, IDisposable
             await new ArtistSelectDialog(artists).ShowAsync();
         else
             Common.NavigatePage(typeof(ArtistPage), artists[0].id);
+    }
+
+    private void BtnSub_Click(object sender, RoutedEventArgs e)
+    {
+        _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.AlbumSubscribe,
+            new Dictionary<string, object> { { "id", albumid }, { "t", BtnSub.IsChecked.GetValueOrDefault(false) ? "1" : "0" } });
     }
 }
