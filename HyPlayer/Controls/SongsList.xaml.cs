@@ -209,11 +209,12 @@ public sealed partial class SongsList : UserControl, IDisposable
             HyPlayList.Player.Pause();
             await HyPlayList.AppendNcSource(ListSource);
             HyPlayList.SongAppendDone();
-            if (ListSource.Substring(0,2) == "pl" ||
-                ListSource.Substring(0,2) == "al")
+            if (ListSource.Substring(0, 2) == "pl" ||
+                ListSource.Substring(0, 2) == "al")
             {
                 HyPlayList.PlaySourceId = ListSource.Substring(2);
             }
+
             HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t =>
                 t.PlayItem?.Id == VisibleSongs[SongContainer.SelectedIndex].sid));
         }
@@ -228,11 +229,12 @@ public sealed partial class SongsList : UserControl, IDisposable
         {
             HyPlayList.AppendNcSongs(VisibleSongs);
             HyPlayList.SongAppendDone();
-            if (ListSource?.Substring(0,2) == "pl" ||
-                ListSource?.Substring(0,2) == "al")
+            if (ListSource?.Substring(0, 2) == "pl" ||
+                ListSource?.Substring(0, 2) == "al")
             {
                 HyPlayList.PlaySourceId = ListSource.Substring(2);
             }
+
             HyPlayList.SongMoveTo(SongContainer.SelectedIndex);
         }
     }
@@ -243,8 +245,8 @@ public sealed partial class SongsList : UserControl, IDisposable
         _ = HyPlayList.AppendNcSong(ncsong);
         HyPlayList.SongAppendDone();
         HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.Id == ncsong.sid));
-        if (ListSource.Substring(0,2) == "pl" ||
-            ListSource.Substring(0,2) == "al")
+        if (ListSource.Substring(0, 2) == "pl" ||
+            ListSource.Substring(0, 2) == "al")
         {
             HyPlayList.PlaySourceId = ListSource.Substring(2);
         }
@@ -261,18 +263,19 @@ public sealed partial class SongsList : UserControl, IDisposable
         foreach (NCSong ncsong in SongContainer.SelectedItems)
             _ = HyPlayList.AppendNcSong(ncsong);
         HyPlayList.SongAppendDone();
-        if (ListSource.Substring(0,2) == "pl" ||
-            ListSource.Substring(0,2) == "al")
+        if (ListSource.Substring(0, 2) == "pl" ||
+            ListSource.Substring(0, 2) == "al")
         {
             HyPlayList.PlaySourceId = ListSource.Substring(2);
         }
+
         HyPlayList.SongMoveTo(origidx);
     }
 
     private void FlyoutItemPlayNext_Click(object sender, RoutedEventArgs e)
     {
-        foreach (NCSong ncsong in SongContainer.SelectedItems)
-            _ = HyPlayList.AppendNcSong(ncsong);
+        _ = HyPlayList.AppendNcSongRange(SongContainer.SelectedItems.Cast<NCSong>().ToList(),
+            HyPlayList.NowPlaying + 1);
         HyPlayList.SongAppendDone();
     }
 
@@ -373,9 +376,9 @@ public sealed partial class SongsList : UserControl, IDisposable
     private bool Filter(NCSong ncsong)
     {
         if (ncsong == null) return false;
-        return (ncsong.songname??"").ToLower().Contains(FilterBox.Text.ToLower()) ||
-               (ncsong.ArtistString??"").ToLower().Contains(FilterBox.Text.ToLower()) ||
-               (ncsong.Album?.name??"").ToLower().Contains(FilterBox.Text.ToLower()) ||
+        return (ncsong.songname ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
+               (ncsong.ArtistString ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
+               (ncsong.Album?.name ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
                (ncsong.transname ?? "").ToLower().Contains(FilterBox.Text.ToLower()) ||
                (ncsong.alias ?? "").ToLower().Contains(FilterBox.Text.ToLower());
     }

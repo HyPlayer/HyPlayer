@@ -161,7 +161,7 @@ namespace HyPlayer.Pages
 
         private void ChangePlayState(object sender, RoutedEventArgs e)
         {
-            if (HyPlayList.isPlaying) HyPlayList.Player.Pause();
+            if (HyPlayList.IsPlaying) HyPlayList.Player.Pause();
             else HyPlayList.Player.Play();
         }
 
@@ -169,7 +169,7 @@ namespace HyPlayer.Pages
         {
             base.OnNavigatedTo(e);
             OnChangePlayItem(HyPlayList.NowPlayingItem);
-            PlayStateIcon.Glyph = HyPlayList.isPlaying ? "\uEDB4" : "\uEDB5";
+            PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uEDB4" : "\uEDB5";
             Common.BarPlayBar.Visibility = Visibility.Collapsed;
             Window.Current.SetTitleBar(SongNameContainer);
         }

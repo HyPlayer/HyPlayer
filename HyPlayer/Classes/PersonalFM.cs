@@ -13,10 +13,11 @@ internal static class PersonalFM
 {
     public static void InitPersonalFM()
     {
-        LoadNextFM();
+        HyPlayList.NowPlayType = PlayMode.DefaultRoll;
         HyPlayList.OnSongMoveNext += HyPlayList_OnSongMoveNext;
         HyPlayList.OnMediaEnd += HyPlayList_OnMediaEnd;
         Common.IsInFm = true;
+        LoadNextFM();
     }
 
     public static void ExitFm()

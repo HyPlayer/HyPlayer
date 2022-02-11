@@ -509,7 +509,7 @@ public sealed partial class PlayBar
     {
         if (HyPlayList.NowPlayingItem.PlayItem?.Name != null && HyPlayList.Player.Source == null)
             HyPlayList.LoadPlayerSong();
-        if (HyPlayList.isPlaying)
+        if (HyPlayList.IsPlaying)
         {
             if (Common.Setting.fadeInOutPause)
             {
@@ -545,11 +545,11 @@ public sealed partial class PlayBar
             }
 
             HyPlayList.Player.Pause();
-            PlayStateIcon.Glyph = HyPlayList.isPlaying ? "\uEDB5" : "\uEDB4";
+            PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uEDB5" : "\uEDB4";
             return;
         }
 
-        if (!HyPlayList.isPlaying)
+        if (!HyPlayList.IsPlaying)
         {
             HyPlayList.Player.Play();
             if (Common.Setting.fadeInOutPause)
@@ -582,7 +582,7 @@ public sealed partial class PlayBar
                 }
 
                 FadeSettedVolume = false;
-                PlayStateIcon.Glyph = HyPlayList.isPlaying ? "\uEDB5" : "\uEDB4";
+                PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uEDB5" : "\uEDB4";
             }
         }
     }

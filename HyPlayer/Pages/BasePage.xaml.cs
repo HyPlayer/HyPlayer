@@ -104,9 +104,9 @@ public sealed partial class BasePage : Page
         }
 
         if (args.VirtualKey == VirtualKey.GamepadY)
-            if (HyPlayList.isPlaying)
+            if (HyPlayList.IsPlaying)
                 HyPlayList.Player.Pause();
-            else if (!HyPlayList.isPlaying) HyPlayList.Player.Play();
+            else if (!HyPlayList.IsPlaying) HyPlayList.Player.Play();
 
         if (args.VirtualKey == VirtualKey.Escape)
             if (Common.isExpanded)

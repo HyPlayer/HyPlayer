@@ -64,7 +64,7 @@ public static class HyPlayList
     private static readonly Timer SecTimer = new(1000); // 公用秒表
     public static readonly List<HyPlayItem> List = new();
     public static readonly List<int> ShuffleList = new();
-    public static int ShufflingIndex = 0;
+    public static int ShufflingIndex = -1;
     public static List<SongLyric> Lyrics = new();
     public static TimeSpan LyricOffset = TimeSpan.Zero;
 
@@ -91,7 +91,7 @@ public static class HyPlayList
         get => (PlayMode)Common.Setting.songRollType;
     }
 
-    public static bool isPlaying => Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing;
+    public static bool IsPlaying => Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing;
 
     public static string PlaySourceId;
 
@@ -278,7 +278,9 @@ public static class HyPlayList
     public static void SongAppendDone()
     {
         Common.IsInFm = false;
-        HyPlayList.PlaySourceId = null;
+        PlaySourceId = null;
+        if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
+            CreateShufflePlayLists();
         Common.Invoke(() => OnPlayListAddDone?.Invoke());
     }
 
@@ -376,7 +378,7 @@ public static class HyPlayList
         }
     }
 
-    private async static void MoveSongPointer(bool realNext = false)
+    private static void MoveSongPointer(bool realNext = false)
     {
         //首先切换指针到下一首要播放的歌
         switch (NowPlayType)
@@ -396,7 +398,7 @@ public static class HyPlayList
                     // 新版乱序算法
                     if ((++ShufflingIndex) > List.Count - 1)
                         ShufflingIndex = 0;
-                    NowPlaying = ShuffleList[ShufflingIndex + 1];
+                    NowPlaying = ShuffleList[ShufflingIndex];
                 }
                 else
                 {
@@ -801,6 +803,15 @@ public static class HyPlayList
         if (hpi != null)
             List.Insert(position, hpi);
         return hpi;
+    }
+    
+    public static List<HyPlayItem> AppendNcSongRange(List<NCSong> ncSongs, int position = -1)
+    {
+        if (position < 0)
+            position = List.Count;
+        var insertList = ncSongs.Select(LoadNcSong).ToList();
+        List.InsertRange(position, insertList);
+        return insertList;
     }
 
     private static HyPlayItem LoadNcSong(NCSong ncSong)

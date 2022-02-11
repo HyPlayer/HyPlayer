@@ -87,7 +87,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
         if (Common.Setting.albumRotate)
             //网易云音乐圆形唱片
-            if (HyPlayList.isPlaying)
+            if (HyPlayList.IsPlaying)
                 RotateAnimationSet.StartAsync();
     }
 
@@ -559,7 +559,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
     {
-        if (HyPlayList.isPlaying)
+        if (HyPlayList.IsPlaying)
             HyPlayList.Player.Pause();
         else
             HyPlayList.Player.Play();
