@@ -61,10 +61,10 @@ public static class HyPlayList
     private static int _gcCountDown = 5;
 
     public static int NowPlaying;
-    public static int ShuffleNowPlaying;
     private static readonly Timer SecTimer = new(1000); // 公用秒表
     public static readonly List<HyPlayItem> List = new();
-    public static readonly List<HyPlayItem> ShuffleList = new();
+    public static readonly List<int> ShuffleList = new();
+    public static int ShufflingIndex = 0;
     public static List<SongLyric> Lyrics = new();
     public static TimeSpan LyricOffset = TimeSpan.Zero;
 
@@ -80,7 +80,13 @@ public static class HyPlayList
     /*********        基本       ********/
     public static PlayMode NowPlayType
     {
-        set => Common.Setting.songRollType = (int)value;
+        set
+        {
+            // 新版随机创建随机表
+            if (value == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
+                CreateShufflePlayLists();
+            Common.Setting.songRollType = (int)value;
+        }
 
         get => (PlayMode)Common.Setting.songRollType;
     }
@@ -98,7 +104,7 @@ public static class HyPlayList
         {
             if (List.Count <= NowPlaying || NowPlaying == -1)
                 return new HyPlayItem { ItemType = HyPlayItemType.Netease };
-            return List[NowPlaying];
+            else return List[NowPlaying];
         }
     }
 
@@ -292,7 +298,13 @@ public static class HyPlayList
             NowPlaying = List.Count - 1;
         else
             NowPlaying--;
-
+        if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
+        {
+            // 新版随机上一曲
+            if(--ShufflingIndex < 0)
+                ShufflingIndex = ShuffleList.Count - 1;
+            NowPlaying = ShuffleList[ShufflingIndex];
+        }
         LoadPlayerSong();
         Player.Play();
     }
@@ -364,7 +376,7 @@ public static class HyPlayList
         }
     }
 
-    private static void MoveSongPointer(bool realNext = false)
+    private async static void MoveSongPointer(bool realNext = false)
     {
         //首先切换指针到下一首要播放的歌
         switch (NowPlayType)
@@ -378,15 +390,18 @@ public static class HyPlayList
 
                 break;
             case PlayMode.Shuffled:
-                //随机播放
-                if (ShuffleNowPlaying + 1 >= List.Count) 
+                // 随机播放
+                if (Common.Setting.shuffleNoRepeating)
                 {
-                    CreateShufflePlayLists();
-                    ShuffleNowPlaying = 1;
+                    // 新版乱序算法
+                    if ((++ShufflingIndex) > List.Count - 1)
+                        ShufflingIndex = 0;
+                    NowPlaying = ShuffleList[ShufflingIndex + 1];
                 }
-                    
                 else
-                    NowPlaying++;
+                {
+                    NowPlaying = new Random(DateTime.Now.Millisecond).Next(List.Count - 1);
+                }
                 break;
             case PlayMode.SinglePlay:
                 if (realNext)
@@ -440,7 +455,7 @@ public static class HyPlayList
                     {
                         Common.BarPlayBar.TbSongTag.Text = tag;
                     });
-                    
+
                 }
                 else
                     PlayerOnMediaFailed(Player, null); //传一个播放失败
@@ -670,6 +685,7 @@ public static class HyPlayList
     private static async void LoadLyrics(HyPlayItem hpi)
     {
         var pureLyricInfo = new PureLyricInfo();
+        bool unionTranslation = false;
         switch (hpi.ItemType)
         {
             case HyPlayItemType.Netease:
@@ -684,6 +700,7 @@ public static class HyPlayList
                             await StorageFile.GetFileFromPathAsync(Path.ChangeExtension(NowPlayingItem.PlayItem.Url,
                                 "lrc")))
                     };
+                    unionTranslation = true;
                 }
                 catch
                 {
@@ -694,7 +711,7 @@ public static class HyPlayList
         }
 
         //先进行歌词转换以免被搞
-        Lyrics = Utils.ConvertPureLyric(pureLyricInfo.PureLyrics);
+        Lyrics = Utils.ConvertPureLyric(pureLyricInfo.PureLyrics, unionTranslation);
         Utils.ConvertTranslation(pureLyricInfo.TrLyrics, Lyrics);
         if (Lyrics.Count != 0 && Lyrics[0].LyricTime != TimeSpan.Zero)
             Lyrics.Insert(0,
@@ -1153,20 +1170,22 @@ public static class HyPlayList
         };
     }
 
-    public static void CreateShufflePlayLists()
+    public static Task CreateShufflePlayLists()
     {
-        int targetPosition = 0;
-        for (var originalPosition = 10; originalPosition < List.Count; originalPosition++)
+        ShuffleList.Clear();
+        Stack<int> shuffledNumbers = new();
+        while (shuffledNumbers.Count < List.Count)
         {
             byte[] buffer = Guid.NewGuid().ToByteArray();
-            int iSeed = BitConverter.ToInt32(buffer, 0);
-            Random random = new Random(iSeed);
-            while (ShuffleList[targetPosition] != null)
-            {
-                targetPosition = random.Next(1, List.Count);
-            }
-            ShuffleList[targetPosition] = List[originalPosition];
-        }
+            int Seed = BitConverter.ToInt32(buffer, 0);
+            Random random = new Random(Seed);
+            var indexShuffled = random.Next(List.Count);
+            if (shuffledNumbers.Contains(indexShuffled))
+                continue;
+            shuffledNumbers.Push(indexShuffled);
+            ShuffleList.Add(indexShuffled);
+        }          
+        return Task.CompletedTask;
     }
 }
 
@@ -1180,7 +1199,7 @@ public enum PlayMode
 
 public static class Utils
 {
-    public static List<SongLyric> ConvertPureLyric(string lyricAllText)
+    public static List<SongLyric> ConvertPureLyric(string lyricAllText, bool hasTranslationsInLyricText = false)
     {
         var lyrics = new List<SongLyric>();
         if (string.IsNullOrEmpty(lyricAllText)) return new List<SongLyric> { SongLyric.NoLyric };
@@ -1234,17 +1253,18 @@ public static class Utils
             var haveTranslation = false;
             string translation = null;
             //NLyric 的双语歌词
-            if (lrcText.EndsWith('」'))
-            {
-                if (lrcText.LastIndexOf('「') != -1 && lrcText.LastIndexOf('」') != -1)
+            if (hasTranslationsInLyricText)
+                if (lrcText.EndsWith('」'))
                 {
-                    translation = lrcText.Substring(lrcText.IndexOf('「') + 1,
-                        lrcText.IndexOf('」') - lrcText.IndexOf('「') - 1);
-                    lrcText = lrcText.Substring(0, lrcText.IndexOf('「'));
-                }
+                    if (lrcText.LastIndexOf('「') != -1 && lrcText.LastIndexOf('」') != -1)
+                    {
+                        translation = lrcText.Substring(lrcText.IndexOf('「') + 1,
+                            lrcText.IndexOf('」') - lrcText.IndexOf('「') - 1);
+                        lrcText = lrcText.Substring(0, lrcText.IndexOf('「'));
+                    }
 
-                haveTranslation = !string.IsNullOrEmpty(translation);
-            }
+                    haveTranslation = !string.IsNullOrEmpty(translation);
+                }
 
 
             lyrics.Add(new SongLyric

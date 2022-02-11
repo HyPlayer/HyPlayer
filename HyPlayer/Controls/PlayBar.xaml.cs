@@ -298,7 +298,7 @@ public sealed partial class PlayBar
                         }
                     };
                     hyitem.PlayItem.Artist = Info.artist.Select(t => new NCArtist
-                            { name = t[0].ToString(), id = t[1].ToString() })
+                    { name = t[0].ToString(), id = t[1].ToString() })
                         .ToList();
 
                     HyPlayList.List.Add(hyitem);
@@ -516,7 +516,7 @@ public sealed partial class PlayBar
                 FadeSettedVolume = true;
                 var vol = Common.Setting.Volume;
                 var curtime = HyPlayList.Player.PlaybackSession.Position.TotalSeconds;
-                for (;;)
+                for (; ; )
                     try
                     {
                         await Task.Delay(50);
@@ -558,7 +558,7 @@ public sealed partial class PlayBar
                 var vol = Common.Setting.Volume;
                 HyPlayList.Player.Volume = 0;
                 var curtime = HyPlayList.Player.PlaybackSession.Position.TotalSeconds;
-                for (;;)
+                for (; ; )
                 {
                     await Task.Delay(50);
                     var curvol = (HyPlayList.Player.PlaybackSession.Position.TotalSeconds - curtime) /
@@ -750,8 +750,6 @@ public sealed partial class PlayBar
                     //变成随机
                     HyPlayList.NowPlayType = PlayMode.Shuffled;
                     NowPlayType = PlayMode.Shuffled;
-                    HyPlayList.CreateShufflePlayLists();
-                    HyPlayList.ShuffleNowPlaying = 1;
                     IconPlayType.Glyph = "\uE14B";
                     break;
                 case PlayMode.Shuffled:
@@ -781,22 +779,22 @@ public sealed partial class PlayBar
         switch (HyPlayList.NowPlayingItem.ItemType)
         {
             case HyPlayItemType.Netease:
-            {
-                Api.LikeSong(HyPlayList.NowPlayingItem.PlayItem.Id,
-                    !Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id));
-                if (Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id))
-                    Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.Id);
-                else
-                    Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.Id);
+                {
+                    Api.LikeSong(HyPlayList.NowPlayingItem.PlayItem.Id,
+                        !Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id));
+                    if (Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id))
+                        Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.Id);
+                    else
+                        Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.Id);
 
-                IconLiked.Foreground = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
-                    ? new SolidColorBrush(Colors.Red)
-                    : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-                IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
-                    ? "\uE00B;"
-                    : "\uEB51";
-                break;
-            }
+                    IconLiked.Foreground = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
+                        ? new SolidColorBrush(Colors.Red)
+                        : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+                    IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
+                        ? "\uE00B;"
+                        : "\uEB51";
+                    break;
+                }
             case HyPlayItemType.Radio:
                 _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.ResourceLike,
                     new Dictionary<string, object>

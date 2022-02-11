@@ -3,6 +3,7 @@
 using System;
 using HyPlayer.HyPlayControl;
 using NeteaseCloudMusicApi;
+using System.Threading.Tasks;
 
 #endregion
 
@@ -26,13 +27,13 @@ internal static class PersonalFM
         HyPlayList.RemoveAllSong();
     }
 
-    private static void HyPlayList_OnMediaEnd(HyPlayItem hpi)
+    private static async void HyPlayList_OnMediaEnd(HyPlayItem hpi)
     {
         if (Common.IsInFm)
-            LoadNextFM();
+           await LoadNextFM();
     }
 
-    public static async void LoadNextFM()
+    public static async Task<bool> LoadNextFM()
     {
         try
         {
@@ -58,6 +59,7 @@ internal static class PersonalFM
         {
             Common.AddToTeachingTipLists(e.Message, (e.InnerException ?? new Exception()).Message);
         }
+        return true;
     }
 
     private static void HyPlayList_OnSongMoveNext()

@@ -312,6 +312,16 @@ namespace HyPlayer
             }
         }
 
+        public bool shuffleNoRepeating
+        {
+            get => GetSettings("shuffleNoRepeating", true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["shuffleNoRepeating"] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public int lyricScaleSize
         {
             get
