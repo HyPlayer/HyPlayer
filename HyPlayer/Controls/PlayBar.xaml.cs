@@ -70,7 +70,7 @@ public sealed partial class PlayBar
         realSelectSong = false;
         ListBoxPlayList.ItemsSource = PlayItems;
         realSelectSong = true;
-        Common.Invoke(async () =>
+        _ = Common.Invoke(async () =>
         {
             try
             {
@@ -239,7 +239,7 @@ public sealed partial class PlayBar
             .Select(t => t.PlayItem.Id).ToList());
     }
 
-    private async void TestFile()
+    private static async void TestFile()
     {
         var fop = new FileOpenPicker();
         fop.FileTypeFilter.Add(".flac");
@@ -335,7 +335,7 @@ public sealed partial class PlayBar
 
     public void OnPlayPositionChange(TimeSpan ts)
     {
-        Common.Invoke(() =>
+        _ = Common.Invoke(() =>
         {
             try
             {
@@ -398,7 +398,7 @@ public sealed partial class PlayBar
     }
 
 
-    public void LoadPlayingFile(HyPlayItem mpi)
+    public async void LoadPlayingFile(HyPlayItem mpi)
     {
         if (Common.IsInFm)
         {
@@ -427,89 +427,113 @@ public sealed partial class PlayBar
 
         if (HyPlayList.NowPlayingItem.PlayItem == null) return;
 
-        Common.Invoke(async () =>
+        TbSingerName.Content = HyPlayList.NowPlayingItem.PlayItem.ArtistString;
+        TbSongName.Text = HyPlayList.NowPlayingItem.PlayItem.Name;
+        TbAlbumName.Content = HyPlayList.NowPlayingItem.PlayItem.AlbumString;
+        try
         {
-            TbSingerName.Content = HyPlayList.NowPlayingItem.PlayItem.ArtistString;
-            TbSongName.Text = HyPlayList.NowPlayingItem.PlayItem.Name;
-            TbAlbumName.Content = HyPlayList.NowPlayingItem.PlayItem.AlbumString;
-            try
-            {
-                if (!Common.Setting.noImage)
-                    if (mpi.ItemType == HyPlayItemType.Local)
-                    {
-                        var img = new BitmapImage();
-                        await img.SetSourceAsync(
-                            await HyPlayList.NowPlayingStorageFile?.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999));
-                        AlbumImage.Source = img;
-                    }
-                    else
-                    {
-                        AlbumImage.Source =
-                            new BitmapImage(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=" +
-                                                    StaticSource.PICSIZE_PLAYBAR_ALBUMCOVER));
-                    }
-            }
-            catch (Exception)
-            {
-                //IGNORE
-            }
+            if (!Common.Setting.noImage)
+                if (mpi.ItemType == HyPlayItemType.Local)
+                {
+                    var img = new BitmapImage();
+                    await img.SetSourceAsync(
+                        await HyPlayList.NowPlayingStorageFile?.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999));
+                    AlbumImage.Source = img;
+                }
+                else
+                {
+                    AlbumImage.Source =
+                        new BitmapImage(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=" +
+                                                StaticSource.PICSIZE_PLAYBAR_ALBUMCOVER));
+                }
+        }
+        catch (Exception)
+        {
+            //IGNORE
+        }
 
-            //SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
-            canslide = false;
-            SliderProgress.Minimum = 0;
-            SliderProgress.Maximum = HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds;
-            SliderProgress.Value = 0;
-            canslide = true;
-            if (mpi.ItemType != HyPlayItemType.Local)
-            {
-                IconLiked.Foreground = Common.LikedSongs.Contains(mpi.PlayItem.Id)
-                    ? new SolidColorBrush(Colors.Red)
-                    : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-                IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
-                    ? "\uE00B;"
-                    : "\uEB51";
-                HistoryManagement.AddNCSongHistory(mpi.PlayItem.Id);
-            }
+        //SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
+        canslide = false;
+        SliderProgress.Minimum = 0;
+        SliderProgress.Maximum = HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds;
+        SliderProgress.Value = 0;
+        canslide = true;
+        if (mpi.ItemType != HyPlayItemType.Local)
+        {
+            IconLiked.Foreground = Common.LikedSongs.Contains(mpi.PlayItem.Id)
+                ? new SolidColorBrush(Colors.Red)
+                : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+            IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
+                ? "\uE00B;"
+                : "\uEB51";
+            HistoryManagement.AddNCSongHistory(mpi.PlayItem.Id);
+        }
 
-            realSelectSong = false;
+        realSelectSong = false;
+        // 新版随机播放算法
+        if (HyPlayList.NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating &&
+            Common.Setting.displayShuffledList)
+        {
+            ListBoxPlayList.SelectedIndex = HyPlayList.ShufflingIndex;
+        }
+        else
+        {
             ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
-            realSelectSong = true;
-            if (HyPlayList.NowPlayingItem.PlayItem.Tag != "在线")
-                TbSongTag.Text = HyPlayList.NowPlayingItem.PlayItem.Tag;
-            Btn_Share.IsEnabled = HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease;
-            /*
-            verticalAnimation.To = TbSongName.ActualWidth - TbSongName.Tb.ActualWidth;
-            verticalAnimation.SpeedRatio = 0.1;
-            TbSongNameScrollStoryBoard.Stop();
-            TbSongNameScrollStoryBoard.Children.Clear();
-            TbSongNameScrollStoryBoard.Children.Add(verticalAnimation);
-            TbSongNameScrollStoryBoard.Begin();
-            */
-        });
+        }
+        realSelectSong = true;
+        if (HyPlayList.NowPlayingItem.PlayItem.Tag != "在线")
+            TbSongTag.Text = HyPlayList.NowPlayingItem.PlayItem.Tag;
+        Btn_Share.IsEnabled = HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease;
+        /*
+        verticalAnimation.To = TbSongName.ActualWidth - TbSongName.Tb.ActualWidth;
+        verticalAnimation.SpeedRatio = 0.1;
+        TbSongNameScrollStoryBoard.Stop();
+        TbSongNameScrollStoryBoard.Children.Clear();
+        TbSongNameScrollStoryBoard.Children.Add(verticalAnimation);
+        TbSongNameScrollStoryBoard.Begin();
+        */
     }
 
     public void RefreshSongList()
     {
         try
         {
+            List<HyPlayItem> targetingList;
+            int targetingIndex;
+            // 新版随机播放算法
+            if (HyPlayList.NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating &&
+                Common.Setting.displayShuffledList)
+            {
+                targetingIndex = HyPlayList.ShufflingIndex;
+                targetingList = HyPlayList.ShuffleList.Select(t => HyPlayList.List[t]).ToList();
+                PlayListTitle.Text = "随机播放列表 (共" + targetingList.Count + "首)";
+            }
+            else
+            {
+                targetingIndex = HyPlayList.NowPlaying;
+                targetingList = HyPlayList.List;
+                PlayListTitle.Text = "播放列表 (共" + targetingList.Count + "首)";
+            }
+
             var vpos = -1;
             for (var b = 0; b < PlayItems.Count; b++)
-                if (!HyPlayList.List.Contains(PlayItems[b]))
+                if (!targetingList.Contains(PlayItems[b]))
                     PlayItems.RemoveAt(b);
 
-            foreach (var t in HyPlayList.List)
+            foreach (var t in targetingList)
             {
                 vpos++;
                 if (!PlayItems.Contains(t)) PlayItems.Insert(vpos, t);
             }
 
-            if (HyPlayList.NowPlaying != -1 && HyPlayList.NowPlaying < PlayItems.Count)
+            if (targetingIndex != -1 && targetingIndex < PlayItems.Count)
             {
                 realSelectSong = false;
-                ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
+                ListBoxPlayList.SelectedIndex = targetingIndex;
                 realSelectSong = true;
-                PlayListTitle.Text = "播放列表 (共" + HyPlayList.List.Count + "首)";
             }
+
+            
         }
         catch
         {
@@ -627,9 +651,24 @@ public sealed partial class PlayBar
 
     private void ListBoxPlayList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (ListBoxPlayList.SelectedIndex != -1 && ListBoxPlayList.SelectedIndex != HyPlayList.NowPlaying &&
-            realSelectSong)
-            HyPlayList.SongMoveTo(ListBoxPlayList.SelectedIndex);
+        if (HyPlayList.NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating &&
+            Common.Setting.displayShuffledList)
+        {
+            if (ListBoxPlayList.SelectedIndex != -1 &&
+                ListBoxPlayList.SelectedIndex != HyPlayList.ShuffleList[ListBoxPlayList.SelectedIndex] &&
+                realSelectSong)
+            {
+                HyPlayList.SongMoveTo(HyPlayList.ShuffleList[ListBoxPlayList.SelectedIndex]);
+                HyPlayList.ShufflingIndex = ListBoxPlayList.SelectedIndex;
+            }
+        }
+        else
+        {
+            if (ListBoxPlayList.SelectedIndex != -1 && ListBoxPlayList.SelectedIndex != HyPlayList.NowPlaying &&
+                realSelectSong)
+                HyPlayList.SongMoveTo(ListBoxPlayList.SelectedIndex);
+        }
+        
     }
 
     public void ShowExpandedPlayer()
@@ -948,7 +987,17 @@ public sealed partial class PlayBar
     private void ButtonPlayList_OnClick(object sender, RoutedEventArgs e)
     {
         if (HyPlayList.NowPlaying >= 0 && HyPlayList.NowPlaying < PlayItems.Count)
-            ListBoxPlayList.ScrollIntoView(PlayItems[HyPlayList.NowPlaying]);
+            if (HyPlayList.NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating &&
+                Common.Setting.displayShuffledList)
+            {
+                // 新的随机算法
+                ListBoxPlayList.SelectedIndex = HyPlayList.ShufflingIndex;
+            }
+            else
+            {
+                ListBoxPlayList.ScrollIntoView(PlayItems[HyPlayList.NowPlaying]);
+            }
+            
     }
 
     private void ImageContainer_OnPointerEntered(object sender, PointerRoutedEventArgs e)

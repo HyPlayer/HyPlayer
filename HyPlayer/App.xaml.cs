@@ -83,7 +83,7 @@ sealed partial class App : Application
 
     private void MemoryManagerOnAppMemoryUsageLimitChanging(object sender, AppMemoryUsageLimitChangingEventArgs e)
     {
-        Common.Invoke(() =>
+        _ = Common.Invoke(() =>
         {
             // Xbox 求你行行好,别杀我~ QAQ
             if (isInBackground)
@@ -97,7 +97,7 @@ sealed partial class App : Application
 
     private void MemoryManagerOnAppMemoryUsageIncreased(object sender, object e)
     {
-        Common.Invoke(() =>
+        _ = Common.Invoke(() =>
         {
             if (isInBackground)
             {
@@ -136,7 +136,7 @@ sealed partial class App : Application
         }
 
         if (Common.isExpanded)
-            Common.Invoke(() => { Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer)); });
+            _ = Common.Invoke(() => { Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer)); });
     }
 
     private void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)

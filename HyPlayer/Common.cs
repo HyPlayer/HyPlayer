@@ -11,6 +11,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
+using Windows.Foundation;
 using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Core;
@@ -62,11 +63,11 @@ namespace HyPlayer
         public static bool NavigatingBack;
         private static int _teachingTipSecondCounter = 3;
 
-        public static async void Invoke(Action action, CoreDispatcherPriority Priority = CoreDispatcherPriority.Normal)
+        public static IAsyncAction Invoke(Action action, CoreDispatcherPriority Priority = CoreDispatcherPriority.Normal)
         {
             try
             {
-                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority,
+                return CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority,
                     () => { action(); });
             }
 #if DEBUG
@@ -91,13 +92,15 @@ namespace HyPlayer
                 }));
                 */
             }
+
+            return null;
         }
 
 
         public static void AddToTeachingTipLists(string title, string subtitle = "")
         {
             TeachingTipList.Push(new KeyValuePair<string, string?>(title, subtitle));
-            Common.Invoke((() =>
+            _ = Common.Invoke((() =>
             {
                 if (!GlobalTip.IsOpen)
                     RollTeachingTip(false);
@@ -298,6 +301,16 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values["downloadLyric"] = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        public bool displayShuffledList
+        {
+            get => GetSettings("displayShuffledList", true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["displayShuffledList"] = value;
                 OnPropertyChanged();
             }
         }
@@ -821,8 +834,16 @@ namespace HyPlayer
 
             if (Common.Setting.advancedMusicHistoryStorage)
             {
-                var file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("songPlayHistory", CreationCollisionOption.OpenIfExists);
-                await FileIO.WriteTextAsync(file, string.Join("\r\n", songids));
+                try
+                {
+                    var file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("songPlayHistory",
+                        CreationCollisionOption.OpenIfExists);
+                    await FileIO.WriteTextAsync(file, string.Join("\r\n", songids));
+                }
+                catch
+                {
+                    // ignored
+                }
             }
             else
             {

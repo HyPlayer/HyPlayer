@@ -358,6 +358,7 @@
                         <CheckBox Content="无图模式 (开启后需重启应用)" IsChecked="{x:Bind hyplayer:Common.Setting.noImage, Mode=TwoWay}" />
                         <CheckBox Content="是否开启高级音乐历史存储 (超过 100 首)" IsChecked="{x:Bind hyplayer:Common.Setting.advancedMusicHistoryStorage, Mode=TwoWay}" />
                         <CheckBox Content="是否使用不重复随机" IsChecked="{x:Bind hyplayer:Common.Setting.shuffleNoRepeating, Mode=TwoWay}" />
+                        <CheckBox Content="是否显示随机列表" Visibility="{x:Bind hyplayer:Common.Setting.shuffleNoRepeating, Mode=OneWay}" IsChecked="{x:Bind hyplayer:Common.Setting.displayShuffledList, Mode=TwoWay}" />
                         <CheckBox
                             x:Name="CBSongCacheEnable"
                             Content="是否开启播放缓存 (可能造成播放前空白)"

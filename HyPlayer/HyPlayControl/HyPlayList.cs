@@ -164,11 +164,11 @@ public static class HyPlayList
         Player.MediaFailed += PlayerOnMediaFailed;
         Player.BufferingStarted += Player_BufferingStarted;
         Player.BufferingEnded += Player_BufferingEnded;
-        SecTimer.Elapsed += (sender, args) => Common.Invoke(() => OnTimerTicked?.Invoke());
+        SecTimer.Elapsed += (sender, args) => _ = Common.Invoke(() => OnTimerTicked?.Invoke());
         SecTimer.Start();
         OnTimerTicked += () =>
         {
-            Common.Invoke(() =>
+            _ = Common.Invoke(() =>
             {
                 if (--_gcCountDown < 0)
                 {
@@ -184,17 +184,17 @@ public static class HyPlayList
 
     public static void LoginDoneCall()
     {
-        Common.Invoke(() => { OnLoginDone?.Invoke(); });
+        _ = Common.Invoke(() => { OnLoginDone?.Invoke(); });
     }
 
     private static void Player_BufferingEnded(MediaPlayer sender, object args)
     {
-        Common.Invoke(() => OnSongBufferEnd?.Invoke());
+        _ = Common.Invoke(() => OnSongBufferEnd?.Invoke());
     }
 
     private static void Player_BufferingStarted(MediaPlayer sender, object args)
     {
-        Common.Invoke(() => OnSongBufferStart?.Invoke());
+        _ = Common.Invoke(() => OnSongBufferStart?.Invoke());
     }
 
     private static void PlayerOnMediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
@@ -211,7 +211,7 @@ public static class HyPlayList
             _crashedTime = NowPlayingItem.PlayItem.Id;
             if (NowPlayingItem.ItemType == HyPlayItemType.Netease && !NowPlayingItem.PlayItem.IsLocalFile ||
                 NowPlayingItem.ItemType == HyPlayItemType.Radio)
-                Common.Invoke(() =>
+                _ = Common.Invoke(() =>
                 {
                     List[NowPlaying] = LoadNcSong(new NCSong
                     {
@@ -281,12 +281,12 @@ public static class HyPlayList
         PlaySourceId = null;
         if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
             CreateShufflePlayLists();
-        Common.Invoke(() => OnPlayListAddDone?.Invoke());
+        _ = Common.Invoke(() => OnPlayListAddDone?.Invoke());
     }
 
     public static void SongMoveNext()
     {
-        Common.Invoke(() => OnSongMoveNext?.Invoke());
+        _ = Common.Invoke(() => OnSongMoveNext?.Invoke());
         if (List.Count == 0) return;
         MoveSongPointer(true);
         LoadPlayerSong();
@@ -303,10 +303,11 @@ public static class HyPlayList
         if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
         {
             // 新版随机上一曲
-            if(--ShufflingIndex < 0)
+            if (--ShufflingIndex < 0)
                 ShufflingIndex = ShuffleList.Count - 1;
             NowPlaying = ShuffleList[ShufflingIndex];
         }
+
         LoadPlayerSong();
         Player.Play();
     }
@@ -364,16 +365,16 @@ public static class HyPlayList
         switch (args.Button)
         {
             case SystemMediaTransportControlsButton.Play:
-                Common.Invoke(() => Player.Play());
+                _ = Common.Invoke(() => Player.Play());
                 break;
             case SystemMediaTransportControlsButton.Pause:
-                Common.Invoke(() => Player.Pause());
+                _ = Common.Invoke(() => Player.Pause());
                 break;
             case SystemMediaTransportControlsButton.Previous:
-                Common.Invoke(SongMovePrevious);
+                _ = Common.Invoke(SongMovePrevious);
                 break;
             case SystemMediaTransportControlsButton.Next:
-                Common.Invoke(SongMoveNext);
+                _ = Common.Invoke(SongMoveNext);
                 break;
         }
     }
@@ -404,6 +405,7 @@ public static class HyPlayList
                 {
                     NowPlaying = new Random(DateTime.Now.Millisecond).Next(List.Count - 1);
                 }
+
                 break;
             case PlayMode.SinglePlay:
                 if (realNext)
@@ -422,7 +424,7 @@ public static class HyPlayList
     {
         //当播放结束时,此时你应当进行切歌操作
         //不过在此之前还是把订阅了的时间给返回回去吧
-        Common.Invoke(() => OnMediaEnd?.Invoke(NowPlayingItem));
+        _ = Common.Invoke(() => OnMediaEnd?.Invoke(NowPlayingItem));
         MoveSongPointer();
         //然后尝试加载下一首歌
         LoadPlayerSong();
@@ -453,11 +455,7 @@ public static class HyPlayList
                     else
                         tag = $"{bitrate / 1000}K";
                     if (bitrate == 0) tag = "在线";
-                    Common.Invoke(() =>
-                    {
-                        Common.BarPlayBar.TbSongTag.Text = tag;
-                    });
-
+                    _ = Common.Invoke(() => { Common.BarPlayBar.TbSongTag.Text = tag; });
                 }
                 else
                     PlayerOnMediaFailed(Player, null); //传一个播放失败
@@ -586,7 +584,7 @@ public static class HyPlayList
         //记录下当前播放位置
         ApplicationData.Current.LocalSettings.Values["nowSongPointer"] = NowPlaying.ToString();
         //因为加载图片可能会高耗时,所以在此处加载
-        Common.Invoke(() => OnPlayItemChange?.Invoke(NowPlayingItem));
+        _ = Common.Invoke(() => OnPlayItemChange?.Invoke(NowPlayingItem));
         //加载歌词
         LoadLyrics(NowPlayingItem);
         try
@@ -621,7 +619,7 @@ public static class HyPlayList
 
     private static void PlaybackSession_PositionChanged(MediaPlaybackSession sender, object args)
     {
-        Common.Invoke(() => OnPlayPositionChange?.Invoke(Player.PlaybackSession.Position));
+        _ = Common.Invoke(() => OnPlayPositionChange?.Invoke(Player.PlaybackSession.Position));
         LoadLyricChange();
     }
 
@@ -654,7 +652,7 @@ public static class HyPlayList
         }
 
 
-        if (changed) Common.Invoke(() => OnLyricChange?.Invoke());
+        if (changed) _ = Common.Invoke(() => OnLyricChange?.Invoke());
     }
 
     private static void Player_VolumeChanged(MediaPlayer sender, object args)
@@ -662,7 +660,7 @@ public static class HyPlayList
         if (!Common.BarPlayBar.FadeSettedVolume)
             Common.Setting.Volume = (int)(Player.Volume * 100);
 
-        Common.Invoke(() => OnVolumeChange?.Invoke(Player.Volume));
+        _ = Common.Invoke(() => OnVolumeChange?.Invoke(Player.Volume));
     }
 
     private static void Player_CurrentStateChanged(MediaPlayer sender, object args)
@@ -679,9 +677,9 @@ public static class HyPlayList
         }
 
         if (Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
-            Common.Invoke(() => OnPlay?.Invoke());
+            _ = Common.Invoke(() => OnPlay?.Invoke());
         else
-            Common.Invoke(() => OnPause?.Invoke());
+            _ = Common.Invoke(() => OnPause?.Invoke());
     }
 
     private static async void LoadLyrics(HyPlayItem hpi)
@@ -719,7 +717,7 @@ public static class HyPlayList
             Lyrics.Insert(0,
                 new SongLyric { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "" });
         LyricPos = 0;
-        Common.Invoke(() => OnLyricLoaded?.Invoke());
+        _ = Common.Invoke(() => OnLyricLoaded?.Invoke());
     }
 
 
@@ -804,7 +802,7 @@ public static class HyPlayList
             List.Insert(position, hpi);
         return hpi;
     }
-    
+
     public static List<HyPlayItem> AppendNcSongRange(List<NCSong> ncSongs, int position = -1)
     {
         if (position < 0)
@@ -1184,22 +1182,22 @@ public static class HyPlayList
     public static Task CreateShufflePlayLists()
     {
         ShuffleList.Clear();
-        Stack<int> shuffledNumbers = new();
+        HashSet<int> shuffledNumbers = new();
         while (shuffledNumbers.Count < List.Count)
         {
-            byte[] buffer = Guid.NewGuid().ToByteArray();
-            int Seed = BitConverter.ToInt32(buffer, 0);
-            Random random = new Random(Seed);
+            var buffer = Guid.NewGuid().ToByteArray();
+            var seed = BitConverter.ToInt32(buffer, 0);
+            var random = new Random(seed);
             var indexShuffled = random.Next(List.Count);
-            if (shuffledNumbers.Contains(indexShuffled))
-                continue;
-            shuffledNumbers.Push(indexShuffled);
-            ShuffleList.Add(indexShuffled);
-        }          
+            if (shuffledNumbers.Add(indexShuffled))
+                ShuffleList.Add(indexShuffled);
+        }
+
+        // Call 一下来触发前端显示的播放列表更新
+        _ = Common.Invoke(() => OnPlayListAddDone?.Invoke());
         return Task.CompletedTask;
     }
 }
-
 
 public enum PlayMode
 {

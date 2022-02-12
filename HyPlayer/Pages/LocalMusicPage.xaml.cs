@@ -78,7 +78,7 @@ public sealed partial class LocalMusicPage : Page
 
         FileScanTask = Task.Run(() =>
         {
-            Common.Invoke(() =>
+            _ = Common.Invoke(() =>
             {
                 FileLoadingIndicateRing.IsActive = true;
                 foreach (var item in tmp) GetSubFiles(item);

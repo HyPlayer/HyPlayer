@@ -44,7 +44,7 @@ public sealed partial class DownloadPage : Page, IDisposable
 
     private void DownloadPage_Elapsed()
     {
-        Common.Invoke(() =>
+        _ = Common.Invoke(() =>
         {
             if (DLList.Children.Count != DownloadManager.DownloadLists.Count)
             {

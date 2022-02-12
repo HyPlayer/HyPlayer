@@ -96,7 +96,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     public void Dispose()
     {
-        Common.Invoke(() =>
+        _ = Common.Invoke(() =>
         {
             HyPlayList.OnLyricChange -= RefreshLyricTime;
             HyPlayList.OnPlayItemChange -= OnSongChange;
@@ -107,7 +107,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             Background = null;
             if (Window.Current != null)
                 Window.Current.SizeChanged -= Current_SizeChanged;
-            Common.Invoke(() =>
+            _ = Common.Invoke(() =>
             {
                 LyricBox.Children.Clear();
                 LyricList.Clear();
@@ -447,7 +447,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     public void OnSongChange(HyPlayItem mpi)
     {
         if (mpi?.PlayItem != null)
-            Common.Invoke(async () =>
+            _ = Common.Invoke(async () =>
             {
                 try
                 {
