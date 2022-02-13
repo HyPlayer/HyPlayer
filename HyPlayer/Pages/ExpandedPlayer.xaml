@@ -44,7 +44,6 @@
             </Grid.ColumnDefinitions>
             <ScrollViewer
                 x:Name="UIAugmentationSys"
-                MinWidth="600"
                 Canvas.ZIndex="0"
                 HorizontalScrollMode="Disabled"
                 VerticalScrollBarVisibility="Hidden"

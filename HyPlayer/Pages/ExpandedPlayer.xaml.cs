@@ -258,7 +258,9 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             SongInfo.Width = double.NaN;
         }
 
+        BtnToggleFullScreen.IsChecked = ApplicationView.GetForCurrentView().IsFullScreenMode;
 
+        /*
         if (550 > nowwidth)
         {
             ImageAlbum.Width = nowwidth - ImageAlbum.ActualOffset.X - 15;
@@ -271,6 +273,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             LeftPanel.HorizontalAlignment = HorizontalAlignment.Center;
             ImageAlbum.HorizontalAlignment = HorizontalAlignment.Center;
         }
+        */
 
 
         if (SongInfo.ActualOffset.Y + SongInfo.ActualHeight > MainGrid.ActualHeight &&
@@ -378,6 +381,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         {
             PageContainer.Background = new BackdropBlurBrush() { Amount = 50.0 };
         }
+
         NowPlaybackSpeed = "x" + HyPlayList.Player.PlaybackSession.PlaybackRate;
     }
 

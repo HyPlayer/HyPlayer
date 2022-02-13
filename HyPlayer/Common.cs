@@ -305,6 +305,26 @@ namespace HyPlayer
             }
         }
         
+        public bool writedownloadFileInfo
+        {
+            get => GetSettings("writedownloadFileInfo", true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["writedownloadFileInfo"] = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        public bool write163Info
+        {
+            get => GetSettings("write163Info", true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["write163Info"] = value;
+                OnPropertyChanged();
+            }
+        }
+        
         public bool displayShuffledList
         {
             get => GetSettings("displayShuffledList", true);

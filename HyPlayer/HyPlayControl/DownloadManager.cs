@@ -47,7 +47,8 @@ internal class DownloadObject
         Status = 2;
         if (Common.Setting.downloadLyric)
             DownloadLyric();
-        WriteInfoToFile();
+        if (Common.Setting.writedownloadFileInfo)
+            WriteInfoToFile();
         try
         {
             var downloadToastContent = new ToastContent
@@ -94,7 +95,8 @@ internal class DownloadObject
     {
         var file = File.Create(
             new UwpStorageFileAbstraction(await StorageFile.GetFileFromPathAsync(fullpath)));
-        The163KeyHelper.TrySetMusicInfo(file.Tag, dontuseme);
+        if (Common.Setting.write163Info)
+            The163KeyHelper.TrySetMusicInfo(file.Tag, dontuseme);
         if (string.IsNullOrEmpty(file.Tag.Title))
         {
             //写相关信息

@@ -17,6 +17,7 @@ using Windows.Storage.Pickers;
 using Windows.System.Profile;
 using Windows.UI;
 using Windows.UI.Notifications;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -430,6 +431,8 @@ public sealed partial class PlayBar
         TbSingerName.Content = HyPlayList.NowPlayingItem.PlayItem.ArtistString;
         TbSongName.Text = HyPlayList.NowPlayingItem.PlayItem.Name;
         TbAlbumName.Content = HyPlayList.NowPlayingItem.PlayItem.AlbumString;
+        ApplicationView.GetForCurrentView().Title = HyPlayList.NowPlayingItem.PlayItem.ArtistString + " - " +
+                                                    HyPlayList.NowPlayingItem.PlayItem.Name + " - HyPlayer";
         try
         {
             if (!Common.Setting.noImage)
