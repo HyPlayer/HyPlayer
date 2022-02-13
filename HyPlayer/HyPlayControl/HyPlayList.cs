@@ -82,10 +82,10 @@ public static class HyPlayList
     {
         set
         {
+            Common.Setting.songRollType = (int)value;
             // 新版随机创建随机表
             if (value == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
                 CreateShufflePlayLists();
-            Common.Setting.songRollType = (int)value;
         }
 
         get => (PlayMode)Common.Setting.songRollType;
@@ -316,6 +316,11 @@ public static class HyPlayList
     {
         if (List.Count <= index) return;
         NowPlaying = index;
+        if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
+        {
+            ShufflingIndex = ShuffleList.FindIndex(t => t == index);
+        }
+
         LoadPlayerSong();
         Player.Play();
     }
@@ -1193,6 +1198,10 @@ public static class HyPlayList
                 ShuffleList.Add(indexShuffled);
         }
 
+        if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
+        {
+            ShufflingIndex = ShuffleList.FindIndex(t => t == NowPlaying);
+        }
         // Call 一下来触发前端显示的播放列表更新
         _ = Common.Invoke(() => OnPlayListAddDone?.Invoke());
         return Task.CompletedTask;

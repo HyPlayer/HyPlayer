@@ -515,25 +515,30 @@ public sealed partial class PlayBar
                 PlayListTitle.Text = "播放列表 (共" + targetingList.Count + "首)";
             }
 
+            /*
             var vpos = -1;
             for (var b = 0; b < PlayItems.Count; b++)
                 if (!targetingList.Contains(PlayItems[b]))
-                    PlayItems.RemoveAt(b);
+                    PlayItems.RemoveAt(b);           
 
             foreach (var t in targetingList)
             {
                 vpos++;
                 if (!PlayItems.Contains(t)) PlayItems.Insert(vpos, t);
             }
+            */
 
-            if (targetingIndex != -1 && targetingIndex < PlayItems.Count)
-            {
-                realSelectSong = false;
-                ListBoxPlayList.SelectedIndex = targetingIndex;
-                realSelectSong = true;
-            }
+            realSelectSong = false;
+            PlayItems.Clear();
+            targetingList.ForEach(t=>PlayItems.Add(t));
+            realSelectSong = true;
 
-            
+            if (targetingIndex == -1 || targetingIndex >= PlayItems.Count) return;
+            realSelectSong = false;
+            ListBoxPlayList.SelectedIndex = targetingIndex;
+            realSelectSong = true;
+
+
         }
         catch
         {
@@ -991,7 +996,7 @@ public sealed partial class PlayBar
                 Common.Setting.displayShuffledList)
             {
                 // 新的随机算法
-                ListBoxPlayList.SelectedIndex = HyPlayList.ShufflingIndex;
+                ListBoxPlayList.ScrollIntoView(PlayItems[HyPlayList.ShufflingIndex]);
             }
             else
             {

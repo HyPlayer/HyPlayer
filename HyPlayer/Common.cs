@@ -332,6 +332,7 @@ namespace HyPlayer
             {
                 ApplicationData.Current.LocalSettings.Values["shuffleNoRepeating"] = value;
                 OnPropertyChanged();
+                if (HyPlayList.NowPlayType == PlayMode.Shuffled && value) HyPlayList.CreateShufflePlayLists();
             }
         }
 
