@@ -172,14 +172,19 @@ public sealed partial class SongsList : UserControl, IDisposable
 
     private void HyPlayListOnOnPlayItemChange(HyPlayItem playitem)
     {
-        if (playitem.ItemType == HyPlayItemType.Local || playitem.PlayItem == null) return;
-        var idx = VisibleSongs.ToList().FindIndex(t => t.sid == playitem.PlayItem.Id);
-        if (idx != -1)
+        if (playitem?.ItemType == HyPlayItemType.Local || playitem?.PlayItem == null)
         {
+            if (MultiSelect) return;
             IsManualSelect = false;
-            SongContainer.SelectedIndex = idx;
+            SongContainer.SelectedIndex = -1;
             IsManualSelect = true;
+            return;
         }
+        var idx = VisibleSongs.ToList().FindIndex(t => t.sid == playitem.PlayItem.Id);
+        if (idx == -1) return;
+        IsManualSelect = false;
+        SongContainer.SelectedIndex = idx;
+        IsManualSelect = true;
     }
 
     private void Songs_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -199,10 +204,10 @@ public sealed partial class SongsList : UserControl, IDisposable
 
     private async void SongContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (SongContainer.SelectedIndex < 0) return;
-        if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
         if (!IsManualSelect) return;
-        if (VisibleSongs[SongContainer.SelectedIndex].sid == HyPlayList.NowPlayingItem.PlayItem?.Id) return;
+        if (SongContainer.SelectedIndex < 0 || SongContainer.SelectedItem == null) return;
+        if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
+        if (VisibleSongs[SongContainer.SelectedIndex].sid == HyPlayList.NowPlayingItem?.PlayItem?.Id) return;
         if (ListSource != null && ListSource != "content" && Songs.Count == VisibleSongs.Count)
         {
             HyPlayList.RemoveAllSong();

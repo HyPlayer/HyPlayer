@@ -14,7 +14,7 @@
             Margin="30,0,30,0"
             FontSize="25"
             Text="本地歌曲" />
-        <Pivot Margin="15,25,30,0" SelectionChanged="Pivot_SelectionChanged">
+        <Pivot Margin="15,25,30,0">
 
             <PivotItem Header="下载管理">
                 <Frame x:Name="DownloadPageFrame" />
@@ -38,7 +38,11 @@
                         <Button
                             x:Name="Refresh"
                             Click="Refresh_Click"
-                            Content="加载"
+                            Content="扫描本地"
+                            Style="{StaticResource ButtonRevealStyle}" />
+                        <Button
+                            Click="Add_Local"
+                            Content="播放本地"
                             Style="{StaticResource ButtonRevealStyle}" />
                     </StackPanel>
                     <Grid Grid.Row="1">

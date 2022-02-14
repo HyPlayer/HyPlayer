@@ -49,6 +49,7 @@ internal class DownloadObject
             DownloadLyric();
         if (Common.Setting.writedownloadFileInfo)
             WriteInfoToFile();
+        /*
         try
         {
             var downloadToastContent = new ToastContent
@@ -83,12 +84,14 @@ internal class DownloadObject
             toast.Data.SequenceNumber = 0;
             var notifier = ToastNotificationManager.CreateToastNotifier();
             notifier.Show(toast);
-            Common.AddToTeachingTipLists(filename + "下载完成");
+            
         }
         catch (Exception ex)
         {
             Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
+        */
+        Common.AddToTeachingTipLists(filename + "下载完成");
     }
 
     private async void WriteInfoToFile()
@@ -167,6 +170,7 @@ internal class DownloadObject
 
     public static void DownloadStartToast(string songname)
     {
+        /*
         var downloadToastContent = new ToastContent
         {
             Visual = new ToastVisual
@@ -200,6 +204,7 @@ internal class DownloadObject
         toast.Data.SequenceNumber = 0;
         var notifier = ToastNotificationManager.CreateToastNotifier();
         notifier.Show(toast);
+        */
         Common.AddToTeachingTipLists("下载开始", "歌曲" + songname + "下载开始");
     }
 
@@ -305,38 +310,38 @@ internal static class DownloadManager
         if (DownloadLists[0].Status == 2)
         {
             DownloadLists.RemoveAt(0);
-            if (DownloadLists.Count == 0)
+            if (DownloadLists.Count != 0) return;
+            /*
+            var downloadToastContent = new ToastContent
             {
-                var downloadToastContent = new ToastContent
+                Visual = new ToastVisual
                 {
-                    Visual = new ToastVisual
+                    BindingGeneric = new ToastBindingGeneric
                     {
-                        BindingGeneric = new ToastBindingGeneric
+                        Children =
                         {
-                            Children =
+                            new AdaptiveText
                             {
-                                new AdaptiveText
-                                {
-                                    Text = "下载全部完成",
-                                    HintStyle = AdaptiveTextStyle.Header
-                                }
+                                Text = "下载全部完成",
+                                HintStyle = AdaptiveTextStyle.Header
                             }
                         }
-                    },
-                    Launch = "",
-                    Scenario = ToastScenario.Reminder,
-                    Audio = new ToastAudio { Silent = true }
-                };
-                var toast = new ToastNotification(downloadToastContent.GetXml())
-                {
-                    Tag = "HyPlayerDownloadAllDone",
-                    Data = new NotificationData()
-                };
-                toast.Data.SequenceNumber = 0;
-                var notifier = ToastNotificationManager.CreateToastNotifier();
-                notifier.Show(toast);
-                Common.AddToTeachingTipLists("下载全部完成");
-            }
+                    }
+                },
+                Launch = "",
+                Scenario = ToastScenario.Reminder,
+                Audio = new ToastAudio { Silent = true }
+            };
+            var toast = new ToastNotification(downloadToastContent.GetXml())
+            {
+                Tag = "HyPlayerDownloadAllDone",
+                Data = new NotificationData()
+            };
+            toast.Data.SequenceNumber = 0;
+            var notifier = ToastNotificationManager.CreateToastNotifier();
+            notifier.Show(toast);
+            */
+            Common.AddToTeachingTipLists("下载全部完成");
 
             return;
         }

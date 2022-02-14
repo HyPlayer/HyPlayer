@@ -793,4 +793,9 @@ public sealed partial class BasePage : Page
     {
         _ = Launcher.LaunchUriAsync(new Uri(@"https://blog.kengwang.com.cn/hyplayer-login-help"));
     }
+
+    private void TheTeachingTip_OnCloseButtonClick(TeachingTip sender, object args)
+    {
+        Common.TeachingTipList.Clear();
+    }
 }

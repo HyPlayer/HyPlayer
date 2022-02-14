@@ -59,6 +59,7 @@ namespace HyPlayer
         public static bool isExpanded = false;
         public static TeachingTip GlobalTip;
         public static readonly Stack<KeyValuePair<string, string?>> TeachingTipList = new();
+        private static object previousNavigationItem;
 
         public static bool NavigatingBack;
         private static int _teachingTipSecondCounter = 3;
@@ -139,7 +140,7 @@ namespace HyPlayer
             if (Setting.forceMemoryGarbage)
             {
                 if (NavigationHistory.Count >= 1 && PageBase.NavMain.SelectedItem == NavigationHistory.Peek().Item)
-                    PageBase.NavMain.SelectedItem = PageBase.ItemMain;
+                    PageBase.NavMain.SelectedItem = PageBase.NavItemBlank;
                 NavigationHistory.Push(new NavigationHistoryItem
                 {
                     PageType = SourcePageType,
@@ -155,6 +156,9 @@ namespace HyPlayer
                 BaseFrame?.Navigate(SourcePageType, paratmer,
                     new SlideNavigationTransitionInfo { Effect = SlideNavigationTransitionEffect.FromRight });
             }
+            if (previousNavigationItem == PageBase.NavMain.SelectedItem)
+                PageBase.NavMain.SelectedItem = PageBase.NavItemBlank;
+            previousNavigationItem = PageBase.NavMain.SelectedItem;
         }
 
         public static void NavigateRefresh()
@@ -724,6 +728,16 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values["highQualityCoverInSMTC"] = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        public bool expandedPlayerFullCover
+        {
+            get => GetSettings("expandedPlayerFullCover", false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["expandedPlayerFullCover"] = value;
                 OnPropertyChanged();
             }
         }

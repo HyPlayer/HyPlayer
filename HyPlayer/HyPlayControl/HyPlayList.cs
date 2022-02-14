@@ -11,7 +11,9 @@ using Windows.Media.Core;
 using Windows.Media.Playback;
 using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
+using Windows.Storage.AccessCache;
 using Windows.Storage.FileProperties;
+using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
 using HyPlayer.Classes;
 using NeteaseCloudMusicApi;
@@ -86,6 +88,8 @@ public static class HyPlayList
             // 新版随机创建随机表
             if (value == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
                 CreateShufflePlayLists();
+            if (value != PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
+                Common.Invoke(() => OnPlayListAddDone?.Invoke());
         }
 
         get => (PlayMode)Common.Setting.songRollType;
@@ -235,6 +239,101 @@ public static class HyPlayList
         }
     }
 
+    public static async void PickLocalFile()
+    {
+        var fop = new FileOpenPicker();
+        fop.FileTypeFilter.Add(".flac");
+        fop.FileTypeFilter.Add(".mp3");
+        fop.FileTypeFilter.Add(".ncm");
+        fop.FileTypeFilter.Add(".ape");
+        fop.FileTypeFilter.Add(".m4a");
+        fop.FileTypeFilter.Add(".wav");
+
+
+        var files =
+            await fop.PickMultipleFilesAsync();
+        //HyPlayList.RemoveAllSong();
+        var isFirstLoad = true;
+        foreach (var file in files)
+        {
+            var folder = await file.GetParentAsync();
+            if (folder != null)
+            {
+                if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(folder.Path.GetHashCode().ToString()))
+                    StorageApplicationPermissions.FutureAccessList.AddOrReplace(folder.Path.GetHashCode().ToString(),
+                        folder);
+            }
+            else
+            {
+                if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(file.Path.GetHashCode().ToString()))
+                {
+                    StorageApplicationPermissions.FutureAccessList.AddOrReplace(file.Path.GetHashCode().ToString(),
+                        file);
+                }
+            }
+
+            if (Path.GetExtension(file.Path) == ".ncm")
+            {
+                //脑残Music
+                var stream = await file.OpenStreamForReadAsync();
+                if (NCMFile.IsCorrectNCMFile(stream))
+                {
+                    var Info = NCMFile.GetNCMMusicInfo(stream);
+                    var hyitem = new HyPlayItem
+                    {
+                        ItemType = HyPlayItemType.Netease,
+                        PlayItem = new PlayItem
+                        {
+                            DontSetLocalStorageFile = file,
+                            Album = new NCAlbum
+                            {
+                                name = Info.album,
+                                id = Info.albumId.ToString(),
+                                cover = Info.albumPic
+                            },
+                            Url = file.Path,
+                            SubExt = Info.format,
+                            Bitrate = Info.bitrate,
+                            IsLocalFile = true,
+                            Type = HyPlayItemType.Netease,
+                            LengthInMilliseconds = Info.duration,
+                            Id = Info.musicId.ToString(),
+                            Artist = null,
+                            /*
+                            size = sf.GetBasicPropertiesAsync()
+                                .GetAwaiter()
+                                .GetResult()
+                                .Size.ToString(),
+                            */
+                            Name = Info.musicName,
+                            Tag = file.Provider.DisplayName + " NCM"
+                        }
+                    };
+                    hyitem.PlayItem.Artist = Info.artist.Select(t => new NCArtist
+                            { name = t[0].ToString(), id = t[1].ToString() })
+                        .ToList();
+
+                    HyPlayList.List.Add(hyitem);
+                }
+
+                stream.Dispose();
+            }
+            else
+            {
+                await HyPlayList.AppendStorageFile(file);
+            }
+
+            if (!isFirstLoad) continue;
+            HyPlayList.SongAppendDone();
+            isFirstLoad = false;
+            HyPlayList.SongMoveTo(HyPlayList.List.Count - 1);
+        }
+
+        HyPlayList.SongAppendDone();
+        //HyPlayList.SongMoveTo(0);
+    }
+
+
     private static async Task LoadLocalFile()
     {
         // 此处可以改进
@@ -353,6 +452,12 @@ public static class HyPlayList
         //假如移除后面的我就不管了
     }
 
+    public static void ManualRemoveAllSong()
+    {
+        RemoveAllSong();
+        OnPlayItemChange?.Invoke(null);
+    }
+    
     public static void RemoveAllSong()
     {
         List.Clear();
@@ -722,7 +827,9 @@ public static class HyPlayList
             Lyrics.Insert(0,
                 new SongLyric { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "" });
         LyricPos = 0;
-        _ = Common.Invoke(() => OnLyricLoaded?.Invoke());
+
+        Common.Invoke(() => OnLyricLoaded?.Invoke());
+        Common.Invoke(() => OnLyricChange?.Invoke());
     }
 
 
@@ -1202,6 +1309,7 @@ public static class HyPlayList
         {
             ShufflingIndex = ShuffleList.FindIndex(t => t == NowPlaying);
         }
+
         // Call 一下来触发前端显示的播放列表更新
         _ = Common.Invoke(() => OnPlayListAddDone?.Invoke());
         return Task.CompletedTask;

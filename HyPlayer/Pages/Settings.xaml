@@ -377,6 +377,7 @@
                             IsChecked="{x:Bind hyplayer:Common.Setting.ancientSMTC, Mode=TwoWay}" />
                         <CheckBox Content="是否启用安全本地文件访问 (可能会提高内存占用)" IsChecked="{x:Bind hyplayer:Common.Setting.safeFileAccess, Mode=TwoWay}" />
                         <CheckBox Content="是否进行听歌打卡 (将会把听歌数据上传网易云音乐同步)" IsChecked="{x:Bind hyplayer:Common.Setting.doScrobble, Mode=TwoWay}" />
+                        <CheckBox Content="歌词界面专辑封面不裁剪为正方形" IsChecked="{x:Bind hyplayer:Common.Setting.expandedPlayerFullCover, Mode=TwoWay}" />
                         <CheckBox
                             x:Name="HighQualityCoverInSMTC"
                             Content="是否输出高清图片到SMTC"

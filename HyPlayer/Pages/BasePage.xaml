@@ -40,6 +40,7 @@
         </FlyoutBase.AttachedFlyout>
         <muxc:TeachingTip
             x:Name="TheTeachingTip"
+            CloseButtonClick="TheTeachingTip_OnCloseButtonClick"
             Title="一个弹窗, 两个弹窗, 三个弹窗, 四个弹窗...zzzzzz"
             IsLightDismissEnabled="False"
             PreferredPlacement="TopRight" />
@@ -94,8 +95,6 @@
                     Icon="Find"
                     Tag="PageSearch" />
                 <muxc:NavigationViewItem
-                    x:Name="ItemMain"
-                    x:FieldModifier="public"
                     Content="发现音乐">
                     <muxc:NavigationViewItem.Icon>
                         <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE12B;" />
@@ -194,7 +193,7 @@
                     Icon="Setting"
                     Tag="PageSettings"
                     Tapped="NavigationViewItem_Tapped" />
-                <muxc:NavigationViewItem IsEnabled="False" Height="120" />
+                <muxc:NavigationViewItem x:Name="NavItemBlank" x:FieldModifier="public" IsEnabled="False" Height="120" />
             </muxc:NavigationView.FooterMenuItems>
             <Grid>
                 <Grid.RowDefinitions>

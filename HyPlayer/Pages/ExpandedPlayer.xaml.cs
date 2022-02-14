@@ -275,19 +275,19 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         }
         */
 
-
-        if (SongInfo.ActualOffset.Y + SongInfo.ActualHeight > MainGrid.ActualHeight &&
-            WindowMode != ExpandedWindowMode.LyricOnly)
+        float sizey = 1;
+        float sizex = 1;
+        if (WindowMode != ExpandedWindowMode.LyricOnly)
         {
-            var size = (float?)(MainGrid.ActualHeight / (SongInfo.ActualOffset.Y + SongInfo.ActualHeight));
-            UIAugmentationSys.ChangeView(0, 0, size);
-        }
-        else
-        {
-            UIAugmentationSys.ChangeView(0, 0, 1);
-        }
+            if (SongInfo.ActualOffset.Y + SongInfo.ActualHeight > MainGrid.ActualHeight)
+            {
+                sizey = (float)(MainGrid.ActualHeight / (SongInfo.ActualOffset.Y + SongInfo.ActualHeight));
+            }
 
-
+            if (ImageAlbum.ActualOffset.X + ImageAlbum.ActualWidth > LeftPanel.ActualWidth)
+                sizex = (float)(LeftPanel.ActualWidth / (ImageAlbum.ActualOffset.X + ImageAlbum.ActualWidth));
+            UIAugmentationSys.ChangeView(0, 0, Math.Min(sizex, sizey));
+        }
         //{//合并显示
         //    SongInfo.SetValue(Grid.RowProperty, 1);
         //    SongInfo.VerticalAlignment = VerticalAlignment.Bottom;
@@ -450,67 +450,86 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     public void OnSongChange(HyPlayItem mpi)
     {
-        if (mpi?.PlayItem != null)
-            _ = Common.Invoke(async () =>
+        TextBlockSinger.Content = mpi?.PlayItem?.ArtistString;
+        TextBlockSongTitle.Text = mpi?.PlayItem?.Name;
+        TextBlockAlbum.Content = mpi?.PlayItem?.AlbumString;
+
+        if (mpi?.PlayItem == null)
+        {
+            LyricList.Clear();
+            LyricBox.Children.Clear();
+            LyricBox.Children.Add(new TextBlock() { Text = "当前暂无歌曲播放" });
+            ImageAlbum.Source = null;
+            return;
+        }
+
+        async void LoadLyricColor()
+        {
+            if (await IsBrightAsync())
             {
-                try
+                ForegroundAlbumBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0, 0, 0));
+                TextBlockSongTitle.Foreground = ForegroundAlbumBrush;
+            }
+            else
+            {
+                ForegroundAlbumBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
+                TextBlockSongTitle.Foreground = ForegroundAlbumBrush;
+            }
+        }
+
+        async void LoadCoverImage()
+        {
+            try
+            {
+                if (mpi.ItemType == HyPlayItemType.Local)
                 {
-                    if (mpi.ItemType == HyPlayItemType.Local)
+                    var img = new BitmapImage();
+                    await img.SetSourceAsync(
+                        await HyPlayList.NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999));
+                    ImageAlbum.Source = img;
+                }
+                else
+                {
+                    ImageAlbum.PlaceholderSource = new BitmapImage(new Uri(mpi.PlayItem.Album.cover + "?param=" +
+                                                                           StaticSource
+                                                                               .PICSIZE_EXPANDEDPLAYER_PREVIEWALBUMCOVER));
+                    if (Common.Setting.expandedPlayerFullCover)
                     {
-                        var img = new BitmapImage();
-                        await img.SetSourceAsync(
-                            await HyPlayList.NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.SingleItem,
-                                9999));
-                        ImageAlbum.Source = img;
-                    }
-                    else
-                    {
-                        ImageAlbum.PlaceholderSource = new BitmapImage(new Uri(mpi.PlayItem.Album.cover +
-                                                                               "?param=" +
-                                                                               StaticSource
-                                                                                   .PICSIZE_EXPANDEDPLAYER_PREVIEWALBUMCOVER));
                         ImageAlbum.Source = new BitmapImage(new Uri(mpi.PlayItem.Album.cover));
                     }
-
-                    TextBlockSinger.Content = mpi.PlayItem.ArtistString;
-                    TextBlockSongTitle.Text = mpi.PlayItem.Name;
-                    TextBlockAlbum.Content = mpi.PlayItem.AlbumString;
-                    Background = new ImageBrush
-                        { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
-
-                    if (lastlrcid != HyPlayList.NowPlayingItem.GetHashCode())
-                    {
-                        //歌词加载中提示
-                        var blanksize = LyricBoxContainer.ViewportHeight / 2;
-                        if (double.IsNaN(blanksize) || blanksize == 0) blanksize = Window.Current.Bounds.Height / 3;
-
-                        LyricBox.Children.Clear();
-                        LyricBox.Children.Add(new Grid { Height = blanksize });
-                        var lrcitem = new LyricItem(SongLyric.LoadingLyric)
-                        {
-                            Width = LyricWidth
-                        };
-                        LyricList = new List<LyricItem> { lrcitem };
-                        LyricBox.Children.Add(lrcitem);
-                        LyricBox.Children.Add(new Grid { Height = blanksize });
-                    }
-
-                    needRedesign++;
-                    if (await IsBrightAsync())
-                    {
-                        ForegroundAlbumBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0, 0, 0));
-                        TextBlockSongTitle.Foreground = ForegroundAlbumBrush;
-                    }
                     else
                     {
-                        ForegroundAlbumBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
-                        TextBlockSongTitle.Foreground = ForegroundAlbumBrush;
+                        ImageAlbum.Source = new BitmapImage(new Uri(mpi.PlayItem.Album.cover + "?param=" +
+                                                                    StaticSource
+                                                                        .PICSIZE_EXPANDEDPLAYER_COVER));
                     }
+
+                    Background = new ImageBrush
+                        { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                 }
-                catch (Exception)
-                {
-                }
-            });
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        if (lastlrcid != HyPlayList.NowPlayingItem.GetHashCode())
+        {
+            //歌词加载中提示
+            var blanksize = LyricBoxContainer.ViewportHeight / 2;
+            if (double.IsNaN(blanksize) || blanksize == 0) blanksize = Window.Current.Bounds.Height / 3;
+
+            LyricBox.Children.Clear();
+            LyricBox.Children.Add(new Grid { Height = blanksize });
+            var lrcitem = new LyricItem(SongLyric.LoadingLyric) { Width = LyricWidth };
+            LyricList = new List<LyricItem> { lrcitem };
+            LyricBox.Children.Add(lrcitem);
+            LyricBox.Children.Add(new Grid { Height = blanksize });
+        }
+
+        needRedesign++;
+        LoadCoverImage();
+        LoadLyricColor();
     }
 
     public void StartExpandAnimation()
@@ -758,8 +777,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private async Task<bool> IsBrightAsync()
     {
         if (Common.Setting.lyricColor != 0) return Common.Setting.lyricColor == 2;
-        if (HyPlayList.NowPlayingItem.PlayItem == null) return false;
-
         if (HyPlayList.NowPlayingItem.PlayItem == null) return false;
 
         if (lastSongForBrush == HyPlayList.NowPlayingItem.PlayItem) return ForegroundAlbumBrush.Color.R == 0;

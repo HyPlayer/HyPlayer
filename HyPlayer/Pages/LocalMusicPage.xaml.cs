@@ -142,9 +142,9 @@ public sealed partial class LocalMusicPage : Page
         await CloudUpload.UploadMusic(sf);
     }
 
-    private void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void Add_Local(object sender, RoutedEventArgs e)
     {
-        if ((sender as Pivot).SelectedIndex == 1) LoadLocalMusic();
+        HyPlayList.PickLocalFile();
     }
 }
 

@@ -67,15 +67,15 @@ namespace HyPlayer.Pages
         }
 
 
-
         public string LyricText
         {
             get { return (string)GetValue(LyricTextProperty); }
             set { SetValue(LyricTextProperty, value); }
         }
-        public static readonly DependencyProperty LyricTextProperty =
-            DependencyProperty.Register("LyricText", typeof(string), typeof(CompactPlayerPage), new PropertyMetadata("双击此处回正常窗口"));
 
+        public static readonly DependencyProperty LyricTextProperty =
+            DependencyProperty.Register("LyricText", typeof(string), typeof(CompactPlayerPage),
+                new PropertyMetadata("双击此处回正常窗口"));
 
 
         public string LyricTranslation
@@ -85,8 +85,8 @@ namespace HyPlayer.Pages
         }
 
         public static readonly DependencyProperty LyricTranslationProperty =
-            DependencyProperty.Register("LyricTranslation", typeof(string), typeof(CompactPlayerPage), new PropertyMetadata("右键可切换模糊保留"));
-
+            DependencyProperty.Register("LyricTranslation", typeof(string), typeof(CompactPlayerPage),
+                new PropertyMetadata("右键可切换模糊保留"));
 
 
         public string NowPlayingName
@@ -96,8 +96,8 @@ namespace HyPlayer.Pages
         }
 
         public static readonly DependencyProperty NowPlayingNameProperty =
-            DependencyProperty.Register("NowPlayingName", typeof(string), typeof(CompactPlayerPage), new PropertyMetadata(string.Empty));
-
+            DependencyProperty.Register("NowPlayingName", typeof(string), typeof(CompactPlayerPage),
+                new PropertyMetadata(string.Empty));
 
 
         public string NowPlayingArtists
@@ -107,7 +107,8 @@ namespace HyPlayer.Pages
         }
 
         public static readonly DependencyProperty NowPlayingArtistsProperty =
-            DependencyProperty.Register("NowPlayingArtists", typeof(string), typeof(CompactPlayerPage), new PropertyMetadata(string.Empty));
+            DependencyProperty.Register("NowPlayingArtists", typeof(string), typeof(CompactPlayerPage),
+                new PropertyMetadata(string.Empty));
 
 
         bool forceBlur = true;
@@ -130,22 +131,23 @@ namespace HyPlayer.Pages
 
         public async void OnChangePlayItem(HyPlayItem item)
         {
-            NowPlayingName = item.PlayItem.Name;
-            NowPlayingArtists = item.PlayItem.ArtistString;
+            NowPlayingName = item?.PlayItem?.Name;
+            NowPlayingArtists = item?.PlayItem?.ArtistString;
             BitmapImage img = null;
-            if (!Common.Setting.noImage)
-                if (item.ItemType == HyPlayItemType.Local)
-                {
-                    img = new BitmapImage();
-                    await img.SetSourceAsync(
-                        await HyPlayList.NowPlayingStorageFile?.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999));
-                }
-                else
-                {
-                    img = new BitmapImage(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover));
-                }
+            if (item != null)
+                if (!Common.Setting.noImage)
+                    if (item.ItemType == HyPlayItemType.Local)
+                    {
+                        img = new BitmapImage();
+                        await img.SetSourceAsync(
+                            await HyPlayList.NowPlayingStorageFile?.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999));
+                    }
+                    else
+                    {
+                        img = new BitmapImage(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover));
+                    }
 
-            TotalProgress = item.PlayItem.LengthInMilliseconds;
+            TotalProgress = item?.PlayItem?.LengthInMilliseconds ?? 0;
             AlbumCover = new ImageBrush() { ImageSource = img, Stretch = Stretch.UniformToFill };
         }
 
