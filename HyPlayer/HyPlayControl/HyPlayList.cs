@@ -159,12 +159,15 @@ public static class HyPlayList
         MediaSystemControls.IsEnabled = true;
         MediaSystemControls.ButtonPressed += SystemControls_ButtonPressed;
         MediaSystemControls.PlaybackStatus = MediaPlaybackStatus.Closed;
-        //MediaSystemControls.PlaybackPositionChangeRequested += MediaSystemControls_PlaybackPositionChangeRequested;
-        //Player.SourceChanged += Player_SourceChanged;   //锚点修改
         Player.MediaEnded += Player_MediaEnded;
         Player.CurrentStateChanged += Player_CurrentStateChanged;
         Player.VolumeChanged += Player_VolumeChanged;
         Player.PlaybackSession.PositionChanged += PlaybackSession_PositionChanged;
+        if (Common.Setting.progressInSMTC)
+        {
+            MediaSystemControls.PlaybackPositionChangeRequested += MediaSystemControls_PlaybackPositionChangeRequested;
+            Player.PlaybackSession.PositionChanged += UpdateSmtcPosition;
+        }
         Player.MediaFailed += PlayerOnMediaFailed;
         Player.BufferingStarted += Player_BufferingStarted;
         Player.BufferingEnded += Player_BufferingEnded;
@@ -183,6 +186,23 @@ public static class HyPlayList
         };
         HistoryManagement.InitializeHistoryTrack();
         Common.IsInFm = false;
+    }
+
+    public static void UpdateSmtcPosition(MediaPlaybackSession sender, object args)
+    {
+        MediaSystemControls.UpdateTimelineProperties(new SystemMediaTransportControlsTimelineProperties
+        {
+            StartTime = TimeSpan.Zero,
+            Position = Player.PlaybackSession.Position,
+            MinSeekTime = TimeSpan.Zero,
+            MaxSeekTime = Player.NaturalDuration,
+            EndTime = Player.NaturalDuration
+        });
+    }
+
+    public static void MediaSystemControls_PlaybackPositionChangeRequested(SystemMediaTransportControls sender, PlaybackPositionChangeRequestedEventArgs args)
+    {
+        Player.PlaybackSession.Position = args.RequestedPlaybackPosition;
     }
 
 

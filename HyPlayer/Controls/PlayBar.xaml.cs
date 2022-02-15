@@ -337,7 +337,7 @@ public sealed partial class PlayBar
             TbSingerName.Content = null;
             TbSongName.Text = null;
             TbAlbumName.Content = null;
-            ApplicationView.GetForCurrentView().Title = "HyPlayer";
+            ApplicationView.GetForCurrentView().Title = "";
             TbSongTag.Text = "无歌曲";
             AlbumImage.Source = null;
             return;
@@ -347,7 +347,7 @@ public sealed partial class PlayBar
         TbSongName.Text = HyPlayList.NowPlayingItem.PlayItem.Name;
         TbAlbumName.Content = HyPlayList.NowPlayingItem.PlayItem.AlbumString;
         ApplicationView.GetForCurrentView().Title = HyPlayList.NowPlayingItem.PlayItem.ArtistString + " - " +
-                                                    HyPlayList.NowPlayingItem.PlayItem.Name + " - HyPlayer";
+                                                    HyPlayList.NowPlayingItem.PlayItem.Name;
         try
         {
             if (!Common.Setting.noImage)

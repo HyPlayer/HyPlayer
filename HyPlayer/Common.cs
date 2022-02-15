@@ -64,7 +64,8 @@ namespace HyPlayer
         public static bool NavigatingBack;
         private static int _teachingTipSecondCounter = 3;
 
-        public static IAsyncAction Invoke(Action action, CoreDispatcherPriority Priority = CoreDispatcherPriority.Normal)
+        public static IAsyncAction Invoke(Action action,
+            CoreDispatcherPriority Priority = CoreDispatcherPriority.Normal)
         {
             try
             {
@@ -156,6 +157,7 @@ namespace HyPlayer
                 BaseFrame?.Navigate(SourcePageType, paratmer,
                     new SlideNavigationTransitionInfo { Effect = SlideNavigationTransitionEffect.FromRight });
             }
+
             if (previousNavigationItem == PageBase.NavMain.SelectedItem)
                 PageBase.NavMain.SelectedItem = PageBase.NavItemBlank;
             previousNavigationItem = PageBase.NavMain.SelectedItem;
@@ -308,7 +310,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
         public bool writedownloadFileInfo
         {
             get => GetSettings("writedownloadFileInfo", true);
@@ -318,7 +320,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
         public bool write163Info
         {
             get => GetSettings("write163Info", true);
@@ -328,7 +330,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
         public bool displayShuffledList
         {
             get => GetSettings("displayShuffledList", true);
@@ -362,10 +364,7 @@ namespace HyPlayer
 
         public int lyricScaleSize
         {
-            get
-            {
-                return GetSettings("lyricScaleSize", 0);
-            }
+            get { return GetSettings("lyricScaleSize", 0); }
             set
             {
                 ApplicationData.Current.LocalSettings.Values["lyricScaleSize"] = value;
@@ -427,7 +426,11 @@ namespace HyPlayer
         public bool albumRound
         {
             get => GetSettings("albumRound", false);
-            set { ApplicationData.Current.LocalSettings.Values["albumRound"] = value; OnPropertyChanged(); }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["albumRound"] = value;
+                OnPropertyChanged();
+            }
         }
 
         public int albumBorderLength
@@ -731,7 +734,30 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
+        public bool progressInSMTC
+        {
+            get => GetSettings("progressInSMTC", false);
+            set
+            {
+                if (value)
+                {
+                    HyPlayList.MediaSystemControls.PlaybackPositionChangeRequested +=
+                        HyPlayList.MediaSystemControls_PlaybackPositionChangeRequested;
+                    HyPlayList.Player.PlaybackSession.PositionChanged += HyPlayList.UpdateSmtcPosition;
+                }
+                else
+                {
+                    HyPlayList.MediaSystemControls.PlaybackPositionChangeRequested -=
+                        HyPlayList.MediaSystemControls_PlaybackPositionChangeRequested;
+                    HyPlayList.Player.PlaybackSession.PositionChanged -= HyPlayList.UpdateSmtcPosition;
+                }
+
+                ApplicationData.Current.LocalSettings.Values["progressInSMTC"] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool expandedPlayerFullCover
         {
             get => GetSettings("expandedPlayerFullCover", false);
@@ -866,7 +892,6 @@ namespace HyPlayer
 
         public static async void SetcurPlayingListHistory(List<string> songids)
         {
-
             if (Common.Setting.advancedMusicHistoryStorage)
             {
                 try
@@ -883,9 +908,9 @@ namespace HyPlayer
             else
             {
                 //低级音乐存储
-                ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = JsonConvert.SerializeObject(songids.Count > 100 ? songids.GetRange(0, 100) : songids);
+                ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] =
+                    JsonConvert.SerializeObject(songids.Count > 100 ? songids.GetRange(0, 100) : songids);
             }
-
         }
 
         public static async void ClearHistory()
@@ -894,7 +919,8 @@ namespace HyPlayer
             ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
             ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonConvert.SerializeObject(list);
             ApplicationData.Current.LocalSettings.Values["searchHistory"] = JsonConvert.SerializeObject(list);
-            await (await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("songPlayHistory", CreationCollisionOption.OpenIfExists)).DeleteAsync();
+            await (await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("songPlayHistory",
+                CreationCollisionOption.OpenIfExists)).DeleteAsync();
         }
 
         public static async Task<List<NCSong>> GetNCSongHistory()
@@ -962,12 +988,15 @@ namespace HyPlayer
             List<string> trackIds = new();
             if (Common.Setting.advancedMusicHistoryStorage)
             {
-                trackIds = (await FileIO.ReadTextAsync(await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("songPlayHistory", CreationCollisionOption.OpenIfExists))).Split("\r\n").ToList();
+                trackIds = (await FileIO.ReadTextAsync(
+                    await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("songPlayHistory",
+                        CreationCollisionOption.OpenIfExists))).Split("\r\n").ToList();
             }
             else
             {
                 //低级音乐存储
-                trackIds = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"].ToString()) ?? new();
+                trackIds = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
+                    .Values["curPlayingListHistory"].ToString()) ?? new();
             }
 
             if (trackIds == null || trackIds.Count == 0)
