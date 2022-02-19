@@ -262,7 +262,7 @@
                         <MenuFlyoutSeparator />
                         <ToggleMenuFlyoutItem
                             x:Name="BtnToggleFullScreen"
-                            HorizontalAlignment="Center"
+                            HorizontalAlignment="Left"
                             Background="Transparent"
                             Click="BtnToggleFullScreen_Checked"
                             Text="全屏模式">
@@ -272,7 +272,7 @@
                         </ToggleMenuFlyoutItem>
                         <ToggleMenuFlyoutItem
                             x:Name="BtnToggleTinyMode"
-                            HorizontalAlignment="Center"
+                            HorizontalAlignment="Left"
                             Background="Transparent"
                             Click="BtnToggleTinyModeClick"
                             Text="小窗模式">
@@ -293,7 +293,7 @@
                         </ToggleMenuFlyoutItem>
                         <ToggleMenuFlyoutItem
                             x:Name="BtnToggleLyric"
-                            HorizontalAlignment="Right"
+                            HorizontalAlignment="Left"
                             Background="Transparent"
                             Click="BtnToggleWindowsMode_Checked"
                             Text="歌词界面">
