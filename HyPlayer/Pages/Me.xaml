@@ -81,10 +81,10 @@
         </Grid>
         <Pivot Grid.Row="1">
             <PivotItem Header="我的歌单">
-                <controls1:SimpleLinerList ListItems="{x:Bind myPlayList}" />
+                <controls1:SimpleLinerList x:Name="MySongList" ListItems="{x:Bind myPlayList}" />
             </PivotItem>
             <PivotItem Header="收藏歌单">
-                <controls1:SimpleLinerList ListItems="{x:Bind likedPlayList}" />
+                <controls1:SimpleLinerList x:Name="MyFavouriteList"  ListItems="{x:Bind likedPlayList}" />
             </PivotItem>
         </Pivot>
     </Grid>

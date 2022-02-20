@@ -10,9 +10,7 @@
 <p align="center">
 	<img alt="Using GPL-v3" src="https://img.shields.io/github/license/kengwang/HyPlayer">
 	<img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/kengwang/HyPlayer">
-</p>
-<p align="center">
-主开发者: <a href="https://github.com/kengwang">@kengwang</a> | 界面设计: <a href="https://github.com/aaaaaaccd">@aaaaaaccd</a> | 部分功能开发者: <a href="https://github.com/EP012014">@EP012014</a> | <a href="PREVIEW.md">界面预览</a>
+    <img alt="GitHub issues" src="https://img.shields.io/github/issues/HyPlayer/HyPlayer">
 </p>
 
 
@@ -21,6 +19,8 @@
 ## 反馈 & 交流
 
 用户交流 QQ 群: <a href="https://jq.qq.com/?_wv=1027&k=cQ73ZhqY">1145646224</a>
+
+> 建议首选 QQ 群组, 下列方式仅为紧急情况使用
 
 Telegram 群组: https://t.me/joinchat/6tJqI3m-b402NDRl
 
@@ -40,6 +40,7 @@ Azure 编译包会编译 Commit 并发布 Release: [查看Release](https://githu
 
 ## 界面预览
 
+[界面预览](PREVIEW.md)
 
 ## 自动编译状态
 
@@ -63,14 +64,17 @@ Azure 编译包会编译 Commit 并发布 Release: [查看Release](https://githu
 
 ### 关于无版权
 
-你可以通过使用 [UnblockNeteaseMusic](https://github.com/nondanee/UnblockNeteaseMusic) 进行解灰, 打开后在 HyPlayer 设置页面填入代理服务器地址.
+HyPlayer 不内置解灰以及 VIP 歌曲解锁
 
-~~在使用代理服务器前,你可能需要解除 UWP 网络环回限制~~
+你可以通过使用 [UnblockNeteaseMusic](https://github.com/nondanee/UnblockNeteaseMusic) 进行解灰.
+
+将其设置为系统代理并在 `设置` - `实验室` 中填入代理地址
+
+在使用代理服务器前,你可能需要解除 UWP 网络环回限制
 
 ```powershell
 CheckNetIsolation LoopbackExempt -a -n="48848aaaaaaccd.hyplayer_fkcggvf9kbkw0"
 ```
-我们已经在2.0.27版本中修复此问题
 
 ## 使用
 
@@ -85,6 +89,14 @@ CheckNetIsolation LoopbackExempt -a -n="48848aaaaaaccd.hyplayer_fkcggvf9kbkw0"
 
 * NLyric [wwh1004/NLyric](https://github.com/wwh1004/NLyric)
 * ncmdump [anonymous5l/ncmdump-gui](https://github.com/anonymous5l/ncmdump-gui)
+
+## 开发者
+
+* 主开发者: [Kengwang](https://github.com/kengwang)
+* UI 设计: [aaaaaaccd](https://github.com/aaaaaaccd)
+* 部分功能: [EP012014 (天湖)](https://github.com/EP012014)
+* 部分功能: [Raspberry Kan](https://github.com/Raspberry-Monster)
+* [Contributors](https://github.com/HyPlayer/HyPlayer/graphs/contributors)
 
 ## 捐助
 

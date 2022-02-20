@@ -11,6 +11,8 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
+using Microsoft.Toolkit.Uwp.UI.Behaviors;
+using Microsoft.Xaml.Interactivity;
 using NeteaseCloudMusicApi;
 
 #endregion
@@ -61,6 +63,7 @@ public sealed partial class Me : Page, IDisposable
 
         LoadInfo();
         LoadPlayList();
+        MySongList.ListHeader = GridPersonalInformation;
     }
 
     public async void LoadPlayList()

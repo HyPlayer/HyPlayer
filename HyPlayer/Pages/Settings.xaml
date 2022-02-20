@@ -173,7 +173,8 @@
                             ToolTipService.ToolTip="{x:Bind FadeTime.Value}"
                             Visibility="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=OneWay}"
                             Value="{x:Bind hyplayer:Common.Setting.fadeInOutTime, Mode=TwoWay}" />
-                        <ToggleSwitch Header="播放暂停渐入渐出" IsOn="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=TwoWay}" />
+                        <ToggleSwitch Header="播放暂停渐入渐出"
+                                      IsOn="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=TwoWay}" />
                         <Slider
                             x:Name="FadeTimePause"
                             Width="300"
@@ -279,7 +280,8 @@
                                 <ColumnDefinition Width="50" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="下载文件命名" />
-                            <TextBox Grid.Column="1" Text="{x:Bind hyplayer:Common.Setting.downloadFileName, Mode=TwoWay}" />
+                            <TextBox Grid.Column="1"
+                                     Text="{x:Bind hyplayer:Common.Setting.downloadFileName, Mode=TwoWay}" />
                             <Button Grid.Column="2">
                                 <Button.Flyout>
                                     <Flyout>
@@ -300,9 +302,12 @@
                                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE897;" />
                             </Button>
                         </Grid>
-                        <CheckBox Content="是否下载歌词" IsChecked="{x:Bind hyplayer:Common.Setting.downloadLyric, Mode=TwoWay}" />
-                        <CheckBox Content="是否写音乐信息" IsChecked="{x:Bind hyplayer:Common.Setting.writedownloadFileInfo, Mode=TwoWay}" />
-                        <CheckBox Content="是否写网易云音乐信息" IsChecked="{x:Bind hyplayer:Common.Setting.write163Info, Mode=TwoWay}" />
+                        <CheckBox Content="是否下载歌词"
+                                  IsChecked="{x:Bind hyplayer:Common.Setting.downloadLyric, Mode=TwoWay}" />
+                        <CheckBox Content="是否写音乐信息"
+                                  IsChecked="{x:Bind hyplayer:Common.Setting.writedownloadFileInfo, Mode=TwoWay}" />
+                        <CheckBox Content="是否写网易云音乐信息"
+                                  IsChecked="{x:Bind hyplayer:Common.Setting.write163Info, Mode=TwoWay}" />
                         <Button
                             x:Name="ClearHistory"
                             Click="ClearHistory_Click"
@@ -356,11 +361,17 @@
                             x:Name="ForceMemoryCollect"
                             Content="是否频繁内存回收 (开启后可能会频繁出现页面重载现象)"
                             IsChecked="{x:Bind hyplayer:Common.Setting.forceMemoryGarbage, Mode=TwoWay}" />
-                        <CheckBox Content="使用 亚克力背景 (否则为一般模糊)" IsChecked="{x:Bind hyplayer:Common.Setting.useAcrylic, Mode=TwoWay}" />
-                        <CheckBox Content="无图模式 (开启后需重启应用)" IsChecked="{x:Bind hyplayer:Common.Setting.noImage, Mode=TwoWay}" />
-                        <CheckBox Content="是否开启高级音乐历史存储 (超过 100 首)" IsChecked="{x:Bind hyplayer:Common.Setting.advancedMusicHistoryStorage, Mode=TwoWay}" />
-                        <CheckBox Content="是否使用不重复随机" IsChecked="{x:Bind hyplayer:Common.Setting.shuffleNoRepeating, Mode=TwoWay}" />
-                        <CheckBox Content="是否显示随机列表" Visibility="{x:Bind hyplayer:Common.Setting.shuffleNoRepeating, Mode=OneWay}" IsChecked="{x:Bind hyplayer:Common.Setting.displayShuffledList, Mode=TwoWay}" />
+                        <CheckBox Content="使用 亚克力背景 (否则为一般模糊)"
+                                  IsChecked="{x:Bind hyplayer:Common.Setting.useAcrylic, Mode=TwoWay}" />
+                        <CheckBox Content="无图模式 (开启后需重启应用)"
+                                  IsChecked="{x:Bind hyplayer:Common.Setting.noImage, Mode=TwoWay}" />
+                        <CheckBox Content="是否开启高级音乐历史存储 (超过 100 首)"
+                                  IsChecked="{x:Bind hyplayer:Common.Setting.advancedMusicHistoryStorage, Mode=TwoWay}" />
+                        <CheckBox Content="是否使用不重复随机"
+                                  IsChecked="{x:Bind hyplayer:Common.Setting.shuffleNoRepeating, Mode=TwoWay}" />
+                        <CheckBox Content="是否显示随机列表"
+                                  Visibility="{x:Bind hyplayer:Common.Setting.shuffleNoRepeating, Mode=OneWay}"
+                                  IsChecked="{x:Bind hyplayer:Common.Setting.displayShuffledList, Mode=TwoWay}" />
                         <CheckBox
                             x:Name="CBSongCacheEnable"
                             Content="是否开启播放缓存 (可能造成播放前空白)"
@@ -375,10 +386,14 @@
                             x:Name="CBOldSMTC"
                             Content="是否同时开启传统SMTC控制 (可能会减小后台闪退几率,重启后生效)"
                             IsChecked="{x:Bind hyplayer:Common.Setting.ancientSMTC, Mode=TwoWay}" />
-                        <CheckBox Content="是否启用安全本地文件访问 (可能会提高内存占用)" IsChecked="{x:Bind hyplayer:Common.Setting.safeFileAccess, Mode=TwoWay}" />
-                        <CheckBox Content="是否进行听歌打卡 (将会把听歌数据上传网易云音乐同步)" IsChecked="{x:Bind hyplayer:Common.Setting.doScrobble, Mode=TwoWay}" />
-                        <CheckBox Content="歌词界面专辑封面不裁剪为正方形" IsChecked="{x:Bind hyplayer:Common.Setting.expandedPlayerFullCover, Mode=TwoWay}" />
-                        <CheckBox Content="SMTC 更新进度条" IsChecked="{x:Bind hyplayer:Common.Setting.progressInSMTC, Mode=TwoWay}" />
+                        <CheckBox Content="是否启用安全本地文件访问 (可能会提高内存占用)"
+                                  IsChecked="{x:Bind hyplayer:Common.Setting.safeFileAccess, Mode=TwoWay}" />
+                        <CheckBox Content="是否进行听歌打卡 (将会把听歌数据上传网易云音乐同步)"
+                                  IsChecked="{x:Bind hyplayer:Common.Setting.doScrobble, Mode=TwoWay}" />
+                        <CheckBox Content="歌词界面专辑封面不裁剪为正方形"
+                                  IsChecked="{x:Bind hyplayer:Common.Setting.expandedPlayerFullCover, Mode=TwoWay}" />
+                        <CheckBox Content="SMTC 更新进度条"
+                                  IsChecked="{x:Bind hyplayer:Common.Setting.progressInSMTC, Mode=TwoWay}" />
                         <CheckBox
                             x:Name="HighQualityCoverInSMTC"
                             Content="是否输出高清图片到SMTC"
@@ -406,7 +421,8 @@
                             Click="BtnXboxReserve_Click"
                             Content="Xbox 进后台模式"
                             Style="{StaticResource ButtonRevealStyle}" />
-                        <CheckBox Content="完整模式 (显示发现及评论入口)" IsChecked="{x:Bind hyplayer:Common.Setting.notClearMode, Mode=TwoWay}" />
+                        <CheckBox Content="完整模式 (显示发现及评论入口)"
+                                  IsChecked="{x:Bind hyplayer:Common.Setting.notClearMode, Mode=TwoWay}" />
                     </StackPanel>
                 </ScrollViewer>
             </PivotItem>
@@ -431,10 +447,12 @@
                                 <Hyperlink NavigateUri="https://github.com/HyPlayer/HyPlayer.UWP">
                                     重构版本 Github
                                 </Hyperlink>
-                                |<Hyperlink NavigateUri="https://github.com/HyPlayer/HyPlayer">
+                                |
+                                <Hyperlink NavigateUri="https://github.com/HyPlayer/HyPlayer">
                                     原版 Github (正在使用的)
                                 </Hyperlink>
-                                |<Hyperlink NavigateUri="https://gitee.com/kengwang/HyPlayer">
+                                |
+                                <Hyperlink NavigateUri="https://gitee.com/kengwang/HyPlayer">
                                     Gitee
                                 </Hyperlink>
                             </Paragraph>
@@ -463,7 +481,8 @@
                             DoubleTapped="StackPanel_DoubleTapped"
                             Orientation="Horizontal"
                             Tapped="UIElement_OnTapped">
-                            <PersonPicture ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=GibeJPa6pAcRMKgoHC9ibI4w&amp;s=100" />
+                            <PersonPicture
+                                ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=GibeJPa6pAcRMKgoHC9ibI4w&amp;s=100" />
                             <StackPanel Margin="15,0,0,0" Orientation="Vertical">
                                 <TextBlock FontSize="18" FontWeight="Medium">
                                     Kengwang
@@ -485,13 +504,16 @@
                                         <Hyperlink NavigateUri="https://github.com/kengwang">
                                             Github
                                         </Hyperlink>
-                                        |<Hyperlink NavigateUri="https://blog.kengwang.co">
+                                        |
+                                        <Hyperlink NavigateUri="https://blog.kengwang.co">
                                             博客
                                         </Hyperlink>
-                                        |<Hyperlink NavigateUri="http://www.coolapk.com/u/1683034">
+                                        |
+                                        <Hyperlink NavigateUri="http://www.coolapk.com/u/1683034">
                                             酷安@kengwang
                                         </Hyperlink>
-                                        |<Hyperlink NavigateUri="https://afdian.net/@kengwang">
+                                        |
+                                        <Hyperlink NavigateUri="https://afdian.net/@kengwang">
                                             爱发电打赏
                                         </Hyperlink>
                                     </Paragraph>
@@ -503,7 +525,8 @@
                             DoubleTapped="StackPanel_DoubleTapped"
                             Orientation="Horizontal"
                             Tapped="UIElement_OnTapped">
-                            <PersonPicture ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=eHh3SVVDUJKHf1I5XD7CPg&amp;s=100" />
+                            <PersonPicture
+                                ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=eHh3SVVDUJKHf1I5XD7CPg&amp;s=100" />
                             <StackPanel Margin="15,0,0,0" Orientation="Vertical">
                                 <TextBlock FontSize="18" FontWeight="Medium">
                                     aaaaaaccd
@@ -518,14 +541,15 @@
                                     FontSize="15"
                                     FontWeight="Light"
                                     Foreground="Gray">
-                                    HyPlayer Team EasyCraft Team Waifu2X4A
+                                    High
                                 </TextBlock>
                                 <RichTextBlock>
                                     <Paragraph>
                                         <Hyperlink NavigateUri="https://github.com/aaaaaaccd">
                                             Github
                                         </Hyperlink>
-                                        |<Hyperlink NavigateUri="https://www.coolapk.com/u/2409682">
+                                        |
+                                        <Hyperlink NavigateUri="https://www.coolapk.com/u/2409682">
                                             酷安@一只老白
                                         </Hyperlink>
                                     </Paragraph>
@@ -537,7 +561,8 @@
                             DoubleTapped="StackPanel_DoubleTapped"
                             Orientation="Horizontal"
                             Tapped="UIElement_OnTapped">
-                            <PersonPicture ProfilePicture="https://himg.bdimg.com/sys/portraitn/item/0fd16570303132303134g930801000000" />
+                            <PersonPicture
+                                ProfilePicture="https://himg.bdimg.com/sys/portraitn/item/0fd16570303132303134g930801000000" />
                             <StackPanel Margin="15,0,0,0" Orientation="Vertical">
                                 <TextBlock FontSize="18" FontWeight="Medium">
                                     EP012014
@@ -559,7 +584,39 @@
                                         <Hyperlink NavigateUri="https://github.com/EP012014">
                                             Github
                                         </Hyperlink>
-                                        |</Paragraph>
+                                    </Paragraph>
+                                </RichTextBlock>
+                            </StackPanel>
+                        </StackPanel>
+                        <StackPanel
+                            Margin="10,20,0,0"
+                            DoubleTapped="StackPanel_DoubleTapped"
+                            Orientation="Horizontal"
+                            Tapped="UIElement_OnTapped">
+                            <PersonPicture
+                                ProfilePicture="https://q1.qlogo.cn/g?b=qq&amp;k=L3T8OPGiblT0IMjCLUH3GKA&amp;s=100" />
+                            <StackPanel Margin="15,0,0,0" Orientation="Vertical">
+                                <TextBlock FontSize="18" FontWeight="Medium">
+                                    Raspberry Monster
+                                </TextBlock>
+                                <TextBlock
+                                    FontSize="15"
+                                    FontWeight="Medium"
+                                    Foreground="Gray">
+                                    Developer
+                                </TextBlock>
+                                <TextBlock
+                                    FontSize="15"
+                                    FontWeight="Light"
+                                    Foreground="Gray">
+                                    僕が夢を捨てて大人になるまで
+                                </TextBlock>
+                                <RichTextBlock>
+                                    <Paragraph>
+                                        <Hyperlink NavigateUri="https://github.com/Raspberry-Monster">
+                                            Github
+                                        </Hyperlink>
+                                    </Paragraph>
                                 </RichTextBlock>
                             </StackPanel>
                         </StackPanel>
