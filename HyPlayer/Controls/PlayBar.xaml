@@ -188,7 +188,7 @@
                             Name="BtnFlyoutLike"
                             Click="BtnLike_OnClick"
                             HorizontalAlignment="Left"
-                            Text="喜欢">
+                            Text="喜欢歌曲">
                             <ToggleMenuFlyoutItem.Icon>
                                     <FontIcon x:Name="FlyoutLiked" FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE00B;" />
                             </ToggleMenuFlyoutItem.Icon>
