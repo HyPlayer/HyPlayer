@@ -556,7 +556,7 @@ namespace HyPlayer
             {
                 try
                 {
-                    return GetSettings("searchingDir", KnownFolders.MusicLibrary.Path);
+                    return GetSettings("searchingDir", KnownFolders.MusicLibrary.Path ?? downloadDir);
                 }
                 catch
                 {
