@@ -173,6 +173,39 @@
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
                 <Button
+                Name="BtnMore"
+                Grid.Column="0"
+                Width="45"
+                Height="45"
+                VerticalAlignment="Center"
+                Background="Transparent"
+                CornerRadius="30"
+                Visibility="Collapsed"
+                Style="{StaticResource ButtonRevealStyle}">
+                    <Button.Flyout>
+                    <MenuFlyout>
+                        <ToggleMenuFlyoutItem
+                            Name="BtnFlyoutLike"
+                            Click="BtnLike_OnClick"
+                            HorizontalAlignment="Left"
+                            Text="喜欢">
+                            <ToggleMenuFlyoutItem.Icon>
+                                    <FontIcon x:Name="FlyoutLiked" FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE00B;" />
+                            </ToggleMenuFlyoutItem.Icon>
+                        </ToggleMenuFlyoutItem>
+                            <ToggleMenuFlyoutItem
+                             x:Name="FlyoutDesktopLyrics"
+                              Click="ToggleButton_Click"
+                              Text="桌面歌词"
+                              IsChecked="{x:Bind hy:Common.Setting.toastLyric, Mode=TwoWay}"/>
+                   </MenuFlyout>
+                    </Button.Flyout>
+                    <Button.Content>
+                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xEDE3;" />
+                    </Button.Content>
+                    
+                </Button>
+                <Button
                     Name="BtnPlayRollType"
                     Grid.Column="2"
                     Width="45"
@@ -481,7 +514,7 @@
                         <Setter Target="BtnNextSong.(Grid.Column)" Value="6" />
                         <Setter Target="SliderProgress.Margin" Value="0,0,15,0" />
                         <Setter Target="GridSongInfoContainer.Visibility" Value="Collapsed" />
-
+                        <Setter Target="BtnMore.Visibility" Value="Visible" />
                     </VisualState.Setters>
                 </VisualState>
 
