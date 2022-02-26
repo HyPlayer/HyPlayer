@@ -63,7 +63,6 @@ public sealed partial class Me : Page, IDisposable
 
         LoadInfo();
         LoadPlayList();
-        MySongList.ListHeader = GridPersonalInformation;
     }
 
     public async void LoadPlayList()
