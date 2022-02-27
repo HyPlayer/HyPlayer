@@ -6,8 +6,33 @@
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:hy="using:HyPlayer"
     xmlns:local="using:HyPlayer.Controls"
-    xmlns:media="using:Microsoft.Toolkit.Uwp.UI.Media" xmlns:hyplaycontrol="using:HyPlayer.HyPlayControl"
+    xmlns:media="using:Microsoft.Toolkit.Uwp.UI.Media"
     Background="{ThemeResource SystemControlAcrylicElementMediumHighBrush}">
+    <UserControl.Resources>
+        <Flyout x:Key="VolumeFlyout">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="40" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <FontIcon
+                    x:Name="BtnMuteIcon"
+                    Grid.Column="0"
+                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                    Glyph="&#xE15D;"
+                    Tapped="BtnMute_OnCllick" />
+                <Slider
+                    Name="SliderAudioRate"
+                    Grid.Column="1"
+                    Width="100"
+                    VerticalAlignment="Center"
+                    x:FieldModifier="public"
+                    ValueChanged="SliderAudioRate_ValueChanged" />
+            </Grid>
+        </Flyout>
+        <FontIconSource Glyph="&#xE008;" FontFamily="{StaticResource SymbolThemeFontFamily}" x:Name="IconTick"
+                        x:Key="IconTick" />
+    </UserControl.Resources>
     <Grid Name="GridThis">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -173,50 +198,66 @@
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
                 <Button
-                Name="BtnMore"
-                Grid.Column="0"
-                Width="45"
-                Height="45"
-                VerticalAlignment="Center"
-                Background="Transparent"
-                CornerRadius="30"
-                Visibility="Collapsed"
-                Style="{StaticResource ButtonRevealStyle}">
+                    Name="BtnMore"
+                    Grid.Column="0"
+                    Padding="0"
+                    Width="40"
+                    Height="40"
+                    VerticalAlignment="Center"
+                    Background="Transparent"
+                    CornerRadius="30"
+                    Visibility="Collapsed"
+                    Style="{StaticResource ButtonRevealStyle}">
                     <Button.Flyout>
                         <MenuFlyout>
+                            <MenuFlyoutItem IsEnabled="False" Text="{x:Bind TbSongName.Text, Mode=OneWay}" />
+                            <MenuFlyoutItem IsEnabled="False" Text="{x:Bind TbSingerName.Content, Mode=OneWay}" />
+                            <MenuFlyoutSeparator />
                             <MenuFlyoutItem
-                            Name="BtnFlyoutLike"
-                            Click="BtnLike_OnClick"
-                            HorizontalAlignment="Left"
-                            Text="喜欢歌曲">
+                                x:Name="BtnFlyoutLike"
+                                Click="BtnLike_OnClick"
+                                Text="喜欢歌曲">
                                 <MenuFlyoutItem.Icon>
-                                    <FontIcon x:Name="FlyoutLiked" FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE00B;" />
+                                    <FontIcon x:Name="FlyoutLiked" FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                              Glyph="&#xE00B;" />
                                 </MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
-                            <ToggleMenuFlyoutItem
-                             x:Name="FlyoutDesktopLyrics"
-                              Click="ToggleButton_Click"
-                              Text="桌面歌词"
-                              IsChecked="{x:Bind hy:Common.Setting.toastLyric, Mode=TwoWay}">
+                            <MenuFlyoutItem
+                                x:Name="FlyoutDesktopLyrics"
+                                Click="ToggleButton_Click"
+                                Text="桌面歌词">
                                 <MenuFlyoutItem.Icon>
-                                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE986;"/>
+                                    <IconSourceElement x:Name="FlyoutDesktopLyricIcon" />
                                 </MenuFlyoutItem.Icon>
-                            </ToggleMenuFlyoutItem>
-                            <ToggleMenuFlyoutItem
-                             x:Name="FlyoutBtnMute"
-                              Click="BtnMute_OnCllick"
-                              Text="静音模式"
-                              IsChecked="{x:Bind hyplaycontrol:HyPlayList.Player.IsMuted, Mode=OneWay}">
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem Click="BtnPlayRollType_OnClick" Text="顺序播放" x:Name="FlyoutPlayRollType">
                                 <MenuFlyoutItem.Icon>
-                                    <FontIcon x:Name="FlyoutBtnMuteIcon" FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE15D;"/>
+                                    <FontIcon Glyph="{x:Bind IconPlayType.Glyph , Mode = OneWay}"
+                                              FontFamily="{StaticResource SymbolThemeFontFamily}" />
                                 </MenuFlyoutItem.Icon>
-                            </ToggleMenuFlyoutItem>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem
+                                x:Name="FlyoutBtnVolume"
+                                Click="FlyoutBtnVolume_OnClick"
+                                ContextFlyout="{StaticResource VolumeFlyout}"
+                                Text="调整音量">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon x:Name="FlyoutBtnMuteIcon"
+                                              FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE15D;" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem
+                                x:Name="FlyoutBtnPlayList"
+                                Click="FlyoutBtnPlayList_OnClick"
+                                ContextFlyout="{x:Bind ButtonPlayList.Flyout}"
+                                Text="播放列表">
+                                <MenuFlyoutItem.Icon>
+                                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE142;" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
                         </MenuFlyout>
                     </Button.Flyout>
-                    <Button.Content>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE712;" />
-                    </Button.Content>
-                    
+                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE712;" />
                 </Button>
                 <Button
                     Name="BtnPlayRollType"
@@ -337,39 +378,17 @@
                 Style="{StaticResource ToggleButtonRevealStyle}"
                 ToolTipService.ToolTip="桌面歌词" />
             <Button
-                Name="BtnVolume"
+                x:Name="BtnVolume"
                 Width="40"
                 Height="40"
                 Padding="-5"
                 HorizontalAlignment="Right"
                 Background="Transparent"
                 CornerRadius="20"
+                Flyout="{StaticResource VolumeFlyout}"
                 Style="{StaticResource ButtonRevealStyle}">
                 <FontIcon x:Name="BtnVolIcon" FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE15D;" />
                 <!--  E198  -->
-                <Button.Flyout>
-                    <Flyout>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="40" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <FontIcon
-                                x:Name="BtnMuteIcon"
-                                Grid.Column="0"
-                                FontFamily="{StaticResource SymbolThemeFontFamily}"
-                                Glyph="&#xE15D;"
-                                Tapped="BtnMute_OnCllick" />
-                            <Slider
-                                Name="SliderAudioRate"
-                                Grid.Column="1"
-                                Width="100"
-                                VerticalAlignment="Center"
-                                x:FieldModifier="public"
-                                ValueChanged="SliderAudioRate_ValueChanged" />
-                        </Grid>
-                    </Flyout>
-                </Button.Flyout>
             </Button>
             <Button
                 x:Name="ButtonPlayList"

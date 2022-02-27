@@ -205,7 +205,7 @@ public sealed partial class SongsList : UserControl, IDisposable
     private async void SongContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (!IsManualSelect) return;
-        if (SongContainer.SelectedIndex < 0 || SongContainer.SelectedItem == null) return;
+        if (SongContainer.SelectedItem == null || SongContainer.SelectedIndex < 0) return;
         if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
         if (VisibleSongs[SongContainer.SelectedIndex].sid == HyPlayList.NowPlayingItem?.PlayItem?.Id) return;
         if (ListSource != null && ListSource != "content" && Songs.Count == VisibleSongs.Count)

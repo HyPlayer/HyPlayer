@@ -95,6 +95,8 @@ public sealed partial class PlayBar
             Common.BarPlayBar.ShowExpandedPlayer();
         if (!Common.Setting.useAcrylic)
             Common.PageMain.GridPlayBar.Background = new BackdropBlurBrush() { Amount = 30.0 };
+
+        FlyoutDesktopLyricIcon.IconSource = Common.Setting.toastLyric ? IconTick : null;
         /*
         verticalAnimation = new DoubleAnimation();
 
@@ -311,6 +313,7 @@ public sealed partial class PlayBar
         {
             IconPrevious.Glyph = "\uE7E8";
             IconPlayType.Glyph = "\uE107";
+            FlyoutPlayRollType.Text = "私人 FM";
         }
         else
         {
@@ -320,14 +323,17 @@ public sealed partial class PlayBar
                 case PlayMode.Shuffled:
                     //随机
                     IconPlayType.Glyph = "\uE14B";
+                    FlyoutPlayRollType.Text = "随机播放";
                     break;
                 case PlayMode.SinglePlay:
                     //单曲
                     IconPlayType.Glyph = "\uE1CC";
+                    FlyoutPlayRollType.Text = "单曲循环";
                     break;
                 case PlayMode.DefaultRoll:
                     //顺序
                     IconPlayType.Glyph = "\uE169";
+                    FlyoutPlayRollType.Text = "顺序播放";
                     break;
             }
         }
@@ -376,18 +382,23 @@ public sealed partial class PlayBar
         SliderProgress.Maximum = HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds;
         SliderProgress.Value = 0;
         canslide = true;
+        bool isLiked = Common.LikedSongs.Contains(mpi.PlayItem.Id);
         if (mpi.ItemType != HyPlayItemType.Local)
         {
-            IconLiked.Foreground = Common.LikedSongs.Contains(mpi.PlayItem.Id)
-                    ? new SolidColorBrush(Colors.Red)
-                    : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-            FlyoutLiked.Foreground = Common.LikedSongs.Contains(mpi.PlayItem.Id)
+            IconLiked.Foreground = isLiked
                 ? new SolidColorBrush(Colors.Red)
                 : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-            IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
+            FlyoutLiked.Foreground = isLiked
+                ? new SolidColorBrush(Colors.Red)
+                : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+            BtnMore.Background = isLiked
+                ? new SolidColorBrush(Colors.Red)
+                : new SolidColorBrush(Colors.Transparent);
+            BtnMore.BorderThickness = isLiked ? new Thickness(3) : new Thickness(0);
+            IconLiked.Glyph = isLiked
                 ? "\uE00B"
                 : "\uE006";
-            FlyoutLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
+            FlyoutLiked.Glyph = isLiked
                 ? "\uE00B"
                 : "\uE006";
             //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
@@ -405,6 +416,7 @@ public sealed partial class PlayBar
         {
             ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
         }
+
         realSelectSong = true;
         if (HyPlayList.NowPlayingItem.PlayItem.Tag != "在线")
             TbSongTag.Text = HyPlayList.NowPlayingItem.PlayItem.Tag;
@@ -455,15 +467,13 @@ public sealed partial class PlayBar
 
             realSelectSong = false;
             PlayItems.Clear();
-            targetingList.ForEach(t=>PlayItems.Add(t));
+            targetingList.ForEach(t => PlayItems.Add(t));
             realSelectSong = true;
 
             if (targetingIndex == -1 || targetingIndex >= PlayItems.Count) return;
             realSelectSong = false;
             ListBoxPlayList.SelectedIndex = targetingIndex;
             realSelectSong = true;
-
-
         }
         catch
         {
@@ -599,7 +609,6 @@ public sealed partial class PlayBar
                 realSelectSong)
                 HyPlayList.SongMoveTo(ListBoxPlayList.SelectedIndex);
         }
-        
     }
 
     public void ShowExpandedPlayer()
@@ -732,18 +741,21 @@ public sealed partial class PlayBar
                     HyPlayList.NowPlayType = PlayMode.Shuffled;
                     NowPlayType = PlayMode.Shuffled;
                     IconPlayType.Glyph = "\uE14B";
+                    FlyoutPlayRollType.Text = "随机播放";
                     break;
                 case PlayMode.Shuffled:
                     //变成单曲
                     IconPlayType.Glyph = "\uE1CC";
                     HyPlayList.NowPlayType = PlayMode.SinglePlay;
                     NowPlayType = PlayMode.SinglePlay;
+                    FlyoutPlayRollType.Text = "单曲循环";
                     break;
                 case PlayMode.SinglePlay:
                     //变成顺序
                     HyPlayList.NowPlayType = PlayMode.DefaultRoll;
                     NowPlayType = PlayMode.DefaultRoll;
                     IconPlayType.Glyph = "\uE169";
+                    FlyoutPlayRollType.Text = "顺序播放";
                     break;
             }
         }
@@ -757,29 +769,33 @@ public sealed partial class PlayBar
 
     private void BtnLike_OnClick(object sender, RoutedEventArgs e)
     {
+        bool isLiked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
         switch (HyPlayList.NowPlayingItem.ItemType)
         {
             case HyPlayItemType.Netease:
             {
                 Api.LikeSong(HyPlayList.NowPlayingItem.PlayItem.Id,
-                    !Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id));
-                if (Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id))
+                    !isLiked);
+                if (isLiked)
                     Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.Id);
                 else
                     Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.Id);
-
-                IconLiked.Foreground = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
+                isLiked = !isLiked;
+                IconLiked.Foreground = isLiked
                     ? new SolidColorBrush(Colors.Red)
                     : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-                FlyoutLiked.Foreground = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
+                FlyoutLiked.Foreground = isLiked
                     ? new SolidColorBrush(Colors.Red)
                     : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-                IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
+                IconLiked.Glyph = isLiked
                     ? "\uE00B"
                     : "\uE006";
-                FlyoutLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
+                FlyoutLiked.Glyph = isLiked
                     ? "\uE00B"
                     : "\uE006";
+                BtnMore.Background = isLiked
+                    ? new SolidColorBrush(Colors.Red)
+                    : new SolidColorBrush(Colors.Transparent);
                 //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
                 break;
             }
@@ -789,18 +805,22 @@ public sealed partial class PlayBar
                         { { "type", "4" }, { "t", "1" }, { "id", HyPlayList.NowPlayingItem.PlayItem.Id } });
                 break;
             default:
-                IconLiked.Foreground = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
+                IconLiked.Foreground = isLiked
                     ? new SolidColorBrush(Colors.Red)
                     : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-                FlyoutLiked.Foreground = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
+                FlyoutLiked.Foreground =isLiked
                     ? new SolidColorBrush(Colors.Red)
                     : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-                IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
+                IconLiked.Glyph = isLiked
                     ? "\uE00B"
                     : "\uE006";
-                FlyoutLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
+                FlyoutLiked.Glyph =isLiked
                     ? "\uE00B"
                     : "\uE006";
+                BtnMore.Background = isLiked
+                    ? new SolidColorBrush(Colors.Red)
+                    : new SolidColorBrush(Colors.Transparent);
+                BtnMore.BorderThickness = isLiked ? new Thickness(3) : new Thickness(0);
                 //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
                 break;
         }
@@ -916,6 +936,8 @@ public sealed partial class PlayBar
 
     private void ToggleButton_Click(object sender, RoutedEventArgs e)
     {
+        Common.Setting.toastLyric = !Common.Setting.toastLyric;
+        FlyoutDesktopLyricIcon.IconSource = Common.Setting.toastLyric ? IconTick : null;
         InitializeDesktopLyric();
     }
 
@@ -942,7 +964,6 @@ public sealed partial class PlayBar
             {
                 ListBoxPlayList.ScrollIntoView(PlayItems[HyPlayList.NowPlaying]);
             }
-            
     }
 
     private void ImageContainer_OnPointerEntered(object sender, PointerRoutedEventArgs e)
@@ -953,6 +974,17 @@ public sealed partial class PlayBar
     private void ImageContainer_OnPointerExited(object sender, PointerRoutedEventArgs e)
     {
         AlbumImageHover.Visibility = Visibility.Collapsed;
+    }
+
+    private void FlyoutBtnVolume_OnClick(object sender, RoutedEventArgs e)
+    {
+        FlyoutBtnVolume.ContextFlyout?.ShowAt(BtnMore);
+    }
+
+    private void FlyoutBtnPlayList_OnClick(object sender, RoutedEventArgs e)
+    {
+        FlyoutBtnPlayList.ContextFlyout?.ShowAt(BtnMore);
+        ButtonPlayList_OnClick(sender, e);
     }
 }
 

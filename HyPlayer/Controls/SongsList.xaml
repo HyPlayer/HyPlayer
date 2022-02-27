@@ -198,7 +198,7 @@
                             <ColumnDefinition
                                 Width="*" />
                             <ColumnDefinition
-                                Width="100" />
+                                Width="60" />
                         </Grid.ColumnDefinitions>
                         <StackPanel
                             Grid.Column="0"
@@ -282,27 +282,10 @@
                                     Text="{x:Bind Album.name}" />
                             </Grid>
                         </StackPanel>
-                        <StackPanel
-                            Grid.Column="1"
-                            HorizontalAlignment="Right"
-                            Orientation="Horizontal"
-                            Spacing="8">
-                            <Button
-                                x:Name="BtnPlay"
-                                x:Phase="1"
-                                Background="Transparent"
-                                Click="BtnPlay_Click"
-                                Style="{StaticResource ButtonRevealStyle}"
-                                Tag="{x:Bind Order}"
-                                ToolTipService.ToolTip="播放"
-                                Visibility="{x:Bind IsAvailable}">
-                                <FontIcon
-                                    Name="PlayStateIcon"
-                                    FontFamily="{StaticResource SymbolThemeFontFamily}"
-                                    Glyph="&#xEDB5;" />
-                            </Button>
+
                             <Button
                                 x:Name="More"
+                                Grid.Column="1"
                                 x:Phase="3"
                                 Background="Transparent"
                                 Click="More_Click"
@@ -313,7 +296,6 @@
                                     FontFamily="{StaticResource SymbolThemeFontFamily}"
                                     Glyph="&#xE10C;" />
                             </Button>
-                        </StackPanel>
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>

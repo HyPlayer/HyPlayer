@@ -26,7 +26,7 @@
                 <Grid HorizontalAlignment="Stretch" Tag="{x:Bind ResourceId}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="100" />
+                        <ColumnDefinition Width="60" />
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0" Orientation="Horizontal">
                         <TextBlock
