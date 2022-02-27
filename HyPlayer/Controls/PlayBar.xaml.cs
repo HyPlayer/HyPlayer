@@ -391,10 +391,6 @@ public sealed partial class PlayBar
             FlyoutLiked.Foreground = isLiked
                 ? new SolidColorBrush(Colors.Red)
                 : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-            BtnMore.Background = isLiked
-                ? new SolidColorBrush(Colors.Red)
-                : new SolidColorBrush(Colors.Transparent);
-            BtnMore.BorderThickness = isLiked ? new Thickness(3) : new Thickness(0);
             IconLiked.Glyph = isLiked
                 ? "\uE00B"
                 : "\uE006";
@@ -793,9 +789,6 @@ public sealed partial class PlayBar
                 FlyoutLiked.Glyph = isLiked
                     ? "\uE00B"
                     : "\uE006";
-                BtnMore.Background = isLiked
-                    ? new SolidColorBrush(Colors.Red)
-                    : new SolidColorBrush(Colors.Transparent);
                 //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
                 break;
             }
@@ -817,10 +810,6 @@ public sealed partial class PlayBar
                 FlyoutLiked.Glyph =isLiked
                     ? "\uE00B"
                     : "\uE006";
-                BtnMore.Background = isLiked
-                    ? new SolidColorBrush(Colors.Red)
-                    : new SolidColorBrush(Colors.Transparent);
-                BtnMore.BorderThickness = isLiked ? new Thickness(3) : new Thickness(0);
                 //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
                 break;
         }
