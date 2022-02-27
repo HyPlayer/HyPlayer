@@ -96,7 +96,6 @@ public sealed partial class PlayBar
         if (!Common.Setting.useAcrylic)
             Common.PageMain.GridPlayBar.Background = new BackdropBlurBrush() { Amount = 30.0 };
 
-        FlyoutDesktopLyricIcon.IconSource = Common.Setting.toastLyric ? IconTick : null;
         /*
         verticalAnimation = new DoubleAnimation();
 
@@ -926,7 +925,6 @@ public sealed partial class PlayBar
     private void ToggleButton_Click(object sender, RoutedEventArgs e)
     {
         Common.Setting.toastLyric = !Common.Setting.toastLyric;
-        FlyoutDesktopLyricIcon.IconSource = Common.Setting.toastLyric ? IconTick : null;
         InitializeDesktopLyric();
     }
 

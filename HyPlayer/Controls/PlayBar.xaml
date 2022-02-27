@@ -227,7 +227,8 @@
                                 Click="ToggleButton_Click"
                                 Text="桌面歌词">
                                 <MenuFlyoutItem.Icon>
-                                    <IconSourceElement x:Name="FlyoutDesktopLyricIcon" />
+                                    <FontIcon x:Name="FlyoutDesktopLyricIcon"  FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                              Glyph="&#xE001;" Visibility="{x:Bind hy:Common.Setting.toastLyric , Mode=OneWay }"/>
                                 </MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
                             <MenuFlyoutItem Click="BtnPlayRollType_OnClick" Text="顺序播放" x:Name="FlyoutPlayRollType">
