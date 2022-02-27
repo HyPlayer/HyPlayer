@@ -666,6 +666,16 @@ namespace HyPlayer
             set => ApplicationData.Current.LocalSettings.Values["fadeInOutTimePause"] = value;
         }
 
+        public bool playBarMargin
+        {
+            get => GetSettings("playBarMargin", true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["playBarMargin"] = value;
+                OnPropertyChanged();
+            }
+        }
+        
         public bool toastLyric
         {
             get => GetSettings("toastLyric", false);

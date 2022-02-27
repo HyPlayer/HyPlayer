@@ -365,6 +365,8 @@
                                   IsChecked="{x:Bind hyplayer:Common.Setting.useAcrylic, Mode=TwoWay}" />
                         <CheckBox Content="无图模式 (开启后需重启应用)"
                                   IsChecked="{x:Bind hyplayer:Common.Setting.noImage, Mode=TwoWay}" />
+                        <CheckBox Content="PlayBar 脱离窗口边缘"
+                                  IsChecked="{x:Bind hyplayer:Common.Setting.playBarMargin, Mode=TwoWay}" />
                         <CheckBox Content="是否开启高级音乐历史存储 (超过 100 首)"
                                   IsChecked="{x:Bind hyplayer:Common.Setting.advancedMusicHistoryStorage, Mode=TwoWay}" />
                         <CheckBox Content="是否使用不重复随机"
