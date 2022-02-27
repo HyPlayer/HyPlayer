@@ -385,12 +385,12 @@ public sealed partial class PlayBar
                 ? new SolidColorBrush(Colors.Red)
                 : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
             IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
-                ? "\uE00B;"
-                : "\uEB51";
+                ? "\uE00B"
+                : "\uE006";
             FlyoutLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
-                ? "\uE00B;"
-                : "\uEB51";
-            BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
+                ? "\uE00B"
+                : "\uE006";
+            //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
             HistoryManagement.AddNCSongHistory(mpi.PlayItem.Id);
         }
 
@@ -562,6 +562,7 @@ public sealed partial class PlayBar
     {
         HyPlayList.Player.IsMuted = !HyPlayList.Player.IsMuted;
         BtnMuteIcon.Glyph = HyPlayList.Player.IsMuted ? "\uE198" : "\uE15D";
+        FlyoutBtnMuteIcon.Glyph = HyPlayList.Player.IsMuted ? "\uE198" : "\uE15D";
         BtnVolIcon.Glyph = HyPlayList.Player.IsMuted ? "\uE198" : "\uE15D";
         //SliderAudioRate.Visibility = HyPlayList.Player.IsMuted ? Visibility.Collapsed : Visibility.Visible;
     }
@@ -774,12 +775,12 @@ public sealed partial class PlayBar
                     ? new SolidColorBrush(Colors.Red)
                     : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
                 IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
-                    ? "\uE00B;"
-                    : "\uEB51";
+                    ? "\uE00B"
+                    : "\uE006";
                 FlyoutLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
-                    ? "\uE00B;"
-                    : "\uEB51";
-                BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
+                    ? "\uE00B"
+                    : "\uE006";
+                //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
                 break;
             }
             case HyPlayItemType.Radio:
@@ -795,12 +796,12 @@ public sealed partial class PlayBar
                     ? new SolidColorBrush(Colors.Red)
                     : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
                 IconLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
-                    ? "\uE00B;"
-                    : "\uEB51";
+                    ? "\uE00B"
+                    : "\uE006";
                 FlyoutLiked.Glyph = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id)
-                    ? "\uE00B;"
-                    : "\uEB51";
-                BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
+                    ? "\uE00B"
+                    : "\uE006";
+                //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
                 break;
         }
     }
