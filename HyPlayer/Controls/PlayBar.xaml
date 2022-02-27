@@ -374,7 +374,7 @@
                 Click="ToggleButton_Click"
                 Content="词"
                 CornerRadius="20"
-                IsChecked="{x:Bind hy:Common.Setting.toastLyric, Mode=TwoWay}"
+                IsChecked="{x:Bind hy:Common.Setting.toastLyric, Mode=OneWay}"
                 IsThreeState="False"
                 Style="{StaticResource ToggleButtonRevealStyle}"
                 ToolTipService.ToolTip="桌面歌词" />
