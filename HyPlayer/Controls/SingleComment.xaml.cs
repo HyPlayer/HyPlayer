@@ -40,11 +40,11 @@ public sealed partial class SingleComment : UserControl
         ReplyBtn.Visibility = Visibility.Visible;
     }
 
-    private async void LoadFloorComments()
+    private async void LoadFloorComments(bool IsLoadMoreComments)
     {
         try
         {
-            SubCmts.Children.Clear();
+            if (!IsLoadMoreComments) SubCmts.Children.Clear();
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentFloor,
                 new Dictionary<string, object>
                 {
@@ -112,7 +112,7 @@ public sealed partial class SingleComment : UserControl
                     });
                 ReplyText.Text = string.Empty;
                 await Task.Delay(1000);
-                LoadFloorComments();
+                LoadFloorComments(false);
             }
             catch (Exception ex)
             {
@@ -134,7 +134,7 @@ public sealed partial class SingleComment : UserControl
 
     private void LoadMore_Click(object sender, RoutedEventArgs e)
     {
-        LoadFloorComments();
+        LoadFloorComments(true);
     }
 
     private void ReplyBtn_Click(object sender, RoutedEventArgs e)
@@ -143,7 +143,7 @@ public sealed partial class SingleComment : UserControl
         {
             time = null;
             SubCmtsConainer.Visibility = Visibility.Visible;
-            LoadFloorComments();
+            LoadFloorComments(false);
         }
         else
         {
