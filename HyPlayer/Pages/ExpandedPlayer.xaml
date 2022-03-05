@@ -318,6 +318,7 @@
                                 </ControlTemplate>
                             </MenuFlyoutItem.Template>
                         </MenuFlyoutItem>
+                        <MenuFlyoutSeparator />
                         <ToggleMenuFlyoutItem x:Name="ABRepeatState" IsChecked="{x:Bind hyplayer:Common.ABRepeatStatus,Mode=TwoWay}" Text="AB循环" Click="ChangeABRepeatStatus_Click" />
                         <MenuFlyoutItem     Text="设置开始点"
                                             HorizontalAlignment="Left"
@@ -325,7 +326,7 @@
                                             />
                         <MenuFlyoutItem
                                             Name="ABStartPointItem"
-                                            Text="{x:Bind hyplayer:Common.ABStartPointFriendlyName,Mode=OneWay}"
+                                            Text="{x:Bind hyplayer:Common.ABStartPointFriendlyValue,Mode=OneWay}"
                                             HorizontalAlignment="Left" />
                         <MenuFlyoutItem     Text="设置结束点"
                                             HorizontalAlignment="Left"
@@ -333,7 +334,7 @@
                                             />
                         <MenuFlyoutItem
                                             Name="ABEndPointItem"
-                                            Text="{x:Bind hyplayer:Common.ABEndPointFriendlyName,Mode=OneWay}"
+                                            Text="{x:Bind hyplayer:Common.ABEndPointFriendlyValue,Mode=OneWay}"
                                             HorizontalAlignment="Left" />
                     </MenuFlyout>
                 </Button.Flyout>

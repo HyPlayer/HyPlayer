@@ -62,13 +62,17 @@ namespace HyPlayer
         private static object previousNavigationItem;
         public static TimeSpan ABStartPoint=TimeSpan.Zero;
         public static TimeSpan ABEndPoint=TimeSpan.Zero;
-        public static string ABStartPointFriendlyName
+        public static string ABStartPointFriendlyValue
         {
-            get=>ABStartPoint.Minutes.ToString()+":"+ABStartPoint.Seconds.ToString();
+            get=> ABStartPoint.Hours.ToString() + ":" 
+                + ABStartPoint.Minutes.ToString()+":"
+                + ABStartPoint.Seconds.ToString();
         }
-        public static string ABEndPointFriendlyName
+        public static string ABEndPointFriendlyValue
         { 
-            get=>ABEndPoint.Minutes.ToString()+":"+ABEndPoint.Seconds.ToString(); 
+            get=> ABEndPoint.Hours.ToString() + ":"
+                + ABEndPoint.Minutes.ToString()+":"
+                + ABEndPoint.Seconds.ToString(); 
         }
         public static bool ABRepeatStatus=false;
 

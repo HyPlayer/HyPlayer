@@ -891,12 +891,12 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)
     {
         Common.ABStartPoint = HyPlayList.Player.PlaybackSession.Position;
-        ABStartPointItem.Text = Common.ABStartPointFriendlyName;
+        ABStartPointItem.Text = Common.ABStartPointFriendlyValue;
     }
     private void SetABEndPointButton_Click(object sender, RoutedEventArgs e)
     {
         Common.ABEndPoint = HyPlayList.Player.PlaybackSession.Position;
-        ABEndPointItem.Text = Common.ABEndPointFriendlyName;
+        ABEndPointItem.Text = Common.ABEndPointFriendlyValue;
     }
 }
 
