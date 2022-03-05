@@ -44,6 +44,7 @@ public sealed partial class SingleComment : UserControl
     {
         try
         {
+            SubCmts.Children.Clear();
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentFloor,
                 new Dictionary<string, object>
                 {
