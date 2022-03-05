@@ -283,9 +283,13 @@
                             </Grid>
                         </StackPanel>
 
+                        <StackPanel
+                            Grid.Column="1"
+                            HorizontalAlignment="Right"
+                            Orientation="Horizontal"
+                            Spacing="8">
                             <Button
                                 x:Name="More"
-                                Grid.Column="1"
                                 x:Phase="3"
                                 Background="Transparent"
                                 Click="More_Click"
@@ -296,6 +300,7 @@
                                     FontFamily="{StaticResource SymbolThemeFontFamily}"
                                     Glyph="&#xE10C;" />
                             </Button>
+                        </StackPanel>
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>
