@@ -875,6 +875,27 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.CompactOverlay);
         Common.PageMain.ExpandedPlayer.Navigate(typeof(CompactPlayerPage));
     }
+
+    private void ABRepeatState_Click(object sender, RoutedEventArgs e)
+    {
+        if (Common.ABRepeatStatus)
+        {
+            HyPlayList.OnTimerTicked += HyPlayList.CheckABTimeRemaining;
+        }
+        else
+        {
+            HyPlayList.OnTimerTicked -= HyPlayList.CheckABTimeRemaining;
+        }
+    }
+
+    private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)
+    {
+        Common.ABStartPoint = HyPlayList.Player.PlaybackSession.Position;
+    }
+    private void SetABEndPointButton_Click(object sender, RoutedEventArgs e)
+    {
+        Common.ABEndPoint = HyPlayList.Player.PlaybackSession.Position;
+    }
 }
 
 public class AlbumShadowConverter : IValueConverter

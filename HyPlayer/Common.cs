@@ -60,6 +60,18 @@ namespace HyPlayer
         public static TeachingTip GlobalTip;
         public static readonly Stack<KeyValuePair<string, string?>> TeachingTipList = new();
         private static object previousNavigationItem;
+        public static TimeSpan ABStartPoint=TimeSpan.Zero;
+        public static TimeSpan ABEndPoint=TimeSpan.Zero;
+        public static string ABStartPointFriendlyName
+        {
+            get=>ABStartPoint.Minutes.ToString()+":"+ABStartPoint.Seconds.ToString();
+        }
+        public static string ABEndPointFriendlyName
+        { 
+            get=>ABEndPoint.Minutes.ToString()+":"+ABEndPoint.Seconds.ToString(); 
+        }
+        public static bool ABRepeatStatus=false;
+
 
         public static bool NavigatingBack;
         private static int _teachingTipSecondCounter = 3;

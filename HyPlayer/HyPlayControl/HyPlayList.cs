@@ -1334,6 +1334,10 @@ public static class HyPlayList
         _ = Common.Invoke(() => OnPlayListAddDone?.Invoke());
         return Task.CompletedTask;
     }
+    public static void CheckABTimeRemaining()
+    {
+        if ((Player.PlaybackSession.Position>=Common.ABEndPoint)&&(Common.ABEndPoint!=TimeSpan.Zero)) Player.PlaybackSession.Position = Common.ABStartPoint;
+    } 
 }
 
 public enum PlayMode

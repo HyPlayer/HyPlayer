@@ -318,6 +318,24 @@
                                 </ControlTemplate>
                             </MenuFlyoutItem.Template>
                         </MenuFlyoutItem>
+                        <ToggleMenuFlyoutItem x:Name="ABRepeatState" IsChecked="{x:Bind hyplayer:Common.ABRepeatStatus}" Text="启用AB循环" Click="ABRepeatState_Click" />
+                        <MenuFlyoutItem>
+                            <MenuFlyoutItem.Template>
+                                <ControlTemplate TargetType="MenuFlyoutItem">
+                                    <controls:DockPanel LastChildFill="True">
+                                        <Button controls:DockPanel.Dock="Left" Click="SetABStartPointButton_Click">设置开始点</Button>
+                                        <Button controls:DockPanel.Dock="Right" Click="SetABEndPointButton_Click">设置结束点</Button>
+                                        <TextBlock
+                                            Text="{x:Bind hyplayer:Common.ABStartPointFriendlyName,Mode=OneWay}"
+                                            TextAlignment="Center" />
+                                        <TextBlock
+                                            Text="{x:Bind hyplayer:Common.ABEndPointFriendlyName,Mode=OneWay}"
+                                            TextAlignment="Center" />
+                                    </controls:DockPanel>
+                                </ControlTemplate>
+                            </MenuFlyoutItem.Template>
+                        </MenuFlyoutItem>
+                        
                     </MenuFlyout>
                 </Button.Flyout>
                 <Button.Content>
