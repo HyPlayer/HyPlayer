@@ -318,24 +318,23 @@
                                 </ControlTemplate>
                             </MenuFlyoutItem.Template>
                         </MenuFlyoutItem>
-                        <ToggleMenuFlyoutItem x:Name="ABRepeatState" IsChecked="{x:Bind hyplayer:Common.ABRepeatStatus}" Text="启用AB循环" Click="ABRepeatState_Click" />
-                        <MenuFlyoutItem>
-                            <MenuFlyoutItem.Template>
-                                <ControlTemplate TargetType="MenuFlyoutItem">
-                                    <controls:DockPanel LastChildFill="True">
-                                        <Button controls:DockPanel.Dock="Left" Click="SetABStartPointButton_Click">设置开始点</Button>
-                                        <Button controls:DockPanel.Dock="Right" Click="SetABEndPointButton_Click">设置结束点</Button>
-                                        <TextBlock
+                        <ToggleMenuFlyoutItem x:Name="ABRepeatState" IsChecked="{x:Bind hyplayer:Common.ABRepeatStatus,Mode=TwoWay}" Text="AB循环" Click="ChangeABRepeatStatus_Click" />
+                        <MenuFlyoutItem     Text="设置开始点"
+                                            HorizontalAlignment="Left"
+                                            Click="SetABStartPointButton_Click"
+                                            />
+                        <MenuFlyoutItem
+                                            Name="ABStartPointItem"
                                             Text="{x:Bind hyplayer:Common.ABStartPointFriendlyName,Mode=OneWay}"
-                                            TextAlignment="Center" />
-                                        <TextBlock
+                                            HorizontalAlignment="Left" />
+                        <MenuFlyoutItem     Text="设置结束点"
+                                            HorizontalAlignment="Left"
+                                            Click="SetABEndPointButton_Click"
+                                            />
+                        <MenuFlyoutItem
+                                            Name="ABEndPointItem"
                                             Text="{x:Bind hyplayer:Common.ABEndPointFriendlyName,Mode=OneWay}"
-                                            TextAlignment="Center" />
-                                    </controls:DockPanel>
-                                </ControlTemplate>
-                            </MenuFlyoutItem.Template>
-                        </MenuFlyoutItem>
-                        
+                                            HorizontalAlignment="Left" />
                     </MenuFlyout>
                 </Button.Flyout>
                 <Button.Content>

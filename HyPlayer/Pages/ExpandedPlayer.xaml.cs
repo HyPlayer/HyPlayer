@@ -876,25 +876,27 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         Common.PageMain.ExpandedPlayer.Navigate(typeof(CompactPlayerPage));
     }
 
-    private void ABRepeatState_Click(object sender, RoutedEventArgs e)
+    private void ChangeABRepeatStatus_Click(object sender, RoutedEventArgs e)
     {
         if (Common.ABRepeatStatus)
         {
-            HyPlayList.OnTimerTicked += HyPlayList.CheckABTimeRemaining;
+            HyPlayList.OnPlayPositionChange += HyPlayList.CheckABTimeRemaining;
         }
         else
         {
-            HyPlayList.OnTimerTicked -= HyPlayList.CheckABTimeRemaining;
+            HyPlayList.OnPlayPositionChange -= HyPlayList.CheckABTimeRemaining;
         }
     }
 
     private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)
     {
         Common.ABStartPoint = HyPlayList.Player.PlaybackSession.Position;
+        ABStartPointItem.Text = Common.ABStartPointFriendlyName;
     }
     private void SetABEndPointButton_Click(object sender, RoutedEventArgs e)
     {
         Common.ABEndPoint = HyPlayList.Player.PlaybackSession.Position;
+        ABEndPointItem.Text = Common.ABEndPointFriendlyName;
     }
 }
 
