@@ -26,9 +26,9 @@
     <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
     <AppxPackageDir>D:\Workspace\Personal\HyPlayer\HyPlayer\HyPlayer\AppPackages\2.1.15</AppxPackageDir>
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
-    <PackageCertificateThumbprint>BE6DBF29FE69892E2F45644F534FB6CACFE36DF9</PackageCertificateThumbprint>
-    <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
-    <PackageCertificateKeyFile />
+	  <PackageCertificateThumbprint>BE6DBF29FE69892E2F45644F534FB6CACFE36DF9</PackageCertificateThumbprint>
+	  <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
+	  <PackageCertificateKeyFile />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -151,6 +151,7 @@
     <Compile Include="Controls\LyricItem.xaml.cs">
       <DependentUpon>LyricItem.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\LyricItemWrapper.cs" />
     <Compile Include="Controls\LyricShareDialog.xaml.cs">
       <DependentUpon>LyricShareDialog.xaml</DependentUpon>
     </Compile>

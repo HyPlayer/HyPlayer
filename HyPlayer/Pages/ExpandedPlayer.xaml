@@ -8,6 +8,7 @@
     xmlns:hyplayer="using:HyPlayer"
     xmlns:pages="using:HyPlayer.Pages"
     xmlns:ui="using:Microsoft.Toolkit.Uwp.UI"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     NavigationCacheMode="Disabled">
     <Page.Resources>
         <pages:AlbumShadowConverter x:Key="ShadowConverter" />
@@ -213,17 +214,33 @@
                         </MenuFlyout>
                     </ScrollViewer.ContextFlyout>
                     <ScrollViewer.Content>
-                        <StackPanel
+                        <Grid x:Name="LyricBoxHost">
+                            <StackPanel Orientation="Horizontal" Spacing="5" Visibility="Collapsed">
+                                <TextBlock HorizontalAlignment="Center" Text="当前暂未播放歌曲" />
+                            </StackPanel>
+                            <muxc:ItemsRepeater x:Name="LyricBox" 
+                                                PointerWheelChanged="LyricBoxContainer_OnPointerWheelChanged"
+                                                Tapped="LyricBox_Tapped">
+                                <muxc:ItemsRepeater.Layout>
+                                    <muxc:StackLayout Orientation="Vertical" Spacing="5" />
+                                </muxc:ItemsRepeater.Layout>
+                                <muxc:ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:DataType="controls1:LyricItemModel">
+                                        <controls1:LyricItemWrapper SongLyric="{x:Bind SongLyric}" IsShow="{x:Bind IsShow,Mode=OneWay}" HorizontalAlignment="Stretch" />
+                                    </DataTemplate>
+                                </muxc:ItemsRepeater.ItemTemplate>
+                            </muxc:ItemsRepeater>
+                        </Grid>
+
+                        <!--<StackPanel
                             Name="LyricBox"
                             Orientation="Vertical"
                             PointerWheelChanged="LyricBoxContainer_OnPointerWheelChanged"
                             ScrollViewer.VerticalScrollBarVisibility="Auto"
                             Spacing="15"
                             Tapped="LyricBox_Tapped">
-                            <StackPanel Orientation="Horizontal" Spacing="5">
-                                <TextBlock HorizontalAlignment="Center" Text="当前暂未播放歌曲" />
-                            </StackPanel>
-                        </StackPanel>
+
+                        </StackPanel>-->
                     </ScrollViewer.Content>
                 </ScrollViewer>
             </Grid>
