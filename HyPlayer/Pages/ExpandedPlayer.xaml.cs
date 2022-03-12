@@ -54,7 +54,9 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private int lastlrcid;
 
     public PlayItem lastSongForBrush;
+
     private int lastwidth;
+
     //private List<LyricItem> LyricList = new();
     private bool ManualChangeMode;
     private int needRedesign = 1;
@@ -389,7 +391,13 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void RefreshLyricTime()
     {
-        if (LyricBox.ItemsSource is not List<LyricItemModel> list || (HyPlayList.LyricPos < 0 || HyPlayList.LyricPos >= list.Count)) return;
+        UpdateFocusingLyric();
+    }
+
+    private void UpdateFocusingLyric()
+    {
+        if (LyricBox.ItemsSource is not List<LyricItemModel> list ||
+            (HyPlayList.LyricPos < 0 || HyPlayList.LyricPos >= list.Count)) return;
         if (HyPlayList.LyricPos == -1)
         {
             if (lastitem != null)
@@ -417,14 +425,14 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
         if (k >= 0)
         {
-            var ele = LyricBox.TryGetElement(k) as FrameworkElement;
-
+            var ele = LyricBox.GetOrCreateElement(k) as FrameworkElement;
+            ele?.UpdateLayout();
             var transform = ele?.TransformToVisual((UIElement)LyricBoxContainer.Content);
             var position = transform?.TransformPoint(new Point(0, 0));
 
             if (position.HasValue)
             {
-                LyricBoxContainer.ChangeView(null, position.Value.Y - MainGrid.ActualHeight / 4, null, false);
+                LyricBoxContainer.ChangeView(null, position.Value.Y + MainGrid.ActualHeight / 8, null, false);
             }
         }
     }
@@ -524,7 +532,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     }
 
                     Background = new ImageBrush
-                    { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                        { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                 }
             }
             catch (Exception)
@@ -912,6 +920,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         Common.ABStartPoint = HyPlayList.Player.PlaybackSession.Position;
         ABStartPointItem.Text = Common.ABStartPointFriendlyValue;
     }
+
     private void SetABEndPointButton_Click(object sender, RoutedEventArgs e)
     {
         Common.ABEndPoint = HyPlayList.Player.PlaybackSession.Position;

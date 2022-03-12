@@ -222,7 +222,7 @@
                                                 PointerWheelChanged="LyricBoxContainer_OnPointerWheelChanged"
                                                 Tapped="LyricBox_Tapped">
                                 <muxc:ItemsRepeater.Layout>
-                                    <muxc:StackLayout Orientation="Vertical" Spacing="5" />
+                                    <muxc:StackLayout Orientation="Vertical" Spacing="15" />
                                 </muxc:ItemsRepeater.Layout>
                                 <muxc:ItemsRepeater.ItemTemplate>
                                     <DataTemplate x:DataType="controls1:LyricItemModel">
