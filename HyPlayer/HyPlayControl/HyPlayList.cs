@@ -19,6 +19,7 @@ using HyPlayer.Classes;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
 using File = TagLib.File;
+using Opportunity.LrcParser;
 
 #endregion
 
@@ -1352,150 +1353,24 @@ public static class Utils
     public static List<SongLyric> ConvertPureLyric(string lyricAllText, bool hasTranslationsInLyricText = false)
     {
         var lyrics = new List<SongLyric>();
-        if (string.IsNullOrEmpty(lyricAllText)) return new List<SongLyric> { SongLyric.NoLyric };
-        var spaceBeforeLyric = true;
-        var lyricsArr = lyricAllText.Replace("\r\n", "\n").Replace("\r", "\n").Split("\n");
-        var offset = TimeSpan.Zero;
-        foreach (var sL in lyricsArr)
+        var parsedlyrics= Lyrics.Parse(lyricAllText);
+        for (int i = 1; i < parsedlyrics.Lyrics.Lines.Count; i++)
         {
-            var lyricTextLine = sL.Trim();
-            if (lyricTextLine.IndexOf('[') == -1 || lyricTextLine.IndexOf(']') == -1)
-                continue; //此行不为Lrc
-
-            var prefix = lyricTextLine.Substring(1, lyricTextLine.IndexOf(']') - 1);
-            if (prefix.StartsWith("al") || prefix.StartsWith("ar") || prefix.StartsWith("au") ||
-                prefix.StartsWith("by") || prefix.StartsWith("re") || prefix.StartsWith("ti") ||
-                prefix.StartsWith("ve"))
-                //这种废标签不想解析
-                continue;
-
-            if (prefix.StartsWith("offset"))
-            {
-                if (!int.TryParse(prefix.Substring(6), out var offsetInt)) continue;
-                offset = new TimeSpan(0, 0, 0, 0, offsetInt);
-            }
-
-            if (!TimeSpan.TryParse("00:" + prefix, out var time)) continue;
-
-            var lrcText = lyricTextLine.Substring(lyricTextLine.IndexOf(']') + 1);
-            while (lrcText.Trim().StartsWith('['))
-            {
-                //一句双时间
-                lyrics = lyrics.Union(ConvertPureLyric(lrcText)).ToList();
-                lrcText = lrcText.Substring(lyricTextLine.IndexOf(']') + 1);
-            }
-
-            // 移除歌词前空格
-            if (lrcText.StartsWith(' '))
-            {
-                if (spaceBeforeLyric) lrcText = lrcText.Substring(1);
-            }
-            else
-            {
-                if (!string.IsNullOrWhiteSpace(lrcText))
-                {
-                    if (spaceBeforeLyric) lyrics.ForEach(t => t.PureLyric = " " + t.PureLyric);
-
-                    spaceBeforeLyric = false;
-                }
-            }
-
-            var haveTranslation = false;
-            string translation = null;
-            //NLyric 的双语歌词
-            if (hasTranslationsInLyricText)
-                if (lrcText.EndsWith('」'))
-                {
-                    if (lrcText.LastIndexOf('「') != -1 && lrcText.LastIndexOf('」') != -1)
-                    {
-                        translation = lrcText.Substring(lrcText.IndexOf('「') + 1,
-                            lrcText.IndexOf('」') - lrcText.IndexOf('「') - 1);
-                        lrcText = lrcText.Substring(0, lrcText.IndexOf('「'));
-                    }
-
-                    haveTranslation = !string.IsNullOrEmpty(translation);
-                }
-
-
+            var lyrictime = parsedlyrics.Lyrics.Lines[i].Timestamp.TimeOfDay.ToString();
+            if (TimeSpan.TryParse(lyrictime, out var time))
             lyrics.Add(new SongLyric
             {
-                LyricTime = time + offset,
-                PureLyric = lrcText,
-                Translation = translation,
-                HaveTranslation = haveTranslation
+                LyricTime = time + parsedlyrics.Lyrics.MetaData.Offset,
+                PureLyric = parsedlyrics.Lyrics.Lines[i].Content,
+                Translation = null,
+                HaveTranslation = false
             });
         }
-
         return lyrics.OrderBy(lyric => lyric.LyricTime.TotalMilliseconds).ToList();
     }
 
     public static void ConvertTranslation(string lyricAllText, List<SongLyric> lyrics)
     {
-        if (string.IsNullOrEmpty(lyricAllText)) return;
-
-        var lyricsArr = lyricAllText.Replace("\r\n", "\n").Replace("\r", "\n").Split("\n");
-        var offset = TimeSpan.Zero;
-        foreach (var sL in lyricsArr)
-        {
-            var lyricTextLine = sL.Trim();
-            if (lyricTextLine.IndexOf('[') == -1 || lyricTextLine.IndexOf(']') == -1)
-                continue; //此行不为Lrc
-
-            var prefix = lyricTextLine.Substring(1, lyricTextLine.IndexOf(']') - 1);
-            if (prefix.StartsWith("al") || prefix.StartsWith("ar") || prefix.StartsWith("au") ||
-                prefix.StartsWith("by") || prefix.StartsWith("re") || prefix.StartsWith("ti") ||
-                prefix.StartsWith("ve"))
-                //这种废标签不想解析
-                continue;
-
-            if (prefix.StartsWith("offset"))
-            {
-                if (!int.TryParse(prefix.Substring(6), out var offsetInt)) continue;
-
-                offset = new TimeSpan(0, 0, 0, 0, offsetInt);
-            }
-
-            if (!TimeSpan.TryParse("00:" + prefix, out var time)) continue;
-
-            var lrcText = lyricTextLine.Substring(lyricTextLine.IndexOf(']') + 1);
-
-            while (lrcText.Trim().StartsWith('['))
-            {
-                //一句双时间
-                ConvertTranslation(lrcText, lyrics);
-                lrcText = lrcText.Substring(lyricTextLine.IndexOf(']') + 1);
-            }
-
-            var isSet = false;
-            for (var i = 0; i < lyrics.Count; i++)
-            {
-                var songLyric = lyrics[i];
-                if (songLyric.LyricTime == time + offset)
-                {
-                    if (songLyric.HaveTranslation)
-                        songLyric.PureLyric += "「" + songLyric.Translation + "」";
-
-                    songLyric.Translation = lrcText;
-                    songLyric.HaveTranslation = true;
-                    lyrics[i] = songLyric;
-                    isSet = true;
-                    break;
-                }
-            }
-
-            if (!isSet)
-            {
-                // 这个翻译没有对应歌词, 还是将它压入
-                var idx = lyrics.FindIndex(t => t.LyricTime > time + offset);
-                if (idx == -1) idx = lyrics.Count - 1;
-                lyrics.Insert(idx + 1, new SongLyric
-                {
-                    HaveTranslation = true,
-                    LyricTime = time + offset,
-                    PureLyric = "",
-                    Translation = lrcText
-                });
-            }
-        }
+        throw new NotImplementedException();
     }
 }
