@@ -714,6 +714,12 @@ public static class HyPlayList
         _controlsDisplayUpdater.MusicProperties.Artist = NowPlayingItem.PlayItem.ArtistString;
         _controlsDisplayUpdater.MusicProperties.AlbumTitle = NowPlayingItem.PlayItem.AlbumString;
         _controlsDisplayUpdater.MusicProperties.Title = NowPlayingItem.PlayItem.Name;
+        _controlsDisplayUpdater.MusicProperties.TrackNumber = (uint)NowPlaying;
+        _controlsDisplayUpdater.MusicProperties.AlbumTrackCount = (uint)List.Count;
+        _controlsDisplayUpdater.MusicProperties.Genres.Clear();
+        if (NowPlayingItem.ItemType == HyPlayItemType.Netease)
+            _controlsDisplayUpdater.MusicProperties.Genres.Add("NCM-" + NowPlayingItem.PlayItem.Id);
+
         //记录下当前播放位置
         ApplicationData.Current.LocalSettings.Values["nowSongPointer"] = NowPlaying.ToString();
         //因为加载图片可能会高耗时,所以在此处加载
@@ -848,7 +854,7 @@ public static class HyPlayList
         Utils.ConvertTranslation(pureLyricInfo.TrLyrics, Lyrics);
         if (Lyrics.Count != 0 && Lyrics[0].LyricTime != TimeSpan.Zero)
             Lyrics.Insert(0,
-                new SongLyric { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "" });
+                new SongLyric { LyricTime = TimeSpan.Zero, PureLyric = "" });
         LyricPos = 0;
 
         Common.Invoke(() => OnLyricLoaded?.Invoke());
@@ -1356,26 +1362,25 @@ public static class Utils
 {
     public static List<SongLyric> ConvertPureLyric(string lyricAllText, bool hasTranslationsInLyricText = false)
     {
-        var lyrics = new List<SongLyric>();
         var parsedlyrics = Lyrics.Parse(lyricAllText);
-        for (int i = 1; i < parsedlyrics.Lyrics.Lines.Count; i++)
-        {
-            var lyrictime = parsedlyrics.Lyrics.Lines[i].Timestamp.TimeOfDay.ToString();
-            if (TimeSpan.TryParse(lyrictime, out var time))
-                lyrics.Add(new SongLyric
-                {
-                    LyricTime = time + parsedlyrics.Lyrics.MetaData.Offset,
-                    PureLyric = parsedlyrics.Lyrics.Lines[i].Content,
-                    Translation = null,
-                    HaveTranslation = false
-                });
-        }
-
-        return lyrics.OrderBy(lyric => lyric.LyricTime.TotalMilliseconds).ToList();
+        return parsedlyrics.Lyrics.Lines.Select(lyricsLine => new SongLyric
+                { LyricTime = lyricsLine.Timestamp.TimeOfDay, PureLyric = lyricsLine.Content, Translation = null })
+            .ToList();
     }
 
     public static void ConvertTranslation(string lyricAllText, List<SongLyric> lyrics)
     {
-        throw new NotImplementedException();
+        var parsedlyrics = Lyrics.Parse(lyricAllText);
+        foreach (var lyricsLine in parsedlyrics.Lyrics.Lines)
+        {
+            foreach (var songLyric in lyrics)
+            {
+                if (songLyric.LyricTime.TotalMilliseconds == lyricsLine.Timestamp.TimeOfDay.TotalMilliseconds)
+                {
+                    songLyric.Translation = lyricsLine.Content;
+                    break;
+                }
+            }
+        }
     }
 }

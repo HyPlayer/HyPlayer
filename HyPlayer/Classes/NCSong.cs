@@ -40,15 +40,15 @@ public class PureLyricInfo
 public class SongLyric
 {
     public static SongLyric PureSong = new()
-        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏" };
+        { LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏" };
 
     public static SongLyric NoLyric = new()
-        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏" };
+        { LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏" };
 
     public static SongLyric LoadingLyric = new()
-        { HaveTranslation = false, LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..." };
+        { LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..." };
 
-    public bool HaveTranslation;
+    public bool HaveTranslation => !string.IsNullOrEmpty(Translation);
     public TimeSpan LyricTime;
     public string PureLyric;
     public string Translation;

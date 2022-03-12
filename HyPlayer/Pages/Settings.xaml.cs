@@ -65,8 +65,7 @@ public sealed partial class Settings : Page
         _lyricItem = new LyricItem(new SongLyric
         {
             PureLyric = "歌词大小示例 AaBbCcDd 約束の言葉",
-            Translation = "翻译大小示例",
-            HaveTranslation = true
+            Translation = "翻译大小示例"
         });
         _lyricItem.OnShow();
         StackPanelLyricSet.Children.Add(_lyricItem);
