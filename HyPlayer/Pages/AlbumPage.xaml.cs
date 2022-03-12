@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
@@ -27,7 +28,8 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class AlbumPage : Page, IDisposable
 {
-    private readonly ObservableCollection<NCSong> songs = new();
+    private readonly ObservableCollection<NCSong> AlbumSongs = new();
+    CollectionViewSource AlbumSongsViewSource = new() { IsSourceGrouped = true };
     private NCAlbum Album;
     private string albumid;
     private List<NCArtist> artists = new();
@@ -40,7 +42,8 @@ public sealed partial class AlbumPage : Page, IDisposable
 
     public void Dispose()
     {
-        songs.Clear();
+        AlbumSongs.Clear();
+        AlbumSongsViewSource.Source = null;
         Album = null;
         artists = null;
         ImageRect.ImageSource = null;
@@ -64,7 +67,6 @@ public sealed partial class AlbumPage : Page, IDisposable
 
         LoadAlbumInfo();
         LoadAlbumDynamic();
-
     }
 
     private async void LoadAlbumDynamic()
@@ -105,12 +107,33 @@ public sealed partial class AlbumPage : Page, IDisposable
                                  + json["album"]["description"];
             var idx = 0;
             SongContainer.ListSource = "al" + Album.id;
+            /*
             foreach (var song in json["songs"].ToArray())
             {
                 var ncSong = NCSong.CreateFromJson(song);
                 ncSong.Order = idx++;
-                songs.Add(ncSong);
+                AlbumSongs.Add(ncSong);
             }
+            */
+            AlbumSongsViewSource.Source = json["songs"].ToArray().Select(jsonSong => new NCAlbumSong
+                {
+                    Album = Album,
+                    alias = string.Join(" / ", jsonSong["alia"].ToArray().Select(t => t.ToString())),
+                    Artist = jsonSong["ar"].Select(NCArtist.CreateFromJson).ToList(),
+                    IsAvailable = jsonSong["privilege"]["st"].ToString() == "0",
+                    IsVip = jsonSong["fee"]?.ToString() == "1",
+                    LengthInMilliseconds = double.Parse(jsonSong["dt"].ToString()),
+                    mvid = jsonSong["mv"]?.ToObject<int>() ?? -1,
+                    Order = jsonSong["no"]?.ToObject<int>() ?? 0,
+                    sid = jsonSong["id"].ToString(),
+                    songname = jsonSong["name"].ToString(),
+                    transname = string.Join(" / ",
+                        jsonSong["tns"]?.ToArray().Select(t => t.ToString()) ?? Array.Empty<string>()),
+                    Type = HyPlayItemType.Netease,
+                    IsCloud = false,
+                    DiscName = jsonSong["cd"].ToString()
+                }).GroupBy(t => t.DiscName).OrderBy(t => t.Key)
+                .Select(t => new DiscSongs(t) { Key = t.Key });
         }
         catch (Exception ex)
         {
@@ -119,13 +142,13 @@ public sealed partial class AlbumPage : Page, IDisposable
     }
 
 
-    private void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
+    private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
         try
         {
-            HyPlayList.AppendNcSongs(songs);
+            await HyPlayList.AppendNcSource("al" + Album.id);
             HyPlayList.SongAppendDone();
-            HyPlayList.PlaySourceId = albumid;
+            HyPlayList.PlaySourceId = "al" + Album.id;
             HyPlayList.SongMoveTo(0);
         }
         catch (Exception ex)
@@ -137,6 +160,12 @@ public sealed partial class AlbumPage : Page, IDisposable
 
     private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
     {
+        List<NCSong> songs = new List<NCSong>();
+        foreach (var discSongs in (IEnumerable<DiscSongs>)AlbumSongsViewSource.Source)
+        {
+            songs.AddRange(discSongs);
+        }
+
         DownloadManager.AddDownload(songs);
     }
 
@@ -156,6 +185,21 @@ public sealed partial class AlbumPage : Page, IDisposable
     private void BtnSub_Click(object sender, RoutedEventArgs e)
     {
         _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.AlbumSubscribe,
-            new Dictionary<string, object> { { "id", albumid }, { "t", BtnSub.IsChecked.GetValueOrDefault(false) ? "1" : "0" } });
+            new Dictionary<string, object>
+                { { "id", albumid }, { "t", BtnSub.IsChecked.GetValueOrDefault(false) ? "1" : "0" } });
     }
+}
+
+public class DiscSongs : List<NCAlbumSong>
+{
+    public DiscSongs(IEnumerable<NCAlbumSong> items) : base(items)
+    {
+    }
+
+    public string Key { get; set; }
+}
+
+public class NCAlbumSong : NCSong
+{
+    public string DiscName { get; set; }
 }

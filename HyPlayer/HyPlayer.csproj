@@ -148,6 +148,9 @@
     <Compile Include="Controls\ExpandableTextBox.xaml.cs">
       <DependentUpon>ExpandableTextBox.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\GroupedSongsList.xaml.cs">
+      <DependentUpon>GroupedSongsList.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\LyricItem.xaml.cs">
       <DependentUpon>LyricItem.xaml</DependentUpon>
     </Compile>
@@ -326,6 +329,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\ExpandableTextBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\GroupedSongsList.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -11,13 +11,12 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <controls1:SongsList
+        <controls1:GroupedSongsList
             x:Name="SongContainer"
             Grid.Row="1"
             Margin="20,30,0,0"
-            IsSearchEnabled="True"
-            Songs="{x:Bind songs}">
-            <controls1:SongsList.ListHeader>
+            GroupedSongs="{x:Bind AlbumSongsViewSource, Mode=OneWay}">
+            <controls1:GroupedSongsList.ListHeader>
                 <controls:DockPanel
                     x:Name="GridPersonalInformation"
                     Grid.Row="0"
@@ -93,8 +92,8 @@
                             TextWrapping="WrapWholeWords" />
                     </StackPanel>
                 </controls:DockPanel>
-            </controls1:SongsList.ListHeader>
-        </controls1:SongsList>
+            </controls1:GroupedSongsList.ListHeader>
+        </controls1:GroupedSongsList>
     </Grid>
 
 

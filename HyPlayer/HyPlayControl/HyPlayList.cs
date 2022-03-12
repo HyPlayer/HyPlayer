@@ -169,6 +169,7 @@ public static class HyPlayList
             MediaSystemControls.PlaybackPositionChangeRequested += MediaSystemControls_PlaybackPositionChangeRequested;
             Player.PlaybackSession.PositionChanged += UpdateSmtcPosition;
         }
+
         Player.MediaFailed += PlayerOnMediaFailed;
         Player.BufferingStarted += Player_BufferingStarted;
         Player.BufferingEnded += Player_BufferingEnded;
@@ -201,7 +202,8 @@ public static class HyPlayList
         });
     }
 
-    public static void MediaSystemControls_PlaybackPositionChangeRequested(SystemMediaTransportControls sender, PlaybackPositionChangeRequestedEventArgs args)
+    public static void MediaSystemControls_PlaybackPositionChangeRequested(SystemMediaTransportControls sender,
+        PlaybackPositionChangeRequestedEventArgs args)
     {
         Player.PlaybackSession.Position = args.RequestedPlaybackPosition;
     }
@@ -478,7 +480,7 @@ public static class HyPlayList
         RemoveAllSong();
         OnPlayItemChange?.Invoke(null);
     }
-    
+
     public static void RemoveAllSong()
     {
         List.Clear();
@@ -1335,10 +1337,12 @@ public static class HyPlayList
         _ = Common.Invoke(() => OnPlayListAddDone?.Invoke());
         return Task.CompletedTask;
     }
+
     public static void CheckABTimeRemaining(TimeSpan currentTime)
     {
-        if ((currentTime>=Common.ABEndPoint)&&(Common.ABEndPoint!=TimeSpan.Zero)&&(Common.ABEndPoint >Common.ABStartPoint)) Player.PlaybackSession.Position = Common.ABStartPoint;
-    } 
+        if ((currentTime >= Common.ABEndPoint) && (Common.ABEndPoint != TimeSpan.Zero) &&
+            (Common.ABEndPoint > Common.ABStartPoint)) Player.PlaybackSession.Position = Common.ABStartPoint;
+    }
 }
 
 public enum PlayMode
@@ -1353,19 +1357,20 @@ public static class Utils
     public static List<SongLyric> ConvertPureLyric(string lyricAllText, bool hasTranslationsInLyricText = false)
     {
         var lyrics = new List<SongLyric>();
-        var parsedlyrics= Lyrics.Parse(lyricAllText);
+        var parsedlyrics = Lyrics.Parse(lyricAllText);
         for (int i = 1; i < parsedlyrics.Lyrics.Lines.Count; i++)
         {
             var lyrictime = parsedlyrics.Lyrics.Lines[i].Timestamp.TimeOfDay.ToString();
             if (TimeSpan.TryParse(lyrictime, out var time))
-            lyrics.Add(new SongLyric
-            {
-                LyricTime = time + parsedlyrics.Lyrics.MetaData.Offset,
-                PureLyric = parsedlyrics.Lyrics.Lines[i].Content,
-                Translation = null,
-                HaveTranslation = false
-            });
+                lyrics.Add(new SongLyric
+                {
+                    LyricTime = time + parsedlyrics.Lyrics.MetaData.Offset,
+                    PureLyric = parsedlyrics.Lyrics.Lines[i].Content,
+                    Translation = null,
+                    HaveTranslation = false
+                });
         }
+
         return lyrics.OrderBy(lyric => lyric.LyricTime.TotalMilliseconds).ToList();
     }
 

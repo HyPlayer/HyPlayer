@@ -146,7 +146,6 @@ public class NCSong
 
     public double LengthInMilliseconds;
 
-    public bool LoadList = false;
     public int mvid;
     public int Order = 0;
     public string sid;
