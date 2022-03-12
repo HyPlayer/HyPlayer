@@ -50,12 +50,12 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     public double lastChangedLyricWidth;
     private int lastheight;
 
-    private LyricItem lastitem;
+    private LyricItemModel lastitem;
     private int lastlrcid;
 
     public PlayItem lastSongForBrush;
     private int lastwidth;
-    private List<LyricItem> LyricList = new();
+    //private List<LyricItem> LyricList = new();
     private bool ManualChangeMode;
     private int needRedesign = 1;
     private int nowheight;
@@ -109,8 +109,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 Window.Current.SizeChanged -= Current_SizeChanged;
             _ = Common.Invoke(() =>
             {
-                LyricBox.Children.Clear();
-                LyricList.Clear();
+                LyricBox.ItemsSource = null;
+                //LyricList.Clear();
                 if (Common.Setting.albumRotate)
                     RotateAnimationSet.Stop();
             });
@@ -333,11 +333,13 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             }
         }
 
-        LyricList.ForEach(t =>
-        {
-            t.Width = LyricWidth;
-            t.RefreshFontSize();
-        });
+        LyricBox.Width = LyricWidth;
+
+        //LyricList.ForEach(t =>
+        //{
+        //    t.Width = LyricWidth;
+        //    t.RefreshFontSize();
+        //});
     }
 
 
@@ -387,56 +389,71 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void RefreshLyricTime()
     {
-        if (HyPlayList.LyricPos < 0 || HyPlayList.LyricPos >= LyricList.Count) return;
+        if (LyricBox.ItemsSource is not List<LyricItemModel> list || (HyPlayList.LyricPos < 0 || HyPlayList.LyricPos >= list.Count)) return;
         if (HyPlayList.LyricPos == -1)
         {
-            lastitem?.OnHind();
+            if (lastitem != null)
+            {
+                lastitem.IsShow = false;
+            }
+
             LyricBoxContainer.ChangeView(null, 0, null, false);
         }
 
-        var item = LyricList[HyPlayList.LyricPos];
+        var item = list[HyPlayList.LyricPos];
         if (item == null) return;
-        lastitem?.OnHind();
-        item?.OnShow();
+
+        if (lastitem != null)
+        {
+            lastitem.IsShow = false;
+        }
+
+        item.IsShow = true;
         lastitem = item;
         if (sclock > 0)
             return;
 
-        var transform = item?.TransformToVisual((UIElement)LyricBoxContainer.Content);
-        var position = transform?.TransformPoint(new Point(0, 0));
-        LyricBoxContainer.ChangeView(null, position?.Y - MainGrid.ActualHeight / 4, null, false);
+        var k = LyricBox.ItemsSourceView.IndexOf(item);
+
+        if (k >= 0)
+        {
+            var ele = LyricBox.TryGetElement(k) as FrameworkElement;
+
+            var transform = ele?.TransformToVisual((UIElement)LyricBoxContainer.Content);
+            var position = transform?.TransformPoint(new Point(0, 0));
+
+            if (position.HasValue)
+            {
+                LyricBoxContainer.ChangeView(null, position.Value.Y - MainGrid.ActualHeight / 4, null, false);
+            }
+        }
     }
 
     public void LoadLyricsBox()
     {
         if (HyPlayList.NowPlayingItem == null) return;
-        LyricBox.Children.Clear();
+        LyricBox.ItemsSource = null;
         var blanksize = LyricBoxContainer.ViewportHeight / 2;
         if (double.IsNaN(blanksize) || blanksize == 0) blanksize = Window.Current.Bounds.Height / 3;
 
-        LyricBox.Children.Add(new Grid { Height = blanksize });
+        LyricBoxHost.Margin = new Thickness(0, blanksize, 0, blanksize);
+
+        List<LyricItemModel> source = null;
+
         if (HyPlayList.Lyrics.Count == 0)
         {
-            var lrcitem = new LyricItem(SongLyric.PureSong)
+            source = new List<LyricItemModel>()
             {
-                Width = LyricWidth
+                new LyricItemModel(SongLyric.PureSong)
             };
-            LyricBox.Children.Add(lrcitem);
         }
         else
         {
-            foreach (var songLyric in HyPlayList.Lyrics)
-            {
-                var lrcitem = new LyricItem(songLyric)
-                {
-                    Width = LyricWidth
-                };
-                LyricBox.Children.Add(lrcitem);
-            }
+            source = new List<LyricItemModel>(HyPlayList.Lyrics.Select(c => new LyricItemModel(c)));
         }
 
-        LyricBox.Children.Add(new Grid { Height = blanksize });
-        LyricList = LyricBox.Children.OfType<LyricItem>().ToList();
+        LyricBox.ItemsSource = source;
+        LyricBox.Width = LyricWidth;
         lastlrcid = HyPlayList.NowPlayingItem.GetHashCode();
         InitLyricTime();
     }
@@ -456,9 +473,11 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
         if (mpi?.PlayItem == null)
         {
-            LyricList.Clear();
-            LyricBox.Children.Clear();
-            LyricBox.Children.Add(new TextBlock() { Text = "当前暂无歌曲播放" });
+            //LyricList.Clear();
+            //LyricBox.Children.Clear();
+            LyricBox.ItemsSource = null;
+
+            //LyricBox.Children.Add(new TextBlock() { Text = "当前暂无歌曲播放" });
             ImageAlbum.Source = null;
             return;
         }
@@ -505,7 +524,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     }
 
                     Background = new ImageBrush
-                        { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                    { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                 }
             }
             catch (Exception)
@@ -519,12 +538,12 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             var blanksize = LyricBoxContainer.ViewportHeight / 2;
             if (double.IsNaN(blanksize) || blanksize == 0) blanksize = Window.Current.Bounds.Height / 3;
 
-            LyricBox.Children.Clear();
-            LyricBox.Children.Add(new Grid { Height = blanksize });
-            var lrcitem = new LyricItem(SongLyric.LoadingLyric) { Width = LyricWidth };
-            LyricList = new List<LyricItem> { lrcitem };
-            LyricBox.Children.Add(lrcitem);
-            LyricBox.Children.Add(new Grid { Height = blanksize });
+            LyricBoxHost.Margin = new Thickness(0, blanksize, 0, blanksize);
+            LyricBox.ItemsSource = new List<LyricItemModel>()
+            {
+                new LyricItemModel(SongLyric.LoadingLyric)
+            };
+            LyricBox.Width = LyricWidth;
         }
 
         needRedesign++;
