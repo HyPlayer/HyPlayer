@@ -326,6 +326,26 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        
+        public bool downloadTranslation
+        {
+            get => GetSettings("downloadTranslation", true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["downloadTranslation"] = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        public bool usingGBK
+        {
+            get => GetSettings("usingGBK", false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["usingGBK"] = value;
+                OnPropertyChanged();
+            }
+        }
 
         public bool writedownloadFileInfo
         {

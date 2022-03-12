@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
@@ -130,7 +131,7 @@ internal class DownloadObject
                 !(json.ContainsKey("uncollected") && json["uncollected"].ToString().ToLower() == "true"))
             {
                 var lrc = Utils.ConvertPureLyric(json["lrc"]["lyric"].ToString());
-                if (json["tlyric"]?["lyric"] != null)
+                if (Common.Setting.downloadTranslation && json["tlyric"]?["lyric"] != null)
                     Utils.ConvertTranslation(json["tlyric"]["lyric"].ToString(), lrc);
                 var lrctxt = string.Join("\r\n", lrc.Select(t =>
                 {
@@ -143,7 +144,15 @@ internal class DownloadObject
                     .CreateFileAsync(
                         Path.GetFileName(Path.ChangeExtension(fullpath, "lrc")),
                         CreationCollisionOption.ReplaceExisting);
-                await FileIO.WriteTextAsync(sf, lrctxt);
+                if (Common.Setting.usingGBK)
+                {
+                    await FileIO.WriteBytesAsync(sf,
+                        Encoding.Convert(Encoding.UTF8, Encoding.GetEncoding("GBK"), Encoding.UTF8.GetBytes(lrctxt)));
+                }
+                else
+                {
+                    await FileIO.WriteTextAsync(sf, lrctxt);
+                }
             }
         }
         catch (Exception ex)

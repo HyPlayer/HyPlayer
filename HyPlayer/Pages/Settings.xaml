@@ -304,10 +304,14 @@
                         </Grid>
                         <CheckBox Content="是否下载歌词"
                                   IsChecked="{x:Bind hyplayer:Common.Setting.downloadLyric, Mode=TwoWay}" />
+                        <CheckBox Content="是否下载翻译"
+                                  IsChecked="{x:Bind hyplayer:Common.Setting.downloadTranslation, Mode=TwoWay}" />
                         <CheckBox Content="是否写音乐信息"
                                   IsChecked="{x:Bind hyplayer:Common.Setting.writedownloadFileInfo, Mode=TwoWay}" />
                         <CheckBox Content="是否写网易云音乐信息"
                                   IsChecked="{x:Bind hyplayer:Common.Setting.write163Info, Mode=TwoWay}" />
+                        <CheckBox Content="是否使用 GBK 写内容"
+                                  IsChecked="{x:Bind hyplayer:Common.Setting.usingGBK, Mode=TwoWay}" />
                         <Button
                             x:Name="ClearHistory"
                             Click="ClearHistory_Click"
