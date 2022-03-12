@@ -10,6 +10,7 @@
     xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
     xmlns:local="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:pages="using:HyPlayer.Pages"
     x:Name="SongListRoot"
     d:DesignHeight="300"
     mc:Ignorable="d">
@@ -17,20 +18,36 @@
         <ListView
             Name="SongContainer"
             Padding="10"
-            ItemsSource="{x:Bind GroupedSongs}"
+            ItemsSource="{x:Bind GroupedSongs.View, Mode=OneWay}"
             SelectionChanged="SongContainer_SelectionChanged"
             ShowsScrollingPlaceholders="True">
             <ListView.Footer>
                 <ContentControl Margin="0,0,0,130" Content="{x:Bind Footer}" />
             </ListView.Footer>
             <ListView.Header>
-                <StackPanel
-                    x:Name="HeaderPanel"
-                    Orientation="Vertical">
-                    <ContentControl
-                        Content="{x:Bind ListHeader}" />
+                <StackPanel x:Name="HeaderPanel" Orientation="Vertical">
+                    <ContentControl Content="{x:Bind ListHeader}" />
                 </StackPanel>
             </ListView.Header>
+
+            <ListView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <ItemsStackPanel x:Name="GroupedStackPanel" AreStickyGroupHeadersEnabled="False" />
+                </ItemsPanelTemplate>
+            </ListView.ItemsPanel>
+
+            <ListView.GroupStyle>
+                <GroupStyle>
+                    <GroupStyle.HeaderTemplate>
+                        <DataTemplate x:DataType="pages:DiscSongs">
+                            <Border AutomationProperties.Name="{x:Bind Key}">
+                                <TextBlock Style="{ThemeResource TitleTextBlockStyle}" Text="{x:Bind Key}" />
+                            </Border>
+                        </DataTemplate>
+                    </GroupStyle.HeaderTemplate>
+                </GroupStyle>
+            </ListView.GroupStyle>
+
             <ListView.ContextFlyout>
                 <MenuFlyout>
                     <MenuFlyoutItem
@@ -39,8 +56,7 @@
                         Style="{StaticResource MenuFlyoutItemRevealStyle}"
                         Text="立即播放">
                         <MenuFlyoutItem.Icon>
-                            <SymbolIcon
-                                Symbol="Play" />
+                            <SymbolIcon Symbol="Play" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                     <MenuFlyoutItem
@@ -49,8 +65,7 @@
                         Style="{StaticResource MenuFlyoutItemRevealStyle}"
                         Text="下一首播放">
                         <MenuFlyoutItem.Icon>
-                            <SymbolIcon
-                                Symbol="Next" />
+                            <SymbolIcon Symbol="Next" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                     <MenuFlyoutSeparator />
@@ -60,9 +75,7 @@
                         Style="{StaticResource MenuFlyoutItemRevealStyle}"
                         Text="歌手">
                         <MenuFlyoutItem.Icon>
-                            <FontIcon
-                                FontFamily="{StaticResource SymbolThemeFontFamily}"
-                                Glyph="&#xE716;" />
+                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE716;" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                     <MenuFlyoutItem
@@ -71,9 +84,7 @@
                         Style="{StaticResource MenuFlyoutItemRevealStyle}"
                         Text="专辑">
                         <MenuFlyoutItem.Icon>
-                            <FontIcon
-                                FontFamily="{StaticResource SymbolThemeFontFamily}"
-                                Glyph="&#xE93C;" />
+                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE93C;" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                     <MenuFlyoutSeparator />
@@ -84,9 +95,7 @@
                         Text="评论"
                         Visibility="{x:Bind local:Common.Setting.notClearMode, Mode=OneWay}">
                         <MenuFlyoutItem.Icon>
-                            <FontIcon
-                                FontFamily="{StaticResource SymbolThemeFontFamily}"
-                                Glyph="&#xE8F2;" />
+                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8F2;" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                     <MenuFlyoutItem
@@ -95,9 +104,7 @@
                         Style="{StaticResource MenuFlyoutItemRevealStyle}"
                         Text="下载">
                         <MenuFlyoutItem.Icon>
-                            <FontIcon
-                                FontFamily="{StaticResource SymbolThemeFontFamily}"
-                                Glyph="&#xE118;" />
+                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE118;" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                     <MenuFlyoutItem
@@ -107,9 +114,7 @@
                         Text="视频"
                         Visibility="{x:Bind local:Common.Setting.notClearMode, Mode=OneWay}">
                         <MenuFlyoutItem.Icon>
-                            <FontIcon
-                                FontFamily="{StaticResource SymbolThemeFontFamily}"
-                                Glyph="&#xE173;" />
+                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE173;" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                     <MenuFlyoutItem
@@ -118,42 +123,36 @@
                         Style="{StaticResource MenuFlyoutItemRevealStyle}"
                         Text="收藏">
                         <MenuFlyoutItem.Icon>
-                            <FontIcon
-                                FontFamily="{StaticResource SymbolThemeFontFamily}"
-                                Glyph="&#xE1DA;" />
+                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE1DA;" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                 </MenuFlyout>
             </ListView.ContextFlyout>
             <ListView.Resources>
-                <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+                <Style BasedOn="{StaticResource DefaultListViewItemStyle}" TargetType="ListViewItem">
                     <Setter Property="HorizontalAlignment" Value="Stretch" />
                 </Style>
             </ListView.Resources>
             <ListView.ItemTemplate>
-                <DataTemplate
-                    x:DataType="classes:NCSong">
+                <DataTemplate x:DataType="classes:NCSong">
                     <Grid
-                        Background="Transparent"
                         HorizontalAlignment="Stretch"
+                        Background="Transparent"
                         IsRightTapEnabled="True"
+                        PointerPressed="Grid_PointerPressed"
                         RightTapped="Grid_RightTapped"
                         Tag="{x:Bind Order}">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition
-                                Width="*" />
-                            <ColumnDefinition
-                                Width="60" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="60" />
                         </Grid.ColumnDefinitions>
-                        <StackPanel
-                            Grid.Column="0"
-                            Orientation="Horizontal">
+                        <StackPanel Grid.Column="0" Orientation="Horizontal">
                             <TextBlock
                                 x:Name="OrderId"
                                 Width="30"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
-                                Text="{x:Bind DspOrder}" />
+                                Text="{x:Bind Order}" />
                             <controls:ImageEx
                                 x:Name="ImageRect"
                                 Width="75"
@@ -165,8 +164,7 @@
                                 IsEnabled="{x:Bind IsAvailable}"
                                 Source="{x:Bind Cover}"
                                 Stretch="UniformToFill" />
-                            <Grid
-                                Padding="7,0,0,0">
+                            <Grid Padding="7,0,0,0">
                                 <Grid.RowDefinitions>
                                     <RowDefinition />
                                     <RowDefinition />
@@ -174,8 +172,7 @@
                                     <RowDefinition />
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition
-                                        Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel
                                     Grid.Row="0"
@@ -241,9 +238,7 @@
                                 Style="{StaticResource ButtonRevealStyle}"
                                 Tag="{x:Bind Order}"
                                 ToolTipService.ToolTip="更多">
-                                <FontIcon
-                                    FontFamily="{StaticResource SymbolThemeFontFamily}"
-                                    Glyph="&#xE10C;" />
+                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE10C;" />
                             </Button>
                         </StackPanel>
                     </Grid>

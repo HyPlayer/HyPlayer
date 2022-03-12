@@ -196,7 +196,7 @@ public class DiscSongs : List<NCAlbumSong>
     {
     }
 
-    public string Key { get; set; }
+    public object Key { get; set; }
 }
 
 public class NCAlbumSong : NCSong

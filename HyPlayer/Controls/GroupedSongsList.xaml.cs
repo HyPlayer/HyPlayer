@@ -25,7 +25,7 @@ using NeteaseCloudMusicApi;
 
 namespace HyPlayer.Controls;
 
-public sealed partial class GroupedSongsList : UserControl, IDisposable
+public sealed partial class GroupedSongsList : IDisposable
 {
     public static readonly DependencyProperty GroupedSongsProperty = DependencyProperty.Register(
         "GroupedSongs", typeof(CollectionViewSource), typeof(GroupedSongsList),
@@ -35,6 +35,7 @@ public sealed partial class GroupedSongsList : UserControl, IDisposable
     {
         get => (CollectionViewSource)GetValue(GroupedSongsProperty);
         set => SetValue(GroupedSongsProperty, value);
+        
     }
 
     public static readonly DependencyProperty ListSourceProperty = DependencyProperty.Register(
@@ -57,7 +58,7 @@ public sealed partial class GroupedSongsList : UserControl, IDisposable
     public static readonly DependencyProperty FooterProperty = DependencyProperty.Register(
         "Footer", typeof(UIElement), typeof(GroupedSongsList), new PropertyMetadata(default(UIElement)));
 
-    public bool IsManualSelect = true;
+    public bool IsManualSelect = false;
 
     public GroupedSongsList()
     {
@@ -128,8 +129,13 @@ public sealed partial class GroupedSongsList : UserControl, IDisposable
             return;
         }
 
-        var idx = ((GroupedSongs.Source as IEnumerable<NCSong>) ?? Array.Empty<NCSong>()).ToList()
-            .FindIndex(t => t.sid == playitem.PlayItem.Id);
+        var idx = -1;
+        foreach (var discSongs in GroupedSongs.Source as IEnumerable<DiscSongs>)
+        {
+            int index = discSongs.FindIndex(t => t.sid == playitem.PlayItem.Id);
+            if (index != -1) idx = index;
+        }
+
         if (idx == -1) return;
         IsManualSelect = false;
         SongContainer.SelectedIndex = idx;
@@ -259,6 +265,11 @@ public sealed partial class GroupedSongsList : UserControl, IDisposable
 
         SongContainer.ContextFlyout.ShowAt(element,
             new FlyoutShowOptions
-                { Position = e?.GetPosition(element) ?? new Point(element?.ActualWidth ?? 0, 80) });
+            { Position = e?.GetPosition(element) ?? new Point(element?.ActualWidth ?? 0, 80) });
+    }
+
+    private void Grid_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        IsManualSelect = true;
     }
 }

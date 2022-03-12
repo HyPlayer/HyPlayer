@@ -156,9 +156,11 @@ public class NCSong
     public int DspOrder => Order + 1;
 
     public BitmapImage Cover =>
-        Common.Setting.noImage ? null : new BitmapImage(new Uri(Album.cover ??=
-            "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg" + "?param=" +
-            StaticSource.PICSIZE_SINGLENCSONG_COVER));
+        Common.Setting.noImage
+            ? null
+            : new BitmapImage(new Uri(Album.cover ??=
+                "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg" + "?param=" +
+                StaticSource.PICSIZE_SINGLENCSONG_COVER));
 
     public string ArtistString
     {
@@ -206,7 +208,7 @@ public class NCSong
 
     public string ConvertTranslate(string source)
     {
-        return source == null ? "" : "(" + source + ")";
+        return string.IsNullOrEmpty(source) ? "" : "(" + source + ")";
     }
 }
 
