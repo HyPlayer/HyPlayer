@@ -62,13 +62,17 @@ Azure 编译包会编译 Commit 并发布 Release: [查看Release](https://githu
 
 因为作者忙于学业,通常只会在周末处理相关事情
 
+请勿将此软件用于 UWP 入门学习, 由于作者没利用好 MVVM 导致项目混乱.
+
+请勿模仿
+
 ### 关于无版权
 
 HyPlayer 不内置解灰以及 VIP 歌曲解锁
 
 你可以通过使用 [UnblockNeteaseMusic](https://github.com/nondanee/UnblockNeteaseMusic) 进行解灰.
 
-将其设置为系统代理并在 `设置` - `实验室` 中填入代理地址
+将其设置为系统代理并在 `设置` - `实验室` 中填入任意内容以便降级 HTTPS
 
 在使用代理服务器前,你可能需要解除 UWP 网络环回限制
 
@@ -84,6 +88,13 @@ CheckNetIsolation LoopbackExempt -a -n="48848aaaaaaccd.hyplayer_fkcggvf9kbkw0"
 * Windows UI Library [microsoft/microsoft-ui-xaml](https://github.com/microsoft/microsoft-ui-xaml) (MIT Licence)
 * Windows Community Toolkit [CommunityToolkit/WindowsCommunityToolkit](https://github.com/CommunityToolkit/WindowsCommunityToolkit) (MIT Licence)
 * TagLibSharp [mono/taglib-sharp](https://github.com/mono/taglib-sharp) (LGPL)
+* Opportunity.LrcParser [OpportunityLiu/LrcParser](https://github.com/OpportunityLiu/LrcParser) ([Apache-2.0 Licence](https://github.com/OpportunityLiu/LrcParser/blob/master/LICENSE))
+
+
+
+> 如有许可协议使用不当请发 Issue 或者 Pull Request
+>
+> If any of the licenses are not being used correctly, please submit a new issue.
 
 ## 代码参考
 
