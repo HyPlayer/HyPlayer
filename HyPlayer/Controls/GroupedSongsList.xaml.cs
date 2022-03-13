@@ -34,8 +34,12 @@ public sealed partial class GroupedSongsList : IDisposable
     public CollectionViewSource GroupedSongs
     {
         get => (CollectionViewSource)GetValue(GroupedSongsProperty);
-        set => SetValue(GroupedSongsProperty, value);
-        
+        set
+        {
+            SetValue(GroupedSongsProperty, value);
+            SongContainer.SelectedIndex = -1;
+        }
+
     }
 
     public static readonly DependencyProperty ListSourceProperty = DependencyProperty.Register(
@@ -72,6 +76,7 @@ public sealed partial class GroupedSongsList : IDisposable
         var tryCount = 5;
         while (--tryCount > 0)
         {
+            SongContainer.SelectedItem = null;
             await Task.Delay(TimeSpan.FromSeconds(2));
             try
             {
