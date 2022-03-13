@@ -268,11 +268,13 @@ public sealed partial class SongsList : UserControl, IDisposable
         foreach (NCSong ncsong in SongContainer.SelectedItems)
             _ = HyPlayList.AppendNcSong(ncsong);
         HyPlayList.SongAppendDone();
-        if (ListSource.Substring(0, 2) == "pl" ||
-            ListSource.Substring(0, 2) == "al")
+        /*
+        if (ListSource?.Substring(0, 2) == "pl" ||
+            ListSource?.Substring(0, 2) == "al")
         {
             HyPlayList.PlaySourceId = ListSource.Substring(2);
         }
+        */
 
         HyPlayList.SongMoveTo(origidx);
     }
