@@ -333,7 +333,7 @@ public static class HyPlayList
                         }
                     };
                     hyitem.PlayItem.Artist = Info.artist.Select(t => new NCArtist
-                            { name = t[0].ToString(), id = t[1].ToString() })
+                    { name = t[0].ToString(), id = t[1].ToString() })
                         .ToList();
 
                     HyPlayList.List.Add(hyitem);
@@ -1364,7 +1364,8 @@ public static class Utils
     {
         var parsedlyrics = Lyrics.Parse(lyricAllText);
         return parsedlyrics.Lyrics.Lines.Select(lyricsLine => new SongLyric
-                { LyricTime = lyricsLine.Timestamp.TimeOfDay, PureLyric = lyricsLine.Content, Translation = null })
+        { LyricTime = lyricsLine.Timestamp.TimeOfDay, PureLyric = lyricsLine.Content, Translation = null })
+            .OrderBy(t => t.LyricTime)
             .ToList();
     }
 
