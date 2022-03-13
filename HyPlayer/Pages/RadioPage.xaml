@@ -69,7 +69,7 @@
                                 Content="排序"
                                 Style="{StaticResource ButtonRevealStyle}" />
                         </StackPanel>
-                        <TextBlock
+                        <controls1:SelectableTextBox
                             x:Name="TextBlockDesc"
                             Margin="0,5,0,0"
                             FontSize="13"

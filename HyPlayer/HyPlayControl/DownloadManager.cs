@@ -276,7 +276,8 @@ internal class DownloadObject
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            Common.AddToTeachingTipLists("无法下载歌曲 " + ncsong.songname + "\n已自动将其从下载列表中移除", ex.Message);
+            DownloadManager.DownloadLists.Remove(DownloadManager.DownloadLists.FirstOrDefault());
         }
     }
 }
