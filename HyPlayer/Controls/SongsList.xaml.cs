@@ -96,10 +96,14 @@ public sealed partial class SongsList : UserControl, IDisposable
     public bool MultiSelect
     {
         get => (bool)GetValue(MultiSelectProperty);
-        set =>
-            SetValue(MultiSelectProperty,
-                value) /*SongContainer.SelectionMode = (value? ListViewSelectionMode.Multiple : ListViewSelectionMode.Single);*/
-        ;
+        set
+        {
+            /*SongContainer.SelectionMode = (value? ListViewSelectionMode.Multiple : ListViewSelectionMode.Single);*/
+            IsManualSelect = false;
+            SetValue(MultiSelectProperty, value);
+            IsManualSelect = true;
+        }
+
     }
 
     public UIElement ListHeader
@@ -351,7 +355,7 @@ public sealed partial class SongsList : UserControl, IDisposable
 
         SongContainer.ContextFlyout.ShowAt(element,
             new FlyoutShowOptions
-                { Position = e?.GetPosition(element) ?? new Point(element?.ActualWidth ?? 0, 80) });
+            { Position = e?.GetPosition(element) ?? new Point(element?.ActualWidth ?? 0, 80) });
     }
 
     public static Brush GetBrush(bool IsAvailable)
