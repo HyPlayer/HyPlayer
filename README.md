@@ -72,6 +72,8 @@ HyPlayer 不内置解灰以及 VIP 歌曲解锁
 
 你可以通过使用 [UnblockNeteaseMusic](https://github.com/nondanee/UnblockNeteaseMusic) 进行解灰.
 
+解灰教程已在[Wiki](https://github.com/HyPlayer/HyPlayer/wiki/%E5%85%B3%E4%BA%8E%E4%BD%BF%E7%94%A8-UnblockNeteaseMusic-%E7%9A%84%E6%96%B9%E6%B3%95)中列出
+
 将其设置为系统代理并在 `设置` - `实验室` 中填入任意内容以便降级 HTTPS
 
 在使用代理服务器前,你可能需要解除 UWP 网络环回限制
