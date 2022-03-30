@@ -922,8 +922,26 @@ public sealed partial class PlayBar
         DataTransferManager.ShowShareUI();
     }
 
-    private void ToggleButton_Click(object sender, RoutedEventArgs e)
+    private async void ToggleButton_Click(object sender, RoutedEventArgs e)
     {
+        if (!Common.Setting.toastLyric && Common.Setting.progressInSMTC)
+        {
+            // 当前未打开歌词
+            Bindings.Update();
+            try
+            {
+                var uri = new Uri($"hot-lyric:///?from={Windows.ApplicationModel.Package.Current.Id.FamilyName}");
+                if (await Windows.System.Launcher.QueryUriSupportAsync(uri, Windows.System.LaunchQuerySupportType.Uri, "306200B4771A6.217957860C1A5_mb3g82vhcggpy") == Windows.System.LaunchQuerySupportStatus.Available)
+    {
+                    await Windows.System.Launcher.LaunchUriAsync(uri);
+                    Common.Setting.toastLyric = false;
+                    Bindings.Update();
+                    return;
+                }
+            }
+            catch { }
+        }
+
         Common.Setting.toastLyric = !Common.Setting.toastLyric;
         InitializeDesktopLyric();
     }
