@@ -784,7 +784,7 @@ namespace HyPlayer
 
         public bool progressInSMTC
         {
-            get => GetSettings("progressInSMTC", false);
+            get => GetSettings("progressInSMTC", true);
             set
             {
                 if (value)
