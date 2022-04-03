@@ -12,8 +12,6 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="150" />
         </Grid.RowDefinitions>
         <controls:DockPanel
             x:Name="GridPersonalInformation"
@@ -84,15 +82,10 @@
                             HorizontalAlignment="Center"
                             Orientation="Horizontal">
                             <Button
-                                Click="PrevPage_Click"
-                                Content="上一页"
-                                Style="{StaticResource ButtonRevealStyle}"
-                                Visibility="Collapsed" />
-                            <Button
                                 Click="NextPage_Click"
-                                Content="下一页"
+                                Content="加载更多"
                                 Style="{StaticResource ButtonRevealStyle}"
-                                Visibility="Collapsed" />
+                                Visibility="{x:Bind SongHasMore, Mode=OneWay}" />
                         </StackPanel>
                     </controls1:SongsList.Footer>
                 </controls1:SongsList>
@@ -108,14 +101,12 @@
                                 x:Name="PrevPage"
                                 Click="PrevPage_Click"
                                 Content="上一页"
-                                Style="{StaticResource ButtonRevealStyle}"
-                                Visibility="Collapsed" />
+                                Style="{StaticResource ButtonRevealStyle}"/>
                             <Button
                                 x:Name="NextPage"
                                 Click="NextPage_Click"
                                 Content="下一页"
-                                Style="{StaticResource ButtonRevealStyle}"
-                                Visibility="Collapsed" />
+                                Style="{StaticResource ButtonRevealStyle}"/>
                         </StackPanel>
                     </controls1:SimpleLinerList.Footer>
                 </controls1:SimpleLinerList>

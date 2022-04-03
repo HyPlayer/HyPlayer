@@ -29,6 +29,17 @@ public sealed partial class ArtistPage : Page
     private NCArtist artist;
     private int page;
 
+
+
+    public static readonly DependencyProperty SongHasMoreProperty = DependencyProperty.Register(
+        "SongHasMore", typeof(bool), typeof(ArtistPage), new PropertyMetadata(default(bool)));
+
+    public bool SongHasMore
+    {
+        get => (bool)GetValue(SongHasMoreProperty);
+        set => SetValue(SongHasMoreProperty, value);
+    }
+
     public ArtistPage()
     {
         InitializeComponent();
@@ -102,7 +113,6 @@ public sealed partial class ArtistPage : Page
         {
             var j1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistSongs,
                 new Dictionary<string, object> { { "id", artist.id }, { "limit", 50 }, { "offset", page * 50 } });
-            allSongs.Clear();
             var idx = 0;
             try
             {
@@ -115,18 +125,11 @@ public sealed partial class ArtistPage : Page
                     ncSong.IsAvailable =
                         json["privileges"][idx][
                             "st"].ToString() == "0";
-                    ncSong.Order = idx++;
+                    ncSong.Order = page * 50 + idx++;
                     allSongs.Add(ncSong);
                 }
 
-                if (int.Parse(j1["total"].ToString()) >= (page + 1) * 50)
-                    NextPage.Visibility = Visibility.Visible;
-                else
-                    NextPage.Visibility = Visibility.Collapsed;
-                if (page > 0)
-                    PrevPage.Visibility = Visibility.Visible;
-                else
-                    PrevPage.Visibility = Visibility.Collapsed;
+                SongHasMore = int.Parse(j1["total"].ToString()) >= (page + 1) * 50;
             }
             catch (Exception ex)
             {
