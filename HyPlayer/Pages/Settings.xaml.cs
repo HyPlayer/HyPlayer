@@ -321,4 +321,40 @@ public sealed partial class Settings : Page
     {
         Common.CollectGarbage();
     }
+
+    private async void HotLyricOnStartUp_Checked(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var uri = new Uri($"hot-lyric:///?from={Windows.ApplicationModel.Package.Current.Id.FamilyName}");
+            if (await Windows.System.Launcher.QueryUriSupportAsync(uri, Windows.System.LaunchQuerySupportType.Uri) != Windows.System.LaunchQuerySupportStatus.Available)
+            {
+                var dlg = new ContentDialog()
+                {
+                    Title = "当前未安装 「热词」",
+                    Content = "是否前往商店安装 「热词」",
+                    CloseButtonText = "否",
+                    PrimaryButtonText = "前往 \"商店\""
+                };
+
+                var res = await dlg.ShowAsync(ContentDialogPlacement.Popup);
+                if (res == ContentDialogResult.Primary)
+                {
+
+                    await Windows.System.Launcher.LaunchUriAsync(new Uri("ms-windows-store://pdp?productId=9MXFFHVQVBV9"));
+                    return;
+                }
+                else
+                {
+                    Common.Setting.hotlyricOnStartup = false;
+                }
+            }
+            else
+            {
+                await Windows.System.Launcher.LaunchUriAsync(uri);
+            }
+
+        }
+        catch { }
+    }
 }

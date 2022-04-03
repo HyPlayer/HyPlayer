@@ -108,7 +108,7 @@
                             <RadioButton Content="白色" />
                             <RadioButton Content="黑色" />
                         </controls:RadioButtons>
-                        <CheckBox Content="是否开启时启动热词" IsChecked="{x:Bind hyplayer:Common.Setting.hotlyricOnStartup, Mode=TwoWay}" />
+                        <CheckBox Content="是否开启时启动热词" Checked="HotLyricOnStartUp_Checked" IsChecked="{x:Bind hyplayer:Common.Setting.hotlyricOnStartup, Mode=TwoWay}" />
                     </StackPanel>
                 </ScrollViewer>
             </PivotItem>

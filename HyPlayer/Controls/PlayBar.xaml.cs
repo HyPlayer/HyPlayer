@@ -869,26 +869,46 @@ public sealed partial class PlayBar
 
     private async void ToggleButton_Click(object sender, RoutedEventArgs e)
     {
-        if (!Common.Setting.toastLyric && Common.Setting.progressInSMTC)
+        if (Common.Setting.toastLyric) { Common.Setting.toastLyric = false; InitializeDesktopLyric(); return; }
+        // 当前未打开歌词
+        Bindings.Update();
+        var uri = new Uri($"hot-lyric:///?from={Windows.ApplicationModel.Package.Current.Id.FamilyName}");
+        if (await Windows.System.Launcher.QueryUriSupportAsync(uri, Windows.System.LaunchQuerySupportType.Uri, "306200B4771A6.217957860C1A5_mb3g82vhcggpy") != Windows.System.LaunchQuerySupportStatus.Available)
         {
-            // 当前未打开歌词
-            Bindings.Update();
-            try
+            var dlg = new ContentDialog()
             {
-                var uri = new Uri($"hot-lyric:///?from={Windows.ApplicationModel.Package.Current.Id.FamilyName}");
-                if (await Windows.System.Launcher.QueryUriSupportAsync(uri, Windows.System.LaunchQuerySupportType.Uri, "306200B4771A6.217957860C1A5_mb3g82vhcggpy") == Windows.System.LaunchQuerySupportStatus.Available)
-                {
-                    await Windows.System.Launcher.LaunchUriAsync(uri);
-                    Common.Setting.toastLyric = false;
-                    Bindings.Update();
-                    return;
-                }
-            }
-            catch { }
-        }
+                Title = "关于桌面歌词",
+                Content = "目前 HyPlayer 已经适配「热词」，我们推荐使用「热词」来获得真正的桌面歌词体验。\r\n我们仍然保留了旧的 Toast 歌词，如想使用 Toast 歌词请点击否。\r\n点击是将会前往商店安装 「热词」",
+                CloseButtonText = "否",
+                PrimaryButtonText = "安装 「热词」"
+            };
 
-        Common.Setting.toastLyric = !Common.Setting.toastLyric;
-        InitializeDesktopLyric();
+            var res = await dlg.ShowAsync(ContentDialogPlacement.Popup);
+            if (res == ContentDialogResult.Primary)
+            {
+                await Windows.System.Launcher.LaunchUriAsync(new Uri("ms-windows-store://pdp?productId=9MXFFHVQVBV9"));
+                return;
+            }
+            else
+            {
+                Common.Setting.toastLyric = true;
+                InitializeDesktopLyric();
+                return;
+            }
+        }
+        try
+        {
+            if (!Common.Setting.progressInSMTC) Common.Setting.progressInSMTC = true;
+            await Windows.System.Launcher.LaunchUriAsync(uri, new Windows.System.LauncherOptions()
+            {
+                FallbackUri = new Uri("ms-windows-store://pdp?productId=9MXFFHVQVBV9")
+            });
+            Common.Setting.toastLyric = false;
+            Bindings.Update();
+            return;
+
+        }
+        catch { }
     }
 
     private void BtnPlayStateChange_KeyUp(object sender, KeyRoutedEventArgs e)
