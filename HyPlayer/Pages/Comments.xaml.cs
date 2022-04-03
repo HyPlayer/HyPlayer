@@ -91,7 +91,9 @@ public sealed partial class Comments : Page, IDisposable
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentNew,
                 new Dictionary<string, object>
                 {
-                    { "cursor", page != 1 ? cursor : null }, { "id", resourceid }, { "type", resourcetype },
+                    { "cursor", (page != 1 && type == 3) ? cursor : null },
+                    { "id", resourceid },
+                    { "type", resourcetype },
                     { "pageNo", page },
                     { "pageSize", 20 },
                     { "sortType", type }
