@@ -214,10 +214,14 @@ public sealed partial class SongsList : UserControl, IDisposable
         if (VisibleSongs[SongContainer.SelectedIndex].sid == HyPlayList.NowPlayingItem?.PlayItem?.Id) return;
         if (ListSource != null && ListSource != "content" && Songs.Count == VisibleSongs.Count)
         {
-            HyPlayList.RemoveAllSong();
-            HyPlayList.Player.Pause();
-            await HyPlayList.AppendNcSource(ListSource);
-            HyPlayList.SongAppendDone();
+            if (HyPlayList.PlaySourceId != ListSource.Substring(2))
+            {
+                // Change Music Source
+                HyPlayList.RemoveAllSong();
+                await HyPlayList.AppendNcSource(ListSource);
+                HyPlayList.SongAppendDone();
+            }
+            
             if (ListSource.Substring(0, 2) == "pl" ||
                 ListSource.Substring(0, 2) == "al")
             {
