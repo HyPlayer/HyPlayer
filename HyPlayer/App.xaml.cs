@@ -8,6 +8,7 @@ using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.ExtendedExecution;
 using Windows.Security.ExchangeActiveSyncProvisioning;
 using Windows.Storage;
+using Windows.Storage.AccessCache;
 using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.StartScreen;
@@ -310,7 +311,26 @@ sealed partial class App : Application
         if (HyPlayList.Player == null)
             HyPlayList.InitializeHyPlaylist();
         HyPlayList.RemoveAllSong();
-        foreach (StorageFile file in args.Files) await HyPlayList.AppendStorageFile(file);
+        foreach (var storageItem in args.Files)
+        {
+            var file = (StorageFile)storageItem;
+            var folder = await file.GetParentAsync();
+            if (folder != null)
+            {
+                if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(folder.Path.GetHashCode().ToString()))
+                    StorageApplicationPermissions.FutureAccessList.AddOrReplace(folder.Path.GetHashCode().ToString(),
+                        folder);
+            }
+            else
+            {
+                if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(file.Path.GetHashCode().ToString()))
+                {
+                    StorageApplicationPermissions.FutureAccessList.AddOrReplace(file.Path.GetHashCode().ToString(),
+                        file);
+                }
+            }
+            await HyPlayList.AppendStorageFile(file);
+        }
         HyPlayList.SongAppendDone();
         HyPlayList.SongMoveTo(0);
     }

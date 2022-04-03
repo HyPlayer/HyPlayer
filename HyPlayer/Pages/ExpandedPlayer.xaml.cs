@@ -512,8 +512,10 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 {
                     var img = new BitmapImage();
                     await img.SetSourceAsync(
-                        await HyPlayList.NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999));
+                        await HyPlayList.NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
                     ImageAlbum.Source = img;
+                    Background = new ImageBrush
+                        { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                 }
                 else
                 {
