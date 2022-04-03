@@ -600,6 +600,35 @@
                                 </RichTextBlock>
                             </StackPanel>
                         </StackPanel>
+                        <StackPanel
+                            Margin="10,20,0,0"
+                            DoubleTapped="StackPanel_DoubleTapped"
+                            Orientation="Horizontal"
+                            Tapped="UIElement_OnTapped">
+                            <PersonPicture ProfilePicture="http://avatar.coolapk.com/data/001/87/30/68_avatar_middle.jpg" />
+                            <StackPanel Margin="15,0,0,0" Orientation="Vertical">
+                                <TextBlock FontSize="18" FontWeight="Medium">
+                                    FUNNYTW
+                                </TextBlock>
+                                <TextBlock
+                                    FontSize="15"
+                                    FontWeight="Medium"
+                                    Foreground="Gray">
+                                    新版图标提供
+                                </TextBlock>
+                                <TextBlock
+                                    FontSize="15"
+                                    FontWeight="Light"
+                                    Foreground="Gray" />
+                                <RichTextBlock>
+                                    <Paragraph>
+                                        <Hyperlink NavigateUri="https://www.coolapk.com/u/1873068">
+                                            酷安
+                                        </Hyperlink>
+                                    </Paragraph>
+                                </RichTextBlock>
+                            </StackPanel>
+                        </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
             </PivotItem>

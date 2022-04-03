@@ -109,6 +109,7 @@ CheckNetIsolation LoopbackExempt -a -n="48848aaaaaaccd.hyplayer_fkcggvf9kbkw0"
 * UI 设计: [aaaaaaccd](https://github.com/aaaaaaccd)
 * 部分功能: [EP012014 (天湖)](https://github.com/EP012014)
 * 部分功能: [Raspberry Kan](https://github.com/Raspberry-Monster)
+* 图标提供: [FUNNYTW](https://www.coolapk.com/u/1873068)
 * [Contributors](https://github.com/HyPlayer/HyPlayer/graphs/contributors)
 
 ## 捐助
