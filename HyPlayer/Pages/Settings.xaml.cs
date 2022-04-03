@@ -334,7 +334,7 @@ public sealed partial class Settings : Page
                     Title = "当前未安装 「热词」",
                     Content = "是否前往商店安装 「热词」",
                     CloseButtonText = "否",
-                    PrimaryButtonText = "前往 \"商店\""
+                    PrimaryButtonText = "安装「热词」"
                 };
 
                 var res = await dlg.ShowAsync(ContentDialogPlacement.Popup);

@@ -159,6 +159,7 @@ public sealed partial class PlayBar
         {
             SequenceNumber = 0
         };
+        if (HyPlayList.NowPlayingItem.PlayItem == null) return;
         data.Values["Title"] = HyPlayList.NowPlayingItem.PlayItem.Name;
         data.Values["PureLyric"] = HyPlayList.Lyrics[HyPlayList.LyricPos].PureLyric;
         // TODO 此处有点冒险的报错,请注意测试
@@ -878,7 +879,7 @@ public sealed partial class PlayBar
             var dlg = new ContentDialog()
             {
                 Title = "关于桌面歌词",
-                Content = "目前 HyPlayer 已经适配「热词」，我们推荐使用「热词」来获得真正的桌面歌词体验。\r\n我们仍然保留了旧的 Toast 歌词，如想使用 Toast 歌词请点击否。\r\n点击是将会前往商店安装 「热词」",
+                Content = "目前 HyPlayer 已经适配「热词」，我们推荐使用「热词」来获得真正的桌面歌词体验。\r\n同时我们仍然保留了旧的 Toast 歌词\r\n如想使用 Toast 歌词请点击否。\r\n或者可以前往 Microsoft 商店安装 「热词」",
                 CloseButtonText = "否",
                 PrimaryButtonText = "安装 「热词」"
             };
