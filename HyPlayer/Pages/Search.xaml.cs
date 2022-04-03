@@ -27,7 +27,24 @@ public sealed partial class Search : Page, IDisposable
     private int page;
     private string Text = "";
 
+    public static readonly DependencyProperty HasNextPageProperty = DependencyProperty.Register(
+        "HasNextPage", typeof(bool), typeof(Search), new PropertyMetadata(default(bool)));
 
+    public bool HasNextPage
+    {
+        get => (bool)GetValue(HasNextPageProperty);
+        set => SetValue(HasNextPageProperty, value);
+    }
+
+    public static readonly DependencyProperty HasPreviousPageProperty = DependencyProperty.Register(
+        "HasPreviousPage", typeof(bool), typeof(Search), new PropertyMetadata(default(bool)));
+
+    public bool HasPreviousPage
+    {
+        get => (bool)GetValue(HasPreviousPageProperty);
+        set => SetValue(HasPreviousPageProperty, value);
+    }
+    
     public Search()
     {
         InitializeComponent();
@@ -159,13 +176,13 @@ public sealed partial class Search : Page, IDisposable
                     Order = i++
                 });
             if (json["result"]["mvCount"].ToObject<int>() >= (page + 1) * 30)
-                NextPage.Visibility = Visibility.Visible;
+                HasNextPage = true;
             else
-                NextPage.Visibility = Visibility.Collapsed;
+                HasNextPage = false;
             if (page > 0)
-                PrevPage.Visibility = Visibility.Visible;
+                HasPreviousPage = true;
             else
-                PrevPage.Visibility = Visibility.Collapsed;
+                HasPreviousPage = false;
         }
     }
     
@@ -192,13 +209,13 @@ public sealed partial class Search : Page, IDisposable
                     Order = i++
                 });
             if (json["result"]["videoCount"].ToObject<int>() >= (page + 1) * 30)
-                NextPage.Visibility = Visibility.Visible;
+                HasNextPage = true;
             else
-                NextPage.Visibility = Visibility.Collapsed;
+                HasNextPage = false;
             if (page > 0)
-                PrevPage.Visibility = Visibility.Visible;
+                HasPreviousPage = true;
             else
-                PrevPage.Visibility = Visibility.Collapsed;
+                HasPreviousPage = false;
         }
     }
 
@@ -224,13 +241,13 @@ public sealed partial class Search : Page, IDisposable
                     Order = i++
                 });
         if (json["result"]["songCount"].ToObject<int>() >= (page + 1) * 30)
-            NextPage.Visibility = Visibility.Visible;
+            HasNextPage = true;
         else
-            NextPage.Visibility = Visibility.Collapsed;
+            HasNextPage = false;
         if (page > 0)
-            PrevPage.Visibility = Visibility.Visible;
+            HasPreviousPage = true;
         else
-            PrevPage.Visibility = Visibility.Collapsed;
+            HasPreviousPage = false;
     }
 
     private void LoadUserResult(JObject json)
@@ -255,13 +272,13 @@ public sealed partial class Search : Page, IDisposable
                     Order = i++
                 });
         if (json["result"]["userprofileCount"].ToObject<int>() >= (page + 1) * 30)
-            NextPage.Visibility = Visibility.Visible;
+            HasNextPage = true;
         else
-            NextPage.Visibility = Visibility.Collapsed;
+            HasNextPage = false;
         if (page > 0)
-            PrevPage.Visibility = Visibility.Visible;
+            HasPreviousPage = true;
         else
-            PrevPage.Visibility = Visibility.Collapsed;
+            HasPreviousPage = false;
     }
 
     private void LoadRadioResult(JObject json)
@@ -287,13 +304,13 @@ public sealed partial class Search : Page, IDisposable
                     CanPlay = true
                 });
         if (int.Parse(json["result"]["djRadiosCount"].ToString()) >= (page + 1) * 30)
-            NextPage.Visibility = Visibility.Visible;
+            HasNextPage = true;
         else
-            NextPage.Visibility = Visibility.Collapsed;
+            HasNextPage = false;
         if (page > 0)
-            PrevPage.Visibility = Visibility.Visible;
+            HasPreviousPage = true;
         else
-            PrevPage.Visibility = Visibility.Collapsed;
+            HasPreviousPage = false;
     }
 
     private void Btn_Click(object sender, RoutedEventArgs e)
@@ -324,13 +341,13 @@ public sealed partial class Search : Page, IDisposable
                 CanPlay = true
             });
         if (int.Parse(json["result"]["playlistCount"].ToString()) >= (page + 1) * 30)
-            NextPage.Visibility = Visibility.Visible;
+            HasNextPage = true;
         else
-            NextPage.Visibility = Visibility.Collapsed;
+            HasNextPage = false;
         if (page > 0)
-            PrevPage.Visibility = Visibility.Visible;
+            HasPreviousPage = true;
         else
-            PrevPage.Visibility = Visibility.Collapsed;
+            HasPreviousPage = false;
     }
 
     private void LoadArtistResult(JObject json)
@@ -355,13 +372,13 @@ public sealed partial class Search : Page, IDisposable
                 Order = i++
             });
         if (int.Parse(json["result"]["artistCount"].ToString()) >= (page + 1) * 30)
-            NextPage.Visibility = Visibility.Visible;
+            HasNextPage = true;
         else
-            NextPage.Visibility = Visibility.Collapsed;
+            HasNextPage = false;
         if (page > 0)
-            PrevPage.Visibility = Visibility.Visible;
+            HasPreviousPage = true;
         else
-            PrevPage.Visibility = Visibility.Collapsed;
+            HasPreviousPage = false;
     }
 
     private void LoadAlbumResult(JObject json)
@@ -388,13 +405,13 @@ public sealed partial class Search : Page, IDisposable
                 CanPlay = true
             });
         if (int.Parse(json["result"]["albumCount"].ToString()) >= (page + 1) * 30)
-            NextPage.Visibility = Visibility.Visible;
+            HasNextPage = true;
         else
-            NextPage.Visibility = Visibility.Collapsed;
+            HasNextPage = false;
         if (page > 0)
-            PrevPage.Visibility = Visibility.Visible;
+            HasPreviousPage = true;
         else
-            PrevPage.Visibility = Visibility.Collapsed;
+            HasPreviousPage = false;
     }
 
     private void LoadSongResult(JObject json)
@@ -416,13 +433,13 @@ public sealed partial class Search : Page, IDisposable
             }
 
             if (int.Parse(json["result"]["songCount"].ToString()) >= (page + 1) * 30)
-                NextPage.Visibility = Visibility.Visible;
+                HasNextPage = true;
             else
-                NextPage.Visibility = Visibility.Collapsed;
+                HasNextPage = false;
             if (page > 0)
-                PrevPage.Visibility = Visibility.Visible;
+                HasPreviousPage = true;
             else
-                PrevPage.Visibility = Visibility.Collapsed;
+                HasPreviousPage = false;
         }
         catch
         {

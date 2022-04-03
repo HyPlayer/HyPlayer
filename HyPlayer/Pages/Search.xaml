@@ -66,35 +66,52 @@
             </NavigationView.MenuItems>
             <Grid>
                 <Grid VerticalAlignment="Stretch">
-                    <hycontrol:SimpleLinerList x:Name="SearchResultContainer" Margin="0,30,0,0" />
+                    <hycontrol:SimpleLinerList x:Name="SearchResultContainer" Margin="0,30,0,0">
+                        <hycontrol:SimpleLinerList.Footer>
+                            <StackPanel
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Bottom"
+                                Orientation="Horizontal">
+                                <Button
+                                    Click="PrevPage_OnClick"
+                                    Content="上一页"
+                                    Style="{StaticResource ButtonRevealStyle}"
+                                    Visibility="{x:Bind HasPreviousPage, Mode=OneWay}" />
+                                <Button
+                                    Click="NextPage_OnClickPage_OnClick"
+                                    Content="下一页"
+                                    Style="{StaticResource ButtonRevealStyle}"
+                                    Visibility="{x:Bind HasNextPage,Mode = OneWay}" />
+                            </StackPanel>
+                        </hycontrol:SimpleLinerList.Footer>
+                    </hycontrol:SimpleLinerList>
                     <hycontrol:SongsList
                         x:Name="SongsSearchResultContainer"
                         Margin="0,30,0,0"
-                        Songs="{x:Bind SongResults}" />
+                        Songs="{x:Bind SongResults}">
+                        <hycontrol:SongsList.Footer>
+                            <StackPanel
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Bottom"
+                                    Orientation="Horizontal">
+                                    <Button
+                                        Click="PrevPage_OnClick"
+                                        Content="上一页"
+                                        Style="{StaticResource ButtonRevealStyle}"
+                                        Visibility="{x:Bind HasPreviousPage, Mode=OneWay}" />
+                                    <Button
+                                        Click="NextPage_OnClickPage_OnClick"
+                                        Content="下一页"
+                                        Style="{StaticResource ButtonRevealStyle}"
+                                        Visibility="{x:Bind HasNextPage,Mode = OneWay}" />
+                                </StackPanel>
+                        </hycontrol:SongsList.Footer>
+                    </hycontrol:SongsList>
                     <TextBlock
                         x:Name="TBNoRes"
                         Margin="0,30,0,0"
                         Text="没有搜索到相关内容" />
                 </Grid>
-                <StackPanel
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Bottom"
-                    Orientation="Horizontal">
-                    <Button
-                        x:Name="PrevPage"
-                        Click="PrevPage_OnClick"
-                        Content="上一页"
-                        Style="{StaticResource ButtonRevealStyle}"
-                        Visibility="Collapsed" />
-                    <TextBlock x:Name="PageIndicator" />
-                    <Button
-                        x:Name="NextPage"
-                        Click="NextPage_OnClickPage_OnClick"
-                        Content="下一页"
-                        Style="{StaticResource ButtonRevealStyle}"
-                        Visibility="Collapsed" />
-                </StackPanel>
-
             </Grid>
         </NavigationView>
     </Grid>
