@@ -81,16 +81,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         HyPlayList.OnLyricLoaded += HyPlayList_OnLyricLoaded;
         Window.Current.SizeChanged += Current_SizeChanged;
         HyPlayList.OnTimerTicked += HyPlayList_OnTimerTicked;
-        Current_SizeChanged(null, null);
-        ToggleButtonSound.IsChecked = Common.ShowLyricSound;
-        ToggleButtonTranslation.IsChecked = Common.ShowLyricTrans;
-        if (Common.Setting.albumRound) ImageAlbum.CornerRadius = new CornerRadius(300);
-        ImageAlbum.BorderThickness = new Thickness(Common.Setting.albumBorderLength);
-
-        if (Common.Setting.albumRotate)
-            //网易云音乐圆形唱片
-            if (HyPlayList.IsPlaying)
-                RotateAnimationSet.StartAsync();
     }
 
     public double showsize { get; set; }
@@ -170,6 +160,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 LyricWidth = nowwidth * 0.4;
             else
                 LyricWidth = nowwidth - 15;
+            LyricWidth = Math.Max(LyricWidth, 0);
             showsize = Common.Setting.lyricSize <= 0
                 ? Math.Max(nowwidth / 66, 23)
                 : Common.Setting.lyricSize;
@@ -365,7 +356,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             ToggleButtonTranslation.HorizontalAlignment = HorizontalAlignment.Left;
             ToggleButtonSound.HorizontalAlignment = HorizontalAlignment.Left;
         }
-
+        Current_SizeChanged(null, null);
         //LeftPanel.Visibility = Visibility.Collapsed;
         programClick = true;
         BtnToggleFullScreen.IsChecked = ApplicationView.GetForCurrentView().IsFullScreenMode;
@@ -927,6 +918,19 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     {
         Common.ABEndPoint = HyPlayList.Player.PlaybackSession.Position;
         ABEndPointItem.Text = Common.ABEndPointFriendlyValue;
+    }
+
+    private void Page_Loaded(object sender, RoutedEventArgs e)
+    {
+        ToggleButtonSound.IsChecked = Common.ShowLyricSound;
+        ToggleButtonTranslation.IsChecked = Common.ShowLyricTrans;
+        if (Common.Setting.albumRound) ImageAlbum.CornerRadius = new CornerRadius(300);
+        ImageAlbum.BorderThickness = new Thickness(Common.Setting.albumBorderLength);
+
+        if (Common.Setting.albumRotate)
+            //网易云音乐圆形唱片
+            if (HyPlayList.IsPlaying)
+                RotateAnimationSet.StartAsync();
     }
 }
 

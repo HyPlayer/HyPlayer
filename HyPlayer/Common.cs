@@ -317,6 +317,16 @@ namespace HyPlayer
             }
         }
 
+        public bool hotlyricOnStartup
+        {
+            get => GetSettings("hotlyricOnStartup", false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["hotlyricOnStartup"] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool downloadLyric
         {
             get => GetSettings("downloadLyric", true);

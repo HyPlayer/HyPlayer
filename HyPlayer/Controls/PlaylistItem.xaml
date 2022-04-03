@@ -10,6 +10,7 @@
     Height="250"
     d:DesignHeight="250"
     d:DesignWidth="200"
+    Loaded="UserControl_Loaded"
     mc:Ignorable="d">
     <Grid
         CornerRadius="8"

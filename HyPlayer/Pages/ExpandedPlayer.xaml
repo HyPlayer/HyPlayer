@@ -9,6 +9,7 @@
     xmlns:pages="using:HyPlayer.Pages"
     xmlns:ui="using:Microsoft.Toolkit.Uwp.UI"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    Loaded="Page_Loaded"
     NavigationCacheMode="Disabled">
     <Page.Resources>
         <pages:AlbumShadowConverter x:Key="ShadowConverter" />

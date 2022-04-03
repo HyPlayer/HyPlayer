@@ -71,8 +71,6 @@ public sealed partial class SongsList : UserControl, IDisposable
     {
         InitializeComponent();
         HyPlayList.OnPlayItemChange += HyPlayListOnOnPlayItemChange;
-        MultiSelect = false;
-        IndicateNowPlayingItem();
     }
 
     private async void IndicateNowPlayingItem()
@@ -221,7 +219,7 @@ public sealed partial class SongsList : UserControl, IDisposable
                 await HyPlayList.AppendNcSource(ListSource);
                 HyPlayList.SongAppendDone();
             }
-            
+
             if (ListSource.Substring(0, 2) == "pl" ||
                 ListSource.Substring(0, 2) == "al")
             {
@@ -403,6 +401,12 @@ public sealed partial class SongsList : UserControl, IDisposable
         if (IsEnabled)
             return new GridLength(35);
         return new GridLength(0);
+    }
+
+    private void SongListRoot_Loaded(object sender, RoutedEventArgs e)
+    {
+        MultiSelect = false;
+        IndicateNowPlayingItem();
     }
 }
 

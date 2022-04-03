@@ -7,6 +7,7 @@
     xmlns:hy="using:HyPlayer"
     xmlns:local="using:HyPlayer.Controls"
     xmlns:media="using:Microsoft.Toolkit.Uwp.UI.Media"
+    Loaded="UserControl_Loaded"
     Background="{ThemeResource SystemControlAcrylicElementMediumHighBrush}">
     <UserControl.Resources>
         <Flyout x:Key="VolumeFlyout">

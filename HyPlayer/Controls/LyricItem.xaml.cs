@@ -29,24 +29,11 @@ public sealed partial class LyricItem : UserControl
 
     public LyricItem(SongLyric lrc)
     {
-        InitializeComponent();
-        TextBoxPureLyric.FontSize = actualsize;
-        TextBoxTranslation.FontSize = actualsize;
         Lrc = lrc;
-        TextBoxPureLyric.Text = Lrc.PureLyric;
-        if (Lrc.HaveTranslation && Common.ShowLyricTrans && !string.IsNullOrWhiteSpace(Lrc.Translation))
-            TextBoxTranslation.Text = Lrc.Translation;
-        else
-            TextBoxTranslation.Visibility = Visibility.Collapsed;
-
-        if (Common.KawazuConv != null && Common.ShowLyricSound)
-            LoadRomaji();
-        else
-            TextBoxSound.Visibility = Visibility.Collapsed;
-
-        RefreshFontSize();
-        OnHind();
+        InitializeComponent();
     }
+
+
 
     private async void LoadRomaji()
     {
@@ -119,5 +106,24 @@ public sealed partial class LyricItem : UserControl
     {
         HyPlayList.Player.PlaybackSession.Position = Lrc.LyricTime;
         Common.PageExpandedPlayer.jumpedLyrics = true;
+    }
+
+    private void LyricPanel_Loaded(object sender, RoutedEventArgs e)
+    {
+        TextBoxPureLyric.FontSize = actualsize;
+        TextBoxTranslation.FontSize = actualsize;
+        TextBoxPureLyric.Text = Lrc.PureLyric;
+        if (Lrc.HaveTranslation && Common.ShowLyricTrans && !string.IsNullOrWhiteSpace(Lrc.Translation))
+            TextBoxTranslation.Text = Lrc.Translation;
+        else
+            TextBoxTranslation.Visibility = Visibility.Collapsed;
+
+        if (Common.KawazuConv != null && Common.ShowLyricSound)
+            LoadRomaji();
+        else
+            TextBoxSound.Visibility = Visibility.Collapsed;
+
+        RefreshFontSize();
+        OnHind();
     }
 }

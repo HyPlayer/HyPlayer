@@ -57,62 +57,6 @@ public sealed partial class PlayBar
     {
         Common.BarPlayBar = this;
         InitializeComponent();
-        HyPlayList.Player.Volume = (double)Common.Setting.Volume / 100;
-        SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
-        HyPlayList.OnPlayItemChange += LoadPlayingFile;
-        HyPlayList.OnPlayPositionChange += OnPlayPositionChange;
-        //HyPlayList.OnPlayPositionChange += UpdateMSTC;
-        HyPlayList.OnPlayListAddDone += HyPlayList_OnPlayListAdd;
-        HyPlayList.OnSongRemoveAll += HyPlayListOnOnSongRemoveAll;
-        AlbumImage.Source = new BitmapImage(new Uri("ms-appx:Assets/icon.png"));
-        if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
-            ButtonDesktopLyrics.Visibility = Visibility.Collapsed;
-        InitializeDesktopLyric();
-        realSelectSong = false;
-        ListBoxPlayList.ItemsSource = PlayItems;
-        realSelectSong = true;
-        _ = Common.Invoke(async () =>
-        {
-            try
-            {
-                var list = await HistoryManagement.GetcurPlayingListHistory();
-                HyPlayList.AppendNcSongs(list);
-                if (list.Count > 0)
-                {
-                    int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"].ToString(),
-                        out HyPlayList.NowPlaying);
-                    HyPlayList.Player_SourceChanged(null, null);
-                    HyPlayList.SongAppendDone();
-                }
-            }
-            catch
-            {
-            }
-        });
-
-
-        if (Common.isExpanded)
-            Common.BarPlayBar.ShowExpandedPlayer();
-        if (!Common.Setting.useAcrylic)
-            Common.PageMain.GridPlayBar.Background = new BackdropBlurBrush() { Amount = 30.0 };
-
-        /*
-        verticalAnimation = new DoubleAnimation();
-
-        verticalAnimation.From = 0;
-        verticalAnimation.To = 0;
-        verticalAnimation.SpeedRatio = 0.1;
-        verticalAnimation.Duration = new Duration(TimeSpan.FromSeconds(4));
-        verticalAnimation.AutoReverse = true;
-        verticalAnimation.RepeatBehavior = RepeatBehavior.Forever;
-        verticalAnimation.EnableDependentAnimation = true;
-
-        TbSongNameScrollStoryBoard = new Storyboard();
-        TbSongNameScrollStoryBoard.Children.Add(verticalAnimation);
-        Storyboard.SetTarget(verticalAnimation, TbSongName);
-        Storyboard.SetTargetProperty(verticalAnimation, "Horizontalofset");
-        TbSongNameScrollStoryBoard.Begin();
-        */
     }
 
 
@@ -123,6 +67,7 @@ public sealed partial class PlayBar
         PlayItems.Clear();
         PlayListTitle.Text = "播放列表";
     }
+
 
     private void UpdateMSTC(TimeSpan pos)
     {
@@ -486,7 +431,7 @@ public sealed partial class PlayBar
                 FadeSettedVolume = true;
                 var vol = Common.Setting.Volume;
                 var curtime = HyPlayList.Player.PlaybackSession.Position.TotalSeconds;
-                for (;;)
+                for (; ; )
                     try
                     {
                         await Task.Delay(50);
@@ -528,7 +473,7 @@ public sealed partial class PlayBar
                 var vol = Common.Setting.Volume;
                 HyPlayList.Player.Volume = 0;
                 var curtime = HyPlayList.Player.PlaybackSession.Position.TotalSeconds;
-                for (;;)
+                for (; ; )
                 {
                     await Task.Delay(50);
                     var curvol = (HyPlayList.Player.PlaybackSession.Position.TotalSeconds - curtime) /
@@ -768,14 +713,35 @@ public sealed partial class PlayBar
         switch (HyPlayList.NowPlayingItem.ItemType)
         {
             case HyPlayItemType.Netease:
-            {
-                Api.LikeSong(HyPlayList.NowPlayingItem.PlayItem.Id,
-                    !isLiked);
-                if (isLiked)
-                    Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.Id);
-                else
-                    Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.Id);
-                isLiked = !isLiked;
+                {
+                    Api.LikeSong(HyPlayList.NowPlayingItem.PlayItem.Id,
+                        !isLiked);
+                    if (isLiked)
+                        Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.Id);
+                    else
+                        Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.Id);
+                    isLiked = !isLiked;
+                    IconLiked.Foreground = isLiked
+                        ? new SolidColorBrush(Colors.Red)
+                        : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+                    FlyoutLiked.Foreground = isLiked
+                        ? new SolidColorBrush(Colors.Red)
+                        : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+                    IconLiked.Glyph = isLiked
+                        ? "\uE00B"
+                        : "\uE006";
+                    FlyoutLiked.Glyph = isLiked
+                        ? "\uE00B"
+                        : "\uE006";
+                    //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
+                    break;
+                }
+            case HyPlayItemType.Radio:
+                _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.ResourceLike,
+                    new Dictionary<string, object>
+                        { { "type", "4" }, { "t", "1" }, { "id", HyPlayList.NowPlayingItem.PlayItem.Id } });
+                break;
+            default:
                 IconLiked.Foreground = isLiked
                     ? new SolidColorBrush(Colors.Red)
                     : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
@@ -786,27 +752,6 @@ public sealed partial class PlayBar
                     ? "\uE00B"
                     : "\uE006";
                 FlyoutLiked.Glyph = isLiked
-                    ? "\uE00B"
-                    : "\uE006";
-                //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
-                break;
-            }
-            case HyPlayItemType.Radio:
-                _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.ResourceLike,
-                    new Dictionary<string, object>
-                        { { "type", "4" }, { "t", "1" }, { "id", HyPlayList.NowPlayingItem.PlayItem.Id } });
-                break;
-            default:
-                IconLiked.Foreground = isLiked
-                    ? new SolidColorBrush(Colors.Red)
-                    : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-                FlyoutLiked.Foreground =isLiked
-                    ? new SolidColorBrush(Colors.Red)
-                    : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-                IconLiked.Glyph = isLiked
-                    ? "\uE00B"
-                    : "\uE006";
-                FlyoutLiked.Glyph =isLiked
                     ? "\uE00B"
                     : "\uE006";
                 //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
@@ -932,7 +877,7 @@ public sealed partial class PlayBar
             {
                 var uri = new Uri($"hot-lyric:///?from={Windows.ApplicationModel.Package.Current.Id.FamilyName}");
                 if (await Windows.System.Launcher.QueryUriSupportAsync(uri, Windows.System.LaunchQuerySupportType.Uri, "306200B4771A6.217957860C1A5_mb3g82vhcggpy") == Windows.System.LaunchQuerySupportStatus.Available)
-    {
+                {
                     await Windows.System.Launcher.LaunchUriAsync(uri);
                     Common.Setting.toastLyric = false;
                     Bindings.Update();
@@ -990,6 +935,77 @@ public sealed partial class PlayBar
     {
         FlyoutBtnPlayList.ContextFlyout?.ShowAt(BtnMore);
         ButtonPlayList_OnClick(sender, e);
+    }
+
+    private async void UserControl_Loaded(object sender, RoutedEventArgs e)
+    {
+        HyPlayList.Player.Volume = (double)Common.Setting.Volume / 100;
+        SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
+        HyPlayList.OnPlayItemChange += LoadPlayingFile;
+        HyPlayList.OnPlayPositionChange += OnPlayPositionChange;
+        //HyPlayList.OnPlayPositionChange += UpdateMSTC;
+        HyPlayList.OnPlayListAddDone += HyPlayList_OnPlayListAdd;
+        HyPlayList.OnSongRemoveAll += HyPlayListOnOnSongRemoveAll;
+        AlbumImage.Source = new BitmapImage(new Uri("ms-appx:Assets/icon.png"));
+        if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
+            ButtonDesktopLyrics.Visibility = Visibility.Collapsed;
+        InitializeDesktopLyric();
+        realSelectSong = false;
+        ListBoxPlayList.ItemsSource = PlayItems;
+        realSelectSong = true;
+
+        try
+        {
+            var list = await HistoryManagement.GetcurPlayingListHistory();
+            HyPlayList.AppendNcSongs(list);
+            if (list.Count > 0)
+            {
+                int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"].ToString(),
+                    out HyPlayList.NowPlaying);
+                HyPlayList.Player_SourceChanged(null, null);
+                HyPlayList.SongAppendDone();
+            }
+        }
+        catch
+        {
+        }
+
+        if (Common.isExpanded)
+            Common.BarPlayBar.ShowExpandedPlayer();
+        if (!Common.Setting.useAcrylic)
+            Common.PageMain.GridPlayBar.Background = new BackdropBlurBrush() { Amount = 30.0 };
+        if (Common.Setting.hotlyricOnStartup)
+        {
+            try
+            {
+                var uri = new Uri($"hot-lyric:///?from={Windows.ApplicationModel.Package.Current.Id.FamilyName}");
+                if (await Windows.System.Launcher.QueryUriSupportAsync(uri, Windows.System.LaunchQuerySupportType.Uri, "306200B4771A6.217957860C1A5_mb3g82vhcggpy") == Windows.System.LaunchQuerySupportStatus.Available)
+                {
+                    await Windows.System.Launcher.LaunchUriAsync(uri);
+                    Common.Setting.toastLyric = false;
+                    Bindings.Update();
+                    return;
+                }
+            }
+            catch { }
+        }
+        /*
+        verticalAnimation = new DoubleAnimation();
+
+        verticalAnimation.From = 0;
+        verticalAnimation.To = 0;
+        verticalAnimation.SpeedRatio = 0.1;
+        verticalAnimation.Duration = new Duration(TimeSpan.FromSeconds(4));
+        verticalAnimation.AutoReverse = true;
+        verticalAnimation.RepeatBehavior = RepeatBehavior.Forever;
+        verticalAnimation.EnableDependentAnimation = true;
+
+        TbSongNameScrollStoryBoard = new Storyboard();
+        TbSongNameScrollStoryBoard.Children.Add(verticalAnimation);
+        Storyboard.SetTarget(verticalAnimation, TbSongName);
+        Storyboard.SetTargetProperty(verticalAnimation, "Horizontalofset");
+        TbSongNameScrollStoryBoard.Begin();
+        */
     }
 }
 

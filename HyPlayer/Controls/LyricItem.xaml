@@ -10,26 +10,26 @@
     d:DesignHeight="70"
     d:DesignWidth="500"
     DoubleTapped="LyricItem_OnDoubleTapped"
+    Loaded="LyricPanel_Loaded"
     mc:Ignorable="d">
 
-    <controls:DockPanel
-        LastChildFill="True">
+    <controls:DockPanel LastChildFill="True">
         <TextBlock
-            controls:DockPanel.Dock="Top"
-            TextWrapping="WrapWholeWords"
             Name="TextBoxPureLyric"
-            TextAlignment="Center" />
-        <TextBlock
             controls:DockPanel.Dock="Top"
-            TextWrapping="WrapWholeWords"
-            Name="TextBoxTranslation"
-            TextAlignment="Center" />
+            TextAlignment="Center"
+            TextWrapping="WrapWholeWords" />
         <TextBlock
-            controls:DockPanel.Dock="Bottom"
-            TextWrapping="WrapWholeWords"
-            FontSize="15"
+            Name="TextBoxTranslation"
+            controls:DockPanel.Dock="Top"
+            TextAlignment="Center"
+            TextWrapping="WrapWholeWords" />
+        <TextBlock
             Name="TextBoxSound"
-            TextAlignment="Center" />
+            controls:DockPanel.Dock="Bottom"
+            FontSize="15"
+            TextAlignment="Center"
+            TextWrapping="WrapWholeWords" />
     </controls:DockPanel>
 
 </UserControl>

@@ -21,23 +21,26 @@ namespace HyPlayer.Controls;
 
 public sealed partial class SingleComment : UserControl
 {
-    private readonly BitmapImage AvatarSource;
-    private readonly Uri AvatarUri;
+
+
+    public BitmapImage AvatarSource
+    {
+        get { return (BitmapImage)GetValue(AvatarSourceProperty); }
+        set { SetValue(AvatarSourceProperty, value); }
+    }
+
+    public static readonly DependencyProperty AvatarSourceProperty =
+        DependencyProperty.Register("AvatarSource", typeof(BitmapImage), typeof(SingleComment), new PropertyMetadata(null));
+
+
+    private Uri AvatarUri;
     private readonly Comment comment;
     private string time;
 
     public SingleComment(Comment cmt)
     {
-        InitializeComponent();
         comment = cmt;
-        AvatarUri = comment.AvatarUri;
-        if (!Common.Setting.noImage)
-        {
-            AvatarSource = new BitmapImage();
-            AvatarSource.UriSource = AvatarUri;
-        }
-
-        ReplyBtn.Visibility = Visibility.Visible;
+        InitializeComponent();        
     }
 
     private async void LoadFloorComments(bool IsLoadMoreComments)
@@ -149,5 +152,17 @@ public sealed partial class SingleComment : UserControl
         {
             SubCmtsConainer.Visibility = Visibility.Collapsed;
         }
+    }
+
+    private void UserControl_Loaded(object sender, RoutedEventArgs e)
+    {
+        AvatarUri = comment.AvatarUri;
+        if (!Common.Setting.noImage)
+        {
+            AvatarSource = new BitmapImage();
+            AvatarSource.UriSource = AvatarUri;
+        }
+
+        ReplyBtn.Visibility = Visibility.Visible;
     }
 }
