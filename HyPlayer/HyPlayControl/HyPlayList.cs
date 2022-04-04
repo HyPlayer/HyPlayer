@@ -192,6 +192,7 @@ public static class HyPlayList
 
     public static void UpdateSmtcPosition(MediaPlaybackSession sender, object args)
     {
+        MediaSystemControls.PlaybackRate = Player.PlaybackSession.PlaybackRate;
         MediaSystemControls.UpdateTimelineProperties(new SystemMediaTransportControlsTimelineProperties
         {
             StartTime = TimeSpan.Zero,
