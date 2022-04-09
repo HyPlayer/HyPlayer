@@ -54,7 +54,7 @@ public sealed partial class ArtistPage : Page
                 new Dictionary<string, object> { { "id", (string)e.Parameter } });
             artist = NCArtist.CreateFromJson(res["data"]["artist"]);
             if (res["data"]["artist"]["cover"].ToString().StartsWith("http"))
-                ImageRect.ImageSource =
+                ImageRect.ImageSource = ImageRect1.ImageSource=
                     Common.Setting.noImage ? null : new BitmapImage(new Uri(res["data"]["artist"]["cover"] + "?param=" +
                                                                             StaticSource.PICSIZE_ARTIST_DETAIL_COVER));
             TextBoxArtistName.Text = res["data"]["artist"]["name"].ToString();

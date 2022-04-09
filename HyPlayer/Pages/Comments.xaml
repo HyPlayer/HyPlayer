@@ -16,7 +16,7 @@
             ViewChanged="MainScroll_ViewChanged">
 
             <StackPanel Orientation="Vertical">
-                <Grid x:Name="SongInfoContainer" Margin="0,0,0,15" />
+                <Grid x:Name="SongInfoContainer" Margin="0,0,0,0" />
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition />
@@ -26,7 +26,7 @@
                         x:Name="CommentEdit"
                         Height="80"
                         Grid.Column="0"
-                        Margin="15"
+                        Margin="25,15,0,15"
                         AcceptsReturn="True"
                         HorizontalAlignment="Stretch"
                         MaxLength="140"
@@ -36,10 +36,10 @@
                         x:Name="SendComment"
                         Grid.Column="1"
                         MaxWidth="100"
-                        Margin="15"
-                        HorizontalAlignment="Right"
+                        HorizontalAlignment="Center" 
                         Click="SendComment_Click"
                         Content="发表"
+                        FontWeight="ExtraBold"
                         Style="{StaticResource ButtonRevealStyle}" />
                 </Grid>
                 <!--
@@ -52,8 +52,9 @@
                         <ColumnDefinition Width="100" />
                     </Grid.ColumnDefinitions>
                     <TextBlock
-                        Margin="15"
-                        FontSize="23"
+                        Margin="25,10,15,10"
+                        FontSize="24"
+                        FontWeight="Bold"
                         Text="热评" />
 
                 </Grid>
@@ -70,8 +71,9 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock
                             x:Name="AllCmtsTB"
-                            Margin="15"
-                            FontSize="23"
+                            Margin="25,10,15,10"
+                            FontSize="24"
+                            FontWeight="Bold"
                             Text="所有评论" />
                         <ComboBox
                             x:Name="ComboBoxSortType"

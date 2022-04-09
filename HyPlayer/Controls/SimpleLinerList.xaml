@@ -23,17 +23,39 @@
         </ListView.Footer>
         <ListView.ItemTemplate>
             <DataTemplate x:DataType="classes:SimpleListItem">
-                <Grid HorizontalAlignment="Stretch" Tag="{x:Bind ResourceId}">
+                <Grid HorizontalAlignment="Stretch" Tag="{x:Bind ResourceId}" Margin="0,15,0,15">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="60" />
                     </Grid.ColumnDefinitions>
+                    <Rectangle
+                    x:Name="RectangleImageBack"
+                    Grid.ColumnSpan="2"
+                    Margin="0,-10,0,-10"
+                    RadiusX="10"
+                    RadiusY="10">
+                        <Rectangle.Fill>
+                            <ImageBrush ImageSource="{x:Bind Cover}" Stretch="UniformToFill"/>
+                        </Rectangle.Fill>
+                    </Rectangle>
+                    <Rectangle
+                    x:Name="RectangleImageAcrylic"
+                    Margin=" 0,-10,0,-10"
+                    RadiusX="10"
+                    Grid.ColumnSpan="2"
+                    RadiusY="10" 
+                    Fill="{ThemeResource SystemControlAcrylicElementBrush}">
+
+                    </Rectangle>
                     <StackPanel Grid.Column="0" Orientation="Horizontal">
                         <TextBlock
                             x:Name="OrderId"
                             Width="30"
+                            Margin="12,0,0,0"
+                            FontSize="24"
+                            FontWeight="Bold"
                             HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
+                            VerticalAlignment="Top"
                             Text="{x:Bind DspOrder}" />
                         <controls:ImageEx
                             x:Name="ImageRect"
@@ -60,6 +82,7 @@
                                 x:Phase="0"
                                 FontSize="20"
                                 Text="{x:Bind Title}"
+                                FontWeight="Bold"
                                 ToolTipService.ToolTip="{x:Bind Title}" />
                             <TextBlock
                                 Name="TextBlockAlia"
@@ -95,13 +118,19 @@
                     <Button
                         Grid.Column="1"
                         Click="BtnPlayClick"
+                        Background="{ThemeResource SystemRevealAltLowColor}"
+                        Width="45"
+                        Height="35"
+                        CornerRadius="10"
                         Tag="{x:Bind ResourceId}"
                         ToolTipService.ToolTip="播放"
                         Visibility="{x:Bind CanPlay}">
                         <FontIcon
                             Name="PlayStateIcon"
                             FontFamily="{StaticResource SymbolThemeFontFamily}"
-                            Glyph="&#xEDB5;" />
+                            Glyph="&#xEDB5;"
+                            Foreground="{ThemeResource SystemAccentColorLight2}"
+                            />
                     </Button>
                 </Grid>
             </DataTemplate>

@@ -45,6 +45,7 @@ public sealed partial class PlayBar
     public bool FadeSettedVolume;
     public PlayMode NowPlayType = PlayMode.DefaultRoll;
     public ObservableCollection<HyPlayItem> PlayItems = new();
+    public ImageSource AlbumImage2;
 
     private bool realSelectSong;
     /*
@@ -290,7 +291,7 @@ public sealed partial class PlayBar
             TbAlbumName.Content = null;
             ApplicationView.GetForCurrentView().Title = "";
             TbSongTag.Text = "无歌曲";
-            AlbumImage.Source = null;
+            AlbumImage.Source =AlbumImage1.ImageSource =AlbumImage2= null;
             return;
         }
 
@@ -307,11 +308,11 @@ public sealed partial class PlayBar
                     var img = new BitmapImage();
                     await img.SetSourceAsync(
                         await HyPlayList.NowPlayingStorageFile?.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999));
-                    AlbumImage.Source = img;
+                    AlbumImage.Source = AlbumImage1 .ImageSource=AlbumImage2=img;
                 }
                 else
                 {
-                    AlbumImage.Source =
+                    AlbumImage.Source = AlbumImage1.ImageSource = AlbumImage2=
                         new BitmapImage(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=" +
                                                 StaticSource.PICSIZE_PLAYBAR_ALBUMCOVER));
                 }
@@ -556,9 +557,10 @@ public sealed partial class PlayBar
     {
         ButtonExpand.Visibility = Visibility.Collapsed;
         ButtonCollapse.Visibility = Visibility.Visible;
-        Common.PageMain.GridPlayBar.Background = null;
+        Common.PageMain.GridPlayBar.Background = PlayBarAcrylic.Fill =null;
         //Common.PageMain.MainFrame.Visibility = Visibility.Collapsed;
         Common.PageMain.ExpandedPlayer.Visibility = Visibility.Visible;
+        AlbumImage1.ImageSource = null;
         Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer), null,
             new EntranceNavigationTransitionInfo());
         if (Common.Setting.expandAnimation && GridSongInfoContainer.Visibility == Visibility.Visible)
@@ -632,8 +634,9 @@ public sealed partial class PlayBar
         Common.PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));
         //Common.PageMain.MainFrame.Visibility = Visibility.Visible;
         Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
+        AlbumImage1.ImageSource =AlbumImage2;
         if (Common.Setting.useAcrylic)
-            Common.PageMain.GridPlayBar.Background =
+            PlayBarAcrylic.Fill=
                 Application.Current.Resources["SystemControlAcrylicElementMediumHighBrush"] as Brush;
         else
             Common.PageMain.GridPlayBar.Background = new BackdropBlurBrush() { Amount = 30.0 };

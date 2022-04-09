@@ -419,37 +419,64 @@
             </PivotItem>
             <PivotItem FontFamily="Thick" Header="关于">
                 <ScrollViewer VerticalScrollMode="Enabled">
-                    <StackPanel Orientation="Vertical">
+                    <Grid >
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="500"/>
+                        </Grid.ColumnDefinitions>
                         <Image
-                            Width="100"
-                            Height="100"
-                            HorizontalAlignment="Left"
+                            Width="400"
+                            Grid.Column="1"
+                            Height="400"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
                             Source="/Assets/icon.png" />
-                        <RichTextBlock>
+                        <RichTextBlock 
+                            HorizontalAlignment="Right"
+                            HorizontalTextAlignment="Right"
+                            Margin="0,400,10,0"
+                            Grid.Column="1"
+                            >
                             <Paragraph
-                                Margin="0,10,0,0"
+                                Margin="0,15,70,0"
                                 FontFamily="Thick"
-                                FontSize="25">
-                                HyPlayer
+                                FontWeight="Bold"
+                                FontSize="55">
+                                HyPlayer                
                             </Paragraph>
-                            <Paragraph Margin="0,5,0,0">This is an open-source project under GPL-v3 Licence</Paragraph>
+                            <Paragraph Margin="0,15,0,0">This is an open-source project under GPL-v3 Licence</Paragraph>
                             <Paragraph Margin="0,5,0,0">HyPlayer 即将迎来重构, 更加稳定, 更加轻便, 更加美观。欢迎持续关注</Paragraph>
                             <Paragraph Margin="0,5,0,0">
                                 <Hyperlink NavigateUri="https://github.com/HyPlayer/HyPlayer.UWP">
                                     重构版本 Github
                                 </Hyperlink>
-                                |<Hyperlink NavigateUri="https://github.com/HyPlayer/HyPlayer">
+                                |
+                                <Hyperlink NavigateUri="https://github.com/HyPlayer/HyPlayer">
                                     原版 Github (正在使用的)
                                 </Hyperlink>
-                                |<Hyperlink NavigateUri="https://gitee.com/kengwang/HyPlayer">
+                                |
+                                <Hyperlink NavigateUri="https://gitee.com/kengwang/HyPlayer">
                                     Gitee
                                 </Hyperlink>
                             </Paragraph>
                             <Paragraph Margin="0,5,0,0">Copyright © HyPlayer Develop Team 2022</Paragraph>
                             <Paragraph>HyPlayer is licensed under the GNU General Public License v3.0</Paragraph>
                         </RichTextBlock>
-                        <TextBlock x:Name="VersionCode" />
-                        <TextBlock x:Name="DeviceInfo" RightTapped="DeviceInfo_RightTapped">
+                        <TextBlock 
+                            x:Name="VersionCode" 
+                            HorizontalAlignment="Right"
+                            HorizontalTextAlignment="Right"
+                            Margin="0,585,10,0"
+                            Grid.Column="1"
+                            />
+                        <TextBlock 
+                            x:Name="DeviceInfo" 
+                            RightTapped="DeviceInfo_RightTapped" 
+                            HorizontalAlignment="Right"
+                            HorizontalTextAlignment="Right"
+                            Margin=" 0,605,10,0"
+                            Grid.Column="1"
+                            >
                             <TextBlock.ContextFlyout>
                                 <MenuFlyout>
                                     <MenuFlyoutItem
@@ -460,11 +487,21 @@
                                 </MenuFlyout>
                             </TextBlock.ContextFlyout>
                         </TextBlock>
-                        <controls1:SelectableTextBox Text="用户交流反馈 QQ 群: 1145646224" />
+                        <controls1:SelectableTextBox 
+                            Text="用户交流反馈 QQ 群: 1145646224" 
+                            HorizontalAlignment="Right"
+                            HorizontalContentAlignment="Right"
+                            Margin=" 0,625,10,0"
+                            Grid.Column="1"
+                            />
+                        <StackPanel Orientation="Vertical"  Grid.Column="0">
                         <TextBlock
                             FontFamily="Thick"
-                            FontSize="25"
-                            Text="开发者" />
+                            FontSize="30"
+                            FontWeight="Bold"
+                            Text="开发者"
+                            Margin="15,30,30,0"
+                            />
                         <StackPanel
                             Margin="10,20,0,0"
                             DoubleTapped="StackPanel_DoubleTapped"
@@ -617,10 +654,12 @@
                                     Foreground="Gray">
                                     新版图标提供
                                 </TextBlock>
-                                <TextBlock
+                                    <TextBlock
                                     FontSize="15"
                                     FontWeight="Light"
-                                    Foreground="Gray" />
+                                    Foreground="Gray" >
+                                    Forever Funny
+                                    </TextBlock>
                                 <RichTextBlock>
                                     <Paragraph>
                                         <Hyperlink NavigateUri="https://www.coolapk.com/u/1873068">
@@ -631,6 +670,7 @@
                             </StackPanel>
                         </StackPanel>
                     </StackPanel>
+                    </Grid>     
                 </ScrollViewer>
             </PivotItem>
         </Pivot>

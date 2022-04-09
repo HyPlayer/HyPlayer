@@ -7,24 +7,44 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     NavigationCacheMode="Disabled"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Page.Background>
+        <LinearGradientBrush EndPoint="1,1.4" StartPoint="0.1,0.1">
+            <GradientStop Color="#FF33A2D7" Offset="0.85"/>
+            <GradientStop Color="Transparent" Offset="0.5"/>
+        </LinearGradientBrush>
+    </Page.Background>
 
-    <StackPanel Orientation="Vertical">
-        <TextBlock
-            FontSize="32"
-            HorizontalAlignment="Center"
+    <StackPanel 
+        Orientation="Vertical"
+        VerticalAlignment="Center">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock
+                Grid.Column="0"
+            FontSize="56"
             Text="欢迎使用 HyPlayer"
-            TextAlignment="Center" />
-        <controls:ImageEx
-            Height="300"
-            HorizontalAlignment="Center"
+            TextAlignment="Center" 
+            VerticalAlignment="Center"
+            FontWeight="Bold"
+            Margin="0,0,0,100"/>
+            <controls:ImageEx
+            Height="350"
             Source="Assets/icon.png"
-            Width="300"
+            Grid.Column="1"
+            Width="350"
+            Margin="100,0,0,0"
             x:Name="ImageE" />
-        <TextBlock
-            FontSize="25"
-            HorizontalAlignment="Center"
+            <TextBlock
+            FontSize="28"
+            HorizontalAlignment="Center" 
+                VerticalAlignment="Center"
+                Margin="0,75,95,0"
             Text="点击侧边栏登录以解锁更多功能"
             TextAlignment="Center"
             x:Name="TBHINT" />
+        </Grid>
     </StackPanel>
 </Page>

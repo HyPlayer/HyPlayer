@@ -54,16 +54,16 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     public void Dispose()
     {
-        ImageRect.ImageSource = null;
+        ImageRect.ImageSource = ImageRect1 .ImageSource= null;
     }
 
     public void LoadSongListDetail()
     {
         if (playList.cover.StartsWith("http"))
-            ImageRect.ImageSource =
+            ImageRect.ImageSource = ImageRect1.ImageSource =
                 Common.Setting.noImage ? null : new BitmapImage(new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
         else
-            ImageRect.ImageSource =
+            ImageRect.ImageSource =ImageRect1 .ImageSource =
                 Common.Setting.noImage ? null : new BitmapImage(new Uri(playList.cover));
 
 
@@ -171,7 +171,7 @@ public sealed partial class SongListDetail : Page, IDisposable
     {
         base.OnNavigatedFrom(e);
         SongsList.Dispose();
-        ImageRect.ImageSource = null;
+        ImageRect.ImageSource=ImageRect1.ImageSource=null;
     }
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)
