@@ -1,15 +1,15 @@
 ﻿<Page
-    x:Name="Page"
     x:Class="HyPlayer.Pages.SongListDetail"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:controls1="using:HyPlayer.Controls"
+    xmlns:controls2="using:Microsoft.UI.Xaml.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hyplayer="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="using:HyPlayer.Pages"
-    xmlns:controls2="using:Microsoft.UI.Xaml.Controls"
+    x:Name="Page"
     d:DataContext="{d:DesignInstance Type=pages:SongListDetail}"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
@@ -17,12 +17,13 @@
         <ResourceDictionary>
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Default">
-                    <AcrylicBrush x:Key="SongListPageAcrylicBrush"
-                              BackgroundSource="Backdrop"
-                              TintColor="{ThemeResource SystemRevealAltHighColor}"
-                              TintOpacity="0.5"
-                              TintLuminosityOpacity="0.5" FallbackColor="{ThemeResource SystemRevealAltMediumHighColor}"
-                              />
+                    <AcrylicBrush
+                        x:Key="SongListPageAcrylicBrush"
+                        BackgroundSource="Backdrop"
+                        FallbackColor="{ThemeResource SystemRevealAltMediumHighColor}"
+                        TintColor="{ThemeResource SystemRevealAltHighColor}"
+                        TintLuminosityOpacity="0.5"
+                        TintOpacity="0.5" />
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>
@@ -33,7 +34,10 @@
             <RowDefinition />
             <RowDefinition Height="175" />
         </Grid.RowDefinitions>
-        <controls2:ProgressRing Grid.Row="0" IsActive="True" Visibility="{x:Bind IsLoading, Mode = OneWay}" />
+        <controls2:ProgressRing
+            Grid.Row="0"
+            IsActive="True"
+            Visibility="{x:Bind IsLoading, Mode=OneWay}" />
 
         <controls1:SongsList
             x:Name="SongsList"
@@ -43,37 +47,27 @@
             CornerRadius="15"
             IsSearchEnabled="True"
             Songs="{x:Bind Songs}">
-            <controls1:SongsList.ListHeader >
-                <Grid x:Name="GridPersonalInformation" 
-                      >
+            <controls1:SongsList.ListHeader>
+                <Grid x:Name="GridPersonalInformation">
                     <Rectangle
-                    x:Name="RectangleImageBack"
-                    Margin="30,0,30,0"
-                    RadiusX="10"
-                    RadiusY="10">
-                        <Rectangle.Fill>
-                            <ImageBrush x:Name="ImageRect1" Stretch="UniformToFill">
-                                <ImageBrush.ImageSource>
-                                    <BitmapImage UriSource="/Assets/icon.png" />
-                                </ImageBrush.ImageSource>
-                            </ImageBrush>
-                        </Rectangle.Fill>
-                    </Rectangle>
+                        x:Name="RectangleImageBack"
+                        Margin="30,0,30,0"
+                        Fill="{x:Bind RectangleImage.Fill, Mode=OneWay}"
+                        RadiusX="10"
+                        RadiusY="10" />
                     <Rectangle
-                    x:Name="RectangleImageAcrylic"
-                    Margin="0,0,0,0"
-                    RadiusX="10"
-                    RadiusY="10" 
-                    Fill="{ThemeResource SongListPageAcrylicBrush}">
-
-                    </Rectangle>
+                        x:Name="RectangleImageAcrylic"
+                        Margin="0,0,0,0"
+                        Fill="{ThemeResource SongListPageAcrylicBrush}"
+                        RadiusX="10"
+                        RadiusY="10" />
                     <Rectangle
-                        VerticalAlignment="Top"
                         x:Name="RectangleImage"
                         Width="200"
                         Height="200"
                         Margin="20,20,15,20"
                         HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
                         RadiusX="10"
                         RadiusY="10">
                         <Rectangle.Fill>
@@ -87,25 +81,28 @@
                     <StackPanel
                         Name="StackPanelUserInfo"
                         Margin="250,20,40,20"
-                        Orientation="Vertical"
-                        HorizontalAlignment="Center" 
-                        >
+                        HorizontalAlignment="Left"
+                        Orientation="Vertical">
                         <controls1:SelectableTextBox
                             x:Name="TextBoxPLName"
-                            Foreground="{ThemeResource DefaultTextForegroundThemeBrush}"
                             Margin="15,0,0,0"
                             FontSize="36"
                             FontWeight="Bold"
+                            Foreground="{ThemeResource DefaultTextForegroundThemeBrush}"
                             Text="歌单名"
                             TextWrapping="Wrap" />
                         <StackPanel Margin="15,2,0,0" Orientation="Horizontal">
-                            <TextBlock Padding="0,8,0,3" FontSize="18" Foreground="Gray" Text="创建者:" />
+                            <TextBlock
+                                Padding="0,8,0,3"
+                                FontSize="18"
+                                Foreground="Gray"
+                                Text="创建者:" />
                             <HyperlinkButton
                                 x:Name="TextBoxAuthor"
-                                FontSize="18"
-                                Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                                 Click="TextBoxAuthor_Tapped"
-                                Content="歌单创建者" />
+                                Content="歌单创建者"
+                                FontSize="18"
+                                Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}" />
                         </StackPanel>
                         <StackPanel
                             Margin="0,10,0,0"
@@ -113,36 +110,39 @@
                             Spacing="15">
                             <Button
                                 x:Name="ButtonIntel"
-                                Click="ButtonHeartBeat_OnClick"
-                                Background="OrangeRed"
                                 Margin="15,0,0,0"
+                                Background="OrangeRed"
+                                Click="ButtonHeartBeat_OnClick"
                                 Style="{StaticResource ButtonRevealStyle}"
-                                Visibility="Collapsed" >
+                                Visibility="Collapsed">
                                 <StackPanel Orientation="Horizontal">
                                     <FontIcon
-                                       x:Name="IconLiked"
-                                       FontFamily="{StaticResource SymbolThemeFontFamily}"
-                                       Glyph="&#xE00B;"
-                                       FontSize="16"
-                                    />
-                                    <TextBlock Text="心动模式" FontWeight="Bold" Margin="5,0,0,0"/>
+                                        x:Name="IconLiked"
+                                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                        FontSize="16"
+                                        Glyph="&#xE00B;" />
+                                    <TextBlock
+                                        Margin="5,0,0,0"
+                                        FontWeight="Bold"
+                                        Text="心动模式" />
                                 </StackPanel>
-                            </Button> 
+                            </Button>
                             <Button
+                                Background="{ThemeResource SystemControlForegroundAccentBrush}"
                                 Click="ButtonPlayAll_OnClick"
-                                Background="{ThemeResource SystemAccentColor}"
-                                Style="{StaticResource ButtonRevealStyle}" 
-                                >
+                                Style="{StaticResource ButtonRevealStyle}">
                                 <StackPanel Orientation="Horizontal">
                                     <FontIcon
-                                       x:Name="IconPlay"
-                                       FontFamily="{StaticResource SymbolThemeFontFamily}"
-                                       Glyph="&#xEDB5;"
-                                       FontSize="16"
-                                    />
-                                    <TextBlock Text="播放全部" FontWeight="Bold" Margin="5,0,0,0"/>
+                                        x:Name="IconPlay"
+                                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                        FontSize="16"
+                                        Glyph="&#xEDB5;" />
+                                    <TextBlock
+                                        Margin="5,0,0,0"
+                                        FontWeight="Bold"
+                                        Text="播放全部" />
                                 </StackPanel>
-                            </Button>                            
+                            </Button>
                             <ToggleButton
                                 x:Name="ToggleButtonLike"
                                 Click="LikeBtnClick"
@@ -159,9 +159,9 @@
                                 Visibility="{x:Bind hyplayer:Common.Setting.notClearMode, Mode=OneWay}" />
                         </StackPanel>
                         <controls1:ExpandableTextBox
-                            HorizontalAlignment="Stretch"
                             x:Name="DescriptionWrapper"
                             Margin="15,5,0,0"
+                            HorizontalAlignment="Stretch"
                             FontSize="13"
                             Foreground="{ThemeResource SystemControlForegroundChromeHighBrush}"
                             MaxLines="3" />

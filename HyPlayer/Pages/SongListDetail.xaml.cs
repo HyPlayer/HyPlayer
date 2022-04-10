@@ -54,16 +54,18 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     public void Dispose()
     {
-        ImageRect.ImageSource = ImageRect1 .ImageSource= null;
+        ImageRect.ImageSource = null;
     }
 
     public void LoadSongListDetail()
     {
         if (playList.cover.StartsWith("http"))
-            ImageRect.ImageSource = ImageRect1.ImageSource =
-                Common.Setting.noImage ? null : new BitmapImage(new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
+            ImageRect.ImageSource =
+                Common.Setting.noImage
+                    ? null
+                    : new BitmapImage(new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
         else
-            ImageRect.ImageSource =ImageRect1 .ImageSource =
+            ImageRect.ImageSource =
                 Common.Setting.noImage ? null : new BitmapImage(new Uri(playList.cover));
 
 
@@ -138,6 +140,7 @@ public sealed partial class SongListDetail : Page, IDisposable
                 ButtonIntel.Visibility = Visibility.Visible;
                 SongsList.IsMySongList = true;
             }
+
             try
             {
                 json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
@@ -171,7 +174,7 @@ public sealed partial class SongListDetail : Page, IDisposable
     {
         base.OnNavigatedFrom(e);
         SongsList.Dispose();
-        ImageRect.ImageSource=ImageRect1.ImageSource=null;
+        ImageRect.ImageSource = null;
     }
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)

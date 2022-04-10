@@ -30,8 +30,14 @@
             </ListView.Footer>
             <ListView.Header>
                 <StackPanel x:Name="HeaderPanel" Orientation="Vertical">
-                    <ContentControl Content="{x:Bind ListHeader}" />
-                    <Grid ColumnSpacing="12" Margin="0,-45,0,0" Visibility="{x:Bind IsSearchEnabled}">
+                    <ContentControl
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
+                        Content="{x:Bind ListHeader}" />
+                    <Grid
+                        Margin="0,-45,0,0"
+                        ColumnSpacing="12"
+                        Visibility="{x:Bind IsSearchEnabled}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="150" />
@@ -41,8 +47,8 @@
                         <TextBox
                             x:Name="FilterBox"
                             Grid.Column="1"
-                            VerticalAlignment="Center"
                             Width="150"
+                            VerticalAlignment="Center"
                             controls:DockPanel.Dock="Right" />
                         <Button
                             x:Name="SearchToggle"
@@ -162,47 +168,44 @@
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="classes:NCSong">
                     <Grid
-                        HorizontalAlignment="Stretch"
-                        Background="Transparent"
-                        IsRightTapEnabled="True"
                         Margin="-15,15,0,15"
+                        HorizontalAlignment="Stretch"
+                        IsRightTapEnabled="True"
                         RightTapped="Grid_RightTapped"
                         Tag="{x:Bind Order}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="80" />
                         </Grid.ColumnDefinitions>
+                        <controls:ImageEx
+                            x:Name="RectangleImageBack"
+                            Grid.ColumnSpan="2"
+                            Height="85"
+                            Margin="0,-5,0,-5"
+                            x:Phase="4"
+                            CornerRadius="7"
+                            EnableLazyLoading="True"
+                            IsCacheEnabled="False"
+                            Source="{x:Bind Cover}"
+                            Stretch="Fill" />
                         <Rectangle
-                    x:Name="RectangleImageBack"
-                    Margin="0,-5,0,-5"
-                    Grid.ColumnSpan="2"
-                    RadiusX="10"
-                    RadiusY="10">
-                            <Rectangle.Fill>
-                                <ImageBrush ImageSource="{x:Bind Cover}" Stretch="UniformToFill"/>
-                            </Rectangle.Fill>
-                        </Rectangle>
-                        <Rectangle
-                    x:Name="RectangleImageAcrylic"
-                    Margin="0,-5,0,-5"
-                    RadiusX="10"
-                    Grid.ColumnSpan="2"
-                    RadiusY="10" 
-                    Fill="{ThemeResource SystemControlAcrylicElementBrush}">
-
-                        </Rectangle>
+                            x:Name="RectangleImageAcrylic"
+                            Grid.ColumnSpan="2"
+                            Margin="0,-5,0,-5"
+                            Fill="{ThemeResource SystemControlAcrylicElementBrush}"
+                            RadiusX="10"
+                            RadiusY="10" />
 
                         <StackPanel Grid.Column="0" Orientation="Horizontal">
                             <TextBlock
                                 x:Name="OrderId"
-                                HorizontalAlignment="Left" 
-                                VerticalAlignment="Top"
                                 Width="48"
                                 Margin="12,0,0,0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
                                 FontSize="24"
-                                Text="{x:Bind DspOrder}"
                                 FontWeight="Bold"
-                                />
+                                Text="{x:Bind DspOrder}" />
                             <controls:ImageEx
                                 x:Name="ImageRect"
                                 Width="75"
@@ -230,8 +233,8 @@
                                     Spacing="5">
                                     <TextBlock
                                         Name="TextBlockSongname"
-                                        x:Phase="0"
                                         Margin="10,0,0,0"
+                                        x:Phase="0"
                                         FontSize="20"
                                         FontWeight="Bold"
                                         Foreground="{x:Bind hycontrols:SongsList.GetBrush(IsAvailable)}"
@@ -284,17 +287,20 @@
                             Spacing="8">
                             <Button
                                 x:Name="More"
-                                x:Phase="3"
                                 Width="45"
                                 Height="35"
-                                CornerRadius="8"
-                                Background="{ThemeResource SystemRevealAltLowColor}"
                                 Margin="0,0,20,0"
+                                x:Phase="3"
+                                Background="{ThemeResource SystemRevealAltLowColor}"
                                 Click="More_Click"
+                                CornerRadius="8"
                                 Style="{StaticResource ButtonRevealStyle}"
                                 Tag="{x:Bind Order}"
                                 ToolTipService.ToolTip="更多">
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE10C;" Foreground="{ThemeResource SystemAccentColorLight2}"/>
+                                <FontIcon
+                                    FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                    Foreground="{ThemeResource SystemAccentColorLight2}"
+                                    Glyph="&#xE10C;" />
                             </Button>
                         </StackPanel>
                     </Grid>

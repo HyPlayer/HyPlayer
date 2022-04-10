@@ -6,6 +6,7 @@
     xmlns:local="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
    
@@ -22,11 +23,6 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Page.Resources>
-    <Page.Background>
-        <ThemeResource ResourceKey="SystemControlAcrylicWindowMediumHighBrush"/>
-    </Page.Background>
-    <!--muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"-->
-
     <Grid x:Name="MainGrid">
         <FlyoutBase.AttachedFlyout>
             <MenuFlyout x:Name="PlaylistFlyout">
@@ -197,9 +193,7 @@
                     Content="设置"
                     Icon="Setting"
                     Tag="PageSettings"
-                    Tapped="NavigationViewItem_Tapped" 
-                    >
-                </muxc:NavigationViewItem>
+                    Tapped="NavigationViewItem_Tapped" />
                 <muxc:NavigationViewItem x:Name="NavItemBlank" x:FieldModifier="public" IsEnabled="False" Height="120" />
             </muxc:NavigationView.FooterMenuItems>
             <Grid>

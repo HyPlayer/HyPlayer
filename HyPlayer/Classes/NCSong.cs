@@ -158,8 +158,8 @@ public class NCSong
     public BitmapImage Cover =>
         Common.Setting.noImage
             ? null
-            : new BitmapImage(new Uri(Album.cover ??=
-                "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg" + "?param=" +
+            : new BitmapImage(new Uri((Album.cover ??
+                "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg") + "?param=" +
                 StaticSource.PICSIZE_SINGLENCSONG_COVER));
 
     public string ArtistString
