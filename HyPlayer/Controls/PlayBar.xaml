@@ -58,7 +58,6 @@
             Source="{x:Bind AlbumImage.Source, Mode=OneWay}"
             Stretch="Fill"
             Visibility="{x:Bind ButtonExpand.Visibility, Mode=OneWay}" />
-
         <Rectangle
             x:Name="PlayBarAcrylic"
             Grid.Column="0"
@@ -212,7 +211,7 @@
                 <RowDefinition Height="2*" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <Grid Grid.Row="0" Margin="0,5,0,0">
+            <Grid Grid.Row="0" Margin="40,5,0,0" x:Name="MainBtnsGrid">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
                     <ColumnDefinition />
@@ -613,6 +612,7 @@
                         <Setter Target="SliderProgress.Margin" Value="0,0,15,0" />
                         <Setter Target="GridSongInfoContainer.Visibility" Value="Collapsed" />
                         <Setter Target="BtnMore.Visibility" Value="Visible" />
+                        <Setter Target="MainBtnsGrid.Margin" Value="0,5,60,0"/>
                     </VisualState.Setters>
                 </VisualState>
 
@@ -633,12 +633,19 @@
                         <Setter Target="SliderProgress.Margin" Value="0,0,15,0" />
                         <Setter Target="MainControlGrid.(Grid.Column)" Value="0" />
                         <Setter Target="MainControlGrid.(Grid.ColumnSpan)" Value="4" />
+                        <Setter Target="TbSongName.Margin" Value="5,-5,40,0"/>
+                        <Setter Target="TbSingerName.Margin" Value="0,-5,0,0" />
+                        <Setter Target="TbAlbumName.Margin" Value="0,-10,0,0" />
                         <Setter Target="GridSongInfoContainer.Width" Value="500" />
                         <Setter Target="GridSongInfoContainer.Height" Value="50" />
                         <Setter Target="GridSongInfoContainer.Margin" Value="0,0,-70,30" />
                         <Setter Target="ButtonCollapse.Margin" Value="10,10,10,40" />
                         <Setter Target="ButtonExpand.Margin" Value="10,10,10,40" />
                         <Setter Target="Btns.Margin" Value="10,10,10,40" />
+                        <Setter Target="AlbumImage.Margin" Value="10,0,0,0"/>
+                        <Setter Target="AlbumImage.CornerRadius" Value="16"/>
+                        <Setter Target="MainBtnsGrid.Margin" Value="0,5,80,0"/>
+
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
