@@ -12,46 +12,72 @@
         <ResourceDictionary>
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Default">
-                    <AcrylicBrush x:Key="MePageAcrylicBrush"
-                              BackgroundSource="Backdrop"
-                              TintColor="{ThemeResource SystemRevealAltHighColor}"
-                              TintOpacity="0.5"
-                              TintLuminosityOpacity="0.5" FallbackColor="{ThemeResource SystemRevealAltMediumHighColor}"
-                              />
+                    <AcrylicBrush
+                        x:Key="MePageAcrylicBrush"
+                        BackgroundSource="Backdrop"
+                        FallbackColor="{ThemeResource SystemRevealAltMediumHighColor}"
+                        TintColor="{ThemeResource SystemRevealAltHighColor}"
+                        TintLuminosityOpacity="0.5"
+                        TintOpacity="0.5" />
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>
     </Page.Resources>
-
     <Grid>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="NarrowState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="MainGrid.RowDefinitions[1].Height" Value="*" />
+                        <Setter Target="MainGrid.ColumnDefinitions[1].Width" Value="auto" />
+                        <Setter Target="SecondGrid.(Grid.Column)" Value="0" />
+                        <Setter Target="SecondGrid.(Grid.Row)" Value="1" />
+                        <Setter Target="MainGrid.ColumnSpacing" Value="0" />
+                        <Setter Target="RectangleImage.Visibility" Value="Collapsed" />
+                        <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="1" />
+                        <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="10" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="WideState">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1024" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="MainGrid.RowDefinitions[1].Height" Value="auto" />
+                        <Setter Target="MainGrid.ColumnDefinitions[1].Width" Value="*" />
+                        <Setter Target="MainGrid.ColumnSpacing" Value="50" />
+                        <Setter Target="SecondGrid.(Grid.Column)" Value="1" />
+                        <Setter Target="SecondGrid.(Grid.Row)" Value="0" />
+                        <Setter Target="RectangleImage.Visibility" Value="Visible" />
+                        <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="5" />
+                        <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="6" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-
         <Grid Grid.Row="0">
-
             <Rectangle
-                    x:Name="RectangleImageBack"
-                    Margin="30,0,30,0"
-                    RadiusX="10"
-                    RadiusY="10">
+                x:Name="RectangleImageBack"
+                Margin="30,0,30,0"
+                RadiusX="10"
+                RadiusY="10">
                 <Rectangle.Fill>
-                    <ImageBrush x:Name="ImageRect1" Stretch="UniformToFill">
-                        <ImageBrush.ImageSource>
-                            <BitmapImage UriSource="/Assets/icon.png" />
-                        </ImageBrush.ImageSource>
-                    </ImageBrush>
+                    <ImageBrush ImageSource="{x:Bind ImageRect.ImageSource, Mode=OneWay}" Stretch="UniformToFill" />
                 </Rectangle.Fill>
             </Rectangle>
             <Rectangle
-                    x:Name="RectangleImageAcrylic"
-                    Margin="30,0,30,0"
-                    RadiusX="10"
-                    RadiusY="10" 
-                    Fill="{ThemeResource MePageAcrylicBrush}">
-
-            </Rectangle>
+                x:Name="RectangleImageAcrylic"
+                Margin="30,0,30,0"
+                Fill="{ThemeResource MePageAcrylicBrush}"
+                RadiusX="10"
+                RadiusY="10" />
 
             <controls:DockPanel
                 x:Name="GridPersonalInformation"
@@ -73,119 +99,93 @@
                         </ImageBrush>
                     </Rectangle.Fill>
                 </Rectangle>
-                <StackPanel 
-                    Name="StackPanelUserInfo" 
-                    Orientation="Vertical"
+                <StackPanel
+                    Name="StackPanelUserInfo"
                     Margin="0,14,0,0"
-                    >
+                    Orientation="Vertical">
                     <controls1:SelectableTextBox
                         x:Name="TextBoxUserName"
+                        VerticalAlignment="Center"
                         FontSize="48"
                         FontWeight="ExtraBold"
-                        VerticalAlignment="Center"
                         Text="用户名" />
                     <controls1:SelectableTextBox
                         x:Name="TextBoxSignature"
-                        FontSize="18"
                         Margin="0,4,0,0"
+                        FontSize="18"
                         Text="签名" />
                     <Button
                         x:Name="ButtonLogout"
                         Margin="0,10,0,0"
+                        Background="OrangeRed"
                         Click="Logout_OnClick"
                         Content="退出登录"
-                        Style="{StaticResource ButtonRevealStyle}" 
-                        Background="OrangeRed"
                         Foreground="White"
-                        />
+                        Style="{StaticResource ButtonRevealStyle}" />
                 </StackPanel>
             </controls:DockPanel>
-            <VisualStateManager.VisualStateGroups>
-                <VisualStateGroup>
-                    <VisualState>
-                        <VisualState.StateTriggers>
-                            <AdaptiveTrigger MinWindowWidth="0" />
-                        </VisualState.StateTriggers>
-                        <VisualState.Setters>
-                            <Setter Target="RectangleImage.Visibility" Value="Collapsed" />
-                            <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="1" />
-                            <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="10" />
-                        </VisualState.Setters>
-                    </VisualState>
-                    <VisualState>
-                        <VisualState.StateTriggers>
-                            <AdaptiveTrigger MinWindowWidth="1024" />
-                        </VisualState.StateTriggers>
-                        <VisualState.Setters>
-                            <Setter Target="RectangleImage.Visibility" Value="Visible" />
-                            <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="5" />
-                            <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="6" />
-                        </VisualState.Setters>
-                    </VisualState>
-                </VisualStateGroup>
-            </VisualStateManager.VisualStateGroups>
-        </Grid>
-        <Grid Grid.Row="1" Margin="10,10,10,50">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="50"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <Rectangle
-                Fill="{ThemeResource SystemControlBackgroundListLowBrush}"
-                RadiusX="8"
-                RadiusY="8"
-                Grid.Column="0"
-                Margin="20,10,5,25"
-                >
-            </Rectangle>
-            <TextBlock 
-                Text="我的歌单" 
-                Grid.Column="0" 
-                HorizontalAlignment="Left" 
-                VerticalAlignment="Top" 
-                FontSize="24" 
-                FontWeight="Bold" 
-                Margin="45,30,0,0 ">
-            </TextBlock>
-            <controls1:SimpleLinerList 
-                x:Name="MySongList"
-                Grid.Column="0"
-                ListItems="{x:Bind myPlayList}"  
-                VerticalAlignment="Stretch" 
-                HorizontalAlignment="Stretch" 
-                ScrollViewer.VerticalScrollBarVisibility="Disabled" 
-                Margin="20,60,0,0"/>
-            <Rectangle
-                Fill="{ThemeResource SystemControlBackgroundListLowBrush}"
-                RadiusX="8"
-                RadiusY="8"
-                Grid.Column="1"
-                Margin="15,10,20,30"
-                Grid.ColumnSpan="2"
-                >
-            </Rectangle>
-            <TextBlock 
-                Text="收藏歌单" 
-                Grid.Column="1" 
-                HorizontalAlignment="Left" 
-                VerticalAlignment="Top" 
-                FontSize="24" 
-                FontWeight="Bold" 
-                Margin="45,30,0,0 "
-                Grid.ColumnSpan="2">
-            </TextBlock>
-            <controls1:SimpleLinerList 
-                x:Name="MyFavouriteList"
-                Grid.Column="1"
-                ListItems="{x:Bind likedPlayList}"  
-                VerticalAlignment="Stretch" 
-                HorizontalAlignment="Stretch" 
-                Margin="15,60,15,30"
-                ScrollViewer.VerticalScrollBarVisibility="Disabled" 
-                Grid.ColumnSpan="2"
-                />
 
+        </Grid>
+        <Grid
+            x:Name="MainGrid"
+            Grid.Row="1"
+            Margin="30,10,30,50"
+            ColumnSpacing="50"
+            RowSpacing="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <Grid
+                x:Name="FirstGrid"
+                Grid.Column="0"
+                Background="{ThemeResource SystemControlBackgroundListLowBrush}"
+                CornerRadius="8">
+                <TextBlock
+                    Grid.Column="0"
+                    Margin="45,30,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    FontSize="24"
+                    FontWeight="Bold"
+                    Text="我的歌单" />
+                <controls1:SimpleLinerList
+                    x:Name="MySongList"
+                    Grid.Column="0"
+                    Margin="20,60,0,0"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    ListItems="{x:Bind myPlayList}"
+                    ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+            </Grid>
+            <Grid
+                x:Name="SecondGrid"
+                Grid.Column="1"
+                Background="{ThemeResource SystemControlBackgroundListLowBrush}"
+                CornerRadius="8">
+                <TextBlock
+                    Grid.Column="1"
+                    Grid.ColumnSpan="2"
+                    Margin="45,30,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    FontSize="24"
+                    FontWeight="Bold"
+                    Text="收藏歌单" />
+                <controls1:SimpleLinerList
+                    x:Name="MyFavouriteList"
+                    Grid.Column="1"
+                    Grid.ColumnSpan="2"
+                    Margin="15,60,15,30"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    ListItems="{x:Bind likedPlayList}"
+                    ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+            </Grid>
         </Grid>
     </Grid>
 </Page>
