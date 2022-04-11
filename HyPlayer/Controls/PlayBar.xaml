@@ -207,13 +207,13 @@
         <Grid
             x:Name="MainControlGrid"
             Grid.Column="1"
-            Margin="5"
+            Margin="-60,5,0,0"
             Canvas.ZIndex="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="5*" />
                 <RowDefinition Height="2*" />
             </Grid.RowDefinitions>
-            <Grid Grid.Row="0" Margin="-40,5,0,0" x:Name="MainBtnsGrid">
+            <Grid Grid.Row="0" Margin="0,5,0,0" x:Name="MainBtnsGrid">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
                     <ColumnDefinition />

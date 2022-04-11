@@ -76,8 +76,10 @@ public sealed partial class LyricItem : UserControl
         showing = true;
         TextBoxPureLyric.FontSize = actualsize + Common.Setting.lyricScaleSize;
         TextBoxTranslation.FontSize = actualsize + Common.Setting.lyricScaleSize;
-        TextBoxPureLyric.FontWeight = FontWeights.SemiBold;
-        TextBoxTranslation.FontWeight = FontWeights.SemiBold;
+        TextBoxPureLyric.FontWeight = FontWeights.Bold;
+        TextBoxTranslation.FontWeight = FontWeights.Bold;
+        TextBoxPureLyric.Margin = new Thickness(0,3,0,3);
+        TextBoxTranslation.Margin = new Thickness(0,3,0,3);
         TextBoxPureLyric.Foreground = originBrush;
         TextBoxSound.Foreground = originBrush;
         TextBoxTranslation.Foreground = originBrush;
@@ -94,8 +96,10 @@ public sealed partial class LyricItem : UserControl
         showing = false;
         TextBoxPureLyric.FontSize = actualsize;
         TextBoxTranslation.FontSize = actualsize;
-        TextBoxPureLyric.FontWeight = FontWeights.Normal;
-        TextBoxTranslation.FontWeight = FontWeights.Normal;
+        TextBoxPureLyric.Margin = new Thickness(0);
+        TextBoxTranslation.Margin = new Thickness(0);
+        TextBoxPureLyric.FontWeight = FontWeights.SemiBold;
+        TextBoxTranslation.FontWeight = FontWeights.SemiBold;
         TextBoxPureLyric.Foreground = Application.Current.Resources["TextFillColorDisabledBrush"] as Brush;
         TextBoxTranslation.Foreground = Application.Current.Resources["TextFillColorDisabledBrush"] as Brush;
         TextBoxSound.Foreground = Application.Current.Resources["TextFillColorDisabledBrush"] as Brush;
