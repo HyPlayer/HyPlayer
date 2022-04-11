@@ -49,13 +49,13 @@
                 CornerRadius="16"
                 VerticalAlignment="Top"
                 HorizontalAlignment="Center"
-                Margin="0,115,0,0"
+                Margin="-100,115,0,0"
                 Background="#ddffffff" 
                 Tapped="dailyRcmTapped"
             >
                 <StackPanel >
                     <FontIcon
-                        x:Name="IconLiked"
+                        x:Name="IconDailyRcm"
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
                         FontSize="36"
                         Foreground="{ThemeResource SystemAccentColorDark1}"
@@ -78,7 +78,7 @@
                 CornerRadius="16"
                 VerticalAlignment="Top"
                 HorizontalAlignment="Center"
-                Margin="200,115,0,0"
+                Margin="100,115,0,0"
                 Background="#ddffffff" 
                 Tapped="FMTapped"
             >
@@ -107,13 +107,13 @@
                 CornerRadius="16"
                 VerticalAlignment="Top"
                 HorizontalAlignment="Center"
-                Margin="400,115,0,0"
+                Margin="300,115,0,0"
                 Background="#ddffffff" 
                 Tapped="LikedSongListTapped"
             >
                 <StackPanel>
                     <FontIcon
-                        x:Name="IconHeartBeat"
+                        x:Name="IconLiked"
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
                         FontSize="36"
                         Foreground="{ThemeResource SystemAccentColorDark1}"
@@ -249,6 +249,20 @@
                 <!--  占位  -->
                 <Grid Height="150" />
             </StackPanel>
+            <VisualStateManager.VisualStateGroups>
+                <VisualStateGroup>
+                    <VisualState>
+                        <VisualState.StateTriggers>
+                            <AdaptiveTrigger MinWindowWidth="1100" />
+                        </VisualState.StateTriggers>
+                        <VisualState.Setters>
+                            <Setter Target="DailyRcmBtn.Visibility" Value="False"/>
+                            <Setter Target="PersonalFMBtn.Visibility" Value="False"/>
+                            <Setter Target="LikedSongListBtn.Visibility" Value="False"/>
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateManager.VisualStateGroups>
         </Grid>
     </ScrollViewer>
 </Page>

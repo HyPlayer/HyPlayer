@@ -580,7 +580,6 @@
                         <Setter Target="SliderProgress.Margin" Value="0,0,0,0" />
                     </VisualState.Setters>
                 </VisualState>
-
                 <VisualState>
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger MinWindowHeight="1" />
@@ -618,7 +617,6 @@
                         <Setter Target="MainBtnsGrid.Margin" Value="0,5,60,0"/>
                     </VisualState.Setters>
                 </VisualState>
-
                 <VisualState>
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger MinWindowWidth="800" />
