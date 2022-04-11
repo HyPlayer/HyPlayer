@@ -48,11 +48,13 @@
                             x:Name="FilterBox"
                             Grid.Column="1"
                             Width="150"
+                            Margin="0,0,0,10"
                             VerticalAlignment="Center"
                             controls:DockPanel.Dock="Right" />
                         <Button
                             x:Name="SearchToggle"
                             Grid.Column="2"
+                            Margin="0,0,0,10"
                             controls:DockPanel.Dock="Right"
                             Click="FilterBox_OnTextChanged">
                             <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE721;" />
@@ -60,6 +62,7 @@
                         <ToggleButton
                             x:Name="MultiSelectBtn"
                             Grid.Column="3"
+                            Margin="-10,0,0,10"
                             IsChecked="{x:Bind MultiSelect, Mode=TwoWay}">
                             <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE762;" />
                         </ToggleButton>

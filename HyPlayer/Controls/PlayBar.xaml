@@ -45,10 +45,10 @@
     </UserControl.Resources>
     <Grid x:Name="GridThis">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="2*" />
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="9*" />
+            <ColumnDefinition Width="18*" />
+            <ColumnDefinition Width="6*" />
+            <ColumnDefinition Width="auto" />
         </Grid.ColumnDefinitions>
         <controls:ImageEx
             Grid.Column="0"
@@ -69,7 +69,7 @@
             HorizontalAlignment="Left"
             x:FieldModifier="public"
             Canvas.ZIndex="2"
-            CornerRadius="20">
+            CornerRadius="20,0,0,20">
             <StackPanel
                 x:Name="GridSongAdvancedOperation"
                 Margin="30,0,0,15"
@@ -160,8 +160,10 @@
                 <StackPanel Margin="12,0,0,0" Spacing="12">
                     <controls:DockPanel HorizontalAlignment="Stretch" LastChildFill="True">
                         <Grid
+                            x:Name="SongInfoTag"
                             MaxHeight="20"
                             Padding="3,0,3,0"
+                            Margin="0,5,0,0"
                             controls:DockPanel.Dock="Left"
                             BorderBrush="Red"
                             BorderThickness="1"
@@ -179,7 +181,7 @@
                             Margin="5,0,0,0"
                             HorizontalAlignment="Stretch"
                             controls:DockPanel.Dock="Left"
-                            FontSize="18"
+                            FontSize="20"
                             FontWeight="Bold"
                             ToolTipService.ToolTip="{x:Bind Mode=OneWay, Path=TbSongName.Text}" />
 
@@ -208,10 +210,10 @@
             Margin="5"
             Canvas.ZIndex="0">
             <Grid.RowDefinitions>
+                <RowDefinition Height="5*" />
                 <RowDefinition Height="2*" />
-                <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <Grid Grid.Row="0" Margin="40,5,0,0" x:Name="MainBtnsGrid">
+            <Grid Grid.Row="0" Margin="-40,5,0,0" x:Name="MainBtnsGrid">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
                     <ColumnDefinition />
@@ -226,11 +228,13 @@
                 <Button
                     x:Name="BtnMore"
                     Grid.Column="0"
+                    Grid.ColumnSpan="2"
                     Width="40"
                     Height="40"
                     Padding="0"
-                    VerticalAlignment="Center"
+                    Margin="20,10,10,10"
                     Background="Transparent"
+                    VerticalAlignment="Center"
                     CornerRadius="30"
                     Style="{StaticResource ButtonRevealStyle}"
                     Visibility="Collapsed">
@@ -298,8 +302,8 @@
                 <Button
                     x:Name="BtnPlayRollType"
                     Grid.Column="2"
-                    Width="40"
-                    Height="40"
+                    Width="38"
+                    Height="38"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     Background="White"
@@ -309,15 +313,15 @@
                     <FontIcon
                         x:Name="IconPlayType"
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        FontSize=" 16"
+                        FontSize="16"
                         Foreground="{ThemeResource SystemAccentColorDark1}"
                         Glyph="&#xE169;" />
                 </Button>
                 <Button
                     x:Name="BtnPreviousSong"
                     Grid.Column="3"
-                    Width="40"
-                    Height="40"
+                    Width="38"
+                    Height="38"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     Background="White"
@@ -327,19 +331,19 @@
                     <FontIcon
                         x:Name="IconPrevious"
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        FontSize=" 16"
+                        FontSize="16"
                         Foreground="{ThemeResource SystemAccentColorDark1}"
                         Glyph="&#xE892;" />
                 </Button>
                 <Button
                     x:Name="BtnPlayStateChange"
                     Grid.Column="4"
-                    Width="55"
-                    Height="55"
+                    Width="52"
+                    Height="52"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     AutomationProperties.AcceleratorKey="Space"
-                    Background="{ThemeResource SystemAccentColorLight1}"
+                    Background="{ThemeResource SystemAccentColorLight2}"
                     Click="BtnPlayStateChange_OnClick"
                     CornerRadius="30"
                     KeyUp="BtnPlayStateChange_KeyUp"
@@ -524,7 +528,6 @@
                 <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE142;" />
             </Button>
         </controls:UniformGrid>
-
         <Button
             x:Name="ButtonExpand"
             Grid.Column="3"
@@ -595,8 +598,8 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="Btns.Visibility" Value="Collapsed" />
-                        <Setter Target="ButtonCollapse.Margin" Value="10,10,10,40" />
-                        <Setter Target="ButtonExpand.Margin" Value="10,10,10,40" />
+                        <Setter Target="ButtonCollapse.Margin" Value="10,10,20,40" />
+                        <Setter Target="ButtonExpand.Margin" Value="10,10,20,40" />
                         <Setter Target="Btns.Margin" Value="10,10,10,40" />
                         <Setter Target="GridThis.Visibility" Value="Visible" />
                         <Setter Target="MainControlGrid.(Grid.Column)" Value="0" />
@@ -633,9 +636,12 @@
                         <Setter Target="SliderProgress.Margin" Value="0,0,15,0" />
                         <Setter Target="MainControlGrid.(Grid.Column)" Value="0" />
                         <Setter Target="MainControlGrid.(Grid.ColumnSpan)" Value="4" />
-                        <Setter Target="TbSongName.Margin" Value="5,-5,40,0"/>
-                        <Setter Target="TbSingerName.Margin" Value="0,-5,0,0" />
-                        <Setter Target="TbAlbumName.Margin" Value="0,-10,0,0" />
+                        <Setter Target="SongInfoTag.Margin" Value="0,0,0,0"/>
+                        <Setter Target="TbSongName.Margin" Value="5,-7,0,0"/>
+                        <Setter Target="TbSongTag.FontSize" Value="12"/>
+                        <Setter Target="SongInfoTag.Margin" Value="0"/>
+                        <Setter Target="TbSingerName.Margin" Value="0,-15,0,0" />
+                        <Setter Target="TbAlbumName.Margin" Value="0,-15,0,0" />
                         <Setter Target="GridSongInfoContainer.Width" Value="500" />
                         <Setter Target="GridSongInfoContainer.Height" Value="50" />
                         <Setter Target="GridSongInfoContainer.Margin" Value="0,0,-70,30" />
@@ -644,7 +650,7 @@
                         <Setter Target="Btns.Margin" Value="10,10,10,40" />
                         <Setter Target="AlbumImage.Margin" Value="10,0,0,0"/>
                         <Setter Target="AlbumImage.CornerRadius" Value="16"/>
-                        <Setter Target="MainBtnsGrid.Margin" Value="0,5,80,0"/>
+                        <Setter Target="MainBtnsGrid.Margin" Value="0,5,60,0"/>
 
                     </VisualState.Setters>
                 </VisualState>

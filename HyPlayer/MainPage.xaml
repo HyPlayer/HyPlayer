@@ -49,7 +49,7 @@
             Visibility="Collapsed" />
         <Grid
             Name="GridPlayBar"
-            Height="100"
+            Height="110"
             Margin="{x:Bind hyplayer:Common.Setting.playBarMargin, Mode = OneWay , Converter={StaticResource PlayBarMarginConverter} }"
             VerticalAlignment="Bottom"
             x:FieldModifier="public"
