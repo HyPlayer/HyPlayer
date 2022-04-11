@@ -31,7 +31,7 @@
             </Rectangle>
             <!--  欢迎语  -->
             <StackPanel Orientation="Vertical"
-                        Margin="40,95,0,0">
+                        Margin="40,105,0,0">
                 <StackPanel Orientation="Horizontal" >
                     <TextBlock FontSize="56" Text="Hi~ " FontWeight="ExtraBold" />
                     <TextBlock x:Name="TbHelloUserName" FontSize="48" FontWeight="ExtraBold" />
@@ -42,6 +42,93 @@
                     FontSize="20"
                     Text="用音乐开启新的一天吧" />
             </StackPanel>
+            <Button                
+                x:Name="DailyRcmBtn"
+                Height="90"
+                Width="90"
+                CornerRadius="16"
+                VerticalAlignment="Top"
+                HorizontalAlignment="Center"
+                Margin="0,115,0,0"
+                Background="#ddffffff" 
+                Tapped="dailyRcmTapped"
+            >
+                <StackPanel >
+                    <FontIcon
+                        x:Name="IconLiked"
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        FontSize="36"
+                        Foreground="{ThemeResource SystemAccentColorDark1}"
+                        Glyph="&#xE163;" />
+                    <TextBlock 
+                HorizontalAlignment="Center"
+                VerticalAlignment="Top"
+                Text="每日推荐"
+                Margin="0,4,0,0"
+                Foreground="{ThemeResource SystemAccentColorDark1}"
+                FontSize="12"
+                />
+
+                </StackPanel>
+            </Button>
+            <Button                
+                x:Name="PersonalFMBtn"
+                Height="90"
+                Width="90"
+                CornerRadius="16"
+                VerticalAlignment="Top"
+                HorizontalAlignment="Center"
+                Margin="200,115,0,0"
+                Background="#ddffffff" 
+                Tapped="FMTapped"
+            >
+                <StackPanel >
+                    <FontIcon
+                        x:Name="IconFM"
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        FontSize="36"
+                        Foreground="{ThemeResource SystemAccentColorDark1}"
+                        Glyph="&#xEFA9;" />
+                    <TextBlock 
+                HorizontalAlignment="Center"
+                VerticalAlignment="Top"
+                Text="私人FM"
+                Margin="0,4,0,0"
+                Foreground="{ThemeResource SystemAccentColorDark1}"
+                FontSize="12"
+                />
+
+                </StackPanel>
+            </Button>
+            <Button                
+                x:Name="LikedSongListBtn"
+                Height="90"
+                Width="90"
+                CornerRadius="16"
+                VerticalAlignment="Top"
+                HorizontalAlignment="Center"
+                Margin="400,115,0,0"
+                Background="#ddffffff" 
+                Tapped="LikedSongListTapped"
+            >
+                <StackPanel>
+                    <FontIcon
+                        x:Name="IconHeartBeat"
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        FontSize="36"
+                        Foreground="{ThemeResource SystemAccentColorDark1}"
+                        Glyph="&#xE00B;" />
+                    <TextBlock 
+                HorizontalAlignment="Center"
+                VerticalAlignment="Top"
+                Text="喜欢音乐"
+                Margin="0,4,0,0"
+                Foreground="{ThemeResource SystemAccentColorDark1}"
+                FontSize="12"
+                />
+
+                </StackPanel>
+            </Button>
             <StackPanel
             x:Name="MainContainer"
             Padding="15"
