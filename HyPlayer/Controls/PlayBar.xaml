@@ -163,7 +163,7 @@
                             x:Name="SongInfoTag"
                             MaxHeight="20"
                             Padding="3,0,3,0"
-                            Margin="0,5,0,0"
+                            Margin="0,85,0,0"
                             controls:DockPanel.Dock="Left"
                             BorderBrush="Red"
                             BorderThickness="1"
@@ -178,10 +178,10 @@
                         </Grid>
                         <local:SelectableTextBox
                             x:Name="TbSongName"
-                            Margin="5,0,0,0"
+                            Margin="-35,0,0,0"
                             HorizontalAlignment="Stretch"
                             controls:DockPanel.Dock="Left"
-                            FontSize="20"
+                            FontSize="22"
                             FontWeight="Bold"
                             ToolTipService.ToolTip="{x:Bind Mode=OneWay, Path=TbSongName.Text}" />
 
@@ -193,12 +193,14 @@
                         VerticalAlignment="Top"
                         Click="TbSingerName_OnTapped"
                         FontSize="12"
+                        Margin="0,-85,0,0"
                         Foreground="Gray" />
                     <HyperlinkButton
                         x:Name="TbAlbumName"
                         Padding="0"
                         VerticalAlignment="Top"
                         FontSize="12"
+                        Margin="0,-75,0,0"
                         Foreground="Gray"
                         Tapped="TbAlbumName_OnTapped" />
                 </StackPanel>
@@ -228,11 +230,11 @@
                 <Button
                     x:Name="BtnMore"
                     Grid.Column="0"
-                    Grid.ColumnSpan="2"
+                    Grid.ColumnSpan="3"
                     Width="40"
                     Height="40"
                     Padding="0"
-                    Margin="20,10,10,10"
+                    Margin="80,10,10,10"
                     Background="Transparent"
                     VerticalAlignment="Center"
                     CornerRadius="30"
@@ -384,7 +386,7 @@
                     Click="BtnLike_OnClick"
                     CornerRadius="30"
                     Style="{StaticResource ButtonRevealStyle}">
-                    <FontIcon
+                        <FontIcon
                         x:Name="IconLiked"
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
                         FontSize="16"
@@ -611,10 +613,12 @@
                         <Setter Target="BtnPlayStateChange.(Grid.Column)" Value="4" />
                         <Setter Target="BtnNextSong.(Grid.ColumnSpan)" Value="2" />
                         <Setter Target="BtnNextSong.(Grid.Column)" Value="6" />
-                        <Setter Target="SliderProgress.Margin" Value="0,0,15,0" />
+                        <Setter Target="SliderProgress.Margin" Value="10,0,10,0" />
+                        <Setter Target="TextBlockNowTime.Margin" Value="65,5,5,0"/>
+                        <Setter Target="TextBlockTotalTime.Margin" Value="5,5,5,0"/>
                         <Setter Target="GridSongInfoContainer.Visibility" Value="Collapsed" />
                         <Setter Target="BtnMore.Visibility" Value="Visible" />
-                        <Setter Target="MainBtnsGrid.Margin" Value="0,5,60,0"/>
+                        <Setter Target="MainBtnsGrid.Margin" Value="0,5,0,0"/>
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState>
@@ -642,7 +646,7 @@
                         <Setter Target="TbAlbumName.Margin" Value="0,-15,0,0" />
                         <Setter Target="GridSongInfoContainer.Width" Value="500" />
                         <Setter Target="GridSongInfoContainer.Height" Value="50" />
-                        <Setter Target="GridSongInfoContainer.Margin" Value="0,0,-70,30" />
+                        <Setter Target="GridSongInfoContainer.Margin" Value="5,0,-70,30" />
                         <Setter Target="ButtonCollapse.Margin" Value="10,10,10,40" />
                         <Setter Target="ButtonExpand.Margin" Value="10,10,10,40" />
                         <Setter Target="Btns.Margin" Value="10,10,10,40" />

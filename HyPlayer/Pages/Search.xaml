@@ -17,7 +17,7 @@
         </Grid.RowDefinitions>
         <TextBlock
             Grid.Row="0"
-            Margin="0,0,0,15"
+            Margin="0,-5,0,20"
             FontSize="44"
             FontWeight="Bold"
             Text="搜索歌曲" />

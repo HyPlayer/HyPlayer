@@ -78,8 +78,8 @@ public sealed partial class LyricItem : UserControl
         TextBoxTranslation.FontSize = actualsize + Common.Setting.lyricScaleSize;
         TextBoxPureLyric.FontWeight = FontWeights.Bold;
         TextBoxTranslation.FontWeight = FontWeights.Bold;
-        TextBoxPureLyric.Margin = new Thickness(0,3,0,3);
-        TextBoxTranslation.Margin = new Thickness(0,3,0,3);
+        TextBoxPureLyric.Margin = new Thickness(0,2,0,2);
+        TextBoxTranslation.Margin = new Thickness(0,2,0,2);
         TextBoxPureLyric.Foreground = originBrush;
         TextBoxSound.Foreground = originBrush;
         TextBoxTranslation.Foreground = originBrush;
