@@ -72,7 +72,7 @@
             CornerRadius="20,0,0,20">
             <StackPanel
                 x:Name="GridSongAdvancedOperation"
-                Margin="30,0,0,15"
+                Margin="25,0,0,0"
                 Orientation="Horizontal"
                 Spacing="15"
                 Visibility="Collapsed">
@@ -161,7 +161,7 @@
                     <controls:DockPanel HorizontalAlignment="Stretch" LastChildFill="True">
                         <Grid
                             x:Name="SongInfoTag"
-                            MaxHeight="20"
+                            Height="20"
                             Padding="3,0,3,0"
                             Margin="0,85,0,0"
                             controls:DockPanel.Dock="Left"
@@ -394,7 +394,7 @@
                         Glyph="&#xE00B;" />
                 </Button>
             </Grid>
-            <Grid Grid.Row="1">
+            <Grid Grid.Row="1" x:Name="PlayProgress">
                 <controls:DockPanel LastChildFill="True">
                     <TextBlock
                         x:Name="TextBlockTotalTime"
@@ -572,9 +572,12 @@
                         <Setter Target="ButtonExpand.Margin" Value="10" />
                         <Setter Target="MainControlGrid.(Grid.ColumnSpan)" Value="1" />
                         <Setter Target="BtnLike.Visibility" Value="Visible" />
+                        <Setter Target="GridSongAdvancedOperation.Margin" Value="25,0,0,0"/>
+                        <Setter Target="GridSongAdvancedOperation.Spacing" Value="15"/>
                         <Setter Target="BtnPlayRollType.Visibility" Value="Visible" />
                         <Setter Target="BtnPreviousSong.(Grid.ColumnSpan)" Value="1" />
                         <Setter Target="BtnPreviousSong.(Grid.Column)" Value="3" />
+                        <Setter Target="SongInfoTag.Height" Value="20"/>
                         <Setter Target="BtnPlayStateChange.(Grid.ColumnSpan)" Value="1" />
                         <Setter Target="BtnPlayStateChange.(Grid.Column)" Value="4" />
                         <Setter Target="BtnNextSong.(Grid.ColumnSpan)" Value="1" />
@@ -613,9 +616,7 @@
                         <Setter Target="BtnPlayStateChange.(Grid.Column)" Value="4" />
                         <Setter Target="BtnNextSong.(Grid.ColumnSpan)" Value="2" />
                         <Setter Target="BtnNextSong.(Grid.Column)" Value="6" />
-                        <Setter Target="SliderProgress.Margin" Value="10,0,10,0" />
-                        <Setter Target="TextBlockNowTime.Margin" Value="65,5,5,0"/>
-                        <Setter Target="TextBlockTotalTime.Margin" Value="5,5,5,0"/>
+                        <Setter Target="PlayProgress.Margin" Value="70,-5,10,0"/>
                         <Setter Target="GridSongInfoContainer.Visibility" Value="Collapsed" />
                         <Setter Target="BtnMore.Visibility" Value="Visible" />
                         <Setter Target="MainBtnsGrid.Margin" Value="0,5,0,0"/>
@@ -638,12 +639,14 @@
                         <Setter Target="SliderProgress.Margin" Value="0,0,15,0" />
                         <Setter Target="MainControlGrid.(Grid.Column)" Value="0" />
                         <Setter Target="MainControlGrid.(Grid.ColumnSpan)" Value="4" />
+                        <Setter Target="PlayProgress.Margin" Value="70,-5,10,0"/>
                         <Setter Target="SongInfoTag.Margin" Value="0,0,0,0"/>
                         <Setter Target="TbSongName.Margin" Value="5,-7,0,0"/>
-                        <Setter Target="TbSongTag.FontSize" Value="12"/>
+                        <Setter Target="TbSongTag.FontSize" Value="10"/>
                         <Setter Target="SongInfoTag.Margin" Value="0"/>
-                        <Setter Target="TbSingerName.Margin" Value="0,-15,0,0" />
-                        <Setter Target="TbAlbumName.Margin" Value="0,-15,0,0" />
+                        <Setter Target="SongInfoTag.Height" Value="18"/>
+                        <Setter Target="TbSingerName.Margin" Value="0,-16,0,0" />
+                        <Setter Target="TbAlbumName.Margin" Value="0,-16,0,0" />
                         <Setter Target="GridSongInfoContainer.Width" Value="500" />
                         <Setter Target="GridSongInfoContainer.Height" Value="50" />
                         <Setter Target="GridSongInfoContainer.Margin" Value="5,0,-70,30" />
@@ -652,6 +655,8 @@
                         <Setter Target="Btns.Margin" Value="10,10,10,40" />
                         <Setter Target="AlbumImage.Margin" Value="10,0,0,0"/>
                         <Setter Target="AlbumImage.CornerRadius" Value="16"/>
+                        <Setter Target="GridSongAdvancedOperation.Margin" Value="0,0,0,0"/>
+                        <Setter Target="GridSongAdvancedOperation.Spacing" Value="5"/>
                         <Setter Target="MainBtnsGrid.Margin" Value="0,5,60,0"/>
 
                     </VisualState.Setters>
