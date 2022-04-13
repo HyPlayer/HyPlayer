@@ -42,8 +42,30 @@
             x:Name="IconTick"
             FontFamily="{StaticResource SymbolThemeFontFamily}"
             Glyph="&#xE008;" />
+        <Storyboard x:Name="PlayBarBackgroundFadeIn">
+            <FadeInThemeAnimation Storyboard.TargetName="PlayBarBackground" BeginTime ="0:0:0.2"/>
+            <FadeInThemeAnimation Storyboard.TargetName="PlayBarAcrylic" />
+        </Storyboard>
+        <Storyboard x:Name="PlayBarBackgroundFadeOut">
+            <FadeOutThemeAnimation Storyboard.TargetName="PlayBarBackground" Duration="0:0:0.2"/>
+            <FadeOutThemeAnimation Storyboard.TargetName="PlayBarAcrylic" BeginTime="0:0:0.15" Duration="0:0:0.2"/>
+        </Storyboard>
+        <Storyboard x:Name="PlayBarBackgroundAni">
+            <DoubleAnimation Storyboard.TargetName="PlayBarBackground" 
+                             Storyboard.TargetProperty="Opacity" 
+                             From="1" To="0.2" 
+                             AutoReverse="True"
+                             RepeatBehavior="Forever" 
+                             Duration="0:0:4">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseInOut" />
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+
+        </Storyboard>
+
     </UserControl.Resources>
-    <Grid x:Name="GridThis">
+    <Grid x:Name="GridThis" CornerRadius="20,20,0,0" >
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="9*" />
             <ColumnDefinition Width="18*" />
@@ -55,9 +77,10 @@
             Grid.ColumnSpan="4"
             EnableLazyLoading="True"
             IsCacheEnabled="False"
+            x:Name="PlayBarBackground"
             Source="{x:Bind AlbumImage.Source, Mode=OneWay}"
-            Stretch="Fill"
-            Visibility="{x:Bind ButtonExpand.Visibility, Mode=OneWay}" />
+            VerticalAlignment="Top"
+            Stretch="Fill"/>
         <Rectangle
             x:Name="PlayBarAcrylic"
             Grid.Column="0"
@@ -69,7 +92,7 @@
             HorizontalAlignment="Left"
             x:FieldModifier="public"
             Canvas.ZIndex="2"
-            CornerRadius="20,0,0,20">
+            CornerRadius="20,0,0,0">
             <StackPanel
                 x:Name="GridSongAdvancedOperation"
                 Margin="25,0,0,0"
@@ -345,11 +368,16 @@
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     AutomationProperties.AcceleratorKey="Space"
-                    Background="{ThemeResource SystemAccentColorLight2}"
                     Click="BtnPlayStateChange_OnClick"
                     CornerRadius="30"
                     KeyUp="BtnPlayStateChange_KeyUp"
                     Style="{StaticResource ButtonRevealStyle}">
+                    <Button.Background>
+                        <LinearGradientBrush EndPoint="1,1" StartPoint="0,0">
+                            <GradientStop Color="{ThemeResource SystemAccentColorLight2}" Offset="0.3"/>
+                            <GradientStop Color="{ThemeResource SystemAccentColorDark2}" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Button.Background>
                     <FontIcon
                         x:Name="PlayStateIcon"
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
@@ -386,7 +414,7 @@
                     Click="BtnLike_OnClick"
                     CornerRadius="30"
                     Style="{StaticResource ButtonRevealStyle}">
-                        <FontIcon
+                    <FontIcon
                         x:Name="IconLiked"
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
                         FontSize="16"
@@ -479,17 +507,20 @@
                                     HorizontalTextAlignment="Center"
                                     Text="播放列表" />
                                 <Button
-                                    Margin="5,0,10,5"
+                                    Margin="5,-5,10,5"
                                     controls:DockPanel.Dock="Right"
                                     Click="ButtonCleanAll_OnClick"
+                                    FontWeight="Bold"
+                                    Foreground="OrangeRed"
                                     Content="清除全部"
                                     Style="{StaticResource ButtonRevealStyle}" />
                                 <Button
-                                    Margin="0,0,0,5"
+                                    Margin="0,-5,0,5"
                                     HorizontalAlignment="Right"
                                     controls:DockPanel.Dock="Right"
                                     Click="ButtonAddLocal_OnClick"
                                     Content="添加本地"
+                                    FontWeight="Bold"
                                     Style="{StaticResource ButtonRevealStyle}" />
                             </controls:DockPanel>
                             <ListView
@@ -501,7 +532,7 @@
                                 <ListView.ItemTemplate>
                                     <DataTemplate x:DataType="classes:HyPlayItem">
                                         <StackPanel Margin="0,5,0,5" Orientation="Horizontal">
-                                            <StackPanel Width="340" Orientation="Vertical">
+                                            <StackPanel Width="345" Orientation="Vertical">
                                                 <TextBlock FontWeight="Bold" Text="{x:Bind Path=PlayItem.Name}" />
                                                 <TextBlock Foreground="Gray" Text="{x:Bind Path=PlayItem.ArtistString}" />
                                             </StackPanel>

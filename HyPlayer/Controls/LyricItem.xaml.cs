@@ -80,6 +80,7 @@ public sealed partial class LyricItem : UserControl
         TextBoxTranslation.FontWeight = FontWeights.Bold;
         TextBoxPureLyric.Margin = new Thickness(0,2,0,2);
         TextBoxTranslation.Margin = new Thickness(0,2,0,2);
+        TextBoxPureLyric.CharacterSpacing=30;
         TextBoxPureLyric.Foreground = originBrush;
         TextBoxSound.Foreground = originBrush;
         TextBoxTranslation.Foreground = originBrush;
@@ -98,6 +99,7 @@ public sealed partial class LyricItem : UserControl
         TextBoxTranslation.FontSize = actualsize;
         TextBoxPureLyric.Margin = new Thickness(0);
         TextBoxTranslation.Margin = new Thickness(0);
+        TextBoxPureLyric.CharacterSpacing = 0;
         TextBoxPureLyric.FontWeight = FontWeights.SemiBold;
         TextBoxTranslation.FontWeight = FontWeights.SemiBold;
         TextBoxPureLyric.Foreground = Application.Current.Resources["TextFillColorDisabledBrush"] as Brush;

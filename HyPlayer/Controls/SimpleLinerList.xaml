@@ -64,7 +64,7 @@
                             Width="75"
                             Height="75"
                             x:Phase="4"
-                            CornerRadius="4"
+                            CornerRadius="10"
                             EnableLazyLoading="True"
                             IsCacheEnabled="False"
                             Source="{x:Bind Cover}"

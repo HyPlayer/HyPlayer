@@ -461,6 +461,7 @@ public sealed partial class PlayBar
             }
 
             HyPlayList.Player.Pause();
+            PlayBarBackgroundAni.Stop();
             PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uEDB5" : "\uEDB4";
             return;
         }
@@ -468,6 +469,7 @@ public sealed partial class PlayBar
         if (!HyPlayList.IsPlaying)
         {
             HyPlayList.Player.Play();
+            PlayBarBackgroundAni.Begin();
             if (Common.Setting.fadeInOutPause)
             {
                 FadeSettedVolume = true;
@@ -556,7 +558,8 @@ public sealed partial class PlayBar
     {
         ButtonExpand.Visibility = Visibility.Collapsed;
         ButtonCollapse.Visibility = Visibility.Visible;
-        Common.PageMain.GridPlayBar.Background = PlayBarAcrylic.Fill = null;
+        Common.PageMain.GridPlayBar.Background = null;
+        PlayBarBackgroundFadeOut.Begin();
         //Common.PageMain.MainFrame.Visibility = Visibility.Collapsed;
         Common.PageMain.ExpandedPlayer.Visibility = Visibility.Visible;
         Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer), null,
@@ -599,6 +602,7 @@ public sealed partial class PlayBar
         Common.PageExpandedPlayer.StartCollapseAnimation();
         GridSongAdvancedOperation.Visibility = Visibility.Collapsed;
         GridSongInfo.Visibility = Visibility.Visible;
+        PlayBarBackgroundFadeIn.Begin();
         if (Common.Setting.expandAnimation && GridSongInfoContainer.Visibility == Visibility.Visible)
         {
             ConnectedAnimation anim1 = null;
