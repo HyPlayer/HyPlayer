@@ -974,22 +974,25 @@ public sealed partial class PlayBar
         realSelectSong = false;
         ListBoxPlayList.ItemsSource = PlayItems;
         realSelectSong = true;
-
-        try
+        if (HyPlayList.List.Count == 0)
         {
-            var list = await HistoryManagement.GetcurPlayingListHistory();
-            HyPlayList.AppendNcSongs(list);
-            if (list.Count > 0)
+            try
             {
-                int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"].ToString(),
-                    out HyPlayList.NowPlaying);
-                HyPlayList.Player_SourceChanged(null, null);
-                HyPlayList.SongAppendDone();
+                var list = await HistoryManagement.GetcurPlayingListHistory();
+                HyPlayList.AppendNcSongs(list);
+                if (list.Count > 0)
+                {
+                    int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"].ToString(),
+                        out HyPlayList.NowPlaying);
+                    HyPlayList.Player_SourceChanged(null, null);
+                    HyPlayList.SongAppendDone();
+                }
+            }
+            catch
+            {
             }
         }
-        catch
-        {
-        }
+        
 
         if (Common.isExpanded)
             Common.BarPlayBar.ShowExpandedPlayer();
