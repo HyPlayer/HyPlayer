@@ -19,8 +19,9 @@
         </Grid.RowDefinitions>
         <TextBlock
             Grid.Row="0"
-            Margin="30,0,30,0"
-            FontSize="25"
+            Margin="30,-5,30,0"
+            FontSize="44"
+            FontWeight="Bold"
             Text="最近播放" />
         <NavigationView
             x:Name="HisModeNavView"

@@ -31,7 +31,9 @@
             </Rectangle>
             <!--  欢迎语  -->
             <StackPanel Orientation="Vertical"
-                        Margin="40,95,0,0">
+                        Margin="40,105,0,0"
+                        x:Name="GreetingText"
+                        >
                 <StackPanel Orientation="Horizontal" >
                     <TextBlock FontSize="56" Text="Hi~ " FontWeight="ExtraBold" />
                     <TextBlock x:Name="TbHelloUserName" FontSize="48" FontWeight="ExtraBold" />
@@ -41,6 +43,98 @@
                     x:Name="TbRamdomWelcome"
                     FontSize="20"
                     Text="用音乐开启新的一天吧" />
+            </StackPanel >
+            <StackPanel x:Name="HomeBtns" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,115,270,0" Spacing="20" >
+                <Button                
+                x:Name="DailyRcmBtn"
+                Height="90"
+                Width="90"
+                CornerRadius="16"
+                VerticalAlignment="Top"
+                HorizontalAlignment="Center"
+                Margin="0,0,0,0"
+                Background="#ddffffff" 
+                Tapped="dailyRcmTapped"
+            >
+                    <StackPanel >
+                        <FontIcon
+                        x:Name="IconDailyRcm"
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        FontSize="36"
+                        Foreground="{ThemeResource SystemAccentColorDark1}"
+                        Glyph="&#xE163;" />
+                        <TextBlock 
+                HorizontalAlignment="Center"
+                VerticalAlignment="Top"
+                Text="每日推荐"
+                FontWeight="Bold"
+                Margin="0,0,0,0"
+                Foreground="{ThemeResource SystemAccentColorDark1}"
+                FontSize="12"
+                />
+
+                    </StackPanel>
+                </Button>
+                <Button                
+                x:Name="PersonalFMBtn"
+                Height="90"
+                Width="90"
+                CornerRadius="16"
+                VerticalAlignment="Top"
+                HorizontalAlignment="Center"
+                Margin="0,0,0,0"
+                Background="#ddffffff" 
+                Tapped="FMTapped"
+            >
+                    <StackPanel >
+                        <FontIcon
+                        x:Name="IconFM"
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        FontSize="36"
+                        Foreground="{ThemeResource SystemAccentColorDark1}"
+                        Glyph="&#xEFA9;" />
+                        <TextBlock 
+                HorizontalAlignment="Center"
+                VerticalAlignment="Top"
+                Text="私人FM"
+                FontWeight="Bold"
+                Margin="0,4,0,0"
+                Foreground="{ThemeResource SystemAccentColorDark1}"
+                FontSize="12"
+                />
+
+                    </StackPanel>
+                </Button>
+                <Button                
+                x:Name="LikedSongListBtn"
+                Height="90"
+                Width="90"
+                CornerRadius="16"
+                VerticalAlignment="Top"
+                HorizontalAlignment="Center"
+                Margin="0,0,0,0"
+                Background="#ddffffff" 
+                Tapped="LikedSongListTapped"
+            >
+                    <StackPanel>
+                        <FontIcon
+                        x:Name="IconLiked"
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        FontSize="36"
+                        Foreground="{ThemeResource SystemAccentColorDark1}"
+                        Glyph="&#xE00B;" />
+                        <TextBlock 
+                HorizontalAlignment="Center"
+                VerticalAlignment="Top"
+                Text="喜欢音乐"
+                FontWeight="Bold"
+                Margin="0,4,0,0"
+                Foreground="{ThemeResource SystemAccentColorDark1}"
+                FontSize="12"
+                />
+
+                    </StackPanel>
+                </Button>
             </StackPanel>
             <StackPanel
             x:Name="MainContainer"
@@ -50,11 +144,12 @@
                 <Rectangle 
                 HorizontalAlignment="Right" 
                 VerticalAlignment="Top"
-                Height="250"
-                Width="250"
-                Margin="0,-30,10,0">
+                x:Name="Appicon"
+                Height="240"
+                Width="240"
+                Margin="0,-20,0,0">
                     <Rectangle.Fill>
-                        <ImageBrush Stretch="UniformToFill">
+                        <ImageBrush Stretch="Uniform">
                             <ImageBrush.ImageSource>
                                 <BitmapImage UriSource="/Assets/icon.png" />
                             </ImageBrush.ImageSource>
@@ -163,5 +258,47 @@
                 <Grid Height="150" />
             </StackPanel>
         </Grid>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth ="1" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="GreetingText.Visibility" Value="Collapsed"/>
+                        <Setter Target="HomeBtns.Spacing" Value="10"/>
+                        <Setter Target="Appicon.Height" Value="150"/>
+                        <Setter Target="Appicon.Width" Value="110"/>
+                        <Setter Target="Appicon.Margin" Value="0,70,0,0"/>
+                        <Setter Target="HomeBtns.Margin" Value="0,115,135,0"/>
+                    </VisualState.Setters>
+
+                </VisualState>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth ="740" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="GreetingText.Visibility" Value="Visible"/>
+                        <Setter Target="HomeBtns.Spacing" Value="10"/>
+                        <Setter Target="Appicon.Height" Value="150"/>
+                        <Setter Target="Appicon.Width" Value="110"/>
+                        <Setter Target="Appicon.Margin" Value="0,70,0,0"/>
+                        <Setter Target="HomeBtns.Margin" Value="0,115,135,0"/>
+                    </VisualState.Setters>
+
+                </VisualState>
+
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth ="1150" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="GreetingText.Visibility" Value="Visible"/>
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
     </ScrollViewer>
 </Page>

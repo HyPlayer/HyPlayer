@@ -11,10 +11,11 @@
     <Grid>
         <TextBlock
             Grid.Row="0"
-            Margin="30,0,30,0"
-            FontSize="25"
+            Margin="30,-5,30,0"
+            FontSize="44"
+            FontWeight="Bold"
             Text="收藏歌曲" />
-        <Grid Margin="0,30,0,0">
+        <Grid Margin="5,50,0,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />

@@ -18,11 +18,14 @@
             Name="TextBoxPureLyric"
             controls:DockPanel.Dock="Top"
             TextAlignment="Center"
+            FontWeight="Bold" 
+            CharacterSpacing="0"
             TextWrapping="WrapWholeWords" />
         <TextBlock
             Name="TextBoxTranslation"
             controls:DockPanel.Dock="Top"
             TextAlignment="Center"
+            FontWeight="Bold"
             TextWrapping="WrapWholeWords" />
         <TextBlock
             Name="TextBoxSound"

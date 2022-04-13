@@ -14,8 +14,9 @@
         </Grid.RowDefinitions>
         <TextBlock
             Grid.Row="0"
-            Margin="30,0,30,0"
-            FontSize="25"
+            Margin="30,-5,30,0"
+            FontSize="44"
+            FontWeight="Bold" 
             Text="设置" />
         <Pivot
             Grid.Row="1"
@@ -24,7 +25,7 @@
             <PivotItem FontFamily="Thick" Header="歌词设置">
                 <ScrollViewer VerticalScrollMode="Enabled">
                     <StackPanel x:Name="StackPanelLyricSet" Orientation="Vertical">
-                        <TextBlock FontSize="20" Text="罗马音设置" />
+                        <TextBlock FontSize="20" Text="罗马音设置" FontWeight="Bold" Margin="0,20,0,0"/>
                         <TextBlock
                             x:Name="RomajiStatus"
                             Margin="0,10,0,0"
@@ -35,8 +36,9 @@
                             Content="获取罗马音资源文件"
                             Style="{StaticResource ButtonRevealStyle}" />
                         <TextBlock
-                            Margin="0,20,0,0"
+                            Margin="0,30,0,0"
                             FontSize="20"
+                            FontWeight="Bold" 
                             Text="歌词大小设置" />
                         <Grid ColumnSpacing="12">
                             <Grid.ColumnDefinitions>
@@ -66,7 +68,6 @@
                                 x:Name="RomajiSize"
                                 Grid.Column="1"
                                 Width="100"
-                                Margin="0,10,0,0"
                                 LargeChange="5"
                                 SmallChange="1"
                                 SpinButtonPlacementMode="Compact"
@@ -99,14 +100,15 @@
                         Content="是否产生阴影"
                         IsChecked="{x:Bind hyplayer:Common.Setting.lyricDropshadow, Mode=TwoWay}" />-->
                         <controls:RadioButtons
-                            Margin="0,20,0,0"
+                            Margin="0,30,0,0"
                             FontSize="20"
                             Header="歌词颜色"
                             MaxColumns="4"
+                            FontWeight="Bold" 
                             SelectedIndex="{x:Bind hyplayer:Common.Setting.lyricColor, Mode=TwoWay}">
-                            <RadioButton Content="自动" />
-                            <RadioButton Content="白色" />
-                            <RadioButton Content="黑色" />
+                            <RadioButton Content="自动" FontWeight="Normal" />
+                            <RadioButton Content="白色" FontWeight="Normal" />
+                            <RadioButton Content="黑色" FontWeight="Normal"  />
                         </controls:RadioButtons>
                         <CheckBox Content="是否开启时启动热词" Checked="HotLyricOnStartUp_Checked" IsChecked="{x:Bind hyplayer:Common.Setting.hotlyricOnStartup, Mode=TwoWay}" />
                     </StackPanel>
@@ -118,51 +120,65 @@
                         <controls:RadioButtons
                             x:Name="RadioButtonsSongBr"
                             FontSize="20"
+                            FontWeight="Bold" 
+                            Margin="0,30,0,0 "
                             Header="在线播放音质:"
                             MaxColumns="4">
                             <RadioButton
                                 Checked="RadioButton_Checked"
                                 Content="标准 (128k)"
-                                Tag="128000" />
+                                Tag="128000" 
+                                FontWeight="Normal"/>
                             <RadioButton
                                 Checked="RadioButton_Checked"
                                 Content="较高 (192k)"
-                                Tag="192000" />
+                                Tag="192000"
+                                FontWeight="Normal" />
                             <RadioButton
                                 Checked="RadioButton_Checked"
                                 Content="极高 (320k)"
-                                Tag="320000" />
+                                Tag="320000" 
+                                FontWeight="Normal" />
                             <RadioButton
                                 Checked="RadioButton_Checked"
                                 Content="无损 (VIP)"
-                                Tag="999000" />
+                                Tag="999000" 
+                                FontWeight="Normal" />
                         </controls:RadioButtons>
                         <controls:RadioButtons
                             x:Name="RadioButtonsSongDownloadBr"
-                            Margin="0,20,0,0"
+                            Margin="0,30,0,0"
                             FontSize="20"
+                            FontWeight="Bold"
                             Header="歌曲下载音质:"
                             MaxColumns="4">
                             <RadioButton
                                 Checked="RadioButton1_Checked"
                                 Content="标准 (128k)"
-                                Tag="128000" />
+                                Tag="128000" 
+                                FontWeight="Normal" />
                             <RadioButton
                                 Checked="RadioButton1_Checked"
                                 Content="较高 (192k)"
-                                Tag="192000" />
+                                Tag="192000" 
+                                FontWeight="Normal" />
                             <RadioButton
                                 Checked="RadioButton1_Checked"
                                 Content="极高 (320k)"
-                                Tag="320000" />
+                                Tag="320000"
+                                FontWeight="Normal"/>
                             <RadioButton
                                 Checked="RadioButton1_Checked"
                                 Content="无损 (VIP)"
-                                Tag="999000" />
+                                Tag="999000" 
+                                FontWeight="Normal"/>
                         </controls:RadioButtons>
                         <ToggleSwitch
                             x:Name="FadeInOut"
+                            FontWeight="Bold" 
+                            Margin="0,30,0,0"
                             Header="切歌渐入渐出："
+                            FontSize=" 20"
                             IsOn="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=TwoWay}" />
                         <Slider
                             x:Name="FadeTime"
@@ -186,6 +202,7 @@
                             Visibility="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=OneWay}"
                             Value="{x:Bind hyplayer:Common.Setting.fadeInOutTimePause, Mode=TwoWay}" />
                         <Border Height="15" />
+                        <TextBlock Text="唱片设置" FontSize="20" FontWeight="ExtraBlack" Margin="0,10,0,0"/>
                         <CheckBox Content="圆形唱片" IsChecked="{x:Bind hyplayer:Common.Setting.albumRound, Mode=TwoWay}" />
                         <CheckBox Content="唱片旋转" IsChecked="{x:Bind hyplayer:Common.Setting.albumRotate, Mode=TwoWay}" />
                         <Slider
@@ -225,7 +242,7 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="50" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="下载路径" />
+                            <TextBlock Grid.Column="0" Text="下载路径" HorizontalAlignment="Left"  />
                             <TextBlock
                                 x:Name="TextBoxDownloadDir"
                                 Grid.Column="1"
@@ -491,7 +508,7 @@
                             Text="用户交流反馈 QQ 群: 1145646224" 
                             HorizontalAlignment="Right"
                             HorizontalContentAlignment="Right"
-                            Margin=" 0,625,10,0"
+                            Margin=" 0,625,-30,0"
                             Grid.Column="1"
                             />
                         <StackPanel Orientation="Vertical"  Grid.Column="0">
@@ -652,7 +669,7 @@
                                     FontSize="15"
                                     FontWeight="Medium"
                                     Foreground="Gray">
-                                    新版图标提供
+                                    新版图标提供 + conceptUI分支设计
                                 </TextBlock>
                                     <TextBlock
                                     FontSize="15"
@@ -662,10 +679,14 @@
                                     </TextBlock>
                                 <RichTextBlock>
                                     <Paragraph>
-                                        <Hyperlink NavigateUri="https://www.coolapk.com/u/1873068">
-                                            酷安
-                                        </Hyperlink>
-                                    </Paragraph>
+                                            <Hyperlink NavigateUri="https://github.com/FunnyTHEWorld">
+                                             Github
+                                            </Hyperlink>
+                                        |
+                                            <Hyperlink NavigateUri="https://www.coolapk.com/u/1873068">
+                                             酷安
+                                            </Hyperlink>
+                                        </Paragraph>
                                 </RichTextBlock>
                             </StackPanel>
                         </StackPanel>
