@@ -58,7 +58,7 @@
                              RepeatBehavior="Forever" 
                              Duration="0:0:4">
                 <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseInOut" />
+                    <QuarticEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
 
@@ -85,7 +85,7 @@
             x:Name="PlayBarAcrylic"
             Grid.Column="0"
             Grid.ColumnSpan="4"
-            Fill="{ThemeResource SystemControlAcrylicElementMediumHighBrush}" />
+            Fill="{ThemeResource SystemControlAltMediumLowAcrylicElementMediumBrush}" />
         <Grid
             x:Name="GridSongInfoContainer"
             Grid.Column="0"
