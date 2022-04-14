@@ -9,8 +9,6 @@
     x:Name="SongListRoot">
 
     <ListView
-        ScrollViewer.HorizontalScrollMode="Disabled"
-        ScrollViewer.VerticalScrollMode="Disabled"
         Name="ItemList"
         Padding="10"
         Header="{x:Bind ListHeader, Mode=OneWay}"
