@@ -21,7 +21,7 @@
             <behaviors:QuickReturnHeaderBehavior />
         </interactivity:Interaction.Behaviors>
         <ListView.Footer>
-            <ContentControl Margin="0,0,0,40" Content="{x:Bind Footer}" />
+            <ContentControl Content="{x:Bind Footer}" />
         </ListView.Footer>
         <ListView.ItemTemplate>
             <DataTemplate x:DataType="classes:SimpleListItem">
