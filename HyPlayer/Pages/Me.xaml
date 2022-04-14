@@ -117,6 +117,7 @@
                         VerticalAlignment="Center"
                         FontSize="48"
                         FontWeight="Bold"
+                        TextWrapping="NoWrap"
                         Text="用户名" />
                         <controls1:SelectableTextBox
                         x:Name="TextBoxSignature"
@@ -194,7 +195,7 @@
                     x:Name="MyFavouriteList"
                     Grid.Column="1"
                     Grid.ColumnSpan="2"
-                    Margin="0,50,0,30"
+                    Margin="0,50,0,0"
                     CanBeScrollAnchor="False" 
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
