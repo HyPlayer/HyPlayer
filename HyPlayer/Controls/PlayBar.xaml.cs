@@ -462,6 +462,7 @@ public sealed partial class PlayBar
 
             HyPlayList.Player.Pause();
             PlayBarBackgroundAni.Stop();
+            
             PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uEDB5" : "\uEDB4";
             return;
         }

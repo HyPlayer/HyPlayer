@@ -121,8 +121,8 @@
                             HorizontalAlignment="Stretch"
                             x:FieldModifier="public"
                             FontSize="36"
-                            FontWeight="Bold"
-                            CharacterSpacing="15"
+                            FontWeight="ExtraBold"
+                            CharacterSpacing="40"
                             Text="歌曲名"
                             TextWrapping="Wrap" 
                             Margin=" 0,-10,0,0"/>

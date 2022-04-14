@@ -236,69 +236,72 @@
             <PivotItem FontFamily="Thick" Header="存储设置">
                 <ScrollViewer VerticalScrollMode="Enabled">
                     <StackPanel Orientation="Vertical">
-                        <Grid MaxWidth="1000">
+                        <Grid MaxWidth="1000" Margin="0,10,0,10">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="100" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="50" />
+                                <ColumnDefinition Width="80" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="下载路径" HorizontalAlignment="Left"  />
-                            <TextBlock
+                            <TextBox
                                 x:Name="TextBoxDownloadDir"
                                 Grid.Column="1"
                                 Text="{x:Bind hyplayer:Common.Setting.downloadDir, Mode=TwoWay}" />
                             <Button
                                 x:Name="ButtonDownloadSelect"
                                 Grid.Column="2"
+                                HorizontalAlignment="Center" 
                                 Click="ButtonDownloadSelect_OnClick"
                                 Content="选择"
                                 Style="{StaticResource ButtonRevealStyle}" />
                         </Grid>
-                        <Grid MaxWidth="1000" Visibility="{x:Bind hyplayer:Common.Setting.enableCache, Mode=OneWay}">
+                        <Grid MaxWidth="1000" Visibility="{x:Bind hyplayer:Common.Setting.enableCache, Mode=OneWay}" Margin="0,10,0,10">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="100" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="50" />
+                                <ColumnDefinition Width="80" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="缓存路径" />
-                            <TextBlock
+                            <TextBox
                                 x:Name="TextBoxCacheDir"
                                 Grid.Column="1"
                                 Text="{x:Bind hyplayer:Common.Setting.cacheDir, Mode=TwoWay}" />
                             <Button
                                 x:Name="ButtonCacheSelect"
                                 Grid.Column="2"
+                                HorizontalAlignment="Center" 
                                 Click="ButtonCacheSelect_OnClick"
                                 Content="选择"
                                 Style="{StaticResource ButtonRevealStyle}" />
                         </Grid>
-                        <Grid MaxWidth="1000">
+                        <Grid MaxWidth="1000" Margin="0,0,0,10">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="100" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="50" />
+                                <ColumnDefinition Width="80" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="搜索路径" />
-                            <TextBlock
+                            <TextBox
                                 x:Name="TextBoxSearchingDir"
                                 Grid.Column="1"
                                 Text="{x:Bind hyplayer:Common.Setting.searchingDir, Mode=TwoWay}" />
                             <Button
                                 x:Name="ButtonSearchingSelect"
                                 Grid.Column="2"
+                                HorizontalAlignment="Center" 
                                 Click="ButtonSearchingSelect_OnClick"
                                 Content="选择"
                                 Style="{StaticResource ButtonRevealStyle}" />
                         </Grid>
-                        <Grid MaxWidth="1000">
+                        <Grid MaxWidth="1000" Margin="0,0,0,10">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="100" />
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="50" />
+                                <ColumnDefinition Width="80" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="下载文件命名" />
                             <TextBox Grid.Column="1" Text="{x:Bind hyplayer:Common.Setting.downloadFileName, Mode=TwoWay}" />
-                            <Button Grid.Column="2">
+                            <Button Grid.Column="2" Margin="13,0,0,0" Width="55">
                                 <Button.Flyout>
                                     <Flyout>
                                         <RichTextBlock>
@@ -423,6 +426,7 @@
                             VerticalAlignment="Center"
                             Click="RestartBtn_Click"
                             Content="立即重启"
+                            Margin="0,0,0,10"
                             Style="{StaticResource ButtonRevealStyle}"
                             Visibility="Collapsed" />
                         <Button

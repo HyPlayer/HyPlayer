@@ -211,6 +211,22 @@
                 <Frame x:Name="BaseFrame" Grid.Row="1" />
             </Grid>
         </muxc:NavigationView>
+        <Rectangle 
+            VerticalAlignment="Bottom"
+            HorizontalAlignment="Stretch"
+            Height="140"
+            Margin="30,0,30,0"
+            >
+            <Rectangle.Fill>
+                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                    <GradientStop Color="#00000000" Offset="0"/>
+                    <GradientStop Color="Black" Offset="0.3"/>
+                    <GradientStop Color="Black" Offset="0.8"/>
+                    <GradientStop Color="#00000000"  Offset="1.1"/>
+                </LinearGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+
         <!--  登录弹窗  -->
         <ContentDialog x:Name="DialogLogin" Width="400">
             <StackPanel Orientation="Vertical">

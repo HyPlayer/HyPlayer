@@ -61,7 +61,6 @@
                     <QuarticEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-
         </Storyboard>
 
     </UserControl.Resources>
@@ -374,14 +373,14 @@
                     Style="{StaticResource ButtonRevealStyle}">
                     <Button.Background>
                         <LinearGradientBrush EndPoint="1,1" StartPoint="0,0">
-                            <GradientStop Color="{ThemeResource SystemAccentColorLight2}" Offset="0.3"/>
-                            <GradientStop Color="{ThemeResource SystemAccentColorDark2}" Offset="1"/>
+                            <GradientStop Color="{ThemeResource SystemAccentColorLight2}" Offset="0.2"/>
+                            <GradientStop Color="{ThemeResource SystemAccentColorDark1}" Offset="0.8"/>
                         </LinearGradientBrush>
                     </Button.Background>
                     <FontIcon
                         x:Name="PlayStateIcon"
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        Foreground="Black"
+                        Foreground="White" 
                         Glyph="&#xEDB5;" />
                     <!--  EDB4  -->
                 </Button>
