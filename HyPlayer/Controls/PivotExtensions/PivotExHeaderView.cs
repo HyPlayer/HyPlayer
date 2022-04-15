@@ -41,7 +41,6 @@ namespace HyPlayer.Controls
             set { SetValue(PivotProperty, value); }
         }
 
-        // Using a DependencyProperty as the backing store for Pivot.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty PivotProperty =
             DependencyProperty.Register("Pivot", typeof(PivotEx), typeof(PivotExHeaderView), new PropertyMetadata(null, (s, a) =>
             {

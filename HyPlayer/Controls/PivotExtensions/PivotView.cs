@@ -189,27 +189,6 @@ namespace HyPlayer.Controls
 
             var progress = Pivot.HeaderScrollOffset / Pivot.MaxHeaderScrollOffset;
 
-            //if (HeaderContainer != null)
-            //{
-            //    if (HeaderContainer.RenderTransform is not TranslateTransform headerTrans)
-            //    {
-            //        headerTrans = new TranslateTransform();
-            //        HeaderContainer.RenderTransform = headerTrans;
-            //    }
-
-            //    headerTrans.Y = -Pivot.HeaderScrollOffset;
-            //}
-
-            //if (PivotExHeaderView != null)
-            //{
-            //    if (PivotExHeaderView.RenderTransform is not TranslateTransform itemHeaderTrans)
-            //    {
-            //        itemHeaderTrans = new TranslateTransform();
-            //        PivotExHeaderView.RenderTransform = itemHeaderTrans;
-            //    }
-            //    itemHeaderTrans.Y = -Pivot.HeaderScrollOffset;
-            //}
-
             internalSet = true;
             try
             {

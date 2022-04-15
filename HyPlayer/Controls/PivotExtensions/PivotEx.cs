@@ -31,7 +31,6 @@ namespace HyPlayer.Controls
 
             this.SelectionChanged += PivotEx_SelectionChanged;
             this.Unloaded += PivotEx_Unloaded;
-            this.PivotItemUnloading += PivotEx_PivotItemUnloading;
             this.PivotItemLoaded += PivotEx_PivotItemLoaded;
         }
 
@@ -53,7 +52,13 @@ namespace HyPlayer.Controls
             set { SetValue(MaxHeaderScrollOffsetProperty, value); }
         }
 
-        // Using a DependencyProperty as the backing store for MaxHeaderScrollOffset.  This enables animation, styling, binding, etc...
+        public double HeaderScrollOffset
+        {
+            get { return (double)GetValue(HeaderScrollOffsetProperty); }
+            private set { SetValue(HeaderScrollOffsetProperty, value); }
+        }
+
+
         public static readonly DependencyProperty MaxHeaderScrollOffsetProperty =
             DependencyProperty.Register("MaxHeaderScrollOffset", typeof(double), typeof(PivotEx), new PropertyMetadata(0d, (s, a) =>
             {
@@ -65,15 +70,6 @@ namespace HyPlayer.Controls
                 }
             }));
 
-
-
-        public double HeaderScrollOffset
-        {
-            get { return (double)GetValue(HeaderScrollOffsetProperty); }
-            private set { SetValue(HeaderScrollOffsetProperty, value); }
-        }
-
-        // Using a DependencyProperty as the backing store for TitleProgress.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty HeaderScrollOffsetProperty =
             DependencyProperty.Register("HeaderScrollOffset", typeof(double), typeof(PivotEx), new PropertyMetadata(0d, (s, a) =>
             {
@@ -111,11 +107,6 @@ namespace HyPlayer.Controls
 
             currentScrollViewer = sv;
 
-            //progressPropSet.StopAnimation("Progress");
-            //progressPropSet.StopAnimation("OffsetY");
-            //progressPropSet.InsertScalar("Progress", (float)(MaxHeaderScrollOffset == 0 ? 0 : (Math.Clamp(lastScrollOffsetY, 0, MaxHeaderScrollOffset) / MaxHeaderScrollOffset)));
-            //progressPropSet.InsertScalar("OffsetY", (float)(Math.Clamp(lastScrollOffsetY, 0, MaxHeaderScrollOffset)));
-
             scrollProgressBind = internalPropSet.Compositor.CreateExpressionAnimation("prop.Progress");
             scrollProgressBind.SetReferenceParameter("prop", internalPropSet);
             offsetYBind = internalPropSet.Compositor.CreateExpressionAnimation("prop.OffsetY");
@@ -123,6 +114,8 @@ namespace HyPlayer.Controls
 
             progressPropSet.StartAnimation("OffsetY", offsetYBind);
             progressPropSet.StartAnimation("Progress", scrollProgressBind);
+
+            currentScrollPropSet = null;
 
             if (currentScrollViewer != null)
             {
@@ -156,10 +149,6 @@ namespace HyPlayer.Controls
 
                 progressPropSet.StartAnimation("Progress", scrollProgressBind);
             }
-            else
-            {
-                currentScrollPropSet = null;
-            }
         }
 
         private void CurrentScrollViewer_ViewChanging(object sender, ScrollViewerViewChangingEventArgs e)
@@ -188,13 +177,6 @@ namespace HyPlayer.Controls
                 HeaderScrollOffsetChanged?.Invoke(this, EventArgs.Empty);
             }
         }
-
-
-        private void PivotEx_PivotItemUnloading(Pivot sender, PivotItemEventArgs args)
-        {
-            Debug.WriteLine(SelectedIndex);
-        }
-
 
         private void PivotEx_PivotItemLoaded(Pivot sender, PivotItemEventArgs args)
         {
