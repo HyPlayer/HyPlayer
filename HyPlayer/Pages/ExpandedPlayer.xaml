@@ -19,12 +19,12 @@
                     <QuadraticEase EasingMode="EaseInOut"/>
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="ImageScale" Storyboard.TargetProperty="ScaleX" From="1" To="0.8" Duration="0:0:4" AutoReverse="True" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetName="ImageScale" Storyboard.TargetProperty="ScaleX" From="1" To="0.9" Duration="0:0:4" AutoReverse="True" RepeatBehavior="Forever">
                 <DoubleAnimation.EasingFunction>
                     <QuadraticEase EasingMode="EaseInOut"/>
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="ImageScale" Storyboard.TargetProperty="ScaleY" From="1" To="0.8" Duration="0:0:4" AutoReverse="True" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetName="ImageScale" Storyboard.TargetProperty="ScaleY" From="1" To="0.9" Duration="0:0:4" AutoReverse="True" RepeatBehavior="Forever">
                 <DoubleAnimation.EasingFunction>
                     <QuadraticEase EasingMode="EaseInOut"/>
                 </DoubleAnimation.EasingFunction>

@@ -61,6 +61,28 @@
                     <QuarticEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="BackgroundAni" 
+                             Storyboard.TargetProperty="ScaleY" 
+                             From="1" To="2" 
+                             AutoReverse="True"
+                             RepeatBehavior="Forever" 
+                             Duration="0:0:4">
+                <DoubleAnimation.EasingFunction>
+                    <QuarticEase EasingMode="EaseInOut" />
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="BackgroundAni" 
+                             Storyboard.TargetProperty="ScaleX" 
+                             From="1" To="1.5" 
+                             AutoReverse="True"
+                             RepeatBehavior="Forever" 
+                             Duration="0:0:4">
+                <DoubleAnimation.EasingFunction>
+                    <QuarticEase EasingMode="EaseInOut" />
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+
+
         </Storyboard>
 
     </UserControl.Resources>
@@ -79,7 +101,11 @@
             x:Name="PlayBarBackground"
             Source="{x:Bind AlbumImage.Source, Mode=OneWay}"
             VerticalAlignment="Top"
-            Stretch="Fill"/>
+            Stretch="Fill">
+            <controls:ImageEx.RenderTransform>
+                <ScaleTransform x:Name="BackgroundAni" CenterY="55" CenterX="1000"/>
+            </controls:ImageEx.RenderTransform>
+        </controls:ImageEx>
         <Rectangle
             x:Name="PlayBarAcrylic"
             Grid.Column="0"
