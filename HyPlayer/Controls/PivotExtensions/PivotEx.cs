@@ -95,6 +95,11 @@ namespace HyPlayer.Controls
 
             var sv = container?.FindDescendant<ScrollViewer>();
 
+            if (sv != null)
+            {
+                sv.IsHitTestVisible = true;
+            }
+
             if (sv == currentScrollViewer) return;
 
             cts?.Cancel();
@@ -183,6 +188,7 @@ namespace HyPlayer.Controls
             var sv = args.Item.FindDescendant<ScrollViewer>();
             if (sv != null)
             {
+                sv.IsHitTestVisible = false;
                 TryScrollVerticalOffsetAsync(sv);
             }
 
