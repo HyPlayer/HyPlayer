@@ -29,6 +29,7 @@
                     </Grid.RowDefinitions>
                     <StackPanel
                         Grid.Row="0"
+                        Spacing="10"
                         Padding="15"
                         Orientation="Horizontal">
                         <Button

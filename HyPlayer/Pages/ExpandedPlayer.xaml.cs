@@ -105,6 +105,10 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 //LyricList.Clear();
                 if (Common.Setting.albumRotate)
                     RotateAnimationSet.Stop();
+                Storyboard ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
+                ImageAlbumAni.Pause ();
+
+
             });
         });
     }
@@ -114,12 +118,18 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         if (Common.Setting.albumRotate)
             //网易云音乐圆形唱片
             RotateAnimationSet.StartAsync();
+        Storyboard ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
+        ImageAlbumAni.Begin();
+
     }
 
     private void HyPlayList_OnPause()
     {
         if (Common.Setting.albumRotate)
             RotateAnimationSet.Stop();
+        Storyboard ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
+        ImageAlbumAni.Pause();
+
     }
 
     private void HyPlayList_OnTimerTicked()
@@ -931,6 +941,9 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             //网易云音乐圆形唱片
             if (HyPlayList.IsPlaying)
                 RotateAnimationSet.StartAsync();
+        Storyboard ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
+        ImageAlbumAni.Begin();
+
     }
 }
 

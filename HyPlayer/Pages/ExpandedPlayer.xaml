@@ -12,6 +12,25 @@
     Loaded="Page_Loaded"
     NavigationCacheMode="Disabled">
     <Page.Resources>
+        <Storyboard x:Key="ImageAlbumAni">
+            <DoubleAnimation 
+                Storyboard.TargetName="ImageAlbum" Storyboard.TargetProperty="Opacity" From="1" To="0.6" AutoReverse="True" RepeatBehavior="Forever" Duration="0:0:4" >
+                <DoubleAnimation.EasingFunction>
+                    <QuadraticEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="ImageScale" Storyboard.TargetProperty="ScaleX" From="1" To="0.8" Duration="0:0:4" AutoReverse="True" RepeatBehavior="Forever">
+                <DoubleAnimation.EasingFunction>
+                    <QuadraticEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="ImageScale" Storyboard.TargetProperty="ScaleY" From="1" To="0.8" Duration="0:0:4" AutoReverse="True" RepeatBehavior="Forever">
+                <DoubleAnimation.EasingFunction>
+                    <QuadraticEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+
+        </Storyboard>
         <pages:AlbumShadowConverter x:Key="ShadowConverter" />
         <ui:AttachedDropShadow
             x:Key="AlbumDropShadow"
@@ -92,6 +111,9 @@
                                     Duration="0:0:20" />
                             </ani:AnimationSet>
                         </ani:Explicit.Animations>
+                        <controls:ImageEx.RenderTransform>
+                            <ScaleTransform x:Name="ImageScale" CenterX="300" CenterY="300" />
+                        </controls:ImageEx.RenderTransform>
                         <controls:ImageEx.ContextFlyout>
                             <MenuFlyout>
                                 <MenuFlyoutItem

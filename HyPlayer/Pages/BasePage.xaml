@@ -89,7 +89,7 @@
             IsTitleBarAutoPaddingEnabled="False"
             ItemInvoked="NavMain_ItemInvoked"
             PaneDisplayMode="Auto"
-            PaneTitle="关闭导航"
+            PaneTitle="关闭侧栏"
             SelectionChanged="NavMain_OnSelectionChanged">
             <muxc:NavigationView.MenuItems>
                 <muxc:NavigationViewItem

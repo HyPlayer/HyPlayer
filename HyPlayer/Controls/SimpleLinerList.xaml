@@ -12,6 +12,7 @@
         Name="ItemList"
         Padding="10"
         Header="{x:Bind ListHeader, Mode=OneWay}"
+        Margin="0,0,0,120"
         ItemsSource="{x:Bind ListItems}"
         SelectionChanged="ItemList_SelectionChanged"
         ShowsScrollingPlaceholders="True">
