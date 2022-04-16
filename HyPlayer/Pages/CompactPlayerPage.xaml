@@ -91,7 +91,7 @@
                 CornerRadius=" 12"
                 Click="MovePrevious"
                 Style="{StaticResource ButtonRevealStyle}">
-                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE892;" Foreground="White" />
+                <FontIcon  Glyph="&#xE892;" Foreground="White" />
             </Button>
             <Button
                 x:Name="BtnPlayStateChange"
@@ -109,8 +109,8 @@
                 Style="{StaticResource ButtonRevealStyle}" Foreground="{ThemeResource SystemAccentColorLight2}">
                 <FontIcon
                     x:Name="PlayStateIcon"
-                    FontFamily="{StaticResource SymbolThemeFontFamily}"
-                    Glyph="&#xEDB5;" />
+                    Glyph="&#xEDB5;"
+                    FontSize="26"/>
                 <!--  EDB4  -->
             </Button>
             <Button
@@ -125,7 +125,7 @@
                 VerticalAlignment="Stretch"
                 Click="MoveNext"
                 Style="{StaticResource ButtonRevealStyle}">
-                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE893;" Foreground="White"  />
+                <FontIcon Glyph="&#xE893;" Foreground="White"  />
             </Button>
         </Grid>
         <Grid x:Name="GridLyrics" Grid.Row="2">

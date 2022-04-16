@@ -170,11 +170,12 @@
                 </Style>
             </ListView.Resources>
             <ListView.ItemTemplate>
-                <DataTemplate x:DataType="classes:NCSong">
+                <DataTemplate x:DataType="classes:NCSong" ScrollViewer.CanContentRenderOutsideBounds="False" >
                     <Grid
                         Margin="-15,15,0,15"
                         HorizontalAlignment="Stretch"
                         IsRightTapEnabled="True"
+                        ScrollViewer.CanContentRenderOutsideBounds="False"
                         RightTapped="Grid_RightTapped"
                         Tag="{x:Bind Order}">
                         <Grid.ColumnDefinitions>

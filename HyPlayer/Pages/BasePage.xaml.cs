@@ -407,7 +407,6 @@ public sealed partial class BasePage : Page
                         IsRightTapEnabled = true,
                         Icon = new FontIcon
                         {
-                            FontFamily = Application.Current.Resources["SymbolThemeFontFamily"] as FontFamily,
                             Glyph = "\uE142"
                         }
                     };
@@ -432,7 +431,6 @@ public sealed partial class BasePage : Page
                     {
                         Icon = new FontIcon
                         {
-                            FontFamily = Application.Current.Resources["SymbolThemeFontFamily"] as FontFamily,
                             Glyph = jToken["privacy"].ToString() == "0" ? "\uE142" : "\uE72E"
                         },
                         Content = jToken["name"].ToString(),

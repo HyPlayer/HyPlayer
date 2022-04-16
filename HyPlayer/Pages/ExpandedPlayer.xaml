@@ -14,7 +14,7 @@
     <Page.Resources>
         <Storyboard x:Key="ImageAlbumAni">
             <DoubleAnimation 
-                Storyboard.TargetName="ImageAlbum" Storyboard.TargetProperty="Opacity" From="1" To="0.6" AutoReverse="True" RepeatBehavior="Forever" Duration="0:0:4" >
+                Storyboard.TargetName="ImageAlbum" Storyboard.TargetProperty="Opacity" From="1" To="0.65" AutoReverse="True" RepeatBehavior="Forever" Duration="0:0:4" >
                 <DoubleAnimation.EasingFunction>
                     <QuadraticEase EasingMode="EaseInOut"/>
                 </DoubleAnimation.EasingFunction>
@@ -201,7 +201,7 @@
                                 Style="{StaticResource MenuFlyoutItemRevealStyle}"
                                 Text="加载本地歌词">
                                 <MenuFlyoutItem.Icon>
-                                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE160;" />
+                                    <FontIcon Glyph="&#xE160;" />
                                 </MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
                             <MenuFlyoutItem
@@ -209,7 +209,7 @@
                                 Style="{StaticResource MenuFlyoutItemRevealStyle}"
                                 Text="复制歌词">
                                 <MenuFlyoutItem.Icon>
-                                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE16F;" />
+                                    <FontIcon Glyph="&#xE16F;" />
                                 </MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
                             <MenuFlyoutSeparator />
@@ -296,7 +296,7 @@
                             HorizontalContentAlignment="Left" 
                             Text="显示翻译">
                             <ToggleMenuFlyoutItem.Icon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE982;" />
+                                <FontIcon Glyph="&#xE982;" />
                             </ToggleMenuFlyoutItem.Icon>
                         </ToggleMenuFlyoutItem>
                         <ToggleMenuFlyoutItem
@@ -305,7 +305,7 @@
                             HorizontalContentAlignment="Left" 
                             Text="转罗马音">
                             <ToggleMenuFlyoutItem.Icon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE986;" />
+                                <FontIcon Glyph="&#xE986;" />
                             </ToggleMenuFlyoutItem.Icon>
                         </ToggleMenuFlyoutItem>
                         <MenuFlyoutSeparator />
@@ -316,7 +316,7 @@
                             Click="BtnToggleFullScreen_Checked"
                             Text="全屏模式">
                             <ToggleMenuFlyoutItem.Icon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE1D9;" />
+                                <FontIcon Glyph="&#xE1D9;" />
                             </ToggleMenuFlyoutItem.Icon>
                         </ToggleMenuFlyoutItem>
                         <ToggleMenuFlyoutItem
@@ -326,7 +326,7 @@
                             Click="BtnToggleTinyModeClick"
                             Text="小窗模式">
                             <ToggleMenuFlyoutItem.Icon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE2B3;" />
+                                <FontIcon Glyph="&#xE2B3;" />
                             </ToggleMenuFlyoutItem.Icon>
                         </ToggleMenuFlyoutItem>
                         <MenuFlyoutSeparator />
@@ -337,7 +337,7 @@
                             Click="BtnToggleWindowsMode_Checked"
                             Text="专辑封面">
                             <ToggleMenuFlyoutItem.Icon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE15A;" />
+                                <FontIcon Glyph="&#xE15A;" />
                             </ToggleMenuFlyoutItem.Icon>
                         </ToggleMenuFlyoutItem>
                         <ToggleMenuFlyoutItem
@@ -347,7 +347,7 @@
                             Click="BtnToggleWindowsMode_Checked"
                             Text="歌词界面">
                             <ToggleMenuFlyoutItem.Icon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE1A1;" />
+                                <FontIcon Glyph="&#xE1A1;" />
                             </ToggleMenuFlyoutItem.Icon>
                         </ToggleMenuFlyoutItem>
                         <MenuFlyoutSeparator />
@@ -388,7 +388,7 @@
                     </MenuFlyout>
                 </Button.Flyout>
                 <Button.Content>
-                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xEDE3;" />
+                    <FontIcon Glyph="&#xEDE3;" />
                 </Button.Content>
             </Button>
         </Grid>

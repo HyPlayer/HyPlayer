@@ -53,7 +53,7 @@
         <Storyboard x:Name="PlayBarBackgroundAni">
             <DoubleAnimation Storyboard.TargetName="PlayBarBackground" 
                              Storyboard.TargetProperty="Opacity" 
-                             From="1" To="0.2" 
+                             From="1" To="0.4" 
                              AutoReverse="True"
                              RepeatBehavior="Forever" 
                              Duration="0:0:4">
@@ -63,26 +63,14 @@
             </DoubleAnimation>
             <DoubleAnimation Storyboard.TargetName="BackgroundAni" 
                              Storyboard.TargetProperty="ScaleY" 
-                             From="1" To="2" 
+                             From="1" To="8" 
                              AutoReverse="True"
                              RepeatBehavior="Forever" 
-                             Duration="0:0:4">
+                             Duration="0:0:3">
                 <DoubleAnimation.EasingFunction>
                     <QuarticEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="BackgroundAni" 
-                             Storyboard.TargetProperty="ScaleX" 
-                             From="1" To="1.5" 
-                             AutoReverse="True"
-                             RepeatBehavior="Forever" 
-                             Duration="0:0:4">
-                <DoubleAnimation.EasingFunction>
-                    <QuarticEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-
-
         </Storyboard>
 
     </UserControl.Resources>
@@ -103,7 +91,7 @@
             VerticalAlignment="Top"
             Stretch="Fill">
             <controls:ImageEx.RenderTransform>
-                <ScaleTransform x:Name="BackgroundAni" CenterY="55" CenterX="1000"/>
+                <ScaleTransform x:Name="BackgroundAni" CenterY="55" CenterX="200"/>
             </controls:ImageEx.RenderTransform>
         </controls:ImageEx>
         <Rectangle
@@ -134,7 +122,7 @@
                     CornerRadius="20"
                     Style="{StaticResource ButtonRevealStyle}"
                     ToolTipService.ToolTip="添加到歌单">
-                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE1DA;" />
+                    <FontIcon Glyph="&#xE1DA;" />
                 </Button>
                 <Button
                     x:Name="Btn_Down"
@@ -146,7 +134,7 @@
                     CornerRadius="20"
                     Style="{StaticResource ButtonRevealStyle}"
                     ToolTipService.ToolTip="下载音乐">
-                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE118;" />
+                    <FontIcon  Glyph="&#xE118;" />
                 </Button>
                 <Button
                     x:Name="Btn_Comment"
@@ -159,7 +147,7 @@
                     Style="{StaticResource ButtonRevealStyle}"
                     ToolTipService.ToolTip="查看评论"
                     Visibility="{x:Bind Mode=OneWay, Path=hy:Common.Setting.notClearMode}">
-                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8F2;" />
+                    <FontIcon Glyph="&#xE8F2;" />
                 </Button>
                 <Button
                     x:Name="Btn_Share"
@@ -171,7 +159,7 @@
                     CornerRadius="20"
                     Style="{StaticResource ButtonRevealStyle}"
                     ToolTipService.ToolTip="分享">
-                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE72D;" />
+                    <FontIcon Glyph="&#xE72D;" />
                 </Button>
             </StackPanel>
             <StackPanel
@@ -197,7 +185,7 @@
                         <Border.Background>
                             <media:BackdropBlurBrush Amount="10" />
                         </Border.Background>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE70E;" />
+                        <FontIcon Glyph="&#xE70E;" />
                     </Border>
                     <controls:ImageEx
                         x:Name="AlbumImage"
@@ -214,22 +202,24 @@
                             Margin="0,85,0,0"
                             controls:DockPanel.Dock="Left"
                             BorderBrush="Red"
-                            BorderThickness="1"
+                            BorderThickness="1.5"
                             CornerRadius="4">
                             <TextBlock
                                 x:Name="TbSongTag"
                                 x:FieldModifier="public"
-                                FontSize="12"
-                                FontWeight="Medium"
+                                FontSize="11"
+                                FontWeight="Bold"
                                 Foreground="Red"
-                                Text="无歌曲" />
+                                Text="无歌曲" 
+                                />
                         </Grid>
                         <local:SelectableTextBox
                             x:Name="TbSongName"
-                            Margin="-35,0,0,0"
+                            Margin="-38,3,0,0"
                             HorizontalAlignment="Stretch"
                             controls:DockPanel.Dock="Left"
                             FontSize="22"
+                            FontFamily="Bahnschrift SemiBold"
                             FontWeight="Bold"
                             ToolTipService.ToolTip="{x:Bind Mode=OneWay, Path=TbSongName.Text}" />
 
@@ -241,14 +231,14 @@
                         VerticalAlignment="Top"
                         Click="TbSingerName_OnTapped"
                         FontSize="12"
-                        Margin="0,-85,0,0"
+                        Margin="0,-86,0,0"
                         Foreground="Gray" />
                     <HyperlinkButton
                         x:Name="TbAlbumName"
                         Padding="0"
                         VerticalAlignment="Top"
                         FontSize="12"
-                        Margin="0,-75,0,0"
+                        Margin="0,-78,0,0"
                         Foreground="Gray"
                         Tapped="TbAlbumName_OnTapped" />
                 </StackPanel>
@@ -300,7 +290,6 @@
                                 <MenuFlyoutItem.Icon>
                                     <FontIcon
                                         x:Name="FlyoutLiked"
-                                        FontFamily="{StaticResource SymbolThemeFontFamily}"
                                         Glyph="&#xE00B;" />
                                 </MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
@@ -311,7 +300,6 @@
                                 <MenuFlyoutItem.Icon>
                                     <FontIcon
                                         x:Name="FlyoutDesktopLyricIcon"
-                                        FontFamily="{StaticResource SymbolThemeFontFamily}"
                                         Glyph="&#xE001;"
                                         Visibility="{x:Bind Mode=OneWay, Path=hy:Common.Setting.toastLyric}" />
                                 </MenuFlyoutItem.Icon>
@@ -332,7 +320,6 @@
                                 <MenuFlyoutItem.Icon>
                                     <FontIcon
                                         x:Name="FlyoutBtnMuteIcon"
-                                        FontFamily="{StaticResource SymbolThemeFontFamily}"
                                         Glyph="&#xE15D;" />
                                 </MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
@@ -342,12 +329,12 @@
                                 ContextFlyout="{x:Bind Path=ButtonPlayList.Flyout}"
                                 Text="播放列表">
                                 <MenuFlyoutItem.Icon>
-                                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE142;" />
+                                    <FontIcon Glyph="&#xE142;" />
                                 </MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
                         </MenuFlyout>
                     </Button.Flyout>
-                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE712;" />
+                    <FontIcon Glyph="&#xE712;" />
                 </Button>
                 <Button
                     x:Name="BtnPlayRollType"
@@ -362,8 +349,7 @@
                     Style="{StaticResource ButtonRevealStyle}">
                     <FontIcon
                         x:Name="IconPlayType"
-                        FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        FontSize="16"
+                        FontSize="14"
                         Foreground="{ThemeResource SystemAccentColorDark1}"
                         Glyph="&#xE169;" />
                 </Button>
@@ -380,8 +366,7 @@
                     Style="{StaticResource ButtonRevealStyle}">
                     <FontIcon
                         x:Name="IconPrevious"
-                        FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        FontSize="16"
+                        FontSize="12"
                         Foreground="{ThemeResource SystemAccentColorDark1}"
                         Glyph="&#xE892;" />
                 </Button>
@@ -405,9 +390,9 @@
                     </Button.Background>
                     <FontIcon
                         x:Name="PlayStateIcon"
-                        FontFamily="{StaticResource SymbolThemeFontFamily}"
                         Foreground="White" 
-                        Glyph="&#xEDB5;" />
+                        FontSize="24"
+                        Glyph="&#xEDB5;" FontFamily="Segoe Fluent Icons" />
                     <!--  EDB4  -->
                 </Button>
                 <Button
@@ -423,8 +408,7 @@
                     Foreground="{ThemeResource SystemAccentColorDark1}"
                     Style="{StaticResource ButtonRevealStyle}">
                     <FontIcon
-                        FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        FontSize=" 16"
+                        FontSize="12"
                         Foreground="{ThemeResource SystemAccentColorDark1}"
                         Glyph="&#xE101;" />
                 </Button>
@@ -441,8 +425,7 @@
                     Style="{StaticResource ButtonRevealStyle}">
                     <FontIcon
                         x:Name="IconLiked"
-                        FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        FontSize="16"
+                        FontSize="14"
                         Foreground="{ThemeResource SystemAccentColorDark1}"
                         Glyph="&#xE00B;" />
                 </Button>
@@ -492,7 +475,7 @@
                 IsChecked="{x:Bind Mode=OneWay, Path=hy:Common.Setting.toastLyric}"
                 IsThreeState="False"
                 Style="{StaticResource ToggleButtonRevealStyle}"
-                ToolTipService.ToolTip="桌面歌词" />
+                ToolTipService.ToolTip="桌面歌词" FontWeight="SemiBold" />
 
             <Button
                 x:Name="BtnVolume"
@@ -506,7 +489,6 @@
                 Style="{StaticResource ButtonRevealStyle}">
                 <FontIcon
                     x:Name="BtnVolIcon"
-                    FontFamily="{StaticResource SymbolThemeFontFamily}"
                     Glyph="&#xE15D;" />
                 <!--  E198  -->
             </Button>
@@ -583,7 +565,7 @@
                         </StackPanel>
                     </Flyout>
                 </Button.Flyout>
-                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE142;" />
+                <FontIcon  Glyph="&#xE142;" />
             </Button>
         </controls:UniformGrid>
         <Button
@@ -597,7 +579,7 @@
             Click="ButtonExpand_OnClick"
             CornerRadius="20"
             Style="{StaticResource ButtonRevealStyle}">
-            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE971;" />
+            <FontIcon Glyph="&#xE971;" FontSize="24"/>
         </Button>
         <Button
             x:Name="ButtonCollapse"
@@ -611,7 +593,7 @@
             CornerRadius="20"
             Style="{StaticResource ButtonRevealStyle}"
             Visibility="Collapsed">
-            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE972;" />
+            <FontIcon Glyph="&#xE972;" FontSize="24" />
         </Button>
 
 

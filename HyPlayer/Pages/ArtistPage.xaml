@@ -78,7 +78,7 @@
                     FontWeight="ExtraBold"
                     Text="歌手名"
                     TextWrapping="Wrap" 
-                    Margin="0,10,0,0 "/>
+                    Margin="0,10,0,0 " FontFamily="Bahnschrift SemiBold"/>
                 <controls1:SelectableTextBox
                     x:Name="TextboxArtistNameTranslated"
                     Margin="0,2,0,0"

@@ -90,6 +90,7 @@
                             FontWeight="Bold"
                             Foreground="{ThemeResource DefaultTextForegroundThemeBrush}"
                             Text="歌单名"
+                            FontFamily="Bahnschrift SemiBold"
                             TextWrapping="Wrap" />
                         <StackPanel Margin="15,2,0,0" Orientation="Horizontal">
                             <TextBlock
@@ -134,7 +135,6 @@
                                 <StackPanel Orientation="Horizontal">
                                     <FontIcon
                                         x:Name="IconPlay"
-                                        FontFamily="{StaticResource SymbolThemeFontFamily}"
                                         FontSize="16"
                                         Glyph="&#xEDB5;" />
                                     <TextBlock

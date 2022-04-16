@@ -23,7 +23,7 @@
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>
     </Page.Resources>
-    <ScrollViewer VerticalScrollMode="Enabled">
+    <ScrollViewer VerticalScrollMode="Enabled" ScrollViewer.CanContentRenderOutsideBounds="False">
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState x:Name="NarrowState">
@@ -44,6 +44,7 @@
                         <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="1" />
                         <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="10" />
                         <Setter Target="TextBoxSignature.Visibility" Value="Collapsed"/>
+                        <Setter Target="MySongList.Margin" Value="0,50,0,-100"/>
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState x:Name="WideState">
@@ -66,7 +67,7 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        <Grid>
+        <Grid ScrollViewer.CanContentRenderOutsideBounds="False">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
@@ -87,7 +88,6 @@
                 Fill="{ThemeResource MePageAcrylicBrush}"
                 RadiusX="10"
                 RadiusY="10" />
-
                 <controls:DockPanel
                 x:Name="GridPersonalInformation"
                 Margin="35,0,0,0"
@@ -118,7 +118,8 @@
                         FontSize="48"
                         FontWeight="Bold"
                         TextWrapping="NoWrap"
-                        Text="用户名" />
+                        Text="用户名" 
+                        FontFamily="Bahnschrift SemiBold" />
                         <controls1:SelectableTextBox
                         x:Name="TextBoxSignature"
                         Margin="0,8,0,0"
@@ -143,7 +144,9 @@
             Grid.Row="1"
             Margin="30,10,30,10"
             ColumnSpacing="50"
-            RowSpacing="10">
+            RowSpacing="10"
+            ScrollViewer.CanContentRenderOutsideBounds="False" 
+                >
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
                     <ColumnDefinition />
@@ -157,6 +160,7 @@
                 Grid.Column="0"
                 Background="{ThemeResource SystemControlBackgroundListLowBrush}"
                 Margin="0,5,-15,0"
+                ScrollViewer.CanContentRenderOutsideBounds="False"
                 CornerRadius="8">
                     <TextBlock
                     Grid.Column="0"
@@ -171,6 +175,8 @@
                     Grid.Column="0"
                     Margin="0,50,0,0"
                     CanBeScrollAnchor="False"
+                    ScrollViewer.CanContentRenderOutsideBounds="False"
+                    ScrollViewer.VerticalScrollMode="Disabled"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
                     ListItems="{x:Bind myPlayList}"
@@ -181,7 +187,8 @@
                 Grid.Column="1"
                 Margin="-15,5,0,0"
                 Background="{ThemeResource SystemControlBackgroundListLowBrush}"
-                CornerRadius="8">
+                CornerRadius="8"
+                ScrollViewer.CanContentRenderOutsideBounds="False">
                     <TextBlock
                     Grid.Column="1"
                     Grid.ColumnSpan="2"
@@ -198,6 +205,8 @@
                     Margin="0,50,0,0"
                     CanBeScrollAnchor="False" 
                     HorizontalAlignment="Stretch"
+                    ScrollViewer.CanContentRenderOutsideBounds="False"
+                    ScrollViewer.VerticalScrollMode="Disabled"
                     VerticalAlignment="Stretch"
                     ListItems="{x:Bind likedPlayList}"
                     ScrollViewer.VerticalScrollBarVisibility="Disabled" />
