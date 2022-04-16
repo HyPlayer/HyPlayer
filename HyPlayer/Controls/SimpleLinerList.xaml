@@ -130,7 +130,6 @@
                         Visibility="{x:Bind CanPlay}">
                         <FontIcon
                             Name="PlayStateIcon"
-                            FontFamily="{StaticResource SymbolThemeFontFamily}"
                             Foreground="{ThemeResource SystemAccentColorLight2}"
                             Glyph="&#xEDB5;" />
                     </Button>

@@ -25,7 +25,6 @@
                 <FontIcon
                     x:Name="BtnMuteIcon"
                     Grid.Column="0"
-                    FontFamily="{StaticResource SymbolThemeFontFamily}"
                     Glyph="&#xE15D;"
                     Tapped="BtnMute_OnCllick" />
                 <Slider
@@ -554,7 +553,6 @@
                                                 <FontIcon
                                                     Margin="-5,0,0,0"
                                                     HorizontalAlignment="Left"
-                                                    FontFamily="{StaticResource SymbolThemeFontFamily}"
                                                     FontSize="16"
                                                     Glyph="&#xE10A;" />
                                             </Button>
