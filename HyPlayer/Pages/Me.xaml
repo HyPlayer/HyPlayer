@@ -6,6 +6,7 @@
     xmlns:controls1="using:HyPlayer.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:hyplayer="using:HyPlayer"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
     <Page.Resources>
@@ -75,6 +76,7 @@
             <Grid Grid.Row="0">
                 <Rectangle
                     x:Name="RectangleImageBack"
+                    Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}"
                     Margin="30,0,30,0"
                     RadiusX="10"
                     RadiusY="10">
@@ -84,6 +86,7 @@
                 </Rectangle>
                 <Rectangle
                     x:Name="RectangleImageAcrylic"
+                    Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}"
                     Margin="30,0,30,0"
                     Fill="{ThemeResource MePageAcrylicBrush}"
                     RadiusX="10"

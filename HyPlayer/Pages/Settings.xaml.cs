@@ -16,6 +16,7 @@ using Windows.Storage.AccessCache;
 using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
@@ -274,11 +275,11 @@ public sealed partial class Settings : Page
         }
     }
 
-    private void NBShadowDepth_OnValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
+    private void NBShadowDepth_OnValueChanged(object o, RangeBaseValueChangedEventArgs rangeBaseValueChangedEventArgs)
     {
         if (isbyprogram) return;
         var size = 4;
-        if (int.TryParse(NBShadowDepth.Value.ToString(), out size))
+        if (int.TryParse(SliderAlbumShadowDepth.Value.ToString(), out size))
             Common.Setting.expandedCoverShadowDepth = Math.Max(0, size);
     }
 

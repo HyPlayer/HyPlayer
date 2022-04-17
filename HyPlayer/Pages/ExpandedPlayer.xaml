@@ -6,27 +6,47 @@
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:controls1="using:HyPlayer.Controls"
     xmlns:hyplayer="using:HyPlayer"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:pages="using:HyPlayer.Pages"
     xmlns:ui="using:Microsoft.Toolkit.Uwp.UI"
-    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     Loaded="Page_Loaded"
     NavigationCacheMode="Disabled">
     <Page.Resources>
         <Storyboard x:Key="ImageAlbumAni">
-            <DoubleAnimation 
-                Storyboard.TargetName="ImageAlbum" Storyboard.TargetProperty="Opacity" From="1" To="0.65" AutoReverse="True" RepeatBehavior="Forever" Duration="0:0:4" >
+            <DoubleAnimation
+                AutoReverse="True"
+                RepeatBehavior="Forever"
+                Storyboard.TargetName="ImageAlbum"
+                Storyboard.TargetProperty="Opacity"
+                From="1"
+                To="0.65"
+                Duration="0:0:4">
                 <DoubleAnimation.EasingFunction>
-                    <QuadraticEase EasingMode="EaseInOut"/>
+                    <QuadraticEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="ImageScale" Storyboard.TargetProperty="ScaleX" From="1" To="0.9" Duration="0:0:4" AutoReverse="True" RepeatBehavior="Forever">
+            <DoubleAnimation
+                AutoReverse="True"
+                RepeatBehavior="Forever"
+                Storyboard.TargetName="ImageScale"
+                Storyboard.TargetProperty="ScaleX"
+                From="1"
+                To="0.9"
+                Duration="0:0:4">
                 <DoubleAnimation.EasingFunction>
-                    <QuadraticEase EasingMode="EaseInOut"/>
+                    <QuadraticEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="ImageScale" Storyboard.TargetProperty="ScaleY" From="1" To="0.9" Duration="0:0:4" AutoReverse="True" RepeatBehavior="Forever">
+            <DoubleAnimation
+                AutoReverse="True"
+                RepeatBehavior="Forever"
+                Storyboard.TargetName="ImageScale"
+                Storyboard.TargetProperty="ScaleY"
+                From="1"
+                To="0.9"
+                Duration="0:0:4">
                 <DoubleAnimation.EasingFunction>
-                    <QuadraticEase EasingMode="EaseInOut"/>
+                    <QuadraticEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
 
@@ -140,14 +160,13 @@
                         Spacing="5">
                         <controls1:SelectableTextBox
                             x:Name="TextBlockSongTitle"
+                            Margin="0,-10,0,0"
                             HorizontalAlignment="Stretch"
                             x:FieldModifier="public"
                             FontSize="36"
-                            FontWeight="ExtraBold"
-                            CharacterSpacing="40"
+                            FontWeight="Bold"
                             Text="歌曲名"
-                            TextWrapping="Wrap" 
-                            Margin=" 0,-10,0,0"/>
+                            TextWrapping="Wrap" />
                         <StackPanel
                             x:Name="SongInfoContainer"
                             Orientation="Horizontal"
@@ -180,20 +199,23 @@
                     </StackPanel>
                 </Grid>
             </ScrollViewer>
-            <Grid x:Name="RightPanel" Grid.Column="1" HorizontalAlignment="Left">
-                <Grid.RowDefinitions >
-                    <RowDefinition Height="25*"/>
-                    <RowDefinition Height="1*"/>
+            <Grid
+                x:Name="RightPanel"
+                Grid.Column="1"
+                HorizontalAlignment="Left">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="25*" />
+                    <RowDefinition Height="1*" />
                 </Grid.RowDefinitions>
                 <ScrollViewer
                     x:Name="LyricBoxContainer"
+                    Grid.Row="0"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Top"
                     x:FieldModifier="public"
                     HorizontalScrollBarVisibility="Hidden"
                     RightTapped="LyricBoxContainer_RightTapped"
-                    VerticalScrollBarVisibility="Hidden"
-                    Grid.Row="0">
+                    VerticalScrollBarVisibility="Hidden">
                     <ScrollViewer.ContextFlyout>
                         <MenuFlyout>
                             <MenuFlyoutItem
@@ -245,18 +267,25 @@
                     </ScrollViewer.ContextFlyout>
                     <ScrollViewer.Content>
                         <Grid x:Name="LyricBoxHost">
-                            <StackPanel Orientation="Horizontal" Spacing="5" Visibility="Collapsed">
+                            <StackPanel
+                                Orientation="Horizontal"
+                                Spacing="5"
+                                Visibility="Collapsed">
                                 <TextBlock HorizontalAlignment="Center" Text="当前暂未播放歌曲" />
                             </StackPanel>
-                            <muxc:ItemsRepeater x:Name="LyricBox" 
-                                                PointerWheelChanged="LyricBoxContainer_OnPointerWheelChanged"
-                                                Tapped="LyricBox_Tapped">
+                            <muxc:ItemsRepeater
+                                x:Name="LyricBox"
+                                PointerWheelChanged="LyricBoxContainer_OnPointerWheelChanged"
+                                Tapped="LyricBox_Tapped">
                                 <muxc:ItemsRepeater.Layout>
                                     <muxc:StackLayout Orientation="Vertical" Spacing="30" />
                                 </muxc:ItemsRepeater.Layout>
                                 <muxc:ItemsRepeater.ItemTemplate>
                                     <DataTemplate x:DataType="controls1:LyricItemModel">
-                                        <controls1:LyricItemWrapper SongLyric="{x:Bind SongLyric}" IsShow="{x:Bind IsShow,Mode=OneWay}" HorizontalAlignment="Stretch"/>
+                                        <controls1:LyricItemWrapper
+                                            HorizontalAlignment="Stretch"
+                                            IsShow="{x:Bind IsShow, Mode=OneWay}"
+                                            SongLyric="{x:Bind SongLyric}" />
                                     </DataTemplate>
                                 </muxc:ItemsRepeater.ItemTemplate>
                             </muxc:ItemsRepeater>
@@ -282,7 +311,7 @@
                 Height="40"
                 Margin="0,0,27,50"
                 Padding="-5"
-                HorizontalAlignment="Right" 
+                HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"
                 Background="Transparent"
                 BorderThickness="0"
@@ -292,8 +321,8 @@
                     <MenuFlyout>
                         <ToggleMenuFlyoutItem
                             Name="ToggleButtonTranslation"
+                            HorizontalContentAlignment="Left"
                             Click="ToggleButtonTranslation_OnClick"
-                            HorizontalContentAlignment="Left" 
                             Text="显示翻译">
                             <ToggleMenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xE982;" />
@@ -301,8 +330,8 @@
                         </ToggleMenuFlyoutItem>
                         <ToggleMenuFlyoutItem
                             Name="ToggleButtonSound"
+                            HorizontalContentAlignment="Left"
                             Click="ToggleButtonSound_OnClick"
-                            HorizontalContentAlignment="Left" 
                             Text="转罗马音">
                             <ToggleMenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xE986;" />
@@ -311,8 +340,8 @@
                         <MenuFlyoutSeparator />
                         <ToggleMenuFlyoutItem
                             x:Name="BtnToggleFullScreen"
+                            HorizontalContentAlignment="Left"
                             Background="Transparent"
-                            HorizontalContentAlignment="Left"  
                             Click="BtnToggleFullScreen_Checked"
                             Text="全屏模式">
                             <ToggleMenuFlyoutItem.Icon>
@@ -321,8 +350,8 @@
                         </ToggleMenuFlyoutItem>
                         <ToggleMenuFlyoutItem
                             x:Name="BtnToggleTinyMode"
+                            HorizontalContentAlignment="Left"
                             Background="Transparent"
-                            HorizontalContentAlignment="Left"  
                             Click="BtnToggleTinyModeClick"
                             Text="小窗模式">
                             <ToggleMenuFlyoutItem.Icon>
@@ -332,7 +361,7 @@
                         <MenuFlyoutSeparator />
                         <ToggleMenuFlyoutItem
                             x:Name="BtnToggleAlbum"
-                            HorizontalContentAlignment="Left" 
+                            HorizontalContentAlignment="Left"
                             Background="Transparent"
                             Click="BtnToggleWindowsMode_Checked"
                             Text="专辑封面">
@@ -342,8 +371,8 @@
                         </ToggleMenuFlyoutItem>
                         <ToggleMenuFlyoutItem
                             x:Name="BtnToggleLyric"
+                            HorizontalContentAlignment="Left"
                             Background="Transparent"
-                            HorizontalContentAlignment="Left"  
                             Click="BtnToggleWindowsMode_Checked"
                             Text="歌词界面">
                             <ToggleMenuFlyoutItem.Icon>
@@ -351,8 +380,14 @@
                             </ToggleMenuFlyoutItem.Icon>
                         </ToggleMenuFlyoutItem>
                         <MenuFlyoutSeparator />
-                        <MenuFlyoutItem IsEnabled="False" Text="播放速度" HorizontalContentAlignment="Left"  />
-                        <MenuFlyoutItem Click="TbNowSpeed_OnTapped" Text="恢复 x1" HorizontalAlignment="Left" />
+                        <MenuFlyoutItem
+                            HorizontalContentAlignment="Left"
+                            IsEnabled="False"
+                            Text="播放速度" />
+                        <MenuFlyoutItem
+                            HorizontalAlignment="Left"
+                            Click="TbNowSpeed_OnTapped"
+                            Text="恢复 x1" />
                         <MenuFlyoutItem DataContext="{x:Bind NowPlaybackSpeed, Mode=OneWay}">
                             <MenuFlyoutItem.Template>
                                 <ControlTemplate>
@@ -362,29 +397,33 @@
                                         <TextBlock
                                             x:Name="TbNowSpeed"
                                             Text="{TemplateBinding MenuFlyoutItem.DataContext}"
-                                            TextAlignment="Center"   />
+                                            TextAlignment="Center" />
                                     </controls:DockPanel>
                                 </ControlTemplate>
                             </MenuFlyoutItem.Template>
                         </MenuFlyoutItem>
                         <MenuFlyoutSeparator />
-                        <ToggleMenuFlyoutItem x:Name="ABRepeatState" IsChecked="{x:Bind hyplayer:Common.ABRepeatStatus,Mode=TwoWay}" Text="AB循环" Click="ChangeABRepeatStatus_Click"/>
-                        <MenuFlyoutItem     Text="设置开始点"
-                                            HorizontalContentAlignment="Left"  
-                                            Click="SetABStartPointButton_Click"
-                                            />
+                        <ToggleMenuFlyoutItem
+                            x:Name="ABRepeatState"
+                            Click="ChangeABRepeatStatus_Click"
+                            IsChecked="{x:Bind hyplayer:Common.ABRepeatStatus, Mode=TwoWay}"
+                            Text="AB循环" />
                         <MenuFlyoutItem
-                                            Name="ABStartPointItem"
-                                            Text="{x:Bind hyplayer:Common.ABStartPointFriendlyValue,Mode=OneWay}"
-                                            HorizontalAlignment="Left"   />
-                        <MenuFlyoutItem     Text="设置结束点"
-                                            HorizontalContentAlignment="Left"  
-                                            Click="SetABEndPointButton_Click"
-                                            />
+                            HorizontalContentAlignment="Left"
+                            Click="SetABStartPointButton_Click"
+                            Text="设置开始点" />
                         <MenuFlyoutItem
-                                            Name="ABEndPointItem"
-                                            Text="{x:Bind hyplayer:Common.ABEndPointFriendlyValue,Mode=OneWay}"
-                                            HorizontalAlignment="Left"   />
+                            Name="ABStartPointItem"
+                            HorizontalAlignment="Left"
+                            Text="{x:Bind hyplayer:Common.ABStartPointFriendlyValue, Mode=OneWay}" />
+                        <MenuFlyoutItem
+                            HorizontalContentAlignment="Left"
+                            Click="SetABEndPointButton_Click"
+                            Text="设置结束点" />
+                        <MenuFlyoutItem
+                            Name="ABEndPointItem"
+                            HorizontalAlignment="Left"
+                            Text="{x:Bind hyplayer:Common.ABEndPointFriendlyValue, Mode=OneWay}" />
                     </MenuFlyout>
                 </Button.Flyout>
                 <Button.Content>

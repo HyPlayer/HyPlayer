@@ -105,10 +105,11 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 //LyricList.Clear();
                 if (Common.Setting.albumRotate)
                     RotateAnimationSet.Stop();
-                Storyboard ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
-                ImageAlbumAni.Pause ();
-
-
+                if (Common.Setting.expandAlbumBreath)
+                {
+                    Storyboard ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
+                    ImageAlbumAni.Pause();
+                }
             });
         });
     }
@@ -118,18 +119,22 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         if (Common.Setting.albumRotate)
             //网易云音乐圆形唱片
             RotateAnimationSet.StartAsync();
-        Storyboard ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
-        ImageAlbumAni.Begin();
-
+        if (Common.Setting.expandAlbumBreath)
+        {
+            Storyboard ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
+            ImageAlbumAni.Begin();
+        }
     }
 
     private void HyPlayList_OnPause()
     {
         if (Common.Setting.albumRotate)
             RotateAnimationSet.Stop();
-        Storyboard ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
-        ImageAlbumAni.Pause();
-
+        if (Common.Setting.expandAlbumBreath)
+        {
+            Storyboard ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
+            ImageAlbumAni.Pause();
+        }
     }
 
     private void HyPlayList_OnTimerTicked()
@@ -366,6 +371,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             ToggleButtonTranslation.HorizontalAlignment = HorizontalAlignment.Left;
             ToggleButtonSound.HorizontalAlignment = HorizontalAlignment.Left;
         }
+
         Current_SizeChanged(null, null);
         //LeftPanel.Visibility = Visibility.Collapsed;
         programClick = true;
@@ -382,7 +388,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         {
         }
 
-        if (!Common.Setting.useAcrylic)
+        if (!Common.Setting.expandedUseAcrylic)
         {
             PageContainer.Background = new BackdropBlurBrush() { Amount = 50.0 };
         }
@@ -941,9 +947,11 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             //网易云音乐圆形唱片
             if (HyPlayList.IsPlaying)
                 RotateAnimationSet.StartAsync();
-        Storyboard ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
-        ImageAlbumAni.Begin();
-
+        if (Common.Setting.expandAlbumBreath)
+        {
+            Storyboard ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
+            ImageAlbumAni.Begin();
+        }
     }
 }
 
@@ -951,7 +959,7 @@ public class AlbumShadowConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {
-        return Common.Setting.albumRound ? 0 : (double)Common.Setting.expandedCoverShadowDepth / 10;
+        return (Common.Setting.albumRound || Common.Setting.expandAlbumBreath) ? 0 : (double)Common.Setting.expandedCoverShadowDepth / 10;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)

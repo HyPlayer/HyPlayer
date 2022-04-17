@@ -183,6 +183,7 @@
                         </Grid.ColumnDefinitions>
                         <controls:ImageEx
                             x:Name="RectangleImageBack"
+                            Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}"
                             Grid.ColumnSpan="2"
                             Height="85"
                             Margin="0,-5,0,-5"
@@ -194,6 +195,7 @@
                             Stretch="Fill" />
                         <Rectangle
                             x:Name="RectangleImageAcrylic"
+                            Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}"
                             Grid.ColumnSpan="2"
                             Margin="0,-10,0,-10"
                             Fill="{ThemeResource SystemControlAcrylicElementBrush}"

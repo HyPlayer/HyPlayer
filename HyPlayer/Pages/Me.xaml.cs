@@ -14,6 +14,8 @@ using HyPlayer.Classes;
 using Microsoft.Toolkit.Uwp.UI.Behaviors;
 using Microsoft.Xaml.Interactivity;
 using NeteaseCloudMusicApi;
+using HyPlayer.Controls;
+using Windows.UI.Xaml.Shapes;
 
 #endregion
 
@@ -67,53 +69,53 @@ public sealed partial class Me : Page, IDisposable
 
     public async void LoadPlayList()
     {
-            try
-            {
-                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
-                    new Dictionary<string, object> { ["uid"] = uid, ["limit"] = 999 });
+        try
+        {
+            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
+                new Dictionary<string, object> { ["uid"] = uid, ["limit"] = 999 });
 
 
-                var myListIdx = 0;
-                var subListIdx = 0;
-                foreach (var PlaylistItemJson in json["playlist"].ToArray())
-                {
-                    var ncp = NCPlayList.CreateFromJson(PlaylistItemJson);
-                    if (ncp.creater.id != uid)
-                        //GridContainerSub.Children.Add(new PlaylistItem(ncp));
-                        likedPlayList.Add(
-                            new SimpleListItem
-                            {
-                                CoverUri = ncp.cover + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
-                                LineOne = ncp.creater.name,
-                                LineThree = null,
-                                LineTwo = null,
-                                Order = myListIdx++,
-                                ResourceId = "pl" + ncp.plid,
-                                Title = ncp.name,
-                                CanPlay = true
-                            }
-                        );
-                    else
-                        myPlayList.Add(
-                            new SimpleListItem
-                            {
-                                CoverUri = ncp.cover + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
-                                LineOne = ncp.creater.name,
-                                LineThree = null,
-                                LineTwo = null,
-                                Order = subListIdx++,
-                                ResourceId = "pl" + ncp.plid,
-                                Title = ncp.name,
-                                CanPlay = true
-                            }
-                        );
-                }
-            }
-            catch (Exception ex)
+            var myListIdx = 0;
+            var subListIdx = 0;
+            foreach (var PlaylistItemJson in json["playlist"].ToArray())
             {
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                var ncp = NCPlayList.CreateFromJson(PlaylistItemJson);
+                if (ncp.creater.id != uid)
+                    //GridContainerSub.Children.Add(new PlaylistItem(ncp));
+                    likedPlayList.Add(
+                        new SimpleListItem
+                        {
+                            CoverUri = ncp.cover + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                            LineOne = ncp.creater.name,
+                            LineThree = null,
+                            LineTwo = null,
+                            Order = myListIdx++,
+                            ResourceId = "pl" + ncp.plid,
+                            Title = ncp.name,
+                            CanPlay = true
+                        }
+                    );
+                else
+                    myPlayList.Add(
+                        new SimpleListItem
+                        {
+                            CoverUri = ncp.cover + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                            LineOne = ncp.creater.name,
+                            LineThree = null,
+                            LineTwo = null,
+                            Order = subListIdx++,
+                            ResourceId = "pl" + ncp.plid,
+                            Title = ncp.name,
+                            CanPlay = true
+                        }
+                    );
             }
         }
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+        }
+    }
 
     public async void LoadInfo()
     {

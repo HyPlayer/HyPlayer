@@ -60,21 +60,24 @@ namespace HyPlayer
         public static TeachingTip GlobalTip;
         public static readonly Stack<KeyValuePair<string, string?>> TeachingTipList = new();
         private static object previousNavigationItem;
-        public static TimeSpan ABStartPoint=TimeSpan.Zero;
-        public static TimeSpan ABEndPoint=TimeSpan.Zero;
+        public static TimeSpan ABStartPoint = TimeSpan.Zero;
+        public static TimeSpan ABEndPoint = TimeSpan.Zero;
+
         public static string ABStartPointFriendlyValue
         {
-            get=> ABStartPoint.Hours.ToString() + ":" 
-                + ABStartPoint.Minutes.ToString()+":"
-                + ABStartPoint.Seconds.ToString();
+            get => ABStartPoint.Hours.ToString() + ":"
+                                                 + ABStartPoint.Minutes.ToString() + ":"
+                                                 + ABStartPoint.Seconds.ToString();
         }
+
         public static string ABEndPointFriendlyValue
-        { 
-            get=> ABEndPoint.Hours.ToString() + ":"
-                + ABEndPoint.Minutes.ToString()+":"
-                + ABEndPoint.Seconds.ToString(); 
+        {
+            get => ABEndPoint.Hours.ToString() + ":"
+                                               + ABEndPoint.Minutes.ToString() + ":"
+                                               + ABEndPoint.Seconds.ToString();
         }
-        public static bool ABRepeatStatus=false;
+
+        public static bool ABRepeatStatus = false;
 
 
         public static bool NavigatingBack;
@@ -336,7 +339,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
         public bool downloadTranslation
         {
             get => GetSettings("downloadTranslation", true);
@@ -346,7 +349,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
         public bool usingGBK
         {
             get => GetSettings("usingGBK", false);
@@ -424,10 +427,44 @@ namespace HyPlayer
             set => ApplicationData.Current.LocalSettings.Values["forceMemoryGarbage"] = value;
         }
 
-        public bool useAcrylic
+        public bool expandedUseAcrylic
         {
-            get => GetSettings("useAcrylic", true);
-            set => ApplicationData.Current.LocalSettings.Values["useAcrylic"] = value;
+            get => GetSettings("expandedUseAcrylic", true);
+            set => ApplicationData.Current.LocalSettings.Values["expandedUseAcrylic"] = value;
+        }
+
+        public bool playbarBackgroundBreath
+        {
+            get => GetSettings("playbarBackgroundBreath", true);
+            set => ApplicationData.Current.LocalSettings.Values["playbarBackgroundBreath"] = value;
+        }
+
+        public bool playbarBackgroundAcrylic
+        {
+            get => GetSettings("playbarBackgroundAcrylic", true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["playbarBackgroundAcrylic"] = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool expandAlbumBreath
+        {
+            get => GetSettings("expandAlbumBreath", false);
+            set => ApplicationData.Current.LocalSettings.Values["expandAlbumBreath"] = value;
+        }
+
+        public bool listHeaderAcrylicBlur
+        {
+            get => GetSettings("listHeaderAcrylicBlur", true);
+            set => ApplicationData.Current.LocalSettings.Values["listHeaderAcrylicBlur"] = value;
+        }
+
+        public bool itemOfListBackgroundAcrylicBlur
+        {
+            get => GetSettings("itemOfListBackgroundAcrylicBlur", true);
+            set => ApplicationData.Current.LocalSettings.Values["itemOfListBackgroundAcrylicBlur"] = value;
         }
 
         public bool lyricDropshadow
@@ -714,14 +751,14 @@ namespace HyPlayer
 
         public bool playBarMargin
         {
-            get => GetSettings("playBarMargin", true);
+            get => GetSettings("playBarMargin", false);
             set
             {
                 ApplicationData.Current.LocalSettings.Values["playBarMargin"] = value;
                 OnPropertyChanged();
             }
         }
-        
+
         public bool toastLyric
         {
             get => GetSettings("toastLyric", false);

@@ -6,6 +6,7 @@
     xmlns:classes="using:HyPlayer.Classes"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
+    xmlns:hyplayer="using:HyPlayer"
     x:Name="SongListRoot">
 
     <ListView
@@ -34,6 +35,7 @@
                     </Grid.ColumnDefinitions>
                     <controls:ImageEx
                         x:Name="RectangleImageBack"
+                        Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}"
                         Grid.ColumnSpan="2"
                         Height="85"
                         Margin="0,-10,0,-10"
@@ -45,6 +47,7 @@
                         Stretch="UniformToFill" />
                     <Rectangle
                         x:Name="RectangleImageAcrylic"
+                        Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}"
                         Grid.ColumnSpan="2"
                         Margin="0,-10,0,-10"
                         Fill="{ThemeResource SystemControlAcrylicElementBrush}"

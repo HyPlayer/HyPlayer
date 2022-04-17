@@ -51,12 +51,14 @@
                 <Grid x:Name="GridPersonalInformation">
                     <Rectangle
                         x:Name="RectangleImageBack"
+                        Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}"
                         Margin="30,0,30,0"
                         Fill="{x:Bind RectangleImage.Fill, Mode=OneWay}"
                         RadiusX="10"
                         RadiusY="10" />
                     <Rectangle
                         x:Name="RectangleImageAcrylic"
+                        Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}"
                         Margin="0,0,0,0"
                         Fill="{ThemeResource SongListPageAcrylicBrush}"
                         RadiusX="10"

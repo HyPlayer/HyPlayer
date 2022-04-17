@@ -85,6 +85,7 @@
             Grid.ColumnSpan="4"
             EnableLazyLoading="True"
             IsCacheEnabled="False"
+            Visibility="{x:Bind hy:Common.Setting.playbarBackgroundAcrylic, Mode=OneWay}"
             x:Name="PlayBarBackground"
             Source="{x:Bind AlbumImage.Source, Mode=OneWay}"
             VerticalAlignment="Top"
@@ -94,6 +95,7 @@
             </controls:ImageEx.RenderTransform>
         </controls:ImageEx>
         <Rectangle
+            Visibility="{x:Bind hy:Common.Setting.playbarBackgroundAcrylic, Mode=OneWay}"
             x:Name="PlayBarAcrylic"
             Grid.Column="0"
             Grid.ColumnSpan="4"
