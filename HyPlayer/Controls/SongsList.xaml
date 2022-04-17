@@ -30,8 +30,15 @@
             </ListView.Footer>
             <ListView.Header>
                 <StackPanel x:Name="HeaderPanel" Orientation="Vertical">
-                    <ContentControl Content="{x:Bind ListHeader}" />
-                    <Grid ColumnSpacing="12" Visibility="{x:Bind IsSearchEnabled}">
+                    <ContentControl
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Stretch"
+                        Margin="0,-10,0,0"
+                        Content="{x:Bind ListHeader}" />
+                    <Grid
+                        Margin="0,-45,0,0"
+                        ColumnSpacing="12"
+                        Visibility="{x:Bind IsSearchEnabled}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="150" />
@@ -42,19 +49,23 @@
                             x:Name="FilterBox"
                             Grid.Column="1"
                             Width="150"
+                            Margin="0,0,0,10"
+                            VerticalAlignment="Center"
                             controls:DockPanel.Dock="Right" />
                         <Button
                             x:Name="SearchToggle"
                             Grid.Column="2"
+                            Margin="0,0,0,10"
                             controls:DockPanel.Dock="Right"
                             Click="FilterBox_OnTextChanged">
-                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE721;" />
+                            <FontIcon Glyph="&#xE721;" />
                         </Button>
                         <ToggleButton
                             x:Name="MultiSelectBtn"
                             Grid.Column="3"
+                            Margin="-10,0,0,10"
                             IsChecked="{x:Bind MultiSelect, Mode=TwoWay}">
-                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE762;" />
+                            <FontIcon Glyph="&#xE762;" />
                         </ToggleButton>
                     </Grid>
                 </StackPanel>
@@ -86,7 +97,7 @@
                         Style="{StaticResource MenuFlyoutItemRevealStyle}"
                         Text="歌手">
                         <MenuFlyoutItem.Icon>
-                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE716;" />
+                            <FontIcon Glyph="&#xE716;" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                     <MenuFlyoutItem
@@ -95,7 +106,7 @@
                         Style="{StaticResource MenuFlyoutItemRevealStyle}"
                         Text="专辑">
                         <MenuFlyoutItem.Icon>
-                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE93C;" />
+                            <FontIcon Glyph="&#xE93C;" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                     <MenuFlyoutSeparator />
@@ -106,7 +117,7 @@
                         Text="评论"
                         Visibility="{x:Bind local:Common.Setting.notClearMode, Mode=OneWay}">
                         <MenuFlyoutItem.Icon>
-                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8F2;" />
+                            <FontIcon Glyph="&#xE8F2;" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                     <MenuFlyoutItem
@@ -115,7 +126,7 @@
                         Style="{StaticResource MenuFlyoutItemRevealStyle}"
                         Text="下载">
                         <MenuFlyoutItem.Icon>
-                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE118;" />
+                            <FontIcon Glyph="&#xE118;" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                     <MenuFlyoutItem
@@ -125,7 +136,7 @@
                         Text="视频"
                         Visibility="{x:Bind local:Common.Setting.notClearMode, Mode=OneWay}">
                         <MenuFlyoutItem.Icon>
-                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE173;" />
+                            <FontIcon Glyph="&#xE173;" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                     <MenuFlyoutItem
@@ -134,7 +145,7 @@
                         Style="{StaticResource MenuFlyoutItemRevealStyle}"
                         Text="收藏">
                         <MenuFlyoutItem.Icon>
-                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE1DA;" />
+                            <FontIcon Glyph="&#xE1DA;" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                     <MenuFlyoutItem
@@ -146,7 +157,6 @@
                         Visibility="{Binding ElementName=SongListRoot, Path=IsMySongList}">
                         <MenuFlyoutItem.Icon>
                             <FontIcon
-                                FontFamily="{StaticResource SymbolThemeFontFamily}"
                                 Foreground="Red"
                                 Glyph="&#xE107;" />
                         </MenuFlyoutItem.Icon>
@@ -159,30 +169,55 @@
                 </Style>
             </ListView.Resources>
             <ListView.ItemTemplate>
-                <DataTemplate x:DataType="classes:NCSong">
+                <DataTemplate x:DataType="classes:NCSong" ScrollViewer.CanContentRenderOutsideBounds="False" >
                     <Grid
+                        Margin="-15,15,0,15"
                         HorizontalAlignment="Stretch"
-                        Background="Transparent"
                         IsRightTapEnabled="True"
+                        ScrollViewer.CanContentRenderOutsideBounds="False"
                         RightTapped="Grid_RightTapped"
                         Tag="{x:Bind Order}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="60" />
+                            <ColumnDefinition Width="80" />
                         </Grid.ColumnDefinitions>
+                        <controls:ImageEx
+                            x:Name="RectangleImageBack"
+                            Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}"
+                            Grid.ColumnSpan="2"
+                            Height="85"
+                            Margin="0,-5,0,-5"
+                            x:Phase="4"
+                            CornerRadius="7"
+                            EnableLazyLoading="True"
+                            IsCacheEnabled="False"
+                            Source="{x:Bind Cover}"
+                            Stretch="Fill" />
+                        <Rectangle
+                            x:Name="RectangleImageAcrylic"
+                            Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}"
+                            Grid.ColumnSpan="2"
+                            Margin="0,-10,0,-10"
+                            Fill="{ThemeResource SystemControlAcrylicElementBrush}"
+                            RadiusX="10"
+                            RadiusY="10" />
+
                         <StackPanel Grid.Column="0" Orientation="Horizontal">
                             <TextBlock
                                 x:Name="OrderId"
-                                Width="30"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
+                                Width="48"
+                                Margin="12,0,0,0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
+                                FontSize="24"
+                                FontWeight="Bold"
                                 Text="{x:Bind DspOrder}" />
                             <controls:ImageEx
                                 x:Name="ImageRect"
-                                Width="75"
-                                Height="75"
+                                Width="80"
+                                Height="80"
                                 x:Phase="4"
-                                CornerRadius="4"
+                                CornerRadius="10"
                                 EnableLazyLoading="True"
                                 IsCacheEnabled="False"
                                 IsEnabled="{x:Bind IsAvailable}"
@@ -204,8 +239,10 @@
                                     Spacing="5">
                                     <TextBlock
                                         Name="TextBlockSongname"
+                                        Margin="10,0,0,0"
                                         x:Phase="0"
                                         FontSize="20"
+                                        FontWeight="Bold"
                                         Foreground="{x:Bind hycontrols:SongsList.GetBrush(IsAvailable)}"
                                         Text="{x:Bind songname}" />
                                     <TextBlock
@@ -226,7 +263,7 @@
                                 <TextBlock
                                     Name="TextBlockAlia"
                                     Grid.Row="1"
-                                    Margin="0,2,0,-6"
+                                    Margin="10,2,0,-4"
                                     x:Phase="2"
                                     FontSize="12"
                                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"
@@ -235,15 +272,15 @@
                                 <TextBlock
                                     Name="TextBlockArtist"
                                     Grid.Row="2"
-                                    Margin="0,7,0,-6"
+                                    Margin="10,5,0,-4"
                                     FontSize="12"
                                     Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                                     Text="{x:Bind ArtistString}" />
                                 <TextBlock
                                     Name="TextBlockAlbum"
                                     Grid.Row="3"
-                                    Margin="0,7,0,0"
-                                    FontSize="13"
+                                    Margin="10,5,0,0"
+                                    FontSize="12"
                                     Foreground="Gray"
                                     Text="{x:Bind Album.name}" />
                             </Grid>
@@ -256,13 +293,19 @@
                             Spacing="8">
                             <Button
                                 x:Name="More"
+                                Width="45"
+                                Height="35"
+                                Margin="0,0,20,0"
                                 x:Phase="3"
-                                Background="Transparent"
+                                Background="{ThemeResource SystemRevealAltLowColor}"
                                 Click="More_Click"
+                                CornerRadius="8"
                                 Style="{StaticResource ButtonRevealStyle}"
                                 Tag="{x:Bind Order}"
                                 ToolTipService.ToolTip="更多">
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE10C;" />
+                                <FontIcon
+                                    Foreground="{ThemeResource SystemAccentColorLight2}"
+                                    Glyph="&#xE10C;" />
                             </Button>
                         </StackPanel>
                     </Grid>

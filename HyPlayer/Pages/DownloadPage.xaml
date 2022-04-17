@@ -15,12 +15,13 @@
             <Button
                 Click="OpenDownloadFolder_Click"
                 Content="打开下载目标文件夹"
-                Margin="0,0,20,0"
+                Margin="0,-90,20,0"
                 Style="{StaticResource ButtonRevealStyle}"
                 x:Name="OpenDownloadFolder" />
             <Button
                 Click="Button_Cleanall_Click"
                 Content="删除全部"
+                Margin="0,-90,0,0"
                 Style="{StaticResource ButtonRevealStyle}" />
         </StackPanel>
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">

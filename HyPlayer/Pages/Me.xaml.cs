@@ -167,9 +167,4 @@ public sealed partial class Me : Page, IDisposable
         {
         }
     }
-
-    private void PivotView_HeaderScrollProgressChanged(object sender, EventArgs e)
-    {
-        TitleContainer.Opacity = 1 - PivotView.HeaderScrollProgress;
-    }
 }

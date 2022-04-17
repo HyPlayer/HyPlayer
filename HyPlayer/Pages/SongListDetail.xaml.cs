@@ -61,7 +61,9 @@ public sealed partial class SongListDetail : Page, IDisposable
     {
         if (playList.cover.StartsWith("http"))
             ImageRect.ImageSource =
-                Common.Setting.noImage ? null : new BitmapImage(new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
+                Common.Setting.noImage
+                    ? null
+                    : new BitmapImage(new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
         else
             ImageRect.ImageSource =
                 Common.Setting.noImage ? null : new BitmapImage(new Uri(playList.cover));
@@ -138,6 +140,7 @@ public sealed partial class SongListDetail : Page, IDisposable
                 ButtonIntel.Visibility = Visibility.Visible;
                 SongsList.IsMySongList = true;
             }
+
             try
             {
                 json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,

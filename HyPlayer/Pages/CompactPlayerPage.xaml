@@ -7,8 +7,8 @@
     xmlns:local="using:HyPlayer.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     d:Background="White"
-    d:DesignHeight="250"
-    d:DesignWidth="250"
+    d:DesignHeight="350"
+    d:DesignWidth="600"
     Background="{x:Bind Mode=OneWay, Path=AlbumCover}"
     IsRightTapEnabled="True"
     PointerEntered="CompactPlayerPage_OnPointerEntered"
@@ -22,7 +22,7 @@
         IsTapEnabled="True">
         <Grid.RowDefinitions>
             <!--  Placeholder  -->
-            <RowDefinition Height="32" />
+            <RowDefinition Height="72" />
             <RowDefinition Height="5*" />
             <RowDefinition Height="38" />
             <!--  Progress Bar  -->
@@ -31,67 +31,101 @@
         <Grid
             x:Name="SongNameContainer"
             Grid.Row="0"
+            CornerRadius="8"
             Background="{ThemeResource PlaybackAcrylicInAppLuminosity}">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="2*" />
-                <RowDefinition Height="3*" />
-            </Grid.RowDefinitions>
+            <Rectangle
+                Grid.RowSpan="2"
+                Height="56"
+                Width="56"
+                Margin="9,0,0,0 "
+                HorizontalAlignment="Left"
+                Fill="{x:Bind Mode=OneWay, Path=AlbumCover}"
+                RadiusX="8"
+                RadiusY="8"
+                >
+            </Rectangle>
             <TextBlock
-                Grid.Row="0"
+                Grid.Row="1"
                 FontSize="12"
                 Foreground="White"
                 Text="{x:Bind NowPlayingArtists, Mode=OneWay}"
-                TextAlignment="Center" />
+                TextAlignment="Left"
+                VerticalAlignment="Bottom"
+                Margin=" 76,0,0,22"/>
             <TextBlock
-                Grid.Row="1"
+                Grid.Row="0"
+                Grid.ColumnSpan="2"
+                FontSize="20"
+                FontWeight="Bold"
                 Foreground="White"
+                VerticalAlignment="Top" 
                 Text="{x:Bind NowPlayingName, Mode=OneWay}"
-                TextAlignment="Center" />
+                TextAlignment="Left"  
+                Margin="75,4,0,0"
+                />
         </Grid>
         <Grid x:Name="GridBtns" Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="3*" />
-                <ColumnDefinition Width="5*" />
-                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="1* "/>
+                <ColumnDefinition Width="4*" />
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="7*" />
+                <ColumnDefinition Width="1* "/>
+                <ColumnDefinition Width="4*" />
+                <ColumnDefinition Width="1* "/>
             </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions >
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="6*"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
             <Button
-                Grid.Column="0"
-                Height="70"
+                Grid.Column="1"
+                Grid.Row="1"
                 Margin="2"
                 Padding="0"
+                MaxHeight="100"
+                Background="{ThemeResource SystemRevealAltLowColor}"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
+                CornerRadius=" 12"
                 Click="MovePrevious"
                 Style="{StaticResource ButtonRevealStyle}">
-                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE892;" />
+                <FontIcon  Glyph="&#xE892;" Foreground="White" />
             </Button>
             <Button
                 x:Name="BtnPlayStateChange"
-                Grid.Column="1"
-                Height="70"
+                Grid.Column="3"
+                Grid.Row="1"
                 Margin="2"
+                CornerRadius=" 12"
+                MaxHeight=" 100"
                 Padding="0"
                 HorizontalAlignment="Stretch"
+                Background="{ThemeResource SystemRevealAltMediumLowColor}"
                 VerticalAlignment="Stretch"
                 AutomationProperties.AcceleratorKey="Space"
                 Click="ChangePlayState"
-                Style="{StaticResource ButtonRevealStyle}">
+                Style="{StaticResource ButtonRevealStyle}" Foreground="{ThemeResource SystemAccentColorLight2}">
                 <FontIcon
                     x:Name="PlayStateIcon"
-                    FontFamily="{StaticResource SymbolThemeFontFamily}"
-                    Glyph="&#xEDB5;" />
+                    Glyph="&#xEDB5;"
+                    FontSize="26"/>
                 <!--  EDB4  -->
             </Button>
             <Button
-                Grid.Column="2"
-                Height="70"
+                Grid.Column="5"
+                Grid.Row="1"
                 Margin="2"
+                MaxHeight=" 100"
                 Padding="0"
+                CornerRadius=" 12"
                 HorizontalAlignment="Stretch"
+                Background="{ThemeResource SystemRevealAltLowColor}"
                 VerticalAlignment="Stretch"
                 Click="MoveNext"
                 Style="{StaticResource ButtonRevealStyle}">
-                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE893;" />
+                <FontIcon Glyph="&#xE893;" Foreground="White"  />
             </Button>
         </Grid>
         <Grid x:Name="GridLyrics" Grid.Row="2">

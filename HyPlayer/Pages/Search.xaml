@@ -17,8 +17,9 @@
         </Grid.RowDefinitions>
         <TextBlock
             Grid.Row="0"
-            Margin="0,0,0,15"
-            FontSize="25"
+            Margin="0,-5,0,20"
+            FontSize="44"
+            FontWeight="Bold"
             Text="搜索歌曲" />
         <StackPanel Grid.Row="1" Orientation="Vertical">
             <AutoSuggestBox
@@ -33,19 +34,23 @@
                 Tag="PageSearch"
                 TextChanged="SearchKeywordBox_TextChanged" />
             <StackPanel
-                Margin="15"
+                Margin="0,20,15,15"
                 Orientation="Horizontal"
                 Spacing="5">
-                <TextBlock Text="搜索历史" />
+                <TextBlock Text="搜索历史" Margin="0,5,5,5"/>
                 <ScrollViewer HorizontalScrollMode="Enabled">
                     <StackPanel
                         x:Name="SearchHistory"
                         Orientation="Horizontal"
-                        Spacing="5" />
+                        Spacing="5" 
+                        Margin="0,0,0,5"
+                        VerticalAlignment="Top"
+                        />
                 </ScrollViewer>
             </StackPanel>
         </StackPanel>
         <NavigationView
+            Margin="-10,0,0,0"
             x:Name="NavigationViewSelector"
             Grid.Row="2"
             IsBackButtonVisible="Collapsed"
@@ -109,7 +114,9 @@
                     </hycontrol:SongsList>
                     <TextBlock
                         x:Name="TBNoRes"
-                        Margin="0,30,0,0"
+                        HorizontalAlignment="Center"
+                        Margin=" 0,100,0,0"
+                        FontSize=" 18"
                         Text="没有搜索到相关内容" />
                 </Grid>
             </Grid>

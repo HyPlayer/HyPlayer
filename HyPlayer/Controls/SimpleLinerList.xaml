@@ -6,12 +6,14 @@
     xmlns:classes="using:HyPlayer.Classes"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
+    xmlns:hyplayer="using:HyPlayer"
     x:Name="SongListRoot">
 
     <ListView
         Name="ItemList"
         Padding="10"
         Header="{x:Bind ListHeader, Mode=OneWay}"
+        Margin="0,0,0,120"
         ItemsSource="{x:Bind ListItems}"
         SelectionChanged="ItemList_SelectionChanged"
         ShowsScrollingPlaceholders="True">
@@ -19,28 +21,54 @@
             <behaviors:QuickReturnHeaderBehavior />
         </interactivity:Interaction.Behaviors>
         <ListView.Footer>
-            <ContentControl Margin="0,0,0,130" Content="{x:Bind Footer}" />
+            <ContentControl Content="{x:Bind Footer}" />
         </ListView.Footer>
         <ListView.ItemTemplate>
             <DataTemplate x:DataType="classes:SimpleListItem">
-                <Grid HorizontalAlignment="Stretch" Tag="{x:Bind ResourceId}">
+                <Grid
+                    Margin="0,15,0,15"
+                    HorizontalAlignment="Stretch"
+                    Tag="{x:Bind ResourceId}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="60" />
                     </Grid.ColumnDefinitions>
+                    <controls:ImageEx
+                        x:Name="RectangleImageBack"
+                        Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}"
+                        Grid.ColumnSpan="2"
+                        Height="85"
+                        Margin="0,-10,0,-10"
+                        x:Phase="4"
+                        CornerRadius="10"
+                        EnableLazyLoading="True"
+                        IsCacheEnabled="False"
+                        Source="{x:Bind Cover}"
+                        Stretch="UniformToFill" />
+                    <Rectangle
+                        x:Name="RectangleImageAcrylic"
+                        Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}"
+                        Grid.ColumnSpan="2"
+                        Margin="0,-10,0,-10"
+                        Fill="{ThemeResource SystemControlAcrylicElementBrush}"
+                        RadiusX="10"
+                        RadiusY="10" />
                     <StackPanel Grid.Column="0" Orientation="Horizontal">
                         <TextBlock
                             x:Name="OrderId"
                             Width="30"
+                            Margin="12,0,0,0"
                             HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
+                            VerticalAlignment="Top"
+                            FontSize="24"
+                            FontWeight="Bold"
                             Text="{x:Bind DspOrder}" />
                         <controls:ImageEx
                             x:Name="ImageRect"
                             Width="75"
                             Height="75"
                             x:Phase="4"
-                            CornerRadius="4"
+                            CornerRadius="10"
                             EnableLazyLoading="True"
                             IsCacheEnabled="False"
                             Source="{x:Bind Cover}"
@@ -59,6 +87,7 @@
                                 Grid.Row="0"
                                 x:Phase="0"
                                 FontSize="20"
+                                FontWeight="Bold"
                                 Text="{x:Bind Title}"
                                 ToolTipService.ToolTip="{x:Bind Title}" />
                             <TextBlock
@@ -94,13 +123,17 @@
                     </StackPanel>
                     <Button
                         Grid.Column="1"
+                        Width="45"
+                        Height="35"
+                        Background="{ThemeResource SystemRevealAltLowColor}"
                         Click="BtnPlayClick"
+                        CornerRadius="10"
                         Tag="{x:Bind ResourceId}"
                         ToolTipService.ToolTip="播放"
                         Visibility="{x:Bind CanPlay}">
                         <FontIcon
                             Name="PlayStateIcon"
-                            FontFamily="{StaticResource SymbolThemeFontFamily}"
+                            Foreground="{ThemeResource SystemAccentColorLight2}"
                             Glyph="&#xEDB5;" />
                     </Button>
                 </Grid>

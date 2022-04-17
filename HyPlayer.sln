@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31005.135
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32328.378
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HyPlayer", "HyPlayer\HyPlayer.csproj", "{DDD54862-21FE-4810-B8EC-74BF0447E000}"
 EndProject
@@ -25,6 +25,7 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{DDD54862-21FE-4810-B8EC-74BF0447E000}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{DDD54862-21FE-4810-B8EC-74BF0447E000}.Debug|Any CPU.Build.0 = Debug|x86
+		{DDD54862-21FE-4810-B8EC-74BF0447E000}.Debug|Any CPU.Deploy.0 = Debug|x86
 		{DDD54862-21FE-4810-B8EC-74BF0447E000}.Debug|ARM.ActiveCfg = Debug|ARM
 		{DDD54862-21FE-4810-B8EC-74BF0447E000}.Debug|ARM.Build.0 = Debug|ARM
 		{DDD54862-21FE-4810-B8EC-74BF0447E000}.Debug|ARM.Deploy.0 = Debug|ARM

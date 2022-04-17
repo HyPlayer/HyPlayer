@@ -332,7 +332,7 @@ public sealed partial class PlayBar
         {
             IconLiked.Foreground = isLiked
                 ? new SolidColorBrush(Colors.Red)
-                : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+                : IconPrevious.Foreground;
             FlyoutLiked.Foreground = isLiked
                 ? new SolidColorBrush(Colors.Red)
                 : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
@@ -432,7 +432,7 @@ public sealed partial class PlayBar
                 FadeSettedVolume = true;
                 var vol = Common.Setting.Volume;
                 var curtime = HyPlayList.Player.PlaybackSession.Position.TotalSeconds;
-                for (; ; )
+                for (;;)
                     try
                     {
                         await Task.Delay(50);
@@ -461,6 +461,8 @@ public sealed partial class PlayBar
             }
 
             HyPlayList.Player.Pause();
+            PlayBarBackgroundAni.Stop();
+
             PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uEDB5" : "\uEDB4";
             return;
         }
@@ -468,13 +470,15 @@ public sealed partial class PlayBar
         if (!HyPlayList.IsPlaying)
         {
             HyPlayList.Player.Play();
+            if (Common.Setting.playbarBackgroundBreath)
+                PlayBarBackgroundAni.Begin();
             if (Common.Setting.fadeInOutPause)
             {
                 FadeSettedVolume = true;
                 var vol = Common.Setting.Volume;
                 HyPlayList.Player.Volume = 0;
                 var curtime = HyPlayList.Player.PlaybackSession.Position.TotalSeconds;
-                for (; ; )
+                for (;;)
                 {
                     await Task.Delay(50);
                     var curvol = (HyPlayList.Player.PlaybackSession.Position.TotalSeconds - curtime) /
@@ -557,6 +561,7 @@ public sealed partial class PlayBar
         ButtonExpand.Visibility = Visibility.Collapsed;
         ButtonCollapse.Visibility = Visibility.Visible;
         Common.PageMain.GridPlayBar.Background = null;
+        PlayBarBackgroundFadeOut.Begin();
         //Common.PageMain.MainFrame.Visibility = Visibility.Collapsed;
         Common.PageMain.ExpandedPlayer.Visibility = Visibility.Visible;
         Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer), null,
@@ -599,6 +604,7 @@ public sealed partial class PlayBar
         Common.PageExpandedPlayer.StartCollapseAnimation();
         GridSongAdvancedOperation.Visibility = Visibility.Collapsed;
         GridSongInfo.Visibility = Visibility.Visible;
+        PlayBarBackgroundFadeIn.Begin();
         if (Common.Setting.expandAnimation && GridSongInfoContainer.Visibility == Visibility.Visible)
         {
             ConnectedAnimation anim1 = null;
@@ -632,11 +638,8 @@ public sealed partial class PlayBar
         Common.PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));
         //Common.PageMain.MainFrame.Visibility = Visibility.Visible;
         Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
-        if (Common.Setting.useAcrylic)
-            Common.PageMain.GridPlayBar.Background =
-                Application.Current.Resources["SystemControlAcrylicElementMediumHighBrush"] as Brush;
-        else
-            Common.PageMain.GridPlayBar.Background = new BackdropBlurBrush() { Amount = 30.0 };
+        if (!Common.Setting.playbarBackgroundAcrylic)
+            Common.PageMain.GridPlayBar.Background = Application.Current.Resources["ApplicationPageBackgroundThemeBrush"] as SolidColorBrush;
         Window.Current.SetTitleBar(Common.PageBase.AppTitleBar);
         Common.isExpanded = false;
     }
@@ -714,29 +717,29 @@ public sealed partial class PlayBar
         switch (HyPlayList.NowPlayingItem.ItemType)
         {
             case HyPlayItemType.Netease:
-                {
-                    Api.LikeSong(HyPlayList.NowPlayingItem.PlayItem.Id,
-                        !isLiked);
-                    if (isLiked)
-                        Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.Id);
-                    else
-                        Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.Id);
-                    isLiked = !isLiked;
-                    IconLiked.Foreground = isLiked
-                        ? new SolidColorBrush(Colors.Red)
-                        : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-                    FlyoutLiked.Foreground = isLiked
-                        ? new SolidColorBrush(Colors.Red)
-                        : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-                    IconLiked.Glyph = isLiked
-                        ? "\uE00B"
-                        : "\uE006";
-                    FlyoutLiked.Glyph = isLiked
-                        ? "\uE00B"
-                        : "\uE006";
-                    //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
-                    break;
-                }
+            {
+                Api.LikeSong(HyPlayList.NowPlayingItem.PlayItem.Id,
+                    !isLiked);
+                if (isLiked)
+                    Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.Id);
+                else
+                    Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.Id);
+                isLiked = !isLiked;
+                IconLiked.Foreground = isLiked
+                    ? new SolidColorBrush(Colors.Red)
+                    : IconPrevious.Foreground;
+                FlyoutLiked.Foreground = isLiked
+                    ? new SolidColorBrush(Colors.Red)
+                    : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+                IconLiked.Glyph = isLiked
+                    ? "\uE00B"
+                    : "\uE006";
+                FlyoutLiked.Glyph = isLiked
+                    ? "\uE00B"
+                    : "\uE006";
+                //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
+                break;
+            }
             case HyPlayItemType.Radio:
                 _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.ResourceLike,
                     new Dictionary<string, object>
@@ -745,7 +748,7 @@ public sealed partial class PlayBar
             default:
                 IconLiked.Foreground = isLiked
                     ? new SolidColorBrush(Colors.Red)
-                    : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+                    : IconPrevious.Foreground;
                 FlyoutLiked.Foreground = isLiked
                     ? new SolidColorBrush(Colors.Red)
                     : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
@@ -870,16 +873,24 @@ public sealed partial class PlayBar
 
     private async void ToggleButton_Click(object sender, RoutedEventArgs e)
     {
-        if (Common.Setting.toastLyric) { Common.Setting.toastLyric = false; InitializeDesktopLyric(); return; }
+        if (Common.Setting.toastLyric)
+        {
+            Common.Setting.toastLyric = false;
+            InitializeDesktopLyric();
+            return;
+        }
+
         // 当前未打开歌词
         Bindings.Update();
         var uri = new Uri($"hot-lyric:///?from={Windows.ApplicationModel.Package.Current.Id.FamilyName}");
-        if (await Windows.System.Launcher.QueryUriSupportAsync(uri, Windows.System.LaunchQuerySupportType.Uri, "306200B4771A6.217957860C1A5_mb3g82vhcggpy") != Windows.System.LaunchQuerySupportStatus.Available)
+        if (await Windows.System.Launcher.QueryUriSupportAsync(uri, Windows.System.LaunchQuerySupportType.Uri,
+                "306200B4771A6.217957860C1A5_mb3g82vhcggpy") != Windows.System.LaunchQuerySupportStatus.Available)
         {
             var dlg = new ContentDialog()
             {
                 Title = "关于桌面歌词",
-                Content = "目前 HyPlayer 已经适配「热词」，我们推荐使用「热词」来获得真正的桌面歌词体验。\r\n同时我们仍然保留了旧的 Toast 歌词\r\n如想使用 Toast 歌词请点击否。\r\n或者可以前往 Microsoft 商店安装 「热词」",
+                Content =
+                    "目前 HyPlayer 已经适配「热词」，我们推荐使用「热词」来获得真正的桌面歌词体验。\r\n同时我们仍然保留了旧的 Toast 歌词\r\n如想使用 Toast 歌词请点击否。\r\n或者可以前往 Microsoft 商店安装 「热词」",
                 CloseButtonText = "否",
                 PrimaryButtonText = "安装 「热词」"
             };
@@ -897,6 +908,7 @@ public sealed partial class PlayBar
                 return;
             }
         }
+
         try
         {
             if (!Common.Setting.progressInSMTC) Common.Setting.progressInSMTC = true;
@@ -907,9 +919,10 @@ public sealed partial class PlayBar
             Common.Setting.toastLyric = false;
             Bindings.Update();
             return;
-
         }
-        catch { }
+        catch
+        {
+        }
     }
 
     private void BtnPlayStateChange_KeyUp(object sender, KeyRoutedEventArgs e)
@@ -992,18 +1005,20 @@ public sealed partial class PlayBar
             {
             }
         }
-        
+
 
         if (Common.isExpanded)
             Common.BarPlayBar.ShowExpandedPlayer();
-        if (!Common.Setting.useAcrylic)
-            Common.PageMain.GridPlayBar.Background = new BackdropBlurBrush() { Amount = 30.0 };
+        if (!Common.Setting.playbarBackgroundAcrylic)
+            Common.PageMain.GridPlayBar.Background = Application.Current.Resources["ApplicationPageBackgroundThemeBrush"] as Brush;/*new BackdropBlurBrush() { Amount = 30.0 };*/
         if (Common.Setting.hotlyricOnStartup)
         {
             try
             {
                 var uri = new Uri($"hot-lyric:///?from={Windows.ApplicationModel.Package.Current.Id.FamilyName}");
-                if (await Windows.System.Launcher.QueryUriSupportAsync(uri, Windows.System.LaunchQuerySupportType.Uri, "306200B4771A6.217957860C1A5_mb3g82vhcggpy") == Windows.System.LaunchQuerySupportStatus.Available)
+                if (await Windows.System.Launcher.QueryUriSupportAsync(uri, Windows.System.LaunchQuerySupportType.Uri,
+                        "306200B4771A6.217957860C1A5_mb3g82vhcggpy") ==
+                    Windows.System.LaunchQuerySupportStatus.Available)
                 {
                     await Windows.System.Launcher.LaunchUriAsync(uri);
                     Common.Setting.toastLyric = false;
@@ -1011,7 +1026,9 @@ public sealed partial class PlayBar
                     return;
                 }
             }
-            catch { }
+            catch
+            {
+            }
         }
         /*
         verticalAnimation = new DoubleAnimation();

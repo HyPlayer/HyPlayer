@@ -78,7 +78,7 @@ public class PlayBarCornerRadiusConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {
-        return value is true ? new CornerRadius(4) : new CornerRadius(0);
+        return value is true ? new CornerRadius(16) : new CornerRadius(16,16,0,0);
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)

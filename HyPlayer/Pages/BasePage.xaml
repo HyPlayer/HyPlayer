@@ -9,6 +9,7 @@
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
+   
     <Page.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -68,6 +69,7 @@
                     Margin="12,0,0,0"
                     VerticalAlignment="Top"
                     Style="{StaticResource CaptionTextBlockStyle}"
+                    FontWeight="Bold"
                     Text="HyPlayer" />
             </StackPanel>
         </Border>
@@ -87,17 +89,20 @@
             IsTitleBarAutoPaddingEnabled="False"
             ItemInvoked="NavMain_ItemInvoked"
             PaneDisplayMode="Auto"
-            PaneTitle="HyPlayer"
+            PaneTitle="关闭侧栏"
             SelectionChanged="NavMain_OnSelectionChanged">
             <muxc:NavigationView.MenuItems>
                 <muxc:NavigationViewItem
                     Content="寻觅音乐"
                     Icon="Find"
+                    FontWeight="Bold"
                     Tag="PageSearch" />
                 <muxc:NavigationViewItem
-                    Content="发现音乐">
+                    Content="发现音乐"
+                    FontWeight="Bold"
+                    >
                     <muxc:NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE12B;" />
+                        <FontIcon Glyph="&#xE12B;" />
                     </muxc:NavigationViewItem.Icon>
                     <muxc:NavigationViewItem.MenuItems>
                         <muxc:NavigationViewItem
@@ -105,12 +110,12 @@
                             Tag="PageHome"
                             Visibility="{x:Bind local:Common.Setting.notClearMode, Mode=OneWay}">
                             <muxc:NavigationViewItem.Icon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE10F;" />
+                                <FontIcon Glyph="&#xE10F;" />
                             </muxc:NavigationViewItem.Icon>
                         </muxc:NavigationViewItem>
                         <muxc:NavigationViewItem Content="每日推荐" Tag="DailyRcmd">
                             <muxc:NavigationViewItem.Icon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE163;" />
+                                <FontIcon Glyph="&#xE163;" />
                             </muxc:NavigationViewItem.Icon>
                         </muxc:NavigationViewItem>
                         <muxc:NavigationViewItem
@@ -118,7 +123,7 @@
                             SelectsOnInvoked="False"
                             Tag="PersonalFM">
                             <muxc:NavigationViewItem.Icon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xEFA9;" />
+                                <FontIcon Glyph="&#xEFA9;" />
                             </muxc:NavigationViewItem.Icon>
                         </muxc:NavigationViewItem>
                         <muxc:NavigationViewItem
@@ -126,29 +131,30 @@
                             SelectsOnInvoked="False"
                             Tag="HeartBeat">
                             <muxc:NavigationViewItem.Icon>
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE95E;" />
+                                <FontIcon Glyph="&#xE95E;" />
                             </muxc:NavigationViewItem.Icon>
                         </muxc:NavigationViewItem>
                     </muxc:NavigationViewItem.MenuItems>
                 </muxc:NavigationViewItem>
-                <muxc:NavigationViewItem Content="离线音乐" Tag="PageLocal">
+                <muxc:NavigationViewItem Content="离线音乐" Tag="PageLocal" FontWeight="Bold">
                     <muxc:NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE8B7;" />
+                        <FontIcon Glyph="&#xE8B7;" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
                 <muxc:NavigationViewItem
                     x:Name="PageHistory"
                     Content="播放历史"
+                    FontWeight="Bold"
                     Icon="Clock"
                     Tag="PageHistory" />
-                <muxc:NavigationViewItem Content="我的收藏" Tag="PageFavorite">
+                <muxc:NavigationViewItem Content="我的收藏" Tag="PageFavorite" FontWeight="Bold">
                     <muxc:NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE734;" />
+                        <FontIcon Glyph="&#xE734;" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
-                <muxc:NavigationViewItem Content="我的云盘" Tag="MusicCloud">
+                <muxc:NavigationViewItem Content="我的云盘" Tag="MusicCloud" FontWeight="Bold">
                     <muxc:NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE753;;" />
+                        <FontIcon Glyph="&#xE753;;" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
                 <muxc:NavigationViewItemSeparator />
@@ -161,11 +167,11 @@
                     Visibility="Collapsed" />
                 <muxc:NavigationViewItem
                     x:Name="NavItemsMyLovedPlaylist"
-                    Content="我喜欢的音乐"
+                    Content="我喜欢的音乐"                   
                     Tag="SonglistMyLike"
                     Visibility="Collapsed">
                     <muxc:NavigationViewItem.Icon>
-                        <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE006;" />
+                        <FontIcon Glyph="&#xE006;" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
                 <muxc:NavigationViewItem
@@ -187,13 +193,15 @@
                     Content="登录"
                     Icon="Contact"
                     Tag="PageMe"
+                    FontWeight="Bold"
                     Tapped="NavigationViewItem_Tapped" />
                 <muxc:NavigationViewItem
                     Content="设置"
                     Icon="Setting"
+                    FontWeight="ExtraBlack"
                     Tag="PageSettings"
                     Tapped="NavigationViewItem_Tapped" />
-                <muxc:NavigationViewItem x:Name="NavItemBlank" x:FieldModifier="public" IsEnabled="False" Height="120" />
+                <muxc:NavigationViewItem x:Name="NavItemBlank" x:FieldModifier="public" IsEnabled="False" Height="130" />
             </muxc:NavigationView.FooterMenuItems>
             <Grid>
                 <Grid.RowDefinitions>
@@ -213,7 +221,6 @@
                     Click="ButtonCloseLoginForm_Click"
                     Style="{StaticResource ButtonRevealStyle}">
                     <FontIcon
-                        FontFamily="{StaticResource SymbolThemeFontFamily}"
                         FontSize="15"
                         Glyph="&#xE106;" />
                 </Button>

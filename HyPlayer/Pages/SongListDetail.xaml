@@ -4,38 +4,72 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:controls1="using:HyPlayer.Controls"
+    xmlns:controls2="using:Microsoft.UI.Xaml.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hyplayer="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="using:HyPlayer.Pages"
-    xmlns:controls2="using:Microsoft.UI.Xaml.Controls"
+    x:Name="Page"
     d:DataContext="{d:DesignInstance Type=pages:SongListDetail}"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
+    <Page.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Default">
+                    <AcrylicBrush
+                        x:Key="SongListPageAcrylicBrush"
+                        BackgroundSource="Backdrop"
+                        FallbackColor="{ThemeResource SystemRevealAltMediumHighColor}"
+                        TintColor="{ThemeResource SystemRevealAltHighColor}"
+                        TintLuminosityOpacity="0.5"
+                        TintOpacity="0.5" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Page.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition />
             <RowDefinition Height="175" />
         </Grid.RowDefinitions>
-        <controls2:ProgressRing Grid.Row="0" IsActive="True" Visibility="{x:Bind IsLoading, Mode = OneWay}" />
+        <controls2:ProgressRing
+            Grid.Row="0"
+            IsActive="True"
+            Visibility="{x:Bind IsLoading, Mode=OneWay}" />
+
         <controls1:SongsList
             x:Name="SongsList"
             Grid.Row="0"
             Grid.RowSpan="2"
             Margin="20,20,0,0"
-            VerticalAlignment="Stretch"
             CornerRadius="15"
             IsSearchEnabled="True"
             Songs="{x:Bind Songs}">
             <controls1:SongsList.ListHeader>
-                <controls:DockPanel x:Name="GridPersonalInformation" HorizontalAlignment="Stretch" LastChildFill="True">
+                <Grid x:Name="GridPersonalInformation">
                     <Rectangle
-                        VerticalAlignment="Top"
+                        x:Name="RectangleImageBack"
+                        Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}"
+                        Margin="30,0,30,0"
+                        Fill="{x:Bind RectangleImage.Fill, Mode=OneWay}"
+                        RadiusX="10"
+                        RadiusY="10" />
+                    <Rectangle
+                        x:Name="RectangleImageAcrylic"
+                        Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}"
+                        Margin="0,0,0,0"
+                        Fill="{ThemeResource SongListPageAcrylicBrush}"
+                        RadiusX="10"
+                        RadiusY="10" />
+                    <Rectangle
                         x:Name="RectangleImage"
                         Width="200"
                         Height="200"
-                        Margin="15,15,15,0"
-                        controls:DockPanel.Dock="Left"
+                        Margin="20,20,15,20"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
                         RadiusX="10"
                         RadiusY="10">
                         <Rectangle.Fill>
@@ -48,33 +82,69 @@
                     </Rectangle>
                     <StackPanel
                         Name="StackPanelUserInfo"
-                        Margin="15,15,0,0"
+                        Margin="250,20,40,20"
+                        HorizontalAlignment="Left"
                         Orientation="Vertical">
                         <controls1:SelectableTextBox
                             x:Name="TextBoxPLName"
-                            Foreground="{ThemeResource DefaultTextForegroundThemeBrush}"
-                            Margin="0,0,0,0"
+                            Margin="15,0,0,0"
                             FontSize="36"
-                            FontWeight="Medium"
+                            FontWeight="Bold"
+                            Foreground="{ThemeResource DefaultTextForegroundThemeBrush}"
                             Text="歌单名"
+                            FontFamily="Bahnschrift SemiBold"
                             TextWrapping="Wrap" />
-                        <StackPanel Margin="0,2,0,0" Orientation="Horizontal">
-                            <TextBlock Padding="0,8,0,3" FontSize="18" Foreground="Gray" Text="创建者:" />
+                        <StackPanel Margin="15,2,0,0" Orientation="Horizontal">
+                            <TextBlock
+                                Padding="0,8,0,3"
+                                FontSize="18"
+                                Foreground="Gray"
+                                Text="创建者:" />
                             <HyperlinkButton
                                 x:Name="TextBoxAuthor"
-                                FontSize="18"
-                                Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                                 Click="TextBoxAuthor_Tapped"
-                                Content="歌单创建者" />
+                                Content="歌单创建者"
+                                FontSize="18"
+                                Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}" />
                         </StackPanel>
                         <StackPanel
                             Margin="0,10,0,0"
                             Orientation="Horizontal"
                             Spacing="15">
                             <Button
+                                x:Name="ButtonIntel"
+                                Margin="15,0,0,0"
+                                Background="OrangeRed"
+                                Click="ButtonHeartBeat_OnClick"
+                                Style="{StaticResource ButtonRevealStyle}"
+                                Visibility="Collapsed">
+                                <StackPanel Orientation="Horizontal">
+                                    <FontIcon
+                                        x:Name="IconLiked"
+                                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                        FontSize="16"
+                                        Glyph="&#xE00B;" />
+                                    <TextBlock
+                                        Margin="5,0,0,0"
+                                        FontWeight="Bold"
+                                        Text="心动模式" />
+                                </StackPanel>
+                            </Button>
+                            <Button
+                                Background="{ThemeResource SystemControlForegroundAccentBrush}"
                                 Click="ButtonPlayAll_OnClick"
-                                Content="播放全部"
-                                Style="{StaticResource ButtonRevealStyle}" />
+                                Style="{StaticResource ButtonRevealStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <FontIcon
+                                        x:Name="IconPlay"
+                                        FontSize="16"
+                                        Glyph="&#xEDB5;" />
+                                    <TextBlock
+                                        Margin="5,0,0,0"
+                                        FontWeight="Bold"
+                                        Text="播放全部" />
+                                </StackPanel>
+                            </Button>
                             <ToggleButton
                                 x:Name="ToggleButtonLike"
                                 Click="LikeBtnClick"
@@ -89,17 +159,11 @@
                                 Content="评论"
                                 Style="{StaticResource ButtonRevealStyle}"
                                 Visibility="{x:Bind hyplayer:Common.Setting.notClearMode, Mode=OneWay}" />
-                            <Button
-                                x:Name="ButtonIntel"
-                                Click="ButtonHeartBeat_OnClick"
-                                Content="心动模式"
-                                Style="{StaticResource ButtonRevealStyle}"
-                                Visibility="Collapsed" />
                         </StackPanel>
                         <controls1:ExpandableTextBox
-                            HorizontalAlignment="Stretch"
                             x:Name="DescriptionWrapper"
-                            Margin="0,5,0,0"
+                            Margin="15,5,0,0"
+                            HorizontalAlignment="Stretch"
                             FontSize="13"
                             Foreground="{ThemeResource SystemControlForegroundChromeHighBrush}"
                             MaxLines="3" />
@@ -128,7 +192,7 @@
                             </VisualState>
                         </VisualStateGroup>
                     </VisualStateManager.VisualStateGroups>
-                </controls:DockPanel>
+                </Grid>
             </controls1:SongsList.ListHeader>
             <controls1:SongsList.Footer>
                 <Button

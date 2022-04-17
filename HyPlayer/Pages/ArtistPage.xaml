@@ -4,61 +4,106 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:controls1="using:HyPlayer.Controls"
+    xmlns:hyplayer="using:HyPlayer"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
+    <Page.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Default">
+                    <AcrylicBrush
+                        x:Key="ArtistPageAcrylicBrush"
+                        BackgroundSource="Backdrop"
+                        FallbackColor="{ThemeResource SystemRevealAltMediumHighColor}"
+                        TintColor="{ThemeResource SystemRevealAltHighColor}"
+                        TintLuminosityOpacity="0.5"
+                        TintOpacity="0.5" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Page.Resources>
+
+
     <Grid>
-        <controls1:PivotView x:Name="PivotView" Margin="0,-22,0,0" HeaderScrollProgressChanged="PivotView_HeaderScrollProgressChanged">
+        <controls1:PivotView
+            x:Name="PivotView"
+            Margin="0,-22,0,0"
+            HeaderScrollProgressChanged="PivotView_HeaderScrollProgressChanged">
             <controls1:PivotView.Header>
-                <controls:DockPanel Margin="0,22,0,0"
-                    x:Name="GridPersonalInformation"
-                    Grid.Row="0"
-                    LastChildFill="True">
+                <Grid>
                     <Rectangle
-                        x:Name="RectangleImage"
-                        Width="250"
+                        x:Name="RectangleImageBack"
                         Height="250"
+                        Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}"
                         Margin="15"
-                        controls:DockPanel.Dock="Left"
                         RadiusX="10"
                         RadiusY="10">
                         <Rectangle.Fill>
-                            <ImageBrush x:Name="ImageRect" Stretch="UniformToFill" />
+                            <ImageBrush x:Name="ImageRect1" Stretch="UniformToFill" />
                         </Rectangle.Fill>
                     </Rectangle>
-                    <StackPanel
-                        Name="StackPanelUserInfo"
-                        MaxWidth="1000"
-                        HorizontalAlignment="Left"
-                        Margin="15,15,0,0"
-                        Orientation="Vertical">
-                        <controls1:SelectableTextBox
-                            x:Name="TextBoxArtistName"
-                            FontSize="40"
-                            FontWeight="ExtraBold"
-                            Text="歌手名"
-                            TextWrapping="Wrap" />
-                        <controls1:SelectableTextBox
-                            x:Name="TextboxArtistNameTranslated"
-                            Margin="0,2,0,0"
-                            FontSize="25"
-                            Text="歌手别名" />
-                        <controls1:SelectableTextBox
-                            x:Name="TextBlockInfo"
-                            Margin="0,10,0,0"
-                            FontSize="15"
-                            MaxLines="7"
-                            Text="歌手简略信息" />
-                        <controls1:ExpandableTextBox
-                            x:Name="TextBlockDesc"
-                            Margin="0,5,0,0"
-                            FontSize="15"
-                            MaxLines="7"
-                            Text="歌手简介"
-                            TextWrapping="WrapWholeWords" />
-                    </StackPanel>
-                </controls:DockPanel>
+                    <Rectangle
+                        x:Name="RectangleImageBackAcrylic"
+                        Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}"
+                        Height="250"
+                        Margin="15"
+                        Fill="{ThemeResource ArtistPageAcrylicBrush}"
+                        RadiusX="10"
+                        RadiusY="10" />
+                    <controls:DockPanel
+                        x:Name="GridPersonalInformation"
+                        Grid.Row="0"
+                        LastChildFill="True">
+                        <Rectangle
+                            x:Name="RectangleImage"
+                            Width="200"
+                            Height="200"
+                            Margin="40,0,0,0"
+                            controls:DockPanel.Dock="Left"
+                            RadiusX="10"
+                            RadiusY="10">
+                            <Rectangle.Fill>
+                                <ImageBrush x:Name="ImageRect" Stretch="UniformToFill" />
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <StackPanel
+                            Name="StackPanelUserInfo"
+                            MaxWidth="1000"
+                            Margin="15,30,-20,0"
+                            HorizontalAlignment="Left"
+                            Orientation="Vertical">
+                            <controls1:SelectableTextBox
+                                x:Name="TextBoxArtistName"
+                                Margin="0,10,0,0"
+                                FontFamily="Bahnschrift SemiBold"
+                                FontSize="40"
+                                FontWeight="ExtraBold"
+                                Text="歌手名"
+                                TextWrapping="Wrap" />
+                            <controls1:SelectableTextBox
+                                x:Name="TextboxArtistNameTranslated"
+                                Margin="0,2,0,0"
+                                FontSize="25"
+                                Text="歌手别名" />
+                            <controls1:SelectableTextBox
+                                x:Name="TextBlockInfo"
+                                Margin="0,10,5,0"
+                                FontSize="15"
+                                MaxLines="7"
+                                Text="歌手简略信息" />
+                            <controls1:ExpandableTextBox
+                                x:Name="TextBlockDesc"
+                                Margin="0,5,5,0"
+                                FontSize="15"
+                                MaxLines="7"
+                                Text="歌手简介"
+                                TextWrapping="WrapWholeWords" />
+                        </StackPanel>
+                    </controls:DockPanel>
+                </Grid>
+
             </controls1:PivotView.Header>
             <controls1:PivotEx
                 x:Name="mp"
@@ -70,7 +115,7 @@
                         Margin="20,0,0,0"
                         Songs="{x:Bind hotSongs, Mode=OneWay}">
                         <controls1:SongsList.ListHeader>
-                            <Rectangle Height="{x:Bind PivotView.HeaderHeight,Mode=OneWay}" Margin="0,-20,0,0" />
+                            <Rectangle Height="{x:Bind PivotView.HeaderHeight, Mode=OneWay}" Margin="0,-20,0,0" />
                         </controls1:SongsList.ListHeader>
                     </controls1:SongsList>
                 </PivotItem>
@@ -80,7 +125,7 @@
                         Margin="20,0,0,0"
                         Songs="{x:Bind allSongs, Mode=OneWay}">
                         <controls1:SongsList.ListHeader>
-                            <Rectangle Height="{x:Bind PivotView.HeaderHeight,Mode=OneWay}" Margin="0,-20,0,0" />
+                            <Rectangle Height="{x:Bind PivotView.HeaderHeight, Mode=OneWay}" Margin="0,-20,0,0" />
                         </controls1:SongsList.ListHeader>
                         <controls1:SongsList.Footer>
                             <StackPanel
@@ -99,7 +144,7 @@
                 <PivotItem Header="专辑">
                     <controls1:SimpleLinerList x:Name="AlbumContainer" Margin="20,0,0,0">
                         <controls1:SimpleLinerList.ListHeader>
-                            <Rectangle Height="{x:Bind PivotView.HeaderHeight,Mode=OneWay}" />
+                            <Rectangle Height="{x:Bind PivotView.HeaderHeight, Mode=OneWay}" />
                         </controls1:SimpleLinerList.ListHeader>
                         <controls1:SimpleLinerList.Footer>
                             <StackPanel
@@ -110,12 +155,12 @@
                                     x:Name="PrevPage"
                                     Click="PrevPage_Click"
                                     Content="上一页"
-                                    Style="{StaticResource ButtonRevealStyle}"/>
+                                    Style="{StaticResource ButtonRevealStyle}" />
                                 <Button
                                     x:Name="NextPage"
                                     Click="NextPage_Click"
                                     Content="下一页"
-                                    Style="{StaticResource ButtonRevealStyle}"/>
+                                    Style="{StaticResource ButtonRevealStyle}" />
                             </StackPanel>
                         </controls1:SimpleLinerList.Footer>
                     </controls1:SimpleLinerList>

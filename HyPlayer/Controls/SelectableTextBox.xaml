@@ -11,6 +11,7 @@
         Foreground="{x:Bind Foreground, Mode = OneWay}"
         MaxLines="{x:Bind MaxLines , Mode = OneWay}"
         FontSize="{x:Bind FontSize, Mode = OneWay}"
+        Margin=" 0,0,40,0"
         IsTextSelectionEnabled="{x:Bind Selectable, Mode = OneWay}">
         <Paragraph>
             <Run FontWeight="{x:Bind FontWeight, Mode = OneWay}" Text="{x:Bind Text, Mode = OneWay}" />

@@ -11,10 +11,11 @@
     <Grid>
         <TextBlock
             Grid.Row="0"
-            Margin="30,0,30,0"
-            FontSize="25"
+            Margin="30,-5,30,0"
+            FontWeight="Bold" 
+            FontSize="44"
             Text="本地歌曲" />
-        <Pivot Margin="15,25,30,0">
+        <Pivot Margin="20,60,30,0">
 
             <PivotItem Header="下载管理">
                 <Frame x:Name="DownloadPageFrame" />
@@ -28,6 +29,7 @@
                     </Grid.RowDefinitions>
                     <StackPanel
                         Grid.Row="0"
+                        Spacing="10"
                         Padding="15"
                         Orientation="Horizontal">
                         <Button

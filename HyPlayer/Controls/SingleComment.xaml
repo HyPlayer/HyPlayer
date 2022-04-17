@@ -11,25 +11,30 @@
     mc:Ignorable="d">
 
     <StackPanel Orientation="Vertical">
-        <Grid>
+        <Grid Margin="10,0,20,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="70" />
                 <ColumnDefinition Width="10" />
                 <!--  White Space  -->
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
+            <Rectangle Grid.ColumnSpan="3"  Fill="{ThemeResource SystemRevealChromeLowColor}" Margin=" 0,-5,-10,-5" RadiusX="15" RadiusY="15">
+
+            </Rectangle>
+
             <PersonPicture
                 x:Name="UserAvatar"
                 Grid.Column="0"
-                Width="70"
-                Height="70"
-                MaxWidth="70"
-                MaxHeight="70"
+                Width="60"
+                Height="60"
+                MaxWidth="60"
+                MaxHeight="60"
+                Margin="10,10,0,0"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Top"
                 ProfilePicture="{x:Bind AvatarSource, Mode=OneWay}"
                 Tapped="NavToUser_Click" />
-            <StackPanel Grid.Column="2" Orientation="Vertical">
+            <StackPanel Grid.Column="2" Orientation="Vertical" Margin="0,10,0,10">
                 <HyperlinkButton
                     x:Name="Nickname"
                     Padding="0"
@@ -39,7 +44,7 @@
                 <TextBlock Foreground="Gray" Text="{x:Bind comment.SendTime}" />
                 <controls:SelectableTextBox
                     x:Name="CommentContent"
-                    Margin="0,10,0,0"
+                    Margin="0,2,10,0"
                     FontSize="17"
                     Text="{x:Bind comment.content}"
                     TextWrapping="Wrap" />

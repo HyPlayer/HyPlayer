@@ -6,7 +6,9 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Title="选择歌手"
-    CloseButtonText="关闭">
+    FontWeight="Bold"
+    CloseButtonText="关闭"
+    CornerRadius="20">
     <StackPanel>
         <ScrollViewer
             VerticalScrollBarVisibility="Auto">

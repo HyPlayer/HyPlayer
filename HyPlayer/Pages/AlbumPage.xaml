@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:controls1="using:HyPlayer.Controls"
+    xmlns:hyplayer="using:HyPlayer"
     NavigationCacheMode="Disabled">
     <Grid>
         <Grid.RowDefinitions>
@@ -65,9 +66,20 @@
                             Orientation="Horizontal"
                             Spacing="15">
                             <Button
+                                Background="{ThemeResource SystemControlForegroundAccentBrush}"
                                 Click="ButtonPlayAll_OnClick"
-                                Content="播放全部"
-                                Style="{StaticResource ButtonRevealStyle}" />
+                                Style="{StaticResource ButtonRevealStyle}">
+                                <StackPanel Orientation="Horizontal">
+                                    <FontIcon
+                                        x:Name="IconPlay"
+                                        FontSize="16"
+                                        Glyph="&#xEDB5;" />
+                                    <TextBlock
+                                        Margin="5,0,0,0"
+                                        FontWeight="Bold"
+                                        Text="播放全部" />
+                                </StackPanel>
+                            </Button>
                             <Button
                                 Click="ButtonDownloadAll_OnClick"
                                 Content="下载全部"

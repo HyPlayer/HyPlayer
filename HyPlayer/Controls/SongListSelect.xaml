@@ -6,6 +6,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Title="选择歌单"
+    FontWeight="Bold"
+    CornerRadius="20"
     CloseButtonText="关闭">
     <StackPanel>
         <ListView

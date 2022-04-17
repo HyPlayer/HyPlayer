@@ -1,30 +1,46 @@
 ﻿<Page
-    mc:Ignorable="d"
     x:Class="HyPlayer.Pages.Welcome"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     NavigationCacheMode="Disabled"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    mc:Ignorable="d">
+    <Page.Background>
+        <LinearGradientBrush StartPoint="0.1,0.1" EndPoint="1,1.4">
+            <GradientStop Offset="0.85" Color="#FF33A2D7" />
+            <GradientStop Offset="0.5" Color="Transparent" />
+        </LinearGradientBrush>
+    </Page.Background>
 
-    <StackPanel Orientation="Vertical">
-        <TextBlock
-            FontSize="32"
-            HorizontalAlignment="Center"
-            Text="欢迎使用 HyPlayer"
-            TextAlignment="Center" />
+    <controls:WrapPanel
+        HorizontalAlignment="Center"
+        VerticalAlignment="Center"
+        HorizontalSpacing="100">
+        <StackPanel
+            Margin="0,100,0,0"
+            HorizontalAlignment="Stretch"
+            Orientation="Vertical"
+            Spacing="30">
+            <TextBlock
+                VerticalAlignment="Center"
+                FontSize="56"
+                FontWeight="Bold"
+                Text="欢迎使用 HyPlayer"
+                TextAlignment="Center" />
+            <TextBlock
+                x:Name="TBHINT"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                FontSize="28"
+                Text="点击侧边栏登录解锁更多功能"
+                TextAlignment="Center" />
+        </StackPanel>
         <controls:ImageEx
-            Height="300"
-            HorizontalAlignment="Center"
-            Source="Assets/icon.png"
-            Width="300"
-            x:Name="ImageE" />
-        <TextBlock
-            FontSize="25"
-            HorizontalAlignment="Center"
-            Text="点击侧边栏登录以解锁更多功能"
-            TextAlignment="Center"
-            x:Name="TBHINT" />
-    </StackPanel>
+            x:Name="ImageE"
+            Width="350"
+            Height="350"
+            Source="Assets/icon.png" />
+    </controls:WrapPanel>
 </Page>
