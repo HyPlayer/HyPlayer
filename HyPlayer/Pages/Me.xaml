@@ -23,7 +23,7 @@
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>
     </Page.Resources>
-    <ScrollViewer VerticalScrollMode="Enabled" ScrollViewer.CanContentRenderOutsideBounds="False">
+    <Grid>
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState x:Name="NarrowState">
@@ -43,8 +43,8 @@
                         <Setter Target="ButtonLogout.Margin" Value="0,15,0,0" />
                         <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="1" />
                         <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="10" />
-                        <Setter Target="TextBoxSignature.Visibility" Value="Collapsed"/>
-                        <Setter Target="MySongList.Margin" Value="0,50,0,-100"/>
+                        <Setter Target="TextBoxSignature.Visibility" Value="Collapsed" />
+                        <Setter Target="MySongList.Margin" Value="0,50,0,-100" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState x:Name="WideState">
@@ -62,44 +62,44 @@
                         <Setter Target="RectangleImage.Visibility" Value="Visible" />
                         <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="5" />
                         <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="6" />
-                        <Setter Target="TextBoxSignature.Visibility" Value="Visible"/>
+                        <Setter Target="TextBoxSignature.Visibility" Value="Visible" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        <Grid ScrollViewer.CanContentRenderOutsideBounds="False">
+        <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <Grid Grid.Row="0">
                 <Rectangle
-                x:Name="RectangleImageBack"
-                Margin="30,0,30,0"
-                RadiusX="10"
-                RadiusY="10">
+                    x:Name="RectangleImageBack"
+                    Margin="30,0,30,0"
+                    RadiusX="10"
+                    RadiusY="10">
                     <Rectangle.Fill>
                         <ImageBrush ImageSource="{x:Bind ImageRect.ImageSource, Mode=OneWay}" Stretch="UniformToFill" />
                     </Rectangle.Fill>
                 </Rectangle>
                 <Rectangle
-                x:Name="RectangleImageAcrylic"
-                Margin="30,0,30,0"
-                Fill="{ThemeResource MePageAcrylicBrush}"
-                RadiusX="10"
-                RadiusY="10" />
-                <controls:DockPanel
-                x:Name="GridPersonalInformation"
-                Margin="35,0,0,0"
-                LastChildFill="True">
-                    <Rectangle
-                    x:Name="RectangleImage"
-                    Width="150"
-                    Height="150"
-                    Margin="20"
-                    controls:DockPanel.Dock="Left"
+                    x:Name="RectangleImageAcrylic"
+                    Margin="30,0,30,0"
+                    Fill="{ThemeResource MePageAcrylicBrush}"
                     RadiusX="10"
-                    RadiusY="10">
+                    RadiusY="10" />
+                <controls:DockPanel
+                    x:Name="GridPersonalInformation"
+                    Margin="35,0,0,0"
+                    LastChildFill="True">
+                    <Rectangle
+                        x:Name="RectangleImage"
+                        Width="150"
+                        Height="150"
+                        Margin="20"
+                        controls:DockPanel.Dock="Left"
+                        RadiusX="10"
+                        RadiusY="10">
                         <Rectangle.Fill>
                             <ImageBrush x:Name="ImageRect" Stretch="UniformToFill">
                                 <ImageBrush.ImageSource>
@@ -109,44 +109,42 @@
                         </Rectangle.Fill>
                     </Rectangle>
                     <StackPanel
-                    Name="StackPanelUserInfo"
-                    Margin="0,14,0,0"
-                    Orientation="Vertical">
+                        Name="StackPanelUserInfo"
+                        Margin="0,14,0,0"
+                        Orientation="Vertical">
                         <controls1:SelectableTextBox
-                        x:Name="TextBoxUserName"
-                        VerticalAlignment="Center"
-                        FontSize="48"
-                        FontWeight="Bold"
-                        TextWrapping="NoWrap"
-                        Text="用户名" 
-                        FontFamily="Bahnschrift SemiBold" />
+                            x:Name="TextBoxUserName"
+                            VerticalAlignment="Center"
+                            FontFamily="Bahnschrift SemiBold"
+                            FontSize="48"
+                            FontWeight="Bold"
+                            Text="用户名"
+                            TextWrapping="NoWrap" />
                         <controls1:SelectableTextBox
-                        x:Name="TextBoxSignature"
-                        Margin="0,8,0,0"
-                        FontSize="18"
-                        Text="签名"
-                        Foreground="#aaffffff"/>
+                            x:Name="TextBoxSignature"
+                            Margin="0,8,0,0"
+                            FontSize="18"
+                            Foreground="#aaffffff"
+                            Text="签名" />
                         <Button
-                        x:Name="ButtonLogout"
-                        Margin="0,36,0,0"
-                        Background="OrangeRed"
-                        Click="Logout_OnClick"
-                        Content="退出登录"
-                        FontWeight="Bold"
-                        Foreground="White"
-                        Style="{StaticResource ButtonRevealStyle}" />
+                            x:Name="ButtonLogout"
+                            Margin="0,36,0,0"
+                            Background="OrangeRed"
+                            Click="Logout_OnClick"
+                            Content="退出登录"
+                            FontWeight="Bold"
+                            Foreground="White"
+                            Style="{StaticResource ButtonRevealStyle}" />
                     </StackPanel>
                 </controls:DockPanel>
 
             </Grid>
             <Grid
-            x:Name="MainGrid"
-            Grid.Row="1"
-            Margin="30,10,30,10"
-            ColumnSpacing="50"
-            RowSpacing="10"
-            ScrollViewer.CanContentRenderOutsideBounds="False" 
-                >
+                x:Name="MainGrid"
+                Grid.Row="1"
+                Margin="30,10,30,10"
+                ColumnSpacing="50"
+                RowSpacing="10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
                     <ColumnDefinition />
@@ -156,62 +154,48 @@
                     <RowDefinition />
                 </Grid.RowDefinitions>
                 <Grid
-                x:Name="FirstGrid"
-                Grid.Column="0"
-                Background="{ThemeResource SystemControlBackgroundListLowBrush}"
-                Margin="0,5,-15,0"
-                ScrollViewer.CanContentRenderOutsideBounds="False"
-                CornerRadius="8">
+                    x:Name="FirstGrid"
+                    Grid.Column="0"
+                    Margin="0,5,-15,0"
+                    Background="{ThemeResource SystemControlBackgroundListLowBrush}"
+                    CornerRadius="8">
                     <TextBlock
-                    Grid.Column="0"
-                    Margin="25,20,0,0"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    FontSize="24"
-                    FontWeight="Bold"
-                    Text="我的歌单" />
+                        Grid.Column="0"
+                        Margin="25,20,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        FontSize="24"
+                        FontWeight="Bold"
+                        Text="我的歌单" />
                     <controls1:SimpleLinerList
-                    x:Name="MySongList"
-                    Grid.Column="0"
-                    Margin="0,50,0,0"
-                    CanBeScrollAnchor="False"
-                    ScrollViewer.CanContentRenderOutsideBounds="False"
-                    ScrollViewer.VerticalScrollMode="Disabled"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch"
-                    ListItems="{x:Bind myPlayList}"
-                    ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+                        x:Name="MySongList"
+                        Grid.Column="0"
+                        Margin="0,50,0,0"
+                        ListItems="{x:Bind myPlayList}" />
                 </Grid>
                 <Grid
-                x:Name="SecondGrid"
-                Grid.Column="1"
-                Margin="-15,5,0,0"
-                Background="{ThemeResource SystemControlBackgroundListLowBrush}"
-                CornerRadius="8"
-                ScrollViewer.CanContentRenderOutsideBounds="False">
+                    x:Name="SecondGrid"
+                    Grid.Column="1"
+                    Margin="-15,5,0,0"
+                    Background="{ThemeResource SystemControlBackgroundListLowBrush}"
+                    CornerRadius="8">
                     <TextBlock
-                    Grid.Column="1"
-                    Grid.ColumnSpan="2"
-                    Margin="30,20,0,0"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    FontSize="24"
-                    FontWeight="Bold"
-                    Text="收藏歌单" />
+                        Grid.Column="1"
+                        Grid.ColumnSpan="2"
+                        Margin="30,20,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        FontSize="24"
+                        FontWeight="Bold"
+                        Text="收藏歌单" />
                     <controls1:SimpleLinerList
-                    x:Name="MyFavouriteList"
-                    Grid.Column="1"
-                    Grid.ColumnSpan="2"
-                    Margin="0,50,0,0"
-                    CanBeScrollAnchor="False" 
-                    HorizontalAlignment="Stretch"
-                    ScrollViewer.CanContentRenderOutsideBounds="False"
-                    ScrollViewer.VerticalScrollMode="Disabled"
-                    VerticalAlignment="Stretch"
-                    ListItems="{x:Bind likedPlayList}"
-                    ScrollViewer.VerticalScrollBarVisibility="Disabled" />
+                        x:Name="MyFavouriteList"
+                        Grid.Column="1"
+                        Grid.ColumnSpan="2"
+                        Margin="0,50,0,0"
+                        ListItems="{x:Bind likedPlayList}" />
                 </Grid>
             </Grid>
         </Grid>
-    </ScrollViewer>
+    </Grid>
 </Page>
