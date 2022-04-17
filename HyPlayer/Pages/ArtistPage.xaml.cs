@@ -217,4 +217,9 @@ public sealed partial class ArtistPage : Page
     {
         page = 0;
     }
+
+    private void PivotView_HeaderScrollProgressChanged(object sender, EventArgs e)
+    {
+        GridPersonalInformation.Opacity = 1 - PivotView.HeaderScrollProgress;
+    }
 }
