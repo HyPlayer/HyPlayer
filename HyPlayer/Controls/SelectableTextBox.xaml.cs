@@ -38,15 +38,6 @@ namespace HyPlayer.Controls
             set => SetValue(TextProperty, value);
         }
 
-        public static readonly DependencyProperty FontSizeProperty = DependencyProperty.Register(
-            "FontSize", typeof(double), typeof(SelectableTextBox), new PropertyMetadata(13.0));
-
-        public double FontSize
-        {
-            get => (double)GetValue(FontSizeProperty);
-            set => SetValue(FontSizeProperty, value);
-        }
-
         public static readonly DependencyProperty MaxLinesProperty = DependencyProperty.Register(
             "MaxLines", typeof(int), typeof(SelectableTextBox), new PropertyMetadata(default(int)));
 
@@ -63,17 +54,7 @@ namespace HyPlayer.Controls
         {
             get => (TextWrapping)GetValue(TextWrappingProperty);
             set => SetValue(TextWrappingProperty, value);
-        }
-
-        public static readonly DependencyProperty FontWeightProperty = DependencyProperty.Register(
-            "FontWeight", typeof(FontWeight), typeof(SelectableTextBox), new PropertyMetadata(default(FontWeight)));
-
-        public FontWeight FontWeight
-        {
-            get => (FontWeight)GetValue(FontWeightProperty);
-            set => SetValue(FontWeightProperty, value);
-        }
-        
+        }        
         public SelectableTextBox()
         {
             this.InitializeComponent();

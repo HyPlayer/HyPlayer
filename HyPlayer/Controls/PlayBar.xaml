@@ -42,30 +42,37 @@
             FontFamily="{StaticResource SymbolThemeFontFamily}"
             Glyph="&#xE008;" />
         <Storyboard x:Name="PlayBarBackgroundFadeIn">
-            <FadeInThemeAnimation Storyboard.TargetName="PlayBarBackground" BeginTime ="0:0:0.2"/>
+            <FadeInThemeAnimation BeginTime="0:0:0.2" Storyboard.TargetName="PlayBarBackground" />
             <FadeInThemeAnimation Storyboard.TargetName="PlayBarAcrylic" />
         </Storyboard>
         <Storyboard x:Name="PlayBarBackgroundFadeOut">
-            <FadeOutThemeAnimation Storyboard.TargetName="PlayBarBackground" Duration="0:0:0.2"/>
-            <FadeOutThemeAnimation Storyboard.TargetName="PlayBarAcrylic" BeginTime="0:0:0.15" Duration="0:0:0.2"/>
+            <FadeOutThemeAnimation Storyboard.TargetName="PlayBarBackground" Duration="0:0:0.2" />
+            <FadeOutThemeAnimation
+                BeginTime="0:0:0.15"
+                Storyboard.TargetName="PlayBarAcrylic"
+                Duration="0:0:0.2" />
         </Storyboard>
         <Storyboard x:Name="PlayBarBackgroundAni">
-            <DoubleAnimation Storyboard.TargetName="PlayBarBackground" 
-                             Storyboard.TargetProperty="Opacity" 
-                             From="1" To="0.4" 
-                             AutoReverse="True"
-                             RepeatBehavior="Forever" 
-                             Duration="0:0:4">
+            <DoubleAnimation
+                AutoReverse="True"
+                RepeatBehavior="Forever"
+                Storyboard.TargetName="PlayBarBackground"
+                Storyboard.TargetProperty="Opacity"
+                From="1"
+                To="0.4"
+                Duration="0:0:4">
                 <DoubleAnimation.EasingFunction>
                     <QuarticEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="BackgroundAni" 
-                             Storyboard.TargetProperty="ScaleY" 
-                             From="1" To="8" 
-                             AutoReverse="True"
-                             RepeatBehavior="Forever" 
-                             Duration="0:0:3">
+            <DoubleAnimation
+                AutoReverse="True"
+                RepeatBehavior="Forever"
+                Storyboard.TargetName="BackgroundAni"
+                Storyboard.TargetProperty="ScaleY"
+                From="1"
+                To="8"
+                Duration="0:0:3">
                 <DoubleAnimation.EasingFunction>
                     <QuarticEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
@@ -73,7 +80,7 @@
         </Storyboard>
 
     </UserControl.Resources>
-    <Grid x:Name="GridThis" CornerRadius="20,20,0,0" >
+    <Grid x:Name="GridThis" CornerRadius="20,20,0,0">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="9*" />
             <ColumnDefinition Width="18*" />
@@ -81,25 +88,25 @@
             <ColumnDefinition Width="auto" />
         </Grid.ColumnDefinitions>
         <controls:ImageEx
+            x:Name="PlayBarBackground"
             Grid.Column="0"
             Grid.ColumnSpan="4"
+            VerticalAlignment="Top"
             EnableLazyLoading="True"
             IsCacheEnabled="False"
-            Visibility="{x:Bind hy:Common.Setting.playbarBackgroundAcrylic, Mode=OneWay}"
-            x:Name="PlayBarBackground"
             Source="{x:Bind AlbumImage.Source, Mode=OneWay}"
-            VerticalAlignment="Top"
-            Stretch="Fill">
+            Stretch="Fill"
+            Visibility="{x:Bind hy:Common.Setting.playbarBackgroundAcrylic, Mode=OneWay}">
             <controls:ImageEx.RenderTransform>
-                <ScaleTransform x:Name="BackgroundAni" CenterY="55" CenterX="200"/>
+                <ScaleTransform x:Name="BackgroundAni" CenterX="200" CenterY="55" />
             </controls:ImageEx.RenderTransform>
         </controls:ImageEx>
         <Rectangle
-            Visibility="{x:Bind hy:Common.Setting.playbarBackgroundAcrylic, Mode=OneWay}"
             x:Name="PlayBarAcrylic"
             Grid.Column="0"
             Grid.ColumnSpan="4"
-            Fill="{ThemeResource SystemControlAltMediumLowAcrylicElementMediumBrush}" />
+            Fill="{ThemeResource SystemControlAltMediumLowAcrylicElementMediumBrush}"
+            Visibility="{x:Bind hy:Common.Setting.playbarBackgroundAcrylic, Mode=OneWay}" />
         <Grid
             x:Name="GridSongInfoContainer"
             Grid.Column="0"
@@ -135,7 +142,7 @@
                     CornerRadius="20"
                     Style="{StaticResource ButtonRevealStyle}"
                     ToolTipService.ToolTip="下载音乐">
-                    <FontIcon  Glyph="&#xE118;" />
+                    <FontIcon Glyph="&#xE118;" />
                 </Button>
                 <Button
                     x:Name="Btn_Comment"
@@ -199,8 +206,8 @@
                         <Grid
                             x:Name="SongInfoTag"
                             Height="20"
-                            Padding="3,0,3,0"
                             Margin="0,85,0,0"
+                            Padding="3,0,3,0"
                             controls:DockPanel.Dock="Left"
                             BorderBrush="Red"
                             BorderThickness="1.5"
@@ -211,16 +218,15 @@
                                 FontSize="11"
                                 FontWeight="Bold"
                                 Foreground="Red"
-                                Text="无歌曲" 
-                                />
+                                Text="无歌曲" />
                         </Grid>
                         <local:SelectableTextBox
                             x:Name="TbSongName"
                             Margin="-38,3,0,0"
                             HorizontalAlignment="Stretch"
                             controls:DockPanel.Dock="Left"
-                            FontSize="22"
                             FontFamily="Bahnschrift SemiBold"
+                            FontSize="22"
                             FontWeight="Bold"
                             ToolTipService.ToolTip="{x:Bind Mode=OneWay, Path=TbSongName.Text}" />
 
@@ -228,18 +234,18 @@
 
                     <HyperlinkButton
                         x:Name="TbSingerName"
+                        Margin="0,-86,0,0"
                         Padding="0"
                         VerticalAlignment="Top"
                         Click="TbSingerName_OnTapped"
                         FontSize="12"
-                        Margin="0,-86,0,0"
                         Foreground="Gray" />
                     <HyperlinkButton
                         x:Name="TbAlbumName"
+                        Margin="0,-78,0,0"
                         Padding="0"
                         VerticalAlignment="Top"
                         FontSize="12"
-                        Margin="0,-78,0,0"
                         Foreground="Gray"
                         Tapped="TbAlbumName_OnTapped" />
                 </StackPanel>
@@ -254,7 +260,10 @@
                 <RowDefinition Height="5*" />
                 <RowDefinition Height="2*" />
             </Grid.RowDefinitions>
-            <Grid Grid.Row="0" Margin="0,5,0,0" x:Name="MainBtnsGrid">
+            <Grid
+                x:Name="MainBtnsGrid"
+                Grid.Row="0"
+                Margin="0,5,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
                     <ColumnDefinition />
@@ -272,10 +281,10 @@
                     Grid.ColumnSpan="3"
                     Width="40"
                     Height="40"
-                    Padding="0"
                     Margin="80,10,10,10"
-                    Background="Transparent"
+                    Padding="0"
                     VerticalAlignment="Center"
+                    Background="Transparent"
                     CornerRadius="30"
                     Style="{StaticResource ButtonRevealStyle}"
                     Visibility="Collapsed">
@@ -289,9 +298,7 @@
                                 Click="BtnLike_OnClick"
                                 Text="喜欢歌曲">
                                 <MenuFlyoutItem.Icon>
-                                    <FontIcon
-                                        x:Name="FlyoutLiked"
-                                        Glyph="&#xE00B;" />
+                                    <FontIcon x:Name="FlyoutLiked" Glyph="&#xE00B;" />
                                 </MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
                             <MenuFlyoutItem
@@ -319,9 +326,7 @@
                                 ContextFlyout="{StaticResource VolumeFlyout}"
                                 Text="调整音量">
                                 <MenuFlyoutItem.Icon>
-                                    <FontIcon
-                                        x:Name="FlyoutBtnMuteIcon"
-                                        Glyph="&#xE15D;" />
+                                    <FontIcon x:Name="FlyoutBtnMuteIcon" Glyph="&#xE15D;" />
                                 </MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
                             <MenuFlyoutItem
@@ -384,16 +389,17 @@
                     KeyUp="BtnPlayStateChange_KeyUp"
                     Style="{StaticResource ButtonRevealStyle}">
                     <Button.Background>
-                        <LinearGradientBrush EndPoint="1,1" StartPoint="0,0">
-                            <GradientStop Color="{ThemeResource SystemAccentColorLight2}" Offset="0.2"/>
-                            <GradientStop Color="{ThemeResource SystemAccentColorDark1}" Offset="0.8"/>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Offset="0.2" Color="{ThemeResource SystemAccentColorLight2}" />
+                            <GradientStop Offset="0.8" Color="{ThemeResource SystemAccentColorDark1}" />
                         </LinearGradientBrush>
                     </Button.Background>
                     <FontIcon
                         x:Name="PlayStateIcon"
-                        Foreground="White" 
+                        FontFamily="Segoe Fluent Icons"
                         FontSize="24"
-                        Glyph="&#xEDB5;" FontFamily="Segoe Fluent Icons" />
+                        Foreground="White"
+                        Glyph="&#xEDB5;" />
                     <!--  EDB4  -->
                 </Button>
                 <Button
@@ -431,7 +437,7 @@
                         Glyph="&#xE00B;" />
                 </Button>
             </Grid>
-            <Grid Grid.Row="1" x:Name="PlayProgress">
+            <Grid x:Name="PlayProgress" Grid.Row="1">
                 <controls:DockPanel LastChildFill="True">
                     <TextBlock
                         x:Name="TextBlockTotalTime"
@@ -473,10 +479,11 @@
                 Click="ToggleButton_Click"
                 Content="词"
                 CornerRadius="20"
+                FontWeight="SemiBold"
                 IsChecked="{x:Bind Mode=OneWay, Path=hy:Common.Setting.toastLyric}"
                 IsThreeState="False"
                 Style="{StaticResource ToggleButtonRevealStyle}"
-                ToolTipService.ToolTip="桌面歌词" FontWeight="SemiBold" />
+                ToolTipService.ToolTip="桌面歌词" />
 
             <Button
                 x:Name="BtnVolume"
@@ -488,9 +495,7 @@
                 CornerRadius="20"
                 Flyout="{StaticResource VolumeFlyout}"
                 Style="{StaticResource ButtonRevealStyle}">
-                <FontIcon
-                    x:Name="BtnVolIcon"
-                    Glyph="&#xE15D;" />
+                <FontIcon x:Name="BtnVolIcon" Glyph="&#xE15D;" />
                 <!--  E198  -->
             </Button>
             <Button
@@ -518,9 +523,9 @@
                                     Margin="5,-5,10,5"
                                     controls:DockPanel.Dock="Right"
                                     Click="ButtonCleanAll_OnClick"
+                                    Content="清除全部"
                                     FontWeight="Bold"
                                     Foreground="OrangeRed"
-                                    Content="清除全部"
                                     Style="{StaticResource ButtonRevealStyle}" />
                                 <Button
                                     Margin="0,-5,0,5"
@@ -565,7 +570,7 @@
                         </StackPanel>
                     </Flyout>
                 </Button.Flyout>
-                <FontIcon  Glyph="&#xE142;" />
+                <FontIcon Glyph="&#xE142;" />
             </Button>
         </controls:UniformGrid>
         <Button
@@ -579,7 +584,7 @@
             Click="ButtonExpand_OnClick"
             CornerRadius="20"
             Style="{StaticResource ButtonRevealStyle}">
-            <FontIcon Glyph="&#xE971;" FontSize="24"/>
+            <FontIcon FontSize="24" Glyph="&#xE971;" />
         </Button>
         <Button
             x:Name="ButtonCollapse"
@@ -593,7 +598,7 @@
             CornerRadius="20"
             Style="{StaticResource ButtonRevealStyle}"
             Visibility="Collapsed">
-            <FontIcon Glyph="&#xE972;" FontSize="24" />
+            <FontIcon FontSize="24" Glyph="&#xE972;" />
         </Button>
 
 
@@ -604,23 +609,25 @@
                         <AdaptiveTrigger MinWindowWidth="1024" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
+                        <Setter Target="TbSongName.FontSize" Value="22" />
                         <Setter Target="Btns.Visibility" Value="Visible" />
                         <Setter Target="Btns.Margin" Value="10" />
                         <Setter Target="ButtonCollapse.Margin" Value="10" />
                         <Setter Target="ButtonExpand.Margin" Value="10" />
                         <Setter Target="MainControlGrid.(Grid.ColumnSpan)" Value="1" />
                         <Setter Target="BtnLike.Visibility" Value="Visible" />
-                        <Setter Target="GridSongAdvancedOperation.Margin" Value="25,0,0,0"/>
-                        <Setter Target="GridSongAdvancedOperation.Spacing" Value="15"/>
+                        <Setter Target="GridSongAdvancedOperation.Margin" Value="25,0,0,0" />
+                        <Setter Target="GridSongAdvancedOperation.Spacing" Value="15" />
                         <Setter Target="BtnPlayRollType.Visibility" Value="Visible" />
                         <Setter Target="BtnPreviousSong.(Grid.ColumnSpan)" Value="1" />
                         <Setter Target="BtnPreviousSong.(Grid.Column)" Value="3" />
-                        <Setter Target="SongInfoTag.Height" Value="20"/>
+                        <Setter Target="SongInfoTag.Height" Value="20" />
                         <Setter Target="BtnPlayStateChange.(Grid.ColumnSpan)" Value="1" />
                         <Setter Target="BtnPlayStateChange.(Grid.Column)" Value="4" />
                         <Setter Target="BtnNextSong.(Grid.ColumnSpan)" Value="1" />
                         <Setter Target="BtnNextSong.(Grid.Column)" Value="5" />
                         <Setter Target="SliderProgress.Margin" Value="0,0,0,0" />
+                        <Setter Target="AlbumImageHover.Width" Value="NaN" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState>
@@ -628,6 +635,7 @@
                         <AdaptiveTrigger MinWindowHeight="1" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
+                        <Setter Target="TbSongName.FontSize" Value="13.0" />
                         <Setter Target="Btns.Visibility" Value="Collapsed" />
                         <Setter Target="MainControlGrid.(Grid.Column)" Value="0" />
                         <Setter Target="MainControlGrid.(Grid.ColumnSpan)" Value="4" />
@@ -639,6 +647,7 @@
                         <AdaptiveTrigger MinWindowHeight="300" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
+                        <Setter Target="TbSongName.FontSize" Value="13.0" />
                         <Setter Target="Btns.Visibility" Value="Collapsed" />
                         <Setter Target="ButtonCollapse.Margin" Value="10,10,20,40" />
                         <Setter Target="ButtonExpand.Margin" Value="10,10,20,40" />
@@ -654,10 +663,10 @@
                         <Setter Target="BtnPlayStateChange.(Grid.Column)" Value="4" />
                         <Setter Target="BtnNextSong.(Grid.ColumnSpan)" Value="2" />
                         <Setter Target="BtnNextSong.(Grid.Column)" Value="6" />
-                        <Setter Target="PlayProgress.Margin" Value="70,-5,10,0"/>
+                        <Setter Target="PlayProgress.Margin" Value="70,-5,10,0" />
                         <Setter Target="GridSongInfoContainer.Visibility" Value="Collapsed" />
                         <Setter Target="BtnMore.Visibility" Value="Visible" />
-                        <Setter Target="MainBtnsGrid.Margin" Value="0,5,0,0"/>
+                        <Setter Target="MainBtnsGrid.Margin" Value="0,5,0,0" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState>
@@ -665,6 +674,7 @@
                         <AdaptiveTrigger MinWindowWidth="800" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
+                        <Setter Target="AlbumImageHover.Width" Value="0" />
                         <Setter Target="Btns.Visibility" Value="Visible" />
                         <Setter Target="BtnLike.Visibility" Value="Collapsed" />
                         <Setter Target="BtnPlayRollType.Visibility" Value="Collapsed" />
@@ -677,12 +687,12 @@
                         <Setter Target="SliderProgress.Margin" Value="0,0,15,0" />
                         <Setter Target="MainControlGrid.(Grid.Column)" Value="0" />
                         <Setter Target="MainControlGrid.(Grid.ColumnSpan)" Value="4" />
-                        <Setter Target="PlayProgress.Margin" Value="70,-5,10,0"/>
-                        <Setter Target="SongInfoTag.Margin" Value="0,0,0,0"/>
-                        <Setter Target="TbSongName.Margin" Value="5,-7,0,0"/>
-                        <Setter Target="TbSongTag.FontSize" Value="10"/>
-                        <Setter Target="SongInfoTag.Margin" Value="0"/>
-                        <Setter Target="SongInfoTag.Height" Value="18"/>
+                        <Setter Target="PlayProgress.Margin" Value="70,-5,10,0" />
+                        <Setter Target="SongInfoTag.Margin" Value="0,0,0,0" />
+                        <Setter Target="TbSongName.Margin" Value="5,0,0,0" />
+                        <Setter Target="TbSongTag.FontSize" Value="10" />
+                        <Setter Target="SongInfoTag.Margin" Value="0" />
+                        <Setter Target="SongInfoTag.Height" Value="18" />
                         <Setter Target="TbSingerName.Margin" Value="0,-16,0,0" />
                         <Setter Target="TbAlbumName.Margin" Value="0,-16,0,0" />
                         <Setter Target="GridSongInfoContainer.Width" Value="500" />
@@ -691,12 +701,12 @@
                         <Setter Target="ButtonCollapse.Margin" Value="10,10,10,40" />
                         <Setter Target="ButtonExpand.Margin" Value="10,10,10,40" />
                         <Setter Target="Btns.Margin" Value="10,10,10,40" />
-                        <Setter Target="AlbumImage.Margin" Value="10,0,0,0"/>
-                        <Setter Target="AlbumImage.CornerRadius" Value="16"/>
-                        <Setter Target="GridSongAdvancedOperation.Margin" Value="0,0,0,0"/>
-                        <Setter Target="GridSongAdvancedOperation.Spacing" Value="5"/>
-                        <Setter Target="MainBtnsGrid.Margin" Value="0,5,60,0"/>
-
+                        <Setter Target="AlbumImage.Margin" Value="10,0,0,0" />
+                        <Setter Target="AlbumImage.CornerRadius" Value="16" />
+                        <Setter Target="GridSongAdvancedOperation.Margin" Value="0,0,0,0" />
+                        <Setter Target="GridSongAdvancedOperation.Spacing" Value="5" />
+                        <Setter Target="MainBtnsGrid.Margin" Value="0,5,60,0" />
+                        <Setter Target="TbSongName.FontSize" Value="13.0" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
