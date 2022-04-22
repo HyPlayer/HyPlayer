@@ -711,50 +711,57 @@ public static class HyPlayList
         Player.PlaybackSession.Position = TimeSpan.Zero;
         //当加载一个新的播放文件时,此时你应当加载歌词和 SystemMediaTransportControls
         //加载 SystemMediaTransportControls
-        _controlsDisplayUpdater.Type = MediaPlaybackType.Music;
-        _controlsDisplayUpdater.MusicProperties.Artist = NowPlayingItem.PlayItem.ArtistString;
-        _controlsDisplayUpdater.MusicProperties.AlbumTitle = NowPlayingItem.PlayItem.AlbumString;
-        _controlsDisplayUpdater.MusicProperties.Title = NowPlayingItem.PlayItem.Name;
-        _controlsDisplayUpdater.MusicProperties.TrackNumber = (uint)NowPlaying;
-        _controlsDisplayUpdater.MusicProperties.AlbumTrackCount = (uint)List.Count;
-        _controlsDisplayUpdater.MusicProperties.Genres.Clear();
-        if (NowPlayingItem.ItemType == HyPlayItemType.Netease)
-            _controlsDisplayUpdater.MusicProperties.Genres.Add("NCM-" + NowPlayingItem.PlayItem.Id);
+        if (NowPlayingItem.PlayItem != null)
+        {
+            _controlsDisplayUpdater.Type = MediaPlaybackType.Music;
+            _controlsDisplayUpdater.MusicProperties.Artist = NowPlayingItem.PlayItem.ArtistString;
+            _controlsDisplayUpdater.MusicProperties.AlbumTitle = NowPlayingItem.PlayItem.AlbumString;
+            _controlsDisplayUpdater.MusicProperties.Title = NowPlayingItem.PlayItem.Name;
+            _controlsDisplayUpdater.MusicProperties.TrackNumber = (uint)NowPlaying;
+            _controlsDisplayUpdater.MusicProperties.AlbumTrackCount = (uint)List.Count;
+            _controlsDisplayUpdater.MusicProperties.Genres.Clear();
+            if (NowPlayingItem.ItemType == HyPlayItemType.Netease)
+                _controlsDisplayUpdater.MusicProperties.Genres.Add("NCM-" + NowPlayingItem.PlayItem.Id);
 
-        //记录下当前播放位置
-        ApplicationData.Current.LocalSettings.Values["nowSongPointer"] = NowPlaying.ToString();
+            //记录下当前播放位置
+            ApplicationData.Current.LocalSettings.Values["nowSongPointer"] = NowPlaying.ToString();
+        }
         //因为加载图片可能会高耗时,所以在此处加载
         _ = Common.Invoke(() => OnPlayItemChange?.Invoke(NowPlayingItem));
         //加载歌词
-        LoadLyrics(NowPlayingItem);
-        try
+        if (NowPlayingItem.PlayItem != null)
         {
-            if (NowPlayingItem.ItemType == HyPlayItemType.Local)
+            LoadLyrics(NowPlayingItem);
+            try
             {
-                if (NowPlayingStorageFile != null)
+
+                if (NowPlayingItem.ItemType == HyPlayItemType.Local)
                 {
-                    var thumbnail =
-                        await NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999);
-                    if (thumbnail is { CanRead: true })
-                        _controlsDisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromStream(thumbnail);
-                    else
-                        RandomAccessStreamReference.CreateFromUri(new Uri("/Assets/icon.png", UriKind.Relative));
+                    if (NowPlayingStorageFile != null)
+                    {
+                        var thumbnail =
+                            await NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999);
+                        if (thumbnail is { CanRead: true })
+                            _controlsDisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromStream(thumbnail);
+                        else
+                            RandomAccessStreamReference.CreateFromUri(new Uri("/Assets/icon.png", UriKind.Relative));
+                    }
+                }
+                else
+                {
+                    _controlsDisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromUri(new Uri(
+                        NowPlayingItem.PlayItem.Album.cover +
+                        "?param=" +
+                        StaticSource.PICSIZE_AUDIO_PLAYER_COVER));
                 }
             }
-            else
+            catch (Exception)
             {
-                _controlsDisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromUri(new Uri(
-                    NowPlayingItem.PlayItem.Album.cover +
-                    "?param=" +
-                    StaticSource.PICSIZE_AUDIO_PLAYER_COVER));
+                //ignore
             }
-        }
-        catch (Exception)
-        {
-            //ignore
-        }
 
-        _controlsDisplayUpdater.Update();
+            _controlsDisplayUpdater.Update();
+        }
     }
 
     private static void PlaybackSession_PositionChanged(MediaPlaybackSession sender, object args)
