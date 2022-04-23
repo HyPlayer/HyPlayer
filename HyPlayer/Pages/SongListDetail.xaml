@@ -169,6 +169,10 @@
                                 Content="评论"
                                 Style="{StaticResource ButtonRevealStyle}"
                                 Visibility="{x:Bind hyplayer:Common.Setting.notClearMode, Mode=OneWay}" />
+                            <Button
+                                Click="BtnShare_Clicked"
+                                Content="分享"
+                                Style="{StaticResource ButtonRevealStyle}" />
                         </StackPanel>
                         <controls1:ExpandableTextBox
                             x:Name="DescriptionWrapper"

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -305,5 +306,20 @@ public sealed partial class SongListDetail : Page, IDisposable
     private void TextBoxAuthor_Tapped(object sender, RoutedEventArgs routedEventArgs)
     {
         Common.NavigatePage(typeof(Me), playList.creater.id);
+    }
+
+    private void BtnShare_Clicked(object sender, RoutedEventArgs e)
+    {
+        var dataTransferManager = DataTransferManager.GetForCurrentView();
+        dataTransferManager.DataRequested += (s, args) =>
+        {
+            var dp = new DataPackage();
+            dp.Properties.Title = playList.name;
+            dp.SetWebLink(new Uri("https://music.163.com/#/playlist?id=" +
+                                       playList.plid));
+            var request = args.Request;
+            request.Data = dp;
+        };
+        DataTransferManager.ShowShareUI();
     }
 }

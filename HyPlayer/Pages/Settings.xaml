@@ -116,6 +116,9 @@
                                 Checked="HotLyricOnStartUp_Checked"
                                 Content="是否开启时启动热词"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.hotlyricOnStartup, Mode=TwoWay}" />
+                            <CheckBox
+                                Content="是否仍旧使用 Toast 歌词 (不推荐)"
+                                IsChecked="{x:Bind hyplayer:Common.Setting.noUseHotLyric, Mode=TwoWay}" />
                         </StackPanel>
                     </ScrollViewer>
                 </PivotItem>

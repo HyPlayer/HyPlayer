@@ -759,6 +759,16 @@ namespace HyPlayer
             }
         }
 
+        public bool noUseHotLyric
+        {
+            get => GetSettings("noUseHotLyric", false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["noUseHotLyric"] = value;
+                OnPropertyChanged();
+            }
+        }
+        
         public bool toastLyric
         {
             get => GetSettings("toastLyric", false);
