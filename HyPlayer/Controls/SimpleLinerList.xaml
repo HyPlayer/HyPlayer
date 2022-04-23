@@ -27,6 +27,7 @@
             <DataTemplate x:DataType="classes:SimpleListItem">
                 <Grid
                     Margin="0,15,0,15"
+                    Background="Transparent"
                     HorizontalAlignment="Stretch"
                     Tag="{x:Bind ResourceId}">
                     <Grid.ColumnDefinitions>

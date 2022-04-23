@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
@@ -16,6 +17,7 @@ using Microsoft.Xaml.Interactivity;
 using NeteaseCloudMusicApi;
 using HyPlayer.Controls;
 using Windows.UI.Xaml.Shapes;
+using HyPlayer.HyPlayControl;
 
 #endregion
 
@@ -69,6 +71,9 @@ public sealed partial class Me : Page, IDisposable
 
     public async void LoadPlayList()
     {
+        List<SimpleListItem> mySongs = new();
+        List<SimpleListItem> likedSongs = new();
+
         try
         {
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
@@ -82,7 +87,7 @@ public sealed partial class Me : Page, IDisposable
                 var ncp = NCPlayList.CreateFromJson(PlaylistItemJson);
                 if (ncp.creater.id != uid)
                     //GridContainerSub.Children.Add(new PlaylistItem(ncp));
-                    likedPlayList.Add(
+                    likedSongs.Add(
                         new SimpleListItem
                         {
                             CoverUri = ncp.cover + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
@@ -96,7 +101,7 @@ public sealed partial class Me : Page, IDisposable
                         }
                     );
                 else
-                    myPlayList.Add(
+                    mySongs.Add(
                         new SimpleListItem
                         {
                             CoverUri = ncp.cover + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
@@ -110,6 +115,9 @@ public sealed partial class Me : Page, IDisposable
                         }
                     );
             }
+
+            MySongListBox.ItemsSource = mySongs;
+            LikedSongList.ItemsSource = likedSongs;
         }
         catch (Exception ex)
         {
@@ -123,7 +131,9 @@ public sealed partial class Me : Page, IDisposable
         {
             TextBoxUserName.Text = Common.LoginedUser.name;
             TextBoxSignature.Text = Common.LoginedUser.signature;
-            ImageRect.ImageSource = Common.Setting.noImage ? null : new BitmapImage(new Uri(Common.LoginedUser.avatar, UriKind.RelativeOrAbsolute));
+            ImageRect.ImageSource = Common.Setting.noImage
+                ? null
+                : new BitmapImage(new Uri(Common.LoginedUser.avatar, UriKind.RelativeOrAbsolute));
         }
         else
         {
@@ -134,7 +144,9 @@ public sealed partial class Me : Page, IDisposable
 
                 TextBoxUserName.Text = json["profile"]["nickname"].ToString();
                 TextBoxSignature.Text = json["profile"]["signature"].ToString();
-                ImageRect.ImageSource = Common.Setting.noImage ? null : new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
+                ImageRect.ImageSource = Common.Setting.noImage
+                    ? null
+                    : new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
             }
             catch (Exception ex)
             {
@@ -166,5 +178,25 @@ public sealed partial class Me : Page, IDisposable
         catch
         {
         }
+    }
+
+    private async void BtnPlayClick(object sender, RoutedEventArgs e)
+    {
+        HyPlayList.RemoveAllSong();
+        await HyPlayList.AppendNcSource(((Button)sender).Tag.ToString());
+        HyPlayList.SongAppendDone();
+        if (((Button)sender).Tag.ToString().Substring(0, 2) == "pl" ||
+            ((Button)sender).Tag.ToString().Substring(0, 2) == "al")
+        {
+            HyPlayList.PlaySourceId = ((Button)sender).Tag.ToString().Substring(2);
+        }
+
+        HyPlayList.NowPlaying = -1;
+        HyPlayList.SongMoveNext();
+    }
+
+    private void SongListItemClicked(object sender, TappedRoutedEventArgs e)
+    {
+        Common.NavigatePageResource(((Grid)sender).Tag.ToString());
     }
 }

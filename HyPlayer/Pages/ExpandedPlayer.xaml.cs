@@ -104,7 +104,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 LyricBox.ItemsSource = null;
                 //LyricList.Clear();
                 if (Common.Setting.albumRotate)
-                    RotateAnimationSet.Stop();
+                    RotateAnimationSet.StartAsync();
                 if (Common.Setting.expandAlbumBreath)
                 {
                     Storyboard ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
