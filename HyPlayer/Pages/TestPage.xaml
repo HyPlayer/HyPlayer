@@ -4,12 +4,18 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     NavigationCacheMode="Disabled"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    mc:Ignorable="d">
 
     <StackPanel Orientation="Vertical">
         <TextBlock Text="This Page is for DEVELOPING Only, If you don't what you're doing, plz go back" />
         <Button Click="TestTeachingTip_OnClick">TestTeachingTips</Button>
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Text="ResourceId" />
+            <TextBox Text="{x:Bind ResourceId}" />
+            <Button Content="Navigate" Click="NavigateResourceId" />
+            <Button Content="Play" Click="PlayResourceId" />
+        </StackPanel>
     </StackPanel>
 </Page>

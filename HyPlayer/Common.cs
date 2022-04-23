@@ -435,13 +435,13 @@ namespace HyPlayer
 
         public bool playbarBackgroundBreath
         {
-            get => GetSettings("playbarBackgroundBreath", true);
+            get => GetSettings("playbarBackgroundBreath", false);
             set => ApplicationData.Current.LocalSettings.Values["playbarBackgroundBreath"] = value;
         }
 
         public bool playbarBackgroundAcrylic
         {
-            get => GetSettings("playbarBackgroundAcrylic", true);
+            get => GetSettings("playbarBackgroundAcrylic", false);
             set
             {
                 ApplicationData.Current.LocalSettings.Values["playbarBackgroundAcrylic"] = value;
@@ -463,7 +463,7 @@ namespace HyPlayer
 
         public bool itemOfListBackgroundAcrylicBlur
         {
-            get => GetSettings("itemOfListBackgroundAcrylicBlur", true);
+            get => GetSettings("itemOfListBackgroundAcrylicBlur", false);
             set => ApplicationData.Current.LocalSettings.Values["itemOfListBackgroundAcrylicBlur"] = value;
         }
 
