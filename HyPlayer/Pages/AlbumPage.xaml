@@ -38,10 +38,7 @@
                             </ImageBrush>
                         </Rectangle.Fill>
                     </Rectangle>
-                    <StackPanel
-                        x:Name="StackPanelUserInfo"
-                        Margin="15,15,144,0"
-                        Orientation="Vertical">
+                    <StackPanel x:Name="StackPanelUserInfo" Orientation="Vertical">
                         <controls1:SelectableTextBox
                             x:Name="TextBoxAlbumName"
                             FontSize="36"
@@ -96,7 +93,9 @@
                         </StackPanel>
                         <controls1:ExpandableTextBox
                             x:Name="TextBlockDesc"
+                            MaxWidth="700"
                             Margin="0,5,0,0"
+                            HorizontalAlignment="Left"
                             FontSize="13"
                             Foreground="{ThemeResource SystemControlForegroundChromeHighBrush}"
                             MaxLines="7"
@@ -106,31 +105,32 @@
                 </controls:DockPanel>
             </controls1:GroupedSongsList.ListHeader>
         </controls1:GroupedSongsList>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="RectangleImage.Visibility" Value="Collapsed" />
+                        <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="1" />
+                        <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="10" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1024" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="RectangleImage.Visibility" Value="Visible" />
+                        <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="5" />
+                        <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="6" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
     </Grid>
 
 
-    <VisualStateManager.VisualStateGroups>
-        <VisualStateGroup>
-            <VisualState>
-                <VisualState.StateTriggers>
-                    <AdaptiveTrigger MinWindowWidth="0" />
-                </VisualState.StateTriggers>
-                <VisualState.Setters>
-                    <Setter Target="RectangleImage.Visibility" Value="Collapsed" />
-                    <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="1" />
-                    <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="10" />
-                </VisualState.Setters>
-            </VisualState>
-            <VisualState>
-                <VisualState.StateTriggers>
-                    <AdaptiveTrigger MinWindowWidth="1024" />
-                </VisualState.StateTriggers>
-                <VisualState.Setters>
-                    <Setter Target="RectangleImage.Visibility" Value="Visible" />
-                    <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="5" />
-                    <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="6" />
-                </VisualState.Setters>
-            </VisualState>
-        </VisualStateGroup>
-    </VisualStateManager.VisualStateGroups>
+
 </Page>

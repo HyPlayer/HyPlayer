@@ -4,8 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:controls1="using:HyPlayer.Controls"
-    xmlns:hyplayer="using:HyPlayer"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hyplayer="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
@@ -36,22 +36,22 @@
                     <Rectangle
                         x:Name="RectangleImageBack"
                         Height="250"
-                        Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}"
                         Margin="15"
                         RadiusX="10"
-                        RadiusY="10">
+                        RadiusY="10"
+                        Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}">
                         <Rectangle.Fill>
                             <ImageBrush x:Name="ImageRect1" Stretch="UniformToFill" />
                         </Rectangle.Fill>
                     </Rectangle>
                     <Rectangle
                         x:Name="RectangleImageBackAcrylic"
-                        Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}"
                         Height="250"
                         Margin="15"
                         Fill="{ThemeResource ArtistPageAcrylicBrush}"
                         RadiusX="10"
-                        RadiusY="10" />
+                        RadiusY="10"
+                        Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}" />
                     <controls:DockPanel
                         x:Name="GridPersonalInformation"
                         Grid.Row="0"
@@ -167,31 +167,32 @@
                 </PivotItem>
             </controls1:PivotEx>
         </controls1:PivotView>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="RectangleImage.Visibility" Value="Collapsed" />
+                        <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="1" />
+                        <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="10" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1024" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="RectangleImage.Visibility" Value="Visible" />
+                        <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="5" />
+                        <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="6" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
     </Grid>
 
 
-    <VisualStateManager.VisualStateGroups>
-        <VisualStateGroup>
-            <VisualState>
-                <VisualState.StateTriggers>
-                    <AdaptiveTrigger MinWindowWidth="0" />
-                </VisualState.StateTriggers>
-                <VisualState.Setters>
-                    <Setter Target="RectangleImage.Visibility" Value="Collapsed" />
-                    <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="1" />
-                    <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="10" />
-                </VisualState.Setters>
-            </VisualState>
-            <VisualState>
-                <VisualState.StateTriggers>
-                    <AdaptiveTrigger MinWindowWidth="1024" />
-                </VisualState.StateTriggers>
-                <VisualState.Setters>
-                    <Setter Target="RectangleImage.Visibility" Value="Visible" />
-                    <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="5" />
-                    <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="6" />
-                </VisualState.Setters>
-            </VisualState>
-        </VisualStateGroup>
-    </VisualStateManager.VisualStateGroups>
+
 </Page>
