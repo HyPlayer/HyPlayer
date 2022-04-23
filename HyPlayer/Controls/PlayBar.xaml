@@ -352,7 +352,8 @@
                     Background="White"
                     Click="BtnPlayRollType_OnClick"
                     CornerRadius="30"
-                    Style="{StaticResource ButtonRevealStyle}">
+                    Style="{StaticResource ButtonRevealStyle}"
+                    ToolTipService.ToolTip="{x:Bind FlyoutPlayRollType.Text, Mode=OneWay}">
                     <FontIcon
                         x:Name="IconPlayType"
                         FontSize="14"
