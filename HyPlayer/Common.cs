@@ -30,6 +30,7 @@ using Microsoft.UI.Xaml.Controls;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Collections.ObjectModel;
 #if !DEBUG
 using Microsoft.AppCenter.Crashes;
 #endif
@@ -62,6 +63,7 @@ namespace HyPlayer
         private static object previousNavigationItem;
         public static TimeSpan ABStartPoint = TimeSpan.Zero;
         public static TimeSpan ABEndPoint = TimeSpan.Zero;
+        public static ObservableCollection<string> Logs = new ObservableCollection<string>();
 
         public static string ABStartPointFriendlyValue
         {

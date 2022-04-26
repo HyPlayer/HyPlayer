@@ -993,7 +993,8 @@ public sealed partial class PlayBar
         realSelectSong = false;
         ListBoxPlayList.ItemsSource = PlayItems;
         realSelectSong = true;
-        if (HyPlayList.List.Count == 0)
+        Common.Logs.Add("Now PlaySource is "+ HyPlayList.PlaySourceId);
+        if (HyPlayList.PlaySourceId != "local")
         {
             try
             {
