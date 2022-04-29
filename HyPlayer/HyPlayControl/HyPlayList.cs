@@ -198,8 +198,8 @@ public static class HyPlayList
             StartTime = TimeSpan.Zero,
             Position = Player.PlaybackSession.Position,
             MinSeekTime = TimeSpan.Zero,
-            MaxSeekTime = Player.NaturalDuration,
-            EndTime = Player.NaturalDuration
+            MaxSeekTime = Player.PlaybackSession.NaturalDuration,
+            EndTime = Player.PlaybackSession.NaturalDuration
         });
     }
 
@@ -584,7 +584,9 @@ public static class HyPlayList
                     playUrl = json["data"][0]["url"]?.ToString();
                     int bitrate = json["data"][0]["br"]?.ToObject<int>() ?? 0;
                     string tag;
-                    if (bitrate > 900000)
+                    if (bitrate > 999000)
+                        tag = "Hi-Res";
+                    else if(bitrate > 320000)
                         tag = "无损";
                     else
                         tag = $"{bitrate / 1000}K";

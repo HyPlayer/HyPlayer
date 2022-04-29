@@ -116,9 +116,7 @@
                                 Checked="HotLyricOnStartUp_Checked"
                                 Content="是否开启时启动热词"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.hotlyricOnStartup, Mode=TwoWay}" />
-                            <CheckBox
-                                Content="是否仍旧使用 Toast 歌词 (不推荐)"
-                                IsChecked="{x:Bind hyplayer:Common.Setting.noUseHotLyric, Mode=TwoWay}" />
+                            <CheckBox Content="是否仍旧使用 Toast 歌词 (不推荐)" IsChecked="{x:Bind hyplayer:Common.Setting.noUseHotLyric, Mode=TwoWay}" />
                         </StackPanel>
                     </ScrollViewer>
                 </PivotItem>
@@ -131,7 +129,7 @@
                                 FontSize="20"
                                 FontWeight="Bold"
                                 Header="在线播放音质:"
-                                MaxColumns="4">
+                                MaxColumns="5">
                                 <RadioButton
                                     Checked="RadioButton_Checked"
                                     Content="标准 (128k)"
@@ -152,6 +150,11 @@
                                     Content="无损 (VIP)"
                                     FontWeight="Normal"
                                     Tag="999000" />
+                                <RadioButton
+                                    Checked="RadioButton_Checked"
+                                    Content="Hi-Res (VIP)"
+                                    FontWeight="Normal"
+                                    Tag="9999000" />
                             </controls:RadioButtons>
                             <controls:RadioButtons
                                 x:Name="RadioButtonsSongDownloadBr"
@@ -159,7 +162,7 @@
                                 FontSize="20"
                                 FontWeight="Bold"
                                 Header="歌曲下载音质:"
-                                MaxColumns="4">
+                                MaxColumns="5">
                                 <RadioButton
                                     Checked="RadioButton1_Checked"
                                     Content="标准 (128k)"
@@ -180,6 +183,11 @@
                                     Content="无损 (VIP)"
                                     FontWeight="Normal"
                                     Tag="999000" />
+                                <RadioButton
+                                    Checked="RadioButton1_Checked"
+                                    Content="Hi-Res (VIP)"
+                                    FontWeight="Normal"
+                                    Tag="9999000" />
                             </controls:RadioButtons>
                             <ToggleSwitch
                                 x:Name="FadeInOut"
