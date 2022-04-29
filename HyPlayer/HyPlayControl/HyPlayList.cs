@@ -231,7 +231,7 @@ public static class HyPlayList
         //SongMoveNext();
         if (_crashedTime == NowPlayingItem.PlayItem.Id)
         {
-            SongMoveNext();
+            MoveSongPointer();
             _crashedTime = "jump";
         }
         else
@@ -258,7 +258,7 @@ public static class HyPlayList
                 //本地歌曲炸了的话就Move下一首吧
                 Common.AddToTeachingTipLists("播放失败 切到下一曲",
                     "歌曲" + NowPlayingItem.PlayItem.Name + "\r\n" + args?.ErrorMessage);
-                SongMoveNext();
+                MoveSongPointer();
             }
         }
     }
