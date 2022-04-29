@@ -97,7 +97,7 @@
                     <Setter Property="AllowDrop" Value="False" />
                     <Setter Property="UseSystemFocusVisuals" Value="{StaticResource UseSystemFocusVisuals}" />
                     <Setter Property="FocusVisualMargin" Value="0" />
-                    <Setter Property="CornerRadius" Value="{ThemeResource ListViewItemCornerRadius}" />
+                    <Setter Property="CornerRadius" Value="4" />
                     <Setter Property="ScrollViewer.BringIntoViewOnFocusChange" Value="True" />
                     <Setter Property="Template">
                         <Setter.Value>
@@ -238,16 +238,16 @@
                                                         </DoubleAnimation.EasingFunction>
                                                     </DoubleAnimation>
                                                     <ObjectAnimationUsingKeyFrames Storyboard.TargetName="BorderBackground" Storyboard.TargetProperty="Fill">
-                                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ListViewItemBackgroundSelectedPointerOver}" />
+                                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ListViewItemBackgroundPointerOver}" />
                                                     </ObjectAnimationUsingKeyFrames>
                                                     <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
-                                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ListViewItemForegroundSelectedPointerOver}" />
+                                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ListViewItemForegroundPointerOver}" />
                                                     </ObjectAnimationUsingKeyFrames>
                                                     <ObjectAnimationUsingKeyFrames Storyboard.TargetName="MultiSelectSquare" Storyboard.TargetProperty="BorderBrush">
-                                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ListViewItemForegroundSelectedPointerOver}" />
+                                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ListViewItemForegroundPointerOver}" />
                                                     </ObjectAnimationUsingKeyFrames>
                                                     <ObjectAnimationUsingKeyFrames Storyboard.TargetName="MultiSelectCheck" Storyboard.TargetProperty="Foreground">
-                                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ListViewItemForegroundSelectedPointerOver}" />
+                                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ListViewItemForegroundPointerOver}" />
                                                     </ObjectAnimationUsingKeyFrames>
                                                 </Storyboard>
                                             </VisualState>
@@ -272,16 +272,16 @@
                                                                      Duration="0"
                                                                      To="1" />
                                                     <ObjectAnimationUsingKeyFrames Storyboard.TargetName="BorderBackground" Storyboard.TargetProperty="Fill">
-                                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ListViewItemBackgroundSelectedPressed}" />
+                                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ListViewItemBackgroundPressed}" />
                                                     </ObjectAnimationUsingKeyFrames>
                                                     <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Foreground">
-                                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ListViewItemForegroundSelectedPressed}" />
+                                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ListViewItemForegroundPressed}" />
                                                     </ObjectAnimationUsingKeyFrames>
                                                     <ObjectAnimationUsingKeyFrames Storyboard.TargetName="MultiSelectSquare" Storyboard.TargetProperty="BorderBrush">
-                                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ListViewItemForegroundSelectedPressed}" />
+                                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ListViewItemForegroundPressed}" />
                                                     </ObjectAnimationUsingKeyFrames>
                                                     <ObjectAnimationUsingKeyFrames Storyboard.TargetName="MultiSelectCheck" Storyboard.TargetProperty="Foreground">
-                                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ListViewItemForegroundSelectedPressed}" />
+                                                        <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ListViewItemForegroundPressed}" />
                                                     </ObjectAnimationUsingKeyFrames>
                                                 </Storyboard>
                                             </VisualState>
