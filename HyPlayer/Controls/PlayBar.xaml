@@ -451,15 +451,17 @@
                     Grid.Column="3"
                     Margin="5,5,0,0"
                     controls:DockPanel.Dock="Right" />
-                <Slider
-                    x:Name="SliderProgress"
-                    Grid.Column="1"
-                    ValueChanged="SliderProgress_ValueChanged">
-                    <Slider.ThumbToolTipValueConverter>
-                        <local:ThumbConverter SecondValue="{Binding SecondValue}" />
+                <Border Grid.Column="1" Padding="5,0,5,0">
+                    <Slider
+                        x:Name="SliderProgress"
+                        Margin="-5,0,-5,0"
+                        ValueChanged="SliderProgress_ValueChanged">
+                        <Slider.ThumbToolTipValueConverter>
+                            <local:ThumbConverter SecondValue="{Binding SecondValue}" />
 
-                    </Slider.ThumbToolTipValueConverter>
-                </Slider>
+                        </Slider.ThumbToolTipValueConverter>
+                    </Slider>
+                </Border>
                 <TextBlock
                     x:Name="TextBlockNowTime"
                     Grid.Column="0"
@@ -635,6 +637,7 @@
                         <Setter Target="BtnNextSong.(Grid.Column)" Value="5" />
                         <Setter Target="SliderProgress.Margin" Value="0,0,0,0" />
                         <Setter Target="AlbumImageHover.Width" Value="NaN" />
+                        <Setter Target="PlayProgress.Margin" Value="70,-5,10,0" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState>
@@ -691,7 +694,6 @@
                         <Setter Target="BtnPlayStateChange.(Grid.Column)" Value="4" />
                         <Setter Target="BtnNextSong.(Grid.ColumnSpan)" Value="2" />
                         <Setter Target="BtnNextSong.(Grid.Column)" Value="5" />
-                        <Setter Target="SliderProgress.Margin" Value="0,0,15,0" />
                         <Setter Target="MainControlGrid.(Grid.Column)" Value="0" />
                         <Setter Target="MainControlGrid.(Grid.ColumnSpan)" Value="4" />
                         <Setter Target="PlayProgress.Margin" Value="70,-5,10,0" />
