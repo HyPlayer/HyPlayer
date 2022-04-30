@@ -431,7 +431,7 @@ public sealed partial class PlayBar
                 FadeSettedVolume = true;
                 var vol = Common.Setting.Volume;
                 var curtime = HyPlayList.Player.PlaybackSession.Position.TotalSeconds;
-                for (;;)
+                for (; ; )
                     try
                     {
                         await Task.Delay(50);
@@ -477,7 +477,7 @@ public sealed partial class PlayBar
                 var vol = Common.Setting.Volume;
                 HyPlayList.Player.Volume = 0;
                 var curtime = HyPlayList.Player.PlaybackSession.Position.TotalSeconds;
-                for (;;)
+                for (; ; )
                 {
                     await Task.Delay(50);
                     var curvol = (HyPlayList.Player.PlaybackSession.Position.TotalSeconds - curtime) /
@@ -717,29 +717,29 @@ public sealed partial class PlayBar
         switch (HyPlayList.NowPlayingItem.ItemType)
         {
             case HyPlayItemType.Netease:
-            {
-                Api.LikeSong(HyPlayList.NowPlayingItem.PlayItem.Id,
-                    !isLiked);
-                if (isLiked)
-                    Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.Id);
-                else
-                    Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.Id);
-                isLiked = !isLiked;
-                IconLiked.Foreground = isLiked
-                    ? new SolidColorBrush(Colors.Red)
-                    : IconPrevious.Foreground;
-                FlyoutLiked.Foreground = isLiked
-                    ? new SolidColorBrush(Colors.Red)
-                    : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-                IconLiked.Glyph = isLiked
-                    ? "\uE00B"
-                    : "\uE006";
-                FlyoutLiked.Glyph = isLiked
-                    ? "\uE00B"
-                    : "\uE006";
-                //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
-                break;
-            }
+                {
+                    Api.LikeSong(HyPlayList.NowPlayingItem.PlayItem.Id,
+                        !isLiked);
+                    if (isLiked)
+                        Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.Id);
+                    else
+                        Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.Id);
+                    isLiked = !isLiked;
+                    IconLiked.Foreground = isLiked
+                        ? new SolidColorBrush(Colors.Red)
+                        : IconPrevious.Foreground;
+                    FlyoutLiked.Foreground = isLiked
+                        ? new SolidColorBrush(Colors.Red)
+                        : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+                    IconLiked.Glyph = isLiked
+                        ? "\uE00B"
+                        : "\uE006";
+                    FlyoutLiked.Glyph = isLiked
+                        ? "\uE00B"
+                        : "\uE006";
+                    //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
+                    break;
+                }
             case HyPlayItemType.Radio:
                 _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.ResourceLike,
                     new Dictionary<string, object>
@@ -879,6 +879,12 @@ public sealed partial class PlayBar
             InitializeDesktopLyric();
             return;
         }
+        if (Common.Setting.noUseHotLyric)
+        {
+            Common.Setting.toastLyric = true;
+            InitializeDesktopLyric();
+            return;
+        }
 
         // 当前未打开歌词
         Bindings.Update();
@@ -989,7 +995,8 @@ public sealed partial class PlayBar
         realSelectSong = false;
         ListBoxPlayList.ItemsSource = PlayItems;
         realSelectSong = true;
-        if (HyPlayList.List.Count == 0)
+        Common.Logs.Add("Now PlaySource is "+ HyPlayList.PlaySourceId);
+        if (HyPlayList.PlaySourceId != "local")
         {
             try
             {

@@ -296,6 +296,7 @@ sealed partial class App : Application
 
     protected override async void OnFileActivated(FileActivatedEventArgs args)
     {
+        HyPlayList.PlaySourceId = "local";
         InitializeJumpList();
         Common.isExpanded = true;
         ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = "[]";
@@ -310,7 +311,6 @@ sealed partial class App : Application
         Window.Current.Activate();
         if (HyPlayList.Player == null)
             HyPlayList.InitializeHyPlaylist();
-        HyPlayList.RemoveAllSong();
         foreach (var storageItem in args.Files)
         {
             var file = (StorageFile)storageItem;
@@ -331,7 +331,7 @@ sealed partial class App : Application
             }
             await HyPlayList.AppendStorageFile(file);
         }
-        HyPlayList.SongAppendDone();
+        HyPlayList.PlaySourceId = "local";
         HyPlayList.SongMoveTo(0);
     }
 

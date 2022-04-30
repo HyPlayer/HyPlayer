@@ -21,7 +21,10 @@
             FontSize="44"
             FontWeight="Bold"
             Text="搜索歌曲" />
-        <StackPanel Grid.Row="1" Orientation="Vertical">
+        <StackPanel
+            Grid.Row="1"
+            Orientation="Vertical"
+            Spacing="10">
             <AutoSuggestBox
                 x:Name="SearchKeywordBox"
                 AutomationProperties.Name="Search"
@@ -34,25 +37,24 @@
                 Tag="PageSearch"
                 TextChanged="SearchKeywordBox_TextChanged" />
             <StackPanel
-                Margin="0,20,15,15"
+                Margin="0,0,15,45"
                 Orientation="Horizontal"
                 Spacing="5">
-                <TextBlock Text="搜索历史" Margin="0,5,5,5"/>
-                <ScrollViewer HorizontalScrollMode="Enabled">
+                <TextBlock Margin="0,5,5,15" Text="搜索历史" />
+                <ScrollViewer VerticalAlignment="Stretch" HorizontalScrollMode="Enabled">
                     <StackPanel
                         x:Name="SearchHistory"
-                        Orientation="Horizontal"
-                        Spacing="5" 
-                        Margin="0,0,0,5"
+                        Margin="0,0,0,10"
                         VerticalAlignment="Top"
-                        />
+                        Orientation="Horizontal"
+                        Spacing="5" />
                 </ScrollViewer>
             </StackPanel>
         </StackPanel>
         <NavigationView
-            Margin="-10,0,0,0"
             x:Name="NavigationViewSelector"
             Grid.Row="2"
+            Margin="-10,0,0,0"
             IsBackButtonVisible="Collapsed"
             IsSettingsVisible="False"
             PaneDisplayMode="Top"
@@ -86,7 +88,7 @@
                                     Click="NextPage_OnClickPage_OnClick"
                                     Content="下一页"
                                     Style="{StaticResource ButtonRevealStyle}"
-                                    Visibility="{x:Bind HasNextPage,Mode = OneWay}" />
+                                    Visibility="{x:Bind HasNextPage, Mode=OneWay}" />
                             </StackPanel>
                         </hycontrol:SimpleLinerList.Footer>
                     </hycontrol:SimpleLinerList>
@@ -96,26 +98,26 @@
                         Songs="{x:Bind SongResults}">
                         <hycontrol:SongsList.Footer>
                             <StackPanel
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Bottom"
-                                    Orientation="Horizontal">
-                                    <Button
-                                        Click="PrevPage_OnClick"
-                                        Content="上一页"
-                                        Style="{StaticResource ButtonRevealStyle}"
-                                        Visibility="{x:Bind HasPreviousPage, Mode=OneWay}" />
-                                    <Button
-                                        Click="NextPage_OnClickPage_OnClick"
-                                        Content="下一页"
-                                        Style="{StaticResource ButtonRevealStyle}"
-                                        Visibility="{x:Bind HasNextPage,Mode = OneWay}" />
-                                </StackPanel>
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Bottom"
+                                Orientation="Horizontal">
+                                <Button
+                                    Click="PrevPage_OnClick"
+                                    Content="上一页"
+                                    Style="{StaticResource ButtonRevealStyle}"
+                                    Visibility="{x:Bind HasPreviousPage, Mode=OneWay}" />
+                                <Button
+                                    Click="NextPage_OnClickPage_OnClick"
+                                    Content="下一页"
+                                    Style="{StaticResource ButtonRevealStyle}"
+                                    Visibility="{x:Bind HasNextPage, Mode=OneWay}" />
+                            </StackPanel>
                         </hycontrol:SongsList.Footer>
                     </hycontrol:SongsList>
                     <TextBlock
                         x:Name="TBNoRes"
+                        Margin="0,100,0,0"
                         HorizontalAlignment="Center"
-                        Margin=" 0,100,0,0"
                         FontSize=" 18"
                         Text="没有搜索到相关内容" />
                 </Grid>

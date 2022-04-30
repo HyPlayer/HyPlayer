@@ -36,6 +36,12 @@
                 FontSize="28"
                 Text="点击侧边栏登录解锁更多功能"
                 TextAlignment="Center" />
+            <TextBlock
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                FontSize="28"
+                Text="推荐您在登录后进入设置进行个性化"
+                TextAlignment="Center" />
         </StackPanel>
         <controls:ImageEx
             x:Name="ImageE"

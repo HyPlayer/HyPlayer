@@ -208,8 +208,9 @@ public sealed partial class SongsList : UserControl, IDisposable
     {
         if (!IsManualSelect) return;
         if (SongContainer.SelectedItem == null || SongContainer.SelectedIndex < 0) return;
+        int index = SongContainer.SelectedIndex;
         if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
-        if (VisibleSongs[SongContainer.SelectedIndex].sid == HyPlayList.NowPlayingItem?.PlayItem?.Id) return;
+        if (VisibleSongs[index].sid == HyPlayList.NowPlayingItem?.PlayItem?.Id) return;
         if (ListSource != null && ListSource != "content" && Songs.Count == VisibleSongs.Count)
         {
             if (HyPlayList.PlaySourceId != ListSource.Substring(2))
@@ -227,7 +228,7 @@ public sealed partial class SongsList : UserControl, IDisposable
             }
 
             HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t =>
-                t.PlayItem?.Id == VisibleSongs[SongContainer.SelectedIndex].sid));
+                t.PlayItem?.Id == VisibleSongs[index].sid));
         }
         //else if (ListSource == null)
         //{
@@ -246,7 +247,7 @@ public sealed partial class SongsList : UserControl, IDisposable
                 HyPlayList.PlaySourceId = ListSource.Substring(2);
             }
 
-            HyPlayList.SongMoveTo(SongContainer.SelectedIndex);
+            HyPlayList.SongMoveTo(index);
         }
     }
 

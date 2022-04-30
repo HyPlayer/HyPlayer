@@ -259,40 +259,24 @@
                         IsCacheEnabled="False"
                         Stretch="UniformToFill" />
                 </Grid>
-                <StackPanel Margin="12,0,0,0" Spacing="12">
-                    <controls:DockPanel HorizontalAlignment="Stretch" LastChildFill="True">
-                        <Grid
-                            x:Name="SongInfoTag"
-                            Height="20"
-                            Margin="0,85,0,0"
-                            Padding="3,0,3,0"
-                            controls:DockPanel.Dock="Left"
-                            BorderBrush="Red"
-                            BorderThickness="1.5"
-                            CornerRadius="4">
-                            <TextBlock
-                                x:Name="TbSongTag"
-                                x:FieldModifier="public"
-                                FontSize="11"
-                                FontWeight="Bold"
-                                Foreground="Red"
-                                Text="无歌曲" />
-                        </Grid>
-                        <local:SelectableTextBox
-                            x:Name="TbSongName"
-                            Margin="-38,3,0,0"
-                            HorizontalAlignment="Stretch"
-                            controls:DockPanel.Dock="Left"
-                            FontFamily="Bahnschrift SemiBold"
-                            FontSize="22"
-                            FontWeight="Bold"
-                            ToolTipService.ToolTip="{x:Bind Mode=OneWay, Path=TbSongName.Text}" />
+                <StackPanel
+                    Margin="12,0,0,0"
+                    Orientation="Vertical"
+                    Spacing="8">
 
-                    </controls:DockPanel>
+
+                    <local:SelectableTextBox
+                        x:Name="TbSongName"
+                        Margin="0,3,0,0"
+                        HorizontalAlignment="Stretch"
+                        FontFamily="Bahnschrift SemiBold"
+                        FontSize="22"
+                        FontWeight="Bold"
+                        ToolTipService.ToolTip="{x:Bind Mode=OneWay, Path=TbSongName.Text}" />
+
 
                     <HyperlinkButton
                         x:Name="TbSingerName"
-                        Margin="0,-86,0,0"
                         Padding="0"
                         VerticalAlignment="Top"
                         Click="TbSingerName_OnTapped"
@@ -300,12 +284,27 @@
                         Foreground="Gray" />
                     <HyperlinkButton
                         x:Name="TbAlbumName"
-                        Margin="0,-78,0,0"
                         Padding="0"
                         VerticalAlignment="Top"
                         FontSize="12"
                         Foreground="Gray"
                         Tapped="TbAlbumName_OnTapped" />
+                    <Grid
+                        x:Name="SongInfoTag"
+                        Height="20"
+                        Padding="3,0,3,0"
+                        HorizontalAlignment="Left"
+                        BorderBrush="Red"
+                        BorderThickness="1.5"
+                        CornerRadius="4">
+                        <TextBlock
+                            x:Name="TbSongTag"
+                            x:FieldModifier="public"
+                            FontSize="11"
+                            FontWeight="Bold"
+                            Foreground="Red"
+                            Text="无歌曲" />
+                    </Grid>
                 </StackPanel>
             </StackPanel>
             <Grid.RenderTransform>
@@ -461,7 +460,7 @@
                     </Button.Background>
                     <FontIcon
                         x:Name="PlayStateIcon"
-                        FontFamily="Segoe Fluent Icons"
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
                         FontSize="24"
                         Foreground="White"
                         Glyph="&#xEDB5;" />
@@ -502,27 +501,36 @@
                         Glyph="&#xE00B;" />
                 </Button>
             </Grid>
-            <Grid x:Name="PlayProgress" Grid.Row="1">
-                <controls:DockPanel LastChildFill="True">
-                    <TextBlock
-                        x:Name="TextBlockTotalTime"
-                        Margin="5,5,0,0"
-                        controls:DockPanel.Dock="Right" />
-                    <TextBlock
-                        x:Name="TextBlockNowTime"
-                        Margin="0,5,5,0"
-                        controls:DockPanel.Dock="Left" />
+            <Grid
+                x:Name="PlayProgress"
+                Grid.Row="1"
+                ColumnSpacing="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    x:Name="TextBlockTotalTime"
+                    Grid.Column="3"
+                    Margin="5,5,0,0"
+                    controls:DockPanel.Dock="Right" />
+                <Border Grid.Column="1" Padding="5,0,5,0">
                     <Slider
                         x:Name="SliderProgress"
-                        controls:DockPanel.Dock="Bottom"
+                        Margin="-5,0,-5,0"
                         ValueChanged="SliderProgress_ValueChanged">
                         <Slider.ThumbToolTipValueConverter>
                             <local:ThumbConverter SecondValue="{Binding SecondValue}" />
 
                         </Slider.ThumbToolTipValueConverter>
                     </Slider>
-
-                </controls:DockPanel>
+                </Border>
+                <TextBlock
+                    x:Name="TextBlockNowTime"
+                    Grid.Column="0"
+                    Margin="0,5,5,0"
+                    controls:DockPanel.Dock="Left" />
 
             </Grid>
         </Grid>
@@ -698,6 +706,7 @@
                         <Setter Target="BtnNextSong.(Grid.Column)" Value="5" />
                         <Setter Target="SliderProgress.Margin" Value="0,0,0,0" />
                         <Setter Target="AlbumImageHover.Width" Value="NaN" />
+                        <Setter Target="PlayProgress.Margin" Value="70,-5,10,0" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState>
@@ -754,7 +763,6 @@
                         <Setter Target="BtnPlayStateChange.(Grid.Column)" Value="4" />
                         <Setter Target="BtnNextSong.(Grid.ColumnSpan)" Value="2" />
                         <Setter Target="BtnNextSong.(Grid.Column)" Value="5" />
-                        <Setter Target="SliderProgress.Margin" Value="0,0,15,0" />
                         <Setter Target="MainControlGrid.(Grid.Column)" Value="0" />
                         <Setter Target="MainControlGrid.(Grid.ColumnSpan)" Value="4" />
                         <Setter Target="PlayProgress.Margin" Value="70,-5,10,0" />
@@ -763,8 +771,6 @@
                         <Setter Target="TbSongTag.FontSize" Value="10" />
                         <Setter Target="SongInfoTag.Margin" Value="0" />
                         <Setter Target="SongInfoTag.Height" Value="18" />
-                        <Setter Target="TbSingerName.Margin" Value="0,-16,0,0" />
-                        <Setter Target="TbAlbumName.Margin" Value="0,-16,0,0" />
                         <Setter Target="GridSongInfoContainer.Width" Value="500" />
                         <Setter Target="GridSongInfoContainer.Height" Value="50" />
                         <Setter Target="GridSongInfoContainer.Margin" Value="5,0,-70,30" />

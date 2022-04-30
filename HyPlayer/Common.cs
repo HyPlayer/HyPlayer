@@ -30,6 +30,7 @@ using Microsoft.UI.Xaml.Controls;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Collections.ObjectModel;
 #if !DEBUG
 using Microsoft.AppCenter.Crashes;
 #endif
@@ -62,6 +63,7 @@ namespace HyPlayer
         private static object previousNavigationItem;
         public static TimeSpan ABStartPoint = TimeSpan.Zero;
         public static TimeSpan ABEndPoint = TimeSpan.Zero;
+        public static ObservableCollection<string> Logs = new ObservableCollection<string>();
 
         public static string ABStartPointFriendlyValue
         {
@@ -435,13 +437,13 @@ namespace HyPlayer
 
         public bool playbarBackgroundBreath
         {
-            get => GetSettings("playbarBackgroundBreath", true);
+            get => GetSettings("playbarBackgroundBreath", false);
             set => ApplicationData.Current.LocalSettings.Values["playbarBackgroundBreath"] = value;
         }
 
         public bool playbarBackgroundAcrylic
         {
-            get => GetSettings("playbarBackgroundAcrylic", true);
+            get => GetSettings("playbarBackgroundAcrylic", false);
             set
             {
                 ApplicationData.Current.LocalSettings.Values["playbarBackgroundAcrylic"] = value;
@@ -463,7 +465,7 @@ namespace HyPlayer
 
         public bool itemOfListBackgroundAcrylicBlur
         {
-            get => GetSettings("itemOfListBackgroundAcrylicBlur", true);
+            get => GetSettings("itemOfListBackgroundAcrylicBlur", false);
             set => ApplicationData.Current.LocalSettings.Values["itemOfListBackgroundAcrylicBlur"] = value;
         }
 
@@ -759,6 +761,16 @@ namespace HyPlayer
             }
         }
 
+        public bool noUseHotLyric
+        {
+            get => GetSettings("noUseHotLyric", false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["noUseHotLyric"] = value;
+                OnPropertyChanged();
+            }
+        }
+        
         public bool toastLyric
         {
             get => GetSettings("toastLyric", false);

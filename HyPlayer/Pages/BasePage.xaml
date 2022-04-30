@@ -146,7 +146,7 @@
                 </muxc:NavigationViewItem>
                 <muxc:NavigationViewItem Content="我的云盘" Tag="MusicCloud" FontWeight="Bold">
                     <muxc:NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE753;;" />
+                        <FontIcon Glyph="&#xE753;" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
                 <muxc:NavigationViewItemSeparator />
