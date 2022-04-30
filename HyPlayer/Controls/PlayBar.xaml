@@ -77,7 +77,65 @@
                     <QuarticEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
+            <DoubleAnimation
+                AutoReverse="True"
+                RepeatBehavior="Forever"
+                Storyboard.TargetName="PlayBtnGradient"
+                Storyboard.TargetProperty="Offset"
+                From="0.2"
+                To="0.5"
+                Duration="0:0:4">
+                <DoubleAnimation.EasingFunction>
+                   <QuarticEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
         </Storyboard>
+        <Storyboard x:Name="InitializedAni">
+            <DoubleAnimation Storyboard.TargetName="GridSongInfo" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:1.2">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="SongInfoScale" Storyboard.TargetProperty="Y" From="100" To="0" Duration="0:0:1.2">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="MainBtnScale" Storyboard.TargetProperty="Y" From="100" To="0" Duration=" 0:0:0.8">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="MainControlGrid" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration=" 0:0:0.8">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="BtnsAni" Storyboard.TargetProperty="Y" From="100" To="0" Duration=" 0:0:1.2">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="Btns" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration=" 0:0:1.2">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="BtnExpandAni" Storyboard.TargetProperty="Y" From="100" To="0" Duration=" 0:0:1.2">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="ButtonExpand" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration=" 0:0:1.2">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+
+
+
+        </Storyboard>
+                    
 
     </UserControl.Resources>
     <Grid x:Name="GridThis" CornerRadius="20,20,0,0">
@@ -250,6 +308,9 @@
                         Tapped="TbAlbumName_OnTapped" />
                 </StackPanel>
             </StackPanel>
+            <Grid.RenderTransform>
+                <TranslateTransform x:Name="SongInfoScale"/>
+            </Grid.RenderTransform>
         </Grid>
         <Grid
             x:Name="MainControlGrid"
@@ -260,6 +321,9 @@
                 <RowDefinition Height="5*" />
                 <RowDefinition Height="2*" />
             </Grid.RowDefinitions>
+            <Grid.RenderTransform>
+                <TranslateTransform x:Name="MainBtnScale" />
+            </Grid.RenderTransform>
             <Grid
                 x:Name="MainBtnsGrid"
                 Grid.Row="0"
@@ -391,7 +455,7 @@
                     Style="{StaticResource ButtonRevealStyle}">
                     <Button.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Offset="0.2" Color="{ThemeResource SystemAccentColorLight2}" />
+                            <GradientStop x:Name="PlayBtnGradient" Offset="0.2" Color="{ThemeResource SystemAccentColorLight2}" />
                             <GradientStop Offset="0.8" Color="{ThemeResource SystemAccentColorDark1}" />
                         </LinearGradientBrush>
                     </Button.Background>
@@ -485,7 +549,6 @@
                 IsThreeState="False"
                 Style="{StaticResource ToggleButtonRevealStyle}"
                 ToolTipService.ToolTip="桌面歌词" />
-
             <Button
                 x:Name="BtnVolume"
                 Width="40"
@@ -573,6 +636,9 @@
                 </Button.Flyout>
                 <FontIcon Glyph="&#xE142;" />
             </Button>
+            <controls:UniformGrid.RenderTransform>
+                <TranslateTransform x:Name="BtnsAni"/>
+            </controls:UniformGrid.RenderTransform>
         </controls:UniformGrid>
         <Button
             x:Name="ButtonExpand"
@@ -586,6 +652,9 @@
             CornerRadius="20"
             Style="{StaticResource ButtonRevealStyle}">
             <FontIcon FontSize="24" Glyph="&#xE971;" />
+            <Button.RenderTransform>
+                <TranslateTransform x:Name="BtnExpandAni"/>
+            </Button.RenderTransform>
         </Button>
         <Button
             x:Name="ButtonCollapse"

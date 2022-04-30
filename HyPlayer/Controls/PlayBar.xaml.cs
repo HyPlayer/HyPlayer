@@ -59,7 +59,6 @@ public sealed partial class PlayBar
         InitializeComponent();
     }
 
-
     public TimeSpan nowtime => HyPlayList.Player.PlaybackSession.Position;
 
     private void HyPlayListOnOnSongRemoveAll()
@@ -610,6 +609,7 @@ public sealed partial class PlayBar
             ConnectedAnimation anim1 = null;
             ConnectedAnimation anim2 = null;
             ConnectedAnimation anim3 = null;
+            ConnectedAnimation anim4 = null;
             anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
             anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
             anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
@@ -973,6 +973,8 @@ public sealed partial class PlayBar
 
     private async void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
+        InitializedAni.Begin();
+        PlayBarBackgroundFadeIn.Begin();
         HyPlayList.Player.Volume = (double)Common.Setting.Volume / 100;
         SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
         HyPlayList.OnPlayItemChange += LoadPlayingFile;
@@ -1047,6 +1049,7 @@ public sealed partial class PlayBar
         Storyboard.SetTargetProperty(verticalAnimation, "Horizontalofset");
         TbSongNameScrollStoryBoard.Begin();
         */
+
     }
 }
 

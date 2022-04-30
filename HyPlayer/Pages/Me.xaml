@@ -61,7 +61,7 @@
                                     <StackPanel Grid.Column="0" Orientation="Horizontal">
                                         <TextBlock
                                             x:Name="OrderId"
-                                            Width="60"
+                                            Width="48"
                                             Margin="12,0,0,0"
                                             HorizontalAlignment="Center"
                                             VerticalAlignment="Top"
