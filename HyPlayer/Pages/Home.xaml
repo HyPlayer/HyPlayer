@@ -53,14 +53,14 @@
                 VerticalAlignment="Top"
                 HorizontalAlignment="Center"
                 Margin="0,0,0,0"
-                Background="#ddffffff" 
+                Background="{ThemeResource SystemChromeAltMediumHighColor}" 
                 Tapped="dailyRcmTapped"
             >
                     <StackPanel >
                         <FontIcon
                         x:Name="IconDailyRcm"
                         FontSize="36"
-                        Foreground="{ThemeResource SystemAccentColorDark1}"
+                        Foreground="{ThemeResource SystemAccentColorLight1}"
                         Glyph="&#xE163;" />
                         <TextBlock 
                 HorizontalAlignment="Center"
@@ -68,7 +68,7 @@
                 Text="每日推荐"
                 FontWeight="Bold"
                 Margin="0,0,0,0"
-                Foreground="{ThemeResource SystemAccentColorDark1}"
+                Foreground="{ThemeResource SystemAccentColorLight1}"
                 FontSize="12"
                 />
 
@@ -82,14 +82,14 @@
                 VerticalAlignment="Top"
                 HorizontalAlignment="Center"
                 Margin="0,0,0,0"
-                Background="#ddffffff" 
+                Background="{ThemeResource SystemChromeAltMediumHighColor}" 
                 Tapped="FMTapped"
             >
                     <StackPanel >
                         <FontIcon
                         x:Name="IconFM"
                         FontSize="36"
-                        Foreground="{ThemeResource SystemAccentColorDark1}"
+                        Foreground="{ThemeResource SystemAccentColorLight1}"
                         Glyph="&#xEFA9;" />
                         <TextBlock 
                 HorizontalAlignment="Center"
@@ -97,7 +97,7 @@
                 Text="私人FM"
                 FontWeight="Bold"
                 Margin="0,4,0,0"
-                Foreground="{ThemeResource SystemAccentColorDark1}"
+                Foreground="{ThemeResource SystemAccentColorLight1}"
                 FontSize="12"
                 />
 
@@ -111,14 +111,14 @@
                 VerticalAlignment="Top"
                 HorizontalAlignment="Center"
                 Margin="0,0,0,0"
-                Background="#ddffffff" 
+                Background="{ThemeResource SystemChromeAltMediumHighColor}" 
                 Tapped="LikedSongListTapped"
             >
                     <StackPanel>
                         <FontIcon
                         x:Name="IconLiked"
                         FontSize="36"
-                        Foreground="{ThemeResource SystemAccentColorDark1}"
+                        Foreground="{ThemeResource SystemAccentColorLight1}"
                         Glyph="&#xE00B;" />
                         <TextBlock 
                 HorizontalAlignment="Center"
@@ -126,7 +126,7 @@
                 Text="喜欢音乐"
                 FontWeight="Bold"
                 Margin="0,4,0,0"
-                Foreground="{ThemeResource SystemAccentColorDark1}"
+                Foreground="{ThemeResource SystemAccentColorLight1}"
                 FontSize="12"
                 />
 

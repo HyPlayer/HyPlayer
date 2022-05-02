@@ -128,7 +128,7 @@
                                     Grid.Column="1"
                                     Width="45"
                                     Height="35"
-                                    Background="{ThemeResource SystemRevealAltLowColor}"
+                                    Background="{ThemeResource SystemRevealAltMediumHighColor}"
                                     Click="BtnPlayClick"
                                     CornerRadius="10"
                                     Tag="{x:Bind ResourceId}"

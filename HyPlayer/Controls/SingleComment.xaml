@@ -18,7 +18,7 @@
                 <!--  White Space  -->
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <Rectangle Grid.ColumnSpan="3"  Fill="{ThemeResource SystemRevealChromeLowColor}" Margin=" 0,-5,-10,-5" RadiusX="15" RadiusY="15">
+            <Rectangle Grid.ColumnSpan="3"  Fill="{ThemeResource SystemListLowColor}" Margin=" 0,-5,-10,-5" RadiusX="10" RadiusY="10">
 
             </Rectangle>
 

@@ -413,7 +413,7 @@
                     Height="38"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
-                    Background="White"
+                    Background="{ThemeResource SystemRevealAltLowColor}"
                     Click="BtnPlayRollType_OnClick"
                     CornerRadius="30"
                     Style="{StaticResource ButtonRevealStyle}"
@@ -421,7 +421,7 @@
                     <FontIcon
                         x:Name="IconPlayType"
                         FontSize="14"
-                        Foreground="{ThemeResource SystemAccentColorDark1}"
+                        Foreground="{ThemeResource SystemAccentColorLight2}"
                         Glyph="&#xE169;" />
                 </Button>
                 <Button
@@ -431,14 +431,14 @@
                     Height="38"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
-                    Background="White"
+                    Background="{ThemeResource SystemRevealAltLowColor}"
                     Click="BtnPreviousSong_OnClick"
                     CornerRadius="30"
                     Style="{StaticResource ButtonRevealStyle}">
                     <FontIcon
                         x:Name="IconPrevious"
                         FontSize="12"
-                        Foreground="{ThemeResource SystemAccentColorDark1}"
+                        Foreground="{ThemeResource SystemAccentColorLight2}"
                         Glyph="&#xE892;" />
                 </Button>
                 <Button
@@ -451,6 +451,7 @@
                     AutomationProperties.AcceleratorKey="Space"
                     Click="BtnPlayStateChange_OnClick"
                     CornerRadius="30"
+                    Opacity="0.9"
                     KeyUp="BtnPlayStateChange_KeyUp"
                     Style="{StaticResource ButtonRevealStyle}">
                     <Button.Background>
@@ -474,14 +475,13 @@
                     Height="40"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
-                    Background="White"
+                    Background="{ThemeResource SystemRevealAltLowColor}"
                     Click="BtnNextSong_OnClick"
                     CornerRadius="30"
-                    Foreground="{ThemeResource SystemAccentColorDark1}"
                     Style="{StaticResource ButtonRevealStyle}">
                     <FontIcon
                         FontSize="12"
-                        Foreground="{ThemeResource SystemAccentColorDark1}"
+                        Foreground="{ThemeResource SystemAccentColorLight2}"
                         Glyph="&#xE101;" />
                 </Button>
                 <Button
@@ -491,14 +491,14 @@
                     Height="40"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
-                    Background="White"
+                    Background="{ThemeResource SystemRevealAltLowColor}"
                     Click="BtnLike_OnClick"
                     CornerRadius="30"
                     Style="{StaticResource ButtonRevealStyle}">
                     <FontIcon
                         x:Name="IconLiked"
                         FontSize="14"
-                        Foreground="{ThemeResource SystemAccentColorDark1}"
+                        Foreground="{ThemeResource SystemAccentColorLight2}"
                         Glyph="&#xE00B;" />
                 </Button>
             </Grid>
