@@ -105,14 +105,6 @@
                         <FontIcon Glyph="&#xE12B;" />
                     </muxc:NavigationViewItem.Icon>
                     <muxc:NavigationViewItem.MenuItems>
-                        <muxc:NavigationViewItem
-                            Content="主页"
-                            Tag="PageHome"
-                            Visibility="{x:Bind local:Common.Setting.notClearMode, Mode=OneWay}">
-                            <muxc:NavigationViewItem.Icon>
-                                <FontIcon Glyph="&#xE10F;" />
-                            </muxc:NavigationViewItem.Icon>
-                        </muxc:NavigationViewItem>
                         <muxc:NavigationViewItem Content="每日推荐" Tag="DailyRcmd">
                             <muxc:NavigationViewItem.Icon>
                                 <FontIcon Glyph="&#xE163;" />
@@ -188,6 +180,15 @@
                     Visibility="Collapsed" />
             </muxc:NavigationView.MenuItems>
             <muxc:NavigationView.FooterMenuItems>
+                <muxc:NavigationViewItem
+                            Content="主页"
+                            Tag="PageHome"
+                            Visibility="{x:Bind local:Common.Setting.notClearMode, Mode=OneWay}">
+                    <muxc:NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE10F;" />
+                    </muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
+
                 <muxc:NavigationViewItem
                     x:Name="NavItemLogin"
                     Content="登录"

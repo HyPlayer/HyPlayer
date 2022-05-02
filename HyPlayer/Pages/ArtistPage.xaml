@@ -67,6 +67,9 @@
                             <Rectangle.Fill>
                                 <ImageBrush x:Name="ImageRect" Stretch="UniformToFill" />
                             </Rectangle.Fill>
+                            <Rectangle.RenderTransform>
+                                <ScaleTransform x:Name="UserScale" CenterX="100" CenterY="100"/>
+                            </Rectangle.RenderTransform>
                         </Rectangle>
                         <StackPanel
                             Name="StackPanelUserInfo"
@@ -100,6 +103,9 @@
                                 MaxLines="7"
                                 Text="歌手简介"
                                 TextWrapping="WrapWholeWords" />
+                            <StackPanel.RenderTransform>
+                                <ScaleTransform x:Name="UserInfoScale" CenterY="125"/>
+                            </StackPanel.RenderTransform>
                         </StackPanel>
                     </controls:DockPanel>
                 </Grid>

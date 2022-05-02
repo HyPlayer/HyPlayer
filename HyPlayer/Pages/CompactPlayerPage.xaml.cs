@@ -121,6 +121,7 @@ namespace HyPlayer.Pages
             HyPlayList.OnPlay += () => PlayStateIcon.Glyph = "\uEDB4";
             HyPlayList.OnPause += () => PlayStateIcon.Glyph = "\uEDB5";
             HyPlayList.OnLyricChange += OnLyricChanged;
+            CompactPlayerAni.Begin();
         }
 
         private void OnLyricChanged()

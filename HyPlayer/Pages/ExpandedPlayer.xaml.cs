@@ -582,7 +582,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         try
         {
             //anim3?.TryStart(TextBlockSinger);
-            //anim1?.TryStart(TextBlockSongTitle);
+            anim1?.TryStart(TextBlockSongTitle);
             anim2?.TryStart(ImageAlbum);
         }
         catch

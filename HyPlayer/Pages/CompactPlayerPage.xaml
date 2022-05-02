@@ -15,6 +15,37 @@
     PointerExited="CompactPlayerPage_OnPointerExited"
     RightTapped="OnRightTapped"
     mc:Ignorable="d">
+    <Page.Resources>
+        <Storyboard x:Name="CompactPlayerAni">
+            <DoubleAnimation Storyboard.TargetName="SongNameContainer" Storyboard.TargetProperty="Opacity" From="0" To="1">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="SongName" Storyboard.TargetProperty="FontSize" From="0" To="20">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="ArtistsName" Storyboard.TargetProperty="FontSize" From="0" To="12">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Storyboard.TargetName="AlbumScale" Storyboard.TargetProperty="ScaleY" From="0" To="1">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+
+            <DoubleAnimation Storyboard.TargetName="AlbumScale" Storyboard.TargetProperty="ScaleX" From="0" To="1">
+                <DoubleAnimation.EasingFunction>
+                    <CubicEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+
+        </Storyboard>
+    </Page.Resources>
 
     <Grid
         Background="{x:Bind Mode=OneWay, Path=ControlHover}"
@@ -43,11 +74,15 @@
                 RadiusX="8"
                 RadiusY="8"
                 >
+                <Rectangle.RenderTransform>
+                    <ScaleTransform x:Name="AlbumScale" CenterX="28" CenterY="28"/>
+                </Rectangle.RenderTransform>
             </Rectangle>
             <TextBlock
                 Grid.Row="1"
                 FontSize="12"
                 Foreground="White"
+                x:Name="ArtistsName"
                 Text="{x:Bind NowPlayingArtists, Mode=OneWay}"
                 TextAlignment="Left"
                 VerticalAlignment="Bottom"
@@ -56,6 +91,7 @@
                 Grid.Row="0"
                 Grid.ColumnSpan="2"
                 FontSize="20"
+                x:Name="SongName"
                 FontWeight="Bold"
                 Foreground="White"
                 VerticalAlignment="Top" 
