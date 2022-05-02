@@ -296,7 +296,7 @@
                                 Height="35"
                                 Margin="0,0,20,0"
                                 x:Phase="3"
-                                Background="{ThemeResource SystemRevealAltLowColor}"
+                                Background="{ThemeResource SystemRevealAltMediumHighColor}"
                                 Click="More_Click"
                                 CornerRadius="8"
                                 Style="{StaticResource ButtonRevealStyle}"
