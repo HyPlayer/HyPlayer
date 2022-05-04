@@ -15,7 +15,7 @@
     Loaded="UserControl_Loaded"
     mc:Ignorable="d">
     <UserControl.Resources>
-        <hy:PlayBarCornerRadiusConverter x:Key="PlayBarCornerRadiusConverter" />
+        <local:PlayBarImageRadiusConverter x:Key="PlayBarImageRadiusConverter" />
         <Flyout x:Key="VolumeFlyout">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -138,7 +138,7 @@
                     
 
     </UserControl.Resources>
-    <Grid x:Name="GridThis" CornerRadius="20,20,0,0">
+    <Grid x:Name="GridThis" CornerRadius="8,8,0,0">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*" />
             <ColumnDefinition Width="2*" />
@@ -171,7 +171,7 @@
             HorizontalAlignment="Left"
             x:FieldModifier="public"
             Canvas.ZIndex="2"
-            CornerRadius="20,0,0,0">
+            CornerRadius="8,0,0,0">
             <StackPanel
                 x:Name="GridSongAdvancedOperation"
                 Margin="25,0,0,0"
@@ -237,7 +237,7 @@
                     Margin="0"
                     HorizontalAlignment="Left"
                     BorderThickness="0"
-                    CornerRadius="{x:Bind hy:Common.Setting.playBarMargin, Mode=OneWay, Converter={StaticResource PlayBarCornerRadiusConverter}}"
+                    CornerRadius="{x:Bind hy:Common.Setting.playBarMargin, Mode=OneWay, Converter={StaticResource PlayBarImageRadiusConverter}}"
                     IsTapEnabled="True"
                     PointerEntered="ImageContainer_OnPointerEntered"
                     PointerExited="ImageContainer_OnPointerExited"
