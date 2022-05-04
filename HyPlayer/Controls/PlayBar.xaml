@@ -413,15 +413,14 @@
                     Height="38"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
-                    Background="{ThemeResource SystemRevealAltLowColor}"
+                    Background="#22ffffff"
                     Click="BtnPlayRollType_OnClick"
                     CornerRadius="30"
                     Style="{StaticResource ButtonRevealStyle}"
                     ToolTipService.ToolTip="{x:Bind FlyoutPlayRollType.Text, Mode=OneWay}">
                     <FontIcon
                         x:Name="IconPlayType"
-                        FontSize="14"
-                        Foreground="{ThemeResource SystemAccentColorLight2}"
+                        FontSize="16"
                         Glyph="&#xE169;" />
                 </Button>
                 <Button
@@ -431,14 +430,13 @@
                     Height="38"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
-                    Background="{ThemeResource SystemRevealAltLowColor}"
+                    Background="#22ffffff"
                     Click="BtnPreviousSong_OnClick"
                     CornerRadius="30"
                     Style="{StaticResource ButtonRevealStyle}">
                     <FontIcon
                         x:Name="IconPrevious"
-                        FontSize="12"
-                        Foreground="{ThemeResource SystemAccentColorLight2}"
+                        FontSize="13"
                         Glyph="&#xE892;" />
                 </Button>
                 <Button
@@ -475,13 +473,12 @@
                     Height="40"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
-                    Background="{ThemeResource SystemRevealAltLowColor}"
+                    Background="#22ffffff"
                     Click="BtnNextSong_OnClick"
                     CornerRadius="30"
                     Style="{StaticResource ButtonRevealStyle}">
                     <FontIcon
-                        FontSize="12"
-                        Foreground="{ThemeResource SystemAccentColorLight2}"
+                        FontSize="13"
                         Glyph="&#xE101;" />
                 </Button>
                 <Button
@@ -491,14 +488,13 @@
                     Height="40"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
-                    Background="{ThemeResource SystemRevealAltLowColor}"
+                    Background="#22ffffff"
                     Click="BtnLike_OnClick"
                     CornerRadius="30"
                     Style="{StaticResource ButtonRevealStyle}">
                     <FontIcon
                         x:Name="IconLiked"
                         FontSize="14"
-                        Foreground="{ThemeResource SystemAccentColorLight2}"
                         Glyph="&#xE00B;" />
                 </Button>
             </Grid>

@@ -183,6 +183,7 @@
                 <muxc:NavigationViewItem
                             Content="主页"
                             Tag="PageHome"
+                            FontWeight="Bold"
                             Visibility="{x:Bind local:Common.Setting.notClearMode, Mode=OneWay}">
                     <muxc:NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE10F;" />
