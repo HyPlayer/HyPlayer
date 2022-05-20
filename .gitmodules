@@ -4,3 +4,6 @@
 [submodule "Kawazu"]
 	path = Kawazu
 	url = https://github.com/HyPlayer/Kawazu.git
+[submodule "atldotnet"]
+	path = atldotnet
+	url = https://github.com/HyPlayer/atldotnet
