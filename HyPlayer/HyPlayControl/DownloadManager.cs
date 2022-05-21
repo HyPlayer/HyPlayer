@@ -101,8 +101,6 @@ internal class DownloadObject
             new UwpStorageFileAbstraction(await StorageFile.GetFileFromPathAsync(fullpath)));
         if (Common.Setting.write163Info)
             The163KeyHelper.TrySetMusicInfo(file.Tag, dontuseme);
-        if (string.IsNullOrEmpty(file.Tag.Title))
-        {
             //写相关信息
             file.Tag.Album = ncsong.Album.name;
             file.Tag.Performers = ncsong.Artist.Select(t => t.name).ToArray();
@@ -117,7 +115,6 @@ internal class DownloadObject
             file.Tag.Pictures[0].MimeType = "image/jpeg";
             file.Tag.Pictures[0].Description = "cover.jpg";
             file.Save();
-        }
     }
 
     private async void DownloadLyric()
