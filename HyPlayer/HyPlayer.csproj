@@ -556,6 +556,9 @@
     <PackageReference Include="QRCoder">
       <Version>1.4.3</Version>
     </PackageReference>
+    <PackageReference Include="SixLabors.ImageSharp">
+      <Version>2.1.1</Version>
+    </PackageReference>
     <PackageReference Include="TagLibSharp">
       <Version>2.2.0</Version>
     </PackageReference>

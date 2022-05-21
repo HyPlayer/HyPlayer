@@ -16,7 +16,8 @@ using Microsoft.Toolkit.Uwp.Notifications;
 using NeteaseCloudMusicApi;
 using TagLib;
 using File = TagLib.File;
-
+using SixLabors.ImageSharp;
+using System.Net.Http;
 #endregion
 
 namespace HyPlayer.HyPlayControl;
@@ -99,22 +100,44 @@ internal class DownloadObject
     {
         var file = File.Create(
             new UwpStorageFileAbstraction(await StorageFile.GetFileFromPathAsync(fullpath)));
-        if (Common.Setting.write163Info)
-            The163KeyHelper.TrySetMusicInfo(file.Tag, dontuseme);
+        
+
+        try
+        {
+            if (Common.Setting.write163Info)
+                The163KeyHelper.TrySetMusicInfo(file.Tag, dontuseme);
             //写相关信息
             file.Tag.Album = ncsong.Album.name;
             file.Tag.Performers = ncsong.Artist.Select(t => t.name).ToArray();
             file.Tag.Title = ncsong.songname;
-            file.Tag.Pictures = new IPicture[]
+            using var client = new HttpClient();
+            using var response = await client.GetAsync(ncsong.Album.cover + "?param=" + StaticSource.PICSIZE_DOWNLOAD_ALBUMCOVER, HttpCompletionOption.ResponseHeadersRead);
+            using MemoryStream processedFile = new MemoryStream();
+            using (var imageProcessor = Image.Load(await response.Content.ReadAsStreamAsync()))
             {
-                new Picture(ByteVector.FromStream(RandomAccessStreamReference
-                    .CreateFromUri(new Uri(ncsong.Album.cover + "?param=" +
-                                           StaticSource.PICSIZE_DOWNLOAD_ALBUMCOVER))
-                    .OpenReadAsync().GetAwaiter().GetResult().AsStreamForRead()))
+                imageProcessor.Save(processedFile, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder());
+                imageProcessor.Dispose();
             };
+            file.Tag.Pictures = new IPicture[]
+                {
+                new Picture(processedFile.ToArray())
+                };
             file.Tag.Pictures[0].MimeType = "image/jpeg";
             file.Tag.Pictures[0].Description = "cover.jpg";
+            processedFile.Close();
+            client.Dispose();
+            response.Dispose();
+        }
+        catch (Exception ex) 
+        { 
+            Common.AddToTeachingTipLists("写入音乐信息时出现错误", ex.Message);
+        }
+        finally
+        {
             file.Save();
+        }
+        
+            
     }
 
     private async void DownloadLyric()
