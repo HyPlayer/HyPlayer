@@ -149,12 +149,13 @@ sealed partial class App : Application
             Common.NavigateBack();
         }
 
-        ClearExtendedExecution(executionSession);
+        //ClearExtendedExecution(executionSession);
     }
 
     private async void App_EnteredBackground(object sender, EnteredBackgroundEventArgs e)
     {
         isInBackground = true;
+        /*
         var delaySession = new ExtendedExecutionSession();
         delaySession.Reason = ExtendedExecutionReason.Unspecified;
         delaySession.Revoked += SessionRevoked;
@@ -171,47 +172,14 @@ sealed partial class App : Application
 
                 break;
             case ExtendedExecutionResult.Denied:
-                /*
-                var toast = new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder();
-                toast.AddText("应用程序进入后台，有可能关闭");
-                toast.Show();
-                */
+                
+                //var toast = new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder();
+                //toast.AddText("应用程序进入后台，有可能关闭");
+                //toast.Show();
+                
                 break;
         }
-    }
-
-    private void ClearExtendedExecution(ExtendedExecutionSession session)
-    {
-        if (session != null)
-        {
-            session.Revoked -= SessionRevoked;
-            session.Dispose();
-            session = null;
-        }
-    }
-
-    private async void SessionRevoked(object sender, ExtendedExecutionRevokedEventArgs args)
-    {
-        await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
-            CoreDispatcherPriority.Normal, () =>
-            {
-                switch (args.Reason)
-                {
-                    case ExtendedExecutionRevokedReason.Resumed:
-                        executionSession.Revoked -= SessionRevoked;
-                        executionSession.Dispose();
-                        executionSession = null;
-                        break;
-
-                    case ExtendedExecutionRevokedReason.SystemPolicy:
-                        /*
-                        var toast = new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder();
-                        toast.AddText("应用程序进入后台，有可能关闭");
-                        toast.Show();
-                        */
-                        break;
-                }
-            });
+    */
     }
 
     protected override void OnActivated(IActivatedEventArgs args)
