@@ -10,14 +10,12 @@ using System.Threading.Tasks;
 using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
 using Windows.Storage.Streams;
-using Windows.UI.Notifications;
 using HyPlayer.Classes;
-using Microsoft.Toolkit.Uwp.Notifications;
 using NeteaseCloudMusicApi;
 using TagLib;
 using File = TagLib.File;
-using SixLabors.ImageSharp;
-using System.Net.Http;
+using Windows.Graphics.Imaging;
+
 #endregion
 
 namespace HyPlayer.HyPlayControl;
@@ -37,6 +35,13 @@ internal class DownloadObject
     public int Status;
     public ulong TotalSize;
 
+    private static Dictionary<string, Guid> CodecIds = new Dictionary<string, Guid>()
+    {
+        { "image/pjpeg", BitmapDecoder.JpegDecoderId },
+        { "image/x-png", BitmapDecoder.PngDecoderId },
+        { "image/webp", BitmapDecoder.WebpDecoderId }
+    };
+
     public DownloadObject(NCSong song)
     {
         ncsong = song;
@@ -47,10 +52,14 @@ internal class DownloadObject
     private void Wc_DownloadFileCompleted()
     {
         Status = 2;
-        if (Common.Setting.downloadLyric)
-            DownloadLyric();
-        if (Common.Setting.writedownloadFileInfo)
-            WriteInfoToFile();
+        Task.Run((() =>
+        {
+            if (Common.Setting.downloadLyric)
+                DownloadLyric();
+            if (Common.Setting.writedownloadFileInfo)
+                WriteInfoToFile();
+        }));
+
         /*
         try
         {
@@ -97,47 +106,50 @@ internal class DownloadObject
     }
 
     private async void WriteInfoToFile()
-    {
-        var file = File.Create(
-            new UwpStorageFileAbstraction(await StorageFile.GetFileFromPathAsync(fullpath)));
-        
-
+    {        
         try
         {
+            await Task.Delay(1000);
+            // 脱裤子放屁， 等他一会儿再读会不会读的更通顺一点
+            var file = File.Create(
+            new UwpStorageFileAbstraction(await StorageFile.GetFileFromPathAsync(fullpath)));
             if (Common.Setting.write163Info)
                 The163KeyHelper.TrySetMusicInfo(file.Tag, dontuseme);
             //写相关信息
             file.Tag.Album = ncsong.Album.name;
             file.Tag.Performers = ncsong.Artist.Select(t => t.name).ToArray();
             file.Tag.Title = ncsong.songname;
-            using var client = new HttpClient();
-            using var response = await client.GetAsync(ncsong.Album.cover + "?param=" + StaticSource.PICSIZE_DOWNLOAD_ALBUMCOVER, HttpCompletionOption.ResponseHeadersRead);
-            using MemoryStream processedFile = new MemoryStream();
-            using (var imageProcessor = Image.Load(await response.Content.ReadAsStreamAsync()))
+            var ras = RandomAccessStreamReference.CreateFromUri(new Uri(ncsong.Album.cover + "?param=" +
+                                                                        StaticSource
+                                                                            .PICSIZE_DOWNLOAD_ALBUMCOVER));
+            var httpStream = await ras.OpenReadAsync();
+            IRandomAccessStream outputStream;
+            if (httpStream.ContentType != "image/pjpeg")
             {
-                imageProcessor.Save(processedFile, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder());
-                imageProcessor.Dispose();
-            };
+                var bitmapInput = await (await BitmapDecoder.CreateAsync(CodecIds[httpStream.ContentType], httpStream))
+                    .GetSoftwareBitmapAsync();
+                outputStream = new InMemoryRandomAccessStream();
+                var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
+                encoder.SetSoftwareBitmap(bitmapInput);
+                await encoder.FlushAsync();
+            }
+            else
+            {
+                outputStream = httpStream;
+            }
+
             file.Tag.Pictures = new IPicture[]
-                {
-                new Picture(processedFile.ToArray())
-                };
+            {
+                new Picture(ByteVector.FromStream(outputStream.AsStreamForRead()))
+            };
             file.Tag.Pictures[0].MimeType = "image/jpeg";
             file.Tag.Pictures[0].Description = "cover.jpg";
-            processedFile.Close();
-            client.Dispose();
-            response.Dispose();
-        }
-        catch (Exception ex) 
-        { 
-            Common.AddToTeachingTipLists("写入音乐信息时出现错误", ex.Message);
-        }
-        finally
-        {
             file.Save();
         }
-        
-            
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists("写入音乐信息时出现错误", ex.Message);
+        }
     }
 
     private async void DownloadLyric()
@@ -150,7 +162,12 @@ internal class DownloadObject
             if (!(json.ContainsKey("nolyric") && json["nolyric"].ToString().ToLower() == "true") &&
                 !(json.ContainsKey("uncollected") && json["uncollected"].ToString().ToLower() == "true"))
             {
-                var lrc = Utils.ConvertPureLyric(json["lrc"]["lyric"].ToString());
+                if (json["lrc"]["lyric"].ToString().Contains("[99:00.00]纯音乐，请欣赏"))
+                {
+                    // 这个也是纯音乐
+                    return;
+                }
+                var lrc = Utils.ConvertPureLyric(json["lrc"]["lyric"].ToString());                
                 if (Common.Setting.downloadTranslation && json["tlyric"]?["lyric"] != null)
                     Utils.ConvertTranslation(json["tlyric"]["lyric"].ToString(), lrc);
                 var lrctxt = string.Join("\r\n", lrc.Select(t =>
