@@ -15,32 +15,53 @@
     PointerExited="CompactPlayerPage_OnPointerExited"
     RightTapped="OnRightTapped"
     mc:Ignorable="d">
+
     <Page.Resources>
         <Storyboard x:Name="CompactPlayerAni">
-            <DoubleAnimation Storyboard.TargetName="SongNameContainer" Storyboard.TargetProperty="Opacity" From="0" To="1">
+            <DoubleAnimation
+                Storyboard.TargetName="SongNameContainer"
+                Storyboard.TargetProperty="Opacity"
+                From="0"
+                To="1">
                 <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseOut"/>
+                    <CubicEase EasingMode="EaseOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="SongName" Storyboard.TargetProperty="FontSize" From="0" To="20">
+            <DoubleAnimation
+                Storyboard.TargetName="SongName"
+                Storyboard.TargetProperty="FontSize"
+                From="0"
+                To="20">
                 <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseOut"/>
+                    <CubicEase EasingMode="EaseOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="ArtistsName" Storyboard.TargetProperty="FontSize" From="0" To="12">
+            <DoubleAnimation
+                Storyboard.TargetName="ArtistsName"
+                Storyboard.TargetProperty="FontSize"
+                From="0"
+                To="12">
                 <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseOut"/>
+                    <CubicEase EasingMode="EaseOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="AlbumScale" Storyboard.TargetProperty="ScaleY" From="0" To="1">
+            <DoubleAnimation
+                Storyboard.TargetName="AlbumScale"
+                Storyboard.TargetProperty="ScaleY"
+                From="0"
+                To="1">
                 <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseOut"/>
+                    <CubicEase EasingMode="EaseOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
 
-            <DoubleAnimation Storyboard.TargetName="AlbumScale" Storyboard.TargetProperty="ScaleX" From="0" To="1">
+            <DoubleAnimation
+                Storyboard.TargetName="AlbumScale"
+                Storyboard.TargetProperty="ScaleX"
+                From="0"
+                To="1">
                 <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseOut"/>
+                    <CubicEase EasingMode="EaseOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
 
@@ -48,13 +69,14 @@
     </Page.Resources>
 
     <Grid
+        x:Name="MainGrid"
         Background="{x:Bind Mode=OneWay, Path=ControlHover}"
         DoubleTapped="ExitCompactMode"
         IsTapEnabled="True">
         <Grid.RowDefinitions>
             <!--  Placeholder  -->
             <RowDefinition Height="72" />
-            <RowDefinition Height="5*" />
+            <RowDefinition Height="*" />
             <RowDefinition Height="38" />
             <!--  Progress Bar  -->
             <RowDefinition Height="4" />
@@ -62,106 +84,113 @@
         <Grid
             x:Name="SongNameContainer"
             Grid.Row="0"
-            CornerRadius="8"
-            Background="{ThemeResource PlaybackAcrylicInAppLuminosity}">
+            Background="{ThemeResource PlaybackAcrylicInAppLuminosity}"
+            CornerRadius="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
             <Rectangle
+                x:Name="TopAlbumCover"
                 Grid.RowSpan="2"
-                Height="56"
+                Grid.Column="0"
                 Width="56"
-                Margin="9,0,0,0 "
+                Height="56"
+                Margin="9,0,0,0"
                 HorizontalAlignment="Left"
                 Fill="{x:Bind Mode=OneWay, Path=AlbumCover}"
                 RadiusX="8"
-                RadiusY="8"
-                >
+                RadiusY="8">
                 <Rectangle.RenderTransform>
-                    <ScaleTransform x:Name="AlbumScale" CenterX="28" CenterY="28"/>
+                    <ScaleTransform x:Name="AlbumScale" CenterX="28" CenterY="28" />
                 </Rectangle.RenderTransform>
             </Rectangle>
-            <TextBlock
-                Grid.Row="1"
-                FontSize="12"
-                Foreground="White"
-                x:Name="ArtistsName"
-                Text="{x:Bind NowPlayingArtists, Mode=OneWay}"
-                TextAlignment="Left"
-                VerticalAlignment="Bottom"
-                Margin=" 76,0,0,22"/>
-            <TextBlock
-                Grid.Row="0"
-                Grid.ColumnSpan="2"
-                FontSize="20"
-                x:Name="SongName"
-                FontWeight="Bold"
-                Foreground="White"
-                VerticalAlignment="Top" 
-                Text="{x:Bind NowPlayingName, Mode=OneWay}"
-                TextAlignment="Left"  
-                Margin="75,4,0,0"
-                />
+            <Grid Grid.Column="1" Margin="8,0,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock
+                    x:Name="ArtistsName"
+                    Grid.Row="1"
+                    FontSize="12"
+                    Foreground="White"
+                    Text="{x:Bind NowPlayingArtists, Mode=OneWay}"
+                    TextAlignment="Left" />
+                <TextBlock
+                    x:Name="SongName"
+                    Grid.Row="0"
+                    Grid.ColumnSpan="2"
+                    FontSize="23"
+                    FontWeight="Bold"
+                    Foreground="White"
+                    Text="{x:Bind NowPlayingName, Mode=OneWay}"
+                    TextAlignment="Left" />
+            </Grid>
         </Grid>
         <Grid x:Name="GridBtns" Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1* "/>
+                <ColumnDefinition Width="1* " />
                 <ColumnDefinition Width="4*" />
-                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*" />
                 <ColumnDefinition Width="7*" />
-                <ColumnDefinition Width="1* "/>
+                <ColumnDefinition Width="1* " />
                 <ColumnDefinition Width="4*" />
-                <ColumnDefinition Width="1* "/>
+                <ColumnDefinition Width="1* " />
             </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions >
-                <RowDefinition Height="1*"/>
-                <RowDefinition Height="6*"/>
-                <RowDefinition Height="1*"/>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*" />
+                <RowDefinition Height="6*" />
+                <RowDefinition Height="1*" />
             </Grid.RowDefinitions>
             <Button
-                Grid.Column="1"
                 Grid.Row="1"
+                Grid.Column="1"
+                MaxHeight="100"
                 Margin="2"
                 Padding="0"
-                MaxHeight="100"
-                Background="{ThemeResource SystemRevealAltMediumLowColor}"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
-                CornerRadius=" 12"
+                Background="{ThemeResource SystemRevealAltMediumLowColor}"
                 Click="MovePrevious"
+                CornerRadius=" 12"
                 Style="{StaticResource ButtonRevealStyle}">
-                <FontIcon  Glyph="&#xE892;" Foreground="White" />
+                <FontIcon Foreground="White" Glyph="&#xE892;" />
             </Button>
             <Button
                 x:Name="BtnPlayStateChange"
-                Grid.Column="3"
                 Grid.Row="1"
-                Margin="2"
-                CornerRadius=" 12"
+                Grid.Column="3"
                 MaxHeight=" 100"
+                Margin="2"
                 Padding="0"
                 HorizontalAlignment="Stretch"
-                Background="{ThemeResource SystemRevealAltMediumColor}"
                 VerticalAlignment="Stretch"
                 AutomationProperties.AcceleratorKey="Space"
+                Background="{ThemeResource SystemRevealAltMediumColor}"
                 Click="ChangePlayState"
-                Style="{StaticResource ButtonRevealStyle}" Foreground="{ThemeResource SystemAccentColorLight2}">
+                CornerRadius=" 12"
+                Foreground="{ThemeResource SystemAccentColorLight2}"
+                Style="{StaticResource ButtonRevealStyle}">
                 <FontIcon
                     x:Name="PlayStateIcon"
-                    Glyph="&#xEDB5;"
-                    FontSize="26"/>
+                    FontSize="26"
+                    Glyph="&#xEDB5;" />
                 <!--  EDB4  -->
             </Button>
             <Button
-                Grid.Column="5"
                 Grid.Row="1"
-                Margin="2"
+                Grid.Column="5"
                 MaxHeight=" 100"
+                Margin="2"
                 Padding="0"
-                CornerRadius=" 12"
                 HorizontalAlignment="Stretch"
-                Background="{ThemeResource SystemRevealAltMediumLowColor}"
                 VerticalAlignment="Stretch"
+                Background="{ThemeResource SystemRevealAltMediumLowColor}"
                 Click="MoveNext"
+                CornerRadius=" 12"
                 Style="{StaticResource ButtonRevealStyle}">
-                <FontIcon Glyph="&#xE893;" Foreground="White"  />
+                <FontIcon Foreground="White" Glyph="&#xE893;" />
             </Button>
         </Grid>
         <Grid x:Name="GridLyrics" Grid.Row="2">
@@ -201,5 +230,29 @@
             d:Value="62"
             Maximum="{x:Bind Mode=OneWay, Path=TotalProgress}"
             Value="{x:Bind Mode=OneWay, Path=NowProgress}" />
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowHeight="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="MainGrid.RowDefinitions[0].Height" Value="34" />
+                        <Setter Target="TopAlbumCover.Visibility" Value="Collapsed" />
+                        <Setter Target="ArtistsName.FontSize" Value="8" />
+                        <Setter Target="SongName.FontSize" Value="12" />
+                        <Setter Target="SongName.FontWeight" Value="Normal" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowHeight="250" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="MainGrid.RowDefinitions[0].Height" Value="72" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
     </Grid>
 </Page>

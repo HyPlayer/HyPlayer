@@ -126,6 +126,7 @@ namespace HyPlayer.Pages
 
         private void OnLyricChanged()
         {
+            if (HyPlayList.Lyrics.Count <= HyPlayList.LyricPos) return;
             LyricText = HyPlayList.Lyrics[HyPlayList.LyricPos].PureLyric;
             LyricTranslation = HyPlayList.Lyrics[HyPlayList.LyricPos].Translation;
         }
