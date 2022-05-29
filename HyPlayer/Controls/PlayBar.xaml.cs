@@ -1064,6 +1064,13 @@ public sealed partial class PlayBar
         */
 
     }
+
+    private void PlayListTitle_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+    {
+        HyPlayList.List.Reverse();
+        HyPlayList.SongAppendDone();
+        HyPlayList.SongMoveTo(0);
+    }
 }
 
 public class ThumbConverter : DependencyObject, IValueConverter

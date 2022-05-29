@@ -618,9 +618,11 @@
                                 <TextBlock
                                     x:Name="PlayListTitle"
                                     Margin="16,0,0,0"
+                                    DoubleTapped="PlayListTitle_DoubleTapped"
                                     FontSize=" 16"
                                     FontWeight="Bold"
                                     HorizontalTextAlignment="Center"
+                                    IsDoubleTapEnabled="True"
                                     Text="播放列表" />
                                 <Button
                                     Margin="5,-5,10,5"
