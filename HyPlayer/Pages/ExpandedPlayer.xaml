@@ -9,6 +9,7 @@
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:pages="using:HyPlayer.Pages"
     xmlns:ui="using:Microsoft.Toolkit.Uwp.UI"
+    muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
     Loaded="Page_Loaded"
     NavigationCacheMode="Disabled">
     <Page.Resources>
@@ -172,6 +173,7 @@
                             Orientation="Horizontal"
                             Spacing="5">
                             <TextBlock
+                                x:Name="TextBlockSingerNameTip"
                                 Padding="0,6,0,6"
                                 FontSize="18"
                                 FontWeight="Bold"
@@ -185,6 +187,7 @@
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="5">
                             <TextBlock
+                                x:Name="TextBlockAlbumNameTip"
                                 Padding="0,6,0,6"
                                 FontSize="18"
                                 FontWeight="Bold"

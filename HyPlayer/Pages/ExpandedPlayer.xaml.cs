@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,6 +11,7 @@ using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
+using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
@@ -28,6 +28,7 @@ using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using Microsoft.Toolkit.Uwp.UI.Media;
 using Buffer = Windows.Storage.Streams.Buffer;
+using Color = System.Drawing.Color;
 using Point = Windows.Foundation.Point;
 
 #endregion
@@ -43,8 +44,12 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 {
     private readonly bool loaded;
 
-    public SolidColorBrush ForegroundAlbumBrush =
+    public SolidColorBrush ForegroundAccentTextBrush =
         Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush;
+    
+    public SolidColorBrush ForegroundIdleTextBrush =
+        Application.Current.Resources["TextFillColorTertiaryBrush"] as SolidColorBrush;
+
 
     public bool jumpedLyrics;
     public double lastChangedLyricWidth;
@@ -388,7 +393,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         {
         }
 
-        if (!Common.Setting.expandedUseAcrylic)
+        if (Common.Setting.expandedPlayerBackgroundType == 0 && !Common.Setting.expandedUseAcrylic)
         {
             PageContainer.Background = new BackdropBlurBrush() { Amount = 50.0 };
         }
@@ -466,7 +471,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         {
             source = new List<LyricItemModel>(HyPlayList.Lyrics.Select(c => new LyricItemModel(c)));
         }
-
         LyricBox.ItemsSource = source;
         LyricBox.Width = LyricWidth;
         lastlrcid = HyPlayList.NowPlayingItem.GetHashCode();
@@ -501,14 +505,19 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         {
             if (await IsBrightAsync())
             {
-                ForegroundAlbumBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0, 0, 0));
-                TextBlockSongTitle.Foreground = ForegroundAlbumBrush;
+                ForegroundAccentTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0, 0, 0));
+                ForegroundIdleTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(114, 0, 0, 0));
+                
             }
             else
             {
-                ForegroundAlbumBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
-                TextBlockSongTitle.Foreground = ForegroundAlbumBrush;
+                ForegroundAccentTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
+                ForegroundIdleTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(66, 255, 255, 255));
             }
+            TextBlockSongTitle.Foreground = ForegroundAccentTextBrush;
+            TextBlockSingerNameTip.Foreground = ForegroundIdleTextBrush;
+            TextBlockAlbumNameTip.Foreground = ForegroundIdleTextBrush;
+            LoadLyricsBox();
         }
 
         async void LoadCoverImage()
@@ -521,7 +530,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     await img.SetSourceAsync(
                         await HyPlayList.NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
                     ImageAlbum.Source = img;
-                    Background = new ImageBrush
+                    if (Common.Setting.expandedPlayerBackgroundType == 0)
+                        Background = new ImageBrush
                         { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                 }
                 else
@@ -540,7 +550,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                                                                         .PICSIZE_EXPANDEDPLAYER_COVER));
                     }
 
-                    Background = new ImageBrush
+                    if (Common.Setting.expandedPlayerBackgroundType == 0)
+                        Background = new ImageBrush
                         { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                 }
             }
@@ -813,24 +824,43 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private async Task<bool> IsBrightAsync()
     {
         if (Common.Setting.lyricColor != 0) return Common.Setting.lyricColor == 2;
+        if (Common.Setting.expandedPlayerBackgroundType >= 2)
+        {
+            // 强制颜色
+            switch (Common.Setting.expandedPlayerBackgroundType)
+            {
+                case 2: //System
+                    return Application.Current.RequestedTheme == ApplicationTheme.Light;
+                    break;
+                case 3: // White
+                    return true;
+                    break;
+                case 4: // Black
+                    return false;
+                    break;
+            }
+        }
+
         if (HyPlayList.NowPlayingItem.PlayItem == null) return false;
 
-        if (lastSongForBrush == HyPlayList.NowPlayingItem.PlayItem) return ForegroundAlbumBrush.Color.R == 0;
+        if (lastSongForBrush == HyPlayList.NowPlayingItem.PlayItem) return ForegroundAccentTextBrush.Color.R == 0;
         try
         {
             BitmapDecoder decoder;
             if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Local)
                 decoder = await BitmapDecoder.CreateAsync(
-                    await HyPlayList.NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 1));
+                    await HyPlayList.NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.MusicView, 1));
             else
                 decoder = await BitmapDecoder.CreateAsync(await RandomAccessStreamReference
                     .CreateFromUri(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=1y1"))
                     .OpenReadAsync());
             var data = await decoder.GetPixelDataAsync();
             var bytes = data.DetachPixelData();
-            var c = GetPixel(bytes, 0, 0, decoder.PixelWidth, decoder.PixelHeight);
-            var Y = 0.299 * c.R + 0.587 * c.G + 0.114 * c.B;
+            //var c = GetPixel(bytes, 0, 0, decoder.PixelWidth, decoder.PixelHeight);
+            var Y = 0.299 * bytes[2] + 0.587 * bytes[1] + 0.114 * bytes[0];
             lastSongForBrush = HyPlayList.NowPlayingItem.PlayItem;
+            if (Common.Setting.expandedPlayerBackgroundType == 1)
+                PageContainer.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, bytes[2], bytes[1], bytes[0]));
             return Y >= 150;
         }
         catch
@@ -942,6 +972,21 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         ToggleButtonTranslation.IsChecked = Common.ShowLyricTrans;
         if (Common.Setting.albumRound) ImageAlbum.CornerRadius = new CornerRadius(300);
         ImageAlbum.BorderThickness = new Thickness(Common.Setting.albumBorderLength);
+        switch (Common.Setting.expandedPlayerBackgroundType)
+        {
+            case 0: // Default
+            case 1: // According to Album
+                break;
+            case 2: // According to System
+                PageContainer.Background = new SolidColorBrush(Colors.Transparent);
+                break;
+            case 3: // Force White
+                PageContainer.Background = new SolidColorBrush(Colors.WhiteSmoke);
+                break;
+            case 4: // Force Black
+                PageContainer.Background = new SolidColorBrush(Colors.Black);
+                break;
+        }
 
         if (Common.Setting.albumRotate)
             //网易云音乐圆形唱片
@@ -959,7 +1004,9 @@ public class AlbumShadowConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {
-        return (Common.Setting.albumRound || Common.Setting.expandAlbumBreath) ? 0 : (double)Common.Setting.expandedCoverShadowDepth / 10;
+        return (Common.Setting.albumRound || Common.Setting.expandAlbumBreath)
+            ? 0
+            : (double)Common.Setting.expandedCoverShadowDepth / 10;
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)

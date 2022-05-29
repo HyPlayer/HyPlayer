@@ -244,8 +244,8 @@
                                 FontSize="12"
                                 Foreground="Gray"
                                 Text="* 修改后需要重启 HyPlayer" />
+                            <TextBlock Text="主题颜色" FontSize="16" />
                             <controls:RadioButtons
-                                x:Name="RadioButtonsTheme"
                                 FontSize="20"
                                 MaxColumns="3"
                                 SelectedIndex="{x:Bind hyplayer:Common.Setting.themeRequest, Mode=TwoWay}"
@@ -253,6 +253,18 @@
                                 <RadioButton Content="跟随系统" />
                                 <RadioButton Content="亮色" />
                                 <RadioButton Content="暗色" />
+                            </controls:RadioButtons>
+                            <CheckBox Content="播放按钮是否着强调色" IsChecked="{x:Bind hyplayer:Common.Setting.playButtonAccentColor, Mode=TwoWay}" />
+                            <TextBlock Text="播放背景" FontSize="16" />
+                            <controls:RadioButtons
+                                FontSize="20"
+                                MaxColumns="5"
+                                SelectedIndex="{x:Bind hyplayer:Common.Setting.expandedPlayerBackgroundType, Mode=TwoWay}">
+                                <RadioButton Content="专辑封面模糊" />
+                                <RadioButton Content="跟随唱片主色调" />
+                                <RadioButton Content="跟随系统" />
+                                <RadioButton Content="强制白色" />
+                                <RadioButton Content="强制黑色" />
                             </controls:RadioButtons>
                             <TextBlock
                                 Margin="0,10,0,10"

@@ -565,6 +565,7 @@ public sealed partial class PlayBar
         Common.PageMain.ExpandedPlayer.Visibility = Visibility.Visible;
         Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer), null,
             new EntranceNavigationTransitionInfo());
+        Common.PageMain.MainFrame.Visibility = Visibility.Collapsed;
         if (Common.Setting.expandAnimation && GridSongInfoContainer.Visibility == Visibility.Visible)
             try
             {
@@ -637,6 +638,7 @@ public sealed partial class PlayBar
         Common.PageExpandedPlayer = null;
         Common.PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));
         //Common.PageMain.MainFrame.Visibility = Visibility.Visible;
+        Common.PageMain.MainFrame.Visibility = Visibility.Visible;
         Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
         if (!Common.Setting.playbarBackgroundAcrylic)
             Common.PageMain.GridPlayBar.Background = Application.Current.Resources["ApplicationPageBackgroundThemeBrush"] as SolidColorBrush;
@@ -988,6 +990,10 @@ public sealed partial class PlayBar
         //HyPlayList.OnPlayPositionChange += UpdateMSTC;
         HyPlayList.OnPlayListAddDone += HyPlayList_OnPlayListAdd;
         HyPlayList.OnSongRemoveAll += HyPlayListOnOnSongRemoveAll;
+        if (Common.Setting.playButtonAccentColor)
+        {
+            BtnPlayStateChange.Background = Resources["AccentPlayButtonColor"] as Brush;
+        }
         AlbumImage.Source = new BitmapImage(new Uri("ms-appx:Assets/icon.png"));
         if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
             ButtonDesktopLyrics.Visibility = Visibility.Collapsed;

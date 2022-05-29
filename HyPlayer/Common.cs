@@ -331,6 +331,27 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        
+        public bool playButtonAccentColor
+        {
+            get => GetSettings("playButtonAccentColor", true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["playButtonAccentColor"] = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        public int expandedPlayerBackgroundType
+        {
+            
+            get => GetSettings("expandedPlayerBackgroundType", 0);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["expandedPlayerBackgroundType"] = value;
+                OnPropertyChanged();
+            }
+        }
 
         public bool downloadLyric
         {

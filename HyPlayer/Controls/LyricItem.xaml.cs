@@ -54,9 +54,13 @@ public sealed partial class LyricItem : UserControl
     public TextAlignment LyricAlignment =>
         Common.Setting.lyricAlignment ? TextAlignment.Left : TextAlignment.Center;
 
-    private SolidColorBrush originBrush => Common.PageExpandedPlayer != null
-        ? Common.PageExpandedPlayer.ForegroundAlbumBrush
+    private SolidColorBrush AccentBrush => Common.PageExpandedPlayer != null
+        ? Common.PageExpandedPlayer.ForegroundAccentTextBrush
         : Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush;
+    
+    private SolidColorBrush IdleBrush => Common.PageExpandedPlayer != null
+        ? Common.PageExpandedPlayer.ForegroundIdleTextBrush
+        : Application.Current.Resources["TextFillColorTertiaryBrush"] as SolidColorBrush;
 
     public void RefreshFontSize()
     {
@@ -82,10 +86,10 @@ public sealed partial class LyricItem : UserControl
         TextBoxTranslation.Margin = new Thickness(0,2,0,2);
         TextBoxPureLyric.CharacterSpacing=30;
         TextBoxTranslation.CharacterSpacing = 30;
-        TextBoxPureLyric.Foreground = originBrush;
-        TextBoxSound.Foreground = originBrush;
-        TextBoxTranslation.Foreground = originBrush;
-        shadowColor = originBrush.Color == Color.FromArgb(255, 0, 0, 0)
+        TextBoxPureLyric.Foreground = AccentBrush;
+        TextBoxSound.Foreground = AccentBrush;
+        TextBoxTranslation.Foreground = AccentBrush;
+        shadowColor = AccentBrush.Color == Color.FromArgb(255, 0, 0, 0)
             ? Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 255, 255, 255)
             : Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 0, 0, 0);
     }
@@ -104,9 +108,9 @@ public sealed partial class LyricItem : UserControl
         TextBoxTranslation.CharacterSpacing = 0;
         TextBoxPureLyric.FontWeight = FontWeights.SemiBold;
         TextBoxTranslation.FontWeight = FontWeights.SemiBold;
-        TextBoxPureLyric.Foreground = Application.Current.Resources["TextFillColorDisabledBrush"] as Brush;
-        TextBoxTranslation.Foreground = Application.Current.Resources["TextFillColorDisabledBrush"] as Brush;
-        TextBoxSound.Foreground = Application.Current.Resources["TextFillColorDisabledBrush"] as Brush;
+        TextBoxPureLyric.Foreground = IdleBrush;
+        TextBoxTranslation.Foreground = IdleBrush;
+        TextBoxSound.Foreground = IdleBrush;
         shadowColor = Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 0, 0, 0);
     }
 

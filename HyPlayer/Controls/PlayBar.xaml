@@ -15,6 +15,10 @@
     Loaded="UserControl_Loaded"
     mc:Ignorable="d">
     <UserControl.Resources>
+        <LinearGradientBrush x:Key="AccentPlayButtonColor" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop x:Name="PlayBtnGradient" Offset="0.2" Color="{ThemeResource SystemAccentColorLight2}" />
+            <GradientStop Offset="0.8" Color="{ThemeResource SystemAccentColorDark1}" />
+        </LinearGradientBrush>
         <local:PlayBarImageRadiusConverter x:Key="PlayBarImageRadiusConverter" />
         <Flyout x:Key="VolumeFlyout">
             <Grid>
@@ -86,56 +90,96 @@
                 To="0.5"
                 Duration="0:0:4">
                 <DoubleAnimation.EasingFunction>
-                   <QuarticEase EasingMode="EaseInOut"/>
+                    <QuarticEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
         </Storyboard>
         <Storyboard x:Name="InitializedAni">
-            <DoubleAnimation Storyboard.TargetName="GridSongInfo" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:1.2">
+            <DoubleAnimation
+                Storyboard.TargetName="GridSongInfo"
+                Storyboard.TargetProperty="Opacity"
+                From="0"
+                To="1"
+                Duration="0:0:1.2">
                 <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseOut"/>
+                    <CubicEase EasingMode="EaseOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="SongInfoScale" Storyboard.TargetProperty="Y" From="100" To="0" Duration="0:0:1.2">
+            <DoubleAnimation
+                Storyboard.TargetName="SongInfoScale"
+                Storyboard.TargetProperty="Y"
+                From="100"
+                To="0"
+                Duration="0:0:1.2">
                 <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseOut"/>
+                    <CubicEase EasingMode="EaseOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="MainBtnScale" Storyboard.TargetProperty="Y" From="100" To="0" Duration=" 0:0:0.8">
+            <DoubleAnimation
+                Storyboard.TargetName="MainBtnScale"
+                Storyboard.TargetProperty="Y"
+                From="100"
+                To="0"
+                Duration=" 0:0:0.8">
                 <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseOut"/>
+                    <CubicEase EasingMode="EaseOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="MainControlGrid" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration=" 0:0:0.8">
+            <DoubleAnimation
+                Storyboard.TargetName="MainControlGrid"
+                Storyboard.TargetProperty="Opacity"
+                From="0"
+                To="1"
+                Duration=" 0:0:0.8">
                 <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseOut"/>
+                    <CubicEase EasingMode="EaseOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="BtnsAni" Storyboard.TargetProperty="Y" From="100" To="0" Duration=" 0:0:1.2">
+            <DoubleAnimation
+                Storyboard.TargetName="BtnsAni"
+                Storyboard.TargetProperty="Y"
+                From="100"
+                To="0"
+                Duration=" 0:0:1.2">
                 <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseOut"/>
+                    <CubicEase EasingMode="EaseOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="Btns" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration=" 0:0:1.2">
+            <DoubleAnimation
+                Storyboard.TargetName="Btns"
+                Storyboard.TargetProperty="Opacity"
+                From="0"
+                To="1"
+                Duration=" 0:0:1.2">
                 <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseOut"/>
+                    <CubicEase EasingMode="EaseOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="BtnExpandAni" Storyboard.TargetProperty="Y" From="100" To="0" Duration=" 0:0:1.2">
+            <DoubleAnimation
+                Storyboard.TargetName="BtnExpandAni"
+                Storyboard.TargetProperty="Y"
+                From="100"
+                To="0"
+                Duration=" 0:0:1.2">
                 <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseOut"/>
+                    <CubicEase EasingMode="EaseOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-            <DoubleAnimation Storyboard.TargetName="ButtonExpand" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration=" 0:0:1.2">
+            <DoubleAnimation
+                Storyboard.TargetName="ButtonExpand"
+                Storyboard.TargetProperty="Opacity"
+                From="0"
+                To="1"
+                Duration=" 0:0:1.2">
                 <DoubleAnimation.EasingFunction>
-                    <CubicEase EasingMode="EaseOut"/>
+                    <CubicEase EasingMode="EaseOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
 
 
 
         </Storyboard>
-                    
+
 
     </UserControl.Resources>
     <Grid x:Name="GridThis" CornerRadius="8,8,0,0">
@@ -259,10 +303,7 @@
                         IsCacheEnabled="False"
                         Stretch="UniformToFill" />
                 </Grid>
-                <StackPanel
-                    Margin="12,0,0,0"
-                    Orientation="Vertical"
-                    >
+                <StackPanel Margin="12,0,0,0" Orientation="Vertical">
 
 
                     <local:SelectableTextBox
@@ -292,7 +333,7 @@
                     <Grid
                         x:Name="SongInfoTag"
                         Height="20"
-                        Margin=" 0,14,0,0"
+                        Margin="0,14,0,0"
                         Padding="3,0,3,0"
                         HorizontalAlignment="Left"
                         BorderBrush="Red"
@@ -309,7 +350,7 @@
                 </StackPanel>
             </StackPanel>
             <Grid.RenderTransform>
-                <TranslateTransform x:Name="SongInfoScale"/>
+                <TranslateTransform x:Name="SongInfoScale" />
             </Grid.RenderTransform>
         </Grid>
         <Grid
@@ -420,7 +461,7 @@
                     ToolTipService.ToolTip="{x:Bind FlyoutPlayRollType.Text, Mode=OneWay}">
                     <FontIcon
                         x:Name="IconPlayType"
-                        FontSize="16"
+                        FontSize="13"
                         Glyph="&#xE169;" />
                 </Button>
                 <Button
@@ -449,15 +490,10 @@
                     AutomationProperties.AcceleratorKey="Space"
                     Click="BtnPlayStateChange_OnClick"
                     CornerRadius="30"
-                    Opacity="0.9"
                     KeyUp="BtnPlayStateChange_KeyUp"
+                    Opacity="0.9"
                     Style="{StaticResource ButtonRevealStyle}">
-                    <Button.Background>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop x:Name="PlayBtnGradient" Offset="0.2" Color="{ThemeResource SystemAccentColorLight2}" />
-                            <GradientStop Offset="0.8" Color="{ThemeResource SystemAccentColorDark1}" />
-                        </LinearGradientBrush>
-                    </Button.Background>
+                    <Button.Background />
                     <FontIcon
                         x:Name="PlayStateIcon"
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
@@ -477,9 +513,7 @@
                     Click="BtnNextSong_OnClick"
                     CornerRadius="30"
                     Style="{StaticResource ButtonRevealStyle}">
-                    <FontIcon
-                        FontSize="13"
-                        Glyph="&#xE101;" />
+                    <FontIcon FontSize="13" Glyph="&#xE101;" />
                 </Button>
                 <Button
                     x:Name="BtnLike"
@@ -642,7 +676,7 @@
                 <FontIcon Glyph="&#xE142;" />
             </Button>
             <controls:UniformGrid.RenderTransform>
-                <TranslateTransform x:Name="BtnsAni"/>
+                <TranslateTransform x:Name="BtnsAni" />
             </controls:UniformGrid.RenderTransform>
         </controls:UniformGrid>
         <Button
@@ -658,7 +692,7 @@
             Style="{StaticResource ButtonRevealStyle}">
             <FontIcon FontSize="24" Glyph="&#xE971;" />
             <Button.RenderTransform>
-                <TranslateTransform x:Name="BtnExpandAni"/>
+                <TranslateTransform x:Name="BtnExpandAni" />
             </Button.RenderTransform>
         </Button>
         <Button
@@ -704,7 +738,7 @@
                         <Setter Target="SliderProgress.Margin" Value="0,0,0,0" />
                         <Setter Target="AlbumImageHover.Width" Value="NaN" />
                         <Setter Target="PlayProgress.Margin" Value="70,-5,10,0" />
-                        <Setter Target="MainBtnsGrid.Margin" Value="50,5,0,0"/>
+                        <Setter Target="MainBtnsGrid.Margin" Value="50,5,0,0" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState>
@@ -783,7 +817,7 @@
                         <Setter Target="TbAlbumName.FontSize" Value="10" />
                         <Setter Target="TbSingerName.FontSize" Value="10" />
                         <Setter Target="TbSongName.FontSize" Value="18" />
-                        <Setter Target="MainBtnsGrid.Margin" Value="-100,5,0,0"/>
+                        <Setter Target="MainBtnsGrid.Margin" Value="-100,5,0,0" />
 
                     </VisualState.Setters>
                 </VisualState>
