@@ -177,14 +177,9 @@ public static class HyPlayList
         SecTimer.Start();
         OnTimerTicked += () =>
         {
-            _ = Common.Invoke(() =>
-            {
-                if (--_gcCountDown < 0)
-                {
-                    _gcCountDown = 5;
-                    GC.Collect();
-                }
-            });
+            if (--_gcCountDown >= 0) return;
+            _gcCountDown = 5;
+            GC.Collect();
         };
         HistoryManagement.InitializeHistoryTrack();
         Common.IsInFm = false;
@@ -239,20 +234,19 @@ public static class HyPlayList
             _crashedTime = NowPlayingItem.PlayItem.Id;
             if (NowPlayingItem.ItemType == HyPlayItemType.Netease && !NowPlayingItem.PlayItem.IsLocalFile ||
                 NowPlayingItem.ItemType == HyPlayItemType.Radio)
-                _ = Common.Invoke(() =>
+            {
+                List[NowPlaying] = LoadNcSong(new NCSong
                 {
-                    List[NowPlaying] = LoadNcSong(new NCSong
-                    {
-                        Type = NowPlayingItem.ItemType,
-                        Album = NowPlayingItem.PlayItem.Album,
-                        Artist = NowPlayingItem.PlayItem.Artist,
-                        LengthInMilliseconds = NowPlayingItem.PlayItem.LengthInMilliseconds,
-                        sid = NowPlayingItem.PlayItem.Id,
-                        songname = NowPlayingItem.PlayItem.Name
-                    });
-                    LoadPlayerSong();
-                    Player.Play();
+                    Type = NowPlayingItem.ItemType,
+                    Album = NowPlayingItem.PlayItem.Album,
+                    Artist = NowPlayingItem.PlayItem.Artist,
+                    LengthInMilliseconds = NowPlayingItem.PlayItem.LengthInMilliseconds,
+                    sid = NowPlayingItem.PlayItem.Id,
+                    songname = NowPlayingItem.PlayItem.Name
                 });
+                LoadPlayerSong();
+                Player.Play();
+            }
             else
             {
                 //本地歌曲炸了的话就Move下一首吧
@@ -334,7 +328,7 @@ public static class HyPlayList
                         }
                     };
                     hyitem.PlayItem.Artist = Info.artist.Select(t => new NCArtist
-                    { name = t[0].ToString(), id = t[1].ToString() })
+                            { name = t[0].ToString(), id = t[1].ToString() })
                         .ToList();
 
                     HyPlayList.List.Add(hyitem);
@@ -409,7 +403,7 @@ public static class HyPlayList
 
     public static void SongMoveNext()
     {
-        _ = Common.Invoke(() => OnSongMoveNext?.Invoke());
+        OnSongMoveNext?.Invoke();
         if (List.Count == 0) return;
         MoveSongPointer(true);
         LoadPlayerSong();
@@ -499,16 +493,16 @@ public static class HyPlayList
         switch (args.Button)
         {
             case SystemMediaTransportControlsButton.Play:
-                _ = Common.Invoke(() => Player.Play());
+                Player.Play();
                 break;
             case SystemMediaTransportControlsButton.Pause:
-                _ = Common.Invoke(() => Player.Pause());
+                Player.Pause();
                 break;
             case SystemMediaTransportControlsButton.Previous:
-                _ = Common.Invoke(SongMovePrevious);
+                SongMovePrevious();
                 break;
             case SystemMediaTransportControlsButton.Next:
-                _ = Common.Invoke(SongMoveNext);
+                SongMoveNext();
                 break;
         }
     }
@@ -558,7 +552,7 @@ public static class HyPlayList
     {
         //当播放结束时,此时你应当进行切歌操作
         //不过在此之前还是把订阅了的时间给返回回去吧
-        _ = Common.Invoke(() => OnMediaEnd?.Invoke(NowPlayingItem));
+        OnMediaEnd?.Invoke(NowPlayingItem);
         MoveSongPointer();
         //然后尝试加载下一首歌
         LoadPlayerSong();
@@ -586,7 +580,7 @@ public static class HyPlayList
                     string tag;
                     if (bitrate > 999000)
                         tag = "Hi-Res";
-                    else if(bitrate > 320000)
+                    else if (bitrate > 320000)
                         tag = "无损";
                     else
                         tag = $"{bitrate / 1000}K";
@@ -728,15 +722,15 @@ public static class HyPlayList
             //记录下当前播放位置
             ApplicationData.Current.LocalSettings.Values["nowSongPointer"] = NowPlaying.ToString();
         }
+
         //因为加载图片可能会高耗时,所以在此处加载
-        _ = Common.Invoke(() => OnPlayItemChange?.Invoke(NowPlayingItem));
+        OnPlayItemChange?.Invoke(NowPlayingItem);
         //加载歌词
         if (NowPlayingItem.PlayItem != null)
         {
             LoadLyrics(NowPlayingItem);
             try
             {
-
                 if (NowPlayingItem.ItemType == HyPlayItemType.Local)
                 {
                     if (NowPlayingStorageFile != null)
@@ -768,7 +762,7 @@ public static class HyPlayList
 
     private static void PlaybackSession_PositionChanged(MediaPlaybackSession sender, object args)
     {
-        _ = Common.Invoke(() => OnPlayPositionChange?.Invoke(Player.PlaybackSession.Position));
+        OnPlayPositionChange?.Invoke(Player.PlaybackSession.Position);
         LoadLyricChange();
     }
 
@@ -801,7 +795,7 @@ public static class HyPlayList
         }
 
 
-        if (changed) _ = Common.Invoke(() => OnLyricChange?.Invoke());
+        if (changed) OnLyricChange?.Invoke();
     }
 
     private static void Player_VolumeChanged(MediaPlayer sender, object args)
@@ -809,26 +803,23 @@ public static class HyPlayList
         if (!Common.BarPlayBar.FadeSettedVolume)
             Common.Setting.Volume = (int)(Player.Volume * 100);
 
-        _ = Common.Invoke(() => OnVolumeChange?.Invoke(Player.Volume));
+        OnVolumeChange?.Invoke(Player.Volume);
     }
 
     private static void Player_CurrentStateChanged(MediaPlayer sender, object args)
     {
         //先通知 SystemMediaTransportControls
-        switch (Player.PlaybackSession.PlaybackState)
+        MediaSystemControls.PlaybackStatus = Player.PlaybackSession.PlaybackState switch
         {
-            case MediaPlaybackState.Playing:
-                MediaSystemControls.PlaybackStatus = MediaPlaybackStatus.Playing;
-                break;
-            case MediaPlaybackState.Paused:
-                MediaSystemControls.PlaybackStatus = MediaPlaybackStatus.Paused;
-                break;
-        }
+            MediaPlaybackState.Playing => MediaPlaybackStatus.Playing,
+            MediaPlaybackState.Paused => MediaPlaybackStatus.Paused,
+            _ => MediaSystemControls.PlaybackStatus
+        };
 
         if (Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
-            _ = Common.Invoke(() => OnPlay?.Invoke());
+            OnPlay?.Invoke();
         else
-            _ = Common.Invoke(() => OnPause?.Invoke());
+            OnPause?.Invoke();
     }
 
     private static async void LoadLyrics(HyPlayItem hpi)
@@ -867,8 +858,8 @@ public static class HyPlayList
                 new SongLyric { LyricTime = TimeSpan.Zero, PureLyric = "" });
         LyricPos = 0;
 
-        Common.Invoke(() => OnLyricLoaded?.Invoke());
-        Common.Invoke(() => OnLyricChange?.Invoke());
+        OnLyricLoaded?.Invoke();
+        OnLyricChange?.Invoke();
     }
 
 
@@ -1350,7 +1341,7 @@ public static class HyPlayList
         }
 
         // Call 一下来触发前端显示的播放列表更新
-        _ = Common.Invoke(() => OnPlayListAddDone?.Invoke());
+        OnPlayListAddDone?.Invoke();
         return Task.CompletedTask;
     }
 
@@ -1374,7 +1365,7 @@ public static class Utils
     {
         var parsedlyrics = Lyrics.Parse(lyricAllText);
         return parsedlyrics.Lyrics.Lines.Select(lyricsLine => new SongLyric
-        { LyricTime = lyricsLine.Timestamp.TimeOfDay, PureLyric = lyricsLine.Content, Translation = null })
+                { LyricTime = lyricsLine.Timestamp.TimeOfDay, PureLyric = lyricsLine.Content, Translation = null })
             .OrderBy(t => t.LyricTime)
             .ToList();
     }

@@ -76,14 +76,11 @@ public sealed partial class LocalMusicPage : Page
         var folderName = await StorageFolder.GetFolderFromPathAsync(Common.Setting.searchingDir);
         var tmp = await folderName.GetItemsAsync();
 
-        FileScanTask = Task.Run(() =>
+        FileScanTask = Task.Run(async () =>
         {
-            _ = Common.Invoke(() =>
-            {
-                FileLoadingIndicateRing.IsActive = true;
-                foreach (var item in tmp) GetSubFiles(item);
-                FileLoadingIndicateRing.IsActive = false;
-            }, CoreDispatcherPriority.Low);
+            Common.Invoke(() => FileLoadingIndicateRing.IsActive = true);
+            foreach (var item in tmp) await GetSubFiles(item);
+            Common.Invoke(() => FileLoadingIndicateRing.IsActive = false);
         });
     }
 
@@ -96,35 +93,38 @@ public sealed partial class LocalMusicPage : Page
         return false;
     }
 
-    private async void GetSubFiles(IStorageItem item)
+    private Task GetSubFiles(IStorageItem item)
     {
-        try
+        return Task.Run(async () =>
         {
-            switch (item)
+            try
             {
-                //检查文件扩展名，符合条件的才会在本地列表中显示
-                case StorageFile file when CheckFileExtensionName(file.Name):
+                switch (item)
                 {
-                    var hyPlayItem = await HyPlayList.LoadStorageFile(file);
-                    localHyItems.Add(hyPlayItem);
-                    var listViewPlay = new ListViewPlayItem(hyPlayItem.PlayItem.Name, index++,
-                        hyPlayItem.PlayItem.ArtistString);
-                    localItems.Add(listViewPlay);
-                    ListBoxLocalMusicContainer.Items?.Add(listViewPlay);
-                    break;
-                }
-                case StorageFolder folder:
-                {
-                    foreach (var subitems in await folder.GetItemsAsync())
-                        GetSubFiles(subitems);
-                    break;
+                    //检查文件扩展名，符合条件的才会在本地列表中显示
+                    case StorageFile file when CheckFileExtensionName(file.Name):
+                    {
+                        var hyPlayItem = await HyPlayList.LoadStorageFile(file);
+                        localHyItems.Add(hyPlayItem);
+                        var listViewPlay = new ListViewPlayItem(hyPlayItem.PlayItem.Name, index++,
+                            hyPlayItem.PlayItem.ArtistString);
+                        localItems.Add(listViewPlay);
+                        ListBoxLocalMusicContainer.Items?.Add(listViewPlay);
+                        break;
+                    }
+                    case StorageFolder folder:
+                    {
+                        foreach (var subitems in await folder.GetItemsAsync())
+                            GetSubFiles(subitems);
+                        break;
+                    }
                 }
             }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine(ex.Message);
-        }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+            }
+        });
     }
 
     private void ListBoxLocalMusicContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)

@@ -41,8 +41,6 @@ sealed partial class App : Application
     /// </summary>
     private ExtendedExecutionSession executionSession;
 
-    private bool isInBackground;
-
     public App()
     {
         InitializeComponent();
@@ -84,43 +82,24 @@ sealed partial class App : Application
 
     private void MemoryManagerOnAppMemoryUsageLimitChanging(object sender, AppMemoryUsageLimitChangingEventArgs e)
     {
-        _ = Common.Invoke(() =>
-        {
-            // Xbox 求你行行好,别杀我~ QAQ
-            if (isInBackground)
-            {
-                // 内存占用达到某个值
-                Common.CollectGarbage();
-                GC.Collect();
-            }
-        });
+        if (!Common.Setting.forceMemoryGarbage) return;
+        // Xbox 求你行行好,别杀我~ QAQ
+        if (!Common.IsInBackground) return;
+        // 内存占用达到某个值
+        Common.CollectGarbage();
+        GC.Collect();
+
     }
 
     private void MemoryManagerOnAppMemoryUsageIncreased(object sender, object e)
     {
-        _ = Common.Invoke(() =>
+        if (!Common.Setting.forceMemoryGarbage) return;
+        if (Common.IsInBackground)
         {
-            if (isInBackground)
-            {
-                // 内存占用达到某个值
-                Common.CollectGarbage();
-                GC.Collect();
-            }
-
-            /*
-                            // 追踪代码
-                            Crashes.TrackError(new Exception("MemoryManagerOnAppMemoryUsageIncreased"), new Dictionary<string, string>()
-                        {
-                            {"ListCount", HyPlayList.List.Count.ToString()},
-                            {"NowMemory", MemoryManager.AppMemoryUsage.ToString()},
-                            {"DesireMemory", MemoryManager.AppMemoryUsageLimit.ToString()},
-                            {"TotalCommitLimit", MemoryManager.GetAppMemoryReport().TotalCommitLimit.ToString()},
-                            {"IsInBackground", isInBackground.ToString()},
-                            {"DeviceFamily",AnalyticsInfo.VersionInfo.DeviceFamily},
-                            {"DeviceFamilyVersion",AnalyticsInfo.VersionInfo.DeviceFamilyVersion}
-                        });
-                        */
-        });
+            // 内存占用达到某个值
+            Common.CollectGarbage();
+            GC.Collect();
+        }
     }
 
 
@@ -142,44 +121,23 @@ sealed partial class App : Application
 
     private void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)
     {
-        isInBackground = false;
-        if (Common.Setting.forceMemoryGarbage)
+        if (Common.IsInBackground)
         {
-            InitializeThings();
-            Common.NavigateBack();
+            Common.IsInBackground = false;
+            Common.OnEnterForegroundFromBackground.Invoke();
         }
+        Common.IsInBackground = false;
+
+        if (!Common.Setting.forceMemoryGarbage) return;
+        InitializeThings();
+        Common.NavigateBack();
 
         //ClearExtendedExecution(executionSession);
     }
 
     private async void App_EnteredBackground(object sender, EnteredBackgroundEventArgs e)
     {
-        isInBackground = true;
-        /*
-        var delaySession = new ExtendedExecutionSession();
-        delaySession.Reason = ExtendedExecutionReason.Unspecified;
-        delaySession.Revoked += SessionRevoked;
-        var result = await delaySession.RequestExtensionAsync();
-        switch (result)
-        {
-            case ExtendedExecutionResult.Allowed:
-                executionSession = delaySession;
-                if (Common.Setting.forceMemoryGarbage)
-                {
-                    Common.CollectGarbage();
-                    GC.Collect();
-                }
-
-                break;
-            case ExtendedExecutionResult.Denied:
-                
-                //var toast = new Microsoft.Toolkit.Uwp.Notifications.ToastContentBuilder();
-                //toast.AddText("应用程序进入后台，有可能关闭");
-                //toast.Show();
-                
-                break;
-        }
-    */
+        Common.IsInBackground = true;
     }
 
     protected override void OnActivated(IActivatedEventArgs args)

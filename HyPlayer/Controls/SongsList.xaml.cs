@@ -177,16 +177,22 @@ public sealed partial class SongsList : UserControl, IDisposable
         if (playitem?.ItemType == HyPlayItemType.Local || playitem?.PlayItem == null)
         {
             if (MultiSelect) return;
-            IsManualSelect = false;
-            SongContainer.SelectedIndex = -1;
-            IsManualSelect = true;
+            Common.Invoke(() =>
+            {
+                IsManualSelect = false;
+                SongContainer.SelectedIndex = -1;
+                IsManualSelect = true;
+            });
             return;
         }
         var idx = VisibleSongs.ToList().FindIndex(t => t.sid == playitem.PlayItem.Id);
         if (idx == -1) return;
-        IsManualSelect = false;
-        SongContainer.SelectedIndex = idx;
-        IsManualSelect = true;
+        Common.Invoke(() =>
+        {
+            IsManualSelect = false;
+            SongContainer.SelectedIndex = idx;
+            IsManualSelect = true;
+        });
     }
 
     private void Songs_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)

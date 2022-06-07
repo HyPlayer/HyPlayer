@@ -61,9 +61,12 @@ public sealed partial class Home : Page
 
     private async void LoadLoginedContent()
     {
-        UnLoginedContent.Visibility = Visibility.Collapsed;
-        LoginedContent.Visibility = Visibility.Visible;
-        TbHelloUserName.Text = Common.LoginedUser.name;
+        Common.Invoke(() =>
+        {
+            UnLoginedContent.Visibility = Visibility.Collapsed;
+            LoginedContent.Visibility = Visibility.Visible;
+            TbHelloUserName.Text = Common.LoginedUser.name;
+        });
         //我们直接Batch吧
         try
         {
@@ -99,19 +102,23 @@ public sealed partial class Home : Page
             */
 
             //榜单
-            RankPlayList.Children.Clear();
-            foreach (var bditem in ret["/api/toplist"]["list"])
-                RankPlayList.Children.Add(new PlaylistItem(NCPlayList.CreateFromJson(bditem)));
-
+            Common.Invoke(() =>
+            {
+                RankPlayList.Children.Clear();
+                foreach (var bditem in ret["/api/toplist"]["list"])
+                    RankPlayList.Children.Add(new PlaylistItem(NCPlayList.CreateFromJson(bditem)));
+            });
 
             //推荐歌单加载部分 - 优先级稍微靠后下
             try
             {
                 var ret1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendResource);
-
-                RecommendSongListContainer.Children.Clear();
-                foreach (var item in ret1["recommend"])
-                    RecommendSongListContainer.Children.Add(new PlaylistItem(NCPlayList.CreateFromJson(item)));
+                Common.Invoke(() =>
+                {
+                    RecommendSongListContainer.Children.Clear();
+                    foreach (var item in ret1["recommend"])
+                        RecommendSongListContainer.Children.Add(new PlaylistItem(NCPlayList.CreateFromJson(item)));
+                });
             }
             catch (Exception ex)
             {
@@ -171,9 +178,8 @@ public sealed partial class Home : Page
         PersonalFM.InitPersonalFM();
     }
 
-    private void LikedSongListTapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e        )
+    private void LikedSongListTapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
     {
         Common.NavigatePage(typeof(SongListDetail), Common.MySongLists[0].plid);
-
     }
 }

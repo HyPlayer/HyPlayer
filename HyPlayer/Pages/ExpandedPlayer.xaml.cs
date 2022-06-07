@@ -46,7 +46,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     public SolidColorBrush ForegroundAccentTextBrush =
         Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush;
-    
+
     public SolidColorBrush ForegroundIdleTextBrush =
         Application.Current.Resources["TextFillColorTertiaryBrush"] as SolidColorBrush;
 
@@ -86,6 +86,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         HyPlayList.OnLyricLoaded += HyPlayList_OnLyricLoaded;
         Window.Current.SizeChanged += Current_SizeChanged;
         HyPlayList.OnTimerTicked += HyPlayList_OnTimerTicked;
+        Common.OnEnterForegroundFromBackground += () => OnSongChange(HyPlayList.NowPlayingItem);
     }
 
     public double showsize { get; set; }
@@ -93,57 +94,58 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     public void Dispose()
     {
+        HyPlayList.OnLyricChange -= RefreshLyricTime;
+        HyPlayList.OnPlayItemChange -= OnSongChange;
+        HyPlayList.OnLyricLoaded -= HyPlayList_OnLyricLoaded;
+        HyPlayList.OnTimerTicked -= HyPlayList_OnTimerTicked;
+        if (Window.Current != null)
+            Window.Current.SizeChanged -= Current_SizeChanged;
         _ = Common.Invoke(() =>
         {
-            HyPlayList.OnLyricChange -= RefreshLyricTime;
-            HyPlayList.OnPlayItemChange -= OnSongChange;
-            HyPlayList.OnLyricLoaded -= HyPlayList_OnLyricLoaded;
-            HyPlayList.OnTimerTicked -= HyPlayList_OnTimerTicked;
             ImageAlbum.Source = null;
             ImageAlbum.PlaceholderSource = null;
             Background = null;
-            if (Window.Current != null)
-                Window.Current.SizeChanged -= Current_SizeChanged;
-            _ = Common.Invoke(() =>
-            {
-                LyricBox.ItemsSource = null;
-                //LyricList.Clear();
-                if (Common.Setting.albumRotate)
-                    RotateAnimationSet.StartAsync();
-                if (Common.Setting.expandAlbumBreath)
-                {
-                    Storyboard ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
-                    ImageAlbumAni.Pause();
-                }
-            });
+            LyricBox.ItemsSource = null;
+            if (Common.Setting.albumRotate)
+                RotateAnimationSet.Stop();
+            if (!Common.Setting.expandAlbumBreath) return;
+            Storyboard ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
+            ImageAlbumAni.Pause();
         });
     }
 
     private void HyPlayList_OnPlay()
     {
-        if (Common.Setting.albumRotate)
-            //网易云音乐圆形唱片
-            RotateAnimationSet.StartAsync();
-        if (Common.Setting.expandAlbumBreath)
+        Common.Invoke(() =>
         {
-            Storyboard ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
-            ImageAlbumAni.Begin();
-        }
+            if (Common.Setting.albumRotate)
+                //网易云音乐圆形唱片
+                RotateAnimationSet.StartAsync();
+            if (Common.Setting.expandAlbumBreath)
+            {
+                Storyboard ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
+                ImageAlbumAni.Begin();
+            }
+        });
     }
 
     private void HyPlayList_OnPause()
     {
-        if (Common.Setting.albumRotate)
-            RotateAnimationSet.Stop();
-        if (Common.Setting.expandAlbumBreath)
+        Common.Invoke(() =>
         {
-            Storyboard ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
-            ImageAlbumAni.Pause();
-        }
+            if (Common.Setting.albumRotate)
+                RotateAnimationSet.Stop();
+            if (Common.Setting.expandAlbumBreath)
+            {
+                Storyboard ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
+                ImageAlbumAni.Pause();
+            }
+        });
     }
 
     private void HyPlayList_OnTimerTicked()
     {
+        if (Common.IsInBackground) return;
         if (sclock > 0) sclock--;
         if (needRedesign > 0)
         {
@@ -165,7 +167,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void HyPlayList_OnLyricLoaded()
     {
-        LoadLyricsBox();
+        Common.Invoke(LoadLyricsBox);
         needRedesign++;
     }
 
@@ -403,7 +405,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void RefreshLyricTime()
     {
-        UpdateFocusingLyric();
+        Common.Invoke(UpdateFocusingLyric);
     }
 
     private void UpdateFocusingLyric()
@@ -437,15 +439,23 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
         if (k >= 0)
         {
-            var ele = LyricBox.GetOrCreateElement(k) as FrameworkElement;
-            ele?.UpdateLayout();
-            var transform = ele?.TransformToVisual((UIElement)LyricBoxContainer.Content);
-            var position = transform?.TransformPoint(new Point(0, 0));
-
-            if (position.HasValue)
+            try
             {
-                LyricBoxContainer.ChangeView(null, position.Value.Y + MainGrid.ActualHeight / 8, null, false);
+                var ele = LyricBox.GetOrCreateElement(k) as FrameworkElement;
+                ele?.UpdateLayout();
+                var transform = ele?.TransformToVisual((UIElement)LyricBoxContainer.Content);
+                var position = transform?.TransformPoint(new Point(0, 0));
+
+                if (position.HasValue)
+                {
+                    LyricBoxContainer.ChangeView(null, position.Value.Y + MainGrid.ActualHeight / 8, null, false);
+                }
             }
+            catch (Exception e)
+            {
+                // ignore
+            }
+
         }
     }
 
@@ -471,6 +481,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         {
             source = new List<LyricItemModel>(HyPlayList.Lyrics.Select(c => new LyricItemModel(c)));
         }
+
         LyricBox.ItemsSource = source;
         LyricBox.Width = LyricWidth;
         lastlrcid = HyPlayList.NowPlayingItem.GetHashCode();
@@ -486,38 +497,46 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     public void OnSongChange(HyPlayItem mpi)
     {
-        TextBlockSinger.Content = mpi?.PlayItem?.ArtistString;
-        TextBlockSongTitle.Text = mpi?.PlayItem?.Name;
-        TextBlockAlbum.Content = mpi?.PlayItem?.AlbumString;
-
-        if (mpi?.PlayItem == null)
+        Common.Invoke(() =>
         {
-            //LyricList.Clear();
-            //LyricBox.Children.Clear();
-            LyricBox.ItemsSource = null;
+            TextBlockSinger.Content = mpi?.PlayItem?.ArtistString;
+            TextBlockSongTitle.Text = mpi?.PlayItem?.Name;
+            TextBlockAlbum.Content = mpi?.PlayItem?.AlbumString;
 
-            //LyricBox.Children.Add(new TextBlock() { Text = "当前暂无歌曲播放" });
-            ImageAlbum.Source = null;
-            return;
-        }
+            if (mpi?.PlayItem == null)
+            {
+                //LyricList.Clear();
+                //LyricBox.Children.Clear();
+                LyricBox.ItemsSource = null;
 
-        async void LoadLyricColor()
+                //LyricBox.Children.Add(new TextBlock() { Text = "当前暂无歌曲播放" });
+                ImageAlbum.Source = null;
+            }
+        });
+
+        if (mpi?.PlayItem == null) return;
+
+        void LoadLyricColor()
         {
-            if (await IsBrightAsync())
+            Common.Invoke(async () =>
             {
-                ForegroundAccentTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0, 0, 0));
-                ForegroundIdleTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(114, 0, 0, 0));
-                
-            }
-            else
-            {
-                ForegroundAccentTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
-                ForegroundIdleTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(66, 255, 255, 255));
-            }
-            TextBlockSongTitle.Foreground = ForegroundAccentTextBrush;
-            TextBlockSingerNameTip.Foreground = ForegroundIdleTextBrush;
-            TextBlockAlbumNameTip.Foreground = ForegroundIdleTextBrush;
-            LoadLyricsBox();
+                if (await IsBrightAsync())
+                {
+                    ForegroundAccentTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0, 0, 0));
+                    ForegroundIdleTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(114, 0, 0, 0));
+                }
+                else
+                {
+                    ForegroundAccentTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
+                    ForegroundIdleTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(66, 255, 255, 255));
+                }
+
+
+                TextBlockSongTitle.Foreground = ForegroundAccentTextBrush;
+                TextBlockSingerNameTip.Foreground = ForegroundIdleTextBrush;
+                TextBlockAlbumNameTip.Foreground = ForegroundIdleTextBrush;
+                LoadLyricsBox();
+            });
         }
 
         async void LoadCoverImage()
@@ -529,30 +548,36 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     var img = new BitmapImage();
                     await img.SetSourceAsync(
                         await HyPlayList.NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
-                    ImageAlbum.Source = img;
-                    if (Common.Setting.expandedPlayerBackgroundType == 0)
-                        Background = new ImageBrush
-                        { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                    Common.Invoke(() =>
+                    {
+                        ImageAlbum.Source = img;
+                        if (Common.Setting.expandedPlayerBackgroundType == 0)
+                            Background = new ImageBrush
+                            { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                    });
                 }
                 else
                 {
-                    ImageAlbum.PlaceholderSource = new BitmapImage(new Uri(mpi.PlayItem.Album.cover + "?param=" +
-                                                                           StaticSource
-                                                                               .PICSIZE_EXPANDEDPLAYER_PREVIEWALBUMCOVER));
-                    if (Common.Setting.expandedPlayerFullCover)
+                    Common.Invoke(() =>
                     {
-                        ImageAlbum.Source = new BitmapImage(new Uri(mpi.PlayItem.Album.cover));
-                    }
-                    else
-                    {
-                        ImageAlbum.Source = new BitmapImage(new Uri(mpi.PlayItem.Album.cover + "?param=" +
-                                                                    StaticSource
-                                                                        .PICSIZE_EXPANDEDPLAYER_COVER));
-                    }
+                        ImageAlbum.PlaceholderSource = new BitmapImage(new Uri(mpi.PlayItem.Album.cover + "?param=" +
+                                                                               StaticSource
+                                                                                   .PICSIZE_EXPANDEDPLAYER_PREVIEWALBUMCOVER));
+                        if (Common.Setting.expandedPlayerFullCover)
+                        {
+                            ImageAlbum.Source = new BitmapImage(new Uri(mpi.PlayItem.Album.cover));
+                        }
+                        else
+                        {
+                            ImageAlbum.Source = new BitmapImage(new Uri(mpi.PlayItem.Album.cover + "?param=" +
+                                                                        StaticSource
+                                                                            .PICSIZE_EXPANDEDPLAYER_COVER));
+                        }
 
-                    if (Common.Setting.expandedPlayerBackgroundType == 0)
-                        Background = new ImageBrush
-                        { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                        if (Common.Setting.expandedPlayerBackgroundType == 0)
+                            Background = new ImageBrush
+                            { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                    });
                 }
             }
             catch (Exception)
@@ -566,12 +591,15 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             var blanksize = LyricBoxContainer.ViewportHeight / 2;
             if (double.IsNaN(blanksize) || blanksize == 0) blanksize = Window.Current.Bounds.Height / 3;
 
-            LyricBoxHost.Margin = new Thickness(0, blanksize, 0, blanksize);
-            LyricBox.ItemsSource = new List<LyricItemModel>()
+            Common.Invoke(() =>
             {
-                new LyricItemModel(SongLyric.LoadingLyric)
-            };
-            LyricBox.Width = LyricWidth;
+                LyricBoxHost.Margin = new Thickness(0, blanksize, 0, blanksize);
+                LyricBox.ItemsSource = new List<LyricItemModel>()
+                {
+                    new LyricItemModel(SongLyric.LoadingLyric)
+                };
+                LyricBox.Width = LyricWidth;
+            });
         }
 
         needRedesign++;
@@ -860,7 +888,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             var Y = 0.299 * bytes[2] + 0.587 * bytes[1] + 0.114 * bytes[0];
             lastSongForBrush = HyPlayList.NowPlayingItem.PlayItem;
             if (Common.Setting.expandedPlayerBackgroundType == 1)
-                PageContainer.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, bytes[2], bytes[1], bytes[0]));
+                PageContainer.Background =
+                    new SolidColorBrush(Windows.UI.Color.FromArgb(255, bytes[2], bytes[1], bytes[0]));
             return Y >= 150;
         }
         catch

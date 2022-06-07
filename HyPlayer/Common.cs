@@ -39,12 +39,13 @@ using Microsoft.AppCenter.Crashes;
 
 namespace HyPlayer
 {
-    internal class Common
+    internal static class Common
     {
         public static CloudMusicApi ncapi = new();
         public static bool Logined = false;
         public static bool IsInFm = false;
         public static NCUser LoginedUser;
+        public static bool IsInBackground = false;
         public static ExpandedPlayer? PageExpandedPlayer;
         public static MainPage PageMain;
         public static PlayBar BarPlayBar;
@@ -63,6 +64,10 @@ namespace HyPlayer
         private static object previousNavigationItem;
         public static TimeSpan ABStartPoint = TimeSpan.Zero;
         public static TimeSpan ABEndPoint = TimeSpan.Zero;
+
+        public delegate void EnterForegroundFromBackgroundEvent();
+
+        public static EnterForegroundFromBackgroundEvent OnEnterForegroundFromBackground;
         public static ObservableCollection<string> Logs = new ObservableCollection<string>();
 
         public static string ABStartPointFriendlyValue
@@ -88,33 +93,36 @@ namespace HyPlayer
         public static IAsyncAction Invoke(Action action,
             CoreDispatcherPriority Priority = CoreDispatcherPriority.Normal)
         {
-            try
-            {
-                return CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(Priority,
-                    () => { action(); });
-            }
+            if (!IsInBackground)
+                try
+                {
+                    if (CoreApplication.Views.Count > 0)
+                        return CoreApplication.MainView.Dispatcher.RunAsync(Priority,
+                            () => { action(); });
+                }
 #if DEBUG
             catch
             {
 #else
-            catch(Exception e)
-            {
-                Crashes.TrackError(e,null,ErrorAttachmentLog.AttachmentWithText(e.InnerException?.ToString(),"inner"));
+                catch (Exception e)
+                {
+                    Crashes.TrackError(e, null,
+                        ErrorAttachmentLog.AttachmentWithText(e.InnerException?.ToString(), "inner"));
 #endif
 
-                /*
-                Invoke((async () =>
-                {
-                    await new ContentDialog
+                    /*
+                    Invoke((async () =>
                     {
-                        Title = "发生错误",
-                        Content = "Error: " + e.Message + "\r\n" + e.StackTrace,
-                        CloseButtonText = "关闭",
-                        DefaultButton = ContentDialogButton.Close
-                    }.ShowAsync();
-                }));
-                */
-            }
+                        await new ContentDialog
+                        {
+                            Title = "发生错误",
+                            Content = "Error: " + e.Message + "\r\n" + e.StackTrace,
+                            CloseButtonText = "关闭",
+                            DefaultButton = ContentDialogButton.Close
+                        }.ShowAsync();
+                    }));
+                    */
+                }
 
             return null;
         }
@@ -191,7 +199,7 @@ namespace HyPlayer
             GC.Collect();
         }
 
-        public static void NavigatePageResource(string resourceId)
+        public static async void NavigatePageResource(string resourceId)
         {
             switch (resourceId.Substring(0, 2))
             {
@@ -211,13 +219,9 @@ namespace HyPlayer
                     NavigatePage(typeof(Me), resourceId.Substring(2));
                     break;
                 case "ns":
-                    Invoke(async () =>
-                    {
-                        await HyPlayList.AppendNcSource(resourceId);
-                        HyPlayList.SongAppendDone();
-                        HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => "ns" + t.PlayItem.Id == resourceId));
-                    });
-
+                    await HyPlayList.AppendNcSource(resourceId);
+                    HyPlayList.SongAppendDone();
+                    HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => "ns" + t.PlayItem.Id == resourceId));
                     break;
                 case "ml":
                     NavigatePage(typeof(MVPage), resourceId.Substring(2));
@@ -331,7 +335,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
         public bool playButtonAccentColor
         {
             get => GetSettings("playButtonAccentColor", true);
@@ -341,10 +345,9 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
         public int expandedPlayerBackgroundType
         {
-            
             get => GetSettings("expandedPlayerBackgroundType", 0);
             set
             {
@@ -791,7 +794,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
         public bool toastLyric
         {
             get => GetSettings("toastLyric", false);

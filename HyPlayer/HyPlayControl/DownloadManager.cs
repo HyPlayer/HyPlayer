@@ -389,7 +389,6 @@ internal static class DownloadManager
             notifier.Show(toast);
             */
             Common.AddToTeachingTipLists("下载全部完成");
-
             return;
         }
 

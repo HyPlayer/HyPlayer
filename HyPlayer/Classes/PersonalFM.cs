@@ -34,33 +34,35 @@ internal static class PersonalFM
            await LoadNextFM();
     }
 
-    public static async Task<bool> LoadNextFM()
+    public static Task LoadNextFM()
     {
-        try
+        return Task.Run(async () =>
         {
-            if (HyPlayList.List.Count > 2)
-                HyPlayList.RemoveAllSong();
-            else if (HyPlayList.List.Count > 0) HyPlayList.List.RemoveAt(0);
-            if (HyPlayList.List.Count < 1)
+            try
             {
-                //只有一首需要请求下一首
-                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PersonalFm);
-                var song1 = json["data"][0];
-                var song2 = json["data"][1];
-                var item1 = HyPlayList.AppendNcSong(NCSong.CreateFromJson(song1));
-                var item2 = HyPlayList.AppendNcSong(NCSong.CreateFromJson(song2));
-                item1.ItemType = HyPlayItemType.Netease;
-                item2.ItemType = HyPlayItemType.Netease;
+                if (HyPlayList.List.Count > 2)
+                    HyPlayList.RemoveAllSong();
+                else if (HyPlayList.List.Count > 0) HyPlayList.List.RemoveAt(0);
+                if (HyPlayList.List.Count < 1)
+                {
+                    //只有一首需要请求下一首
+                    var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PersonalFm);
+                    var song1 = json["data"][0];
+                    var song2 = json["data"][1];
+                    var item1 = HyPlayList.AppendNcSong(NCSong.CreateFromJson(song1));
+                    var item2 = HyPlayList.AppendNcSong(NCSong.CreateFromJson(song2));
+                    item1.ItemType = HyPlayItemType.Netease;
+                    item2.ItemType = HyPlayItemType.Netease;
+                }
+                HyPlayList.SongAppendDone();
+                HyPlayList.SongMoveTo(0);
+                Common.IsInFm = true;
             }
-            HyPlayList.SongAppendDone();
-            HyPlayList.SongMoveTo(0);
-            Common.IsInFm = true;
-        }
-        catch (Exception e)
-        {
-            Common.AddToTeachingTipLists(e.Message, (e.InnerException ?? new Exception()).Message);
-        }
-        return true;
+            catch (Exception e)
+            {
+                Common.AddToTeachingTipLists(e.Message, (e.InnerException ?? new Exception()).Message);
+            }
+        });
     }
 
     private static void HyPlayList_OnSongMoveNext()

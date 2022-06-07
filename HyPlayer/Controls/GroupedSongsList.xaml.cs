@@ -129,7 +129,10 @@ public sealed partial class GroupedSongsList : IDisposable
         if (playitem?.ItemType == HyPlayItemType.Local || playitem?.PlayItem == null)
         {
             IsManualSelect = false;
-            SongContainer.SelectedIndex = -1;
+            Common.Invoke(()=>
+            {
+                SongContainer.SelectedIndex = -1;
+            });
             IsManualSelect = true;
             return;
         }

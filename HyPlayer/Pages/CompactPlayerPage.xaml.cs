@@ -116,10 +116,11 @@ namespace HyPlayer.Pages
         public CompactPlayerPage()
         {
             this.InitializeComponent();
-            HyPlayList.OnPlayPositionChange += position => NowProgress = position.TotalMilliseconds;
+            HyPlayList.OnPlayPositionChange +=
+                position => Common.Invoke(() => NowProgress = position.TotalMilliseconds);
             HyPlayList.OnPlayItemChange += OnChangePlayItem;
-            HyPlayList.OnPlay += () => PlayStateIcon.Glyph = "\uEDB4";
-            HyPlayList.OnPause += () => PlayStateIcon.Glyph = "\uEDB5";
+            HyPlayList.OnPlay += () => Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB4");
+            HyPlayList.OnPause += () => Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB5");
             HyPlayList.OnLyricChange += OnLyricChanged;
             CompactPlayerAni.Begin();
         }
@@ -127,8 +128,11 @@ namespace HyPlayer.Pages
         private void OnLyricChanged()
         {
             if (HyPlayList.Lyrics.Count <= HyPlayList.LyricPos) return;
-            LyricText = HyPlayList.Lyrics[HyPlayList.LyricPos].PureLyric;
-            LyricTranslation = HyPlayList.Lyrics[HyPlayList.LyricPos].Translation;
+            Common.Invoke(() =>
+            {
+                LyricText = HyPlayList.Lyrics[HyPlayList.LyricPos].PureLyric;
+                LyricTranslation = HyPlayList.Lyrics[HyPlayList.LyricPos].Translation;
+            });
         }
 
         public async void OnChangePlayItem(HyPlayItem item)
@@ -142,15 +146,19 @@ namespace HyPlayer.Pages
                     {
                         img = new BitmapImage();
                         await img.SetSourceAsync(
-                            await HyPlayList.NowPlayingStorageFile?.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999));
+                            await HyPlayList.NowPlayingStorageFile?.GetThumbnailAsync(ThumbnailMode.SingleItem,
+                                9999));
                     }
                     else
                     {
                         img = new BitmapImage(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover));
                     }
 
-            TotalProgress = item?.PlayItem?.LengthInMilliseconds ?? 0;
-            AlbumCover = new ImageBrush() { ImageSource = img, Stretch = Stretch.UniformToFill };
+            Common.Invoke(() =>
+            {
+                TotalProgress = item?.PlayItem?.LengthInMilliseconds ?? 0;
+                AlbumCover = new ImageBrush() { ImageSource = img, Stretch = Stretch.UniformToFill };
+            });
         }
 
         private void MovePrevious(object sender, RoutedEventArgs e)
