@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace HyPlayer.Classes;
 
 public static class Extensions

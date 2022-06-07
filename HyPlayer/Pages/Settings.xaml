@@ -8,7 +8,7 @@
     NavigationCacheMode="Disabled">
 
     <Grid>
-        <controls1:PivotView Grid.Row="1" FontFamily="Black">
+        <controls1:PivotView FontFamily="Black">
             <controls1:PivotView.Header>
                 <TextBlock
                     Margin="30,0,30,0"
@@ -95,11 +95,11 @@
 
                             <CheckBox
                                 x:Name="CheckBoxAlignment"
-                                Content="是否左对齐"
+                                Content="使用左对齐"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.lyricAlignment, Mode=TwoWay}" />
                             <!--<CheckBox
                         x:Name="CheckBoxLyricShadow"
-                        Content="是否产生阴影"
+                        Content="开启歌词阴影"
                         IsChecked="{x:Bind hyplayer:Common.Setting.lyricDropshadow, Mode=TwoWay}" />-->
                             <controls:RadioButtons
                                 Margin="0,30,0,0"
@@ -114,9 +114,9 @@
                             </controls:RadioButtons>
                             <CheckBox
                                 Checked="HotLyricOnStartUp_Checked"
-                                Content="是否开启时启动热词"
+                                Content="开启时启动热词"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.hotlyricOnStartup, Mode=TwoWay}" />
-                            <CheckBox Content="是否仍旧使用 Toast 歌词 (不推荐)" IsChecked="{x:Bind hyplayer:Common.Setting.noUseHotLyric, Mode=TwoWay}" />
+                            <CheckBox Content="仍旧使用 Toast 歌词 (不推荐)" IsChecked="{x:Bind hyplayer:Common.Setting.noUseHotLyric, Mode=TwoWay}" />
                         </StackPanel>
                     </ScrollViewer>
                 </PivotItem>
@@ -223,9 +223,9 @@
                                 FontSize="20"
                                 FontWeight="ExtraBlack"
                                 Text="随机设置" />
-                            <CheckBox Content="是否使用不重复随机" IsChecked="{x:Bind hyplayer:Common.Setting.shuffleNoRepeating, Mode=TwoWay}" />
+                            <CheckBox Content="使用不重复随机" IsChecked="{x:Bind hyplayer:Common.Setting.shuffleNoRepeating, Mode=TwoWay}" />
                             <CheckBox
-                                Content="是否显示随机列表"
+                                Content="显示随机列表"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.displayShuffledList, Mode=TwoWay}"
                                 Visibility="{x:Bind hyplayer:Common.Setting.shuffleNoRepeating, Mode=OneWay}" />
                         </StackPanel>
@@ -254,7 +254,7 @@
                                 <RadioButton Content="亮色" />
                                 <RadioButton Content="暗色" />
                             </controls:RadioButtons>
-                            <CheckBox Content="播放按钮是否着强调色" IsChecked="{x:Bind hyplayer:Common.Setting.playButtonAccentColor, Mode=TwoWay}" />
+                            <CheckBox Content="播放按钮着强调色" IsChecked="{x:Bind hyplayer:Common.Setting.playButtonAccentColor, Mode=TwoWay}" />
                             <TextBlock Text="播放背景" FontSize="16" />
                             <controls:RadioButtons
                                 FontSize="20"
@@ -413,11 +413,21 @@
                                     <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE897;" />
                                 </Button>
                             </Grid>
-                            <CheckBox Content="是否下载歌词" IsChecked="{x:Bind hyplayer:Common.Setting.downloadLyric, Mode=TwoWay}" />
-                            <CheckBox Content="是否下载翻译" IsChecked="{x:Bind hyplayer:Common.Setting.downloadTranslation, Mode=TwoWay}" />
-                            <CheckBox Content="是否写音乐信息" IsChecked="{x:Bind hyplayer:Common.Setting.writedownloadFileInfo, Mode=TwoWay}" />
-                            <CheckBox Content="是否写网易云音乐信息" IsChecked="{x:Bind hyplayer:Common.Setting.write163Info, Mode=TwoWay}" />
-                            <CheckBox Content="是否使用 GBK 写内容" IsChecked="{x:Bind hyplayer:Common.Setting.usingGBK, Mode=TwoWay}" />
+                            <controls:RadioButtons
+                                Margin="0,30,0,0"
+                                FontSize="13"
+                                Header="下载重名解决方法"
+                                MaxColumns="4"
+                                SelectedIndex="{x:Bind hyplayer:Common.Setting.downloadNameOccupySolution, Mode=TwoWay}">
+                                <RadioButton Content="跳过" FontWeight="Normal" />
+                                <RadioButton Content="覆盖" FontWeight="Normal" />
+                                <RadioButton Content="追加 ID" FontWeight="Normal" />
+                            </controls:RadioButtons>
+                            <CheckBox Content="下载歌词" IsChecked="{x:Bind hyplayer:Common.Setting.downloadLyric, Mode=TwoWay}" />
+                            <CheckBox Content="下载翻译" IsChecked="{x:Bind hyplayer:Common.Setting.downloadTranslation, Mode=TwoWay}" />
+                            <CheckBox Content="写音乐信息" IsChecked="{x:Bind hyplayer:Common.Setting.writedownloadFileInfo, Mode=TwoWay}" />
+                            <CheckBox Content="写网易云音乐信息" IsChecked="{x:Bind hyplayer:Common.Setting.write163Info, Mode=TwoWay}" />
+                            <CheckBox Content="使用 GBK 写内容 (请勿开启)" IsChecked="{x:Bind hyplayer:Common.Setting.usingGBK, Mode=TwoWay}" />
                             <Button
                                 x:Name="ClearHistory"
                                 Click="ClearHistory_Click"
@@ -461,39 +471,39 @@
                             </Grid>
                             <!--<CheckBox
                         x:Name="LazySongUrlGetCheck"
-                        Content="是否在播放时才获取播放链接"
+                        Content="在播放时才获取播放链接"
                         IsChecked="{x:Bind hyplayer:Common.Setting.songUrlLazyGet, Mode=TwoWay}" />-->
                             <CheckBox
                                 x:Name="XboxPointerSet"
-                                Content="Xbox上是否隐藏指针（不要开启!）"
+                                Content="Xbox上隐藏指针（不要开启!）"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.xboxHidePointer, Mode=TwoWay}" />
                             <CheckBox
                                 x:Name="ForceMemoryCollect"
-                                Content="是否频繁内存回收 (开启后可能会频繁出现页面重载现象)"
+                                Content="频繁内存回收 (开启后可能会频繁出现页面重载现象)"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.forceMemoryGarbage, Mode=TwoWay}" />
-                            <CheckBox Content="是否开启高级音乐历史存储 (超过 100 首)" IsChecked="{x:Bind hyplayer:Common.Setting.advancedMusicHistoryStorage, Mode=TwoWay}" />
+                            <CheckBox Content="开启高级音乐历史存储 (超过 100 首)" IsChecked="{x:Bind hyplayer:Common.Setting.advancedMusicHistoryStorage, Mode=TwoWay}" />
 
                             <CheckBox
                                 x:Name="CBSongCacheEnable"
-                                Content="是否开启播放缓存 (可能造成播放前空白)"
+                                Content="开启播放缓存 (可能造成播放前空白)"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.enableCache, Mode=TwoWay}" />
                             <CheckBox
                                 x:Name="ControlSoundCheck"
                                 Checked="ControlSoundChecked"
-                                Content="是否开启 UI 音效"
+                                Content="开启 UI 音效"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.uiSound, Mode=TwoWay}"
                                 Unchecked="ControlSoundUnChecked" />
                             <CheckBox
                                 x:Name="CBOldSMTC"
-                                Content="是否同时开启传统SMTC控制 (可能会减小后台闪退几率,重启后生效)"
+                                Content="同时开启传统SMTC控制 (可能会减小后台闪退几率,重启后生效)"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.ancientSMTC, Mode=TwoWay}" />
-                            <CheckBox Content="是否启用安全本地文件访问 (可能会提高内存占用)" IsChecked="{x:Bind hyplayer:Common.Setting.safeFileAccess, Mode=TwoWay}" />
-                            <CheckBox Content="是否进行听歌打卡 (将会把听歌数据上传网易云音乐同步)" IsChecked="{x:Bind hyplayer:Common.Setting.doScrobble, Mode=TwoWay}" />
+                            <CheckBox Content="启用安全本地文件访问 (可能会提高内存占用)" IsChecked="{x:Bind hyplayer:Common.Setting.safeFileAccess, Mode=TwoWay}" />
+                            <CheckBox Content="进行听歌打卡 (将会把听歌数据上传网易云音乐同步)" IsChecked="{x:Bind hyplayer:Common.Setting.doScrobble, Mode=TwoWay}" />
 
                             <CheckBox Content="SMTC 更新进度条 (使用「热词」时需开启)" IsChecked="{x:Bind hyplayer:Common.Setting.progressInSMTC, Mode=TwoWay}" />
                             <CheckBox
                                 x:Name="HighQualityCoverInSMTC"
-                                Content="是否输出高清图片到SMTC"
+                                Content="输出高清图片到SMTC"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.highQualityCoverInSMTC, Mode=TwoWay}" />
                             <Button
                                 x:Name="RestartBtn"

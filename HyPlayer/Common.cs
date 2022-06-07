@@ -520,6 +520,13 @@ namespace HyPlayer
             get => GetSettings("lyricColor", 0);
             set => ApplicationData.Current.LocalSettings.Values["lyricColor"] = value;
         }
+        
+        public int downloadNameOccupySolution
+        {
+            get => GetSettings("downloadNameOccupySolution", 0);
+            set => ApplicationData.Current.LocalSettings.Values["downloadNameOccupySolution"] = value;
+        }
+
 
         public bool albumRotate
         {

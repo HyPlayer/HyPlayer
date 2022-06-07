@@ -106,13 +106,13 @@ internal class DownloadObject
     }
 
     private async void WriteInfoToFile()
-    {        
+    {
         try
         {
             await Task.Delay(1000);
             // 脱裤子放屁， 等他一会儿再读会不会读的更通顺一点
             var file = File.Create(
-            new UwpStorageFileAbstraction(await StorageFile.GetFileFromPathAsync(fullpath)));
+                new UwpStorageFileAbstraction(await StorageFile.GetFileFromPathAsync(fullpath)));
             if (Common.Setting.write163Info)
                 The163KeyHelper.TrySetMusicInfo(file.Tag, dontuseme);
             //写相关信息
@@ -167,7 +167,8 @@ internal class DownloadObject
                     // 这个也是纯音乐
                     return;
                 }
-                var lrc = Utils.ConvertPureLyric(json["lrc"]["lyric"].ToString());                
+
+                var lrc = Utils.ConvertPureLyric(json["lrc"]["lyric"].ToString());
                 if (Common.Setting.downloadTranslation && json["tlyric"]?["lyric"] != null)
                     Utils.ConvertTranslation(json["tlyric"]["lyric"].ToString(), lrc);
                 var lrctxt = string.Join("\r\n", lrc.Select(t =>
@@ -300,6 +301,22 @@ internal class DownloadObject
                 var s = ses[index];
                 folderName += "/" + s;
                 nowFolder = await nowFolder.CreateFolderAsync(s, CreationCollisionOption.OpenIfExists);
+            }
+
+            if (await nowFolder.TryGetItemAsync(Path.GetFileName(filename)) != null)
+            {
+                switch (Common.Setting.downloadNameOccupySolution)
+                {
+                    case 0:
+                        throw new Exception("文件已存在,跳过");
+                        break;
+                    case 1:
+                        await (await nowFolder.GetFileAsync(Path.GetFileName(filename))).DeleteAsync();
+                        break;
+                    case 2:
+                        filename = Path.GetFileNameWithoutExtension(filename) + ncsong.sid + "." + Path.GetExtension(filename);
+                        break;
+                }
             }
 
             downloadOperation = DownloadManager.Downloader.CreateDownload(
