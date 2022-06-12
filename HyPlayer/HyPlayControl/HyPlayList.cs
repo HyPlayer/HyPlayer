@@ -1248,11 +1248,8 @@ public static class HyPlayList
                 out var mi))
         {
             //TagLib.File afi = TagLib.File.Create(new UwpStorageFileAbstraction(sf), ReadStyle.Average);
-            string[] contributingArtistsKey = { "System.Music.Artist" };
-            var contributingArtistsProperty =
-                await mdp.RetrievePropertiesAsync(contributingArtistsKey);
             var contributingArtists =
-                contributingArtistsProperty["System.Music.Artist"] as string[] ?? new[] { "未知歌手" };
+               mdp.Producers as string[] ?? new[] { "未知歌手" };
 
 
             var hyPlayItem = new HyPlayItem
