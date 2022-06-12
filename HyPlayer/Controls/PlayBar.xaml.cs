@@ -63,8 +63,11 @@ public sealed partial class PlayBar
 
     private void HyPlayListOnOnSongRemoveAll()
     {
-        PlayItems.Clear();
-        PlayListTitle.Text = "播放列表";
+        Common.Invoke(() =>
+        {
+            PlayItems.Clear();
+            PlayListTitle.Text = "播放列表";
+        });
     }
 
 
@@ -288,12 +291,16 @@ public sealed partial class PlayBar
                 return;
             }
 
+            TextBlockTotalTime.Text =
+                TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds)
+                    .ToString(@"hh\:mm\:ss");
+
             TbSingerName.Content = HyPlayList.NowPlayingItem.PlayItem.ArtistString;
             TbSongName.Text = HyPlayList.NowPlayingItem.PlayItem.Name;
             TbAlbumName.Content = HyPlayList.NowPlayingItem.PlayItem.AlbumString;
-            ApplicationView.GetForCurrentView().Title = HyPlayList.NowPlayingItem.PlayItem.ArtistString + " - " +
-                                                        HyPlayList.NowPlayingItem.PlayItem.Name;
         });
+        if (HyPlayList.NowPlayingItem.PlayItem == null) return;
+
         try
         {
             if (!Common.Setting.noImage)
@@ -313,6 +320,9 @@ public sealed partial class PlayBar
                                                     StaticSource.PICSIZE_PLAYBAR_ALBUMCOVER));
                     });
                 }
+
+            ApplicationView.GetForCurrentView().Title = HyPlayList.NowPlayingItem.PlayItem.ArtistString + " - " +
+                                                        HyPlayList.NowPlayingItem.PlayItem.Name;
         }
         catch (Exception)
         {
@@ -689,7 +699,7 @@ public sealed partial class PlayBar
 
     private void BtnPlayRollType_OnClick(object sender, RoutedEventArgs e)
     {
-        if (Common.IsInFm.ToString() != "true")
+        if (!Common.IsInFm)
         {
             switch (NowPlayType)
             {
