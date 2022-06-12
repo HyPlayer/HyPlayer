@@ -98,7 +98,6 @@
                         <controls1:SelectableTextBox
                             x:Name="TextBoxPLName"
                             Margin="15,0,0,0"
-                            FontFamily="Bahnschrift SemiBold"
                             FontSize="36"
                             FontWeight="Bold"
                             Foreground="{ThemeResource DefaultTextForegroundThemeBrush}"
@@ -155,6 +154,10 @@
                                         Text="播放全部" />
                                 </StackPanel>
                             </Button>
+                            <Button
+                                Click="BtnAddAll_Clicked"
+                                Content="添加全部"
+                                Style="{StaticResource ButtonRevealStyle}" />
                             <ToggleButton
                                 x:Name="ToggleButtonLike"
                                 Click="LikeBtnClick"

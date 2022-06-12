@@ -316,10 +316,23 @@ public sealed partial class SongListDetail : Page, IDisposable
             var dp = new DataPackage();
             dp.Properties.Title = playList.name;
             dp.SetWebLink(new Uri("https://music.163.com/#/playlist?id=" +
-                                       playList.plid));
+                                  playList.plid));
             var request = args.Request;
             request.Data = dp;
         };
         DataTransferManager.ShowShareUI();
+    }
+
+    private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
+    {
+        if (playList.plid != "-666")
+        {
+            await HyPlayList.AppendPlayList(playList.plid);
+        }
+        else
+        {
+            HyPlayList.AppendNcSongs(Songs.ToList());
+        }
+        HyPlayList.SongAppendDone();
     }
 }
