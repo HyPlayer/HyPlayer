@@ -456,7 +456,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             {
                 // ignore
             }
-
         }
     }
 
@@ -556,7 +555,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         ImageAlbum.Source = img;
                         if (Common.Setting.expandedPlayerBackgroundType == 0)
                             Background = new ImageBrush
-                            { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                                { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                     });
                 }
                 else
@@ -579,7 +578,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
                         if (Common.Setting.expandedPlayerBackgroundType == 0)
                             Background = new ImageBrush
-                            { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                                { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                     });
                 }
             }
@@ -703,21 +702,19 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         {
             if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
             {
-                if (HyPlayList.NowPlayingItem.PlayItem.Artist[0].Type == HyPlayItemType.Radio)
-                {
-                    Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.PlayItem.Artist[0].id);
-                }
-                else
-                {
-                    if (HyPlayList.NowPlayingItem.PlayItem.Album.id != "0")
-                        Common.NavigatePage(typeof(AlbumPage),
-                            HyPlayList.NowPlayingItem.PlayItem.Album.id);
-                }
-
-                if (Common.Setting.forceMemoryGarbage)
-                    Common.NavigatePage(typeof(BlankPage));
-                Common.BarPlayBar.CollapseExpandedPlayer();
+                if (HyPlayList.NowPlayingItem.PlayItem.Album.id != "0")
+                    Common.NavigatePage(typeof(AlbumPage),
+                        HyPlayList.NowPlayingItem.PlayItem.Album.id);
             }
+
+            if (HyPlayList.NowPlayingItem.PlayItem.Artist[0].Type == HyPlayItemType.Radio)
+            {
+                Common.NavigatePage(typeof(RadioPage), HyPlayList.NowPlayingItem.PlayItem.Album.id);
+            }
+
+            if (Common.Setting.forceMemoryGarbage)
+                Common.NavigatePage(typeof(BlankPage));
+            Common.BarPlayBar.CollapseExpandedPlayer();
         }
         catch
         {
@@ -730,26 +727,24 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         {
             if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
             {
-                if (HyPlayList.NowPlayingItem.PlayItem.Artist[0].Type == HyPlayItemType.Radio)
+                if (HyPlayList.NowPlayingItem.PlayItem.Artist.Count > 1)
                 {
-                    Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.PlayItem.Artist[0].id);
-                }
-                else
-                {
-                    if (HyPlayList.NowPlayingItem.PlayItem.Artist.Count > 1)
-                    {
-                        await new ArtistSelectDialog(HyPlayList.NowPlayingItem.PlayItem.Artist).ShowAsync();
-                        return;
-                    }
-
-                    Common.NavigatePage(typeof(ArtistPage),
-                        HyPlayList.NowPlayingItem.PlayItem.Artist[0].id);
+                    await new ArtistSelectDialog(HyPlayList.NowPlayingItem.PlayItem.Artist).ShowAsync();
+                    return;
                 }
 
-                if (Common.Setting.forceMemoryGarbage)
-                    Common.NavigatePage(typeof(BlankPage));
-                Common.BarPlayBar.CollapseExpandedPlayer();
+                Common.NavigatePage(typeof(ArtistPage),
+                    HyPlayList.NowPlayingItem.PlayItem.Artist[0].id);
             }
+
+            if (HyPlayList.NowPlayingItem.PlayItem.Artist[0].Type == HyPlayItemType.Radio)
+            {
+                Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.PlayItem.Artist[0].id);
+            }
+
+            if (Common.Setting.forceMemoryGarbage)
+                Common.NavigatePage(typeof(BlankPage));
+            Common.BarPlayBar.CollapseExpandedPlayer();
         }
         catch
         {

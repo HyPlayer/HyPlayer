@@ -189,6 +189,12 @@ public sealed partial class AlbumPage : Page, IDisposable
             new Dictionary<string, object>
                 { { "id", albumid }, { "t", BtnSub.IsChecked.GetValueOrDefault(false) ? "1" : "0" } });
     }
+
+    private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
+    {
+        await HyPlayList.AppendNcSource("al" + Album.id);
+        HyPlayList.SongAppendDone();
+    }
 }
 
 public class DiscSongs : List<NCAlbumSong>

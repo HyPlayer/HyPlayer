@@ -65,6 +65,10 @@
                                 Content="播放全部"
                                 Style="{StaticResource ButtonRevealStyle}" />
                             <Button
+                                Click="BtnAddAll_Clicked"
+                                Content="添加全部"
+                                Style="{StaticResource ButtonRevealStyle}" />
+                            <Button
                                 Click="Button_Click"
                                 Content="排序"
                                 Style="{StaticResource ButtonRevealStyle}" />

@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -96,11 +97,15 @@ public sealed partial class RadioPage : Page, IDisposable
         LoadProgram();
     }
 
-    private void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
+    private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
         try
         {
-            HyPlayList.AppendNcSongs(Songs);
+            await HyPlayList.AppendNcSource("rd" + Radio.id);
+            if (asc)
+            {
+                HyPlayList.List.Reverse();
+            }
             HyPlayList.SongAppendDone();
             HyPlayList.SongMoveTo(0);
         }
@@ -122,5 +127,11 @@ public sealed partial class RadioPage : Page, IDisposable
         i = 0;
         asc = !asc;
         LoadProgram();
+    }
+
+    private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
+    {
+        await HyPlayList.AppendRadioList(Radio.id);
+        HyPlayList.SongAppendDone();
     }
 }

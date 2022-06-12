@@ -1146,7 +1146,7 @@ public static class HyPlayList
         return false;
     }
 
-    private static async Task<bool> AppendRadioList(string radioId, bool asc = false)
+    public static async Task<bool> AppendRadioList(string radioId, bool asc = false)
     {
         try
         {
