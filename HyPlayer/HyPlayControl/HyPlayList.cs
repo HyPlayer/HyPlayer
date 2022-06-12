@@ -585,6 +585,7 @@ public static class HyPlayList
                     else
                         tag = $"{bitrate / 1000}K";
                     if (bitrate == 0) tag = "在线";
+                    NowPlayingItem.PlayItem.Tag = tag;
                     _ = Common.Invoke(() => { Common.BarPlayBar.TbSongTag.Text = tag; });
                 }
                 else

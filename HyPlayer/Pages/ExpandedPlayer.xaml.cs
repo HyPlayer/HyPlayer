@@ -371,6 +371,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
+        Common.IsInBackground = false;
         Common.PageExpandedPlayer = this;
         Window.Current.SetTitleBar(AppTitleBar);
         if (Common.Setting.lyricAlignment)

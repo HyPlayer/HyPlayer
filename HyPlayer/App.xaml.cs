@@ -135,7 +135,7 @@ sealed partial class App : Application
         //ClearExtendedExecution(executionSession);
     }
 
-    private async void App_EnteredBackground(object sender, EnteredBackgroundEventArgs e)
+    private void App_EnteredBackground(object sender, EnteredBackgroundEventArgs e)
     {
         Common.IsInBackground = true;
     }

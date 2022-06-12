@@ -528,16 +528,15 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="500" />
                             </Grid.ColumnDefinitions>
-                            <Image
-                                Grid.Column="1"
+                            <StackPanel Orientation="Vertical" Grid.Column="1">
+                                <Image
                                 Width="400"
                                 Height="400"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Top"
                                 Source="/Assets/icon.png" />
                             <RichTextBlock
-                                Grid.Column="1"
-                                Margin="0,400,10,0"
+                                Margin="0,0,10,0"
                                 HorizontalAlignment="Right"
                                 HorizontalTextAlignment="Right">
                                 <Paragraph
@@ -565,14 +564,13 @@
                             </RichTextBlock>
                             <TextBlock
                                 x:Name="VersionCode"
-                                Grid.Column="1"
-                                Margin="0,585,10,0"
+                                Margin="0,0,10,0"
                                 HorizontalAlignment="Right"
                                 HorizontalTextAlignment="Right" />
                             <TextBlock
                                 x:Name="DeviceInfo"
                                 Grid.Column="1"
-                                Margin="0,605,10,0"
+                                Margin="0,0,10,0"
                                 HorizontalAlignment="Right"
                                 HorizontalTextAlignment="Right"
                                 RightTapped="DeviceInfo_RightTapped">
@@ -581,17 +579,18 @@
                                         <MenuFlyoutItem
                                             Click="CopyDeviceCode_Click"
                                             Icon="Copy"
-                                            Style="{StaticResource MenuFlyoutItemRevealStyle}"
                                             Text="复制设备识别码" />
                                     </MenuFlyout>
                                 </TextBlock.ContextFlyout>
                             </TextBlock>
                             <controls1:SelectableTextBox
                                 Grid.Column="1"
-                                Margin="0,625,-30,0"
+                                Margin="0,0,-30,0"
                                 HorizontalAlignment="Right"
                                 HorizontalContentAlignment="Right"
                                 Text="用户交流反馈 QQ 群: 1145646224" />
+                            </StackPanel>
+                            
                             <StackPanel Grid.Column="0" Orientation="Vertical">
                                 <TextBlock
                                     Margin="15,0,30,0"
