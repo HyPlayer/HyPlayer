@@ -406,6 +406,8 @@
                                                     : 歌曲名<LineBreak />
                                                     &#x27A4;<Bold>{$INDEX}</Bold>
                                                     : 序号<LineBreak />
+                                                    &#x27A4;<Bold>{$CDNAME}</Bold>
+                                                    : CD 名称<LineBreak />
                                                 </Paragraph>
                                             </RichTextBlock>
                                         </Flyout>

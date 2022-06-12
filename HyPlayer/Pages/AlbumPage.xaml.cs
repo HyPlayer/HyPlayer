@@ -124,15 +124,16 @@ public sealed partial class AlbumPage : Page, IDisposable
                     IsVip = jsonSong["fee"]?.ToString() == "1",
                     LengthInMilliseconds = double.Parse(jsonSong["dt"].ToString()),
                     mvid = jsonSong["mv"]?.ToObject<int>() ?? -1,
-                    Order = jsonSong["no"]?.ToObject<int>() ?? 0,
+                    Order = idx++,
                     sid = jsonSong["id"].ToString(),
                     songname = jsonSong["name"].ToString(),
                     transname = string.Join(" / ",
                         jsonSong["tns"]?.ToArray().Select(t => t.ToString()) ?? Array.Empty<string>()),
                     Type = HyPlayItemType.Netease,
                     IsCloud = false,
-                    DiscName = jsonSong["cd"].ToString()
-                }).GroupBy(t => t.DiscName).OrderBy(t => t.Key)
+                    DiscName = jsonSong["cd"].ToString(),
+                    TrackId = jsonSong["no"].ToObject<int>()
+                }).ToList().GroupBy(t => t.DiscName).OrderBy(t => t.Key)
                 .Select(t => new DiscSongs(t) { Key = t.Key });
         }
         catch (Exception ex)

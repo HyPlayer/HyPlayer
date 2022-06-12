@@ -148,7 +148,9 @@ public class NCSong
 
     public int mvid;
     public int Order = 0;
+    public int TrackId = -1;
     public string sid;
+    public string CDName;
     public string songname;
     public string transname;
     public HyPlayItemType Type;
@@ -186,7 +188,9 @@ public class NCSong
             Type = HyPlayItemType.Netease,
             Album = NCAlbum.CreateFromJson(song[alpath]),
             sid = song["id"].ToString(),
+            TrackId = song["no"].ToObject<int>(),
             songname = song["name"].ToString(),
+            CDName = song["cd"].ToString(),
             Artist = new List<NCArtist>(),
             LengthInMilliseconds = double.Parse(song[dtpath].ToString())
         };
@@ -236,8 +240,10 @@ public class PlayItem
     public bool IsLocalFile;
     public double LengthInMilliseconds;
     public string Name;
+    public string CDName;
     public string Size;
     public string SubExt;
+    public int TrackId;
     public string Tag;
     public HyPlayItemType Type;
     public string Url;
@@ -258,7 +264,8 @@ public class PlayItem
             Artist = Artist,
             LengthInMilliseconds = LengthInMilliseconds,
             sid = Id,
-            songname = Name
+            songname = Name,
+            TrackId = TrackId
         };
     }
 }

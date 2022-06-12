@@ -39,7 +39,6 @@ public sealed partial class GroupedSongsList : IDisposable
             SetValue(GroupedSongsProperty, value);
             SongContainer.SelectedIndex = -1;
         }
-
     }
 
     public static readonly DependencyProperty ListSourceProperty = DependencyProperty.Register(
@@ -128,25 +127,25 @@ public sealed partial class GroupedSongsList : IDisposable
     {
         if (playitem?.ItemType == HyPlayItemType.Local || playitem?.PlayItem == null)
         {
-            IsManualSelect = false;
-            Common.Invoke(()=>
+            Common.Invoke(() =>
             {
+                IsManualSelect = false;
                 SongContainer.SelectedIndex = -1;
+                IsManualSelect = true;
             });
-            IsManualSelect = true;
+
             return;
         }
 
-        var idx = -1;
-        foreach (var discSongs in GroupedSongs.Source as IEnumerable<DiscSongs>)
+        NCAlbumSong selectedSong = null;
+        foreach (var discSongs in (GroupedSongs.Source as IEnumerable<DiscSongs>)!)
         {
-            int index = discSongs.FindIndex(t => t.sid == playitem.PlayItem.Id);
-            if (index != -1) idx = index;
+            var selected = discSongs.FirstOrDefault(t => t.sid == playitem.PlayItem.Id);
+            if (selected != null) selectedSong = selected;
         }
 
-        if (idx == -1) return;
         IsManualSelect = false;
-        SongContainer.SelectedIndex = idx;
+        SongContainer.SelectedIndex = selectedSong?.Order ?? -1;
         IsManualSelect = true;
     }
 
@@ -273,7 +272,7 @@ public sealed partial class GroupedSongsList : IDisposable
 
         SongContainer.ContextFlyout.ShowAt(element,
             new FlyoutShowOptions
-            { Position = e?.GetPosition(element) ?? new Point(element?.ActualWidth ?? 0, 80) });
+                { Position = e?.GetPosition(element) ?? new Point(element?.ActualWidth ?? 0, 80) });
     }
 
     private void Grid_PointerPressed(object sender, PointerRoutedEventArgs e)

@@ -226,6 +226,8 @@ public static class HyPlayList
         //SongMoveNext();
         if (_crashedTime == NowPlayingItem.PlayItem.Id)
         {
+            Common.AddToTeachingTipLists("播放失败 切到下一曲",
+                "歌曲" + NowPlayingItem.PlayItem.Name + "\r\n" + args?.ErrorMessage);
             MoveSongPointer();
             _crashedTime = "jump";
         }
@@ -242,6 +244,8 @@ public static class HyPlayList
                     Artist = NowPlayingItem.PlayItem.Artist,
                     LengthInMilliseconds = NowPlayingItem.PlayItem.LengthInMilliseconds,
                     sid = NowPlayingItem.PlayItem.Id,
+                    TrackId = NowPlayingItem.PlayItem.TrackId,
+                    CDName = NowPlayingItem.PlayItem.CDName,
                     songname = NowPlayingItem.PlayItem.Name
                 });
                 LoadPlayerSong();
@@ -316,6 +320,8 @@ public static class HyPlayList
                             Type = HyPlayItemType.Netease,
                             LengthInMilliseconds = Info.duration,
                             Id = Info.musicId.ToString(),
+                            TrackId = -1,
+                            CDName = "01",
                             Artist = null,
                             /*
                             size = sf.GetBasicPropertiesAsync()
@@ -969,6 +975,8 @@ public static class HyPlayList
                 //SubExt = json["data"][0]["type"].ToString().ToLowerInvariant(),
                 Id = ncSong.sid,
                 Name = ncSong.songname,
+                TrackId = ncSong.TrackId,
+                CDName = ncSong.CDName,
                 //Url = json["data"][0]["url"].ToString(),
                 LengthInMilliseconds = ncSong.LengthInMilliseconds
                 //Size = json["data"][0]["size"].ToString(),
@@ -1019,6 +1027,8 @@ public static class HyPlayList
                     //SubExt = token["type"].ToString(),
                     Id = ncSong.sid,
                     Name = ncSong.songname,
+                    TrackId = ncSong.TrackId,
+                    CDName = ncSong.CDName,
                     //url = token["url"].ToString(),
                     LengthInMilliseconds = ncSong.LengthInMilliseconds
                     //size = token["size"].ToString(),
@@ -1249,7 +1259,7 @@ public static class HyPlayList
         {
             //TagLib.File afi = TagLib.File.Create(new UwpStorageFileAbstraction(sf), ReadStyle.Average);
             var contributingArtists =
-               mdp.Producers as string[] ?? new[] { "未知歌手" };
+                mdp.Producers as string[] ?? new[] { "未知歌手" };
 
 
             var hyPlayItem = new HyPlayItem
@@ -1270,6 +1280,8 @@ public static class HyPlayList
                     {
                         name = mdp.Album
                     },
+                    TrackId = (int)mdp.TrackNumber,
+                    CDName = "01",
                     Url = sf.Path,
                     SubExt = sf.FileType,
                     Size = "0",
@@ -1305,6 +1317,8 @@ public static class HyPlayList
                 .GetResult()
                 .Size.ToString(),
             Name = mi.musicName,
+            TrackId = (int)mdp.TrackNumber,
+            CDName = "01",
             Tag = sf.Provider.DisplayName
         };
         hpi.Artist = mi.artist

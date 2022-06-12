@@ -6,7 +6,9 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Timers;
 using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
 using Windows.Storage.Streams;
@@ -30,6 +32,7 @@ internal class DownloadObject
     public NCSong ncsong;
 
     public int progress;
+    public bool completedFired = false;
 
     // 0 - 排队 1 - 下载中 2 - 下载完成  3 - 暂停
     public int Status;
@@ -52,12 +55,13 @@ internal class DownloadObject
     private void Wc_DownloadFileCompleted()
     {
         Status = 2;
-        Task.Run((() =>
+        DownloadManager.WritingTasks.Add(Task.Run(async () =>
         {
             if (Common.Setting.downloadLyric)
-                DownloadLyric();
+                await DownloadLyric().ConfigureAwait(false);
             if (Common.Setting.writedownloadFileInfo)
-                WriteInfoToFile();
+                await WriteInfoToFile().ConfigureAwait(false);
+            DownloadManager.WritingTasks.RemoveAll(t => t.IsCompleted);
         }));
 
         /*
@@ -105,98 +109,108 @@ internal class DownloadObject
         Common.AddToTeachingTipLists(filename + "下载完成");
     }
 
-    private async void WriteInfoToFile()
+    private Task WriteInfoToFile()
     {
-        try
+        return Task.Run(async () =>
         {
-            await Task.Delay(1000);
-            // 脱裤子放屁， 等他一会儿再读会不会读的更通顺一点
-            var file = File.Create(
-                new UwpStorageFileAbstraction(await StorageFile.GetFileFromPathAsync(fullpath)));
-            if (Common.Setting.write163Info)
-                The163KeyHelper.TrySetMusicInfo(file.Tag, dontuseme);
-            //写相关信息
-            file.Tag.Album = ncsong.Album.name;
-            file.Tag.Performers = ncsong.Artist.Select(t => t.name).ToArray();
-            file.Tag.Title = ncsong.songname;
-            var ras = RandomAccessStreamReference.CreateFromUri(new Uri(ncsong.Album.cover + "?param=" +
-                                                                        StaticSource
-                                                                            .PICSIZE_DOWNLOAD_ALBUMCOVER));
-            var httpStream = await ras.OpenReadAsync();
-            IRandomAccessStream outputStream;
-            if (httpStream.ContentType != "image/pjpeg")
+            try
             {
-                var bitmapInput = await (await BitmapDecoder.CreateAsync(CodecIds[httpStream.ContentType], httpStream))
-                    .GetSoftwareBitmapAsync();
-                outputStream = new InMemoryRandomAccessStream();
-                var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
-                encoder.SetSoftwareBitmap(bitmapInput);
-                await encoder.FlushAsync();
-            }
-            else
-            {
-                outputStream = httpStream;
-            }
-
-            file.Tag.Pictures = new IPicture[]
-            {
-                new Picture(ByteVector.FromStream(outputStream.AsStreamForRead()))
-            };
-            file.Tag.Pictures[0].MimeType = "image/jpeg";
-            file.Tag.Pictures[0].Description = "cover.jpg";
-            file.Save();
-        }
-        catch (Exception ex)
-        {
-            Common.AddToTeachingTipLists("写入音乐信息时出现错误", ex.Message);
-        }
-    }
-
-    private async void DownloadLyric()
-    {
-        //下载歌词
-        try
-        {
-            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Lyric,
-                new Dictionary<string, object> { { "id", ncsong.sid } });
-            if (!(json.ContainsKey("nolyric") && json["nolyric"].ToString().ToLower() == "true") &&
-                !(json.ContainsKey("uncollected") && json["uncollected"].ToString().ToLower() == "true"))
-            {
-                if (json["lrc"]["lyric"].ToString().Contains("[99:00.00]纯音乐，请欣赏"))
+                var file = File.Create(
+                    new UwpStorageFileAbstraction(await StorageFile.GetFileFromPathAsync(fullpath)));
+                if (Common.Setting.write163Info)
+                    The163KeyHelper.TrySetMusicInfo(file.Tag, dontuseme);
+                //写相关信息
+                file.Tag.Album = ncsong.Album.name;
+                file.Tag.Performers = ncsong.Artist.Select(t => t.name).ToArray();
+                file.Tag.Title = ncsong.songname;
+                file.Tag.Track = (uint)(ncsong.TrackId == -1 ? (ncsong.Order + 1) : ncsong.TrackId);
+                file.Tag.Disc = uint.Parse(Regex.Match(ncsong.CDName, "[0-9]+").Value);
+                file.Save();
+                var ras = RandomAccessStreamReference.CreateFromUri(new Uri(ncsong.Album.cover + "?param=" +
+                                                                            StaticSource
+                                                                                .PICSIZE_DOWNLOAD_ALBUMCOVER));
+                var httpStream = await ras.OpenReadAsync();
+                IRandomAccessStream outputStream;
+                if (httpStream.ContentType != "image/pjpeg")
                 {
-                    // 这个也是纯音乐
-                    return;
-                }
-
-                var lrc = Utils.ConvertPureLyric(json["lrc"]["lyric"].ToString());
-                if (Common.Setting.downloadTranslation && json["tlyric"]?["lyric"] != null)
-                    Utils.ConvertTranslation(json["tlyric"]["lyric"].ToString(), lrc);
-                var lrctxt = string.Join("\r\n", lrc.Select(t =>
-                {
-                    if (t.HaveTranslation && !string.IsNullOrWhiteSpace(t.Translation))
-                        return "[" + t.LyricTime.ToString(@"mm\:ss\.ff") + "]" + t.PureLyric + " 「" +
-                               t.Translation + "」";
-                    return "[" + t.LyricTime.ToString(@"mm\:ss\.ff") + "]" + t.PureLyric;
-                }));
-                var sf = await (await StorageFolder.GetFolderFromPathAsync(Path.GetDirectoryName(fullpath)))
-                    .CreateFileAsync(
-                        Path.GetFileName(Path.ChangeExtension(fullpath, "lrc")),
-                        CreationCollisionOption.ReplaceExisting);
-                if (Common.Setting.usingGBK)
-                {
-                    await FileIO.WriteBytesAsync(sf,
-                        Encoding.Convert(Encoding.UTF8, Encoding.GetEncoding("GBK"), Encoding.UTF8.GetBytes(lrctxt)));
+                    var bitmapInput =
+                        await (await BitmapDecoder.CreateAsync(CodecIds[httpStream.ContentType], httpStream))
+                            .GetSoftwareBitmapAsync();
+                    outputStream = new InMemoryRandomAccessStream();
+                    var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
+                    encoder.SetSoftwareBitmap(bitmapInput);
+                    await encoder.FlushAsync();
                 }
                 else
                 {
-                    await FileIO.WriteTextAsync(sf, lrctxt);
+                    outputStream = httpStream;
+                }
+
+                file.Tag.Pictures = new IPicture[]
+                {
+                    new Picture(ByteVector.FromStream(outputStream.AsStreamForRead()))
+                };
+                file.Tag.Pictures[0].MimeType = "image/jpeg";
+                file.Tag.Pictures[0].Description = "cover.jpg";
+                file.Save();
+            }
+            catch (Exception ex)
+            {
+                Common.AddToTeachingTipLists("写入音乐信息时出现错误", ex.Message);
+            }
+        });
+    }
+
+    private Task DownloadLyric()
+    {
+        //下载歌词
+        return Task.Run(async () =>
+        {
+            try
+            {
+                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Lyric,
+                    new Dictionary<string, object> { { "id", ncsong.sid } });
+                if (!(json.ContainsKey("nolyric") && json["nolyric"].ToString().ToLower() == "true") &&
+                    !(json.ContainsKey("uncollected") && json["uncollected"].ToString().ToLower() == "true"))
+                {
+                    if (json["lrc"]["lyric"].ToString().Contains("[99:00.00]纯音乐，请欣赏"))
+                    {
+                        // 这个也是纯音乐
+                        return;
+                    }
+
+                    var lrc = Utils.ConvertPureLyric(json["lrc"]["lyric"].ToString());
+                    if (Common.Setting.downloadTranslation && json["tlyric"]?["lyric"] != null)
+                        Utils.ConvertTranslation(json["tlyric"]["lyric"].ToString(), lrc);
+                    var lrctxt = string.Join("\r\n", lrc.Select(t =>
+                    {
+                        if (t.HaveTranslation && !string.IsNullOrWhiteSpace(t.Translation))
+                            return "[" + t.LyricTime.ToString(@"mm\:ss\.ff") + "]" + t.PureLyric + " 「" +
+                                   t.Translation + "」";
+                        return "[" + t.LyricTime.ToString(@"mm\:ss\.ff") + "]" + t.PureLyric;
+                    }));
+                    if (string.IsNullOrWhiteSpace(lrctxt)) return;
+                    var sf = await (await StorageFolder.GetFolderFromPathAsync(Path.GetDirectoryName(fullpath)))
+                        .CreateFileAsync(
+                            Path.GetFileName(Path.ChangeExtension(fullpath, "lrc")),
+                            CreationCollisionOption.ReplaceExisting);
+                    if (Common.Setting.usingGBK)
+                    {
+                        await FileIO.WriteBytesAsync(sf,
+                            Encoding.Convert(Encoding.UTF8, Encoding.GetEncoding("GBK"),
+                                Encoding.UTF8.GetBytes(lrctxt)));
+                    }
+                    else
+                    {
+                        await FileIO.WriteTextAsync(sf, lrctxt);
+                    }
                 }
             }
-        }
-        catch (Exception ex)
-        {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-        }
+            catch (Exception ex)
+            {
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            }
+        });
     }
 
     private void Wc_DownloadProgressChanged(DownloadOperation obj)
@@ -211,8 +225,11 @@ internal class DownloadObject
         TotalSize = obj.Progress.TotalBytesToReceive;
         HavedSize = obj.Progress.BytesReceived;
         progress = (int)(obj.Progress.BytesReceived * 100 / obj.Progress.TotalBytesToReceive);
-        if (TotalSize == HavedSize)
+        if (TotalSize == HavedSize && !completedFired)
+        {
+            completedFired = true;
             Wc_DownloadFileCompleted();
+        }
     }
 
     public static void DownloadStartToast(string songname)
@@ -281,6 +298,8 @@ internal class DownloadObject
                 Id = ncsong.sid,
                 Name = ncsong.songname,
                 Type = HyPlayItemType.Netease,
+                TrackId = ncsong.TrackId,
+                CDName = ncsong.CDName,
                 Url = json["data"][0]["url"].ToString(),
                 LengthInMilliseconds = ncsong.LengthInMilliseconds,
                 Size = json["data"][0]["size"].ToString()
@@ -290,7 +309,9 @@ internal class DownloadObject
                            .Replace("{$SINGER}", string.Join(';', ncsong.Artist.Select(t => t.name)).EscapeForPath())
                            .Replace("{$SONGNAME}", ncsong.songname.EscapeForPath())
                            .Replace("{$ALBUM}", ncsong.Album.name.EscapeForPath())
-                           .Replace("{$INDEX}", (ncsong.Order + 1).ToString().EscapeForPath())
+                           .Replace("{$INDEX}",
+                               (ncsong.TrackId == -1 ? (ncsong.Order + 1) : ncsong.TrackId).ToString().EscapeForPath())
+                           .Replace("{$CDNAME}", ncsong.CDName.EscapeForPath())
                        + "." +
                        json["data"][0]["type"].ToString().ToLowerInvariant();
             string folderName = Common.Setting.downloadDir;
@@ -314,7 +335,8 @@ internal class DownloadObject
                         await (await nowFolder.GetFileAsync(Path.GetFileName(filename))).DeleteAsync();
                         break;
                     case 2:
-                        filename = Path.GetFileNameWithoutExtension(filename) + ncsong.sid + "." + Path.GetExtension(filename);
+                        filename = Path.GetFileNameWithoutExtension(filename) + ncsong.sid + "." +
+                                   Path.GetExtension(filename);
                         break;
                 }
             }
@@ -338,9 +360,11 @@ internal class DownloadObject
 
 internal static class DownloadManager
 {
-    private static readonly bool Timered = false;
+    private static readonly Timer _timer = new Timer(1000);
+    private static bool Timered;
     public static List<DownloadObject> DownloadLists = new();
     public static BackgroundDownloader Downloader = new();
+    public static List<Task> WritingTasks = new();
 
     public static bool CheckDownloadAbilityAndToast()
     {
@@ -351,11 +375,16 @@ internal static class DownloadManager
     {
         if (!CheckDownloadAbilityAndToast()) return;
         if (!Timered)
-            HyPlayList.OnTimerTicked += Timer_Elapsed;
+        {
+            _timer.Elapsed += Timer_Elapsed;
+            _timer.Start();
+            Timered = true;
+        }
+
         DownloadLists.Add(new DownloadObject(song));
     }
 
-    private static void Timer_Elapsed()
+    private static void Timer_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
     {
         if (DownloadLists.Count == 0) return;
         if (DownloadLists[0].Status == 1) return;
@@ -406,6 +435,8 @@ internal static class DownloadManager
             notifier.Show(toast);
             */
             Common.AddToTeachingTipLists("下载全部完成");
+            _timer.Stop();
+            Timered = false;
             return;
         }
 
@@ -416,16 +447,13 @@ internal static class DownloadManager
     {
         if (!CheckDownloadAbilityAndToast()) return;
         if (!Timered)
-            HyPlayList.OnTimerTicked += Timer_Elapsed;
-        songs.ForEach(t => { DownloadLists.Add(new DownloadObject(t)); });
-    }
+        {
+            _timer.Elapsed += Timer_Elapsed;
+            _timer.Start();
+            Timered = true;
+        }
 
-    internal static void AddDownload(ObservableCollection<NCSong> songs)
-    {
-        if (!CheckDownloadAbilityAndToast()) return;
-        if (!Timered)
-            HyPlayList.OnTimerTicked += Timer_Elapsed;
-        foreach (var song in songs) DownloadLists.Add(new DownloadObject(song));
+        songs.ForEach(t => { DownloadLists.Add(new DownloadObject(t)); });
     }
 }
 
