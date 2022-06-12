@@ -126,29 +126,41 @@ internal class DownloadObject
                 file.Tag.Track = (uint)(ncsong.TrackId == -1 ? (ncsong.Order + 1) : ncsong.TrackId);
                 file.Tag.Disc = uint.Parse(Regex.Match(ncsong.CDName, "[0-9]+").Value);
                 file.Save();
-                var ras = RandomAccessStreamReference.CreateFromUri(new Uri(ncsong.Album.cover + "?param=" +
-                                                                            StaticSource
-                                                                                .PICSIZE_DOWNLOAD_ALBUMCOVER));
-                var httpStream = await ras.OpenReadAsync();
-                IRandomAccessStream outputStream;
-                if (httpStream.ContentType != "image/pjpeg")
+
+                Picture pic;
+                if (!DownloadManager.AlbumPicturesCache.ContainsKey(ncsong.Album.id))
                 {
-                    var bitmapInput =
-                        await (await BitmapDecoder.CreateAsync(CodecIds[httpStream.ContentType], httpStream))
-                            .GetSoftwareBitmapAsync();
-                    outputStream = new InMemoryRandomAccessStream();
-                    var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
-                    encoder.SetSoftwareBitmap(bitmapInput);
-                    await encoder.FlushAsync();
+                    var ras = RandomAccessStreamReference.CreateFromUri(new Uri(ncsong.Album.cover + "?param=" +
+                        StaticSource
+                            .PICSIZE_DOWNLOAD_ALBUMCOVER));
+                    var httpStream = await ras.OpenReadAsync();
+                    IRandomAccessStream outputStream;
+                    if (httpStream.ContentType != "image/pjpeg")
+                    {
+                        var bitmapInput =
+                            await (await BitmapDecoder.CreateAsync(CodecIds[httpStream.ContentType], httpStream))
+                                .GetSoftwareBitmapAsync();
+                        outputStream = new InMemoryRandomAccessStream();
+                        var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
+                        encoder.SetSoftwareBitmap(bitmapInput);
+                        await encoder.FlushAsync();
+                    }
+                    else
+                    {
+                        outputStream = httpStream;
+                    }
+
+                    pic = new Picture(ByteVector.FromStream(outputStream.AsStreamForRead()));
+                    DownloadManager.AlbumPicturesCache[ncsong.Album.id] = pic;
                 }
                 else
                 {
-                    outputStream = httpStream;
+                    pic = DownloadManager.AlbumPicturesCache[ncsong.Album.id];
                 }
 
                 file.Tag.Pictures = new IPicture[]
                 {
-                    new Picture(ByteVector.FromStream(outputStream.AsStreamForRead()))
+                    pic
                 };
                 file.Tag.Pictures[0].MimeType = "image/jpeg";
                 file.Tag.Pictures[0].Description = "cover.jpg";
@@ -156,6 +168,7 @@ internal class DownloadObject
             }
             catch (Exception ex)
             {
+                Common.ErrorMessageList.Add("写入音乐信息时出现错误" + ex.Message);
                 Common.AddToTeachingTipLists("写入音乐信息时出现错误", ex.Message);
             }
         });
@@ -354,6 +367,7 @@ internal class DownloadObject
         {
             Common.AddToTeachingTipLists("无法下载歌曲 " + ncsong.songname + "\n已自动将其从下载列表中移除", ex.Message);
             DownloadManager.DownloadLists.Remove(DownloadManager.DownloadLists.FirstOrDefault());
+            Common.ErrorMessageList.Add("无法下载歌曲 " + ncsong.songname + "\n已自动将其从下载列表中移除" + ex.Message);
         }
     }
 }
@@ -365,6 +379,7 @@ internal static class DownloadManager
     public static List<DownloadObject> DownloadLists = new();
     public static BackgroundDownloader Downloader = new();
     public static List<Task> WritingTasks = new();
+    public static Dictionary<string, Picture> AlbumPicturesCache = new();
 
     public static bool CheckDownloadAbilityAndToast()
     {
@@ -435,6 +450,7 @@ internal static class DownloadManager
             notifier.Show(toast);
             */
             Common.AddToTeachingTipLists("下载全部完成");
+            AlbumPicturesCache.Clear();
             _timer.Stop();
             Timered = false;
             return;
