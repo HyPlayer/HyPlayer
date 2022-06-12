@@ -90,7 +90,7 @@ public static class HyPlayList
             if (value == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
                 CreateShufflePlayLists();
             if (value != PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
-                Common.Invoke(() => OnPlayListAddDone?.Invoke());
+                OnPlayListAddDone?.Invoke();
         }
 
         get => (PlayMode)Common.Setting.songRollType;
@@ -224,10 +224,11 @@ public static class HyPlayList
     {
         //歌曲崩溃了的话就是这个
         //SongMoveNext();
+        Common.ErrorMessageList.Add("歌曲" + NowPlayingItem.PlayItem.Name + " " + args?.ErrorMessage);
         if (_crashedTime == NowPlayingItem.PlayItem.Id)
         {
             Common.AddToTeachingTipLists("播放失败 切到下一曲",
-                "歌曲" + NowPlayingItem.PlayItem.Name + "\r\n" + args?.ErrorMessage);
+                "歌曲" + NowPlayingItem.PlayItem.Name + "\r\n" + args?.ErrorMessage);            
             MoveSongPointer();
             _crashedTime = "jump";
         }

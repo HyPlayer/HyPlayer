@@ -64,6 +64,7 @@ namespace HyPlayer
         private static object previousNavigationItem;
         public static TimeSpan ABStartPoint = TimeSpan.Zero;
         public static TimeSpan ABEndPoint = TimeSpan.Zero;
+        public static List<string> ErrorMessageList = new List<string>();
 
         public delegate void EnterForegroundFromBackgroundEvent();
 
@@ -520,7 +521,7 @@ namespace HyPlayer
             get => GetSettings("lyricColor", 0);
             set => ApplicationData.Current.LocalSettings.Values["lyricColor"] = value;
         }
-        
+
         public int downloadNameOccupySolution
         {
             get => GetSettings("downloadNameOccupySolution", 0);

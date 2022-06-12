@@ -40,13 +40,13 @@ public class PureLyricInfo
 public class SongLyric
 {
     public static SongLyric PureSong = new()
-        { LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏" };
+    { LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏" };
 
     public static SongLyric NoLyric = new()
-        { LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏" };
+    { LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏" };
 
     public static SongLyric LoadingLyric = new()
-        { LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..." };
+    { LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..." };
 
     public bool HaveTranslation => !string.IsNullOrEmpty(Translation);
     public TimeSpan LyricTime;
@@ -188,9 +188,9 @@ public class NCSong
             Type = HyPlayItemType.Netease,
             Album = NCAlbum.CreateFromJson(song[alpath]),
             sid = song["id"].ToString(),
-            TrackId = song["no"].ToObject<int>(),
+            TrackId = song["no"]?.ToObject<int>() ?? -1,
             songname = song["name"].ToString(),
-            CDName = song["cd"].ToString(),
+            CDName = song["cd"]?.ToString() ?? "01",
             Artist = new List<NCArtist>(),
             LengthInMilliseconds = double.Parse(song[dtpath].ToString())
         };

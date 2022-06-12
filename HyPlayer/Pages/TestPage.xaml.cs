@@ -9,7 +9,9 @@ using HyPlayer.Classes;
 using Microsoft.AppCenter;
 using Microsoft.AppCenter.Utils;
 using Newtonsoft.Json;
+using System.Linq;
 using TagLib.NonContainer;
+using System.Collections.Generic;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -65,7 +67,8 @@ public sealed partial class TestPage : Page
             DeviceId = new EasClientDeviceInformation().Id.ToString(),
             IsInBackground = Common.IsInBackground,
             IsUsingCache = Common.Setting.enableCache,
-            IsLowCache = Common.Setting.forceMemoryGarbage
+            IsLowCache = Common.Setting.forceMemoryGarbage,
+            ErrorMessageList = Common.ErrorMessageList.TakeLast(15).ToList()
         }, Formatting.Indented);
         var file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("dump-" +
             DateTime.Now.ToString("yyyyMMddHHmmss") + "-" + Guid.NewGuid() + ".txt");
@@ -83,5 +86,6 @@ public sealed partial class TestPage : Page
         public bool IsInBackground { get; set; }
         public bool IsUsingCache { get; set; }
         public bool IsLowCache { get; set; }
+        public List<string> ErrorMessageList { get; set; }
     }
 }
