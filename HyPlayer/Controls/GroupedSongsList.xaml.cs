@@ -144,9 +144,12 @@ public sealed partial class GroupedSongsList : IDisposable
             if (selected != null) selectedSong = selected;
         }
 
-        IsManualSelect = false;
-        SongContainer.SelectedIndex = selectedSong?.Order ?? -1;
-        IsManualSelect = true;
+        Common.Invoke(() =>
+        {
+            IsManualSelect = false;
+            SongContainer.SelectedIndex = selectedSong?.Order ?? -1;
+            IsManualSelect = true;
+        });
     }
 
 
