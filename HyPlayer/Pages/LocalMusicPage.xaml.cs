@@ -2,9 +2,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.Storage;
+using Windows.Storage.Search;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -23,22 +26,20 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class LocalMusicPage : Page
 {
-    private readonly List<HyPlayItem> localHyItems;
-    private readonly List<ListViewPlayItem> localItems;
+    private readonly ObservableCollection<HyPlayItem> localHyItems;
     private Task FileScanTask;
     private int index;
+    private static string[] supportedFormats = { ".flac", ".mp3", ".ncm", ".ape", ".m4a", ".wav" };
 
     public LocalMusicPage()
     {
         InitializeComponent();
-        localItems = new List<ListViewPlayItem>();
-        localHyItems = new List<HyPlayItem>();
+        localHyItems = new ();
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
-        localItems.Clear();
         localHyItems.Clear();
         FileScanTask?.Dispose();
     }
@@ -52,7 +53,7 @@ public sealed partial class LocalMusicPage : Page
     private void Playall_Click(object sender, RoutedEventArgs e)
     {
         HyPlayList.RemoveAllSong();
-        localHyItems.AddRange(localHyItems);
+        HyPlayList.List.AddRange(localHyItems);
         HyPlayList.SongAppendDone();
         HyPlayList.SongMoveTo(0);
     }
@@ -61,7 +62,6 @@ public sealed partial class LocalMusicPage : Page
     {
         ListBoxLocalMusicContainer.SelectionChanged -= ListBoxLocalMusicContainer_SelectionChanged;
         if (ListBoxLocalMusicContainer.Items != null) ListBoxLocalMusicContainer.Items.Clear();
-        localItems.Clear();
         localHyItems.Clear();
         index = 0;
         LoadLocalMusic();
@@ -72,72 +72,45 @@ public sealed partial class LocalMusicPage : Page
     private async void LoadLocalMusic()
     {
         if (FileScanTask != null) FileScanTask.Dispose();
-
-        var folderName = await StorageFolder.GetFolderFromPathAsync(Common.Setting.searchingDir);
-        var tmp = await folderName.GetItemsAsync();
-
-        FileScanTask = Task.Run(async () =>
-        {
-            Common.Invoke(() => FileLoadingIndicateRing.IsActive = true);
-            foreach (var item in tmp) await GetSubFiles(item);
-            Common.Invoke(() => FileLoadingIndicateRing.IsActive = false);
-        });
-    }
-
-    private bool CheckFileExtensionName(string fileName)
-    {
-        string[] supportedFormats = { ".flac", ".mp3", ".ncm", ".ape", ".m4a", ".wav" };
-        foreach (var format in supportedFormats)
-            if (fileName.EndsWith(format)) //检测扩展名是否支持
-                return true;
-        return false;
-    }
-
-    private Task GetSubFiles(IStorageItem item)
-    {
-        return Task.Run(async () =>
+        ListBoxLocalMusicContainer.ItemsSource = localHyItems;
+        var folder = (!string.IsNullOrEmpty(Common.Setting.searchingDir))
+            ? await StorageFolder.GetFolderFromPathAsync(Common.Setting.searchingDir)
+            : KnownFolders.MusicLibrary;
+        // Use Query to boost? maybe?
+        FileLoadingIndicateRing.Visibility = Visibility.Visible;
+        FileLoadingIndicateRing.IsActive = true;
+        QueryOptions queryOptions = new QueryOptions(CommonFileQuery.DefaultQuery, supportedFormats);
+        queryOptions.FolderDepth = FolderDepth.Deep;
+        var files = await folder.CreateFileQueryWithOptions(queryOptions).GetFilesAsync();
+        foreach (var storageFile in files)
         {
             try
             {
-                switch (item)
-                {
-                    //检查文件扩展名，符合条件的才会在本地列表中显示
-                    case StorageFile file when CheckFileExtensionName(file.Name):
-                    {
-                        var hyPlayItem = await HyPlayList.LoadStorageFile(file);
-                        localHyItems.Add(hyPlayItem);
-                        var listViewPlay = new ListViewPlayItem(hyPlayItem.PlayItem.Name, index++,
-                            hyPlayItem.PlayItem.ArtistString);
-                        localItems.Add(listViewPlay);
-                        ListBoxLocalMusicContainer.Items?.Add(listViewPlay);
-                        break;
-                    }
-                    case StorageFolder folder:
-                    {
-                        foreach (var subitems in await folder.GetItemsAsync())
-                            GetSubFiles(subitems);
-                        break;
-                    }
-                }
+                var item = await HyPlayList.LoadStorageFile(storageFile);
+                localHyItems.Add(item);
             }
-            catch (Exception ex)
+            catch
             {
-                Debug.WriteLine(ex.Message);
+                //ignore
             }
-        });
+
+        }
+        FileLoadingIndicateRing.IsActive = false;
+        FileLoadingIndicateRing.Visibility = Visibility.Collapsed;
     }
+
 
     private void ListBoxLocalMusicContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         HyPlayList.RemoveAllSong();
-        localHyItems.ForEach(t => HyPlayList.List.Add(t));
+        HyPlayList.List.AddRange(localHyItems);
         HyPlayList.SongAppendDone();
         HyPlayList.SongMoveTo(ListBoxLocalMusicContainer.SelectedIndex);
     }
 
     private async void UploadCloud_Click(object sender, RoutedEventArgs e)
     {
-        var sf = await StorageFile.GetFileFromPathAsync(localHyItems[int.Parse((sender as Button).Tag.ToString())]
+        var sf = await StorageFile.GetFileFromPathAsync((((sender as Button).Tag) as HyPlayItem)
             .PlayItem.Url);
         await CloudUpload.UploadMusic(sf);
     }

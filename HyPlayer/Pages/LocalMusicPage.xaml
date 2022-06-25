@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:pages="using:HyPlayer.Pages"
+    xmlns:classes="using:HyPlayer.Classes"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
 
@@ -48,39 +48,37 @@
                             Style="{StaticResource ButtonRevealStyle}" />
                     </StackPanel>
                     <Grid Grid.Row="1">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalScrollMode="Enabled">
-                            <ListView
-                                Name="ListBoxLocalMusicContainer"
-                                ScrollViewer.VerticalScrollBarVisibility="Visible"
-                                ScrollViewer.VerticalScrollMode="Enabled"
-                                SelectionChanged="ListBoxLocalMusicContainer_SelectionChanged"
-                                SelectionMode="Single">
-                                <ListView.ItemTemplate>
-                                    <DataTemplate x:DataType="pages:ListViewPlayItem">
-                                        <Grid>
-                                            <StackPanel
-                                                Width="340"
-                                                HorizontalAlignment="Left"
-                                                Orientation="Vertical">
-                                                <TextBlock Text="{x:Bind Name}" />
-                                                <TextBlock Foreground="Gray" Text="{x:Bind Artist}" />
-                                            </StackPanel>
-                                            <Button
-                                                x:Name="UploadCloud"
-                                                HorizontalAlignment="Right"
-                                                Click="UploadCloud_Click"
-                                                Style="{StaticResource ButtonRevealStyle}"
-                                                Tag="{x:Bind index}"
-                                                ToolTipService.ToolTip="上传到云盘">
-                                                <Button.Content>
-                                                    <SymbolIcon Symbol="Upload" />
-                                                </Button.Content>
-                                            </Button>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ListView.ItemTemplate>
-                            </ListView>
-                        </ScrollViewer>
+                        <ListView
+                            Name="ListBoxLocalMusicContainer"
+                            ScrollViewer.VerticalScrollBarVisibility="Visible"
+                            ScrollViewer.VerticalScrollMode="Enabled"
+                            SelectionChanged="ListBoxLocalMusicContainer_SelectionChanged"
+                            SelectionMode="Single">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="classes:HyPlayItem">
+                                    <Grid>
+                                        <StackPanel
+                                            Width="340"
+                                            HorizontalAlignment="Left"
+                                            Orientation="Vertical">
+                                            <TextBlock Text="{x:Bind PlayItem.Name}" />
+                                            <TextBlock Foreground="Gray" Text="{x:Bind PlayItem.ArtistString}" />
+                                        </StackPanel>
+                                        <Button
+                                            x:Name="UploadCloud"
+                                            HorizontalAlignment="Right"
+                                            Click="UploadCloud_Click"
+                                            Style="{StaticResource ButtonRevealStyle}"
+                                            Tag="{x:Bind }"
+                                            ToolTipService.ToolTip="上传到云盘">
+                                            <Button.Content>
+                                                <SymbolIcon Symbol="Upload" />
+                                            </Button.Content>
+                                        </Button>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
                         <ProgressRing
                             x:Name="FileLoadingIndicateRing"
                             Width="100"
