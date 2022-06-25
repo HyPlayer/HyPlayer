@@ -17,6 +17,7 @@ using NeteaseCloudMusicApi;
 using TagLib;
 using File = TagLib.File;
 using Windows.Graphics.Imaging;
+using Microsoft.Toolkit.Uwp.Helpers;
 
 #endregion
 
@@ -54,7 +55,6 @@ internal class DownloadObject
 
     private void Wc_DownloadFileCompleted()
     {
-        Status = 2;
         DownloadManager.WritingTasks.Add(Task.Run(async () =>
         {
             if (Common.Setting.downloadLyric)
@@ -106,7 +106,7 @@ internal class DownloadObject
             Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
         */
-        Common.AddToTeachingTipLists(filename + "下载完成");
+        Common.AddToTeachingTipLists("下载完成", filename);
     }
 
     private Task WriteInfoToFile()
@@ -115,8 +115,10 @@ internal class DownloadObject
         {
             try
             {
-                var file = File.Create(
-                    new UwpStorageFileAbstraction(await StorageFile.GetFileFromPathAsync(fullpath)));
+                var streamAbscraction = new UwpStorageFileAbstraction(
+                    (await downloadOperation.GetResultRandomAccessStreamReference().OpenReadAsync()).AsStreamForRead(),
+                    await downloadOperation.ResultFile.OpenStreamForWriteAsync(), downloadOperation.ResultFile.Name);
+                var file = File.Create(streamAbscraction);
                 if (Common.Setting.write163Info)
                     The163KeyHelper.TrySetMusicInfo(file.Tag, dontuseme);
                 //写相关信息
@@ -125,7 +127,7 @@ internal class DownloadObject
                 file.Tag.Title = ncsong.songname;
                 file.Tag.Track = (uint)(ncsong.TrackId == -1 ? (ncsong.Order + 1) : ncsong.TrackId);
                 file.Tag.Disc = uint.Parse(Regex.Match(ncsong.CDName, "[0-9]+").Value);
-                file.Save();
+                //file.Save();
 
                 Picture pic;
                 if (!DownloadManager.AlbumPicturesCache.ContainsKey(ncsong.Album.id))
@@ -165,6 +167,7 @@ internal class DownloadObject
                 file.Tag.Pictures[0].MimeType = "image/jpeg";
                 file.Tag.Pictures[0].Description = "cover.jpg";
                 file.Save();
+                streamAbscraction.Release();
             }
             catch (Exception ex)
             {
@@ -228,18 +231,13 @@ internal class DownloadObject
 
     private void Wc_DownloadProgressChanged(DownloadOperation obj)
     {
-        if (obj.Progress.TotalBytesToReceive == 0)
-        {
-            Status = 0;
-            downloadOperation = null;
-            return;
-        }
-
         TotalSize = obj.Progress.TotalBytesToReceive;
         HavedSize = obj.Progress.BytesReceived;
         progress = (int)(obj.Progress.BytesReceived * 100 / obj.Progress.TotalBytesToReceive);
-        if (TotalSize == HavedSize && !completedFired)
+        if (HavedSize == TotalSize)
         {
+            if (Status == 2) return;
+            Status = 2;
             completedFired = true;
             Wc_DownloadFileCompleted();
         }
@@ -291,6 +289,41 @@ internal class DownloadObject
         Status = 1;
         try
         {
+            filename = Common.Setting.downloadFileName
+                .Replace("{$SINGER}", string.Join(';', ncsong.Artist.Select(t => t.name)).EscapeForPath())
+                .Replace("{$SONGNAME}", ncsong.songname.EscapeForPath())
+                .Replace("{$ALBUM}", ncsong.Album.name.EscapeForPath())
+                .Replace("{$INDEX}",
+                    (ncsong.TrackId == -1 ? (ncsong.Order + 1) : ncsong.TrackId).ToString().EscapeForPath())
+                .Replace("{$CDNAME}", ncsong.CDName?.EscapeForPath());
+            string folderName = Common.Setting.downloadDir;
+            var nowFolder = await StorageFolder.GetFolderFromPathAsync(folderName);
+            var ses = filename.Replace('\\', '/').Split('/');
+            for (var index = 0; index < ses.Length - 1; index++)
+            {
+                var s = ses[index];
+                folderName += "/" + s;
+                nowFolder = await nowFolder.CreateFolderAsync(s, CreationCollisionOption.OpenIfExists);
+            }
+
+            if (await nowFolder.FileExistsAsync(Path.GetFileName(filename + ".mp3")) ||
+                await nowFolder.FileExistsAsync(Path.GetFileName(filename + ".flac")))
+            {
+                switch (Common.Setting.downloadNameOccupySolution)
+                {
+                    case 0:
+                        Common.AddToTeachingTipLists("文件已存在，自动跳过", ncsong.songname + "\n已自动将其从下载列表中移除");
+                        DownloadManager.DownloadLists.Remove(DownloadManager.DownloadLists.FirstOrDefault());
+                        return;
+                    case 1:
+                        await (await nowFolder.GetFileAsync(Path.GetFileName(filename))).DeleteAsync();
+                        break;
+                    case 2:
+                        filename = Path.GetFileNameWithoutExtension(filename) + ncsong.sid;
+                        break;
+                }
+            }
+
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
                 new Dictionary<string, object> { { "id", ncsong.sid }, { "br", Common.Setting.downloadAudioRate } });
 
@@ -301,6 +334,7 @@ internal class DownloadObject
                 return; //未获取到
             }
 
+            filename += "." + json["data"][0]["type"].ToString().ToLowerInvariant();
             dontuseme = new PlayItem
             {
                 Bitrate = json["data"][0]["br"].ToObject<int>(),
@@ -318,47 +352,13 @@ internal class DownloadObject
                 Size = json["data"][0]["size"].ToString()
                 //md5 = json["data"][0]["md5"].ToString()
             };
-            filename = Common.Setting.downloadFileName
-                           .Replace("{$SINGER}", string.Join(';', ncsong.Artist.Select(t => t.name)).EscapeForPath())
-                           .Replace("{$SONGNAME}", ncsong.songname.EscapeForPath())
-                           .Replace("{$ALBUM}", ncsong.Album.name.EscapeForPath())
-                           .Replace("{$INDEX}",
-                               (ncsong.TrackId == -1 ? (ncsong.Order + 1) : ncsong.TrackId).ToString().EscapeForPath())
-                           .Replace("{$CDNAME}", ncsong.CDName.EscapeForPath())
-                       + "." +
-                       json["data"][0]["type"].ToString().ToLowerInvariant();
-            string folderName = Common.Setting.downloadDir;
-            var nowFolder = await StorageFolder.GetFolderFromPathAsync(folderName);
-            var ses = filename.Replace('\\', '/').Split('/');
-            for (var index = 0; index < ses.Length - 1; index++)
-            {
-                var s = ses[index];
-                folderName += "/" + s;
-                nowFolder = await nowFolder.CreateFolderAsync(s, CreationCollisionOption.OpenIfExists);
-            }
-
-            if (await nowFolder.TryGetItemAsync(Path.GetFileName(filename)) != null)
-            {
-                switch (Common.Setting.downloadNameOccupySolution)
-                {
-                    case 0:
-                        throw new Exception("文件已存在,跳过");
-                        break;
-                    case 1:
-                        await (await nowFolder.GetFileAsync(Path.GetFileName(filename))).DeleteAsync();
-                        break;
-                    case 2:
-                        filename = Path.GetFileNameWithoutExtension(filename) + ncsong.sid + "." +
-                                   Path.GetExtension(filename);
-                        break;
-                }
-            }
 
             downloadOperation = DownloadManager.Downloader.CreateDownload(
                 new Uri(json["data"][0]["url"].ToString()),
                 await nowFolder.CreateFileAsync(Path.GetFileName(filename))
             );
             fullpath = downloadOperation.ResultFile.Path;
+            downloadOperation.IsRandomAccessRequired = true;
             var process = new Progress<DownloadOperation>(Wc_DownloadProgressChanged);
             _ = downloadOperation.StartAsync().AsTask(process);
             DownloadStartToast(filename);
@@ -475,26 +475,48 @@ internal static class DownloadManager
 
 public class UwpStorageFileAbstraction : File.IFileAbstraction
 {
-    private readonly StorageFile file;
+    private readonly IStorageFile file;
 
 
-    public UwpStorageFileAbstraction(StorageFile file)
+    public UwpStorageFileAbstraction(IStorageFile file)
     {
         if (file == null)
             throw new ArgumentNullException(nameof(file));
 
         this.file = file;
+        _name = file.Name;
+        _readStream = file.OpenStreamForReadAsync().GetAwaiter().GetResult();
+        _writeStream = file.OpenStreamForWriteAsync().GetAwaiter().GetResult();
     }
 
-    public string Name => file.Name;
+    public UwpStorageFileAbstraction(Stream readStream, Stream writeStream, string name = "HyPlayer Music")
+    {
+        _readStream = readStream;
+        _writeStream = writeStream;
+        _name = name;
+    }
 
-    public Stream ReadStream => file.OpenStreamForReadAsync().GetAwaiter().GetResult();
+    private readonly string _name;
 
-    public Stream WriteStream => file.OpenStreamForWriteAsync().GetAwaiter().GetResult();
 
+    public string Name => _name;
+
+    private readonly Stream _readStream;
+    private readonly Stream _writeStream;
+
+    public Stream ReadStream => _readStream;
+
+    public Stream WriteStream => _writeStream;
 
     public void CloseStream(Stream stream)
     {
-        stream?.Dispose();
+    }
+
+    public void Release()
+    {
+        WriteStream.Close();
+        WriteStream.Dispose();
+        ReadStream.Close();
+        ReadStream.Dispose();
     }
 }

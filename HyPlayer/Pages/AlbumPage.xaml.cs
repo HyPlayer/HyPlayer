@@ -131,6 +131,7 @@ public sealed partial class AlbumPage : Page, IDisposable
                         jsonSong["tns"]?.ToArray().Select(t => t.ToString()) ?? Array.Empty<string>()),
                     Type = HyPlayItemType.Netease,
                     IsCloud = false,
+                    CDName = jsonSong["cd"].ToString(),
                     DiscName = jsonSong["cd"].ToString(),
                     TrackId = jsonSong["no"].ToObject<int>()
                 }).ToList().GroupBy(t => t.DiscName).OrderBy(t => t.Key)
