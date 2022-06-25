@@ -240,7 +240,7 @@ public sealed partial class BasePage : Page
                 ButtonLogin.Content = "登录";
                 ButtonLogin.IsEnabled = true;
                 InfoBarLoginHint.Severity = InfoBarSeverity.Warning;
-                InfoBarLoginHint.Message = "登录失败 " + json["msg"];
+                InfoBarLoginHint.Message = "登录失败 " + json["msg"] + json["message"];
             }
             else
             {
