@@ -27,6 +27,7 @@ public class HyPlayItem
 public enum HyPlayItemType
 {
     Local,
+    LocalProgressive,
     Netease,
     Radio
 }

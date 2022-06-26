@@ -426,6 +426,16 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        
+        public bool localProgressiveLoad
+        {
+            get => GetSettings("localProgressiveLoad", false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["localProgressiveLoad"] = value;
+                OnPropertyChanged();
+            }
+        }
 
         public bool shuffleNoRepeating
         {

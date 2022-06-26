@@ -125,7 +125,7 @@ public sealed partial class GroupedSongsList : IDisposable
 
     private void HyPlayListOnOnPlayItemChange(HyPlayItem playitem)
     {
-        if (playitem?.ItemType == HyPlayItemType.Local || playitem?.PlayItem == null)
+        if (playitem?.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive || playitem?.PlayItem == null)
         {
             Common.Invoke(() =>
             {

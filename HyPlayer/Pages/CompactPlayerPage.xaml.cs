@@ -142,7 +142,7 @@ namespace HyPlayer.Pages
             BitmapImage img = null;
             if (item != null)
                 if (!Common.Setting.noImage)
-                    if (item.ItemType == HyPlayItemType.Local)
+                    if (item.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
                     {
                         img = new BitmapImage();
                         await img.SetSourceAsync(

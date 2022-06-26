@@ -369,26 +369,37 @@ public static class HyPlayList
         {
             if (NowPlayingItem.PlayItem.DontSetLocalStorageFile != null)
             {
-                if (NowPlayingItem.PlayItem.DontSetLocalStorageFile.FileType != ".ncm")
+                if (NowPlayingItem.PlayItem.DontSetLocalStorageFile.FileType != ".ncm" && NowPlayingItem.ItemType != HyPlayItemType.LocalProgressive)
                 {
                     NowPlayingStorageFile = NowPlayingItem.PlayItem.DontSetLocalStorageFile;
                 }
                 else
                 {
-                    // 脑残Music解析
-                    var stream = (await NowPlayingItem.PlayItem.DontSetLocalStorageFile.OpenReadAsync())
-                        .AsStreamForRead();
-                    if (NCMFile.IsCorrectNCMFile(stream))
+                    if (NowPlayingItem.PlayItem.DontSetLocalStorageFile.FileType == ".ncm")
                     {
-                        var info = NCMFile.GetNCMMusicInfo(stream);
-                        var coverStream = NCMFile.GetCoverStream(stream);
-                        var encStream = NCMFile.GetEncryptedStream(stream);
-                        encStream.Seek(0, SeekOrigin.Begin);
-                        NowPlayingStorageFile = await StorageFile.CreateStreamedFileAsync(
-                            Path.ChangeExtension(NowPlayingItem.PlayItem.DontSetLocalStorageFile.Name,
-                                info.format), t => { encStream.CopyTo(t.AsStreamForWrite()); },
-                            RandomAccessStreamReference.CreateFromStream(
-                                coverStream.AsRandomAccessStream()));
+                        // 脑残Music解析
+                        var stream = (await NowPlayingItem.PlayItem.DontSetLocalStorageFile.OpenReadAsync())
+                            .AsStreamForRead();
+                        if (NCMFile.IsCorrectNCMFile(stream))
+                        {
+                            var info = NCMFile.GetNCMMusicInfo(stream);
+                            var coverStream = NCMFile.GetCoverStream(stream);
+                            var encStream = NCMFile.GetEncryptedStream(stream);
+                            encStream.Seek(0, SeekOrigin.Begin);
+                            NowPlayingStorageFile = await StorageFile.CreateStreamedFileAsync(
+                                Path.ChangeExtension(NowPlayingItem.PlayItem.DontSetLocalStorageFile.Name,
+                                    info.format), t => { encStream.CopyTo(t.AsStreamForWrite()); },
+                                RandomAccessStreamReference.CreateFromStream(
+                                    coverStream.AsRandomAccessStream()));
+                        }
+                    }
+                    else
+                    {
+                        NowPlayingStorageFile = NowPlayingItem.PlayItem.DontSetLocalStorageFile;
+                        var item = await LoadStorageFile(NowPlayingItem.PlayItem.DontSetLocalStorageFile);
+                        NowPlayingItem.ItemType = HyPlayItemType.Local;
+                        NowPlayingItem.PlayItem = item.PlayItem;
+                        NowPlayingItem.PlayItem.DontSetLocalStorageFile = NowPlayingStorageFile;
                     }
                 }
             }
@@ -687,6 +698,7 @@ public static class HyPlayList
 
                 break;
             case HyPlayItemType.Local:
+            case HyPlayItemType.LocalProgressive:
                 try
                 {
                     await LoadLocalFile();
@@ -696,7 +708,7 @@ public static class HyPlayList
                 {
                     ms = MediaSource.CreateFromUri(new Uri(NowPlayingItem.PlayItem.Url));
                 }
-
+                
                 break;
             default:
                 ms = null;
@@ -742,7 +754,7 @@ public static class HyPlayList
             LoadLyrics(NowPlayingItem);
             try
             {
-                if (NowPlayingItem.ItemType == HyPlayItemType.Local)
+                if (NowPlayingItem.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
                 {
                     if (NowPlayingStorageFile != null)
                     {

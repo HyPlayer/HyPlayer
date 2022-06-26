@@ -3,8 +3,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Search;
@@ -24,17 +26,28 @@ namespace HyPlayer.Pages;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class LocalMusicPage : Page
+public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 {
     private readonly ObservableCollection<HyPlayItem> localHyItems;
     private Task FileScanTask;
     private int index;
+    private string _notificationText;
     private static string[] supportedFormats = { ".flac", ".mp3", ".ncm", ".ape", ".m4a", ".wav" };
+
+    public string NotificationText
+    {
+        get => _notificationText;
+        set
+        {
+            _notificationText = value;
+            OnPropertyChanged();
+        }
+    }
 
     public LocalMusicPage()
     {
         InitializeComponent();
-        localHyItems = new ();
+        localHyItems = new();
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -71,7 +84,8 @@ public sealed partial class LocalMusicPage : Page
 
     private async void LoadLocalMusic()
     {
-        if (FileScanTask != null) FileScanTask.Dispose();
+        FileScanTask?.Dispose();
+        NotificationText = "正在扫描...";
         ListBoxLocalMusicContainer.ItemsSource = localHyItems;
         var folder = (!string.IsNullOrEmpty(Common.Setting.searchingDir))
             ? await StorageFolder.GetFolderFromPathAsync(Common.Setting.searchingDir)
@@ -82,19 +96,64 @@ public sealed partial class LocalMusicPage : Page
         QueryOptions queryOptions = new QueryOptions(CommonFileQuery.DefaultQuery, supportedFormats);
         queryOptions.FolderDepth = FolderDepth.Deep;
         var files = await folder.CreateFileQueryWithOptions(queryOptions).GetFilesAsync();
-        foreach (var storageFile in files)
-        {
-            try
-            {
-                var item = await HyPlayList.LoadStorageFile(storageFile);
-                localHyItems.Add(item);
-            }
-            catch
-            {
-                //ignore
-            }
 
+        if (!Common.Setting.localProgressiveLoad)
+        {
+            foreach (var storageFile in files)
+            {
+                try
+                {
+                    var item = await HyPlayList.LoadStorageFile(storageFile);
+                    localHyItems.Add(item);
+                }
+                catch
+                {
+                    //ignore
+                }
+            }
         }
+        else
+        {
+            var undeterminedAlbum = new NCAlbum
+            {
+                AlbumType = HyPlayItemType.LocalProgressive,
+                name = "未知专辑"
+            };
+            var undeterminedArtistList = new List<NCArtist>()
+            {
+                new NCArtist
+                {
+                    name = "未知歌手",
+                    Type = HyPlayItemType.LocalProgressive
+                }
+            };
+            foreach (var storageFile in files)
+            {
+                localHyItems.Add(new HyPlayItem
+                {
+                    ItemType = HyPlayItemType.LocalProgressive,
+                    PlayItem = new PlayItem
+                    {
+                        Album = undeterminedAlbum,
+                        Artist = undeterminedArtistList,
+                        Bitrate = 0,
+                        DontSetLocalStorageFile = storageFile,
+                        IsLocalFile = true,
+                        LengthInMilliseconds = 0,
+                        Name = storageFile.Name,
+                        CDName = "01",
+                        Size = null,
+                        SubExt = storageFile.FileType,
+                        TrackId = 0,
+                        Tag = "本地歌曲",
+                        Type = HyPlayItemType.LocalProgressive,
+                        Url = storageFile.Path
+                    }
+                });
+            }
+        }
+
+        NotificationText = "扫描完成, 共 " + files.Count + " 首音乐";
         FileLoadingIndicateRing.IsActive = false;
         FileLoadingIndicateRing.Visibility = Visibility.Collapsed;
     }
@@ -119,25 +178,11 @@ public sealed partial class LocalMusicPage : Page
     {
         HyPlayList.PickLocalFile();
     }
-}
 
-public class ListViewPlayItem
-{
-    public ListViewPlayItem(string name, int index, string artist)
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    private void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
-        Name = name;
-        Artist = artist;
-        this.index = index;
-    }
-
-    public string Name { get; }
-    public string Artist { get; }
-    public string DisplayName => Artist + " - " + Name;
-
-    public int index { get; }
-
-    public override string ToString()
-    {
-        return Artist + " - " + Name;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }

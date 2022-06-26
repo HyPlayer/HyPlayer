@@ -486,9 +486,11 @@
                             <CheckBox Content="开启高级音乐历史存储 (超过 100 首)" IsChecked="{x:Bind hyplayer:Common.Setting.advancedMusicHistoryStorage, Mode=TwoWay}" />
 
                             <CheckBox
-                                x:Name="CBSongCacheEnable"
                                 Content="开启播放缓存 (可能造成播放前空白)"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.enableCache, Mode=TwoWay}" />
+                            <CheckBox
+                                Content="本地文件扫描渐进式加载 (Progressive Loading)"
+                                IsChecked="{x:Bind hyplayer:Common.Setting.localProgressiveLoad, Mode=TwoWay}" />
                             <CheckBox
                                 x:Name="ControlSoundCheck"
                                 Checked="ControlSoundChecked"

@@ -174,11 +174,11 @@ public sealed partial class SongsList : UserControl, IDisposable
 
     private void HyPlayListOnOnPlayItemChange(HyPlayItem playitem)
     {
-        if (playitem?.ItemType == HyPlayItemType.Local || playitem?.PlayItem == null)
-        {
-            if (MultiSelect) return;
+        if (playitem?.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive || playitem?.PlayItem == null)
+        {            
             Common.Invoke(() =>
             {
+                if (MultiSelect) return;
                 IsManualSelect = false;
                 SongContainer.SelectedIndex = -1;
                 IsManualSelect = true;

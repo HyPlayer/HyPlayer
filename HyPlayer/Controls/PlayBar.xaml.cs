@@ -304,11 +304,13 @@ public sealed partial class PlayBar
         try
         {
             if (!Common.Setting.noImage)
-                if (mpi.ItemType == HyPlayItemType.Local)
+                if (mpi.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
                 {
+                    var storageFile = HyPlayList.NowPlayingStorageFile;
+                    if (mpi.PlayItem.DontSetLocalStorageFile != null) storageFile = mpi.PlayItem.DontSetLocalStorageFile;
                     var img = new BitmapImage();
                     await img.SetSourceAsync(
-                        await HyPlayList.NowPlayingStorageFile?.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999));
+                        await storageFile?.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
                     Common.Invoke(() => { AlbumImage.Source = img; });
                 }
                 else

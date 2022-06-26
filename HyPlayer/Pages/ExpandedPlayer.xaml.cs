@@ -545,11 +545,13 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         {
             try
             {
-                if (mpi.ItemType == HyPlayItemType.Local)
+                if (mpi.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
                 {
+                    var storageFile = HyPlayList.NowPlayingStorageFile;
+                    if (mpi.PlayItem.DontSetLocalStorageFile != null) storageFile = mpi.PlayItem.DontSetLocalStorageFile;
                     var img = new BitmapImage();
                     await img.SetSourceAsync(
-                        await HyPlayList.NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
+                        await storageFile.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
                     Common.Invoke(() =>
                     {
                         ImageAlbum.Source = img;
@@ -873,7 +875,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         try
         {
             BitmapDecoder decoder;
-            if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Local)
+            if (HyPlayList.NowPlayingItem.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
                 decoder = await BitmapDecoder.CreateAsync(
                     await HyPlayList.NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.MusicView, 1));
             else
