@@ -170,7 +170,10 @@ public static class HyPlayList
             Player.PlaybackSession.PositionChanged += UpdateSmtcPosition;
         }
 
-        Player.MediaFailed += PlayerOnMediaFailed;
+        Player.MediaFailed += (sender, reason) =>
+        {
+            PlayerOnMediaFailed(sender, "播放核心：" + reason.ErrorMessage + " " + reason.Error);
+        };
         Player.BufferingStarted += Player_BufferingStarted;
         Player.BufferingEnded += Player_BufferingEnded;
         SecTimer.Elapsed += (sender, args) => _ = Common.Invoke(() => OnTimerTicked?.Invoke());
@@ -220,15 +223,15 @@ public static class HyPlayList
         _ = Common.Invoke(() => OnSongBufferStart?.Invoke());
     }
 
-    private static void PlayerOnMediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
+    private static void PlayerOnMediaFailed(MediaPlayer sender, string reason)
     {
         //歌曲崩溃了的话就是这个
         //SongMoveNext();
-        Common.ErrorMessageList.Add("歌曲" + NowPlayingItem.PlayItem.Name + " " + args?.ErrorMessage);
+        Common.ErrorMessageList.Add("歌曲" + NowPlayingItem.PlayItem.Name + " 播放失败: " + reason);
         if (_crashedTime == NowPlayingItem.PlayItem.Id)
         {
             Common.AddToTeachingTipLists("播放失败 切到下一曲",
-                "歌曲" + NowPlayingItem.PlayItem.Name + "\r\n" + args?.ErrorMessage);            
+                "歌曲" + NowPlayingItem.PlayItem.Name + "\r\n" + reason);
             MoveSongPointer();
             _crashedTime = "jump";
         }
@@ -256,7 +259,7 @@ public static class HyPlayList
             {
                 //本地歌曲炸了的话就Move下一首吧
                 Common.AddToTeachingTipLists("播放失败 切到下一曲",
-                    "歌曲" + NowPlayingItem.PlayItem.Name + "\r\n" + args?.ErrorMessage);
+                    "歌曲" + NowPlayingItem.PlayItem.Name + "\r\n" + reason);
                 MoveSongPointer();
             }
         }
