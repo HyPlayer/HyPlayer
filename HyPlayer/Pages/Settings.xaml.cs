@@ -22,6 +22,9 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using Kawazu;
 using Microsoft.UI.Xaml.Controls;
+using Windows.Devices.Enumeration;
+using Windows.Foundation;
+using Windows.UI.Xaml.Media;
 
 #endregion
 
@@ -357,5 +360,24 @@ public sealed partial class Settings : Page
 
         }
         catch { }
+    }
+
+    private async void BtnChangeAudioRenderDevice_Click(object sender, RoutedEventArgs e)
+    {
+        DevicePicker devicePicker = new DevicePicker();
+        devicePicker.Filter.SupportedDeviceClasses.Add(DeviceClass.AudioRender);
+        GeneralTransform ge = BtnChangeAudioRenderDevice.TransformToVisual(null);
+        Point point = ge.TransformPoint(new Point());
+        Rect rect = new Rect(point, new Point(point.X + BtnChangeAudioRenderDevice.ActualWidth, point.Y + BtnChangeAudioRenderDevice.ActualHeight));
+        var device = await devicePicker.PickSingleDeviceAsync(rect);
+        if (device != null)
+        {
+            Common.Setting.AudioRenderDevice = device.Id;
+        }
+    }
+
+    private void BtnChangeToDefaultAudioRenderDevice_Click(object sender, RoutedEventArgs e)
+    {
+        Common.Setting.AudioRenderDevice = "";
     }
 }

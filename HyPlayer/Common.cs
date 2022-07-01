@@ -936,6 +936,16 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        public string AudioRenderDevice
+        {
+            get  =>GetSettings("AudioRenderDeviceID", "");
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["AudioRenderDeviceID"] = value;
+                HyPlayList.OnAudioRenderDeviceChangedOrInitialized();
+                OnPropertyChanged();
+            }
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 

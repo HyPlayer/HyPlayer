@@ -522,6 +522,18 @@
                                 Click="BtnXboxReserve_Click"
                                 Content="Xbox 进后台模式"
                                 Style="{StaticResource ButtonRevealStyle}" />
+                            <Button
+                                x:Name="BtnChangeAudioRenderDevice"
+                                Click="BtnChangeAudioRenderDevice_Click"
+                                Content="选择音频输出设备"
+                                Style="{StaticResource ButtonRevealStyle}"
+                                />
+                            <Button
+                                x:Name="BtnChangeToDefaultAudioRenderDevice"
+                                Click="BtnChangeToDefaultAudioRenderDevice_Click"
+                                Content="恢复默认音频输出设备"
+                                Style="{StaticResource ButtonRevealStyle}"
+                                />
                         </StackPanel>
                     </ScrollViewer>
                 </PivotItem>

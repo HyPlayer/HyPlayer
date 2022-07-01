@@ -37,6 +37,7 @@ public sealed partial class MainPage
 
         NavigationCacheMode = NavigationCacheMode.Required;
         InitializeComponent();
+        HyPlayControl.HyPlayList.OnAudioRenderDeviceChangedOrInitialized();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
