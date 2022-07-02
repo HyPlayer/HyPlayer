@@ -958,14 +958,16 @@ public static class HyPlayList
     }
     public static async void OnAudioRenderDeviceChangedOrInitialized()
     {
-        var deviceInfomations = await DeviceInformation.FindAllAsync(DeviceClass.AudioRender);
-        string selectedAudioDevice = "";
-        foreach (var deviceInfo in deviceInfomations)
+        try 
         {
-            if (deviceInfo.Id == Common.Setting.AudioRenderDevice) selectedAudioDevice = deviceInfo.Id;
+            if (string.IsNullOrEmpty(Common.Setting.AudioRenderDevice)) Player.AudioDevice = null;
+            else Player.AudioDevice = await DeviceInformation.CreateFromIdAsync(Common.Setting.AudioRenderDevice);
         }
-        if (selectedAudioDevice != "" ) Player.AudioDevice= await DeviceInformation.CreateFromIdAsync(selectedAudioDevice);
-        else Player.AudioDevice = null;
+        catch(Exception ex)
+        {
+            Common.AddToTeachingTipLists("在切换输出设备时发生错误", ex.Message);
+            Player.AudioDevice = null;
+        }        
     }
     /********        播放文件相关        ********/
 
