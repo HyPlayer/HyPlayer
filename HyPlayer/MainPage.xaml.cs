@@ -9,6 +9,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
+using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
 
 #endregion
@@ -37,7 +38,7 @@ public sealed partial class MainPage
 
         NavigationCacheMode = NavigationCacheMode.Required;
         InitializeComponent();
-        HyPlayControl.HyPlayList.OnAudioRenderDeviceChangedOrInitialized();
+        HyPlayList.OnAudioRenderDeviceChangedOrInitialized();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

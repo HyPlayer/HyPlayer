@@ -21,7 +21,6 @@ using Newtonsoft.Json.Linq;
 using File = TagLib.File;
 using Opportunity.LrcParser;
 using Windows.Devices.Enumeration;
-using Windows.Media.Devices;
 
 #endregion
 
@@ -62,7 +61,6 @@ public static class HyPlayList
     public delegate void TimerTicked();
 
     public delegate void VolumeChangeEvent(double newVolume);
-
 
     private static int _gcCountDown = 5;
 
@@ -958,18 +956,16 @@ public static class HyPlayList
 
         return new PureLyricInfo();
     }
-    
     public static async void OnAudioRenderDeviceChangedOrInitialized()
     {
         var deviceInfomations = await DeviceInformation.FindAllAsync(DeviceClass.AudioRender);
         string selectedAudioDevice = "";
-        string defaultAudioDevice = MediaDevice.GetDefaultAudioRenderId(AudioDeviceRole.Default);
         foreach (var deviceInfo in deviceInfomations)
         {
             if (deviceInfo.Id == Common.Setting.AudioRenderDevice) selectedAudioDevice = deviceInfo.Id;
         }
-        if (selectedAudioDevice != "") Player.AudioDevice = await DeviceInformation.CreateFromIdAsync(selectedAudioDevice);
-        else Player.AudioDevice = await DeviceInformation.CreateFromIdAsync(defaultAudioDevice);
+        if (selectedAudioDevice != "" ) Player.AudioDevice= await DeviceInformation.CreateFromIdAsync(selectedAudioDevice);
+        else Player.AudioDevice = null;
     }
     /********        播放文件相关        ********/
 
