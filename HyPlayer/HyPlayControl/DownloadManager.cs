@@ -115,9 +115,12 @@ internal class DownloadObject
         {
             try
             {
+                /*
                 var streamAbscraction = new UwpStorageFileAbstraction(
                     (await downloadOperation.GetResultRandomAccessStreamReference().OpenReadAsync()).AsStreamForRead(),
                     await downloadOperation.ResultFile.OpenStreamForWriteAsync(), downloadOperation.ResultFile.Name);
+                    */
+                var streamAbscraction = new UwpStorageFileAbstraction(downloadOperation.ResultFile);
                 var file = File.Create(streamAbscraction);
                 if (Common.Setting.write163Info)
                     The163KeyHelper.TrySetMusicInfo(file.Tag, dontuseme);
@@ -286,7 +289,7 @@ internal class DownloadObject
 
     public async void StartDownload()
     {
-        if (downloadOperation != null || Status == 1) return;
+        if (downloadOperation != null) return;
         Status = 1;
         try
         {
@@ -359,7 +362,7 @@ internal class DownloadObject
                 await nowFolder.CreateFileAsync(Path.GetFileName(filename))
             );
             fullpath = downloadOperation.ResultFile.Path;
-            downloadOperation.IsRandomAccessRequired = true;
+            //downloadOperation.IsRandomAccessRequired = true;
             var process = new Progress<DownloadOperation>(Wc_DownloadProgressChanged);
             _ = downloadOperation.StartAsync().AsTask(process);
             DownloadStartToast(filename);
