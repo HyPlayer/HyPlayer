@@ -611,11 +611,11 @@ public static class HyPlayList
                     _ = Common.Invoke(() => { Common.BarPlayBar.TbSongTag.Text = tag; });
                 }
                 else
-                    PlayerOnMediaFailed(Player, null); //传一个播放失败
+                    PlayerOnMediaFailed(Player, "下载链接获取失败"); //传一个播放失败
             }
             catch
             {
-                PlayerOnMediaFailed(Player, null); //传一个播放失败
+                PlayerOnMediaFailed(Player, "下载链接获取失败"); //传一个播放失败
             }
 
         return playUrl;

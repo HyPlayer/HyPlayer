@@ -125,27 +125,23 @@ public sealed partial class GroupedSongsList : IDisposable
 
     private void HyPlayListOnOnPlayItemChange(HyPlayItem playitem)
     {
-        if (playitem?.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive || playitem?.PlayItem == null)
+        Common.Invoke(() =>
         {
-            Common.Invoke(() =>
+            if (playitem?.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive ||
+                playitem?.PlayItem == null)
             {
                 IsManualSelect = false;
                 SongContainer.SelectedIndex = -1;
                 IsManualSelect = true;
-            });
+                return;
+            }
 
-            return;
-        }
-
-        NCAlbumSong selectedSong = null;
-        foreach (var discSongs in (GroupedSongs.Source as IEnumerable<DiscSongs>)!)
-        {
-            var selected = discSongs.FirstOrDefault(t => t.sid == playitem.PlayItem.Id);
-            if (selected != null) selectedSong = selected;
-        }
-
-        Common.Invoke(() =>
-        {
+            NCAlbumSong selectedSong = null;
+            foreach (var discSongs in (GroupedSongs.Source as IEnumerable<DiscSongs>)!)
+            {
+                var selected = discSongs.FirstOrDefault(t => t.sid == playitem.PlayItem.Id);
+                if (selected != null) selectedSong = selected;
+            }
             IsManualSelect = false;
             SongContainer.SelectedIndex = selectedSong?.Order ?? -1;
             IsManualSelect = true;

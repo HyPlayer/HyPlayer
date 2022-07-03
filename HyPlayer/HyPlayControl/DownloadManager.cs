@@ -231,6 +231,7 @@ internal class DownloadObject
 
     private void Wc_DownloadProgressChanged(DownloadOperation obj)
     {
+        if (obj.Progress.TotalBytesToReceive == 0) return;
         TotalSize = obj.Progress.TotalBytesToReceive;
         HavedSize = obj.Progress.BytesReceived;
         progress = (int)(obj.Progress.BytesReceived * 100 / obj.Progress.TotalBytesToReceive);
