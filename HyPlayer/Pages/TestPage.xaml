@@ -18,6 +18,7 @@
             <TextBox Text="{x:Bind ResourceId, Mode=TwoWay}" />
             <Button Click="NavigateResourceId" Content="Navigate" />
             <Button Click="PlayResourceId" Content="Play" />
+            <Button x:Name="DisablePopUp" Content="停用警告弹窗" Click="DisablePopUpButton_Click"/>
         </StackPanel>
         <ListView ItemsSource="{x:Bind hyplayer:Common.Logs}" />
     </StackPanel>

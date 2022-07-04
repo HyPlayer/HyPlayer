@@ -88,4 +88,9 @@ public sealed partial class TestPage : Page
         public bool IsLowCache { get; set; }
         public List<string> ErrorMessageList { get; set; }
     }
+
+    private void DisablePopUpButton_Click(object sender, RoutedEventArgs e)
+    {
+        Common.Setting.DisablePopUp = "true";
+    }
 }

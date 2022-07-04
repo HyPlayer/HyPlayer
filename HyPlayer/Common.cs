@@ -946,6 +946,11 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        public string DisablePopUp
+        {
+            get => GetSettings("DisablePopUp", "false");
+            set => ApplicationData.Current.LocalSettings.Values["DisablePopUp"] = value;
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 

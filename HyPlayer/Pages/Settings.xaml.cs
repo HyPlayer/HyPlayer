@@ -71,6 +71,7 @@ public sealed partial class Settings : Page
             PureLyric = "歌词大小示例 AaBbCcDd 約束の言葉",
             Translation = "翻译大小示例"
         });
+        _lyricItem.IsHitTestVisible = false;
         _lyricItem.OnShow();
         StackPanelLyricSet.Children.Add(_lyricItem);
         isbyprogram = false;
