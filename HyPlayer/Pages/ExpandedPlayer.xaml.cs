@@ -682,7 +682,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         if (loaded)
         {
             Common.BarPlayBar.SliderAudioRate.Value = e.NewValue;
-            HyPlayList.Player.Volume = e.NewValue / 100;
+            HyPlayList.PlayerOutgoingVolume = e.NewValue / 100;
         }
     }
 

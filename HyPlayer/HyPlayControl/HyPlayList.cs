@@ -78,6 +78,17 @@ public static class HyPlayList
     private static SystemMediaTransportControlsDisplayUpdater _controlsDisplayUpdater;
     private static readonly BackgroundDownloader Downloader = new();
 
+    public static double PlayerOutgoingVolume
+    {
+        get => _playerOutgoingVolume;
+        set
+        {
+            _playerOutgoingVolume = value;
+            Player.Volume = _playerOutgoingVolume;
+            OnVolumeChange?.Invoke(_playerOutgoingVolume);
+        }
+    }
+
     public static int LyricPos;
     private static string _crashedTime;
 
@@ -100,6 +111,7 @@ public static class HyPlayList
     public static bool IsPlaying => Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing;
 
     public static string PlaySourceId;
+    private static double _playerOutgoingVolume;
 
     public static StorageFile NowPlayingStorageFile { get; private set; }
 
@@ -163,7 +175,7 @@ public static class HyPlayList
         MediaSystemControls.PlaybackStatus = MediaPlaybackStatus.Closed;
         Player.MediaEnded += Player_MediaEnded;
         Player.CurrentStateChanged += Player_CurrentStateChanged;
-        Player.VolumeChanged += Player_VolumeChanged;
+        //Player.VolumeChanged += Player_VolumeChanged;
         Player.PlaybackSession.PositionChanged += PlaybackSession_PositionChanged;
         if (Common.Setting.progressInSMTC)
         {
@@ -370,7 +382,8 @@ public static class HyPlayList
         {
             if (NowPlayingItem.PlayItem.DontSetLocalStorageFile != null)
             {
-                if (NowPlayingItem.PlayItem.DontSetLocalStorageFile.FileType != ".ncm" && NowPlayingItem.ItemType != HyPlayItemType.LocalProgressive)
+                if (NowPlayingItem.PlayItem.DontSetLocalStorageFile.FileType != ".ncm" &&
+                    NowPlayingItem.ItemType != HyPlayItemType.LocalProgressive)
                 {
                     NowPlayingStorageFile = NowPlayingItem.PlayItem.DontSetLocalStorageFile;
                 }
@@ -709,7 +722,7 @@ public static class HyPlayList
                 {
                     ms = MediaSource.CreateFromUri(new Uri(NowPlayingItem.PlayItem.Url));
                 }
-                
+
                 break;
             default:
                 ms = null;
@@ -820,14 +833,6 @@ public static class HyPlayList
 
 
         if (changed) OnLyricChange?.Invoke();
-    }
-
-    private static void Player_VolumeChanged(MediaPlayer sender, object args)
-    {
-        if (!Common.BarPlayBar.FadeSettedVolume)
-            Common.Setting.Volume = (int)(Player.Volume * 100);
-
-        OnVolumeChange?.Invoke(Player.Volume);
     }
 
     private static void Player_CurrentStateChanged(MediaPlayer sender, object args)
@@ -956,18 +961,19 @@ public static class HyPlayList
 
         return new PureLyricInfo();
     }
+
     public static async void OnAudioRenderDeviceChangedOrInitialized()
     {
-        try 
+        try
         {
             if (string.IsNullOrEmpty(Common.Setting.AudioRenderDevice)) Player.AudioDevice = null;
             else Player.AudioDevice = await DeviceInformation.CreateFromIdAsync(Common.Setting.AudioRenderDevice);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             Common.AddToTeachingTipLists("在切换输出设备时发生错误", ex.Message);
             Player.AudioDevice = null;
-        }        
+        }
     }
     /********        播放文件相关        ********/
 
