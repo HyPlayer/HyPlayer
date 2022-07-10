@@ -135,27 +135,27 @@ namespace HyPlayer.Pages
             });
         }
 
-        public async void OnChangePlayItem(HyPlayItem item)
+        private void OnChangePlayItem(HyPlayItem item)
         {
-            NowPlayingName = item?.PlayItem?.Name;
-            NowPlayingArtists = item?.PlayItem?.ArtistString;
-            BitmapImage img = null;
-            if (item != null)
-                if (!Common.Setting.noImage)
-                    if (item.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
-                    {
-                        img = new BitmapImage();
-                        await img.SetSourceAsync(
-                            await HyPlayList.NowPlayingStorageFile?.GetThumbnailAsync(ThumbnailMode.SingleItem,
-                                9999));
-                    }
-                    else
-                    {
-                        img = new BitmapImage(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover));
-                    }
-
-            Common.Invoke(() =>
+            Common.Invoke(async () =>
             {
+                NowPlayingName = item?.PlayItem?.Name;
+                NowPlayingArtists = item?.PlayItem?.ArtistString;
+                BitmapImage img = null;
+                if (item != null)
+                    if (!Common.Setting.noImage)
+                        if (item.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
+                        {
+                            img = new BitmapImage();
+                            await img.SetSourceAsync(
+                                await HyPlayList.NowPlayingStorageFile?.GetThumbnailAsync(ThumbnailMode.SingleItem,
+                                9999));
+                        }
+                        else
+                        {
+                            img = new BitmapImage(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover));
+                        }
+
                 TotalProgress = item?.PlayItem?.LengthInMilliseconds ?? 0;
                 AlbumCover = new ImageBrush() { ImageSource = img, Stretch = Stretch.UniformToFill };
             });
