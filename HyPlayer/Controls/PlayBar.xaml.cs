@@ -209,57 +209,6 @@ public sealed partial class PlayBar
                         ? "\uEDB4"
                         : "\uEDB5";
 
-                if (Common.Setting.fadeInOut && isFadeInOutPausing == 0)
-                {
-                    if (HyPlayList.Player.PlaybackSession.Position.TotalSeconds <= Common.Setting.fadeInOutTime)
-                    {
-                        HyPlayList.Player.Volume =
-                            HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds /
-                            Common.Setting.fadeInOutTime / 1000 * HyPlayList.PlayerOutgoingVolume;
-                    }
-                    else if (HyPlayList.Player.PlaybackSession.NaturalDuration.TotalSeconds -
-                             HyPlayList.Player.PlaybackSession.Position.TotalSeconds <=
-                             Common.Setting.fadeInOutTime)
-                    {
-                        HyPlayList.Player.Volume =
-                            (HyPlayList.Player.PlaybackSession.NaturalDuration.TotalSeconds -
-                             HyPlayList.Player.PlaybackSession.Position.TotalSeconds) / Common.Setting.fadeInOutTime *
-                            HyPlayList.PlayerOutgoingVolume;
-                    }
-                    else
-                    {
-                        HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume;
-                    }
-                }
-                else if (isFadeInOutPausing != 0)
-                {
-                    var fadeRatio =
-                        (HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds - FadeInOutStartTime) /
-                        Common.Setting.fadeInOutTimePause / 100;
-                    if (fadeRatio >= 1)
-                    {
-                        if (isFadeInOutPausing == 1)
-                            HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume;
-                        else
-                        {
-                            HyPlayList.Player.Volume = 0;
-                            HyPlayList.Player.Pause();
-                        }
-                        isFadeInOutPausing = 0;
-                        return;
-                    }
-
-                    if (isFadeInOutPausing == 1)
-                    {
-                        // Fade In
-                        HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume * fadeRatio;
-                    }
-                    else
-                    {
-                        // Fade Out
-                        HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume * (1 - fadeRatio);
-                    }
-                }
 
                 //SliderAudioRate.Value = mp.Volume;
             }
@@ -268,6 +217,65 @@ public sealed partial class PlayBar
                 //ignore
             }
         });
+        try
+        {
+            if (Common.Setting.fadeInOut && isFadeInOutPausing == 0)
+            {
+                if (HyPlayList.Player.PlaybackSession.Position.TotalSeconds <= Common.Setting.fadeInOutTime)
+                {
+                    HyPlayList.Player.Volume =
+                        HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds /
+                        Common.Setting.fadeInOutTime / 1000 * HyPlayList.PlayerOutgoingVolume;
+                }
+                else if (HyPlayList.Player.PlaybackSession.NaturalDuration.TotalSeconds -
+                         HyPlayList.Player.PlaybackSession.Position.TotalSeconds <=
+                         Common.Setting.fadeInOutTime)
+                {
+                    HyPlayList.Player.Volume =
+                        (HyPlayList.Player.PlaybackSession.NaturalDuration.TotalSeconds -
+                         HyPlayList.Player.PlaybackSession.Position.TotalSeconds) / Common.Setting.fadeInOutTime *
+                        HyPlayList.PlayerOutgoingVolume;
+                }
+                else
+                {
+                    HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume;
+                }
+            }
+            else if (isFadeInOutPausing != 0)
+            {
+                var fadeRatio =
+                    (HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds - FadeInOutStartTime) /
+                    Common.Setting.fadeInOutTimePause / 100;
+                if (fadeRatio >= 1)
+                {
+                    if (isFadeInOutPausing == 1)
+                        HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume;
+                    else
+                    {
+                        HyPlayList.Player.Volume = 0;
+                        HyPlayList.Player.Pause();
+                    }
+
+                    isFadeInOutPausing = 0;
+                    return;
+                }
+
+                if (isFadeInOutPausing == 1)
+                {
+                    // Fade In
+                    HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume * fadeRatio;
+                }
+                else
+                {
+                    // Fade Out
+                    HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume * (1 - fadeRatio);
+                }
+            }
+        }
+        catch (Exception)
+        {
+            //ignore
+        }
     }
 
     public async void LoadPlayingFile(HyPlayItem mpi)
