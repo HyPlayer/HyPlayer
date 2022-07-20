@@ -537,6 +537,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 TextBlockAlbumNameTip.Foreground = ForegroundIdleTextBrush;
                 TextBlockSinger.Foreground = ForegroundAccentTextBrush;
                 TextBlockAlbum.Foreground = ForegroundAccentTextBrush;
+                if (Common.Setting.playbarBackgroundElay)
+                    Common.BarPlayBar.SetPlayBarIdleBackground(ForegroundIdleTextBrush);
                 LoadLyricsBox();
             });
         }
