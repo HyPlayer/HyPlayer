@@ -45,6 +45,7 @@ public sealed partial class PlayBar
     public PlayMode NowPlayType = PlayMode.DefaultRoll;
     public ObservableCollection<HyPlayItem> PlayItems = new();
 
+    private SolidColorBrush BackgroundElayBrush;
     private bool realSelectSong;
 
     private int isFadeInOutPausing = 0; // 0 - Not      1 - FadeIn      2 - FadeOut
@@ -278,6 +279,13 @@ public sealed partial class PlayBar
         }
     }
 
+    public void SetPlayBarIdleBackground(SolidColorBrush colorBrush)
+    {
+        var color = colorBrush.Color;
+        color.A = 80;
+        BackgroundElayBrush = new SolidColorBrush(color);
+    }
+
     public async void LoadPlayingFile(HyPlayItem mpi)
     {
         if (HyPlayList.NowPlayingItem.PlayItem == null) return;
@@ -381,7 +389,7 @@ public sealed partial class PlayBar
             SliderProgress.Maximum = HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds;
             SliderProgress.Value = 0;
             canslide = true;
-            
+
             // 新版随机播放算法
             realSelectSong = false;
             if (HyPlayList.NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating &&
@@ -393,8 +401,9 @@ public sealed partial class PlayBar
             {
                 ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
             }
+
             realSelectSong = true;
-            
+
             if (HyPlayList.NowPlayingItem.PlayItem.Tag != "在线")
                 TbSongTag.Text = HyPlayList.NowPlayingItem.PlayItem.Tag;
             Btn_Share.IsEnabled = HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease;
@@ -421,8 +430,6 @@ public sealed partial class PlayBar
             HistoryManagement.AddNCSongHistory(mpi.PlayItem.Id);
         }
 
-
-       
 
         /*
         verticalAnimation.To = TbSongName.ActualWidth - TbSongName.Tb.ActualWidth;
@@ -1058,6 +1065,22 @@ public sealed partial class PlayBar
             {
             }
         }
+
+        if (Common.Setting.playbarBackgroundElay)
+        {
+            PointerEntered += (o, args) =>
+            {
+                if (Common.isExpanded)
+                {
+                    GridThis.Background = BackgroundElayBrush;
+                }
+            };
+            PointerExited += (o, args) =>
+            {
+                GridThis.Background = new SolidColorBrush(Colors.Transparent);
+            };
+        }
+
         /*
         verticalAnimation = new DoubleAnimation();
 
