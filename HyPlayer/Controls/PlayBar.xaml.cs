@@ -1070,7 +1070,7 @@ public sealed partial class PlayBar
         {
             PointerEntered += (o, args) =>
             {
-                if (Common.isExpanded)
+                if (Common.isExpanded && Common.Setting.playbarBackgroundElay)
                 {
                     GridThis.Background = BackgroundElayBrush;
                 }
