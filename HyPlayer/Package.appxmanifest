@@ -10,7 +10,7 @@
     <Identity
             Name="48848aaaaaaccd.HyPlayer"
             Publisher="CN=C23FC254-B9D2-439F-BE7C-7849EE55BEB2"
-            Version="2.1.29.0"/>
+            Version="2.1.30.0"/>
 
     <mp:PhoneIdentity PhoneProductId="f59825c1-7418-4bf0-9515-cbd8b69f70ac"
                       PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
@@ -64,7 +64,10 @@
                             <uap:FileType>.mp3</uap:FileType>
                             <uap:FileType>.flac</uap:FileType>
                             <uap:FileType>.wav</uap:FileType>
+                            <uap:FileType>.ncm</uap:FileType>
                         </uap:SupportedFileTypes>
+                        <uap:DisplayName>HyPlayer</uap:DisplayName>
+                        <uap:InfoTip>使用 HyPlayer 来打开本地文件</uap:InfoTip>
                     </uap:FileTypeAssociation>
                 </uap:Extension>
                 <uap:Extension Category="windows.mediaPlayback">
@@ -72,8 +75,7 @@
                         <uap:Codec Name="flac"/>
                         <uap:Codec Name="mp3"/>
                         <uap:Codec Name="H.264"/>
-                        <uap:Codec Name="ogg"/>
-                        <uap:Codec Name="H.265"/>
+                        <uap:Codec Name="lpcm"/>
                     </uap:MediaPlayback>
                 </uap:Extension>
             </Extensions>

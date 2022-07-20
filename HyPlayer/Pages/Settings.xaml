@@ -266,6 +266,7 @@
                                 <RadioButton Content="强制白色" />
                                 <RadioButton Content="强制黑色" />
                             </controls:RadioButtons>
+                            <CheckBox Content="播放条背景防糊优化" IsChecked="{x:Bind hyplayer:Common.Setting.playbarBackgroundElay, Mode=TwoWay}" />
                             <TextBlock
                                 Margin="0,10,0,10"
                                 FontSize="20"

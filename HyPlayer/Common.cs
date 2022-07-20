@@ -44,7 +44,7 @@ namespace HyPlayer
         public static CloudMusicApi ncapi = new();
         public static bool Logined = false;
         public static bool IsInFm = false;
-        public static NCUser LoginedUser;
+        public static NCUser? LoginedUser;
         public static bool IsInBackground = false;
         public static ExpandedPlayer? PageExpandedPlayer;
         public static MainPage PageMain;
@@ -333,6 +333,17 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values["hotlyricOnStartup"] = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        
+        public bool playbarBackgroundElay
+        {
+            get => GetSettings("playbarBackgroundElay", false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["playbarBackgroundElay"] = value;
                 OnPropertyChanged();
             }
         }

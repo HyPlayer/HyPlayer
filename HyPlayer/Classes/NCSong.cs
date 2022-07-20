@@ -438,7 +438,7 @@ public class Comment
     public int resourceType;
     public DateTime SendTime;
     public string uid;
-    public bool IsByMyself => uid == Common.LoginedUser.id;
+    public bool IsByMyself => uid == Common.LoginedUser?.id;
 
     public static Comment CreateFromJson(JToken comment, string resourceId, int resourceType)
     {
