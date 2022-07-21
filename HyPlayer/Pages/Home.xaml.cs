@@ -131,7 +131,7 @@ public sealed partial class Home : Page
         }
     }
 
-    public async void LoadRanklist()
+    public async Task LoadRanklist()
     {
         try
         {

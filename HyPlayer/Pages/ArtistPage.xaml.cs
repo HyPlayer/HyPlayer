@@ -79,7 +79,7 @@ public sealed partial class ArtistPage : Page
         }
     }
 
-    private async void LoadHotSongs()
+    private async Task LoadHotSongs()
     {
         try
         {
@@ -107,7 +107,7 @@ public sealed partial class ArtistPage : Page
         }
     }
 
-    private async void LoadSongs()
+    private async Task LoadSongs()
     {
         try
         {
@@ -165,7 +165,7 @@ public sealed partial class ArtistPage : Page
             LoadAlbum();
     }
 
-    private async void LoadAlbum()
+    private async Task LoadAlbum()
     {
         try
         {

@@ -287,7 +287,7 @@ internal class DownloadObject
         Common.AddToTeachingTipLists("下载开始", "歌曲" + songname + "下载开始");
     }
 
-    public async void StartDownload()
+    public async Task StartDownload()
     {
         if (downloadOperation != null) return;
         Status = 1;

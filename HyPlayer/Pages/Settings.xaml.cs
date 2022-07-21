@@ -95,7 +95,7 @@ public sealed partial class Settings : Page
         Common.Setting.downloadAudioRate = ((RadioButton)sender).Tag.ToString();
     }
 
-    private async void GetRomaji()
+    private async Task GetRomaji()
     {
         RomajiStatus.Text = "正在下载资源文件 请稍等";
         try
@@ -115,7 +115,7 @@ public sealed partial class Settings : Page
         HandleDownloadAsync(dl, true);
     }
 
-    private async void HandleDownloadAsync(DownloadOperation dl, bool b)
+    private async Task HandleDownloadAsync(DownloadOperation dl, bool b)
     {
         var process = new Progress<DownloadOperation>(ProgressCallback);
         try
@@ -142,7 +142,7 @@ public sealed partial class Settings : Page
             OnRomajiDownloadDone(obj);
     }
 
-    private async void OnRomajiDownloadDone(DownloadOperation obj)
+    private async Task OnRomajiDownloadDone(DownloadOperation obj)
     {
         try
         {

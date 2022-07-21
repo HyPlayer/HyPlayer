@@ -39,7 +39,7 @@ public sealed partial class MusicCloudPage : Page, IDisposable
         Items = null;
     }
 
-    public async void LoadMusicCloudItem()
+    public async Task LoadMusicCloudItem()
     {
         try
         {

@@ -185,7 +185,7 @@ public sealed partial class BasePage : Page
         }
     }
 
-    private async void LoadLoginData()
+    private async Task LoadLoginData()
     {
         try
         {
@@ -377,7 +377,7 @@ public sealed partial class BasePage : Page
             new Dictionary<string, object> { { "type", 1 } });
     }
 
-    private static async void LoadMyLikelist()
+    private static async Task LoadMyLikelist()
     {
         try
         {
@@ -391,7 +391,7 @@ public sealed partial class BasePage : Page
         }
     }
 
-    public async void LoadSongList()
+    public async Task LoadSongList()
     {
         //加载用户歌单
         var nowitem = NavItemsMyList;
@@ -567,7 +567,7 @@ public sealed partial class BasePage : Page
         }
     }
 
-    private async void LoadHeartBeat()
+    private async Task LoadHeartBeat()
     {
         HyPlayList.RemoveAllSong();
         try
@@ -691,7 +691,7 @@ public sealed partial class BasePage : Page
         }
     }
 
-    private async void ReFreshQr(JObject key)
+    private async Task ReFreshQr(JObject key)
     {
         var QrUri = new Uri("https://music.163.com/login?codekey=" + key["unikey"]);
         var img = new BitmapImage();

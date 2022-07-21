@@ -488,7 +488,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         InitLyricTime();
     }
 
-    private async void InitLyricTime()
+    private async Task InitLyricTime()
     {
         await Task.Delay(500);
         RefreshLyricTime();
@@ -543,7 +543,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             });
         }
 
-        async void LoadCoverImage()
+        async Task LoadCoverImage()
         {
             try
             {

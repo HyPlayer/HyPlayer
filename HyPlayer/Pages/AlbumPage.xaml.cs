@@ -69,14 +69,14 @@ public sealed partial class AlbumPage : Page, IDisposable
         LoadAlbumDynamic();
     }
 
-    private async void LoadAlbumDynamic()
+    private async Task LoadAlbumDynamic()
     {
         var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.AlbumDetailDynamic,
             new Dictionary<string, object>() { { "id", albumid } });
         BtnSub.IsChecked = json["isSub"].ToObject<bool>();
     }
 
-    private async void LoadAlbumInfo()
+    private async Task LoadAlbumInfo()
     {
         JObject json;
         try

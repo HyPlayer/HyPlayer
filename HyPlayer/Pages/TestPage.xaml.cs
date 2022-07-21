@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using System.Linq;
 using TagLib.NonContainer;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 

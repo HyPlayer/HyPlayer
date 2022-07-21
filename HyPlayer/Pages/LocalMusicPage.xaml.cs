@@ -82,7 +82,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
         ListBoxLocalMusicContainer.SelectionChanged += ListBoxLocalMusicContainer_SelectionChanged;
     }
 
-    private async void LoadLocalMusic()
+    private async Task LoadLocalMusic()
     {
         FileScanTask?.Dispose();
         NotificationText = "正在扫描...";

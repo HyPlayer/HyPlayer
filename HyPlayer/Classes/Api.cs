@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using NeteaseCloudMusicApi;
 
 #endregion
@@ -10,7 +11,7 @@ namespace HyPlayer.Classes;
 
 internal class Api
 {
-    public static async void LikeSong(string songid, bool like)
+    public static async Task LikeSong(string songid, bool like)
     {
         try
         {

@@ -38,7 +38,7 @@ public sealed partial class RadioPage : Page, IDisposable
         Songs.Clear();
     }
 
-    private async void LoadProgram()
+    private async Task LoadProgram()
     {
         try
         {

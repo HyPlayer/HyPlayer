@@ -69,7 +69,7 @@ public sealed partial class Me : Page, IDisposable
         LoadPlayList();
     }
 
-    public async void LoadPlayList()
+    public async Task LoadPlayList()
     {
         List<SimpleListItem> mySongs = new();
         List<SimpleListItem> likedSongs = new();
@@ -125,7 +125,7 @@ public sealed partial class Me : Page, IDisposable
         }
     }
 
-    public async void LoadInfo()
+    public async Task LoadInfo()
     {
         if (uid == Common.LoginedUser?.id)
         {

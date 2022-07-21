@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Windows.Media.Core;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -63,7 +64,7 @@ public sealed partial class MVPage : Page, IDisposable
         LoadComment();
     }
 
-    private async void LoadRelateive()
+    private async Task LoadRelateive()
     {
         try
         {
@@ -100,7 +101,7 @@ public sealed partial class MVPage : Page, IDisposable
         MediaPlayerElement.MediaPlayer?.Pause();
     }
 
-    private async void LoadVideo()
+    private async Task LoadVideo()
     {
         if (Regex.IsMatch(mvid, "^[0-9]*$"))
             //纯MV
@@ -140,7 +141,7 @@ public sealed partial class MVPage : Page, IDisposable
             }
     }
 
-    private async void LoadVideoInfo()
+    private async Task LoadVideoInfo()
     {
         if (Regex.IsMatch(mvid, "^[0-9]*$"))
         {

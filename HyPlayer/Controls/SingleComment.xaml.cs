@@ -43,7 +43,7 @@ public sealed partial class SingleComment : UserControl
         InitializeComponent();        
     }
 
-    private async void LoadFloorComments(bool IsLoadMoreComments)
+    private async Task LoadFloorComments(bool IsLoadMoreComments)
     {
         try
         {

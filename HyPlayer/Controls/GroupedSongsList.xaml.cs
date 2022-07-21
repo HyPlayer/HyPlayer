@@ -70,7 +70,7 @@ public sealed partial class GroupedSongsList : IDisposable
         IndicateNowPlayingItem();
     }
 
-    private async void IndicateNowPlayingItem()
+    private async Task IndicateNowPlayingItem()
     {
         var tryCount = 5;
         while (--tryCount > 0)

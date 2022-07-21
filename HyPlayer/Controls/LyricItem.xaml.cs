@@ -35,7 +35,7 @@ public sealed partial class LyricItem : UserControl
 
 
 
-    private async void LoadRomaji()
+    private async Task LoadRomaji()
     {
         if (Utilities.HasKana(Lrc.PureLyric))
             TextBoxSound.Text =

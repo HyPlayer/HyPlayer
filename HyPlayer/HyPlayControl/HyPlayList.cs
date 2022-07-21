@@ -278,7 +278,7 @@ public static class HyPlayList
         }
     }
 
-    public static async void PickLocalFile()
+    public static async Task PickLocalFile()
     {
         var fop = new FileOpenPicker();
         fop.FileTypeFilter.Add(".flac");
@@ -634,7 +634,7 @@ public static class HyPlayList
         return playUrl;
     }
 
-    public static async void LoadPlayerSong()
+    public static async Task LoadPlayerSong()
     {
         if (NowPlayingItem.PlayItem?.Name == null)
         {
@@ -851,7 +851,7 @@ public static class HyPlayList
             OnPause?.Invoke();
     }
 
-    private static async void LoadLyrics(HyPlayItem hpi)
+    private static async Task LoadLyrics(HyPlayItem hpi)
     {
         var pureLyricInfo = new PureLyricInfo();
         bool unionTranslation = false;
@@ -962,7 +962,7 @@ public static class HyPlayList
         return new PureLyricInfo();
     }
 
-    public static async void OnAudioRenderDeviceChangedOrInitialized()
+    public static async Task OnAudioRenderDeviceChangedOrInitialized()
     {
         try
         {

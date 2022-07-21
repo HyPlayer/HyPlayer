@@ -80,7 +80,7 @@ public sealed partial class Comments : Page, IDisposable
         LoadComments(2, HotCommentList);
     }
 
-    private async void LoadComments(int type, StackPanel addingPanel = null)
+    private async Task LoadComments(int type, StackPanel addingPanel = null)
     {
         if (addingPanel == null)
             addingPanel = CommentList;

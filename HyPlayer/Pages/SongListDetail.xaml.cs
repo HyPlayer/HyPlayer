@@ -76,7 +76,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         ToggleButtonLike.IsChecked = playList.subscribed;
     }
 
-    public async void LoadSongListItem()
+    public async Task LoadSongListItem()
     {
         IsLoading = true;
         if (playList.plid != "-666")

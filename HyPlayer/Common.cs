@@ -139,7 +139,7 @@ namespace HyPlayer
             });
         }
 
-        public static async void RollTeachingTip(bool passiveRoll = true)
+        public static void RollTeachingTip(bool passiveRoll = true)
         {
             if (passiveRoll && _teachingTipSecondCounter-- > 0) return;
             _teachingTipSecondCounter = 3;
@@ -200,7 +200,7 @@ namespace HyPlayer
             GC.Collect();
         }
 
-        public static async void NavigatePageResource(string resourceId)
+        public static async Task NavigatePageResource(string resourceId)
         {
             switch (resourceId.Substring(0, 2))
             {
@@ -1064,7 +1064,7 @@ namespace HyPlayer
             ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
         }
 
-        public static async void SetcurPlayingListHistory(List<string> songids)
+        public static async Task SetcurPlayingListHistory(List<string> songids)
         {
             if (Common.Setting.advancedMusicHistoryStorage)
             {
@@ -1087,7 +1087,7 @@ namespace HyPlayer
             }
         }
 
-        public static async void ClearHistory()
+        public static async Task ClearHistory()
         {
             var list = new List<string>();
             ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);

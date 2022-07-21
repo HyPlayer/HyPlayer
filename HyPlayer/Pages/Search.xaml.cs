@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -81,7 +82,7 @@ public sealed partial class Search : Page, IDisposable
         GC.Collect();
     }
 
-    private async void LoadResult()
+    private async Task LoadResult()
     {
         if (string.IsNullOrEmpty(Text)) return;
         if (Convert.ToBase64String(Text.ToByteArrayUtf8()) == "6Ieq5p2A")

@@ -73,7 +73,7 @@ public sealed partial class SongsList : UserControl, IDisposable
         HyPlayList.OnPlayItemChange += HyPlayListOnOnPlayItemChange;
     }
 
-    private async void IndicateNowPlayingItem()
+    private async Task IndicateNowPlayingItem()
     {
         var tryCount = 5;
         while (--tryCount > 0)

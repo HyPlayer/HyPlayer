@@ -56,7 +56,7 @@ public sealed partial class History : Page
         }
     }
 
-    private async void LoadRankAll()
+    private async Task LoadRankAll()
     {
         Songs.Clear();
         try
@@ -78,7 +78,7 @@ public sealed partial class History : Page
         }
     }
 
-    private async void LoadRankWeek()
+    private async Task LoadRankWeek()
     {
         Songs.Clear();
         try

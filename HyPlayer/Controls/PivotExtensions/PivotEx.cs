@@ -89,7 +89,7 @@ namespace HyPlayer.Controls
             UpdateCurrentScrollViewer();
         }
 
-        private async void UpdateCurrentScrollViewer()
+        private async Task UpdateCurrentScrollViewer()
         {
             var container = ContainerFromIndex(SelectedIndex) as PivotItem;
 

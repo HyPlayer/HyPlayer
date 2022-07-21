@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -63,7 +64,7 @@ public sealed partial class PageFavorite : Page, IDisposable
         }
     }
 
-    private async void LoadRadioResult()
+    private async Task LoadRadioResult()
     {
         try
         {
@@ -92,7 +93,7 @@ public sealed partial class PageFavorite : Page, IDisposable
         }
     }
 
-    private async void LoadArtistResult()
+    private async Task LoadArtistResult()
     {
         try
         {
@@ -123,7 +124,7 @@ public sealed partial class PageFavorite : Page, IDisposable
         }
     }
 
-    private async void LoadAlbumResult()
+    private async Task LoadAlbumResult()
     {
         try
         {

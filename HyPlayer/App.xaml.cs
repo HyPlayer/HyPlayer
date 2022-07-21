@@ -72,7 +72,7 @@ sealed partial class App : Application
 #endif
     }
 #if !DEBUG
-    private async void LoadMicrosoftStoreSDK()
+    private async Task LoadMicrosoftStoreSDK()
     {
 
         StoreServicesEngagementManager engagementManager = StoreServicesEngagementManager.GetDefault();
@@ -103,7 +103,7 @@ sealed partial class App : Application
     }
 
 
-    private async void InitializeThings()
+    private async Task InitializeThings()
     {
         try
         {
@@ -194,7 +194,7 @@ sealed partial class App : Application
         */
     }
 
-    public async void InitializeJumpList()
+    public async Task InitializeJumpList()
     {
         var jumpList = await JumpList.LoadCurrentAsync();
         jumpList.Items.Clear();
