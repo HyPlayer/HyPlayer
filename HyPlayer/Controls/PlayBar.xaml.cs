@@ -277,10 +277,10 @@ public sealed partial class PlayBar
     public async void LoadPlayingFile(HyPlayItem mpi)
     {
         if (HyPlayList.NowPlayingItem.PlayItem == null) return;
-
+        
         try
         {
-            if (!Common.Setting.noImage)
+            if (!Common.Setting.noImage && !Common.IsInBackground)
                 if (mpi.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
                 {
                     var storageFile = HyPlayList.NowPlayingStorageFile;
@@ -300,9 +300,8 @@ public sealed partial class PlayBar
                                                     StaticSource.PICSIZE_PLAYBAR_ALBUMCOVER));
                     });
                 }
-
-            ApplicationView.GetForCurrentView().Title = HyPlayList.NowPlayingItem.PlayItem.ArtistString + " - " +
-                                                        HyPlayList.NowPlayingItem.PlayItem.Name;
+            ApplicationView.GetForCurrentView().Title = HyPlayList.NowPlayingItem.PlayItem.Name + " - " +
+                                    HyPlayList.NowPlayingItem.PlayItem.ArtistString;
         }
         catch (Exception)
         {

@@ -504,13 +504,10 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 //LyricBox.Children.Add(new TextBlock() { Text = "当前暂无歌曲播放" });
                 ImageAlbum.Source = null;
             }
-        });
 
-        if (mpi?.PlayItem == null) return;
+            if (mpi?.PlayItem == null) return;
 
-        void LoadLyricColor()
-        {
-            Common.Invoke(async () =>
+            async void LoadLyricColor()
             {
                 if (await IsBrightAsync())
                 {
@@ -532,32 +529,27 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 if (Common.Setting.playbarBackgroundElay)
                     Common.BarPlayBar.SetPlayBarIdleBackground(ForegroundIdleTextBrush);
                 LoadLyricsBox();
-            });
-        }
+            }
 
-        async Task LoadCoverImage()
-        {
-            try
+            async Task LoadCoverImage()
             {
-                if (mpi.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
+                try
                 {
-                    var storageFile = HyPlayList.NowPlayingStorageFile;
-                    if (mpi.PlayItem.DontSetLocalStorageFile != null)
-                        storageFile = mpi.PlayItem.DontSetLocalStorageFile;
-                    var img = new BitmapImage();
-                    await img.SetSourceAsync(
-                        await storageFile.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
-                    Common.Invoke(() =>
+                    if (mpi.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
                     {
+                        var storageFile = HyPlayList.NowPlayingStorageFile;
+                        if (mpi.PlayItem.DontSetLocalStorageFile != null)
+                            storageFile = mpi.PlayItem.DontSetLocalStorageFile;
+                        var img = new BitmapImage();
+                        await img.SetSourceAsync(
+                            await storageFile.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
+
                         ImageAlbum.Source = img;
                         if (Common.Setting.expandedPlayerBackgroundType == 0)
                             Background = new ImageBrush
                                 { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
-                    });
-                }
-                else
-                {
-                    Common.Invoke(() =>
+                    }
+                    else
                     {
                         ImageAlbum.PlaceholderSource = new BitmapImage(new Uri(mpi.PlayItem.Album.cover + "?param=" +
                                                                                StaticSource
@@ -572,34 +564,32 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         if (Common.Setting.expandedPlayerBackgroundType == 0)
                             Background = new ImageBrush
                                 { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
-                    });
+                    }
+                }
+                catch (Exception)
+                {
                 }
             }
-            catch (Exception)
-            {
-            }
-        }
 
-        if (lastlrcid != HyPlayList.NowPlayingItem.GetHashCode())
-        {
-            //歌词加载中提示
-            var blanksize = LyricBoxContainer.ViewportHeight / 2;
-            if (double.IsNaN(blanksize) || blanksize == 0) blanksize = Window.Current.Bounds.Height / 3;
-
-            Common.Invoke(() =>
+            if (lastlrcid != HyPlayList.NowPlayingItem.GetHashCode())
             {
+                //歌词加载中提示
+                var blanksize = LyricBoxContainer.ViewportHeight / 2;
+                if (double.IsNaN(blanksize) || blanksize == 0) blanksize = Window.Current.Bounds.Height / 3;
+
+
                 LyricBoxHost.Margin = new Thickness(0, blanksize, 0, blanksize);
                 LyricBox.ItemsSource = new List<LyricItemModel>
                 {
                     new(SongLyric.LoadingLyric)
                 };
                 LyricBox.Width = LyricWidth;
-            });
-        }
+            }
 
-        needRedesign++;
-        LoadCoverImage();
-        LoadLyricColor();
+            needRedesign++;
+            LoadCoverImage();
+            LoadLyricColor();
+        });
     }
 
     public void StartExpandAnimation()
