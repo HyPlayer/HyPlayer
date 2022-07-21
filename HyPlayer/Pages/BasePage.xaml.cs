@@ -117,7 +117,7 @@ public sealed partial class BasePage : Page
     {
         base.OnNavigatedTo(e);
         ContentDialog dialog = new ContentDialog();
-        if (Common.Setting.DisablePopUp == "false") {
+        if (!Common.Setting.DisablePopUp) {
             dialog.Title = "重要提示";
             dialog.Content = "本软件仅供学习交流使用，下载后请在 24 小时内删除。\r\n请勿使用此软件登录网易云音乐或进行违反网易云音乐用户协议的行为";
             dialog.CloseButtonText = "我已知晓";

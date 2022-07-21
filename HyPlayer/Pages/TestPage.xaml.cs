@@ -92,6 +92,6 @@ public sealed partial class TestPage : Page
 
     private void DisablePopUpButton_Click(object sender, RoutedEventArgs e)
     {
-        Common.Setting.DisablePopUp = "true";
+        Common.Setting.DisablePopUp = true;
     }
 }
