@@ -1,18 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Windows.Security.ExchangeActiveSyncProvisioning;
 using Windows.Storage;
 using Windows.System;
-using HyPlayer.HyPlayControl;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using HyPlayer.Classes;
-using Microsoft.AppCenter;
+using HyPlayer.HyPlayControl;
+using Microsoft.AppCenter.Ingestion.Models;
 using Microsoft.AppCenter.Utils;
 using Newtonsoft.Json;
-using System.Linq;
-using TagLib.NonContainer;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -23,22 +21,22 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class TestPage : Page
 {
-    private int _teachingTipIndex;
-
-
-    public string ResourceId
-    {
-        get { return (string)GetValue(ResourceIdProperty); }
-        set { SetValue(ResourceIdProperty, value); }
-    }
-
     public static readonly DependencyProperty ResourceIdProperty =
         DependencyProperty.Register("ResourceId", typeof(string), typeof(TestPage), new PropertyMetadata(""));
+
+    private int _teachingTipIndex;
 
 
     public TestPage()
     {
         InitializeComponent();
+    }
+
+
+    public string ResourceId
+    {
+        get => (string)GetValue(ResourceIdProperty);
+        set => SetValue(ResourceIdProperty, value);
     }
 
     private void TestTeachingTip_OnClick(object sender, RoutedEventArgs e)
@@ -77,21 +75,21 @@ public sealed partial class TestPage : Page
         Launcher.LaunchFileAsync(file);
     }
 
+    private void DisablePopUpButton_Click(object sender, RoutedEventArgs e)
+    {
+        Common.Setting.DisablePopUp = true;
+    }
+
     private class DumpInfo
     {
         public HyPlayItem CurrentSong { get; set; }
         public string CurrentPlaySource { get; set; }
         public NCUser CurrentUser { get; set; }
-        public Microsoft.AppCenter.Ingestion.Models.Device DeviceType { get; set; }
+        public Device DeviceType { get; set; }
         public string DeviceId { get; set; }
         public bool IsInBackground { get; set; }
         public bool IsUsingCache { get; set; }
         public bool IsLowCache { get; set; }
         public List<string> ErrorMessageList { get; set; }
-    }
-
-    private void DisablePopUpButton_Click(object sender, RoutedEventArgs e)
-    {
-        Common.Setting.DisablePopUp = true;
     }
 }

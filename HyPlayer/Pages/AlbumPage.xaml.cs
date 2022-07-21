@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
@@ -29,9 +28,9 @@ namespace HyPlayer.Pages;
 public sealed partial class AlbumPage : Page, IDisposable
 {
     private readonly ObservableCollection<NCSong> AlbumSongs = new();
-    CollectionViewSource AlbumSongsViewSource = new() { IsSourceGrouped = true };
     private NCAlbum Album;
     private string albumid;
+    private readonly CollectionViewSource AlbumSongsViewSource = new() { IsSourceGrouped = true };
     private List<NCArtist> artists = new();
     private int page;
 
@@ -72,7 +71,7 @@ public sealed partial class AlbumPage : Page, IDisposable
     private async Task LoadAlbumDynamic()
     {
         var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.AlbumDetailDynamic,
-            new Dictionary<string, object>() { { "id", albumid } });
+            new Dictionary<string, object> { { "id", albumid } });
         BtnSub.IsChecked = json["isSub"].ToObject<bool>();
     }
 
@@ -163,11 +162,8 @@ public sealed partial class AlbumPage : Page, IDisposable
 
     private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
     {
-        List<NCSong> songs = new List<NCSong>();
-        foreach (var discSongs in (IEnumerable<DiscSongs>)AlbumSongsViewSource.Source)
-        {
-            songs.AddRange(discSongs);
-        }
+        var songs = new List<NCSong>();
+        foreach (var discSongs in (IEnumerable<DiscSongs>)AlbumSongsViewSource.Source) songs.AddRange(discSongs);
 
         DownloadManager.AddDownload(songs);
     }

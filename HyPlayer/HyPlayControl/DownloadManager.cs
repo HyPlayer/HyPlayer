@@ -2,22 +2,21 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Timers;
+using Windows.Graphics.Imaging;
 using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using HyPlayer.Classes;
+using Microsoft.Toolkit.Uwp.Helpers;
 using NeteaseCloudMusicApi;
 using TagLib;
 using File = TagLib.File;
-using Windows.Graphics.Imaging;
-using Microsoft.Toolkit.Uwp.Helpers;
 
 #endregion
 
@@ -25,33 +24,33 @@ namespace HyPlayer.HyPlayControl;
 
 internal class DownloadObject
 {
-    private PlayItem dontuseme;
-    public DownloadOperation downloadOperation;
-
-    public string fullpath;
-    public ulong HavedSize;
-    public NCSong ncsong;
-
-    public int progress;
-    public bool completedFired = false;
-
-    // 0 - 排队 1 - 下载中 2 - 下载完成  3 - 暂停
-    public int Status;
-    public ulong TotalSize;
-
-    private static Dictionary<string, Guid> CodecIds = new Dictionary<string, Guid>()
+    private static readonly Dictionary<string, Guid> CodecIds = new()
     {
         { "image/pjpeg", BitmapDecoder.JpegDecoderId },
         { "image/x-png", BitmapDecoder.PngDecoderId },
         { "image/webp", BitmapDecoder.WebpDecoderId }
     };
 
+    public bool completedFired;
+    private PlayItem dontuseme;
+    public DownloadOperation downloadOperation;
+
+    public string filename;
+
+    public string fullpath;
+    public ulong HavedSize;
+    public NCSong ncsong;
+
+    public int progress;
+
+    // 0 - 排队 1 - 下载中 2 - 下载完成  3 - 暂停
+    public int Status;
+    public ulong TotalSize;
+
     public DownloadObject(NCSong song)
     {
         ncsong = song;
     }
-
-    public string filename;
 
     private void Wc_DownloadFileCompleted()
     {
@@ -128,7 +127,7 @@ internal class DownloadObject
                 file.Tag.Album = ncsong.Album.name;
                 file.Tag.Performers = ncsong.Artist.Select(t => t.name).ToArray();
                 file.Tag.Title = ncsong.songname;
-                file.Tag.Track = (uint)(ncsong.TrackId == -1 ? (ncsong.Order + 1) : ncsong.TrackId);
+                file.Tag.Track = (uint)(ncsong.TrackId == -1 ? ncsong.Order + 1 : ncsong.TrackId);
                 file.Tag.Disc = uint.Parse(Regex.Match(ncsong.CDName, "[0-9]+").Value);
                 //file.Save();
 
@@ -193,10 +192,8 @@ internal class DownloadObject
                     !(json.ContainsKey("uncollected") && json["uncollected"].ToString().ToLower() == "true"))
                 {
                     if (json["lrc"]["lyric"].ToString().Contains("[99:00.00]纯音乐，请欣赏"))
-                    {
                         // 这个也是纯音乐
                         return;
-                    }
 
                     var lrc = Utils.ConvertPureLyric(json["lrc"]["lyric"].ToString());
                     if (Common.Setting.downloadTranslation && json["tlyric"]?["lyric"] != null)
@@ -214,15 +211,11 @@ internal class DownloadObject
                             Path.GetFileName(Path.ChangeExtension(fullpath, "lrc")),
                             CreationCollisionOption.ReplaceExisting);
                     if (Common.Setting.usingGBK)
-                    {
                         await FileIO.WriteBytesAsync(sf,
                             Encoding.Convert(Encoding.UTF8, Encoding.GetEncoding("GBK"),
                                 Encoding.UTF8.GetBytes(lrctxt)));
-                    }
                     else
-                    {
                         await FileIO.WriteTextAsync(sf, lrctxt);
-                    }
                 }
             }
             catch (Exception ex)
@@ -298,9 +291,9 @@ internal class DownloadObject
                 .Replace("{$SONGNAME}", ncsong.songname.EscapeForPath())
                 .Replace("{$ALBUM}", ncsong.Album.name.EscapeForPath())
                 .Replace("{$INDEX}",
-                    (ncsong.TrackId == -1 ? (ncsong.Order + 1) : ncsong.TrackId).ToString().EscapeForPath())
+                    (ncsong.TrackId == -1 ? ncsong.Order + 1 : ncsong.TrackId).ToString().EscapeForPath())
                 .Replace("{$CDNAME}", ncsong.CDName?.EscapeForPath());
-            string folderName = Common.Setting.downloadDir;
+            var folderName = Common.Setting.downloadDir;
             var nowFolder = await StorageFolder.GetFolderFromPathAsync(folderName);
             var ses = filename.Replace('\\', '/').Split('/');
             for (var index = 0; index < ses.Length - 1; index++)
@@ -312,7 +305,6 @@ internal class DownloadObject
 
             if (await nowFolder.FileExistsAsync(Path.GetFileName(filename + ".mp3")) ||
                 await nowFolder.FileExistsAsync(Path.GetFileName(filename + ".flac")))
-            {
                 switch (Common.Setting.downloadNameOccupySolution)
                 {
                     case 0:
@@ -326,7 +318,6 @@ internal class DownloadObject
                         filename = Path.GetFileNameWithoutExtension(filename) + ncsong.sid;
                         break;
                 }
-            }
 
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
                 new Dictionary<string, object> { { "id", ncsong.sid }, { "br", Common.Setting.downloadAudioRate } });
@@ -378,7 +369,7 @@ internal class DownloadObject
 
 internal static class DownloadManager
 {
-    private static readonly Timer _timer = new Timer(1000);
+    private static readonly Timer _timer = new(1000);
     private static bool Timered;
     public static List<DownloadObject> DownloadLists = new();
     public static BackgroundDownloader Downloader = new();
@@ -488,29 +479,24 @@ public class UwpStorageFileAbstraction : File.IFileAbstraction
             throw new ArgumentNullException(nameof(file));
 
         this.file = file;
-        _name = file.Name;
-        _readStream = file.OpenStreamForReadAsync().GetAwaiter().GetResult();
-        _writeStream = file.OpenStreamForWriteAsync().GetAwaiter().GetResult();
+        Name = file.Name;
+        ReadStream = file.OpenStreamForReadAsync().GetAwaiter().GetResult();
+        WriteStream = file.OpenStreamForWriteAsync().GetAwaiter().GetResult();
     }
 
     public UwpStorageFileAbstraction(Stream readStream, Stream writeStream, string name = "HyPlayer Music")
     {
-        _readStream = readStream;
-        _writeStream = writeStream;
-        _name = name;
+        ReadStream = readStream;
+        WriteStream = writeStream;
+        Name = name;
     }
 
-    private readonly string _name;
 
+    public string Name { get; }
 
-    public string Name => _name;
+    public Stream ReadStream { get; }
 
-    private readonly Stream _readStream;
-    private readonly Stream _writeStream;
-
-    public Stream ReadStream => _readStream;
-
-    public Stream WriteStream => _writeStream;
+    public Stream WriteStream { get; }
 
     public void CloseStream(Stream stream)
     {

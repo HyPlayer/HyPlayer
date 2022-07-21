@@ -3,17 +3,14 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
+using Windows.ApplicationModel;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Media;
 using Windows.Media.Playback;
 using Windows.Storage;
-using Windows.Storage.AccessCache;
 using Windows.Storage.FileProperties;
-using Windows.Storage.Pickers;
+using Windows.System;
 using Windows.System.Profile;
 using Windows.UI;
 using Windows.UI.Notifications;
@@ -30,7 +27,6 @@ using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
 using Microsoft.Toolkit.Uwp.Notifications;
-using Microsoft.Toolkit.Uwp.UI.Media;
 using NeteaseCloudMusicApi;
 
 #endregion
@@ -41,16 +37,16 @@ namespace HyPlayer.Controls;
 
 public sealed partial class PlayBar
 {
+    private SolidColorBrush BackgroundElayBrush;
     private bool canslide;
+
+    private double FadeInOutStartTime;
+
+    private int isFadeInOutPausing; // 0 - Not      1 - FadeIn      2 - FadeOut
     public PlayMode NowPlayType = PlayMode.DefaultRoll;
     public ObservableCollection<HyPlayItem> PlayItems = new();
 
-    private SolidColorBrush BackgroundElayBrush;
     private bool realSelectSong;
-
-    private int isFadeInOutPausing = 0; // 0 - Not      1 - FadeIn      2 - FadeOut
-
-    private double FadeInOutStartTime = 0;
     /*
     private Storyboard TbSongNameScrollStoryBoard;
     private double lastOffsetX;
@@ -223,24 +219,18 @@ public sealed partial class PlayBar
             if (Common.Setting.fadeInOut && isFadeInOutPausing == 0)
             {
                 if (HyPlayList.Player.PlaybackSession.Position.TotalSeconds <= Common.Setting.fadeInOutTime)
-                {
                     HyPlayList.Player.Volume =
                         HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds /
                         Common.Setting.fadeInOutTime / 1000 * HyPlayList.PlayerOutgoingVolume;
-                }
                 else if (HyPlayList.Player.PlaybackSession.NaturalDuration.TotalSeconds -
                          HyPlayList.Player.PlaybackSession.Position.TotalSeconds <=
                          Common.Setting.fadeInOutTime)
-                {
                     HyPlayList.Player.Volume =
                         (HyPlayList.Player.PlaybackSession.NaturalDuration.TotalSeconds -
                          HyPlayList.Player.PlaybackSession.Position.TotalSeconds) / Common.Setting.fadeInOutTime *
                         HyPlayList.PlayerOutgoingVolume;
-                }
                 else
-                {
                     HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume;
-                }
             }
             else if (isFadeInOutPausing != 0)
             {
@@ -250,7 +240,9 @@ public sealed partial class PlayBar
                 if (fadeRatio >= 1)
                 {
                     if (isFadeInOutPausing == 1)
+                    {
                         HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume;
+                    }
                     else
                     {
                         HyPlayList.Player.Volume = 0;
@@ -262,15 +254,11 @@ public sealed partial class PlayBar
                 }
 
                 if (isFadeInOutPausing == 1)
-                {
                     // Fade In
                     HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume * fadeRatio;
-                }
                 else
-                {
                     // Fade Out
                     HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume * (1 - fadeRatio);
-                }
             }
         }
         catch (Exception)
@@ -394,13 +382,9 @@ public sealed partial class PlayBar
             realSelectSong = false;
             if (HyPlayList.NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating &&
                 Common.Setting.displayShuffledList)
-            {
                 ListBoxPlayList.SelectedIndex = HyPlayList.ShufflingIndex;
-            }
             else
-            {
                 ListBoxPlayList.SelectedIndex = HyPlayList.NowPlaying;
-            }
 
             realSelectSong = true;
 
@@ -730,7 +714,7 @@ public sealed partial class PlayBar
 
     private void BtnLike_OnClick(object sender, RoutedEventArgs e)
     {
-        bool isLiked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
+        var isLiked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
         switch (HyPlayList.NowPlayingItem.ItemType)
         {
             case HyPlayItemType.Netease:
@@ -906,11 +890,11 @@ public sealed partial class PlayBar
 
         // 当前未打开歌词
         Bindings.Update();
-        var uri = new Uri($"hot-lyric:///?from={Windows.ApplicationModel.Package.Current.Id.FamilyName}");
-        if (await Windows.System.Launcher.QueryUriSupportAsync(uri, Windows.System.LaunchQuerySupportType.Uri,
-                "306200B4771A6.217957860C1A5_mb3g82vhcggpy") != Windows.System.LaunchQuerySupportStatus.Available)
+        var uri = new Uri($"hot-lyric:///?from={Package.Current.Id.FamilyName}");
+        if (await Launcher.QueryUriSupportAsync(uri, LaunchQuerySupportType.Uri,
+                "306200B4771A6.217957860C1A5_mb3g82vhcggpy") != LaunchQuerySupportStatus.Available)
         {
-            var dlg = new ContentDialog()
+            var dlg = new ContentDialog
             {
                 Title = "关于桌面歌词",
                 Content =
@@ -922,27 +906,24 @@ public sealed partial class PlayBar
             var res = await dlg.ShowAsync(ContentDialogPlacement.Popup);
             if (res == ContentDialogResult.Primary)
             {
-                await Windows.System.Launcher.LaunchUriAsync(new Uri("ms-windows-store://pdp?productId=9MXFFHVQVBV9"));
+                await Launcher.LaunchUriAsync(new Uri("ms-windows-store://pdp?productId=9MXFFHVQVBV9"));
                 return;
             }
-            else
-            {
-                Common.Setting.toastLyric = true;
-                InitializeDesktopLyric();
-                return;
-            }
+
+            Common.Setting.toastLyric = true;
+            InitializeDesktopLyric();
+            return;
         }
 
         try
         {
             if (!Common.Setting.progressInSMTC) Common.Setting.progressInSMTC = true;
-            await Windows.System.Launcher.LaunchUriAsync(uri, new Windows.System.LauncherOptions()
+            await Launcher.LaunchUriAsync(uri, new LauncherOptions
             {
                 FallbackUri = new Uri("ms-windows-store://pdp?productId=9MXFFHVQVBV9")
             });
             Common.Setting.toastLyric = false;
             Bindings.Update();
-            return;
         }
         catch
         {
@@ -964,14 +945,10 @@ public sealed partial class PlayBar
         if (HyPlayList.NowPlaying >= 0 && HyPlayList.NowPlaying < PlayItems.Count)
             if (HyPlayList.NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating &&
                 Common.Setting.displayShuffledList)
-            {
                 // 新的随机算法
                 ListBoxPlayList.ScrollIntoView(PlayItems[HyPlayList.ShufflingIndex]);
-            }
             else
-            {
                 ListBoxPlayList.ScrollIntoView(PlayItems[HyPlayList.NowPlaying]);
-            }
     }
 
     private void ImageContainer_OnPointerEntered(object sender, PointerRoutedEventArgs e)
@@ -1008,9 +985,7 @@ public sealed partial class PlayBar
         HyPlayList.OnSongRemoveAll += HyPlayListOnOnSongRemoveAll;
         Common.OnEnterForegroundFromBackground += () => LoadPlayingFile(HyPlayList.NowPlayingItem);
         if (Common.Setting.playButtonAccentColor)
-        {
             BtnPlayStateChange.Background = Resources["AccentPlayButtonColor"] as Brush;
-        }
 
         AlbumImage.Source = new BitmapImage(new Uri("ms-appx:Assets/icon.png"));
         if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
@@ -1021,7 +996,6 @@ public sealed partial class PlayBar
         realSelectSong = true;
         Common.Logs.Add("Now PlaySource is " + HyPlayList.PlaySourceId);
         if (HyPlayList.PlaySourceId != "local")
-        {
             try
             {
                 var list = await HistoryManagement.GetcurPlayingListHistory();
@@ -1037,7 +1011,6 @@ public sealed partial class PlayBar
             catch
             {
             }
-        }
 
 
         if (Common.isExpanded)
@@ -1047,15 +1020,14 @@ public sealed partial class PlayBar
                 Application.Current.Resources[
                     "ApplicationPageBackgroundThemeBrush"] as Brush; /*new BackdropBlurBrush() { Amount = 30.0 };*/
         if (Common.Setting.hotlyricOnStartup)
-        {
             try
             {
-                var uri = new Uri($"hot-lyric:///?from={Windows.ApplicationModel.Package.Current.Id.FamilyName}");
-                if (await Windows.System.Launcher.QueryUriSupportAsync(uri, Windows.System.LaunchQuerySupportType.Uri,
+                var uri = new Uri($"hot-lyric:///?from={Package.Current.Id.FamilyName}");
+                if (await Launcher.QueryUriSupportAsync(uri, LaunchQuerySupportType.Uri,
                         "306200B4771A6.217957860C1A5_mb3g82vhcggpy") ==
-                    Windows.System.LaunchQuerySupportStatus.Available)
+                    LaunchQuerySupportStatus.Available)
                 {
-                    await Windows.System.Launcher.LaunchUriAsync(uri);
+                    await Launcher.LaunchUriAsync(uri);
                     Common.Setting.toastLyric = false;
                     Bindings.Update();
                     return;
@@ -1064,21 +1036,15 @@ public sealed partial class PlayBar
             catch
             {
             }
-        }
 
         if (Common.Setting.playbarBackgroundElay)
         {
             PointerEntered += (o, args) =>
             {
                 if (Common.isExpanded && Common.Setting.playbarBackgroundElay)
-                {
                     GridThis.Background = BackgroundElayBrush;
-                }
             };
-            PointerExited += (o, args) =>
-            {
-                GridThis.Background = new SolidColorBrush(Colors.Transparent);
-            };
+            PointerExited += (o, args) => { GridThis.Background = new SolidColorBrush(Colors.Transparent); };
         }
 
         /*

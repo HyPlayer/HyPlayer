@@ -9,10 +9,7 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
@@ -31,26 +28,24 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class SongListDetail : Page, IDisposable
 {
-    private int page;
-    private NCPlayList playList;
-    public ObservableCollection<NCSong> Songs;
-
-
     public static readonly DependencyProperty IsLoadingProperty = DependencyProperty.Register(
         "IsLoading", typeof(bool), typeof(SongListDetail), new PropertyMetadata(true));
 
-    public bool IsLoading
-    {
-        get => (bool)GetValue(IsLoadingProperty);
-        set => SetValue(IsLoadingProperty, value);
-    }
-
     private bool isDescExpanded = false;
+    private int page;
+    private NCPlayList playList;
+    public ObservableCollection<NCSong> Songs;
 
     public SongListDetail()
     {
         InitializeComponent();
         Songs = new ObservableCollection<NCSong>();
+    }
+
+    public bool IsLoading
+    {
+        get => (bool)GetValue(IsLoadingProperty);
+        set => SetValue(IsLoadingProperty, value);
     }
 
     public void Dispose()
@@ -326,13 +321,9 @@ public sealed partial class SongListDetail : Page, IDisposable
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
     {
         if (playList.plid != "-666")
-        {
             await HyPlayList.AppendPlayList(playList.plid);
-        }
         else
-        {
             HyPlayList.AppendNcSongs(Songs.ToList());
-        }
         HyPlayList.SongAppendDone();
     }
 }

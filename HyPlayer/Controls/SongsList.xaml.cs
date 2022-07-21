@@ -73,24 +73,6 @@ public sealed partial class SongsList : UserControl, IDisposable
         HyPlayList.OnPlayItemChange += HyPlayListOnOnPlayItemChange;
     }
 
-    private async Task IndicateNowPlayingItem()
-    {
-        var tryCount = 5;
-        while (--tryCount > 0)
-        {
-            await Task.Delay(TimeSpan.FromSeconds(2));
-            try
-            {
-                HyPlayListOnOnPlayItemChange(HyPlayList.NowPlayingItem);
-                break;
-            }
-            catch (Exception)
-            {
-                // ignored
-            }
-        }
-    }
-
     public bool MultiSelect
     {
         get => (bool)GetValue(MultiSelectProperty);
@@ -101,7 +83,6 @@ public sealed partial class SongsList : UserControl, IDisposable
             SetValue(MultiSelectProperty, value);
             IsManualSelect = true;
         }
-
     }
 
     public UIElement ListHeader
@@ -172,10 +153,28 @@ public sealed partial class SongsList : UserControl, IDisposable
         Songs.Clear();
     }
 
+    private async Task IndicateNowPlayingItem()
+    {
+        var tryCount = 5;
+        while (--tryCount > 0)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(2));
+            try
+            {
+                HyPlayListOnOnPlayItemChange(HyPlayList.NowPlayingItem);
+                break;
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+        }
+    }
+
     private void HyPlayListOnOnPlayItemChange(HyPlayItem playitem)
     {
         if (playitem?.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive || playitem?.PlayItem == null)
-        {            
+        {
             Common.Invoke(() =>
             {
                 if (MultiSelect) return;
@@ -185,6 +184,7 @@ public sealed partial class SongsList : UserControl, IDisposable
             });
             return;
         }
+
         var idx = VisibleSongs.ToList().FindIndex(t => t.sid == playitem.PlayItem.Id);
         if (idx == -1) return;
         Common.Invoke(() =>
@@ -214,7 +214,7 @@ public sealed partial class SongsList : UserControl, IDisposable
     {
         if (!IsManualSelect) return;
         if (SongContainer.SelectedItem == null || SongContainer.SelectedIndex < 0) return;
-        int index = SongContainer.SelectedIndex;
+        var index = SongContainer.SelectedIndex;
         if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
         if (VisibleSongs[index].sid == HyPlayList.NowPlayingItem?.PlayItem?.Id) return;
         if (ListSource != null && ListSource != "content" && Songs.Count == VisibleSongs.Count)
@@ -229,9 +229,7 @@ public sealed partial class SongsList : UserControl, IDisposable
 
             if (ListSource.Substring(0, 2) == "pl" ||
                 ListSource.Substring(0, 2) == "al")
-            {
                 HyPlayList.PlaySourceId = ListSource.Substring(2);
-            }
 
             HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t =>
                 t.PlayItem?.Id == VisibleSongs[index].sid));
@@ -249,9 +247,7 @@ public sealed partial class SongsList : UserControl, IDisposable
             HyPlayList.SongAppendDone();
             if (ListSource?.Substring(0, 2) == "pl" ||
                 ListSource?.Substring(0, 2) == "al")
-            {
                 HyPlayList.PlaySourceId = ListSource.Substring(2);
-            }
 
             HyPlayList.SongMoveTo(index);
         }
@@ -265,9 +261,7 @@ public sealed partial class SongsList : UserControl, IDisposable
         HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.Id == ncsong.sid));
         if (ListSource.Substring(0, 2) == "pl" ||
             ListSource.Substring(0, 2) == "al")
-        {
             HyPlayList.PlaySourceId = ListSource.Substring(2);
-        }
     }
 
     private void More_Click(object sender, RoutedEventArgs e)
@@ -364,7 +358,7 @@ public sealed partial class SongsList : UserControl, IDisposable
 
         SongContainer.ContextFlyout.ShowAt(element,
             new FlyoutShowOptions
-            { Position = e?.GetPosition(element) ?? new Point(element?.ActualWidth ?? 0, 80) });
+                { Position = e?.GetPosition(element) ?? new Point(element?.ActualWidth ?? 0, 80) });
     }
 
     public static Brush GetBrush(bool IsAvailable)

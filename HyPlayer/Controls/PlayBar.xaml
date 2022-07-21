@@ -177,7 +177,6 @@
             </DoubleAnimation>
 
 
-
         </Storyboard>
 
 
@@ -422,7 +421,8 @@
                                 Click="BtnPlayRollType_OnClick"
                                 Text="顺序播放">
                                 <MenuFlyoutItem.Icon>
-                                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{x:Bind Mode=OneWay, Path=IconPlayType.Glyph}" />
+                                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                              Glyph="{x:Bind Mode=OneWay, Path=IconPlayType.Glyph}" />
                                 </MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
                             <MenuFlyoutItem

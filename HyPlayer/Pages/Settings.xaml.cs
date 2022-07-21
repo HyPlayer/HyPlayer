@@ -9,11 +9,14 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.Devices.Enumeration;
+using Windows.Foundation;
 using Windows.Networking.BackgroundTransfer;
 using Windows.Security.ExchangeActiveSyncProvisioning;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.Storage.Pickers;
+using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -22,9 +25,6 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using Kawazu;
 using Microsoft.UI.Xaml.Controls;
-using Windows.Devices.Enumeration;
-using Windows.Foundation;
-using Windows.UI.Xaml.Media;
 
 #endregion
 
@@ -331,10 +331,11 @@ public sealed partial class Settings : Page
     {
         try
         {
-            var uri = new Uri($"hot-lyric:///?from={Windows.ApplicationModel.Package.Current.Id.FamilyName}");
-            if (await Windows.System.Launcher.QueryUriSupportAsync(uri, Windows.System.LaunchQuerySupportType.Uri) != Windows.System.LaunchQuerySupportStatus.Available)
+            var uri = new Uri($"hot-lyric:///?from={Package.Current.Id.FamilyName}");
+            if (await Launcher.QueryUriSupportAsync(uri, LaunchQuerySupportType.Uri) !=
+                LaunchQuerySupportStatus.Available)
             {
-                var dlg = new ContentDialog()
+                var dlg = new ContentDialog
                 {
                     Title = "当前未安装 「热词」",
                     Content = "是否前往商店安装 「热词」",
@@ -345,36 +346,33 @@ public sealed partial class Settings : Page
                 var res = await dlg.ShowAsync(ContentDialogPlacement.Popup);
                 if (res == ContentDialogResult.Primary)
                 {
-
-                    await Windows.System.Launcher.LaunchUriAsync(new Uri("ms-windows-store://pdp?productId=9MXFFHVQVBV9"));
+                    await Launcher.LaunchUriAsync(new Uri("ms-windows-store://pdp?productId=9MXFFHVQVBV9"));
                     return;
                 }
-                else
-                {
-                    Common.Setting.hotlyricOnStartup = false;
-                }
+
+                Common.Setting.hotlyricOnStartup = false;
             }
             else
             {
-                await Windows.System.Launcher.LaunchUriAsync(uri);
+                await Launcher.LaunchUriAsync(uri);
             }
-
         }
-        catch { }
+        catch
+        {
+        }
     }
 
     private async void BtnChangeAudioRenderDevice_Click(object sender, RoutedEventArgs e)
     {
-        DevicePicker devicePicker = new DevicePicker();
+        var devicePicker = new DevicePicker();
         devicePicker.Filter.SupportedDeviceClasses.Add(DeviceClass.AudioRender);
-        GeneralTransform ge = BtnChangeAudioRenderDevice.TransformToVisual(null);
-        Point point = ge.TransformPoint(new Point());
-        Rect rect = new Rect(point, new Point(point.X + BtnChangeAudioRenderDevice.ActualWidth, point.Y + BtnChangeAudioRenderDevice.ActualHeight));
+        var ge = BtnChangeAudioRenderDevice.TransformToVisual(null);
+        var point = ge.TransformPoint(new Point());
+        var rect = new Rect(point,
+            new Point(point.X + BtnChangeAudioRenderDevice.ActualWidth,
+                point.Y + BtnChangeAudioRenderDevice.ActualHeight));
         var device = await devicePicker.PickSingleDeviceAsync(rect);
-        if (device != null)
-        {
-            Common.Setting.AudioRenderDevice = device.Id;
-        }
+        if (device != null) Common.Setting.AudioRenderDevice = device.Id;
     }
 
     private void BtnChangeToDefaultAudioRenderDevice_Click(object sender, RoutedEventArgs e)

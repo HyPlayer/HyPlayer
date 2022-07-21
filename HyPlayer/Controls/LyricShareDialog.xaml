@@ -98,7 +98,8 @@
                                 &#x27A4;<Bold>{$NEWLINE}</Bold>
                                 : 换行<LineBreak />
                                 <LineBreak />
-                                例如: [{$TIME}]{$ORIGINAL}「{$TRANSLATION}」{$NEWLINE} 为默认的 lrc 输出格式</Paragraph>
+                                例如: [{$TIME}]{$ORIGINAL}「{$TRANSLATION}」{$NEWLINE} 为默认的 lrc 输出格式
+                            </Paragraph>
                         </RichTextBlock>
                     </Flyout>
                 </Button.Flyout>

@@ -1,5 +1,5 @@
 ﻿<ResourceDictionary
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:HyPlayer.Controls">
 
@@ -17,12 +17,13 @@
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
                         <Border x:Name="HeaderContainer" Child="{TemplateBinding Header}" Canvas.ZIndex="1" />
-                        <local:PivotExHeaderView x:Name="PivotExHeaderView" Pivot="{TemplateBinding Pivot}" Grid.Row="1" Canvas.ZIndex="1" Margin="8,0" />
+                        <local:PivotExHeaderView x:Name="PivotExHeaderView" Pivot="{TemplateBinding Pivot}"
+                                                 Grid.Row="1" Canvas.ZIndex="1" Margin="8,0" />
                         <Border x:Name="PivotContainer" Grid.RowSpan="3" Child="{TemplateBinding Pivot}" />
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
-    
+
 </ResourceDictionary>

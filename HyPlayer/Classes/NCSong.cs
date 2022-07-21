@@ -41,18 +41,19 @@ public class PureLyricInfo
 public class SongLyric
 {
     public static SongLyric PureSong = new()
-    { LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏" };
+        { LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏" };
 
     public static SongLyric NoLyric = new()
-    { LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏" };
+        { LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏" };
 
     public static SongLyric LoadingLyric = new()
-    { LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..." };
+        { LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..." };
 
-    public bool HaveTranslation => !string.IsNullOrEmpty(Translation);
     public TimeSpan LyricTime;
     public string PureLyric;
     public string Translation;
+
+    public bool HaveTranslation => !string.IsNullOrEmpty(Translation);
 }
 
 public class NCRadio
@@ -142,28 +143,29 @@ public class NCSong
     public NCAlbum Album;
     public string alias;
     public List<NCArtist> Artist;
+    public string CDName;
     public bool IsAvailable = true;
+    public bool IsCloud;
     public bool IsVip;
 
     public double LengthInMilliseconds;
 
     public int mvid;
     public int Order = 0;
-    public int TrackId = -1;
     public string sid;
-    public string CDName;
     public string songname;
+    public int TrackId = -1;
     public string transname;
     public HyPlayItemType Type;
-    public bool IsCloud;
     public int DspOrder => Order + 1;
 
     public BitmapImage Cover =>
         Common.Setting.noImage
             ? null
             : new BitmapImage(new Uri((Album.cover ??
-                "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg") + "?param=" +
-                StaticSource.PICSIZE_SINGLENCSONG_COVER));
+                                       "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg") +
+                                      "?param=" +
+                                      StaticSource.PICSIZE_SINGLENCSONG_COVER));
 
     public string ArtistString
     {
@@ -219,6 +221,7 @@ public class NCSong
 
 public class SimpleListItem
 {
+    public bool CanPlay;
     public string CoverUri;
     public string LineOne;
     public string LineThree;
@@ -226,7 +229,6 @@ public class SimpleListItem
     public int Order = 0;
     public string ResourceId;
     public string Title;
-    public bool CanPlay;
     public BitmapImage Cover => Common.Setting.noImage ? null : new BitmapImage(new Uri(CoverUri));
     public int DspOrder => Order + 1;
 }
@@ -236,16 +238,16 @@ public class PlayItem
     public NCAlbum Album;
     public List<NCArtist> Artist;
     public int Bitrate;
+    public string CDName;
     public StorageFile DontSetLocalStorageFile; //如非特殊原因请不要设置这个东西!
     public string Id;
     public bool IsLocalFile;
     public double LengthInMilliseconds;
     public string Name;
-    public string CDName;
     public string Size;
     public string SubExt;
-    public int TrackId;
     public string Tag;
+    public int TrackId;
     public HyPlayItemType Type;
     public string Url;
 

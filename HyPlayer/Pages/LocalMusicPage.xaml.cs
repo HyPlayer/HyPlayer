@@ -4,13 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Search;
-using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -28,11 +25,17 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 {
+    private static readonly string[] supportedFormats = { ".flac", ".mp3", ".ncm", ".ape", ".m4a", ".wav" };
     private readonly ObservableCollection<HyPlayItem> localHyItems;
+    private string _notificationText;
     private Task FileScanTask;
     private int index;
-    private string _notificationText;
-    private static string[] supportedFormats = { ".flac", ".mp3", ".ncm", ".ape", ".m4a", ".wav" };
+
+    public LocalMusicPage()
+    {
+        InitializeComponent();
+        localHyItems = new ObservableCollection<HyPlayItem>();
+    }
 
     public string NotificationText
     {
@@ -44,11 +47,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
         }
     }
 
-    public LocalMusicPage()
-    {
-        InitializeComponent();
-        localHyItems = new();
-    }
+    public event PropertyChangedEventHandler PropertyChanged;
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
@@ -87,20 +86,19 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
         FileScanTask?.Dispose();
         NotificationText = "正在扫描...";
         ListBoxLocalMusicContainer.ItemsSource = localHyItems;
-        var folder = (!string.IsNullOrEmpty(Common.Setting.searchingDir))
+        var folder = !string.IsNullOrEmpty(Common.Setting.searchingDir)
             ? await StorageFolder.GetFolderFromPathAsync(Common.Setting.searchingDir)
             : KnownFolders.MusicLibrary;
         // Use Query to boost? maybe?
         FileLoadingIndicateRing.Visibility = Visibility.Visible;
         FileLoadingIndicateRing.IsActive = true;
-        QueryOptions queryOptions = new QueryOptions(CommonFileQuery.DefaultQuery, supportedFormats);
+        var queryOptions = new QueryOptions(CommonFileQuery.DefaultQuery, supportedFormats);
         queryOptions.FolderDepth = FolderDepth.Deep;
         var files = await folder.CreateFileQueryWithOptions(queryOptions).GetFilesAsync();
 
         if (!Common.Setting.localProgressiveLoad)
         {
             foreach (var storageFile in files)
-            {
                 try
                 {
                     var item = await HyPlayList.LoadStorageFile(storageFile);
@@ -110,7 +108,6 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
                 {
                     //ignore
                 }
-            }
         }
         else
         {
@@ -119,16 +116,15 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
                 AlbumType = HyPlayItemType.LocalProgressive,
                 name = "未知专辑"
             };
-            var undeterminedArtistList = new List<NCArtist>()
+            var undeterminedArtistList = new List<NCArtist>
             {
-                new NCArtist
+                new()
                 {
                     name = "未知歌手",
                     Type = HyPlayItemType.LocalProgressive
                 }
             };
             foreach (var storageFile in files)
-            {
                 localHyItems.Add(new HyPlayItem
                 {
                     ItemType = HyPlayItemType.LocalProgressive,
@@ -150,7 +146,6 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
                         Url = storageFile.Path
                     }
                 });
-            }
         }
 
         NotificationText = "扫描完成, 共 " + files.Count + " 首音乐";
@@ -169,7 +164,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 
     private async void UploadCloud_Click(object sender, RoutedEventArgs e)
     {
-        var sf = await StorageFile.GetFileFromPathAsync((((sender as Button).Tag) as HyPlayItem)
+        var sf = await StorageFile.GetFileFromPathAsync(((sender as Button).Tag as HyPlayItem)
             .PlayItem.Url);
         await CloudUpload.UploadMusic(sf);
     }
@@ -178,8 +173,6 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     {
         HyPlayList.PickLocalFile();
     }
-
-    public event PropertyChangedEventHandler PropertyChanged;
 
     private void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {

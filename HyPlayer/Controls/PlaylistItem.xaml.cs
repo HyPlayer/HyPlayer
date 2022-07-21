@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
@@ -26,8 +25,7 @@ public sealed partial class PlaylistItem : UserControl, IDisposable
     public PlaylistItem(NCPlayList playList)
     {
         this.playList = playList;
-        InitializeComponent();       
-        
+        InitializeComponent();
     }
 
     public void Dispose()
@@ -112,7 +110,9 @@ public sealed partial class PlaylistItem : UserControl, IDisposable
     private void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
         ImageContainer.Source =
-            Common.Setting.noImage ? null : new BitmapImage(new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_PLAYLIST_ITEM_COVER));
+            Common.Setting.noImage
+                ? null
+                : new BitmapImage(new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_PLAYLIST_ITEM_COVER));
         TextBlockPLName.Text = playList.name;
         TextBlockPLAuthor.Text = playList.creater.name;
         StoryboardIn.Begin();

@@ -26,8 +26,8 @@ public sealed partial class SingleDownload : UserControl
     public static string GetSize(double size)
     {
         string[] units = { "B", "KB", "MB", "GB", "TB", "PB" };
-        double mod = 1024.0;
-        int i = 0;
+        var mod = 1024.0;
+        var i = 0;
         while (size >= mod)
         {
             size /= mod;

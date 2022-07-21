@@ -5,7 +5,6 @@ using System.Net;
 using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
@@ -80,7 +79,7 @@ public class PlayBarCornerRadiusConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {
-        return value is true ? new CornerRadius(8) : new CornerRadius(8,8,0,0);
+        return value is true ? new CornerRadius(8) : new CornerRadius(8, 8, 0, 0);
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)

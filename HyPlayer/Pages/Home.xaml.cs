@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
@@ -154,7 +155,7 @@ public sealed partial class Home : Page
         PersonalFM.InitPersonalFM();
     }
 
-    private void dailyRcmTapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+    private void dailyRcmTapped(object sender, TappedRoutedEventArgs e)
     {
         Common.NavigatePage(typeof(SongListDetail), new NCPlayList
         {
@@ -173,12 +174,12 @@ public sealed partial class Home : Page
         });
     }
 
-    private void FMTapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+    private void FMTapped(object sender, TappedRoutedEventArgs e)
     {
         PersonalFM.InitPersonalFM();
     }
 
-    private void LikedSongListTapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+    private void LikedSongListTapped(object sender, TappedRoutedEventArgs e)
     {
         Common.NavigatePage(typeof(SongListDetail), Common.MySongLists[0].plid);
     }

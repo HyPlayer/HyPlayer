@@ -24,28 +24,16 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class Search : Page, IDisposable
 {
-    private readonly ObservableCollection<NCSong> SongResults;
-    private int page;
-    private string Text = "";
-
     public static readonly DependencyProperty HasNextPageProperty = DependencyProperty.Register(
         "HasNextPage", typeof(bool), typeof(Search), new PropertyMetadata(default(bool)));
-
-    public bool HasNextPage
-    {
-        get => (bool)GetValue(HasNextPageProperty);
-        set => SetValue(HasNextPageProperty, value);
-    }
 
     public static readonly DependencyProperty HasPreviousPageProperty = DependencyProperty.Register(
         "HasPreviousPage", typeof(bool), typeof(Search), new PropertyMetadata(default(bool)));
 
-    public bool HasPreviousPage
-    {
-        get => (bool)GetValue(HasPreviousPageProperty);
-        set => SetValue(HasPreviousPageProperty, value);
-    }
-    
+    private readonly ObservableCollection<NCSong> SongResults;
+    private int page;
+    private string Text = "";
+
     public Search()
     {
         InitializeComponent();
@@ -53,6 +41,18 @@ public sealed partial class Search : Page, IDisposable
         SongResults = new ObservableCollection<NCSong>();
         NavigationCacheMode = NavigationCacheMode.Required;
         SongResults = new ObservableCollection<NCSong>();
+    }
+
+    public bool HasNextPage
+    {
+        get => (bool)GetValue(HasNextPageProperty);
+        set => SetValue(HasNextPageProperty, value);
+    }
+
+    public bool HasPreviousPage
+    {
+        get => (bool)GetValue(HasPreviousPageProperty);
+        set => SetValue(HasPreviousPageProperty, value);
     }
 
     public void Dispose()
@@ -186,7 +186,7 @@ public sealed partial class Search : Page, IDisposable
                 HasPreviousPage = false;
         }
     }
-    
+
     private void LoadMlogResult(JObject json)
     {
         var i = 0;

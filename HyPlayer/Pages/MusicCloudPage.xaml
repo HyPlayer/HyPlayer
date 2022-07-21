@@ -12,11 +12,11 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Button
-                x:Name="BtnUpload"
-                Margin="0,-5,30,0"
-                HorizontalAlignment="Right"
-                Click="BtnUpload_Click"
-                Content="上传本地" />
+            x:Name="BtnUpload"
+            Margin="0,-5,30,0"
+            HorizontalAlignment="Right"
+            Click="BtnUpload_Click"
+            Content="上传本地" />
 
         <StackPanel Orientation="Horizontal" Spacing="20">
             <TextBlock

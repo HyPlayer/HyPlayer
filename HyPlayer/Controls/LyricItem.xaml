@@ -18,7 +18,7 @@
             Name="TextBoxPureLyric"
             controls:DockPanel.Dock="Top"
             TextAlignment="Center"
-            FontWeight="Bold" 
+            FontWeight="Bold"
             CharacterSpacing="0"
             TextWrapping="WrapWholeWords" />
         <TextBlock

@@ -3,6 +3,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Net;
@@ -30,7 +31,6 @@ using Microsoft.UI.Xaml.Controls;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Collections.ObjectModel;
 #if !DEBUG
 using Microsoft.AppCenter.Crashes;
 #endif
@@ -41,6 +41,8 @@ namespace HyPlayer
 {
     internal static class Common
     {
+        public delegate void EnterForegroundFromBackgroundEvent();
+
         public static CloudMusicApi ncapi = new();
         public static bool Logined = false;
         public static bool IsInFm = false;
@@ -64,32 +66,26 @@ namespace HyPlayer
         private static object previousNavigationItem;
         public static TimeSpan ABStartPoint = TimeSpan.Zero;
         public static TimeSpan ABEndPoint = TimeSpan.Zero;
-        public static List<string> ErrorMessageList = new List<string>();
-
-        public delegate void EnterForegroundFromBackgroundEvent();
+        public static List<string> ErrorMessageList = new();
 
         public static EnterForegroundFromBackgroundEvent OnEnterForegroundFromBackground;
-        public static ObservableCollection<string> Logs = new ObservableCollection<string>();
-
-        public static string ABStartPointFriendlyValue
-        {
-            get => ABStartPoint.Hours.ToString() + ":"
-                                                 + ABStartPoint.Minutes.ToString() + ":"
-                                                 + ABStartPoint.Seconds.ToString();
-        }
-
-        public static string ABEndPointFriendlyValue
-        {
-            get => ABEndPoint.Hours.ToString() + ":"
-                                               + ABEndPoint.Minutes.ToString() + ":"
-                                               + ABEndPoint.Seconds.ToString();
-        }
+        public static ObservableCollection<string> Logs = new();
 
         public static bool ABRepeatStatus = false;
 
 
         public static bool NavigatingBack;
         private static int _teachingTipSecondCounter = 3;
+
+        public static string ABStartPointFriendlyValue =>
+            ABStartPoint.Hours + ":"
+                               + ABStartPoint.Minutes + ":"
+                               + ABStartPoint.Seconds;
+
+        public static string ABEndPointFriendlyValue =>
+            ABEndPoint.Hours + ":"
+                             + ABEndPoint.Minutes + ":"
+                             + ABEndPoint.Seconds;
 
         public static IAsyncAction Invoke(Action action,
             CoreDispatcherPriority Priority = CoreDispatcherPriority.Normal)
@@ -102,8 +98,8 @@ namespace HyPlayer
                             () => { action(); });
                 }
 #if DEBUG
-            catch
-            {
+                catch
+                {
 #else
                 catch (Exception e)
                 {
@@ -336,8 +332,8 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
-        
+
+
         public bool playbarBackgroundElay
         {
             get => GetSettings("playbarBackgroundElay", false);
@@ -437,7 +433,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
         public bool localProgressiveLoad
         {
             get => GetSettings("localProgressiveLoad", false);
@@ -461,7 +457,7 @@ namespace HyPlayer
 
         public int lyricScaleSize
         {
-            get { return GetSettings("lyricScaleSize", 0); }
+            get => GetSettings("lyricScaleSize", 0);
             set
             {
                 ApplicationData.Current.LocalSettings.Values["lyricScaleSize"] = value;
@@ -947,9 +943,10 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+
         public string AudioRenderDevice
         {
-            get  =>GetSettings("AudioRenderDeviceID", "");
+            get => GetSettings("AudioRenderDeviceID", "");
             set
             {
                 ApplicationData.Current.LocalSettings.Values["AudioRenderDeviceID"] = value;
@@ -957,6 +954,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+
         public bool DisablePopUp
         {
             get => GetSettings("DisablePopUp", false);
@@ -1067,7 +1065,6 @@ namespace HyPlayer
         public static async Task SetcurPlayingListHistory(List<string> songids)
         {
             if (Common.Setting.advancedMusicHistoryStorage)
-            {
                 try
                 {
                     var file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("songPlayHistory",
@@ -1078,13 +1075,10 @@ namespace HyPlayer
                 {
                     // ignored
                 }
-            }
             else
-            {
                 //低级音乐存储
                 ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] =
                     JsonConvert.SerializeObject(songids.Count > 100 ? songids.GetRange(0, 100) : songids);
-            }
         }
 
         public static async Task ClearHistory()
@@ -1161,21 +1155,17 @@ namespace HyPlayer
             var retsongs = new List<NCSong>();
             List<string> trackIds = new();
             if (Common.Setting.advancedMusicHistoryStorage)
-            {
                 trackIds = (await FileIO.ReadTextAsync(
                     await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("songPlayHistory",
                         CreationCollisionOption.OpenIfExists))).Split("\r\n").ToList();
-            }
             else
-            {
                 //低级音乐存储
                 trackIds = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
-                    .Values["curPlayingListHistory"].ToString()) ?? new();
-            }
+                    .Values["curPlayingListHistory"].ToString()) ?? new List<string>();
 
             if (trackIds == null || trackIds.Count == 0)
                 return retsongs;
-            int nowIndex = 0;
+            var nowIndex = 0;
             while (nowIndex * 500 < trackIds.Count)
             {
                 var nowIds = trackIds.GetRange(nowIndex * 500,

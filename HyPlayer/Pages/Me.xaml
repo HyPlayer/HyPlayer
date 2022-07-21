@@ -206,7 +206,8 @@
                         RadiusY="10"
                         Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}">
                         <Rectangle.Fill>
-                            <ImageBrush ImageSource="{x:Bind ImageRect.ImageSource, Mode=OneWay}" Stretch="UniformToFill" />
+                            <ImageBrush ImageSource="{x:Bind ImageRect.ImageSource, Mode=OneWay}"
+                                        Stretch="UniformToFill" />
                         </Rectangle.Fill>
                     </Rectangle>
                     <Rectangle

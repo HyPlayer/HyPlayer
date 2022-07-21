@@ -1,6 +1,5 @@
 ﻿#region
 
-using System;
 using System.Threading.Tasks;
 using Windows.UI;
 using Windows.UI.Text;
@@ -34,6 +33,21 @@ public sealed partial class LyricItem : UserControl
     }
 
 
+    public double actualsize => Common.PageExpandedPlayer == null
+        ? Common.Setting.lyricSize <= 0 ? 23 : Common.Setting.lyricSize
+        : Common.PageExpandedPlayer.showsize;
+
+    public TextAlignment LyricAlignment =>
+        Common.Setting.lyricAlignment ? TextAlignment.Left : TextAlignment.Center;
+
+    private SolidColorBrush AccentBrush => Common.PageExpandedPlayer != null
+        ? Common.PageExpandedPlayer.ForegroundAccentTextBrush
+        : Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush;
+
+    private SolidColorBrush IdleBrush => Common.PageExpandedPlayer != null
+        ? Common.PageExpandedPlayer.ForegroundIdleTextBrush
+        : Application.Current.Resources["TextFillColorTertiaryBrush"] as SolidColorBrush;
+
 
     private async Task LoadRomaji()
     {
@@ -45,22 +59,6 @@ public sealed partial class LyricItem : UserControl
         if (string.IsNullOrEmpty(TextBoxSound.Text))
             TextBoxSound.Visibility = Visibility.Collapsed;
     }
-
-
-    public double actualsize => Common.PageExpandedPlayer == null
-        ? Common.Setting.lyricSize <= 0 ? 23 : Common.Setting.lyricSize
-        : Common.PageExpandedPlayer.showsize;
-
-    public TextAlignment LyricAlignment =>
-        Common.Setting.lyricAlignment ? TextAlignment.Left : TextAlignment.Center;
-
-    private SolidColorBrush AccentBrush => Common.PageExpandedPlayer != null
-        ? Common.PageExpandedPlayer.ForegroundAccentTextBrush
-        : Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush;
-    
-    private SolidColorBrush IdleBrush => Common.PageExpandedPlayer != null
-        ? Common.PageExpandedPlayer.ForegroundIdleTextBrush
-        : Application.Current.Resources["TextFillColorTertiaryBrush"] as SolidColorBrush;
 
     public void RefreshFontSize()
     {
@@ -82,9 +80,9 @@ public sealed partial class LyricItem : UserControl
         TextBoxTranslation.FontSize = actualsize + Common.Setting.lyricScaleSize;
         TextBoxPureLyric.FontWeight = FontWeights.Bold;
         TextBoxTranslation.FontWeight = FontWeights.Bold;
-        TextBoxPureLyric.Margin = new Thickness(0,2,0,2);
-        TextBoxTranslation.Margin = new Thickness(0,2,0,2);
-        TextBoxPureLyric.CharacterSpacing=30;
+        TextBoxPureLyric.Margin = new Thickness(0, 2, 0, 2);
+        TextBoxTranslation.Margin = new Thickness(0, 2, 0, 2);
+        TextBoxPureLyric.CharacterSpacing = 30;
         TextBoxTranslation.CharacterSpacing = 30;
         TextBoxPureLyric.Foreground = AccentBrush;
         TextBoxSound.Foreground = AccentBrush;

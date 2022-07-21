@@ -3,11 +3,9 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
@@ -85,7 +83,9 @@ public sealed partial class RadioPage : Page, IDisposable
         TextBoxDJ.Content = Radio.DJ.name;
         TextBlockDesc.Text = Radio.desc;
         ImageRect.ImageSource =
-            Common.Setting.noImage ? null : new BitmapImage(new Uri(Radio.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
+            Common.Setting.noImage
+                ? null
+                : new BitmapImage(new Uri(Radio.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
         Songs.Clear();
         SongContainer.ListSource = "rd" + Radio.id;
         LoadProgram();
@@ -102,10 +102,7 @@ public sealed partial class RadioPage : Page, IDisposable
         try
         {
             await HyPlayList.AppendNcSource("rd" + Radio.id);
-            if (asc)
-            {
-                HyPlayList.List.Reverse();
-            }
+            if (asc) HyPlayList.List.Reverse();
             HyPlayList.SongAppendDone();
             HyPlayList.SongMoveTo(0);
         }

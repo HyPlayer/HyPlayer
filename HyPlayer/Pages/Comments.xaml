@@ -36,7 +36,7 @@
                         x:Name="SendComment"
                         Grid.Column="1"
                         MaxWidth="100"
-                        HorizontalAlignment="Center" 
+                        HorizontalAlignment="Center"
                         Click="SendComment_Click"
                         Content="发表"
                         FontWeight="ExtraBold"

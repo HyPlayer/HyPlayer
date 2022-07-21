@@ -12,12 +12,8 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
-using Microsoft.Toolkit.Uwp.UI.Behaviors;
-using Microsoft.Xaml.Interactivity;
-using NeteaseCloudMusicApi;
-using HyPlayer.Controls;
-using Windows.UI.Xaml.Shapes;
 using HyPlayer.HyPlayControl;
+using NeteaseCloudMusicApi;
 
 #endregion
 
@@ -187,9 +183,7 @@ public sealed partial class Me : Page, IDisposable
         HyPlayList.SongAppendDone();
         if (((Button)sender).Tag.ToString().Substring(0, 2) == "pl" ||
             ((Button)sender).Tag.ToString().Substring(0, 2) == "al")
-        {
             HyPlayList.PlaySourceId = ((Button)sender).Tag.ToString().Substring(2);
-        }
 
         HyPlayList.NowPlaying = -1;
         HyPlayList.SongMoveNext();

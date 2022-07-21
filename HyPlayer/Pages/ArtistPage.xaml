@@ -68,7 +68,7 @@
                                 <ImageBrush x:Name="ImageRect" Stretch="UniformToFill" />
                             </Rectangle.Fill>
                             <Rectangle.RenderTransform>
-                                <ScaleTransform x:Name="UserScale" CenterX="100" CenterY="100"/>
+                                <ScaleTransform x:Name="UserScale" CenterX="100" CenterY="100" />
                             </Rectangle.RenderTransform>
                         </Rectangle>
                         <StackPanel
@@ -104,7 +104,7 @@
                                 Text="歌手简介"
                                 TextWrapping="WrapWholeWords" />
                             <StackPanel.RenderTransform>
-                                <ScaleTransform x:Name="UserInfoScale" CenterY="125"/>
+                                <ScaleTransform x:Name="UserInfoScale" CenterY="125" />
                             </StackPanel.RenderTransform>
                         </StackPanel>
                     </controls:DockPanel>
@@ -113,7 +113,6 @@
             </controls1:PivotView.Header>
             <controls1:PivotEx
                 x:Name="mp"
-                Grid.Row="1"
                 SelectionChanged="Pivot_SelectionChanged">
                 <PivotItem Header="热门50首">
                     <controls1:SongsList
@@ -198,7 +197,6 @@
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
     </Grid>
-
 
 
 </Page>

@@ -53,7 +53,6 @@ public sealed partial class MVPage : Page, IDisposable
             mvid = e.Parameter.ToString();
             LoadThings();
         }
-
     }
 
     private void LoadThings()

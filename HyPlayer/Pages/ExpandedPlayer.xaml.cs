@@ -42,6 +42,10 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class ExpandedPlayer : Page, IDisposable
 {
+    public static readonly DependencyProperty NowPlaybackSpeedProperty = DependencyProperty.Register(
+        "NowPlaybackSpeed", typeof(string), typeof(ExpandedPlayer),
+        new PropertyMetadata("x" + HyPlayList.Player.PlaybackSession.PlaybackRate));
+
     private readonly bool loaded;
 
     public SolidColorBrush ForegroundAccentTextBrush =
@@ -92,6 +96,12 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     public double showsize { get; set; }
     public double LyricWidth { get; set; }
 
+    public string NowPlaybackSpeed
+    {
+        get => (string)GetValue(NowPlaybackSpeedProperty);
+        set => SetValue(NowPlaybackSpeedProperty, value);
+    }
+
     public void Dispose()
     {
         HyPlayList.OnLyricChange -= RefreshLyricTime;
@@ -109,7 +119,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             if (Common.Setting.albumRotate)
                 RotateAnimationSet.Stop();
             if (!Common.Setting.expandAlbumBreath) return;
-            Storyboard ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
+            var ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
             ImageAlbumAni.Pause();
         });
     }
@@ -123,7 +133,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 RotateAnimationSet.StartAsync();
             if (Common.Setting.expandAlbumBreath)
             {
-                Storyboard ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
+                var ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
                 ImageAlbumAni.Begin();
             }
         });
@@ -137,7 +147,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 RotateAnimationSet.Stop();
             if (Common.Setting.expandAlbumBreath)
             {
-                Storyboard ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
+                var ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
                 ImageAlbumAni.Pause();
             }
         });
@@ -295,9 +305,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         if (WindowMode != ExpandedWindowMode.LyricOnly)
         {
             if (SongInfo.ActualOffset.Y + SongInfo.ActualHeight > MainGrid.ActualHeight)
-            {
                 sizey = (float)(MainGrid.ActualHeight / (SongInfo.ActualOffset.Y + SongInfo.ActualHeight));
-            }
 
             if (ImageAlbum.ActualOffset.X + ImageAlbum.ActualWidth > LeftPanel.ActualWidth)
                 sizex = (float)(LeftPanel.ActualWidth / (ImageAlbum.ActualOffset.X + ImageAlbum.ActualWidth));
@@ -397,9 +405,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         }
 
         if (Common.Setting.expandedPlayerBackgroundType == 0 && !Common.Setting.expandedUseAcrylic)
-        {
-            PageContainer.Background = new BackdropBlurBrush() { Amount = 50.0 };
-        }
+            PageContainer.Background = new BackdropBlurBrush { Amount = 50.0 };
 
         NowPlaybackSpeed = "x" + HyPlayList.Player.PlaybackSession.PlaybackRate;
     }
@@ -412,13 +418,10 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private void UpdateFocusingLyric()
     {
         if (LyricBox.ItemsSource is not List<LyricItemModel> list ||
-            (HyPlayList.LyricPos < 0 || HyPlayList.LyricPos >= list.Count)) return;
+            HyPlayList.LyricPos < 0 || HyPlayList.LyricPos >= list.Count) return;
         if (HyPlayList.LyricPos == -1)
         {
-            if (lastitem != null)
-            {
-                lastitem.IsShow = false;
-            }
+            if (lastitem != null) lastitem.IsShow = false;
 
             LyricBoxContainer.ChangeView(null, 0, null, false);
         }
@@ -426,10 +429,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         var item = list[HyPlayList.LyricPos];
         if (item == null) return;
 
-        if (lastitem != null)
-        {
-            lastitem.IsShow = false;
-        }
+        if (lastitem != null) lastitem.IsShow = false;
 
         item.IsShow = true;
         lastitem = item;
@@ -439,7 +439,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         var k = LyricBox.ItemsSourceView.IndexOf(item);
 
         if (k >= 0)
-        {
             try
             {
                 var ele = LyricBox.GetOrCreateElement(k) as FrameworkElement;
@@ -448,15 +447,12 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 var position = transform?.TransformPoint(new Point(0, 0));
 
                 if (position.HasValue)
-                {
                     LyricBoxContainer.ChangeView(null, position.Value.Y + MainGrid.ActualHeight / 8, null, false);
-                }
             }
             catch (Exception e)
             {
                 // ignore
             }
-        }
     }
 
     public void LoadLyricsBox()
@@ -471,16 +467,12 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         List<LyricItemModel> source = null;
 
         if (HyPlayList.Lyrics.Count == 0)
-        {
-            source = new List<LyricItemModel>()
+            source = new List<LyricItemModel>
             {
-                new LyricItemModel(SongLyric.PureSong)
+                new(SongLyric.PureSong)
             };
-        }
         else
-        {
             source = new List<LyricItemModel>(HyPlayList.Lyrics.Select(c => new LyricItemModel(c)));
-        }
 
         LyricBox.ItemsSource = source;
         LyricBox.Width = LyricWidth;
@@ -550,7 +542,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 if (mpi.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
                 {
                     var storageFile = HyPlayList.NowPlayingStorageFile;
-                    if (mpi.PlayItem.DontSetLocalStorageFile != null) storageFile = mpi.PlayItem.DontSetLocalStorageFile;
+                    if (mpi.PlayItem.DontSetLocalStorageFile != null)
+                        storageFile = mpi.PlayItem.DontSetLocalStorageFile;
                     var img = new BitmapImage();
                     await img.SetSourceAsync(
                         await storageFile.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
@@ -570,15 +563,11 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                                                                                StaticSource
                                                                                    .PICSIZE_EXPANDEDPLAYER_PREVIEWALBUMCOVER));
                         if (Common.Setting.expandedPlayerFullCover)
-                        {
                             ImageAlbum.Source = new BitmapImage(new Uri(mpi.PlayItem.Album.cover));
-                        }
                         else
-                        {
                             ImageAlbum.Source = new BitmapImage(new Uri(mpi.PlayItem.Album.cover + "?param=" +
                                                                         StaticSource
                                                                             .PICSIZE_EXPANDEDPLAYER_COVER));
-                        }
 
                         if (Common.Setting.expandedPlayerBackgroundType == 0)
                             Background = new ImageBrush
@@ -600,9 +589,9 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             Common.Invoke(() =>
             {
                 LyricBoxHost.Margin = new Thickness(0, blanksize, 0, blanksize);
-                LyricBox.ItemsSource = new List<LyricItemModel>()
+                LyricBox.ItemsSource = new List<LyricItemModel>
                 {
-                    new LyricItemModel(SongLyric.LoadingLyric)
+                    new(SongLyric.LoadingLyric)
                 };
                 LyricBox.Width = LyricWidth;
             });
@@ -705,16 +694,12 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         try
         {
             if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
-            {
                 if (HyPlayList.NowPlayingItem.PlayItem.Album.id != "0")
                     Common.NavigatePage(typeof(AlbumPage),
                         HyPlayList.NowPlayingItem.PlayItem.Album.id);
-            }
 
             if (HyPlayList.NowPlayingItem.PlayItem.Artist[0].Type == HyPlayItemType.Radio)
-            {
                 Common.NavigatePage(typeof(RadioPage), HyPlayList.NowPlayingItem.PlayItem.Album.id);
-            }
 
             if (Common.Setting.forceMemoryGarbage)
                 Common.NavigatePage(typeof(BlankPage));
@@ -742,9 +727,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             }
 
             if (HyPlayList.NowPlayingItem.PlayItem.Artist[0].Type == HyPlayItemType.Radio)
-            {
                 Common.NavigatePage(typeof(Me), HyPlayList.NowPlayingItem.PlayItem.Artist[0].id);
-            }
 
             if (Common.Setting.forceMemoryGarbage)
                 Common.NavigatePage(typeof(BlankPage));
@@ -855,7 +838,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     {
         if (Common.Setting.lyricColor != 0) return Common.Setting.lyricColor == 2;
         if (Common.Setting.expandedPlayerBackgroundType >= 2)
-        {
             // 强制颜色
             switch (Common.Setting.expandedPlayerBackgroundType)
             {
@@ -869,7 +851,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     return false;
                     break;
             }
-        }
 
         if (HyPlayList.NowPlayingItem.PlayItem == null) return false;
 
@@ -933,16 +914,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         HyPlayList.LyricOffset.ToString("ss\\.ff");
     }
 
-    public static readonly DependencyProperty NowPlaybackSpeedProperty = DependencyProperty.Register(
-        "NowPlaybackSpeed", typeof(string), typeof(ExpandedPlayer),
-        new PropertyMetadata("x" + HyPlayList.Player.PlaybackSession.PlaybackRate));
-
-    public string NowPlaybackSpeed
-    {
-        get => (string)GetValue(NowPlaybackSpeedProperty);
-        set => SetValue(NowPlaybackSpeedProperty, value);
-    }
-
     private void BtnSpeedMinusClick(object sender, RoutedEventArgs e)
     {
         if (HyPlayList.Player.PlaybackSession.PlaybackRate <= 0.2) return;
@@ -964,7 +935,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void BtnCopyLyricClicked(object sender, RoutedEventArgs e)
     {
-        new LyricShareDialog() { Lyrics = HyPlayList.Lyrics }.ShowAsync();
+        new LyricShareDialog { Lyrics = HyPlayList.Lyrics }.ShowAsync();
     }
 
     private void BtnToggleTinyModeClick(object sender, RoutedEventArgs e)
@@ -976,13 +947,9 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private void ChangeABRepeatStatus_Click(object sender, RoutedEventArgs e)
     {
         if (Common.ABRepeatStatus)
-        {
             HyPlayList.OnPlayPositionChange += HyPlayList.CheckABTimeRemaining;
-        }
         else
-        {
             HyPlayList.OnPlayPositionChange -= HyPlayList.CheckABTimeRemaining;
-        }
     }
 
     private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)
@@ -1025,7 +992,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 RotateAnimationSet.StartAsync();
         if (Common.Setting.expandAlbumBreath)
         {
-            Storyboard ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
+            var ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
             ImageAlbumAni.Begin();
         }
     }
@@ -1035,7 +1002,7 @@ public class AlbumShadowConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {
-        return (Common.Setting.albumRound || Common.Setting.expandAlbumBreath)
+        return Common.Setting.albumRound || Common.Setting.expandAlbumBreath
             ? 0
             : (double)Common.Setting.expandedCoverShadowDepth / 10;
     }

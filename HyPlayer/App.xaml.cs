@@ -4,13 +4,11 @@ using System;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
-using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.ExtendedExecution;
 using Windows.Security.ExchangeActiveSyncProvisioning;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.System;
-using Windows.UI.Core;
 using Windows.UI.StartScreen;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -88,7 +86,6 @@ sealed partial class App : Application
         // 内存占用达到某个值
         Common.CollectGarbage();
         GC.Collect();
-
     }
 
     private void MemoryManagerOnAppMemoryUsageIncreased(object sender, object e)
@@ -126,6 +123,7 @@ sealed partial class App : Application
             Common.IsInBackground = false;
             Common.OnEnterForegroundFromBackground.Invoke();
         }
+
         Common.IsInBackground = false;
 
         if (!Common.Setting.forceMemoryGarbage) return;
@@ -250,13 +248,13 @@ sealed partial class App : Application
             else
             {
                 if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(file.Path.GetHashCode().ToString()))
-                {
                     StorageApplicationPermissions.FutureAccessList.AddOrReplace(file.Path.GetHashCode().ToString(),
                         file);
-                }
             }
+
             await HyPlayList.AppendStorageFile(file);
         }
+
         HyPlayList.PlaySourceId = "local";
         HyPlayList.SongMoveTo(0);
     }

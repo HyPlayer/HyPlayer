@@ -9,7 +9,7 @@
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
-   
+
     <Page.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -99,8 +99,7 @@
                     Tag="PageSearch" />
                 <muxc:NavigationViewItem
                     Content="发现音乐"
-                    FontWeight="Bold"
-                    >
+                    FontWeight="Bold">
                     <muxc:NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE12B;" />
                     </muxc:NavigationViewItem.Icon>
@@ -159,7 +158,7 @@
                     Visibility="Collapsed" />
                 <muxc:NavigationViewItem
                     x:Name="NavItemsMyLovedPlaylist"
-                    Content="我喜欢的音乐"                   
+                    Content="我喜欢的音乐"
                     Tag="SonglistMyLike"
                     Visibility="Collapsed">
                     <muxc:NavigationViewItem.Icon>
@@ -181,10 +180,10 @@
             </muxc:NavigationView.MenuItems>
             <muxc:NavigationView.FooterMenuItems>
                 <muxc:NavigationViewItem
-                            Content="主页"
-                            Tag="PageHome"
-                            FontWeight="Bold"
-                            Visibility="{x:Bind local:Common.Setting.notClearMode, Mode=OneWay}">
+                    Content="主页"
+                    Tag="PageHome"
+                    FontWeight="Bold"
+                    Visibility="{x:Bind local:Common.Setting.notClearMode, Mode=OneWay}">
                     <muxc:NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE10F;" />
                     </muxc:NavigationViewItem.Icon>

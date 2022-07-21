@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.DataTransfer;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -21,26 +20,27 @@ namespace HyPlayer.Controls;
 
 public sealed partial class SingleComment : UserControl
 {
-
-
-    public BitmapImage AvatarSource
-    {
-        get { return (BitmapImage)GetValue(AvatarSourceProperty); }
-        set { SetValue(AvatarSourceProperty, value); }
-    }
-
     public static readonly DependencyProperty AvatarSourceProperty =
-        DependencyProperty.Register("AvatarSource", typeof(BitmapImage), typeof(SingleComment), new PropertyMetadata(null));
+        DependencyProperty.Register("AvatarSource", typeof(BitmapImage), typeof(SingleComment),
+            new PropertyMetadata(null));
+
+    private readonly Comment comment;
 
 
     private Uri AvatarUri;
-    private readonly Comment comment;
     private string time;
 
     public SingleComment(Comment cmt)
     {
         comment = cmt;
-        InitializeComponent();        
+        InitializeComponent();
+    }
+
+
+    public BitmapImage AvatarSource
+    {
+        get => (BitmapImage)GetValue(AvatarSourceProperty);
+        set => SetValue(AvatarSourceProperty, value);
     }
 
     private async Task LoadFloorComments(bool IsLoadMoreComments)

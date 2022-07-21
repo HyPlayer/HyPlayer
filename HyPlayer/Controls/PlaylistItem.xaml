@@ -97,7 +97,7 @@
                     Width="200"
                     Margin="10,12,10,27"
                     FontSize="15"
-                    FontWeight="Bold" 
+                    FontWeight="Bold"
                     TextWrapping="WrapWholeWords" />
             </Grid>
         </Grid>

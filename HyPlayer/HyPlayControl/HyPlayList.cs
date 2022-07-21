@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
+using Windows.Devices.Enumeration;
 using Windows.Media;
 using Windows.Media.Core;
 using Windows.Media.Playback;
@@ -18,9 +19,8 @@ using Windows.Storage.Streams;
 using HyPlayer.Classes;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
-using File = TagLib.File;
 using Opportunity.LrcParser;
-using Windows.Devices.Enumeration;
+using File = TagLib.File;
 
 #endregion
 
@@ -78,6 +78,12 @@ public static class HyPlayList
     private static SystemMediaTransportControlsDisplayUpdater _controlsDisplayUpdater;
     private static readonly BackgroundDownloader Downloader = new();
 
+    public static int LyricPos;
+    private static string _crashedTime;
+
+    public static string PlaySourceId;
+    private static double _playerOutgoingVolume;
+
     public static double PlayerOutgoingVolume
     {
         get => _playerOutgoingVolume;
@@ -88,9 +94,6 @@ public static class HyPlayList
             OnVolumeChange?.Invoke(_playerOutgoingVolume);
         }
     }
-
-    public static int LyricPos;
-    private static string _crashedTime;
 
     /*********        基本       ********/
     public static PlayMode NowPlayType
@@ -110,9 +113,6 @@ public static class HyPlayList
 
     public static bool IsPlaying => Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing;
 
-    public static string PlaySourceId;
-    private static double _playerOutgoingVolume;
-
     public static StorageFile NowPlayingStorageFile { get; private set; }
 
 
@@ -122,7 +122,7 @@ public static class HyPlayList
         {
             if (List.Count <= NowPlaying || NowPlaying == -1)
                 return new HyPlayItem { ItemType = HyPlayItemType.Netease };
-            else return List[NowPlaying];
+            return List[NowPlaying];
         }
     }
 
@@ -251,7 +251,7 @@ public static class HyPlayList
         else
         {
             _crashedTime = NowPlayingItem.PlayItem.Id;
-            if (NowPlayingItem.ItemType == HyPlayItemType.Netease && !NowPlayingItem.PlayItem.IsLocalFile ||
+            if ((NowPlayingItem.ItemType == HyPlayItemType.Netease && !NowPlayingItem.PlayItem.IsLocalFile) ||
                 NowPlayingItem.ItemType == HyPlayItemType.Radio)
             {
                 List[NowPlaying] = LoadNcSong(new NCSong
@@ -305,10 +305,8 @@ public static class HyPlayList
             else
             {
                 if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(file.Path.GetHashCode().ToString()))
-                {
                     StorageApplicationPermissions.FutureAccessList.AddOrReplace(file.Path.GetHashCode().ToString(),
                         file);
-                }
             }
 
             if (Path.GetExtension(file.Path) == ".ncm")
@@ -354,23 +352,23 @@ public static class HyPlayList
                             { name = t[0].ToString(), id = t[1].ToString() })
                         .ToList();
 
-                    HyPlayList.List.Add(hyitem);
+                    List.Add(hyitem);
                 }
 
                 stream.Dispose();
             }
             else
             {
-                await HyPlayList.AppendStorageFile(file);
+                await AppendStorageFile(file);
             }
 
             if (!isFirstLoad) continue;
-            HyPlayList.SongAppendDone();
+            SongAppendDone();
             isFirstLoad = false;
-            HyPlayList.SongMoveTo(HyPlayList.List.Count - 1);
+            SongMoveTo(List.Count - 1);
         }
 
-        HyPlayList.SongAppendDone();
+        SongAppendDone();
         //HyPlayList.SongMoveTo(0);
     }
 
@@ -469,9 +467,7 @@ public static class HyPlayList
         if (List.Count <= index) return;
         NowPlaying = index;
         if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
-        {
             ShufflingIndex = ShuffleList.FindIndex(t => t == index);
-        }
 
         LoadPlayerSong();
         Player.Play();
@@ -560,7 +556,7 @@ public static class HyPlayList
                 if (Common.Setting.shuffleNoRepeating)
                 {
                     // 新版乱序算法
-                    if ((++ShufflingIndex) > List.Count - 1)
+                    if (++ShufflingIndex > List.Count - 1)
                         ShufflingIndex = 0;
                     NowPlaying = ShuffleList[ShufflingIndex];
                 }
@@ -611,7 +607,7 @@ public static class HyPlayList
                 if (json["data"]?[0]?["code"]?.ToString() == "200")
                 {
                     playUrl = json["data"][0]["url"]?.ToString();
-                    int bitrate = json["data"][0]["br"]?.ToObject<int>() ?? 0;
+                    var bitrate = json["data"][0]["br"]?.ToObject<int>() ?? 0;
                     string tag;
                     if (bitrate > 999000)
                         tag = "Hi-Res";
@@ -624,7 +620,9 @@ public static class HyPlayList
                     _ = Common.Invoke(() => { Common.BarPlayBar.TbSongTag.Text = tag; });
                 }
                 else
+                {
                     PlayerOnMediaFailed(Player, "下载链接获取失败"); //传一个播放失败
+                }
             }
             catch
             {
@@ -854,7 +852,7 @@ public static class HyPlayList
     private static async Task LoadLyrics(HyPlayItem hpi)
     {
         var pureLyricInfo = new PureLyricInfo();
-        bool unionTranslation = false;
+        var unionTranslation = false;
         switch (hpi.ItemType)
         {
             case HyPlayItemType.Netease:
@@ -1383,9 +1381,7 @@ public static class HyPlayList
         }
 
         if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
-        {
             ShufflingIndex = ShuffleList.FindIndex(t => t == NowPlaying);
-        }
 
         // Call 一下来触发前端显示的播放列表更新
         OnPlayListAddDone?.Invoke();
@@ -1394,8 +1390,8 @@ public static class HyPlayList
 
     public static void CheckABTimeRemaining(TimeSpan currentTime)
     {
-        if ((currentTime >= Common.ABEndPoint) && (Common.ABEndPoint != TimeSpan.Zero) &&
-            (Common.ABEndPoint > Common.ABStartPoint)) Player.PlaybackSession.Position = Common.ABStartPoint;
+        if (currentTime >= Common.ABEndPoint && Common.ABEndPoint != TimeSpan.Zero &&
+            Common.ABEndPoint > Common.ABStartPoint) Player.PlaybackSession.Position = Common.ABStartPoint;
     }
 }
 
@@ -1421,22 +1417,18 @@ public static class Utils
     {
         var parsedlyrics = Lyrics.Parse(lyricAllText);
         foreach (var lyricsLine in parsedlyrics.Lyrics.Lines)
-        {
-            foreach (var songLyric in lyrics)
+        foreach (var songLyric in lyrics)
+            if (songLyric.LyricTime.TotalMilliseconds == lyricsLine.Timestamp.TimeOfDay.TotalMilliseconds)
             {
-                if (songLyric.LyricTime.TotalMilliseconds == lyricsLine.Timestamp.TimeOfDay.TotalMilliseconds)
-                {
-                    songLyric.Translation = lyricsLine.Content;
-                    break;
-                }
+                songLyric.Translation = lyricsLine.Content;
+                break;
             }
-        }
     }
 }
 
 public class AudioDevices
 {
-    public string DeviceName;
     public string DeviceID;
+    public string DeviceName;
     public bool IsDefaultDevice;
 }

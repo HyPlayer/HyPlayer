@@ -10,7 +10,8 @@
     mc:Ignorable="d">
 
     <StackPanel Orientation="Vertical">
-        <TextBlock Text="此页面仅用于调试使用，如果你不知道此页面的用途，请返回上一页 | This page is for debugging use only, if you do not know the purpose of this page, please go back" />
+        <TextBlock
+            Text="此页面仅用于调试使用，如果你不知道此页面的用途，请返回上一页 | This page is for debugging use only, if you do not know the purpose of this page, please go back" />
         <Button Click="TestTeachingTip_OnClick">TestTeachingTips</Button>
         <Button Click="DumpDebugInfo_Click">Dump Debug Info</Button>
         <StackPanel Orientation="Horizontal">
@@ -18,7 +19,7 @@
             <TextBox Text="{x:Bind ResourceId, Mode=TwoWay}" />
             <Button Click="NavigateResourceId" Content="Navigate" />
             <Button Click="PlayResourceId" Content="Play" />
-            <Button x:Name="DisablePopUp" Content="停用警告弹窗" Click="DisablePopUpButton_Click"/>
+            <Button x:Name="DisablePopUp" Content="停用警告弹窗" Click="DisablePopUpButton_Click" />
         </StackPanel>
         <ListView ItemsSource="{x:Bind hyplayer:Common.Logs}" />
     </StackPanel>

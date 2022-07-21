@@ -46,7 +46,7 @@
                             Click="Add_Local"
                             Content="手动添加"
                             Style="{StaticResource ButtonRevealStyle}" />
-                        <TextBlock Text="{x:Bind NotificationText, Mode=OneWay}"></TextBlock>
+                        <TextBlock Text="{x:Bind NotificationText, Mode=OneWay}" />
                     </StackPanel>
                     <Grid Grid.Row="1">
                         <ListView
@@ -63,7 +63,8 @@
                                             HorizontalAlignment="Left"
                                             Orientation="Vertical">
                                             <TextBlock Text="{x:Bind PlayItem.Name, Mode=OneWay}" />
-                                            <TextBlock Foreground="Gray" Text="{x:Bind PlayItem.ArtistString, Mode=OneWay}" />
+                                            <TextBlock Foreground="Gray"
+                                                       Text="{x:Bind PlayItem.ArtistString, Mode=OneWay}" />
                                         </StackPanel>
                                         <Button
                                             x:Name="UploadCloud"

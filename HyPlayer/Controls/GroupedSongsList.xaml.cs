@@ -2,22 +2,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Foundation;
-using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
-using NeteaseCloudMusicApi;
 
 #endregion
 
@@ -30,16 +25,6 @@ public sealed partial class GroupedSongsList : IDisposable
     public static readonly DependencyProperty GroupedSongsProperty = DependencyProperty.Register(
         "GroupedSongs", typeof(CollectionViewSource), typeof(GroupedSongsList),
         new PropertyMetadata(default(CollectionViewSource)));
-
-    public CollectionViewSource GroupedSongs
-    {
-        get => (CollectionViewSource)GetValue(GroupedSongsProperty);
-        set
-        {
-            SetValue(GroupedSongsProperty, value);
-            SongContainer.SelectedIndex = -1;
-        }
-    }
 
     public static readonly DependencyProperty ListSourceProperty = DependencyProperty.Register(
         "ListSource", typeof(string),
@@ -61,7 +46,7 @@ public sealed partial class GroupedSongsList : IDisposable
     public static readonly DependencyProperty FooterProperty = DependencyProperty.Register(
         "Footer", typeof(UIElement), typeof(GroupedSongsList), new PropertyMetadata(default(UIElement)));
 
-    public bool IsManualSelect = false;
+    public bool IsManualSelect;
 
     public GroupedSongsList()
     {
@@ -70,22 +55,13 @@ public sealed partial class GroupedSongsList : IDisposable
         IndicateNowPlayingItem();
     }
 
-    private async Task IndicateNowPlayingItem()
+    public CollectionViewSource GroupedSongs
     {
-        var tryCount = 5;
-        while (--tryCount > 0)
+        get => (CollectionViewSource)GetValue(GroupedSongsProperty);
+        set
         {
-            SongContainer.SelectedItem = null;
-            await Task.Delay(TimeSpan.FromSeconds(2));
-            try
-            {
-                HyPlayListOnOnPlayItemChange(HyPlayList.NowPlayingItem);
-                break;
-            }
-            catch (Exception)
-            {
-                // ignored
-            }
+            SetValue(GroupedSongsProperty, value);
+            SongContainer.SelectedIndex = -1;
         }
     }
 
@@ -123,6 +99,25 @@ public sealed partial class GroupedSongsList : IDisposable
         HyPlayList.OnPlayItemChange -= HyPlayListOnOnPlayItemChange;
     }
 
+    private async Task IndicateNowPlayingItem()
+    {
+        var tryCount = 5;
+        while (--tryCount > 0)
+        {
+            SongContainer.SelectedItem = null;
+            await Task.Delay(TimeSpan.FromSeconds(2));
+            try
+            {
+                HyPlayListOnOnPlayItemChange(HyPlayList.NowPlayingItem);
+                break;
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+        }
+    }
+
     private void HyPlayListOnOnPlayItemChange(HyPlayItem playitem)
     {
         Common.Invoke(() =>
@@ -142,6 +137,7 @@ public sealed partial class GroupedSongsList : IDisposable
                 var selected = discSongs.FirstOrDefault(t => t.sid == playitem.PlayItem.Id);
                 if (selected != null) selectedSong = selected;
             }
+
             IsManualSelect = false;
             SongContainer.SelectedIndex = selectedSong?.Order ?? -1;
             IsManualSelect = true;
@@ -163,9 +159,7 @@ public sealed partial class GroupedSongsList : IDisposable
             HyPlayList.SongAppendDone();
             if (ListSource.Substring(0, 2) == "pl" ||
                 ListSource.Substring(0, 2) == "al")
-            {
                 HyPlayList.PlaySourceId = ListSource.Substring(2);
-            }
 
             HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t =>
                 t.PlayItem?.Id == (SongContainer.SelectedItem as NCSong)?.sid));
@@ -183,9 +177,7 @@ public sealed partial class GroupedSongsList : IDisposable
             HyPlayList.SongAppendDone();
             if (ListSource?.Substring(0, 2) == "pl" ||
                 ListSource?.Substring(0, 2) == "al")
-            {
                 HyPlayList.PlaySourceId = ListSource.Substring(2);
-            }
 
             HyPlayList.SongMoveTo(SongContainer.SelectedIndex);
         }
@@ -204,9 +196,7 @@ public sealed partial class GroupedSongsList : IDisposable
         HyPlayList.SongAppendDone();
         if (ListSource.Substring(0, 2) == "pl" ||
             ListSource.Substring(0, 2) == "al")
-        {
             HyPlayList.PlaySourceId = ListSource.Substring(2);
-        }
 
         HyPlayList.SongMoveTo(origidx);
     }
@@ -251,7 +241,7 @@ public sealed partial class GroupedSongsList : IDisposable
 
     private void BtnMV_Click(object sender, RoutedEventArgs e)
     {
-        Common.NavigatePage(typeof(MVPage), (SongContainer.SelectedItem as NCSong) ?? new NCSong());
+        Common.NavigatePage(typeof(MVPage), SongContainer.SelectedItem as NCSong ?? new NCSong());
     }
 
     private async void FlyoutCollection_Click(object sender, RoutedEventArgs e)

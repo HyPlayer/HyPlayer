@@ -13,45 +13,6 @@
     Loaded="Page_Loaded"
     NavigationCacheMode="Disabled">
     <Page.Resources>
-        <Storyboard x:Key="ImageAlbumAni">
-            <DoubleAnimation
-                AutoReverse="True"
-                RepeatBehavior="Forever"
-                Storyboard.TargetName="ImageAlbum"
-                Storyboard.TargetProperty="Opacity"
-                From="1"
-                To="0.65"
-                Duration="0:0:4">
-                <DoubleAnimation.EasingFunction>
-                    <QuadraticEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation
-                AutoReverse="True"
-                RepeatBehavior="Forever"
-                Storyboard.TargetName="ImageScale"
-                Storyboard.TargetProperty="ScaleX"
-                From="1"
-                To="0.9"
-                Duration="0:0:4">
-                <DoubleAnimation.EasingFunction>
-                    <QuadraticEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation
-                AutoReverse="True"
-                RepeatBehavior="Forever"
-                Storyboard.TargetName="ImageScale"
-                Storyboard.TargetProperty="ScaleY"
-                From="1"
-                To="0.9"
-                Duration="0:0:4">
-                <DoubleAnimation.EasingFunction>
-                    <QuadraticEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-
-        </Storyboard>
         <pages:AlbumShadowConverter x:Key="ShadowConverter" />
         <ui:AttachedDropShadow
             x:Key="AlbumDropShadow"

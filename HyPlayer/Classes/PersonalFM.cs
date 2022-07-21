@@ -1,9 +1,9 @@
 ﻿#region
 
 using System;
+using System.Threading.Tasks;
 using HyPlayer.HyPlayControl;
 using NeteaseCloudMusicApi;
-using System.Threading.Tasks;
 
 #endregion
 
@@ -31,7 +31,7 @@ internal static class PersonalFM
     private static async void HyPlayList_OnMediaEnd(HyPlayItem hpi)
     {
         if (Common.IsInFm)
-           await LoadNextFM();
+            await LoadNextFM();
     }
 
     public static Task LoadNextFM()
@@ -54,6 +54,7 @@ internal static class PersonalFM
                     item1.ItemType = HyPlayItemType.Netease;
                     item2.ItemType = HyPlayItemType.Netease;
                 }
+
                 HyPlayList.SongAppendDone();
                 HyPlayList.SongMoveTo(0);
                 Common.IsInFm = true;

@@ -24,25 +24,23 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class ArtistPage : Page
 {
+    public static readonly DependencyProperty SongHasMoreProperty = DependencyProperty.Register(
+        "SongHasMore", typeof(bool), typeof(ArtistPage), new PropertyMetadata(default(bool)));
+
     private readonly ObservableCollection<NCSong> allSongs = new();
     private readonly ObservableCollection<NCSong> hotSongs = new();
     private NCArtist artist;
     private int page;
 
-
-
-    public static readonly DependencyProperty SongHasMoreProperty = DependencyProperty.Register(
-        "SongHasMore", typeof(bool), typeof(ArtistPage), new PropertyMetadata(default(bool)));
+    public ArtistPage()
+    {
+        InitializeComponent();
+    }
 
     public bool SongHasMore
     {
         get => (bool)GetValue(SongHasMoreProperty);
         set => SetValue(SongHasMoreProperty, value);
-    }
-
-    public ArtistPage()
-    {
-        InitializeComponent();
     }
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -54,9 +52,11 @@ public sealed partial class ArtistPage : Page
                 new Dictionary<string, object> { { "id", (string)e.Parameter } });
             artist = NCArtist.CreateFromJson(res["data"]["artist"]);
             if (res["data"]["artist"]["cover"].ToString().StartsWith("http"))
-                ImageRect.ImageSource = ImageRect1.ImageSource=
-                    Common.Setting.noImage ? null : new BitmapImage(new Uri(res["data"]["artist"]["cover"] + "?param=" +
-                                                                            StaticSource.PICSIZE_ARTIST_DETAIL_COVER));
+                ImageRect.ImageSource = ImageRect1.ImageSource =
+                    Common.Setting.noImage
+                        ? null
+                        : new BitmapImage(new Uri(res["data"]["artist"]["cover"] + "?param=" +
+                                                  StaticSource.PICSIZE_ARTIST_DETAIL_COVER));
             TextBoxArtistName.Text = res["data"]["artist"]["name"].ToString();
             if (res["data"]["artist"]["transNames"].HasValues)
                 TextboxArtistNameTranslated.Text =
@@ -220,18 +220,18 @@ public sealed partial class ArtistPage : Page
 
     private void PivotView_HeaderScrollProgressChanged(object sender, EventArgs e)
     {
-        GridPersonalInformation.Opacity = 1 - (PivotView.HeaderScrollProgress *1.4);
-        RectangleImageBack.Opacity = 1 - (PivotView.HeaderScrollProgress * 1.1);
-        RectangleImageBackAcrylic.Opacity = 1 - (PivotView.HeaderScrollProgress * 1.1);
-        RectangleImageBack.RadiusX = 10 + (PivotView.HeaderScrollProgress * 60);
-        RectangleImageBackAcrylic.RadiusX = 10 + (PivotView.HeaderScrollProgress * 60);
-        RectangleImageBack.RadiusY = 10 + (PivotView.HeaderScrollProgress * 60);
-        RectangleImageBackAcrylic.RadiusY = 10 + (PivotView.HeaderScrollProgress * 60);
-        UserScale.ScaleX = 1 - (PivotView.HeaderScrollProgress * 0.8);
-        RectangleImage.RadiusX= 10 + (PivotView.HeaderScrollProgress * 100);
-        RectangleImage.RadiusY= 10 + (PivotView.HeaderScrollProgress * 100);
-        UserScale.ScaleY=1 - (PivotView.HeaderScrollProgress * 0.8);
-        UserInfoScale.ScaleX = 1-(PivotView.HeaderScrollProgress*0.6);
-        UserInfoScale.ScaleY = 1-(PivotView.HeaderScrollProgress*0.6);
+        GridPersonalInformation.Opacity = 1 - PivotView.HeaderScrollProgress * 1.4;
+        RectangleImageBack.Opacity = 1 - PivotView.HeaderScrollProgress * 1.1;
+        RectangleImageBackAcrylic.Opacity = 1 - PivotView.HeaderScrollProgress * 1.1;
+        RectangleImageBack.RadiusX = 10 + PivotView.HeaderScrollProgress * 60;
+        RectangleImageBackAcrylic.RadiusX = 10 + PivotView.HeaderScrollProgress * 60;
+        RectangleImageBack.RadiusY = 10 + PivotView.HeaderScrollProgress * 60;
+        RectangleImageBackAcrylic.RadiusY = 10 + PivotView.HeaderScrollProgress * 60;
+        UserScale.ScaleX = 1 - PivotView.HeaderScrollProgress * 0.8;
+        RectangleImage.RadiusX = 10 + PivotView.HeaderScrollProgress * 100;
+        RectangleImage.RadiusY = 10 + PivotView.HeaderScrollProgress * 100;
+        UserScale.ScaleY = 1 - PivotView.HeaderScrollProgress * 0.8;
+        UserInfoScale.ScaleX = 1 - PivotView.HeaderScrollProgress * 0.6;
+        UserInfoScale.ScaleY = 1 - PivotView.HeaderScrollProgress * 0.6;
     }
 }

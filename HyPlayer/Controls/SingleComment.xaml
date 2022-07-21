@@ -18,9 +18,7 @@
                 <!--  White Space  -->
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <Rectangle Grid.ColumnSpan="3"  Margin=" 0,-5,-10,-5" RadiusX="10" RadiusY="10">
-
-            </Rectangle>
+            <Rectangle Grid.ColumnSpan="3" Margin=" 0,-5,-10,-5" RadiusX="10" RadiusY="10" />
 
             <PersonPicture
                 x:Name="UserAvatar"
