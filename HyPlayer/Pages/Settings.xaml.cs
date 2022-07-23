@@ -20,6 +20,7 @@ using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
@@ -382,6 +383,6 @@ public sealed partial class Settings : Page
 
     private async void CheckUpdate_Click(object sender, RoutedEventArgs e)
     {
-        await Common.CheckUpdate(false);
+        await UpdateManager.PopupVersionCheck();
     }
 }

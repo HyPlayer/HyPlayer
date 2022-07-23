@@ -127,8 +127,10 @@ public sealed partial class BasePage : Page
             dialog.PrimaryButtonClick += (_, _) => Application.Current.Exit();
             await dialog.ShowAsync();
         }
-        await Common.CheckUpdate(true);
-        LoadLoginData();
+        // 不要阻塞页面加载
+        _ = UpdateManager.PopupVersionCheck(true);
+        // Fire and Forget
+        _ = LoadLoginData();
         /*
         if (e.Parameter is string)
             LoginDone();

@@ -7,9 +7,9 @@
     xmlns:controls1="using:HyPlayer.Controls"
     xmlns:hyplayer="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:pages="using:HyPlayer.Pages"
     mc:Ignorable="d"
     NavigationCacheMode="Disabled">
-
     <Grid>
         <controls1:PivotView FontFamily="Black">
             <controls1:PivotView.Header>
@@ -581,20 +581,22 @@
                     <ScrollViewer VerticalScrollMode="Enabled">
                         <Grid Margin="0,100,0,150">
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="6*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <StackPanel x:Name="AboutPanel" Orientation="Vertical" Grid.Column="0" Margin="0,0,0,24">
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Top">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
+                                            VerticalAlignment="Top">
                                     <Image
-                                    Width="128"
-                                    Height="128"
-                                    Source="/Assets/icon.png" />
-                                    <TextBlock Text="HyPlayer" Style="{StaticResource HeaderTextBlockStyle}" VerticalAlignment="Center"/>
+                                        Width="128"
+                                        Height="128"
+                                        Source="/Assets/icon.png" />
+                                    <TextBlock Text="HyPlayer" Style="{StaticResource HeaderTextBlockStyle}"
+                                               VerticalAlignment="Center" />
                                 </StackPanel>
 
                                 <RichTextBlock
@@ -621,22 +623,27 @@
                                 </RichTextBlock>
                                 <Grid Margin="8,12,8,0" ColumnSpacing="8" MaxWidth="600" HorizontalAlignment="Center">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <Border CornerRadius="6" Height="80" Width="256" Background="#1A808080" Padding="13,10" >
+                                    <Border CornerRadius="6" Height="80" Width="256" Background="#1A808080"
+                                            Padding="13,10">
                                         <Grid RowSpacing="8">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="*" />                                                
+                                                <RowDefinition Height="*" />
                                             </Grid.RowDefinitions>
                                             <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Top">
                                                 <FontIcon Glyph="&#xE946;" Margin="0,1,0,0" FontSize="16" />
-                                                <TextBlock Text="版本信息" FontSize="14" Margin="6,0,0,0" FontWeight="SemiBold"/>
+                                                <TextBlock Text="版本信息" FontSize="14" Margin="6,0,0,0"
+                                                           FontWeight="SemiBold" />
                                             </StackPanel>
                                             <TextBlock Grid.Row="1"
-                                                d:Text="2.1.30"
-                                            x:Name="VersionCode" HorizontalAlignment="Left" VerticalAlignment="Top" TextAlignment="Left" TextWrapping="Wrap" FontSize="13" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
+                                                       d:Text="2.1.30"
+                                                       x:Name="VersionCode" HorizontalAlignment="Left"
+                                                       VerticalAlignment="Top" TextAlignment="Left" TextWrapping="Wrap"
+                                                       FontSize="13"
+                                                       Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" />
                                         </Grid>
                                     </Border>
                                     <Border
@@ -656,17 +663,21 @@
                                                     Height="*" />
                                             </Grid.RowDefinitions>
                                             <StackPanel Grid.Row="0"
-                                                Orientation="Horizontal" VerticalAlignment="Top">
+                                                        Orientation="Horizontal" VerticalAlignment="Top">
                                                 <FontIcon
                                                     Glyph="&#xEA6C;"
                                                     Margin="0,1,0,0"
                                                     FontSize="16" />
-                                                <TextBlock Text="设备识别码" FontSize="14" Margin="6,0,0,0" FontWeight="SemiBold"/>
+                                                <TextBlock Text="设备识别码" FontSize="14" Margin="6,0,0,0"
+                                                           FontWeight="SemiBold" />
                                             </StackPanel>
                                             <TextBlock
-                                                Grid.Row="1"                                                
+                                                Grid.Row="1"
                                                 x:Name="DeviceInfo"
-                                                HorizontalAlignment="Left" HorizontalTextAlignment="Left" TextWrapping="Wrap" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" FontSize="13">
+                                                HorizontalAlignment="Left" HorizontalTextAlignment="Left"
+                                                TextWrapping="Wrap"
+                                                Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                                                FontSize="13">
                                                 <TextBlock.ContextFlyout>
                                                     <MenuFlyout>
                                                         <MenuFlyoutItem
@@ -684,8 +695,8 @@
                                     ColumnSpacing="8"
                                     MaxWidth="600" HorizontalAlignment="Center">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <Border
                                         CornerRadius="6"
@@ -709,13 +720,15 @@
                                                     Glyph="&#xED15;"
                                                     Margin="0,1,0,0"
                                                     FontSize="16" />
-                                                <TextBlock Text="用户交流反馈 QQ 群" FontSize="14" Margin="6,0,0,0" FontWeight="SemiBold"/>
+                                                <TextBlock Text="用户交流反馈 QQ 群" FontSize="14" Margin="6,0,0,0"
+                                                           FontWeight="SemiBold" />
                                             </StackPanel>
                                             <controls1:SelectableTextBox
                                                 Grid.Row="1"
                                                 HorizontalAlignment="Left"
                                                 VerticalAlignment="Top"
-                                                Text="1145646224" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
+                                                Text="1145646224"
+                                                Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" />
                                         </Grid>
                                     </Border>
                                     <Border
@@ -741,20 +754,22 @@
                                                     Glyph="&#xE117;"
                                                     Margin="0,1,0,0"
                                                     FontSize="16" />
-                                                <TextBlock Text="检查更新" FontSize="14" Margin="6,0,0,0" FontWeight="SemiBold"/>
+                                                <TextBlock Text="检查更新" FontSize="14" Margin="6,0,0,0"
+                                                           FontWeight="SemiBold" />
                                             </StackPanel>
                                             <StackPanel
                                                 Orientation="Horizontal"
                                                 Grid.Row="1">
 
-                                                <ComboBox x:Name="UpdateSource" 
-                                                SelectedIndex="{x:Bind hyplayer:Common.Setting.UpdateSource,Mode=TwoWay}" 
-                                                HorizontalAlignment="Left">
+                                                <ComboBox x:Name="UpdateSource"
+                                                          SelectedIndex="{x:Bind hyplayer:Common.Setting.UpdateSource,Mode=TwoWay}"
+                                                          HorizontalAlignment="Left">
                                                     <ComboBoxItem Content="Microsoft Store"></ComboBoxItem>
                                                     <ComboBoxItem Content="App Center"></ComboBoxItem>
 
                                                 </ComboBox>
-                                                <Button Margin="8,0,0,0" VerticalAlignment="Top" x:Name="CheckUpdate" Click="CheckUpdate_Click" Content="检查"/>
+                                                <Button Margin="8,0,0,0" VerticalAlignment="Top" x:Name="CheckUpdate"
+                                                        Click="CheckUpdate_Click" Content="检查" />
                                             </StackPanel>
 
                                         </Grid>
@@ -762,116 +777,153 @@
                                 </Grid>
 
 
-
                             </StackPanel>
-                            <StackPanel Spacing="12" x:Name="DeveloperPanel" Grid.Row="1" MaxWidth="800"  DoubleTapped="StackPanel_DoubleTapped">
+                            <StackPanel Spacing="12" x:Name="DeveloperPanel" Grid.Row="1" MaxWidth="800"
+                                        DoubleTapped="StackPanel_DoubleTapped">
 
                                 <Border CornerRadius="4" Height="64" Background="#1A808080" Tapped="UIElement_OnTapped">
 
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
-                                            <PersonPicture ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=GibeJPa6pAcRMKgoHC9ibI4w&amp;s=100" Height="44"/>
+                                            <PersonPicture
+                                                ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=GibeJPa6pAcRMKgoHC9ibI4w&amp;s=100"
+                                                Height="44" />
                                             <StackPanel>
-                                                <TextBlock Text="Kengwang" Style="{StaticResource SubtitleTextBlockStyle}" Margin="1,0,0,0"/>
+                                                <TextBlock Text="Kengwang"
+                                                           Style="{StaticResource SubtitleTextBlockStyle}"
+                                                           Margin="1,0,0,0" />
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
-                                                    <TextBlock Text="Developer"/>
-                                                    <TextBlock Text="Stay Cool~" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
+                                                    <TextBlock Text="Developer" />
+                                                    <TextBlock Text="Stay Cool~"
+                                                               Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" >
-                                            <HyperlinkButton NavigateUri="https://github.com/kengwang" Content="Github"/>
-                                            <HyperlinkButton NavigateUri="https://blog.kengwang.co" Content="博客"/>
-                                            <HyperlinkButton NavigateUri="http://www.coolapk.com/u/1683034" Content="酷安@kengwang"/>
-                                            <HyperlinkButton NavigateUri="https://afdian.net/@kengwang" Content="爱发电打赏"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <HyperlinkButton NavigateUri="https://github.com/kengwang" Content="Github" />
+                                            <HyperlinkButton NavigateUri="https://blog.kengwang.co" Content="博客" />
+                                            <HyperlinkButton NavigateUri="http://www.coolapk.com/u/1683034"
+                                                             Content="酷安@kengwang" />
+                                            <HyperlinkButton NavigateUri="https://afdian.net/@kengwang" Content="爱发电打赏" />
                                         </StackPanel>
                                     </Grid>
                                 </Border>
-                                <Border CornerRadius="4" Height="64" Background="#1A808080"  Tapped="UIElement_OnTapped">
+                                <Border CornerRadius="4" Height="64" Background="#1A808080" Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
-                                            <PersonPicture ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=eHh3SVVDUJKHf1I5XD7CPg&amp;s=100" Height="44"/>
+                                            <PersonPicture
+                                                ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=eHh3SVVDUJKHf1I5XD7CPg&amp;s=100"
+                                                Height="44" />
                                             <StackPanel>
-                                                <TextBlock Text="aaaaaaccd" Style="{StaticResource SubtitleTextBlockStyle}" Margin="1,0,0,0"/>
+                                                <TextBlock Text="aaaaaaccd"
+                                                           Style="{StaticResource SubtitleTextBlockStyle}"
+                                                           Margin="1,0,0,0" />
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
-                                                    <TextBlock Text="Design"/>
-                                                    <TextBlock d:Text=""  Text="High" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
+                                                    <TextBlock Text="Design" />
+                                                    <TextBlock d:Text="" Text="High"
+                                                               Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" >
-                                            <HyperlinkButton NavigateUri="https://github.com/aaaaaaccd" Content="Github"/>
-                                            <HyperlinkButton NavigateUri="https://www.coolapk.com/u/2409682" Content="酷安@一只老白"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <HyperlinkButton NavigateUri="https://github.com/aaaaaaccd"
+                                                             Content="Github" />
+                                            <HyperlinkButton NavigateUri="https://www.coolapk.com/u/2409682"
+                                                             Content="酷安@一只老白" />
 
                                         </StackPanel>
                                     </Grid>
                                 </Border>
-                                <Border CornerRadius="4" Height="64" Background="#1A808080"  Tapped="UIElement_OnTapped">
+                                <Border CornerRadius="4" Height="64" Background="#1A808080" Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
-                                            <PersonPicture ProfilePicture="https://himg.bdimg.com/sys/portraitn/item/0fd16570303132303134g930801000000" Height="44"/>
+                                            <PersonPicture
+                                                ProfilePicture="https://himg.bdimg.com/sys/portraitn/item/0fd16570303132303134g930801000000"
+                                                Height="44" />
                                             <StackPanel>
-                                                <TextBlock Text="EP012014" Style="{StaticResource SubtitleTextBlockStyle}" Margin="1,0,0,0"/>
+                                                <TextBlock Text="EP012014"
+                                                           Style="{StaticResource SubtitleTextBlockStyle}"
+                                                           Margin="1,0,0,0" />
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
-                                                    <TextBlock Text="Developer"/>
-                                                    <TextBlock Text="Solidarity Forever~" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
+                                                    <TextBlock Text="Developer" />
+                                                    <TextBlock Text="Solidarity Forever~"
+                                                               Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" >
-                                            <HyperlinkButton NavigateUri="https://github.com/EP012014" Content="Github"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <HyperlinkButton NavigateUri="https://github.com/EP012014" Content="Github" />
                                         </StackPanel>
                                     </Grid>
                                 </Border>
-                                <Border CornerRadius="4" Height="64" Background="#1A808080"  Tapped="UIElement_OnTapped">
+                                <Border CornerRadius="4" Height="64" Background="#1A808080" Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
-                                            <PersonPicture ProfilePicture="https://q1.qlogo.cn/g?b=qq&amp;k=L3T8OPGiblT0IMjCLUH3GKA&amp;s=100" Height="44"/>
+                                            <PersonPicture
+                                                ProfilePicture="https://q1.qlogo.cn/g?b=qq&amp;k=L3T8OPGiblT0IMjCLUH3GKA&amp;s=100"
+                                                Height="44" />
                                             <StackPanel>
-                                                <TextBlock Text="Raspberry Monster" Style="{StaticResource SubtitleTextBlockStyle}" Margin="1,0,0,0"/>
+                                                <TextBlock Text="Raspberry Monster"
+                                                           Style="{StaticResource SubtitleTextBlockStyle}"
+                                                           Margin="1,0,0,0" />
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
-                                                    <TextBlock Text="Developer"/>
-                                                    <TextBlock Text="僕が夢を捨てて大人になるまで" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
+                                                    <TextBlock Text="Developer" />
+                                                    <TextBlock Text="僕が夢を捨てて大人になるまで"
+                                                               Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"  Tapped="UIElement_OnTapped">
-                                            <HyperlinkButton NavigateUri="https://github.com/Raspberry-Monster" Content="Github"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                                                    Tapped="UIElement_OnTapped">
+                                            <HyperlinkButton NavigateUri="https://github.com/Raspberry-Monster"
+                                                             Content="Github" />
                                         </StackPanel>
                                     </Grid>
                                 </Border>
-                                <Border CornerRadius="4" Height="64" Background="#1A808080"  Tapped="UIElement_OnTapped">
+                                <Border CornerRadius="4" Height="64" Background="#1A808080" Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
-                                            <PersonPicture ProfilePicture="http://avatar.coolapk.com/data/001/87/30/68_avatar_middle.jpg" Height="44"/>
+                                            <PersonPicture
+                                                ProfilePicture="http://avatar.coolapk.com/data/001/87/30/68_avatar_middle.jpg"
+                                                Height="44" />
                                             <StackPanel>
-                                                <TextBlock Text="FUNNYTW" Style="{StaticResource SubtitleTextBlockStyle}" Margin="1,0,0,0"/>
+                                                <TextBlock Text="FUNNYTW"
+                                                           Style="{StaticResource SubtitleTextBlockStyle}"
+                                                           Margin="1,0,0,0" />
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
-                                                    <TextBlock Text="新版图标提供 + 新版 UI 设计"/>
-                                                    <TextBlock Text="Forever Funny" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
+                                                    <TextBlock Text="新版图标提供 + 新版 UI 设计" />
+                                                    <TextBlock Text="Forever Funny"
+                                                               Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" >
-                                            <HyperlinkButton NavigateUri="https://github.com/FunnyTHEWorld" Content="Github"/>
-                                            <HyperlinkButton NavigateUri="https://www.coolapk.com/u/1873068" Content="酷安"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <HyperlinkButton NavigateUri="https://github.com/FunnyTHEWorld"
+                                                             Content="Github" />
+                                            <HyperlinkButton NavigateUri="https://www.coolapk.com/u/1873068"
+                                                             Content="酷安" />
                                         </StackPanel>
                                     </Grid>
                                 </Border>
-                                <Border CornerRadius="4" Height="64" Background="#1A808080"  Tapped="UIElement_OnTapped">
+                                <Border CornerRadius="4" Height="64" Background="#1A808080" Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
-                                            <PersonPicture ProfilePicture="https://cn.gravatar.com/avatar/e14c9eb2a52ddb20a3ea5c72766eeffb?s=100" Height="44"/>
+                                            <PersonPicture
+                                                ProfilePicture="https://cn.gravatar.com/avatar/e14c9eb2a52ddb20a3ea5c72766eeffb?s=100"
+                                                Height="44" />
                                             <StackPanel>
-                                                <TextBlock Text="叫我蓝火火" Style="{StaticResource SubtitleTextBlockStyle}" Margin="1,0,0,0"/>
+                                                <TextBlock Text="叫我蓝火火" Style="{StaticResource SubtitleTextBlockStyle}"
+                                                           Margin="1,0,0,0" />
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
-                                                    <TextBlock Text="热词开发者 + 部分功能实现"/>
-                                                    <TextBlock Text="太阳在晒你的同时，你也在晒太阳" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
+                                                    <TextBlock Text="热词开发者 + 部分功能实现" />
+                                                    <TextBlock Text="太阳在晒你的同时，你也在晒太阳"
+                                                               Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" >
-                                            <HyperlinkButton NavigateUri="https://github.com/cnbluefire" Content="Github"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <HyperlinkButton NavigateUri="https://github.com/cnbluefire"
+                                                             Content="Github" />
                                         </StackPanel>
                                     </Grid>
                                 </Border>
@@ -1097,14 +1149,14 @@
                                 </StackPanel>
                             </StackPanel>
                             <VisualStateManager.VisualStateGroups>
-                                <VisualStateGroup >
-                                    <VisualState x:Name="LargeLayout" >
+                                <VisualStateGroup>
+                                    <VisualState x:Name="LargeLayout">
                                         <VisualState.StateTriggers>
-                                            <AdaptiveTrigger MinWindowWidth="800"/>
+                                            <AdaptiveTrigger MinWindowWidth="800" />
                                         </VisualState.StateTriggers>
                                         <VisualState.Setters>
-                                            <Setter Target="DeveloperPanel.Grid.Row" Value="0"/>
-                                            <Setter Target="AboutPanel.Grid.Column" Value="1"/>
+                                            <Setter Target="DeveloperPanel.Grid.Row" Value="0" />
+                                            <Setter Target="AboutPanel.Grid.Column" Value="1" />
 
                                         </VisualState.Setters>
                                     </VisualState>
