@@ -124,10 +124,10 @@ public sealed partial class BasePage : Page
             dialog.CloseButtonText = "我已知晓";
             dialog.PrimaryButtonText = "退出软件";
             dialog.IsPrimaryButtonEnabled = true;
-            dialog.PrimaryButtonClick += (_, _) => Environment.Exit(0);
+            dialog.PrimaryButtonClick += (_, _) => Application.Current.Exit();
             await dialog.ShowAsync();
         }
-
+        await Common.CheckUpdate(true);
         LoadLoginData();
         /*
         if (e.Parameter is string)

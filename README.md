@@ -11,10 +11,12 @@
 	<img alt="Using GPL-v3" src="https://img.shields.io/github/license/kengwang/HyPlayer">
 	<img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/kengwang/HyPlayer">
     <img alt="GitHub issues" src="https://img.shields.io/github/issues/HyPlayer/HyPlayer">
+    <h4 align="center">本软件仅供学习交流使用  请勿用于其他用途<br /><br />下载后请在 24 小时内删除
+</h4>
 </p>
 
 
-**本软件仅供学习交流使用  请勿用于其他用途**
+
 
 ## 反馈 & 交流
 
@@ -34,7 +36,7 @@ Skype 群组: https://join.skype.com/umOViUQNItVd
 
 Microsoft Store: [点击查看](https://www.microsoft.com/store/productId/9N5TD916686K)
 
-[Azure DevOps](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=29&branchName=master) : [![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/HyPlayer.HyPlayer?branchName=master)](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=29&branchName=master)
+[Azure DevOps](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=29&branchName=develop) : [![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/HyPlayer.HyPlayer?branchName=develop)](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=29&branchName=develop)
 
 Azure 编译包会编译 Commit 并发布 Release: [查看Release](https://github.com/HyPlayer/HyPlayer/releases/tag/azure-build)
 

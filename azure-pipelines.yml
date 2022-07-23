@@ -4,19 +4,16 @@
 # https://aka.ms/yaml
 
 trigger:
-- master
+- develop
 
 pool:
   vmImage: 'windows-2022'
 
 variables:
-  solution: 'HyPlayer.sln'
-  buildPlatform: 'x64|x86|ARM|ARM64'
-  buildConfiguration: 'Release'
-  appxPackageDir: '$(build.artifactStagingDirectory)\AppxPackages\\'
+- group: HyPlayerDevelopBuild
+
 
 steps:
-
 - checkout: self
   submodules: true
 
@@ -39,16 +36,16 @@ steps:
     restoreSolution: '$(solution)'
 
 - task: DownloadSecureFile@1
-  name: signingCert
+  name: certificate
   displayName: 'Download CA certificate'
   inputs:
-    secureFile: 'HyPlayer.pfx'
+    secureFile: '$(signingCert.secureFilePath)'
  
 - task: VSBuild@1
   inputs:
     solution: '$(solution)'
     vsVersion: '17.0'
-    msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)"  /p:AppxPackageDir="$(appxPackageDir)"  /p:AppxBundle=Auto  /p:PackageCertificateThumbprint=""  /p:UapAppxPackageBuildMode=SideloadOnly  /p:AppxPackageSigningEnabled=true  /p:PackageCertificateKeyFile="$(signingCert.secureFilePath)"'
+    msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)"  /p:AppxPackageDir="$(appxPackageDir)"  /p:AppxBundle=Auto  /p:PackageCertificateThumbprint=""  /p:UapAppxPackageBuildMode=SideloadOnly  /p:AppxPackageSigningEnabled=true  /p:PackageCertificateKeyFile="$(certificate.secureFilePath)" /p:PackageCertificatePassword="$(signingCert.password)"'
     platform: 'x64'
     configuration: '$(buildConfiguration)'
     clean: true

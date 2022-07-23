@@ -31,6 +31,8 @@ using Microsoft.UI.Xaml.Controls;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Windows.ApplicationModel;
+using Windows.Services.Store;
 #if !DEBUG
 using Microsoft.AppCenter.Crashes;
 #endif
@@ -290,6 +292,74 @@ namespace HyPlayer
             public object Item;
             public Type PageType;
             public object Paratmers;
+        }
+
+        public static async Task CheckUpdate(bool isStartUp) 
+        {
+            try 
+            {
+                if (Setting.UpdateSource == 0)
+                {
+                    StoreContext updateManager = StoreContext.GetDefault();
+                    var updateLists = await updateManager.GetAppAndOptionalStorePackageUpdatesAsync();
+                    if (updateLists.Where(t=>t.Package.Id==Package.Current.Id)!=null)
+                    {
+                        ContentDialog contentDialog = new ContentDialog();
+                        contentDialog.Title = "检测到新版本HyPlayer";
+                        contentDialog.Content = $"检测到新版本的HyPlayer\n是否进行更新?";
+                        contentDialog.SecondaryButtonText = "更新";
+                        contentDialog.SecondaryButtonClick += async (_, _) => await Windows.System.Launcher.LaunchUriAsync(new Uri(@"ms-windows-store://pdp/?productid=9N5TD916686K"));
+                        contentDialog.PrimaryButtonText = "取消";
+                        if (updateLists.FirstOrDefault().Mandatory) contentDialog.Content += "\n此更新为重要更新，建议立即升级";
+                        await contentDialog.ShowAsync();
+                    }
+                    else if (isStartUp!=true)
+                    {
+                        ContentDialog contentDialog = new ContentDialog();
+                        contentDialog.Title = "未检测到更新";
+                        contentDialog.Content = $"未检测到新版本的HyPlayer";
+                        contentDialog.PrimaryButtonText = "确定";
+                        await contentDialog.ShowAsync();
+                    }
+                }
+                else
+                {
+                    WebClient versionsGetter = new WebClient();
+                    versionsGetter.Headers.Add("X-API-Token", "50f1aa0749d70814b0e91493444759885119a58d");
+                    JObject versions = JObject.Parse((await versionsGetter.DownloadStringTaskAsync("https://api.appcenter.ms/v0.1/apps/kengwang/HyPlayer/distribution_groups/Public/releases")).Replace("[", "").Replace("]", ""));
+                    string onlineVersion = versions["version"].ToString();
+                    bool mandatoryUpdate = bool.Parse(versions["mandatory_update"].ToString());
+                    var package = Package.Current;
+                    var packageId = package.Id;
+                    var version = packageId.Version;
+                    string localVersion = string.Format("{0}.{1}.{2}.{3}", version.Major, version.Minor,
+                        version.Build, version.Revision);
+                    if (onlineVersion != localVersion)
+                    {
+                        ContentDialog contentDialog = new ContentDialog();
+                        contentDialog.Title = "检测到新版本HyPlayer";
+                        contentDialog.Content = $"检测到新版本的HyPlayer\n在线版本:{onlineVersion}\n是否进行更新?";
+                        contentDialog.SecondaryButtonText = "更新";
+                        contentDialog.SecondaryButtonClick += async (_, _) =>await Windows.System.Launcher.LaunchUriAsync(new Uri(@"https://install.appcenter.ms/users/kengwang/apps/HyPlayer/distribution_groups/public"));
+                        contentDialog.PrimaryButtonText = "取消";
+                        if (mandatoryUpdate) contentDialog.Content += "\n此更新为重要更新，建议立即升级";
+                        await contentDialog.ShowAsync();
+                    }
+                    else if (isStartUp != true)
+                    {
+                        ContentDialog contentDialog = new ContentDialog();
+                        contentDialog.Title = "未检测到更新";
+                        contentDialog.Content = $"未检测到新版本的HyPlayer";
+                        contentDialog.PrimaryButtonText = "确定";
+                        await contentDialog.ShowAsync();
+                    }
+                }
+            }
+            catch(Exception e)
+            {
+                AddToTeachingTipLists("检测更新失败", e.Message);
+            }
+            
         }
     }
 
@@ -959,6 +1029,16 @@ namespace HyPlayer
         {
             get => GetSettings("DisablePopUp", false);
             set => ApplicationData.Current.LocalSettings.Values["DisablePopUp"] = value;
+        }
+
+        public int UpdateSource
+        {
+            get => GetSettings("UpdateSource", 0);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["UpdateSource"] = value;
+                OnPropertyChanged();
+            }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
