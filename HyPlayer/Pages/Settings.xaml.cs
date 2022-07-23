@@ -379,4 +379,9 @@ public sealed partial class Settings : Page
     {
         Common.Setting.AudioRenderDevice = "";
     }
+
+    private async void CheckUpdate_Click(object sender, RoutedEventArgs e)
+    {
+        await Common.CheckUpdate(false);
+    }
 }
