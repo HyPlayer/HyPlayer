@@ -633,18 +633,15 @@
                                     HorizontalContentAlignment="Right"
                                     Text="用户交流反馈 QQ 群: 1145646224" />
                                 <TextBlock Text="更新源:" HorizontalAlignment="Right"></TextBlock>
-                                    <ComboBox x:Name="UpdateSource" 
+                                <ComboBox x:Name="UpdateSource" 
                                           SelectedIndex="{x:Bind hyplayer:Common.Setting.UpdateSource,Mode=TwoWay}" 
                                           HorizontalAlignment="Right">
-                                        <ComboBoxItem Content="Microsoft Store"></ComboBoxItem>
-                                        <ComboBoxItem Content="App Center"></ComboBoxItem>
-                                        
-                                    </ComboBox>
+                                    <ComboBoxItem Content="Microsoft Store"></ComboBoxItem>
+                                    <ComboBoxItem Content="App Center"></ComboBoxItem>
+
+                                </ComboBox>
                                 <Button x:Name="CheckUpdate" Click="CheckUpdate_Click" Content="检测更新" HorizontalAlignment="Right"></Button>
-
-
                             </StackPanel>
-
                             <StackPanel Grid.Column="0" Orientation="Vertical">
                                 <TextBlock
                                     Margin="15,0,30,0"
