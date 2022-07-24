@@ -88,6 +88,165 @@ public sealed partial class PlayBar
         HyPlayList.MediaSystemControls.UpdateTimelineProperties(timelineProperties);
     }
 
+    public void RefreshTile()
+    {
+        var cover = (int)HyPlayList.NowPlayingItem.ItemType > 1
+            ? HyPlayList.NowPlayingItem.PlayItem.Album.cover
+            : "https://s2.loli.net/2022/07/24/vwmY7t19uXLHPOr.png";
+        var tileContent = new TileContent()
+        {
+            Visual = new TileVisual()
+            {
+                DisplayName = "HyPlayer",
+                TileSmall = new TileBinding()
+                {
+                    Content = new TileBindingContentAdaptive()
+                    {
+                        Children =
+                        {
+                            new AdaptiveImage()
+                            {
+                                Source =
+                                    cover
+                            }
+                        }
+                    }
+                },
+                TileMedium = new TileBinding()
+                {
+                    Branding = TileBranding.NameAndLogo,
+                    Content = new TileBindingContentAdaptive()
+                    {
+                        Children =
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = HyPlayList.NowPlayingItem.PlayItem.Name,
+                                HintStyle = AdaptiveTextStyle.Base
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = HyPlayList.NowPlayingItem.PlayItem.ArtistString,
+                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                                HintWrap = true,
+                                HintMaxLines = 2
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = HyPlayList.NowPlayingItem.PlayItem.AlbumString,
+                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                                HintWrap = true,
+                                HintMaxLines = 2
+                            }
+                        },
+                        BackgroundImage = new TileBackgroundImage()
+                        {
+                            Source =
+                                cover
+                        }
+                    }
+                },
+                TileWide = new TileBinding()
+                {
+                    Branding = TileBranding.NameAndLogo,
+                    Content = new TileBindingContentAdaptive()
+                    {
+                        Children =
+                        {
+                            new AdaptiveGroup()
+                            {
+                                Children =
+                                {
+                                    new AdaptiveSubgroup()
+                                    {
+                                        HintWeight = 40,
+                                        Children =
+                                        {
+                                            new AdaptiveImage()
+                                            {
+                                                Source =
+                                                    cover
+                                            }
+                                        }
+                                    },
+                                    new AdaptiveSubgroup()
+                                    {
+                                        Children =
+                                        {
+                                            new AdaptiveText()
+                                            {
+                                                Text = HyPlayList.NowPlayingItem.PlayItem.Name,
+                                                HintStyle = AdaptiveTextStyle.Base
+                                            },
+                                            new AdaptiveText()
+                                            {
+                                                Text = HyPlayList.NowPlayingItem.PlayItem.ArtistString,
+                                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                                                HintWrap = true,
+                                                HintMaxLines = 3
+                                            },
+                                            new AdaptiveText()
+                                            {
+                                                Text = HyPlayList.NowPlayingItem.PlayItem.AlbumString,
+                                                HintStyle = AdaptiveTextStyle.CaptionSubtle
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        BackgroundImage = new TileBackgroundImage()
+                        {
+                            Source =
+                                cover
+                        }
+                    }
+                },
+                TileLarge = new TileBinding()
+                {
+                    Branding = TileBranding.NameAndLogo,
+                    Content = new TileBindingContentAdaptive()
+                    {
+                        Children =
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = HyPlayList.NowPlayingItem.PlayItem.Name,
+                                HintStyle = AdaptiveTextStyle.Base
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = HyPlayList.NowPlayingItem.PlayItem.ArtistString,
+                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                                HintWrap = true,
+                                HintMaxLines = 3
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = HyPlayList.NowPlayingItem.PlayItem.AlbumString,
+                                HintStyle = AdaptiveTextStyle.CaptionSubtle
+                            },
+                            new AdaptiveImage()
+                            {
+                                Source = cover
+                            }
+                        },
+                        BackgroundImage = new TileBackgroundImage()
+                        {
+                            Source = cover
+                        }
+                    }
+                }
+            }
+        };
+
+// Create the tile notification
+        var tileNotif = new TileNotification(tileContent.GetXml());
+
+// And send the notification to the primary tile
+        TileUpdateManager.CreateTileUpdaterForApplication().Update(tileNotif);
+    }
+
     public void InitializeDesktopLyric()
     {
         if (Common.Setting.toastLyric)
@@ -277,7 +436,7 @@ public sealed partial class PlayBar
     public async void LoadPlayingFile(HyPlayItem mpi)
     {
         if (HyPlayList.NowPlayingItem.PlayItem == null) return;
-        
+
         try
         {
             if (!Common.Setting.noImage && !Common.IsInBackground)
@@ -300,8 +459,9 @@ public sealed partial class PlayBar
                                                     StaticSource.PICSIZE_PLAYBAR_ALBUMCOVER));
                     });
                 }
+
             ApplicationView.GetForCurrentView().Title = HyPlayList.NowPlayingItem.PlayItem.Name + " - " +
-                                    HyPlayList.NowPlayingItem.PlayItem.ArtistString;
+                                                        HyPlayList.NowPlayingItem.PlayItem.ArtistString;
         }
         catch (Exception)
         {
@@ -413,7 +573,7 @@ public sealed partial class PlayBar
             HistoryManagement.AddNCSongHistory(mpi.PlayItem.Id);
         }
 
-
+        RefreshTile();
         /*
         verticalAnimation.To = TbSongName.ActualWidth - TbSongName.Tb.ActualWidth;
         verticalAnimation.SpeedRatio = 0.1;
