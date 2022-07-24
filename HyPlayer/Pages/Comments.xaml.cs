@@ -221,4 +221,13 @@ public sealed partial class Comments : Page, IDisposable
             BackToTop.Visibility = Visibility.Visible;
         else BackToTop.Visibility = Visibility.Collapsed;
     }
+
+    private void PageSelect_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+    {
+        if (int.TryParse(PageSelect.Text, out page))
+        {
+            LoadComments(sortType);
+            ScrollTop();
+        }
+    }
 }

@@ -36,11 +36,12 @@
                         x:Name="SendComment"
                         Grid.Column="1"
                         MaxWidth="100"
-                        HorizontalAlignment="Center"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Margin="8,15,0,0"
                         Click="SendComment_Click"
                         Content="发表"
-                        FontWeight="ExtraBold"
-                        Style="{StaticResource ButtonRevealStyle}" />
+                        Style="{StaticResource AccentButtonStyle}" />
                 </Grid>
                 <!--
             <TextBlock Text="热评" FontSize="40" Margin="15" />
@@ -58,17 +59,22 @@
                         Text="热评" />
 
                 </Grid>
-                <StackPanel Orientation="Vertical">
+
+                <StackPanel>
                     <StackPanel
                         x:Name="HotCommentList"
                         Margin="10"
                         Orientation="Vertical"
                         Spacing="30" />
+                    
+                    <Border BorderBrush="{ThemeResource SystemControlBackgroundListMediumRevealBorderBrush}" BorderThickness="0,1,0,0" HorizontalAlignment="Stretch" Margin="16,0,16,16"/>
+
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition />
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
+
                         <TextBlock
                             x:Name="AllCmtsTB"
                             Margin="25,10,15,10"
@@ -78,7 +84,7 @@
                         <ComboBox
                             x:Name="ComboBoxSortType"
                             Grid.Column="1"
-                            Margin="0,25,15,0"
+                            Margin="0,8,16,0"
                             HorizontalAlignment="Right"
                             SelectedIndex="2"
                             SelectionChanged="ComboBoxSortType_OnSelectionChanged">
@@ -94,34 +100,29 @@
                         Spacing="30" />
 
                 </StackPanel>
-                <StackPanel
-                    HorizontalAlignment="Center"
-                    Orientation="Horizontal"
-                    Spacing="15">
-                    <Button
-                        x:Name="PrevPage"
-                        Click="PrevPage_Click"
-                        Content="上一页"
-                        IsEnabled="False"
-                        Style="{StaticResource ButtonRevealStyle}" />
-                    <StackPanel Orientation="Vertical">
-                        <TextBlock x:Name="PageIndicator" />
-                        <TextBox
-                            x:Name="PageSelect"
-                            Header="跳页"
-                            PlaceholderText="跳页" />
+
+                <StackPanel HorizontalAlignment="Center" Spacing="4">
+                    <TextBlock x:Name="PageIndicator" HorizontalAlignment="Center" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
+                    <StackPanel 
+                        Orientation="Horizontal"
+                        Spacing="12">
                         <Button
-                            x:Name="SkipPage"
-                            Click="SkipPage_Click"
-                            Content="跳转"
-                            Style="{StaticResource ButtonRevealStyle}" />
+                            x:Name="PrevPage"
+                            Click="PrevPage_Click"
+                            Content="上一页"
+                            IsEnabled="False"/>
+                        <AutoSuggestBox 
+                            x:Name="PageSelect" 
+                            PlaceholderText="跳页"
+                            QueryIcon="Forward" 
+                            Width="110" 
+                            QuerySubmitted="PageSelect_QuerySubmitted"/>
+                        <Button
+                            x:Name="NextPage"
+                            Click="NextPage_Click"
+                            Content="下一页"
+                            IsEnabled="False"/>
                     </StackPanel>
-                    <Button
-                        x:Name="NextPage"
-                        Click="NextPage_Click"
-                        Content="下一页"
-                        IsEnabled="False"
-                        Style="{StaticResource ButtonRevealStyle}" />
                 </StackPanel>
                 <Grid Height="150" />
             </StackPanel>
@@ -131,10 +132,9 @@
             Width="50"
             Height="50"
             Margin="15"
-            HorizontalAlignment="Right"
+            HorizontalAlignment="Right"            
             Click="BackToTop_Click"
             CornerRadius="5"
-            Style="{StaticResource ButtonRevealStyle}"
             ToolTipService.ToolTip="回到顶部"
             Visibility="Collapsed">
             <Button.Content>

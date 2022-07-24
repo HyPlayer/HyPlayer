@@ -11,7 +11,7 @@
     mc:Ignorable="d">
 
     <StackPanel Orientation="Vertical">
-        <Grid Margin="10,0,20,0">
+        <Grid Margin="10,0,10,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="70" />
                 <ColumnDefinition Width="10" />
@@ -37,8 +37,7 @@
                     x:Name="Nickname"
                     Padding="0"
                     Click="NavToUser_Click"
-                    Content="{x:Bind comment.Nickname}"
-                    Foreground="{ThemeResource DefaultTextForegroundThemeBrush}" />
+                    Content="{x:Bind comment.Nickname}" Style="{StaticResource TextBlockButtonStyle}" />
                 <TextBlock Foreground="Gray" Text="{x:Bind comment.SendTime}" />
                 <controls:SelectableTextBox
                     x:Name="CommentContent"
@@ -48,18 +47,17 @@
                     TextWrapping="Wrap" />
                 <StackPanel
                     Margin="0,10,0,0"
-                    HorizontalAlignment="Left"
+                    HorizontalAlignment="Right"
                     Orientation="Horizontal"
-                    Spacing="10">
+                    Spacing="4">
                     <ToggleButton
                         x:Name="Like"
                         Height="35"
                         Click="Like_Click"
                         IsChecked="{x:Bind comment.HasLiked}"
-                        Style="{StaticResource ToggleButtonRevealStyle}"
-                        ToolTipService.ToolTip="点赞">
-                        <StackPanel Orientation="Horizontal" Spacing="5">
-                            <SymbolIcon Symbol="Like" />
+                        ToolTipService.ToolTip="点赞"  Background="Transparent" BorderBrush="Transparent">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE19F;" FontSize="15" />
                             <TextBlock x:Name="LikeCountTB" Text="{x:Bind comment.likedCount}" />
                         </StackPanel>
                     </ToggleButton>
@@ -67,19 +65,17 @@
                         x:Name="Delete"
                         Height="35"
                         Click="Delete_Click"
-                        Style="{StaticResource ButtonRevealStyle}"
                         ToolTipService.ToolTip="删除"
-                        Visibility="{x:Bind comment.IsByMyself}">
-                        <SymbolIcon Symbol="Delete" />
+                        Visibility="{x:Bind comment.IsByMyself}" Background="Transparent" BorderBrush="Transparent">
+                        <FontIcon Glyph="&#xE107;" FontSize="15" />
                     </Button>
                     <ToggleButton
                         x:Name="ReplyBtn"
                         Height="35"
                         Click="ReplyBtn_Click"
-                        Style="{StaticResource ToggleButtonRevealStyle}"
-                        ToolTipService.ToolTip="回复">
-                        <StackPanel Orientation="Horizontal" Spacing="5">
-                            <SymbolIcon Symbol="Comment" />
+                        ToolTipService.ToolTip="回复" Background="Transparent" BorderBrush="Transparent">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE134;" FontSize="15" />
                             <TextBlock Text="{x:Bind comment.ReplyCount}" />
                         </StackPanel>
                     </ToggleButton>
@@ -91,11 +87,11 @@
         <Border
             x:Name="SubCmtsConainer"
             Margin="5"
-            Background="{ThemeResource SystemControlBackgroundBaseLowBrush}"
-            CornerRadius="5"
+            Background="#26808080"
+            CornerRadius="4"
             Visibility="Collapsed">
             <StackPanel Orientation="Vertical">
-                <Grid>
+                <Grid Margin="0,12,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition />
                         <ColumnDefinition Width="80" />
@@ -104,14 +100,14 @@
                         x:Name="ReplyText"
                         Grid.Column="0"
                         Height="20"
-                        Margin="10" />
+                        Margin="12,0,0,0" />
                     <Button
                         x:Name="SendReply"
                         Grid.Column="1"
-                        Margin="10"
+                        Margin="12,0"
                         Click="SendReply_Click"
                         Content="回复"
-                        Style="{StaticResource ButtonRevealStyle}" />
+                        Style="{StaticResource AccentButtonStyle}" />
                 </Grid>
                 <StackPanel x:Name="SubCmts" Margin="10" />
                 <Button
