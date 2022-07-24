@@ -28,6 +28,8 @@ using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
 using Microsoft.Toolkit.Uwp.Notifications;
 using NeteaseCloudMusicApi;
+using Windows.UI.StartScreen;
+using Windows.Data.Xml.Dom;
 
 #endregion
 
@@ -90,6 +92,7 @@ public sealed partial class PlayBar
 
     public void RefreshTile()
     {
+        if (HyPlayList.NowPlayingItem?.PlayItem == null) return;
         var cover = (int)HyPlayList.NowPlayingItem.ItemType > 1
             ? HyPlayList.NowPlayingItem.PlayItem.Album.cover
             : "https://s2.loli.net/2022/07/24/vwmY7t19uXLHPOr.png";
@@ -97,20 +100,10 @@ public sealed partial class PlayBar
         {
             Visual = new TileVisual()
             {
-                DisplayName = "HyPlayer",
+                DisplayName = "HyPlayer 正在播放",
                 TileSmall = new TileBinding()
                 {
                     Content = new TileBindingContentAdaptive()
-                    {
-                        Children =
-                        {
-                            new AdaptiveImage()
-                            {
-                                Source =
-                                    cover
-                            }
-                        }
-                    }
                 },
                 TileMedium = new TileBinding()
                 {
@@ -118,32 +111,27 @@ public sealed partial class PlayBar
                     Content = new TileBindingContentAdaptive()
                     {
                         Children =
-                        {
-                            new AdaptiveText()
-                            {
-                                Text = HyPlayList.NowPlayingItem.PlayItem.Name,
-                                HintStyle = AdaptiveTextStyle.Base
-                            },
-                            new AdaptiveText()
-                            {
-                                Text = HyPlayList.NowPlayingItem.PlayItem.ArtistString,
-                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
-                                HintWrap = true,
-                                HintMaxLines = 2
-                            },
-                            new AdaptiveText()
-                            {
-                                Text = HyPlayList.NowPlayingItem.PlayItem.AlbumString,
-                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
-                                HintWrap = true,
-                                HintMaxLines = 2
-                            }
-                        },
-                        BackgroundImage = new TileBackgroundImage()
-                        {
-                            Source =
-                                cover
-                        }
+                {
+                    new AdaptiveText()
+                    {
+                        Text = HyPlayList.NowPlayingItem?.PlayItem.Name,
+                        HintStyle = AdaptiveTextStyle.Base
+                    },
+                    new AdaptiveText()
+                    {
+                        Text = HyPlayList.NowPlayingItem?.PlayItem.ArtistString,
+                        HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                        HintWrap = true,
+                        HintMaxLines = 2
+                    },
+                    new AdaptiveText()
+                    {
+                        Text = HyPlayList.NowPlayingItem?.PlayItem.AlbumString,
+                        HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                        HintWrap = true,
+                        HintMaxLines = 2
+                    }
+                }
                     }
                 },
                 TileWide = new TileBinding()
@@ -152,54 +140,25 @@ public sealed partial class PlayBar
                     Content = new TileBindingContentAdaptive()
                     {
                         Children =
-                        {
-                            new AdaptiveGroup()
-                            {
-                                Children =
-                                {
-                                    new AdaptiveSubgroup()
-                                    {
-                                        HintWeight = 40,
-                                        Children =
-                                        {
-                                            new AdaptiveImage()
-                                            {
-                                                Source =
-                                                    cover
-                                            }
-                                        }
-                                    },
-                                    new AdaptiveSubgroup()
-                                    {
-                                        Children =
-                                        {
-                                            new AdaptiveText()
-                                            {
-                                                Text = HyPlayList.NowPlayingItem.PlayItem.Name,
-                                                HintStyle = AdaptiveTextStyle.Base
-                                            },
-                                            new AdaptiveText()
-                                            {
-                                                Text = HyPlayList.NowPlayingItem.PlayItem.ArtistString,
-                                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
-                                                HintWrap = true,
-                                                HintMaxLines = 3
-                                            },
-                                            new AdaptiveText()
-                                            {
-                                                Text = HyPlayList.NowPlayingItem.PlayItem.AlbumString,
-                                                HintStyle = AdaptiveTextStyle.CaptionSubtle
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        BackgroundImage = new TileBackgroundImage()
-                        {
-                            Source =
-                                cover
-                        }
+                {
+                    new AdaptiveText()
+                    {
+                        Text = HyPlayList.NowPlayingItem?.PlayItem.Name,
+                        HintStyle = AdaptiveTextStyle.Base
+                    },
+                    new AdaptiveText()
+                    {
+                        Text = HyPlayList.NowPlayingItem?.PlayItem.ArtistString,
+                        HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                        HintWrap = true,
+                        HintMaxLines = 3
+                    },
+                    new AdaptiveText()
+                    {
+                        Text = HyPlayList.NowPlayingItem?.PlayItem.AlbumString,
+                        HintStyle = AdaptiveTextStyle.CaptionSubtle
+                    }
+                }
                     }
                 },
                 TileLarge = new TileBinding()
@@ -208,42 +167,34 @@ public sealed partial class PlayBar
                     Content = new TileBindingContentAdaptive()
                     {
                         Children =
-                        {
-                            new AdaptiveText()
-                            {
-                                Text = HyPlayList.NowPlayingItem.PlayItem.Name,
-                                HintStyle = AdaptiveTextStyle.Base
-                            },
-                            new AdaptiveText()
-                            {
-                                Text = HyPlayList.NowPlayingItem.PlayItem.ArtistString,
-                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
-                                HintWrap = true,
-                                HintMaxLines = 3
-                            },
-                            new AdaptiveText()
-                            {
-                                Text = HyPlayList.NowPlayingItem.PlayItem.AlbumString,
-                                HintStyle = AdaptiveTextStyle.CaptionSubtle
-                            },
-                            new AdaptiveImage()
-                            {
-                                Source = cover
-                            }
-                        },
-                        BackgroundImage = new TileBackgroundImage()
-                        {
-                            Source = cover
-                        }
+                {
+                    new AdaptiveText()
+                    {
+                        Text = HyPlayList.NowPlayingItem?.PlayItem.Name,
+                        HintStyle = AdaptiveTextStyle.Base
+                    },
+                    new AdaptiveText()
+                    {
+                        Text = HyPlayList.NowPlayingItem?.PlayItem.ArtistString,
+                        HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                        HintWrap = true,
+                        HintMaxLines = 3
+                    },
+                    new AdaptiveText()
+                    {
+                        Text = HyPlayList.NowPlayingItem?.PlayItem.AlbumString,
+                        HintStyle = AdaptiveTextStyle.CaptionSubtle
+                    }
+                }
                     }
                 }
             }
         };
 
-// Create the tile notification
+        // Create the tile notification
         var tileNotif = new TileNotification(tileContent.GetXml());
 
-// And send the notification to the primary tile
+        // And send the notification to the primary tile
         TileUpdateManager.CreateTileUpdaterForApplication().Update(tileNotif);
     }
 
@@ -877,29 +828,29 @@ public sealed partial class PlayBar
         switch (HyPlayList.NowPlayingItem.ItemType)
         {
             case HyPlayItemType.Netease:
-            {
-                Api.LikeSong(HyPlayList.NowPlayingItem.PlayItem.Id,
-                    !isLiked);
-                if (isLiked)
-                    Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.Id);
-                else
-                    Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.Id);
-                isLiked = !isLiked;
-                IconLiked.Foreground = isLiked
-                    ? new SolidColorBrush(Colors.Red)
-                    : IconPrevious.Foreground;
-                FlyoutLiked.Foreground = isLiked
-                    ? new SolidColorBrush(Colors.Red)
-                    : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-                IconLiked.Glyph = isLiked
-                    ? "\uE00B"
-                    : "\uE006";
-                FlyoutLiked.Glyph = isLiked
-                    ? "\uE00B"
-                    : "\uE006";
-                //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
-                break;
-            }
+                {
+                    Api.LikeSong(HyPlayList.NowPlayingItem.PlayItem.Id,
+                        !isLiked);
+                    if (isLiked)
+                        Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.Id);
+                    else
+                        Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.Id);
+                    isLiked = !isLiked;
+                    IconLiked.Foreground = isLiked
+                        ? new SolidColorBrush(Colors.Red)
+                        : IconPrevious.Foreground;
+                    FlyoutLiked.Foreground = isLiked
+                        ? new SolidColorBrush(Colors.Red)
+                        : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+                    IconLiked.Glyph = isLiked
+                        ? "\uE00B"
+                        : "\uE006";
+                    FlyoutLiked.Glyph = isLiked
+                        ? "\uE00B"
+                        : "\uE006";
+                    //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
+                    break;
+                }
             case HyPlayItemType.Radio:
                 _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.ResourceLike,
                     new Dictionary<string, object>
