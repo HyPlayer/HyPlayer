@@ -43,7 +43,7 @@
             Grid.Row="0"
             Grid.RowSpan="2"
             Margin="20,20,0,0"
-            CornerRadius="15"
+            CornerRadius="16"
             IsSearchEnabled="True"
             Songs="{x:Bind Songs}">
             <controls1:SongsList.ListHeader>
@@ -78,8 +78,8 @@
                         Margin="20,20,15,20"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Top"
-                        RadiusX="10"
-                        RadiusY="10">
+                        RadiusX="16"
+                        RadiusY="16">
                         <Rectangle.Fill>
                             <ImageBrush x:Name="ImageRect" Stretch="UniformToFill">
                                 <ImageBrush.ImageSource>
@@ -91,100 +91,106 @@
                     <StackPanel
                         Name="StackPanelUserInfo"
                         Grid.Column="1"
-                        Margin="0,20,40,20"
+                        Margin="16,20,40,20"
                         HorizontalAlignment="Left"
                         Orientation="Vertical">
-                        <controls1:SelectableTextBox
+                        <TextBlock
+                            IsTextSelectionEnabled="True"
                             x:Name="TextBoxPLName"
-                            Margin="15,0,0,0"
-                            FontSize="36"
                             FontWeight="Bold"
                             Foreground="{ThemeResource DefaultTextForegroundThemeBrush}"
                             Text="歌单名"
+                            Style="{StaticResource TitleTextBlockStyle}"
                             TextWrapping="Wrap" />
-                        <StackPanel Margin="15,2,0,0" Orientation="Horizontal">
+                        <StackPanel Margin="0,2,0,0" Orientation="Horizontal">
                             <TextBlock
                                 Padding="0,8,0,3"
-                                FontSize="18"
-                                Foreground="Gray"
                                 Text="创建者:" />
                             <HyperlinkButton
+                                Style="{StaticResource TextBlockButtonStyle}"
                                 x:Name="TextBoxAuthor"
                                 Click="TextBoxAuthor_Tapped"
-                                Content="歌单创建者"
-                                FontSize="18"
-                                Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}" />
-                        </StackPanel>
-                        <StackPanel
-                            Margin="0,10,0,0"
-                            Orientation="Horizontal"
-                            Spacing="15">
-                            <Button
-                                x:Name="ButtonIntel"
-                                Margin="15,0,0,0"
-                                Background="OrangeRed"
-                                Click="ButtonHeartBeat_OnClick"
-                                Style="{StaticResource ButtonRevealStyle}"
-                                Visibility="Collapsed">
-                                <StackPanel Orientation="Horizontal">
-                                    <FontIcon
-                                        x:Name="IconLiked"
-                                        FontFamily="{StaticResource SymbolThemeFontFamily}"
-                                        FontSize="16"
-                                        Glyph="&#xE00B;" />
-                                    <TextBlock
-                                        Margin="5,0,0,0"
-                                        FontWeight="Bold"
-                                        Text="心动模式" />
-                                </StackPanel>
-                            </Button>
-                            <Button
-                                Background="{ThemeResource SystemControlForegroundAccentBrush}"
-                                Click="ButtonPlayAll_OnClick"
-                                Style="{StaticResource ButtonRevealStyle}">
-                                <StackPanel Orientation="Horizontal">
-                                    <FontIcon
-                                        x:Name="IconPlay"
-                                        FontSize="16"
-                                        Glyph="&#xEDB5;" />
-                                    <TextBlock
-                                        Margin="5,0,0,0"
-                                        FontWeight="Bold"
-                                        Text="播放全部" />
-                                </StackPanel>
-                            </Button>
-                            <Button
-                                Click="BtnAddAll_Clicked"
-                                Content="添加全部"
-                                Style="{StaticResource ButtonRevealStyle}" />
-                            <ToggleButton
-                                x:Name="ToggleButtonLike"
-                                Click="LikeBtnClick"
-                                Content="收藏"
-                                Style="{StaticResource ToggleButtonRevealStyle}" />
-                            <Button
-                                Click="ButtonDownloadAll_OnClick"
-                                Content="下载全部"
-                                Style="{StaticResource ButtonRevealStyle}" />
-                            <Button
-                                Click="ButtonComment_OnClick"
-                                Content="评论"
-                                Style="{StaticResource ButtonRevealStyle}"
-                                Visibility="{x:Bind hyplayer:Common.Setting.notClearMode, Mode=OneWay}" />
-                            <Button
-                                Click="BtnShare_Clicked"
-                                Content="分享"
-                                Style="{StaticResource ButtonRevealStyle}" />
+                                Content="歌单创建者"/>
                         </StackPanel>
                         <controls1:ExpandableTextBox
                             x:Name="DescriptionWrapper"
                             MaxWidth="700"
-                            Margin="15,5,0,0"
+                            Margin="0,8,0,0"
                             HorizontalAlignment="Left"
                             FontSize="13"
-                            Foreground="{ThemeResource SystemControlForegroundChromeHighBrush}"
                             MaxLines="3" />
+
                     </StackPanel>
+                    <StackPanel
+                        Grid.Column="2"
+                        Margin="16"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Bottom"
+                        Spacing="8">
+                        <Button
+                            x:Name="ButtonIntel"
+                            Background="OrangeRed"
+                            Click="ButtonHeartBeat_OnClick"
+                            Visibility="Collapsed">
+                            <StackPanel Orientation="Horizontal">
+                                <FontIcon
+                                    x:Name="IconLiked"
+                                    FontSize="16"
+                                    Glyph="&#xE00B;" />
+                                <TextBlock
+                                    Margin="4,0,0,0"
+                                    Text="心动模式" />
+                            </StackPanel>
+                        </Button>
+                        <Button
+                            Style="{StaticResource AccentButtonStyle}"
+                            Click="ButtonPlayAll_OnClick">
+                            <StackPanel Orientation="Horizontal">
+                                <FontIcon                           
+                                    x:Name="IconPlay"
+                                    FontSize="16"
+                                    Glyph="&#xEDB5;"/>
+                                <TextBlock
+                                    Margin="4,0,0,0"
+                                    Text="播放"
+                                    ToolTipService.ToolTip="播放全部"/>
+                            </StackPanel>
+                        </Button>
+                        <Button
+                            Click="BtnAddAll_Clicked"
+                            Content="添加"
+                            ToolTipService.ToolTip="添加全部"/>
+
+                        <Button
+                            Click="ButtonDownloadAll_OnClick"
+                            Content="下载"
+                            ToolTipService.ToolTip="下载全部"/>
+                        <ToggleButton
+                            x:Name="ToggleButtonLike"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            Click="LikeBtnClick"
+                            ToolTipService.ToolTip="收藏">
+                            <FontIcon Glyph="&#xE728;"/>
+                        </ToggleButton>
+                        <Button
+                            Click="ButtonComment_OnClick"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            Visibility="{x:Bind hyplayer:Common.Setting.notClearMode, Mode=OneWay}"
+                            ToolTipService.ToolTip="评论">
+                            <FontIcon Glyph="&#xE134;" />
+                        </Button>
+                        <Button
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            Click="BtnShare_Clicked"
+                            ToolTipService.ToolTip="分享">
+                            <FontIcon Glyph="&#xE72D;" />
+                        </Button>
+                    </StackPanel>
+
                 </Grid>
             </controls1:SongsList.ListHeader>
             <controls1:SongsList.Footer>
