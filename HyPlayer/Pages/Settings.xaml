@@ -927,226 +927,24 @@
                                         </StackPanel>
                                     </Grid>
                                 </Border>
-                            </StackPanel>
-                            <StackPanel Grid.Column="0" Orientation="Vertical" Visibility="Collapsed">
-                                <TextBlock
-                                    Margin="15,0,30,0"
-                                    FontFamily="Thick"
-                                    FontSize="23"
-                                    FontWeight="Bold"
-                                    Text="开发者" />
-                                <StackPanel
-                                    Margin="10,20,0,0"
-                                    DoubleTapped="StackPanel_DoubleTapped"
-                                    Orientation="Horizontal"
-                                    Tapped="UIElement_OnTapped">
-                                    <PersonPicture
-                                        ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=GibeJPa6pAcRMKgoHC9ibI4w&amp;s=100" />
-                                    <StackPanel Margin="15,0,0,0" Orientation="Vertical">
-                                        <TextBlock FontSize="18" FontWeight="Medium">
-                                            Kengwang
-                                        </TextBlock>
-                                        <TextBlock
-                                            FontSize="15"
-                                            FontWeight="Medium"
-                                            Foreground="Gray">
-                                            Developer
-                                        </TextBlock>
-                                        <TextBlock
-                                            FontSize="15"
-                                            FontWeight="Light"
-                                            Foreground="Gray">
-                                            Stay Cool~
-                                        </TextBlock>
-                                        <RichTextBlock>
-                                            <Paragraph>
-                                                <Hyperlink NavigateUri="https://github.com/kengwang">
-                                                    Github
-                                                </Hyperlink>
-                                                |
-                                                <Hyperlink NavigateUri="https://blog.kengwang.co">
-                                                    博客
-                                                </Hyperlink>
-                                                |
-                                                <Hyperlink NavigateUri="http://www.coolapk.com/u/1683034">
-                                                    酷安@kengwang
-                                                </Hyperlink>
-                                                |
-                                                <Hyperlink NavigateUri="https://afdian.net/@kengwang">
-                                                    爱发电打赏
-                                                </Hyperlink>
-                                            </Paragraph>
-                                        </RichTextBlock>
-                                    </StackPanel>
-                                </StackPanel>
-                                <StackPanel
-                                    Margin="10,20,0,0"
-                                    DoubleTapped="StackPanel_DoubleTapped"
-                                    Orientation="Horizontal"
-                                    Tapped="UIElement_OnTapped">
-                                    <PersonPicture
-                                        ProfilePicture="https://thirdqq.qlogo.cn/g?b=sdk&amp;k=eHh3SVVDUJKHf1I5XD7CPg&amp;s=100" />
-                                    <StackPanel Margin="15,0,0,0" Orientation="Vertical">
-                                        <TextBlock FontSize="18" FontWeight="Medium">
-                                            aaaaaaccd
-                                        </TextBlock>
-                                        <TextBlock
-                                            FontSize="15"
-                                            FontWeight="Medium"
-                                            Foreground="Gray">
-                                            Design
-                                        </TextBlock>
-                                        <TextBlock
-                                            FontSize="15"
-                                            FontWeight="Light"
-                                            Foreground="Gray">
-                                            High
-                                        </TextBlock>
-                                        <RichTextBlock>
-                                            <Paragraph>
-                                                <Hyperlink NavigateUri="https://github.com/aaaaaaccd">
-                                                    Github
-                                                </Hyperlink>
-                                                |
-                                                <Hyperlink NavigateUri="https://www.coolapk.com/u/2409682">
-                                                    酷安@一只老白
-                                                </Hyperlink>
-                                            </Paragraph>
-                                        </RichTextBlock>
-                                    </StackPanel>
-                                </StackPanel>
-                                <StackPanel
-                                    Margin="10,20,0,0"
-                                    DoubleTapped="StackPanel_DoubleTapped"
-                                    Orientation="Horizontal"
-                                    Tapped="UIElement_OnTapped">
-                                    <PersonPicture
-                                        ProfilePicture="https://himg.bdimg.com/sys/portraitn/item/0fd16570303132303134g930801000000" />
-                                    <StackPanel Margin="15,0,0,0" Orientation="Vertical">
-                                        <TextBlock FontSize="18" FontWeight="Medium">
-                                            EP012014
-                                        </TextBlock>
-                                        <TextBlock
-                                            FontSize="15"
-                                            FontWeight="Medium"
-                                            Foreground="Gray">
-                                            Developer
-                                        </TextBlock>
-                                        <TextBlock
-                                            FontSize="15"
-                                            FontWeight="Light"
-                                            Foreground="Gray">
-                                            Solidarity Forever~
-                                        </TextBlock>
-                                        <RichTextBlock>
-                                            <Paragraph>
-                                                <Hyperlink NavigateUri="https://github.com/EP012014">
-                                                    Github
-                                                </Hyperlink>
-                                            </Paragraph>
-                                        </RichTextBlock>
-                                    </StackPanel>
-                                </StackPanel>
-                                <StackPanel
-                                    Margin="10,20,0,0"
-                                    DoubleTapped="StackPanel_DoubleTapped"
-                                    Orientation="Horizontal"
-                                    Tapped="UIElement_OnTapped">
-                                    <PersonPicture
-                                        ProfilePicture="https://q1.qlogo.cn/g?b=qq&amp;k=L3T8OPGiblT0IMjCLUH3GKA&amp;s=100" />
-                                    <StackPanel Margin="15,0,0,0" Orientation="Vertical">
-                                        <TextBlock FontSize="18" FontWeight="Medium">
-                                            Raspberry Monster
-                                        </TextBlock>
-                                        <TextBlock
-                                            FontSize="15"
-                                            FontWeight="Medium"
-                                            Foreground="Gray">
-                                            Developer
-                                        </TextBlock>
-                                        <TextBlock
-                                            FontSize="15"
-                                            FontWeight="Light"
-                                            Foreground="Gray">
-                                            僕が夢を捨てて大人になるまで
-                                        </TextBlock>
-                                        <RichTextBlock>
-                                            <Paragraph>
-                                                <Hyperlink NavigateUri="https://github.com/Raspberry-Monster">
-                                                    Github
-                                                </Hyperlink>
-                                            </Paragraph>
-                                        </RichTextBlock>
-                                    </StackPanel>
-                                </StackPanel>
-                                <StackPanel
-                                    Margin="10,20,0,0"
-                                    DoubleTapped="StackPanel_DoubleTapped"
-                                    Orientation="Horizontal"
-                                    Tapped="UIElement_OnTapped">
-                                    <PersonPicture
-                                        ProfilePicture="http://avatar.coolapk.com/data/001/87/30/68_avatar_middle.jpg" />
-                                    <StackPanel Margin="15,0,0,0" Orientation="Vertical">
-                                        <TextBlock FontSize="18" FontWeight="Medium">
-                                            FUNNYTW
-                                        </TextBlock>
-                                        <TextBlock
-                                            FontSize="15"
-                                            FontWeight="Medium"
-                                            Foreground="Gray">
-                                            新版图标提供 + 新版 UI 设计
-                                        </TextBlock>
-                                        <TextBlock
-                                            FontSize="15"
-                                            FontWeight="Light"
-                                            Foreground="Gray">
-                                            Forever Funny
-                                        </TextBlock>
-                                        <RichTextBlock>
-                                            <Paragraph>
-                                                <Hyperlink NavigateUri="https://github.com/FunnyTHEWorld">
-                                                    Github
-                                                </Hyperlink>
-                                                |
-                                                <Hyperlink NavigateUri="https://www.coolapk.com/u/1873068">
-                                                    酷安
-                                                </Hyperlink>
-                                            </Paragraph>
-                                        </RichTextBlock>
-                                    </StackPanel>
-                                </StackPanel>
-                                <StackPanel
-                                    Margin="10,20,0,0"
-                                    DoubleTapped="StackPanel_DoubleTapped"
-                                    Orientation="Horizontal"
-                                    Tapped="UIElement_OnTapped">
-                                    <PersonPicture
-                                        ProfilePicture="https://cn.gravatar.com/avatar/e14c9eb2a52ddb20a3ea5c72766eeffb?s=100" />
-                                    <StackPanel Margin="15,0,0,0" Orientation="Vertical">
-                                        <TextBlock FontSize="18" FontWeight="Medium">
-                                            叫我蓝火火
-                                        </TextBlock>
-                                        <TextBlock
-                                            FontSize="15"
-                                            FontWeight="Medium"
-                                            Foreground="Gray">
-                                            热词开发者 + 部分功能实现
-                                        </TextBlock>
-                                        <TextBlock
-                                            FontSize="15"
-                                            FontWeight="Light"
-                                            Foreground="Gray">
-                                            太阳在晒你的同时，你也在晒太阳
-                                        </TextBlock>
-                                        <RichTextBlock>
-                                            <Paragraph>
-                                                <Hyperlink NavigateUri="https://github.com/cnbluefire">
-                                                    Github
-                                                </Hyperlink>
-                                            </Paragraph>
-                                        </RichTextBlock>
-                                    </StackPanel>
-                                </StackPanel>
+                                <Border CornerRadius="4" Height="64" Background="#1A808080"  Tapped="UIElement_OnTapped">
+                                    <Grid Margin="8">
+                                        <StackPanel Orientation="Horizontal" Spacing="12">
+                                            <PersonPicture ProfilePicture="https://discuss.flarum.org.cn/assets/avatars/MfhtDgaco3bsFR6D.png" Height="44"/>
+                                            <StackPanel>
+                                                <TextBlock Text="Betta_Fish" Style="{StaticResource SubtitleTextBlockStyle}" Margin="1,0,0,0"/>
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <TextBlock Text="部分UI更新"/>
+                                                    <TextBlock Text="???"  Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" >
+                                            <HyperlinkButton NavigateUri="https://github.com/zxbmmmmmmmmm" Content="Github"/>
+                                            <HyperlinkButton NavigateUri="http://www.coolapk.com/u/6052095" Content="酷安"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
                             </StackPanel>
                             <VisualStateManager.VisualStateGroups>
                                 <VisualStateGroup>
