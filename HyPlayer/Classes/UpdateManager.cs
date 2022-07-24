@@ -29,7 +29,7 @@ public static class UpdateManager
     {
         var storeContext = StoreContext.GetDefault();
         var packageUpdates = await storeContext.GetAppAndOptionalStorePackageUpdatesAsync();
-        var update = packageUpdates.FirstOrDefault(t => t.Package.Id.Name == Package.Current.Id.Name);
+        var update = packageUpdates.FirstOrDefault();
         return new RemoteVersionResult
         {
             UpdateSource = UpdateSource.MicrosoftStore,
@@ -47,16 +47,15 @@ public static class UpdateManager
         var versionsGetter = new WebClient();
         versionsGetter.Headers.Add("X-API-Token", "50f1aa0749d70814b0e91493444759885119a58d");
         var versions =
-            JObject.Parse(
-                (await versionsGetter.DownloadStringTaskAsync(
-                    "https://api.appcenter.ms/v0.1/apps/kengwang/HyPlayer/distribution_groups/Public/releases"))
-                .Replace("[", "").Replace("]", ""));
-        if (versions["version"] == null) return new RemoteVersionResult();
+            JArray.Parse(
+                await versionsGetter.DownloadStringTaskAsync(
+                    "https://api.appcenter.ms/v0.1/apps/kengwang/HyPlayer/distribution_groups/Public/releases"));
+        if (versions?.First?["version"] == null) return new RemoteVersionResult();
         return new RemoteVersionResult()
         {
             UpdateSource = UpdateSource.AppCenter,
             IsMandatory = versions["mandatory_update"]?.ToString() == "False",
-            Version = Version.Parse(versions["version"].ToString()),
+            Version = Version.Parse(versions?["version"]?.ToString() ?? ""),
             UpdateLog = $"更新发布于 {versions["uploaded_at"]}"
         };
     }
@@ -76,8 +75,8 @@ public static class UpdateManager
         var remoteResult = await GetRemoteVersion((UpdateSource)Common.Setting.UpdateSource);
         var localVersion = new Version(Package.Current.Id.Version.Major, Package.Current.Id.Version.Minor,
             Package.Current.Id.Version.Build, Package.Current.Id.Version.Revision);
-        string title = "发现新版本";
-        if (remoteResult.Version == localVersion)
+        var title = "发现新版本";
+        if (remoteResult.Version != null || remoteResult.Version == localVersion)
         {
             if (isStartup) return;
             title = "你已是最新版";
