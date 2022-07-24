@@ -16,8 +16,7 @@
             ViewChanged="MainScroll_ViewChanged">
 
             <StackPanel Orientation="Vertical">
-                <Grid x:Name="SongInfoContainer" Margin="0,0,0,0" />
-                <Grid>
+                <Grid Margin="25,15,0,0" ColumnSpacing="8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition />
                         <ColumnDefinition Width="100" />
@@ -26,7 +25,6 @@
                         x:Name="CommentEdit"
                         Height="80"
                         Grid.Column="0"
-                        Margin="25,15,0,15"
                         AcceptsReturn="True"
                         HorizontalAlignment="Stretch"
                         MaxLength="140"
@@ -35,10 +33,10 @@
                     <Button
                         x:Name="SendComment"
                         Grid.Column="1"
-                        MaxWidth="100"
+                        Width="80"
+                        Height="80"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Top"
-                        Margin="8,15,0,0"
                         Click="SendComment_Click"
                         Content="发表"
                         Style="{StaticResource AccentButtonStyle}" />
