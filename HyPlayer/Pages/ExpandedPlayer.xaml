@@ -132,33 +132,31 @@
                         <StackPanel
                             x:Name="SongInfoContainer"
                             Orientation="Horizontal"
-                            Spacing="5">
+                            Spacing="4">
                             <TextBlock
                                 x:Name="TextBlockSingerNameTip"
                                 Padding="0,6,0,6"
                                 FontSize="18"
-                                FontWeight="Bold"
                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                 Text="歌手: "
                                 TextAlignment="Center" />
                             <HyperlinkButton
                                 Name="TextBlockSinger"
                                 Click="TextBlockSinger_OnTapped"
-                                FontSize="18" />
+                                FontSize="18" Style="{StaticResource TextBlockButtonStyle}"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="5">
                             <TextBlock
                                 x:Name="TextBlockAlbumNameTip"
                                 Padding="0,6,0,6"
                                 FontSize="18"
-                                FontWeight="Bold"
-                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                                 Text="专辑: "
                                 TextAlignment="Center" />
                             <HyperlinkButton
                                 Name="TextBlockAlbum"
                                 Click="TextBlockAlbum_OnTapped"
-                                FontSize="18" />
+                                FontSize="18"  Style="{StaticResource TextBlockButtonStyle}"/>
                         </StackPanel>
                     </StackPanel>
                 </Grid>

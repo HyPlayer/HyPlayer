@@ -260,8 +260,13 @@
                                 <RadioButton Content="亮色" />
                                 <RadioButton Content="暗色" />
                             </controls:RadioButtons>
-                            <CheckBox Content="播放按钮着强调色"
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <CheckBox Content="播放按钮着强调色"
                                       IsChecked="{x:Bind hyplayer:Common.Setting.playButtonAccentColor, Mode=TwoWay}" />
+                                <CheckBox Content="播放栏按钮透明"
+                                      IsChecked="{x:Bind hyplayer:Common.Setting.playbarButtonsTransparent, Mode=TwoWay}" />
+                            </StackPanel>
+
                             <TextBlock Text="播放背景" FontSize="16" />
                             <controls:RadioButtons
                                 FontSize="20"
