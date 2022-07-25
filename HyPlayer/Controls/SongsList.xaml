@@ -34,7 +34,7 @@
                         HorizontalContentAlignment="Stretch"
                         Content="{x:Bind ListHeader}" />
                     <Grid
-                        Margin="0,-45,0,0"
+                        Margin="0,16,0,0"
                         ColumnSpacing="12"
                         Visibility="{x:Bind IsSearchEnabled}">
                         <Grid.ColumnDefinitions>
@@ -46,14 +46,13 @@
                         <TextBox
                             x:Name="FilterBox"
                             Grid.Column="1"
+                            PlaceholderText="搜索..."
                             Width="150"
-                            Margin="0,0,0,10"
                             VerticalAlignment="Center"
                             controls:DockPanel.Dock="Right" />
                         <Button
                             x:Name="SearchToggle"
                             Grid.Column="2"
-                            Margin="0,0,0,10"
                             controls:DockPanel.Dock="Right"
                             Click="FilterBox_OnTextChanged">
                             <FontIcon Glyph="&#xE721;" />
@@ -61,7 +60,7 @@
                         <ToggleButton
                             x:Name="MultiSelectBtn"
                             Grid.Column="3"
-                            Margin="-10,0,0,10"
+                            Margin="-10,0,0,0"
                             IsChecked="{x:Bind MultiSelect, Mode=TwoWay}">
                             <FontIcon Glyph="&#xE762;" />
                         </ToggleButton>
@@ -286,21 +285,21 @@
                         <StackPanel
                             Grid.Column="1"
                             HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
                             Orientation="Horizontal"
+                            Margin="0,0,8,0"
                             Spacing="8">
                             <Button
                                 x:Name="More"
                                 Width="45"
                                 Height="35"
-                                Margin="0,0,20,0"
                                 x:Phase="3"
-                                Background="{ThemeResource SystemRevealAltMediumHighColor}"
                                 Click="More_Click"
-                                CornerRadius="8"
-                                Style="{StaticResource ButtonRevealStyle}"
+                                Background="Transparent"
                                 Tag="{x:Bind Order}"
+                                BorderBrush="Transparent"
                                 ToolTipService.ToolTip="更多">
-                                <FontIcon Foreground="{ThemeResource SystemAccentColorLight2}" Glyph="&#xE10C;" />
+                                <FontIcon Glyph="&#xE10C;" />
                             </Button>
                         </StackPanel>
                     </Grid>

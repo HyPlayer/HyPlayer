@@ -309,8 +309,20 @@ public sealed partial class PlayBar
                 canslide = false;
                 SliderProgress.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
                 canslide = true;
-                TextBlockNowTime.Text =
-                    HyPlayList.Player.PlaybackSession.Position.ToString(@"hh\:mm\:ss");
+                if(HyPlayList.Player.PlaybackSession.Position.Hours == 0)
+                {
+                    if(HyPlayList.Player.PlaybackSession.Position.Minutes < 10)
+                        TextBlockNowTime.Text =
+                            HyPlayList.Player.PlaybackSession.Position.ToString(@"m\:ss");
+                    else
+                        TextBlockNowTime.Text =
+                            HyPlayList.Player.PlaybackSession.Position.ToString(@"mm\:ss");
+                }
+                else
+                {
+                    TextBlockNowTime.Text =
+                        HyPlayList.Player.PlaybackSession.Position.ToString(@"hh\:mm\:ss");
+                }
                 PlayStateIcon.Glyph =
                     HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
                         ? "\uEDB4"
@@ -462,10 +474,20 @@ public sealed partial class PlayBar
                 AlbumImage.Source = null;
                 return;
             }
+            
+            var totalTime = TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds);
+            if(totalTime.Hours == 0)
+            {
+                if(totalTime.Minutes<10)
+                    TextBlockTotalTime.Text = totalTime.ToString(@"m\:ss");
+                else
+                    TextBlockTotalTime.Text = totalTime.ToString(@"mm\:ss");
+            }
+            else
+            {
+                TextBlockTotalTime.Text = totalTime.ToString(@"hh\:mm\:ss");
+            }
 
-            TextBlockTotalTime.Text =
-                TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds)
-                    .ToString(@"hh\:mm\:ss");
 
             if (HyPlayList.NowPlayingItem?.PlayItem == null) return;
             canslide = false;
@@ -1094,6 +1116,16 @@ public sealed partial class PlayBar
         HyPlayList.OnPlayListAddDone += HyPlayList_OnPlayListAdd;
         HyPlayList.OnSongRemoveAll += HyPlayListOnOnSongRemoveAll;
         Common.OnEnterForegroundFromBackground += () => LoadPlayingFile(HyPlayList.NowPlayingItem);
+        if (Common.Setting.playButtonAccentColor)
+            BtnPlayStateChange.Background = Resources["AccentPlayButtonColor"] as Brush;
+        if(Common.Setting.playbarButtonsTransparent)
+        {
+            BtnPlayRollType.Background = new SolidColorBrush(Colors.Transparent);
+            BtnPreviousSong.Background = new SolidColorBrush(Colors.Transparent);
+            BtnPlayStateChange.Background = new SolidColorBrush(Colors.Transparent);
+            BtnNextSong.Background = new SolidColorBrush(Colors.Transparent);
+            BtnLike.Background = new SolidColorBrush(Colors.Transparent);
+        }
         if (Common.Setting.playButtonAccentColor)
             BtnPlayStateChange.Background = Resources["AccentPlayButtonColor"] as Brush;
 

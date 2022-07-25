@@ -335,7 +335,15 @@ namespace HyPlayer
             }
         }
 
-
+        public bool playbarButtonsTransparent
+        {
+            get => GetSettings("playbarButtonsTransparent", true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["playbarButtonsTransparent"] = value;
+                OnPropertyChanged();
+            }
+        }
         public bool playbarBackgroundElay
         {
             get => GetSettings("playbarBackgroundElay", false);
@@ -348,7 +356,7 @@ namespace HyPlayer
 
         public bool playButtonAccentColor
         {
-            get => GetSettings("playButtonAccentColor", true);
+            get => GetSettings("playButtonAccentColor", false);
             set
             {
                 ApplicationData.Current.LocalSettings.Values["playButtonAccentColor"] = value;
