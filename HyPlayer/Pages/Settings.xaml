@@ -894,7 +894,7 @@
                                                           HorizontalAlignment="Left">
                                                     <ComboBoxItem Content="Microsoft Store"></ComboBoxItem>
                                                     <ComboBoxItem Content="App Center"></ComboBoxItem>
-
+                                                    <ComboBoxItem Content="App Center(Canary)"></ComboBoxItem>
                                                 </ComboBox>
                                                 <Button Margin="8,0,0,0" VerticalAlignment="Top" x:Name="CheckUpdate"
                                                         Click="CheckUpdate_Click" Content="检查" />
