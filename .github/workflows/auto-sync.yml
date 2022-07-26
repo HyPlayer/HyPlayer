@@ -1,0 +1,25 @@
+name: Mirroring
+
+on: [push, delete]
+
+jobs:
+  to_notabug:
+    runs-on: ubuntu-latest
+    steps:                                              # <-- must use actions/checkout@v1 before mirroring!
+    - uses: actions/checkout@v1
+    - uses: pixta-dev/repository-mirroring-action@v1
+      with:
+        target_repo_url:
+          git@notabug.org:HyPlayer/HyPlayer.git
+        ssh_private_key:                                # <-- use 'secrets' to pass credential information.
+          ${{ secrets.SSH_KEY }}
+  to_gitee:
+    runs-on: ubuntu-latest
+    steps:                                              # <-- must use actions/checkout@v1 before mirroring!
+    - uses: actions/checkout@v1
+    - uses: pixta-dev/repository-mirroring-action@v1
+      with:
+        target_repo_url:
+          git@gitee.com:kengwang/HyPlayer.git
+        ssh_private_key:                                # <-- use 'secrets' to pass credential information.
+          ${{ secrets.SSH_KEY }}
