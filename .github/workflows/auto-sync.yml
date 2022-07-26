@@ -12,7 +12,7 @@ jobs:
         target_repo_url:
           git@notabug.org:HyPlayer/HyPlayer.git
         ssh_private_key:                                # <-- use 'secrets' to pass credential information.
-          ${{ secrets.NOTABUG_SSH_PRIVATE_KEY }}
+          ${{ secrets.SSH_KEY }}
   to_gitee:
     runs-on: ubuntu-latest
     steps:                                              # <-- must use actions/checkout@v1 before mirroring!
@@ -22,4 +22,4 @@ jobs:
         target_repo_url:
           git@gitee.com:kengwang/HyPlayer.git
         ssh_private_key:                                # <-- use 'secrets' to pass credential information.
-          ${{ secrets.GITEE_SSH_PRIVATE_KEY }}
+          ${{ secrets.SSH_KEY }}
