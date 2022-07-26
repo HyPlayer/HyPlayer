@@ -29,213 +29,234 @@
                             Spacing="20"
                             HorizontalAlignment="Stretch"
                             Orientation="Vertical">
-                            <controls:Expander HorizontalAlignment="Stretch" IsExpanded="True" HorizontalContentAlignment="Stretch" Header="罗马音">
+                            <controls:Expander HorizontalAlignment="Stretch" IsExpanded="True"
+                                               HorizontalContentAlignment="Stretch" Header="罗马音">
                                 <controls:Expander.Transitions>
                                     <TransitionCollection>
-                                        <RepositionThemeTransition/>
+                                        <RepositionThemeTransition />
                                     </TransitionCollection>
                                 </controls:Expander.Transitions>
                                 <Grid>
-                                    <TextBlock                                     
+                                    <TextBlock
                                         x:Name="RomajiStatus"
-                                        Text="获取中..." HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                        Text="获取中..." HorizontalAlignment="Left" VerticalAlignment="Center" />
                                     <Button
                                         Click="ButtonBase_OnClick"
                                         Content="获取罗马音资源文件"
-                                        HorizontalAlignment="Right"/>
+                                        HorizontalAlignment="Right" />
                                 </Grid>
                             </controls:Expander>
 
-                            <controls:Expander HorizontalAlignment="Stretch" IsExpanded="True" HorizontalContentAlignment="Stretch" Header="歌词大小">
+                            <controls:Expander HorizontalAlignment="Stretch" IsExpanded="True"
+                                               HorizontalContentAlignment="Stretch" Header="歌词大小">
                                 <controls:Expander.Transitions>
                                     <TransitionCollection>
-                                        <RepositionThemeTransition/>
+                                        <RepositionThemeTransition />
                                     </TransitionCollection>
                                 </controls:Expander.Transitions>
-                                <Grid RowSpacing="16">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                    </Grid.RowDefinitions>
-                                    <TextBlock Text="歌词大小(复数为自动)" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                    <controls:NumberBox
-                                        x:Name="LyricSize"
-                                        MinWidth="100"
-                                        HorizontalAlignment="Right"
-                                        LargeChange="5"
-                                        SmallChange="1"
-                                        SpinButtonPlacementMode="Compact"
-                                        ValueChanged="LyricSize_OnValueChanged"
-                                        Value="{x:Bind hyplayer:Common.Setting.lyricSize}"/>
-                                    <TextBlock Grid.Row="1" VerticalAlignment="Center" Text="罗马音"/>
-                                    <controls:NumberBox
-                                        x:Name="RomajiSize"
-                                        Grid.Row="1"
-                                        MinWidth="100"
-                                        HorizontalAlignment="Right"                                        
-                                        Grid.Column="1"
-                                        LargeChange="5"
-                                        SmallChange="1"
-                                        SpinButtonPlacementMode="Compact"
-                                        Value="{x:Bind hyplayer:Common.Setting.romajiSize, Mode=TwoWay}" />
-                                    <TextBlock Grid.Row="2" VerticalAlignment="Center" Text="歌词放大大小"/>
-                                    <controls:NumberBox
-                                        x:Name="LyricScaleSize"
-                                        Grid.Row="2"
-                                        HorizontalAlignment="Right"                                        
-                                        MinWidth="100"
-                                        Grid.Column="1"
-                                        LargeChange="5"
-                                        SmallChange="1"
-                                        SpinButtonPlacementMode="Compact"
-                                        Value="{x:Bind hyplayer:Common.Setting.lyricScaleSize, Mode=TwoWay}" />
-                                </Grid>
-                            </controls:Expander>
-
-                            <controls:Expander Header="歌词颜色" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
-                                <controls:Expander.Transitions>
-                                    <TransitionCollection>
-                                        <RepositionThemeTransition/>
-                                    </TransitionCollection>
-                                </controls:Expander.Transitions>
-                                <controls:RadioButtons
-                                    SelectedIndex="{x:Bind hyplayer:Common.Setting.lyricColor, Mode=TwoWay}">
-                                    <RadioButton Content="自动" FontWeight="Normal" />
-                                    <RadioButton Content="白色" FontWeight="Normal" />
-                                    <RadioButton Content="黑色" FontWeight="Normal" />
-                                </controls:RadioButtons>
+                                <StackPanel Orientation="Vertical" Spacing="16">
+                                    <Grid>
+                                        <TextBlock Text="歌词大小 (负数为自动)" HorizontalAlignment="Left"
+                                                   VerticalAlignment="Center" />
+                                        <controls:NumberBox
+                                            x:Name="LyricSize"
+                                            MinWidth="100"
+                                            HorizontalAlignment="Right"
+                                            LargeChange="5"
+                                            SmallChange="1"
+                                            SpinButtonPlacementMode="Compact"
+                                            ValueChanged="LyricSize_OnValueChanged"
+                                            Value="{x:Bind hyplayer:Common.Setting.lyricSize}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock VerticalAlignment="Center" Text="罗马音大小" />
+                                        <controls:NumberBox
+                                            x:Name="RomajiSize"
+                                            MinWidth="100"
+                                            HorizontalAlignment="Right"
+                                            LargeChange="5"
+                                            SmallChange="1"
+                                            SpinButtonPlacementMode="Compact"
+                                            Value="{x:Bind hyplayer:Common.Setting.romajiSize, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock VerticalAlignment="Center" Text="焦点歌词放大大小" />
+                                        <controls:NumberBox
+                                            x:Name="LyricScaleSize"
+                                            HorizontalAlignment="Right"
+                                            MinWidth="100"
+                                            LargeChange="5"
+                                            SmallChange="1"
+                                            SpinButtonPlacementMode="Compact"
+                                            Value="{x:Bind hyplayer:Common.Setting.lyricScaleSize, Mode=TwoWay}" />
+                                    </Grid>
+                                </StackPanel>
                             </controls:Expander>
 
                             <!--<CheckBox
                                 x:Name="CheckBoxLyricShadow"
                                 Content="开启歌词阴影"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.lyricDropshadow, Mode=TwoWay}" />-->
-                            <StackPanel Spacing="8">
-                                <StackPanel.Transitions>
+                            <controls:Expander HorizontalAlignment="Stretch" IsExpanded="True"
+                                               HorizontalContentAlignment="Stretch" Header="歌词显示">
+                                <controls:Expander.Transitions>
                                     <TransitionCollection>
-                                        <RepositionThemeTransition/>
+                                        <RepositionThemeTransition />
                                     </TransitionCollection>
-                                </StackPanel.Transitions>
-                                <CheckBox
-                                    x:Name="CheckBoxAlignment"
-                                    Content="使用左对齐"
-                                    IsChecked="{x:Bind hyplayer:Common.Setting.lyricAlignment, Mode=TwoWay}" />
-                                <CheckBox
-                                    Checked="HotLyricOnStartUp_Checked"
-                                    Content="开启时启动热词"
-                                    IsChecked="{x:Bind hyplayer:Common.Setting.hotlyricOnStartup, Mode=TwoWay}" />
-                                <CheckBox Content="使用 Toast 歌词 (不推荐)"
-                                    IsChecked="{x:Bind hyplayer:Common.Setting.noUseHotLyric, Mode=TwoWay}" />
-                            </StackPanel>
-
+                                </controls:Expander.Transitions>
+                                <StackPanel Spacing="8">
+                                    <Grid>
+                                        <TextBlock Text="歌词颜色" VerticalAlignment="Center" />
+                                        <ComboBox
+                                            HorizontalAlignment="Right"
+                                            SelectedIndex="{x:Bind hyplayer:Common.Setting.lyricColor, Mode=TwoWay}">
+                                            <ComboBoxItem Content="自动" />
+                                            <ComboBoxItem Content="白色" />
+                                            <ComboBoxItem Content="黑色" />
+                                        </ComboBox>
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock VerticalAlignment="Center" Text="使用左对齐" />
+                                        <ToggleSwitch
+                                            MinWidth="10" HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.lyricAlignment, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            Text="开启时启动热词" />
+                                        <ToggleSwitch
+                                            Toggled="HotLyricOnStartUp_Checked"
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.hotlyricOnStartup, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock
+                                            VerticalAlignment="Center"
+                                            Text="使用 Toast 歌词 (不推荐)" />
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.noUseHotLyric, Mode=TwoWay}" />
+                                    </Grid>
+                                </StackPanel>
+                            </controls:Expander>
                         </StackPanel>
                     </ScrollViewer>
                 </PivotItem>
                 <PivotItem FontFamily="Thick" Header="播放设置">
                     <ScrollViewer VerticalScrollMode="Enabled">
                         <StackPanel Margin="0,100,0,150" Orientation="Vertical" Spacing="20">
-                            <controls:Expander Header="音质设置" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                            <controls:Expander Header="音质设置" IsExpanded="True" HorizontalAlignment="Stretch"
+                                               HorizontalContentAlignment="Stretch">
                                 <controls:Expander.Transitions>
                                     <TransitionCollection>
-                                        <RepositionThemeTransition/>
+                                        <RepositionThemeTransition />
                                     </TransitionCollection>
                                 </controls:Expander.Transitions>
                                 <Grid RowSpacing="16">
                                     <Grid.RowDefinitions>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
+                                        <RowDefinition />
+                                        <RowDefinition />
                                     </Grid.RowDefinitions>
-                                    <TextBlock Text="在线播放音质" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                    <ComboBox x:Name="ComboBoxSongBr" SelectionChanged="ComboBoxSongBr_SelectionChanged" HorizontalAlignment="Right">
-                                        <ComboBoxItem Content="标准 (128k)" Tag="128000"/>
-                                        <ComboBoxItem Content="较高 (192k)" Tag="192000"/>
-                                        <ComboBoxItem Content="极高 (320k)" Tag="320000"/>
-                                        <ComboBoxItem Content="无损 (VIP)" Tag="999000"/>
-                                        <ComboBoxItem Content="Hi-Res (VIP)" Tag="9999000"/>
+                                    <TextBlock Text="在线播放音质" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                                    <ComboBox x:Name="ComboBoxSongBr"
+                                              SelectionChanged="ComboBoxSongBr_SelectionChanged"
+                                              HorizontalAlignment="Right">
+                                        <ComboBoxItem Content="标准 (128k)" Tag="128000" />
+                                        <ComboBoxItem Content="较高 (192k)" Tag="192000" />
+                                        <ComboBoxItem Content="极高 (320k)" Tag="320000" />
+                                        <ComboBoxItem Content="无损 (VIP)" Tag="999000" />
+                                        <ComboBoxItem Content="Hi-Res (VIP)" Tag="9999000" />
                                     </ComboBox>
-                                    <TextBlock Text="在线播放音质" Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                    <ComboBox x:Name="ComboBoxSongDownloadBr" SelectionChanged="ComboBoxSongDownloadBr_SelectionChanged" Grid.Row="1" HorizontalAlignment="Right">
-                                        <ComboBoxItem Content="标准 (128k)" Tag="128000"/>
-                                        <ComboBoxItem Content="较高 (192k)" Tag="192000"/>
-                                        <ComboBoxItem Content="极高 (320k)" Tag="320000"/>
-                                        <ComboBoxItem Content="无损 (VIP)" Tag="999000"/>
-                                        <ComboBoxItem Content="Hi-Res (VIP)" Tag="9999000"/>
+                                    <TextBlock Text="在线播放音质" Grid.Row="1" HorizontalAlignment="Left"
+                                               VerticalAlignment="Center" />
+                                    <ComboBox x:Name="ComboBoxSongDownloadBr"
+                                              SelectionChanged="ComboBoxSongDownloadBr_SelectionChanged" Grid.Row="1"
+                                              HorizontalAlignment="Right">
+                                        <ComboBoxItem Content="标准 (128k)" Tag="128000" />
+                                        <ComboBoxItem Content="较高 (192k)" Tag="192000" />
+                                        <ComboBoxItem Content="极高 (320k)" Tag="320000" />
+                                        <ComboBoxItem Content="无损 (VIP)" Tag="999000" />
+                                        <ComboBoxItem Content="Hi-Res (VIP)" Tag="9999000" />
                                     </ComboBox>
                                 </Grid>
                             </controls:Expander>
 
-                            <controls:Expander Header="渐入渐出" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                            <controls:Expander Header="渐入渐出" IsExpanded="True" HorizontalAlignment="Stretch"
+                                               HorizontalContentAlignment="Stretch">
                                 <controls:Expander.Transitions>
                                     <TransitionCollection>
-                                        <RepositionThemeTransition/>
+                                        <RepositionThemeTransition />
                                     </TransitionCollection>
                                 </controls:Expander.Transitions>
-                                <Grid RowSpacing="16">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                    </Grid.RowDefinitions>
-                                    <TextBlock Text="切歌时" VerticalAlignment="Center"/>
-                                    <ToggleSwitch
-                                        x:Name="FadeInOut"
-                                        HorizontalAlignment="Right"
-                                        MinWidth="10"
-                                        IsOn="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=TwoWay}" />
-                                    <TextBlock Text="切歌渐入渐出时间 单位: s" Grid.Row="1" VerticalAlignment="Center"/>
-                                    <Slider
-                                        x:Name="FadeTime"
-                                        Width="256"
-                                        Grid.Row="1"
-                                        HorizontalAlignment="Right"
-                                        Maximum="12"
-                                        Minimum="0"
-                                        ToolTipService.ToolTip="{x:Bind FadeTime.Value}"
-                                        IsEnabled="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=OneWay}"
-                                        Value="{x:Bind hyplayer:Common.Setting.fadeInOutTime, Mode=TwoWay}" />
-                                    <TextBlock Text="播放暂停时" VerticalAlignment="Center" Grid.Row="2"/>
-                                    <ToggleSwitch Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Right" MinWidth="10" IsOn="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=TwoWay}" />
-                                    <TextBlock Text="渐入渐出时间 单位: 0.1s" VerticalAlignment="Center" Grid.Row="3"/>
+                                <StackPanel Orientation="Vertical" Spacing="8">
+                                    <Grid>
+                                        <TextBlock Text="切歌时" VerticalAlignment="Center" />
+                                        <ToggleSwitch
+                                            x:Name="FadeInOut"
+                                            HorizontalAlignment="Right"
+                                            MinWidth="10"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid Visibility="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=OneWay}">
+                                        <TextBlock Text="切歌渐入渐出时间 单位: s" VerticalAlignment="Center" />
+                                        <Slider
+                                            x:Name="FadeTime"
+                                            Width="256"
+                                            HorizontalAlignment="Right"
+                                            Maximum="12"
+                                            Minimum="0"
+                                            ToolTipService.ToolTip="{x:Bind FadeTime.Value}"
+                                            IsEnabled="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=OneWay}"
+                                            Value="{x:Bind hyplayer:Common.Setting.fadeInOutTime, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="播放暂停时" VerticalAlignment="Center" />
+                                        <ToggleSwitch VerticalAlignment="Center" HorizontalAlignment="Right"
+                                                      MinWidth="10"
+                                                      IsOn="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=TwoWay}" />
 
-                                    <Slider
-                                        x:Name="FadeTimePause"
-                                        Grid.Row="3"
-                                        Width="256"
-                                        HorizontalAlignment="Right"
-                                        Maximum="50"
-                                        Minimum="0"
-                                        ToolTipService.ToolTip="{x:Bind FadeTimePause.Value}"
-                                        IsEnabled="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=OneWay}"
-                                        Value="{x:Bind hyplayer:Common.Setting.fadeInOutTimePause, Mode=TwoWay}" />
-                                </Grid>
+                                    </Grid>
+                                    <Grid Visibility="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=OneWay}">
+                                        <TextBlock Text="渐入渐出时间 单位: 0.1s" VerticalAlignment="Center" />
+                                        <Slider
+                                            x:Name="FadeTimePause"
+                                            Width="256"
+                                            HorizontalAlignment="Right"
+                                            Maximum="50"
+                                            Minimum="0"
+                                            ToolTipService.ToolTip="{x:Bind FadeTimePause.Value}"
+                                            IsEnabled="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=OneWay}"
+                                            Value="{x:Bind hyplayer:Common.Setting.fadeInOutTimePause, Mode=TwoWay}" />
+                                    </Grid>
+                                </StackPanel>
                             </controls:Expander>
 
-                            <controls:Expander Header="随机设置" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                            <controls:Expander Header="随机设置" IsExpanded="True" HorizontalAlignment="Stretch"
+                                               HorizontalContentAlignment="Stretch">
                                 <controls:Expander.Transitions>
                                     <TransitionCollection>
-                                        <RepositionThemeTransition/>
+                                        <RepositionThemeTransition />
                                     </TransitionCollection>
                                 </controls:Expander.Transitions>
-                                <Grid RowSpacing="16">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                    </Grid.RowDefinitions>
-                                    <TextBlock Text="使用不重复随机" VerticalAlignment="Center"/>
-                                    <ToggleSwitch HorizontalAlignment="Right"
-                                                  MinWidth="10"
-                                                  IsOn="{x:Bind hyplayer:Common.Setting.shuffleNoRepeating, Mode=TwoWay}" />
-                                    <TextBlock Text="显示随机列表" Grid.Row="1" VerticalAlignment="Center"/>
-
-                                    <ToggleSwitch 
-                                        Grid.Row="1"
-                                        IsOn="{x:Bind hyplayer:Common.Setting.displayShuffledList, Mode=TwoWay}"                                         
-                                        HorizontalAlignment="Right"
-                                        MinWidth="10"
-                                        Visibility="{x:Bind hyplayer:Common.Setting.shuffleNoRepeating, Mode=OneWay}" />
-                                </Grid>
+                                <StackPanel Orientation="Vertical" Spacing="16">
+                                    <Grid>
+                                        <TextBlock Text="使用不重复随机" VerticalAlignment="Center" />
+                                        <ToggleSwitch HorizontalAlignment="Right"
+                                                      MinWidth="10"
+                                                      IsOn="{x:Bind hyplayer:Common.Setting.shuffleNoRepeating, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="显示随机列表" VerticalAlignment="Center" />
+                                        <ToggleSwitch
+                                            IsOn="{x:Bind hyplayer:Common.Setting.displayShuffledList, Mode=TwoWay}"
+                                            HorizontalAlignment="Right"
+                                            MinWidth="10"
+                                            Visibility="{x:Bind hyplayer:Common.Setting.shuffleNoRepeating, Mode=OneWay}" />
+                                    </Grid>
+                                </StackPanel>
                             </controls:Expander>
 
 
@@ -245,156 +266,176 @@
                 <PivotItem FontFamily="Thick" Header="显示设置">
                     <ScrollViewer VerticalScrollMode="Enabled">
                         <StackPanel Margin="0,100,0,150" Spacing="20">
-                            <controls:Expander Header="主题色(修改后需要重启 HyPlayer)" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                            <controls:Expander Header="颜色设置 (需要重启 HyPlayer)" IsExpanded="True"
+                                               HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
                                 <controls:Expander.Transitions>
                                     <TransitionCollection>
-                                        <RepositionThemeTransition/>
+                                        <RepositionThemeTransition />
                                     </TransitionCollection>
                                 </controls:Expander.Transitions>
-                                <Grid RowSpacing="16">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                    </Grid.RowDefinitions>
-                                    <controls:RadioButtons
-                                        HorizontalAlignment="Left"                                      
-                                        SelectedIndex="{x:Bind hyplayer:Common.Setting.themeRequest, Mode=TwoWay}"
-                                        SelectionChanged="RadioButtonsTheme_SelectionChanged">
-                                        <RadioButton Content="跟随系统"/>
-                                        <RadioButton Content="亮色"/>
-                                        <RadioButton Content="暗色" />
-                                    </controls:RadioButtons>
-                                    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12">
-                                        <CheckBox Content="播放按钮着强调色"
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.playButtonAccentColor, Mode=TwoWay}" />
-                                        <CheckBox Content="播放栏按钮透明"
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.playbarButtonsTransparent, Mode=TwoWay}" />
-                                    </StackPanel>
-                                </Grid>
+                                <StackPanel Orientation="Vertical" Spacing="16">
+                                    <Grid>
+                                        <TextBlock Text="主题色" VerticalAlignment="Center" />
+                                        <ComboBox
+                                            HorizontalAlignment="Right"
+                                            SelectedIndex="{x:Bind hyplayer:Common.Setting.themeRequest, Mode=TwoWay}">
+                                            <ComboBoxItem Content="跟随系统" />
+                                            <ComboBoxItem Content="亮色" />
+                                            <ComboBoxItem Content="暗色" />
+                                        </ComboBox>
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="播放按钮着强调色" VerticalAlignment="Center" />
+                                        <ToggleSwitch HorizontalAlignment="Right" MinWidth="10"
+                                                      IsOn="{x:Bind hyplayer:Common.Setting.playButtonAccentColor, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="播放栏按钮透明" VerticalAlignment="Center" />
+                                        <ToggleSwitch HorizontalAlignment="Right" MinWidth="10"
+                                                      IsOn="{x:Bind hyplayer:Common.Setting.playbarButtonsTransparent, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="播放条背景防糊优化" VerticalAlignment="Center" />
+                                        <ToggleSwitch HorizontalAlignment="Right" MinWidth="10"
+                                                      IsOn="{x:Bind hyplayer:Common.Setting.playbarBackgroundElay, Mode=TwoWay}" />
+                                    </Grid>
+                                </StackPanel>
                             </controls:Expander>
 
-                            <controls:Expander Header="播放背景" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                            <controls:Expander Header="歌词页面" IsExpanded="True" HorizontalAlignment="Stretch"
+                                               HorizontalContentAlignment="Stretch">
                                 <controls:Expander.Transitions>
                                     <TransitionCollection>
-                                        <RepositionThemeTransition/>
-                                    </TransitionCollection>
-                                </controls:Expander.Transitions>
-                                <Grid RowSpacing="16">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                    </Grid.RowDefinitions>
-                                    <controls:RadioButtons
-                                        MaxColumns="5"
-                                        SelectedIndex="{x:Bind hyplayer:Common.Setting.expandedPlayerBackgroundType, Mode=TwoWay}">
-                                        <RadioButton Content="专辑封面模糊" />
-                                        <RadioButton Content="跟随唱片主色调" />
-                                        <RadioButton Content="跟随系统" />
-                                        <RadioButton Content="强制白色" />
-                                        <RadioButton Content="强制黑色" />
-                                    </controls:RadioButtons>
-                                    <CheckBox Content="播放条背景防糊优化" Grid.Row="1"
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.playbarBackgroundElay, Mode=TwoWay}" />
-                                </Grid>
-                            </controls:Expander>
-
-                            <controls:Expander Header="唱片设置" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
-                                <controls:Expander.Transitions>
-                                    <TransitionCollection>
-                                        <RepositionThemeTransition/>
-                                    </TransitionCollection>
-                                </controls:Expander.Transitions>
-                                <Grid RowSpacing="16">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                    </Grid.RowDefinitions>
-                                    <TextBlock Text="唱片边框厚度 (0 为无边框)" VerticalAlignment="Center"/>
-                                    <Slider
-                                        x:Name="SliderAlbumBorderLength"
-                                        Width="256"
-                                        HorizontalAlignment="Right"
-                                        Maximum="280"
-                                        Minimum="0"
-                                        ToolTipService.ToolTip="{x:Bind SliderAlbumBorderLength.Value}"
-                                        Value="{x:Bind hyplayer:Common.Setting.albumBorderLength, Mode=TwoWay}" />
-                                    <TextBlock Grid.Row="1" Text="歌词页面封面阴影强度 (0为无阴影)" VerticalAlignment="Center"/>
-                                    <Slider
-                                        x:Name="SliderAlbumShadowDepth"
-                                        Grid.Row="1"
-                                        Width="256"
-                                        HorizontalAlignment="Right"
-                                        Maximum="20"
-                                        Minimum="0"
-                                        ToolTipService.ToolTip="{x:Bind SliderAlbumShadowDepth.Value}"
-                                        ValueChanged="NBShadowDepth_OnValueChanged"
-                                        Value="{x:Bind hyplayer:Common.Setting.expandedCoverShadowDepth, Mode=OneWay}" />
-                                    <StackPanel Orientation="Horizontal" Grid.Row="2" Spacing="12">
-                                        <CheckBox Content="圆形唱片"
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.albumRound, Mode=TwoWay}" />
-                                        <CheckBox Content="唱片旋转"
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.albumRotate, Mode=TwoWay}" />
-                                    </StackPanel>
-                                </Grid>
-                            </controls:Expander>
-
-                            <controls:Expander Header="个性化" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
-                                <controls:Expander.Transitions>
-                                    <TransitionCollection>
-                                        <RepositionThemeTransition/>
-                                    </TransitionCollection>
-                                </controls:Expander.Transitions>
-                                <Grid RowSpacing="16">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                    </Grid.RowDefinitions>
-                                    <TextBlock Text="无图模式(需重启应用)" VerticalAlignment="Center"/>
-                                    <ToggleSwitch HorizontalAlignment="Right" 
-                                                  MinWidth="10"
-                                                  IsOn="{x:Bind hyplayer:Common.Setting.noImage, Mode=TwoWay}" />
-                                    <TextBlock Grid.Row="1" Text="PlayBar 脱离窗口边缘" VerticalAlignment="Center"/>
-                                    <ToggleSwitch HorizontalAlignment="Right" 
-                                                  Grid.Row="1"
-                                                  MinWidth="10"
-                                                  IsOn="{x:Bind hyplayer:Common.Setting.playBarMargin, Mode=TwoWay}" />
-                                    <TextBlock Grid.Row="2" Text="歌词界面专辑封面不裁剪为正方形" VerticalAlignment="Center"/>
-                                    <ToggleSwitch HorizontalAlignment="Right" 
-                                                  Grid.Row="2"
-                                                  MinWidth="10"
-                                                  IsOn="{x:Bind hyplayer:Common.Setting.expandedPlayerFullCover, Mode=TwoWay}" />
-                                    <TextBlock Grid.Row="3" Text="显示发现及评论入口" VerticalAlignment="Center"/>
-                                    <ToggleSwitch HorizontalAlignment="Right" 
-                                                  Grid.Row="3" 
-                                                  MinWidth="10"
-                                                  IsOn="{x:Bind hyplayer:Common.Setting.notClearMode, Mode=TwoWay}" />
-                                </Grid>
-                            </controls:Expander>
-
-                            <controls:Expander Header="特效设置" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
-                                <controls:Expander.Transitions>
-                                    <TransitionCollection>
-                                        <RepositionThemeTransition/>
+                                        <RepositionThemeTransition />
                                     </TransitionCollection>
                                 </controls:Expander.Transitions>
                                 <StackPanel Spacing="16">
-                                    <CheckBox Content="歌词页面使用亚克力背景 (否则为一般模糊)"
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.expandedUseAcrylic, Mode=TwoWay}" />
-                                    <CheckBox Content="播放条使用亚克力背景 (否则为纯色)"
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.playbarBackgroundAcrylic, Mode=TwoWay}" />
-                                    <CheckBox Content="展开/收缩「歌词页面」动画"
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.expandAnimation, Mode=TwoWay}" />
-                                    <CheckBox Content="播放条背景呼吸动画"
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.playbarBackgroundBreath, Mode=TwoWay}" />
-                                    <CheckBox Content="歌词页面专辑封面呼吸动画 (与阴影冲突)"
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.expandAlbumBreath, Mode=TwoWay}" />
-                                    <CheckBox Content="表头背景模糊"
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur, Mode=TwoWay}" />
-                                    <CheckBox Content="歌单列表项背景模糊"
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur, Mode=TwoWay}" />
+                                    <Grid>
+                                        <TextBlock Text="背景显示设置" VerticalAlignment="Center" />
+                                        <ComboBox
+                                            HorizontalAlignment="Right"
+                                            SelectedIndex="{x:Bind hyplayer:Common.Setting.expandedPlayerBackgroundType, Mode=TwoWay}">
+                                            <ComboBoxItem Content="专辑封面模糊" />
+                                            <ComboBoxItem Content="跟随唱片主色调" />
+                                            <ComboBoxItem Content="跟随系统" />
+                                            <ComboBoxItem Content="强制白色" />
+                                            <ComboBoxItem Content="强制黑色" />
+                                        </ComboBox>
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="唱片边框厚度 (0 为无边框)" VerticalAlignment="Center" />
+                                        <Slider
+                                            x:Name="SliderAlbumBorderLength"
+                                            Width="256"
+                                            HorizontalAlignment="Right"
+                                            Maximum="280"
+                                            Minimum="0"
+                                            ToolTipService.ToolTip="{x:Bind SliderAlbumBorderLength.Value}"
+                                            Value="{x:Bind hyplayer:Common.Setting.albumBorderLength, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="歌词页面封面阴影强度 (0为无阴影)" VerticalAlignment="Center" />
+                                        <Slider
+                                            x:Name="SliderAlbumShadowDepth"
+                                            Width="256"
+                                            HorizontalAlignment="Right"
+                                            Maximum="20"
+                                            Minimum="0"
+                                            ToolTipService.ToolTip="{x:Bind SliderAlbumShadowDepth.Value}"
+                                            ValueChanged="NBShadowDepth_OnValueChanged"
+                                            Value="{x:Bind hyplayer:Common.Setting.expandedCoverShadowDepth, Mode=OneWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="圆形唱片" VerticalAlignment="Center" />
+                                        <ToggleSwitch HorizontalAlignment="Right" MinWidth="10"
+                                                      IsOn="{x:Bind hyplayer:Common.Setting.albumRound, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="唱片旋转" VerticalAlignment="Center" />
+                                        <ToggleSwitch HorizontalAlignment="Right" MinWidth="10"
+                                                      IsOn="{x:Bind hyplayer:Common.Setting.albumRotate, Mode=TwoWay}" />
+                                    </Grid>
+                                </StackPanel>
+                            </controls:Expander>
+                            <controls:Expander Header="个性化" IsExpanded="True" HorizontalAlignment="Stretch"
+                                               HorizontalContentAlignment="Stretch">
+                                <controls:Expander.Transitions>
+                                    <TransitionCollection>
+                                        <RepositionThemeTransition />
+                                    </TransitionCollection>
+                                </controls:Expander.Transitions>
+                                <StackPanel Orientation="Vertical" Spacing="16">
+                                    <Grid>
+                                        <TextBlock Text="无图模式(需重启应用)" VerticalAlignment="Center" />
+                                        <ToggleSwitch HorizontalAlignment="Right"
+                                                      MinWidth="10"
+                                                      IsOn="{x:Bind hyplayer:Common.Setting.noImage, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="PlayBar 脱离窗口边缘" VerticalAlignment="Center" />
+                                        <ToggleSwitch HorizontalAlignment="Right"
+                                                      MinWidth="10"
+                                                      IsOn="{x:Bind hyplayer:Common.Setting.playBarMargin, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="歌词界面专辑封面不裁剪为正方形" VerticalAlignment="Center" />
+                                        <ToggleSwitch HorizontalAlignment="Right"
+                                                      Grid.Row="2"
+                                                      MinWidth="10"
+                                                      IsOn="{x:Bind hyplayer:Common.Setting.expandedPlayerFullCover, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="显示发现及评论入口" VerticalAlignment="Center" />
+                                        <ToggleSwitch HorizontalAlignment="Right"
+                                                      MinWidth="10"
+                                                      IsOn="{x:Bind hyplayer:Common.Setting.notClearMode, Mode=TwoWay}" />
+                                    </Grid>
+                                </StackPanel>
+                            </controls:Expander>
+
+                            <controls:Expander Header="特效设置" IsExpanded="True" HorizontalAlignment="Stretch"
+                                               HorizontalContentAlignment="Stretch">
+                                <controls:Expander.Transitions>
+                                    <TransitionCollection>
+                                        <RepositionThemeTransition />
+                                    </TransitionCollection>
+                                </controls:Expander.Transitions>
+                                <StackPanel Spacing="16">
+                                    <Grid>
+                                        <TextBlock Text="圆形唱片" VerticalAlignment="Center" />
+                                        <ToggleSwitch HorizontalAlignment="Right" MinWidth="10"
+                                                      IsOn="{x:Bind hyplayer:Common.Setting.expandedUseAcrylic, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="播放条使用亚克力背景 (否则为纯色)" VerticalAlignment="Center" />
+                                        <ToggleSwitch HorizontalAlignment="Right" MinWidth="10"
+                                                      IsOn="{x:Bind hyplayer:Common.Setting.playbarBackgroundAcrylic, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="展开/收缩「歌词页面」动画" VerticalAlignment="Center" />
+                                        <ToggleSwitch HorizontalAlignment="Right" MinWidth="10"
+                                                      IsOn="{x:Bind hyplayer:Common.Setting.expandAnimation, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="播放条背景呼吸动画" VerticalAlignment="Center" />
+                                        <ToggleSwitch HorizontalAlignment="Right" MinWidth="10"
+                                                      IsOn="{x:Bind hyplayer:Common.Setting.playbarBackgroundBreath, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="歌词页面专辑封面呼吸动画 (与阴影冲突)" VerticalAlignment="Center" />
+                                        <ToggleSwitch HorizontalAlignment="Right" MinWidth="10"
+                                                      IsOn="{x:Bind hyplayer:Common.Setting.expandAlbumBreath, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="表头背景模糊" VerticalAlignment="Center" />
+                                        <ToggleSwitch HorizontalAlignment="Right" MinWidth="10"
+                                                      IsOn="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="歌单列表项背景模糊" VerticalAlignment="Center" />
+                                        <ToggleSwitch HorizontalAlignment="Right" MinWidth="10"
+                                                      IsOn="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur, Mode=TwoWay}" />
+                                    </Grid>
                                 </StackPanel>
                             </controls:Expander>
                         </StackPanel>
@@ -403,145 +444,160 @@
                 <PivotItem FontFamily="Thick" Header="存储设置">
                     <ScrollViewer VerticalScrollMode="Enabled">
                         <StackPanel Margin="0,100,0,150" Orientation="Vertical" Spacing="20">
-                            <controls:Expander Header="路径设置" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                            <controls:Expander Header="路径设置" IsExpanded="True" HorizontalAlignment="Stretch"
+                                               HorizontalContentAlignment="Stretch">
                                 <controls:Expander.Transitions>
                                     <TransitionCollection>
-                                        <RepositionThemeTransition/>
+                                        <RepositionThemeTransition />
                                     </TransitionCollection>
                                 </controls:Expander.Transitions>
-                                <Grid RowSpacing="16">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                    </Grid.RowDefinitions>
-                                    <TextBlock Text="下载路径" VerticalAlignment="Center"/>
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-                                        <TextBox                                          
-                                            x:Name="TextBoxDownloadDir"
-                                            Width="256"
-                                            Text="{x:Bind hyplayer:Common.Setting.downloadDir, Mode=TwoWay}" />
-                                        <Button
-                                            x:Name="ButtonDownloadSelect"
-                                            Click="ButtonDownloadSelect_OnClick"
-                                            Content="选择"/>
-                                    </StackPanel>
-                                    <TextBlock Grid.Row="1" Text="搜索路径" VerticalAlignment="Center"/>
-                                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-                                        <TextBox 
-                                            x:Name="TextBoxSearchingDir"                                           
-                                            Width="256"
-                                            Text="{x:Bind hyplayer:Common.Setting.searchingDir, Mode=TwoWay}" />
-                                        <Button
-                                            x:Name="ButtonSearchingSelect"
-                                            Click="ButtonSearchingSelect_OnClick"
-                                            Content="选择"/>
-                                    </StackPanel>
-                                    <TextBlock Grid.Row="2" Text="缓存路径" VerticalAlignment="Center"/>
-                                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-                                        <TextBox 
-                                            x:Name="TextBoxCacheDir"                                           
-                                            Width="256"
-                                            Text="{x:Bind hyplayer:Common.Setting.cacheDir, Mode=TwoWay}" 
-                                            IsEnabled="{x:Bind hyplayer:Common.Setting.enableCache, Mode=OneWay}"/>
-                                        <Button
-                                            x:Name="ButtonCacheSelect"
-                                            Click="ButtonSearchingSelect_OnClick"
-                                            Content="选择"
-                                            IsEnabled="{x:Bind hyplayer:Common.Setting.enableCache, Mode=OneWay}"/>
-                                    </StackPanel>
-                                </Grid>
+                                <StackPanel Spacing="16">
+                                    <Grid>
+                                        <TextBlock Text="下载路径" VerticalAlignment="Center" />
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                                            <TextBox
+                                                x:Name="TextBoxDownloadDir"
+                                                Width="256"
+                                                Text="{x:Bind hyplayer:Common.Setting.downloadDir, Mode=TwoWay}" />
+                                            <Button
+                                                x:Name="ButtonDownloadSelect"
+                                                Click="ButtonDownloadSelect_OnClick"
+                                                Content="选择" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="搜索路径" VerticalAlignment="Center" />
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                                                    Spacing="8">
+                                            <TextBox
+                                                x:Name="TextBoxSearchingDir"
+                                                Width="256"
+                                                Text="{x:Bind hyplayer:Common.Setting.searchingDir, Mode=TwoWay}" />
+                                            <Button
+                                                x:Name="ButtonSearchingSelect"
+                                                Click="ButtonSearchingSelect_OnClick"
+                                                Content="选择" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="缓存路径" VerticalAlignment="Center" />
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                                                    Spacing="8">
+                                            <TextBox
+                                                x:Name="TextBoxCacheDir"
+                                                Width="256"
+                                                Text="{x:Bind hyplayer:Common.Setting.cacheDir, Mode=TwoWay}"
+                                                IsEnabled="{x:Bind hyplayer:Common.Setting.enableCache, Mode=OneWay}" />
+                                            <Button
+                                                x:Name="ButtonCacheSelect"
+                                                Click="ButtonSearchingSelect_OnClick"
+                                                Content="选择"
+                                                IsEnabled="{x:Bind hyplayer:Common.Setting.enableCache, Mode=OneWay}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
                             </controls:Expander>
 
-                            <controls:Expander Header="名称设置" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                            <controls:Expander Header="名称设置" IsExpanded="True" HorizontalAlignment="Stretch"
+                                               HorizontalContentAlignment="Stretch">
                                 <controls:Expander.Transitions>
                                     <TransitionCollection>
-                                        <RepositionThemeTransition/>
+                                        <RepositionThemeTransition />
                                     </TransitionCollection>
                                 </controls:Expander.Transitions>
-                                <Grid RowSpacing="16">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                    </Grid.RowDefinitions>
-                                    <TextBlock Text="下载文件命名" VerticalAlignment="Center"/>
-                                    <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="8">
-                                        <TextBox
-                                             Width="256"
-                                             Text="{x:Bind hyplayer:Common.Setting.downloadFileName, Mode=TwoWay}" />
-                                        <Button>
-                                            <Button.Flyout>
-                                                <Flyout>
-                                                    <RichTextBlock>
-                                                        <Paragraph>
-                                                            &#x27A4;
-                                                            <Bold>{$SINGER}</Bold>
-                                                            : 歌手
-                                                            <LineBreak />
-                                                            &#x27A4;
-                                                            <Bold>{$ALBUM}</Bold>
-                                                            : 专辑
-                                                            <LineBreak />
-                                                            &#x27A4;
-                                                            <Bold>{$SONGNAME}</Bold>
-                                                            : 歌曲名
-                                                            <LineBreak />
-                                                            &#x27A4;
-                                                            <Bold>{$INDEX}</Bold>
-                                                            : 序号
-                                                            <LineBreak />
-                                                            &#x27A4;
-                                                            <Bold>{$CDNAME}</Bold>
-                                                            : CD 名称
-                                                            <LineBreak />
-                                                        </Paragraph>
-                                                    </RichTextBlock>
-                                                </Flyout>
-                                            </Button.Flyout>
-                                            <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE946;"/>
-                                        </Button>
+                                <StackPanel Spacing="16">
+                                    <Grid>
+                                        <TextBlock Text="下载文件命名" VerticalAlignment="Center" />
+                                        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="8">
+                                            <TextBox
+                                                Width="256"
+                                                Text="{x:Bind hyplayer:Common.Setting.downloadFileName, Mode=TwoWay}" />
+                                            <Button>
+                                                <Button.Flyout>
+                                                    <Flyout>
+                                                        <RichTextBlock>
+                                                            <Paragraph>
+                                                                &#x27A4;
+                                                                <Bold>{$SINGER}</Bold>
+                                                                : 歌手
+                                                                <LineBreak />
+                                                                &#x27A4;
+                                                                <Bold>{$ALBUM}</Bold>
+                                                                : 专辑
+                                                                <LineBreak />
+                                                                &#x27A4;
+                                                                <Bold>{$SONGNAME}</Bold>
+                                                                : 歌曲名
+                                                                <LineBreak />
+                                                                &#x27A4;
+                                                                <Bold>{$INDEX}</Bold>
+                                                                : 序号
+                                                                <LineBreak />
+                                                                &#x27A4;
+                                                                <Bold>{$CDNAME}</Bold>
+                                                                : CD 名称
+                                                                <LineBreak />
+                                                            </Paragraph>
+                                                        </RichTextBlock>
+                                                    </Flyout>
+                                                </Button.Flyout>
+                                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                                          Glyph="&#xE946;" />
+                                            </Button>
 
-                                    </StackPanel>
-                                    <TextBlock Text="下载重名解决方法" Grid.Row="1" VerticalAlignment="Center"/>
-                                    <ComboBox                                      
-                                        Grid.Row="1"
-                                        HorizontalAlignment="Right"
-                                        SelectedIndex="{x:Bind hyplayer:Common.Setting.downloadNameOccupySolution, Mode=TwoWay}">
-                                        <ComboBoxItem  Content="跳过" />
-                                        <ComboBoxItem  Content="覆盖" />
-                                        <ComboBoxItem  Content="追加 ID" />
-                                    </ComboBox>
-
-                                </Grid>
+                                        </StackPanel>
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="下载重名解决方法" VerticalAlignment="Center" />
+                                        <ComboBox
+                                            HorizontalAlignment="Right"
+                                            SelectedIndex="{x:Bind hyplayer:Common.Setting.downloadNameOccupySolution, Mode=TwoWay}">
+                                            <ComboBoxItem Content="跳过" />
+                                            <ComboBoxItem Content="覆盖" />
+                                            <ComboBoxItem Content="追加 ID" />
+                                        </ComboBox>
+                                    </Grid>
+                                </StackPanel>
                             </controls:Expander>
-                            
-                            <controls:Expander Header="下载内容" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+
+                            <controls:Expander Header="下载选项" IsExpanded="True" HorizontalAlignment="Stretch"
+                                               HorizontalContentAlignment="Stretch">
                                 <controls:Expander.Transitions>
                                     <TransitionCollection>
-                                        <RepositionThemeTransition/>
+                                        <RepositionThemeTransition />
                                     </TransitionCollection>
                                 </controls:Expander.Transitions>
                                 <StackPanel Spacing="8">
-                                    <CheckBox Content="下载歌词"
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.downloadLyric, Mode=TwoWay}" />
-                                    <CheckBox Content="下载翻译"
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.downloadTranslation, Mode=TwoWay}" />
-                                    <CheckBox Content="写音乐信息"
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.writedownloadFileInfo, Mode=TwoWay}" />
-                                    <CheckBox Content="写网易云音乐信息"
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.write163Info, Mode=TwoWay}" />
-                                    <CheckBox Content="使用 GBK 写内容 (请勿开启)"
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.usingGBK, Mode=TwoWay}" />
+                                    <Grid>
+                                        <TextBlock Text="下载歌词" VerticalAlignment="Center" />
+                                        <ToggleSwitch HorizontalAlignment="Right" MinWidth="10" IsOn="{x:Bind hyplayer:Common.Setting.downloadLyric, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="下载翻译" VerticalAlignment="Center" />
+                                        <ToggleSwitch HorizontalAlignment="Right" MinWidth="10" IsOn="{x:Bind hyplayer:Common.Setting.downloadTranslation, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="写音乐信息" VerticalAlignment="Center" />
+                                        <ToggleSwitch HorizontalAlignment="Right" MinWidth="10" IsOn="{x:Bind hyplayer:Common.Setting.writedownloadFileInfo, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="写网易云音乐信息" VerticalAlignment="Center" />
+                                        <ToggleSwitch HorizontalAlignment="Right" MinWidth="10" IsOn="{x:Bind hyplayer:Common.Setting.write163Info, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock Text="使用 GBK 写内容 (请勿开启)" VerticalAlignment="Center" />
+                                        <ToggleSwitch HorizontalAlignment="Right" MinWidth="10" IsOn="{x:Bind hyplayer:Common.Setting.usingGBK, Mode=TwoWay}" />
+                                    </Grid>
                                 </StackPanel>
                             </controls:Expander>
-                            
-                            <Button                                
+
+                            <Button
                                 x:Name="ClearHistory"
                                 Click="ClearHistory_Click"
                                 Content="清除历史记录">
                                 <Button.Transitions>
                                     <TransitionCollection>
-                                        <RepositionThemeTransition/>
+                                        <RepositionThemeTransition />
                                     </TransitionCollection>
                                 </Button.Transitions>
                             </Button>
@@ -999,21 +1055,28 @@
                                         </StackPanel>
                                     </Grid>
                                 </Border>
-                                <Border CornerRadius="4" Height="64" Background="#1A808080"  Tapped="UIElement_OnTapped">
+                                <Border CornerRadius="4" Height="64" Background="#1A808080" Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
-                                            <PersonPicture ProfilePicture="https://discuss.flarum.org.cn/assets/avatars/MfhtDgaco3bsFR6D.png" Height="44"/>
+                                            <PersonPicture
+                                                ProfilePicture="https://discuss.flarum.org.cn/assets/avatars/MfhtDgaco3bsFR6D.png"
+                                                Height="44" />
                                             <StackPanel>
-                                                <TextBlock Text="Betta_Fish" Style="{StaticResource SubtitleTextBlockStyle}" Margin="1,0,0,0"/>
+                                                <TextBlock Text="Betta_Fish"
+                                                           Style="{StaticResource SubtitleTextBlockStyle}"
+                                                           Margin="1,0,0,0" />
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
-                                                    <TextBlock Text="部分UI更新"/>
-                                                    <TextBlock Text="???"  Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
+                                                    <TextBlock Text="部分UI更新" />
+                                                    <TextBlock Text="???"
+                                                               Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" >
-                                            <HyperlinkButton NavigateUri="https://github.com/zxbmmmmmmmmm" Content="Github"/>
-                                            <HyperlinkButton NavigateUri="http://www.coolapk.com/u/6052095" Content="酷安"/>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                            <HyperlinkButton NavigateUri="https://github.com/zxbmmmmmmmmm"
+                                                             Content="Github" />
+                                            <HyperlinkButton NavigateUri="http://www.coolapk.com/u/6052095"
+                                                             Content="酷安" />
                                         </StackPanel>
                                     </Grid>
                                 </Border>
