@@ -14,8 +14,16 @@ public static class UpdateManager
     public enum UpdateSource
     {
         MicrosoftStore,
-        AppCenter
+        AppCenter,
+        AppCenterCanary
     }
+
+    public static string[] UpdateSourceLink =
+    {
+        "ms-windows-store://pdp/?productid=9N5TD916686K",
+        "https://install.appcenter.ms/users/kengwang/apps/hyplayer/distribution_groups/public",
+        "https://install.appcenter.ms/users/kengwang/apps/hyplayer/distribution_groups/canary"
+    };
 
     public class RemoteVersionResult
     {
@@ -42,18 +50,18 @@ public static class UpdateManager
         };
     }
 
-    public static async Task<RemoteVersionResult> GetVersionFromAppCenter()
+    public static async Task<RemoteVersionResult> GetVersionFromAppCenter(bool isCanary)
     {
         var versionsGetter = new WebClient();
         versionsGetter.Headers.Add("X-API-Token", "50f1aa0749d70814b0e91493444759885119a58d");
         var versions =
             JArray.Parse(
                 await versionsGetter.DownloadStringTaskAsync(
-                    "https://api.appcenter.ms/v0.1/apps/kengwang/HyPlayer/distribution_groups/Public/releases"));
+                    $"https://api.appcenter.ms/v0.1/apps/kengwang/HyPlayer/distribution_groups/{(isCanary ? "Canary" : "Public")}/releases"));
         if (versions?.First?["version"] == null) return new RemoteVersionResult();
         return new RemoteVersionResult()
         {
-            UpdateSource = UpdateSource.AppCenter,
+            UpdateSource = isCanary ? UpdateSource.AppCenterCanary : UpdateSource.AppCenter,
             IsMandatory = versions.First["mandatory_update"]?.ToString()=="True",
             Version = Version.Parse(versions.First?["version"]?.ToString() ?? ""),
             UpdateLog = $"更新发布于 {versions.First["uploaded_at"]}"
@@ -65,7 +73,8 @@ public static class UpdateManager
         return updateSource switch
         {
             UpdateSource.MicrosoftStore => await GetVersionFromStore(),
-            UpdateSource.AppCenter => await GetVersionFromAppCenter(),
+            UpdateSource.AppCenter => await GetVersionFromAppCenter(false),
+            UpdateSource.AppCenterCanary => await GetVersionFromAppCenter(true),
             _ => throw new ArgumentOutOfRangeException(nameof(updateSource), updateSource, null)
         };
     }
@@ -76,7 +85,7 @@ public static class UpdateManager
         var localVersion = new Version(Package.Current.Id.Version.Major, Package.Current.Id.Version.Minor,
             Package.Current.Id.Version.Build, Package.Current.Id.Version.Revision);
         var title = "发现新版本";
-        if (remoteResult.Version != null || remoteResult.Version == localVersion)
+        if (remoteResult.Version == null || remoteResult.Version == localVersion)
         {
             if (isStartup) return;
             title = "你已是最新版";
@@ -96,7 +105,7 @@ public static class UpdateManager
             contentDialog.SecondaryButtonText = "更新";
             contentDialog.SecondaryButtonClick += async (_, _) =>
                 await Windows.System.Launcher.LaunchUriAsync(
-                    new Uri(@"ms-windows-store://pdp/?productid=9N5TD916686K"));
+                    new Uri(UpdateSourceLink[Common.Setting.UpdateSource]));
             contentDialog.PrimaryButtonText = "取消";
             await contentDialog.ShowAsync();
         }
