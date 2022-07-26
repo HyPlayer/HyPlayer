@@ -217,7 +217,6 @@
                                         <ToggleSwitch VerticalAlignment="Center" HorizontalAlignment="Right"
                                                       MinWidth="10"
                                                       IsOn="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=TwoWay}" />
-
                                     </Grid>
                                     <Grid Visibility="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=OneWay}">
                                         <TextBlock Text="渐入渐出时间 单位: 0.1s" VerticalAlignment="Center" />
@@ -606,45 +605,39 @@
                 </PivotItem>
                 <PivotItem FontFamily="Thick" Header="实验室🧪">
                     <ScrollViewer VerticalScrollMode="Enabled">
-                        <StackPanel Margin="0,100,0,150" Orientation="Vertical">
-                            <Grid MaxWidth="1000">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="150" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="50" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="X-Real-IP (置空不设置)" />
-                                <TextBox x:Name="TextBoxXREALIP" Grid.Column="1" />
+                        <StackPanel Margin="0,100,0,150" Orientation="Vertical"  Spacing="12">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox 
+                                    Header="X-Real-IP (置空不设置)"
+                                    x:Name="TextBoxXREALIP" 
+                                    Width="256" />
                                 <Button
                                     x:Name="ButtonXREALIPSave"
-                                    Grid.Column="2"
                                     Click="ButtonXREALIPSave_OnClick"
                                     Content="设置"
-                                    Style="{StaticResource ButtonRevealStyle}" />
-                            </Grid>
-                            <Grid MaxWidth="1000">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="150" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="50" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="代理服务器 (置空不设置)" />
-                                <TextBox x:Name="TextBoxPROXY" Grid.Column="1" />
+                                    Margin="8,26,0,0" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox 
+                                    Header="代理服务器 (置空不设置)" 
+                                    x:Name="TextBoxPROXY"
+                                    Width="256" />
                                 <Button
                                     x:Name="ButtonPROXYSave"
-                                    Grid.Column="2"
                                     Click="ButtonPROXYSave_OnClick"
                                     Content="设置"
-                                    Style="{StaticResource ButtonRevealStyle}" />
-                            </Grid>
+                                    Margin="8,26,0,0" />
+                            </StackPanel>
+
                             <!--<CheckBox
-                        x:Name="LazySongUrlGetCheck"
-                        Content="在播放时才获取播放链接"
-                        IsChecked="{x:Bind hyplayer:Common.Setting.songUrlLazyGet, Mode=TwoWay}" />-->
+                                x:Name="LazySongUrlGetCheck"
+                                Content="在播放时才获取播放链接"
+                                IsChecked="{x:Bind hyplayer:Common.Setting.songUrlLazyGet, Mode=TwoWay}" />-->
                             <CheckBox
                                 x:Name="XboxPointerSet"
                                 Content="Xbox上隐藏指针（不要开启!）"
-                                IsChecked="{x:Bind hyplayer:Common.Setting.xboxHidePointer, Mode=TwoWay}" />
+                                IsChecked="{x:Bind hyplayer:Common.Setting.xboxHidePointer, Mode=TwoWay}"
+                                Margin="0,12,0,0"/>
                             <CheckBox
                                 x:Name="ForceMemoryCollect"
                                 Content="频繁内存回收 (开启后可能会频繁出现页面重载现象)"
@@ -685,23 +678,19 @@
                                 VerticalAlignment="Center"
                                 Click="RestartBtn_Click"
                                 Content="立即重启 HyPlayer"
-                                Style="{StaticResource ButtonRevealStyle}"
                                 Visibility="Collapsed" />
                             <Button
                                 x:Name="BtnXboxReserve"
                                 Click="BtnXboxReserve_Click"
-                                Content="Xbox 进后台模式"
-                                Style="{StaticResource ButtonRevealStyle}" />
+                                Content="Xbox 进后台模式" />
                             <Button
                                 x:Name="BtnChangeAudioRenderDevice"
                                 Click="BtnChangeAudioRenderDevice_Click"
-                                Content="选择音频输出设备"
-                                Style="{StaticResource ButtonRevealStyle}" />
+                                Content="选择音频输出设备" />
                             <Button
                                 x:Name="BtnChangeToDefaultAudioRenderDevice"
                                 Click="BtnChangeToDefaultAudioRenderDevice_Click"
-                                Content="恢复默认音频输出设备"
-                                Style="{StaticResource ButtonRevealStyle}" />
+                                Content="恢复默认音频输出设备" />
                         </StackPanel>
                     </ScrollViewer>
                 </PivotItem>
@@ -767,7 +756,7 @@
                                                            FontWeight="SemiBold" />
                                             </StackPanel>
                                             <TextBlock Grid.Row="1"
-                                                       d:Text="2.1.30"
+                                                       d:Text="2.1.30" IsTextSelectionEnabled="True"
                                                        x:Name="VersionCode" HorizontalAlignment="Left"
                                                        VerticalAlignment="Top" TextAlignment="Left" TextWrapping="Wrap"
                                                        FontSize="13"
@@ -796,7 +785,8 @@
                                                     Glyph="&#xEA6C;"
                                                     Margin="0,1,0,0"
                                                     FontSize="16" />
-                                                <TextBlock Text="设备识别码" FontSize="14" Margin="6,0,0,0"
+                                                <TextBlock Text="设备识别码" IsTextSelectionEnabled="True"
+                                                           FontSize="14" Margin="6,0,0,0"
                                                            FontWeight="SemiBold" />
                                             </StackPanel>
                                             <TextBlock
