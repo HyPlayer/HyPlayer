@@ -210,7 +210,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private void ChangeWindowMode()
     {
         realclick = false;
-        needRedesign++;
         switch (WindowMode)
         {
             case ExpandedWindowMode.Both:
@@ -244,11 +243,17 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 LyricBox.Margin = new Thickness(15);
                 break;
         }
-
-        if (nowwidth > 800 || WindowMode == ExpandedWindowMode.Both)
-            LyricWidth = nowwidth * 0.4;
+        
+        if (WindowMode == ExpandedWindowMode.LyricOnly)
+            LyricWidth = nowwidth - 30;
         else
-            LyricWidth = nowwidth - 15;
+        {
+            if (nowwidth > 800 || WindowMode == ExpandedWindowMode.Both)
+                LyricWidth = nowwidth * 0.4;
+            else
+                LyricWidth = nowwidth - 30;
+        }
+        needRedesign++;
         realclick = true;
     }
 
