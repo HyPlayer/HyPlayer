@@ -1,6 +1,10 @@
 name: Mirroring
 
-on: [push, delete]
+on:
+  push:
+    branches:
+      - main
+      - develop
 
 jobs:
   to_notabug:
