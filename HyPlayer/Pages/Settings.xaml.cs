@@ -26,6 +26,7 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using Kawazu;
 using Microsoft.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media.Animation;
 
 #endregion
 
@@ -46,13 +47,11 @@ public sealed partial class Settings : Page
     {
         isbyprogram = true;
         InitializeComponent();
-        RomajiStatus.Text = "当前日语转罗马音状态: " + (Common.KawazuConv == null ? "无法转换 请尝试重新下载资源文件" : "可以转换");
-        RadioButtonsSongBr.SelectedIndex =
-            RadioButtonsSongBr.Items.IndexOf(RadioButtonsSongBr.Items.First(t =>
-                ((RadioButton)t).Tag.ToString() == Common.Setting.audioRate));
-        RadioButtonsSongDownloadBr.SelectedIndex = RadioButtonsSongDownloadBr.Items.IndexOf(
-            RadioButtonsSongDownloadBr.Items.First(t =>
-                ((RadioButton)t).Tag.ToString() == Common.Setting.downloadAudioRate));
+        RomajiStatus.Text = (Common.KawazuConv == null ? "请下载资源文件" : "可以转换");
+        ComboBoxSongBr.SelectedIndex = ComboBoxSongBr.Items.IndexOf(ComboBoxSongBr.Items.First(t =>
+                ((ComboBoxItem)t).Tag.ToString() == Common.Setting.audioRate));
+        ComboBoxSongDownloadBr.SelectedIndex = ComboBoxSongDownloadBr.Items.IndexOf(ComboBoxSongDownloadBr.Items.First(t =>
+                ((ComboBoxItem)t).Tag.ToString() == Common.Setting.audioRate));
         TextBoxXREALIP.Text = ApplicationData.Current.LocalSettings.Values["xRealIp"] != null
             ? ApplicationData.Current.LocalSettings.Values["xRealIp"].ToString()
             : "";
@@ -72,6 +71,7 @@ public sealed partial class Settings : Page
             PureLyric = "歌词大小示例 AaBbCcDd 約束の言葉",
             Translation = "翻译大小示例"
         });
+        _lyricItem.Transitions.Add(new RepositionThemeTransition());
         _lyricItem.IsHitTestVisible = false;
         _lyricItem.OnShow();
         StackPanelLyricSet.Children.Add(_lyricItem);
@@ -81,19 +81,6 @@ public sealed partial class Settings : Page
 #endif
         //ToggleButtonDaylight.IsChecked = Application.Current.RequestedTheme == ApplicationTheme.Dark;
         BtnXboxReserve.Visibility = true ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-
-    private void RadioButton_Checked(object sender, RoutedEventArgs e)
-    {
-        if (isbyprogram) return;
-        Common.Setting.audioRate = ((RadioButton)sender).Tag.ToString();
-    }
-
-    private void RadioButton1_Checked(object sender, RoutedEventArgs e)
-    {
-        if (isbyprogram) return;
-        Common.Setting.downloadAudioRate = ((RadioButton)sender).Tag.ToString();
     }
 
     private async Task GetRomaji()
@@ -171,7 +158,7 @@ public sealed partial class Settings : Page
         finally
         {
             RomajiStatus.Text =
-                "当前日语转罗马音状态: " + (Common.KawazuConv == null ? "无法转换 请尝试重新下载资源文件" : "可以转换");
+                (Common.KawazuConv == null ? "请重新下载资源文件" : "可以转换");
         }
     }
 
@@ -313,11 +300,6 @@ public sealed partial class Settings : Page
         DeviceInfo.ContextFlyout.ShowAt(DeviceInfo);
     }
 
-    private void RadioButtonsTheme_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        RestartBtn.Visibility = Visibility.Visible;
-    }
-
     private async void RestartBtn_Click(object sender, RoutedEventArgs e)
     {
         await CoreApplication.RequestRestartAsync("ChangeThemeRestart");
@@ -384,5 +366,19 @@ public sealed partial class Settings : Page
     private async void CheckUpdate_Click(object sender, RoutedEventArgs e)
     {
         await UpdateManager.PopupVersionCheck();
+    }
+
+    private void ComboBoxSongBr_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (isbyprogram) return;
+        var selectedItem = (ComboBoxItem)((ComboBox)sender).SelectedItem;
+        Common.Setting.audioRate = selectedItem.Tag.ToString();
+    }
+
+    private void ComboBoxSongDownloadBr_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (isbyprogram) return;
+        var selectedItem = (ComboBoxItem)((ComboBox)sender).SelectedItem;
+        Common.Setting.audioRate = selectedItem.Tag.ToString();
     }
 }
