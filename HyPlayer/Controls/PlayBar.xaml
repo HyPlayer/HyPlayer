@@ -81,6 +81,8 @@
                     <QuarticEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
+            <!--
+            对不起, 因为新增了支持不着强调色, 所以这个 Animation 删了
             <DoubleAnimation
                 AutoReverse="True"
                 RepeatBehavior="Forever"
@@ -92,7 +94,7 @@
                 <DoubleAnimation.EasingFunction>
                     <QuarticEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
+            </DoubleAnimation>-->
         </Storyboard>
         <Storyboard x:Name="InitializedAni">
             <DoubleAnimation
