@@ -19,7 +19,7 @@
         </Grid.RowDefinitions>
         <TextBlock
             Grid.Row="0"
-            Margin="30,-5,30,0"
+            Margin="24,24,24,0"
             FontSize="44"
             FontWeight="Bold"
             Text="最近播放" />

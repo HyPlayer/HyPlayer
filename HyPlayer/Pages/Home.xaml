@@ -12,7 +12,7 @@
                 Text="主页"
                 FontSize="44"
                 FontWeight="Bold"
-                Margin="35,5,0,0" />
+                Margin="24,24,0,0" />
             <Rectangle
                 Height=" 150"
                 VerticalAlignment="Top"
