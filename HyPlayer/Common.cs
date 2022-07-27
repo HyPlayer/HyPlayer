@@ -980,6 +980,16 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        
+        public bool disableTile
+        {
+            get => GetSettings("disableTile", Environment.OSVersion.Version.Build >= 22000);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["disableTile"] = value;
+                OnPropertyChanged();
+            }
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 

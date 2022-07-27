@@ -401,7 +401,7 @@
                                 </controls:Expander.Transitions>
                                 <StackPanel Spacing="16">
                                     <Grid>
-                                        <TextBlock Text="圆形唱片" VerticalAlignment="Center" />
+                                        <TextBlock Text="歌词页面使用亚克力背景 (否则为一般模糊)" VerticalAlignment="Center" />
                                         <ToggleSwitch HorizontalAlignment="Right" MinWidth="10"
                                                       IsOn="{x:Bind hyplayer:Common.Setting.expandedUseAcrylic, Mode=TwoWay}" />
                                     </Grid>
@@ -672,6 +672,9 @@
                                 x:Name="HighQualityCoverInSMTC"
                                 Content="输出高清图片到SMTC"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.highQualityCoverInSMTC, Mode=TwoWay}" />
+                            <CheckBox x:Name="DisableTile" 
+                                      Content="停用磁贴" 
+                                      IsChecked="{x:Bind hyplayer:Common.Setting.disableTile ,Mode=TwoWay}" />
                             <Button
                                 x:Name="RestartBtn"
                                 Margin="0,0,0,10"
