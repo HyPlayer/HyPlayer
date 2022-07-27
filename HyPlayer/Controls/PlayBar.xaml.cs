@@ -92,7 +92,7 @@ public sealed partial class PlayBar
 
     public void RefreshTile()
     {
-        if (HyPlayList.NowPlayingItem?.PlayItem == null) return;
+        if (HyPlayList.NowPlayingItem?.PlayItem == null || Common.Setting.disableTile) return;
         var cover = (int)HyPlayList.NowPlayingItem.ItemType > 1
             ? HyPlayList.NowPlayingItem.PlayItem.Album.cover
             : "https://s2.loli.net/2022/07/24/vwmY7t19uXLHPOr.png";
