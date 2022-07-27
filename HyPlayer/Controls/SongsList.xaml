@@ -18,7 +18,7 @@
     <Grid>
         <ListView
             Name="SongContainer"
-            Padding="10"
+            Padding="0"
             ItemsSource="{x:Bind VisibleSongs}"
             SelectionChanged="SongContainer_SelectionChanged"
             SelectionMode="{x:Bind MultiSelect, Converter={StaticResource SelectModeConverter}, Mode=OneWay}"

@@ -78,7 +78,6 @@
             x:FieldModifier="public"
             BackRequested="OnNavigateBack"
             Canvas.ZIndex="0"
-            CompactModeThresholdWidth="0"
             DisplayModeChanged="NavMain_DisplayModeChanged"
             FlowDirection="LeftToRight"
             FontFamily="Microsoft Sans Serif"
@@ -89,7 +88,6 @@
             IsTitleBarAutoPaddingEnabled="False"
             ItemInvoked="NavMain_ItemInvoked"
             PaneDisplayMode="Auto"
-            PaneTitle="关闭侧栏"
             SelectionChanged="NavMain_OnSelectionChanged">
             <muxc:NavigationView.MenuItems>
                 <muxc:NavigationViewItem
@@ -205,11 +203,7 @@
                 <muxc:NavigationViewItem x:Name="NavItemBlank" x:FieldModifier="public" IsEnabled="False" Height="130" />
             </muxc:NavigationView.FooterMenuItems>
             <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="30" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                <Frame x:Name="BaseFrame" Grid.Row="1" />
+                <Frame x:Name="BaseFrame" Grid.Row="1" Margin="0,48,0,0"/>
             </Grid>
         </muxc:NavigationView>
         <!--  登录弹窗  -->
@@ -348,5 +342,17 @@
 
             </StackPanel>
         </ContentDialog>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="641"/>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="BaseFrame.Margin" Value="0"/>
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
     </Grid>
 </Page>

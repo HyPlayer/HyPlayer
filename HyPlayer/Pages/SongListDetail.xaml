@@ -40,37 +40,32 @@
 
         <controls1:SongsList
             x:Name="SongsList"
-            Grid.Row="0"
             Grid.RowSpan="2"
-            Margin="20,20,0,0"
-            CornerRadius="16"
             IsSearchEnabled="True"
             Songs="{x:Bind Songs}">
             <controls1:SongsList.ListHeader>
-                <Grid x:Name="GridPersonalInformation">
+                <Grid x:Name="GridPersonalInformation" Margin="12,32,12,12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <Rectangle
+                    <Border
                         x:Name="RectangleImageBack"
                         Grid.Column="0"
                         Grid.ColumnSpan="2"
                         Margin="30,0,30,0"
-                        Fill="{x:Bind RectangleImage.Fill, Mode=OneWay}"
-                        RadiusX="10"
-                        RadiusY="10"
+                        Background="{x:Bind RectangleImage.Background, Mode=OneWay}"
+
                         Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}" />
-                    <Rectangle
+                    <Border
                         x:Name="RectangleImageAcrylic"
                         Grid.Column="0"
                         Grid.ColumnSpan="2"
                         Margin="0,0,0,0"
-                        Fill="{ThemeResource SongListPageAcrylicBrush}"
-                        RadiusX="10"
-                        RadiusY="10"
+                        Background="{ThemeResource SongListPageAcrylicBrush}"
+                        CornerRadius="16"
                         Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}" />
-                    <Rectangle
+                    <Border
                         x:Name="RectangleImage"
                         Grid.Column="0"
                         Width="200"
@@ -78,16 +73,15 @@
                         Margin="20,20,15,20"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Top"
-                        RadiusX="16"
-                        RadiusY="16">
-                        <Rectangle.Fill>
+                        CornerRadius="16">
+                        <Border.Background>
                             <ImageBrush x:Name="ImageRect" Stretch="UniformToFill">
                                 <ImageBrush.ImageSource>
                                     <BitmapImage UriSource="/Assets/icon.png" />
                                 </ImageBrush.ImageSource>
                             </ImageBrush>
-                        </Rectangle.Fill>
-                    </Rectangle>
+                        </Border.Background>
+                    </Border>
                     <StackPanel
                         Name="StackPanelUserInfo"
                         Grid.Column="1"
