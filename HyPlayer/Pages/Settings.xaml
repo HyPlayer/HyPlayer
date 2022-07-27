@@ -672,6 +672,9 @@
                                 x:Name="HighQualityCoverInSMTC"
                                 Content="输出高清图片到SMTC"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.highQualityCoverInSMTC, Mode=TwoWay}" />
+                            <CheckBox x:Name="DisableTile" 
+                                      Content="停用磁贴" 
+                                      IsChecked="{x:Bind hyplayer:Common.Setting.disableTile ,Mode=TwoWay}" />
                             <Button
                                 x:Name="RestartBtn"
                                 Margin="0,0,0,10"
