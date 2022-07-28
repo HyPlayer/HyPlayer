@@ -90,15 +90,16 @@
                     Width="200"
                     Margin="10,37,19,9"
                     FontSize="10"
-                    Foreground="#FF262626"
-                    TextWrapping="WrapWholeWords" />
+                    TextWrapping="WrapWholeWords"
+                    Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
                 <TextBlock
+                    HorizontalAlignment="Left"
                     x:Name="TextBlockPLName"
-                    Width="200"
+                    MaxWidth="180"
+                    TextTrimming="CharacterEllipsis"
+                    ToolTipService.ToolTip="{x:Bind TextBlockPLName.Text,Mode=OneWay}"
                     Margin="10,12,10,27"
-                    FontSize="15"
-                    FontWeight="Bold"
-                    TextWrapping="WrapWholeWords" />
+                    FontSize="15" />
             </Grid>
         </Grid>
         <Grid.ContextFlyout>
