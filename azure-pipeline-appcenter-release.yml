@@ -1,0 +1,94 @@
+# Universal Windows Platform
+# Build a Universal Windows Platform project using Visual Studio.
+# Add steps that test and distribute an app, save build artifacts, and more:
+# https://aka.ms/yaml
+
+trigger:
+  paths:
+    include:
+      - CHANGELOG_RELEASE.md
+
+
+pool:
+  vmImage: 'windows-2022'
+
+variables:
+- group: HyPlayerDevelopBuild
+  
+steps:
+- task: NuGetToolInstaller@0
+  displayName: 'Use NuGet 4.4.1'
+  inputs:
+    versionSpec: 4.4.1
+    checkLatest: true
+
+- task: NuGetCommand@2
+  displayName: 'NuGet restore **\*.sln'
+  inputs:
+    restoreSolution: '$(Parameters.solution)'
+
+- task: UseDotNet@2
+  displayName: 'Use .NET 6'
+  inputs:
+    version: 6.0.x
+
+- powershell: |
+   $MANIFEST = [xml](Get-Content **\Package.appxmanifest)
+   $MAINVERSION = $MANIFEST.Package.Identity.Version -replace ".{1}$"
+   $VERSION = $MAINVERSION + $(Build.BuildId)
+   Write-Host("##vso[task.setvariable variable=VERSION]$VERSION")
+   echo "Currently Building Version Is"
+   echo $VERSION
+   $MANIFEST.Package.Identity.Version = $VERSION
+   Set-Content -Path **\Package.appxmanifest -Value $MANIFEST.OuterXml
+  displayName: 'Set Version'
+
+- task: DownloadSecureFile@1
+  displayName: 'Download Key'
+  inputs:
+    secureFile: 'b4296f6d-f156-4133-9b5f-25135010eb0f'
+
+- task: VSBuild@1
+  displayName: 'Build solution HyPlayer.sln'
+  inputs:
+    solution: '$(Parameters.solution)'
+    msbuildArgs: '/p:AppxBundlePlatforms="x64" /p:AppxPackageDir="$(Build.ArtifactStagingDirectory)\AppxPackages\\" /p:AppxBundle=Always /p:PackageCertificateThumbprint=""  /p:UapAppxPackageBuildMode=SideloadOnly  /p:AppxPackageSigningEnabled=true  /p:PackageCertificateKeyFile="$(certificate.secureFilePath)" /p:PackageCertificatePassword="$(signingCert.password)"'
+    platform: x64
+    configuration: '$(BuildConfiguration)'
+    clean: true
+    msbuildArchitecture: x64
+
+- powershell: |
+   cd "$(Build.ArtifactStagingDirectory)\AppxPackages\"
+   $SYMPATH = (Get-ChildItem -Include *.appxsym -Recurse) | Foreach-Object{$_.FullName}
+   Move-Item $SYMPATH $(Agent.HomeDirectory)/$(VERSION).appxsym
+  displayName: 'PowerShell Script'
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish artifact: drop'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)\AppxPackages'
+    ArtifactName: 'azure-$(VERSION)'
+  condition: succeededOrFailed()
+
+- task: ArchiveFiles@2
+  displayName: 'Archive Appx Package'
+  inputs:
+    rootFolderOrFile: '$(Build.ArtifactStagingDirectory)\AppxPackages'
+    archiveFile: '$(Agent.HomeDirectory)/$(Build.BuildId).zip'
+    verbose: true
+
+- task: AppCenterDistribute@3
+  displayName: 'Deploy $(Agent.HomeDirectory)/$(Build.BuildId).zip to Visual Studio App Center'
+  inputs:
+    serverEndpoint: HyPlayer/AppCenter
+    appSlug: kengwang/HyPlayer
+    appFile: '$(Agent.HomeDirectory)/$(Build.BuildId).zip'
+    buildVersion: '$(VERSION)'
+    symbolsOption: UWP
+    appxsymPath: '$(Agent.HomeDirectory)/$(VERSION).appxsym'
+    releaseNotesOption: file
+    releaseNotesFile: CHANGELOG_RELEASE.md
+    distributionGroupId: '19bc0109-9e15-4776-b691-f007850cf08a;5e83d7f-28ae-45a5-b084-5d8ecd76e0b0'
+    isSilent: false
+  condition: succeededOrFailed()
