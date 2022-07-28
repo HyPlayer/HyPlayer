@@ -48,9 +48,10 @@ steps:
   displayName: 'Set Version'
 
 - task: DownloadSecureFile@1
-  displayName: 'Download Key'
+  name: certificate
+  displayName: 'Download CA certificate'
   inputs:
-    secureFile: 'b4296f6d-f156-4133-9b5f-25135010eb0f'
+    secureFile: '$(signingCert.secureFilePath)'
 
 - task: VSBuild@1
   displayName: 'Build solution HyPlayer.sln'
