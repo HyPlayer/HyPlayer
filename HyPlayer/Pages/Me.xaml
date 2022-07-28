@@ -162,7 +162,6 @@
                         <Setter Target="MainGrid.ColumnSpacing" Value="0" />
                         <Setter Target="RectangleImage.Width" Value="100" />
                         <Setter Target="RectangleImage.Height" Value="100" />
-                        <Setter Target="ButtonLogout.Margin" Value="0,15,0,0" />
                         <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="1" />
                         <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="10" />
                         <Setter Target="TextBoxSignature.Visibility" Value="Collapsed" />

@@ -502,7 +502,6 @@
                         x:Name="PlayStateIcon"
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
                         FontSize="20"
-                        Foreground="White"
                         Glyph="&#xEDB5;" />
                     <!--  EDB4  -->
                 </Button>

@@ -22,10 +22,9 @@
             <controls1:PivotEx>
                 <PivotItem FontFamily="Thick" Header="歌词设置">
                     <ScrollViewer VerticalScrollMode="Enabled">
-
                         <StackPanel
                             x:Name="StackPanelLyricSet"
-                            Margin="0,124,0,150"
+                            Margin="0,128,0,150"
                             Spacing="20"
                             HorizontalAlignment="Stretch"
                             Orientation="Vertical">
@@ -147,7 +146,7 @@
                 </PivotItem>
                 <PivotItem FontFamily="Thick" Header="播放设置">
                     <ScrollViewer VerticalScrollMode="Enabled">
-                        <StackPanel Margin="0,100,0,150" Orientation="Vertical" Spacing="20">
+                        <StackPanel Margin="0,128,0,150" Orientation="Vertical" Spacing="20">
                             <controls:Expander Header="音质设置" IsExpanded="True" HorizontalAlignment="Stretch"
                                                HorizontalContentAlignment="Stretch">
                                 <controls:Expander.Transitions>
@@ -264,7 +263,7 @@
                 </PivotItem>
                 <PivotItem FontFamily="Thick" Header="显示设置">
                     <ScrollViewer VerticalScrollMode="Enabled">
-                        <StackPanel Margin="0,100,0,150" Spacing="20">
+                        <StackPanel Margin="0,128,0,150" Spacing="20">
                             <controls:Expander Header="颜色设置 (需要重启 HyPlayer)" IsExpanded="True"
                                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
                                 <controls:Expander.Transitions>
@@ -442,7 +441,7 @@
                 </PivotItem>
                 <PivotItem FontFamily="Thick" Header="存储设置">
                     <ScrollViewer VerticalScrollMode="Enabled">
-                        <StackPanel Margin="0,100,0,150" Orientation="Vertical" Spacing="20">
+                        <StackPanel Margin="0,128,0,150" Orientation="Vertical" Spacing="20">
                             <controls:Expander Header="路径设置" IsExpanded="True" HorizontalAlignment="Stretch"
                                                HorizontalContentAlignment="Stretch">
                                 <controls:Expander.Transitions>
@@ -605,7 +604,7 @@
                 </PivotItem>
                 <PivotItem FontFamily="Thick" Header="实验室🧪">
                     <ScrollViewer VerticalScrollMode="Enabled">
-                        <StackPanel Margin="0,100,0,150" Orientation="Vertical"  Spacing="12">
+                        <StackPanel Margin="0,128,0,150" Orientation="Vertical"  Spacing="12">
                             <StackPanel Orientation="Horizontal">
                                 <TextBox 
                                     Header="X-Real-IP (置空不设置)"
@@ -699,7 +698,7 @@
                 </PivotItem>
                 <PivotItem FontFamily="Thick" Header="关于">
                     <ScrollViewer VerticalScrollMode="Enabled">
-                        <Grid Margin="0,100,0,150">
+                        <Grid Margin="0,128,0,150">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
