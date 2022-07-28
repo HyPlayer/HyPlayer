@@ -25,7 +25,7 @@ steps:
 - task: NuGetCommand@2
   displayName: 'NuGet restore **\*.sln'
   inputs:
-    restoreSolution: '$(Parameters.solution)'
+    restoreSolution: '$(solution)'
 
 - task: UseDotNet@2
   displayName: 'Use .NET 6'
@@ -51,10 +51,10 @@ steps:
 - task: VSBuild@1
   displayName: 'Build solution HyPlayer.sln'
   inputs:
-    solution: '$(Parameters.solution)'
+    solution: '$(solution)'
     msbuildArgs: '/p:AppxBundlePlatforms="x64" /p:AppxPackageDir="$(Build.ArtifactStagingDirectory)\AppxPackages\\" /p:AppxBundle=Always /p:PackageCertificateThumbprint=""  /p:UapAppxPackageBuildMode=SideloadOnly  /p:AppxPackageSigningEnabled=true  /p:PackageCertificateKeyFile="$(certificate.secureFilePath)" /p:PackageCertificatePassword="$(signingCert.password)"'
     platform: x64
-    configuration: '$(BuildConfiguration)'
+    configuration: '$(buildConfiguration)'
     clean: true
     msbuildArchitecture: x64
 
