@@ -16,6 +16,10 @@ variables:
 - group: HyPlayerDevelopBuild
   
 steps:
+
+- checkout: self
+  submodules: true
+
 - task: NuGetToolInstaller@0
   displayName: 'Use NuGet 4.4.1'
   inputs:
