@@ -4,6 +4,9 @@
 # https://aka.ms/yaml
 
 trigger:
+  branches:
+   include:
+     - develop
   paths:
     include:
       - CHANGELOG_RELEASE.md
