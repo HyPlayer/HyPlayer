@@ -381,4 +381,9 @@ public sealed partial class Settings : Page
         var selectedItem = (ComboBoxItem)((ComboBox)sender).SelectedItem;
         Common.Setting.audioRate = selectedItem.Tag.ToString();
     }
+
+    private async void CheckCanaryChannelButton_Click(object sender, RoutedEventArgs e)
+    {
+        UpdateManager.GetUserCanaryChannelAvailability(canaryEmail.Text);
+    }
 }

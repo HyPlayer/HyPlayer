@@ -886,7 +886,7 @@
                                                           HorizontalAlignment="Left">
                                                     <ComboBoxItem Content="Microsoft Store"></ComboBoxItem>
                                                     <ComboBoxItem Content="App Center"></ComboBoxItem>
-                                                    <ComboBoxItem Content="App Center(Canary)"></ComboBoxItem>
+                                                    <ComboBoxItem Content="App Center(Canary)" IsEnabled="{x:Bind hyplayer:Common.Setting.canaryChannelAvailability,Mode=OneWay}"></ComboBoxItem>
                                                 </ComboBox>
                                                 <Button Margin="8,0,0,0" VerticalAlignment="Top" x:Name="CheckUpdate"
                                                         Click="CheckUpdate_Click" Content="检查" />
@@ -895,8 +895,9 @@
                                         </Grid>
                                     </Border>
                                 </Grid>
-
-
+                                    <TextBlock Text="内测通道邮箱:"/>
+                                    <TextBox x:Name="canaryEmail"/>
+                                    <Button Content="检查Canary通道可用性" Click="CheckCanaryChannelButton_Click" HorizontalAlignment="Right"/>
                             </StackPanel>
                             <StackPanel Spacing="12" x:Name="DeveloperPanel" Grid.Row="1" MaxWidth="800"
                                         DoubleTapped="StackPanel_DoubleTapped">

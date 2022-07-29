@@ -57,7 +57,7 @@ public static class UpdateManager
         var versions =
             JArray.Parse(
                 await versionsGetter.DownloadStringTaskAsync(
-                    $"https://api.appcenter.ms/v0.1/apps/kengwang/HyPlayer/distribution_groups/{(isCanary ? "Canary" : "Public")}/releases"));
+                    $"https://api.appcenter.ms/v0.1/apps/kengwang/HyPlayer/distribution_groups/{(isCanary ? "Canary" : "Release")}/releases"));
         if (versions?.First?["version"] == null) return new RemoteVersionResult();
         return new RemoteVersionResult()
         {
@@ -109,5 +109,24 @@ public static class UpdateManager
             contentDialog.PrimaryButtonText = "取消";
             await contentDialog.ShowAsync();
         }
+    }
+    public static async Task GetUserCanaryChannelAvailability(string userEmail)
+    {
+        var usersGetter = new WebClient();
+        usersGetter.Headers.Add("X-API-Token", "50f1aa0749d70814b0e91493444759885119a58d");
+        var users = JArray.Parse(
+                await usersGetter.DownloadStringTaskAsync(
+                    "https://api.appcenter.ms/v0.1/apps/kengwang/HyPlayer/distribution_groups/Canary/members"));
+        foreach (var user in users)
+        {
+            if (user["email"].ToString() == userEmail)
+            {
+                Common.AddToTeachingTipLists("Canary版本已解锁","感谢您参加HyPlayer测试\nCanary版本现已解锁\n请到“关于”页面检测更新");
+                Common.Setting.canaryChannelAvailability = true;
+                return;
+            }  
+        }
+        Common.Setting.canaryChannelAvailability = false;
+        Common.AddToTeachingTipLists("未搜索到邮箱","未搜索到此邮箱,请检查此邮箱是否是申请内测通道所使用的邮箱。\nCanary通道未能解锁");
     }
 }

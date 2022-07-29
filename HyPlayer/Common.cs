@@ -990,6 +990,15 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        public bool canaryChannelAvailability
+        {
+            get => GetSettings("canaryChannelAvailability", false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["canaryChannelAvailability"] = value;
+                OnPropertyChanged();
+            }
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
