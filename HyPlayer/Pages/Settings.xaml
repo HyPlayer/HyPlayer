@@ -169,7 +169,7 @@
                                         <ComboBoxItem Content="无损 (VIP)" Tag="999000" />
                                         <ComboBoxItem Content="Hi-Res (VIP)" Tag="9999000" />
                                     </ComboBox>
-                                    <TextBlock Text="在线播放音质" Grid.Row="1" HorizontalAlignment="Left"
+                                    <TextBlock Text="歌曲下载音质" Grid.Row="1" HorizontalAlignment="Left"
                                                VerticalAlignment="Center" />
                                     <ComboBox x:Name="ComboBoxSongDownloadBr"
                                               SelectionChanged="ComboBoxSongDownloadBr_SelectionChanged" Grid.Row="1"
