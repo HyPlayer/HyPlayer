@@ -9,3 +9,7 @@
 * 更新了评论页面
 * 新增开发者
 * 支持选择AppCenter Canary更新通道
+* 允许在系统版本为Windows 11以及手动设置的情况下停用Windows 10 开始菜单磁贴功能
+* 修复ExpandedUseAcrylic Text错误
+* 优化了窄屏下的界面
+* 修复“歌曲下载音质”被命名为“在线播放音质”的错误
