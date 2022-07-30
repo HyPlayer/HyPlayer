@@ -39,7 +39,8 @@ jobs:
         msbuild-architecture: "x64"
 
     - run: |
-        msbuild HyPlayer.sln /t:rebuild /p:Platform="x64" /p:Configuration="Debug"
+        dotnet restore
+        dotnet build HyPlayer.sln /p:AppxBundlePlatforms="x64"  /p:AppxBundle=Auto  /p:PackageCertificateThumbprint=""  /p:UapAppxPackageBuildMode=SideloadOnly /p:platform="x64" /p:configuration="Debug" /p:VisualStudioVersion="17.0"
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
