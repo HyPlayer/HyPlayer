@@ -439,7 +439,7 @@ public sealed partial class PlayBar
             {
                 IconPrevious.Glyph = "\uE7E8";
                 IconPlayType.Glyph = "\uE107";
-                FlyoutPlayRollType.Text = "私人 FM";
+                FlyoutPlayRollType.Text = "我不喜欢";
             }
             else
             {
