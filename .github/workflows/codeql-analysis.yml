@@ -34,9 +34,8 @@ jobs:
         languages: ${{ matrix.language }}
         
 
-    #- run: |
-    #   echo "Build Application"
-    #   ./location_of_script_within_repo/buildscript.sh
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v2
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
