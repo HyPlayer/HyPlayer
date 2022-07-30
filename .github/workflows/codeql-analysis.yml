@@ -21,6 +21,9 @@ jobs:
       fail-fast: false
       matrix:
         language: [ 'csharp' ]
+        configuration: [Debug]
+    env:
+      Solution_Name: HyPlayer.sln
 
     steps:
     - name: Checkout repository
@@ -33,14 +36,25 @@ jobs:
       with:
         languages: ${{ matrix.language }}
    
+     # Install the .NET Core workload
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: 6.0.x
+   
     - name: setup-msbuild
       uses: microsoft/setup-msbuild@v1.1
       with:
         msbuild-architecture: "x64"
+        
+
+    - name: Restore the application
+      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration
+      env:
+        Configuration: ${{ matrix.configuration }}
 
     - run: |
-        dotnet restore
-        dotnet build HyPlayer.sln /p:AppxBundlePlatforms="x64"  /p:AppxBundle=Auto  /p:PackageCertificateThumbprint=""  /p:UapAppxPackageBuildMode=SideloadOnly /p:platform="x64" /p:configuration="Debug" /p:VisualStudioVersion="17.0"
+        msbuild HyPlayer.sln /p:AppxBundlePlatforms="x64"  /p:AppxBundle=Auto  /p:PackageCertificateThumbprint=""  /p:UapAppxPackageBuildMode=SideloadOnly /p:Platform="x64" /p:Configuration="Debug" /p:VisualStudioVersion="17.0"
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
