@@ -63,8 +63,8 @@ public static class UpdateManager
         {
             UpdateSource = isCanary ? UpdateSource.AppCenterCanary : UpdateSource.AppCenter,
             IsMandatory = versions.First["mandatory_update"]?.ToString()=="True",
-            Version = Version.Parse(versions.First?["version"]?.ToString() ?? ""),
-            UpdateLog = $"更新发布于 {versions.First["uploaded_at"]}"
+            Version = Version.Parse(versions.First["version"]?.ToString() ?? ""),
+            UpdateLog = $"更新发布于 {TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(versions.First["uploaded_at"].ToString()), TimeZoneInfo.Local)}"
         };
     }
 
