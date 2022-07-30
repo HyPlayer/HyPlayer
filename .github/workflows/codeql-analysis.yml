@@ -32,10 +32,14 @@ jobs:
       uses: github/codeql-action/init@v2
       with:
         languages: ${{ matrix.language }}
-        
+   
+    - name: setup-msbuild
+      uses: microsoft/setup-msbuild@v1.1
+      with:
+        msbuild-architecture: "x64"
 
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@v2
+    - run: |
+        msbuild HyPlayer.sln /p:Configuration="x64"
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
