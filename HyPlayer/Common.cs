@@ -973,7 +973,7 @@ namespace HyPlayer
 
         public int UpdateSource
         {
-            get => GetSettings("UpdateSource", 0);
+            get => GetSettings("UpdateSource", 1);
             set
             {
                 ApplicationData.Current.LocalSettings.Values["UpdateSource"] = value;

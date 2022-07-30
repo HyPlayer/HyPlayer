@@ -117,16 +117,16 @@ public static class UpdateManager
         var users = JArray.Parse(
                 await usersGetter.DownloadStringTaskAsync(
                     "https://api.appcenter.ms/v0.1/apps/kengwang/HyPlayer/distribution_groups/Canary/members"));
-        foreach (var user in users)
+        if (users.Where(t => t["email"].ToString() == userEmail).FirstOrDefault() != null)
         {
-            if (user["email"].ToString() == userEmail)
-            {
-                Common.AddToTeachingTipLists("Canary版本已解锁","感谢您参加HyPlayer测试\nCanary版本现已解锁\n请到“关于”页面检测更新");
-                Common.Setting.canaryChannelAvailability = true;
-                return;
-            }  
+            Common.AddToTeachingTipLists("Canary版本已解锁", "感谢您参加HyPlayer测试\nCanary版本现已解锁\n请到“关于”页面检测更新");
+            Common.Setting.canaryChannelAvailability = true;
         }
-        Common.Setting.canaryChannelAvailability = false;
-        Common.AddToTeachingTipLists("未搜索到邮箱","未搜索到此邮箱,请检查此邮箱是否是申请内测通道所使用的邮箱。\nCanary通道未能解锁");
+        else
+        {
+            Common.Setting.canaryChannelAvailability = false;
+            Common.AddToTeachingTipLists("未搜索到邮箱", "未搜索到此邮箱,请检查此邮箱是否是申请内测通道所使用的邮箱。\nCanary通道未能解锁");
+            if (Common.Setting.UpdateSource == 2) Common.Setting.UpdateSource = 1;
+        } 
     }
 }
