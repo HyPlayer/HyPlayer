@@ -17,20 +17,13 @@ public static class UpdateManager
         AppCenter,
         AppCenterCanary
     }
-
-    public static string[] UpdateSourceLink =
-    {
-        "ms-windows-store://pdp/?productid=9N5TD916686K",
-        "https://install.appcenter.ms/users/kengwang/apps/hyplayer/distribution_groups/public",
-        "https://install.appcenter.ms/users/kengwang/apps/hyplayer/distribution_groups/canary"
-    };
-
     public class RemoteVersionResult
     {
         public UpdateSource UpdateSource { get; set; }
         public bool IsMandatory { get; set; }
         public Version? Version { get; set; }
         public string? UpdateLog { get; set; }
+        public string DownloadLink { get; set; }
     }
 
     public static async Task<RemoteVersionResult> GetVersionFromStore()
@@ -46,7 +39,8 @@ public static class UpdateManager
                 ? null
                 : new Version(update.Package.Id.Version.Major, update.Package.Id.Version.Minor,
                     update.Package.Id.Version.Build, update.Package.Id.Version.Revision),
-            UpdateLog = update?.Package.Description
+            UpdateLog = update?.Package.Description,
+            DownloadLink = "ms-windows-store://pdp/?productid=9N5TD916686K"
         };
     }
 
@@ -55,16 +49,17 @@ public static class UpdateManager
         var versionsGetter = new WebClient();
         versionsGetter.Headers.Add("X-API-Token", "50f1aa0749d70814b0e91493444759885119a58d");
         var versions =
-            JArray.Parse(
+            JObject.Parse(
                 await versionsGetter.DownloadStringTaskAsync(
-                    $"https://api.appcenter.ms/v0.1/apps/kengwang/HyPlayer/distribution_groups/{(isCanary ? "Canary" : "Release")}/releases"));
-        if (versions?.First?["version"] == null) return new RemoteVersionResult();
+                    $"https://api.appcenter.ms/v0.1/apps/kengwang/hyplayer/distribution_groups/{(isCanary ? "canary" : "release")}/releases/latest"));
+        if (versions?["version"] == null) return new RemoteVersionResult();
         return new RemoteVersionResult()
         {
             UpdateSource = isCanary ? UpdateSource.AppCenterCanary : UpdateSource.AppCenter,
-            IsMandatory = versions.First["mandatory_update"]?.ToString()=="True",
-            Version = Version.Parse(versions.First["version"]?.ToString() ?? ""),
-            UpdateLog = $"更新发布于 {TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(versions.First["uploaded_at"].ToString()), TimeZoneInfo.Local)}"
+            IsMandatory = versions["mandatory_update"]?.ToString()=="True",
+            Version = Version.Parse(versions["version"]?.ToString() ?? ""),
+            UpdateLog = "更新日志:\n" + versions["release_notes"]?.ToString().Replace("* ","") + $"\n更新发布于 {TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(versions["uploaded_at"]?.ToString()), TimeZoneInfo.Local)}",
+            DownloadLink = versions["download_url"]?.ToString()
         };
     }
 
@@ -102,11 +97,11 @@ public static class UpdateManager
             ContentDialog contentDialog = new ContentDialog();
             contentDialog.Title = title;
             contentDialog.Content = message;
-            contentDialog.SecondaryButtonText = "更新";
-            contentDialog.SecondaryButtonClick += async (_, _) =>
-                await Windows.System.Launcher.LaunchUriAsync(
-                    new Uri(UpdateSourceLink[Common.Setting.UpdateSource]));
-            contentDialog.PrimaryButtonText = "取消";
+                contentDialog.PrimaryButtonText = "更新";
+                contentDialog.PrimaryButtonClick += async (_, _) =>
+                    await Windows.System.Launcher.LaunchUriAsync(
+                        new Uri(remoteResult.DownloadLink));
+            contentDialog.CloseButtonText = "取消";
             await contentDialog.ShowAsync();
         }
     }
