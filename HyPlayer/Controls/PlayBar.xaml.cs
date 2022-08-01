@@ -639,7 +639,6 @@ public sealed partial class PlayBar
     private void SliderAudioRate_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
         HyPlayList.PlayerOutgoingVolume = e.NewValue / 100;
-        //if (Common.PageExpandedPlayer != null) Common.PageExpandedPlayer.SliderVolumn.Value = e.NewValue;
     }
 
     private void BtnMute_OnCllick(object sender, RoutedEventArgs e)

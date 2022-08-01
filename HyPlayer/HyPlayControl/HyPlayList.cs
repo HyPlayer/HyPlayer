@@ -91,6 +91,7 @@ public static class HyPlayList
         {
             _playerOutgoingVolume = value;
             Player.Volume = _playerOutgoingVolume;
+            Common.Setting.Volume = (int)(value * 100);
             OnVolumeChange?.Invoke(_playerOutgoingVolume);
         }
     }
