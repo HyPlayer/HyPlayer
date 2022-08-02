@@ -236,7 +236,6 @@ internal class DownloadObject
             if (Status == 2) return;
             Status = 2;
             completedFired = true;
-            Wc_DownloadFileCompleted();
         }
     }
 
@@ -355,8 +354,9 @@ internal class DownloadObject
             fullpath = downloadOperation.ResultFile.Path;
             //downloadOperation.IsRandomAccessRequired = true;
             var process = new Progress<DownloadOperation>(Wc_DownloadProgressChanged);
-            _ = downloadOperation.StartAsync().AsTask(process);
             DownloadStartToast(filename);
+            await downloadOperation.StartAsync().AsTask(process);
+            Wc_DownloadFileCompleted();
         }
         catch (Exception ex)
         {
