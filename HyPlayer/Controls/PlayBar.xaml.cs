@@ -39,7 +39,7 @@ namespace HyPlayer.Controls;
 
 public sealed partial class PlayBar
 {
-    private SolidColorBrush BackgroundElayBrush;
+    private SolidColorBrush BackgroundElayBrush = new(Colors.Transparent);
     private bool canslide;
 
     private double FadeInOutStartTime;
