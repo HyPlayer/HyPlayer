@@ -64,11 +64,11 @@
                 x:Name="CheckBoxLoadRomaji"
                 Grid.Column="0"
                 Checked="LoadRomaji"
-                Content="加载罗马音" />
+                Content="加载罗马字" />
             <Button
                 Grid.Column="1"
                 Click="SelectRomaji"
-                Content="选择罗马音" />
+                Content="选择罗马字" />
         </Grid>
         <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
@@ -92,7 +92,7 @@
                                 &#x27A4;<Bold>{$TRANSLATION}</Bold>
                                 : 翻译<LineBreak />
                                 &#x27A4;<Bold>{$ROMAJI}</Bold>
-                                : 罗马音<LineBreak />
+                                : 罗马字<LineBreak />
                                 &#x27A4;<Bold>{$TIME}</Bold>
                                 : 时间<LineBreak />
                                 &#x27A4;<Bold>{$NEWLINE}</Bold>

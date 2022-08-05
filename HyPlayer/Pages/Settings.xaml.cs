@@ -48,6 +48,7 @@ public sealed partial class Settings : Page
         isbyprogram = true;
         InitializeComponent();
         RomajiStatus.Text = (Common.KawazuConv == null ? "请下载资源文件" : "可以转换");
+        ButtonDownloadRomaji.Visibility = Common.KawazuConv != null ? Visibility.Visible : Visibility.Collapsed;
         ComboBoxSongBr.SelectedIndex = ComboBoxSongBr.Items.IndexOf(ComboBoxSongBr.Items.First(t =>
                 ((ComboBoxItem)t).Tag.ToString() == Common.Setting.audioRate));
         ComboBoxSongDownloadBr.SelectedIndex = ComboBoxSongDownloadBr.Items.IndexOf(ComboBoxSongDownloadBr.Items.First(t =>
@@ -153,12 +154,13 @@ public sealed partial class Settings : Page
         }
         catch (Exception e)
         {
-            RomajiStatus.Text = "罗马音文件解压错误: " + e.Message;
+            RomajiStatus.Text = "罗马字文件解压错误: " + e.Message;
         }
         finally
         {
             RomajiStatus.Text =
                 (Common.KawazuConv == null ? "请重新下载资源文件" : "可以转换");
+            ButtonDownloadRomaji.Visibility = Common.KawazuConv != null ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 

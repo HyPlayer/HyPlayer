@@ -334,7 +334,7 @@
                             Name="ToggleButtonSound"
                             HorizontalContentAlignment="Left"
                             Click="ToggleButtonSound_OnClick"
-                            Text="转罗马音">
+                            Text="转罗马字">
                             <ToggleMenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xE986;" />
                             </ToggleMenuFlyoutItem.Icon>
