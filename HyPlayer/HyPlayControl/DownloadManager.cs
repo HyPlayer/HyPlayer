@@ -129,6 +129,18 @@ internal class DownloadObject
                 file.Tag.Performers = ncsong.Artist.Select(t => t.name).ToArray();
                 file.Tag.Title = ncsong.songname;
                 file.Tag.Track = (uint)(ncsong.TrackId == -1 ? ncsong.Order + 1 : ncsong.TrackId);
+                
+                // 获取 Disc Id
+                var regexRet = Regex.Match(ncsong.CDName ?? "01", "[0-9]+");
+                if (regexRet.Success)
+                {
+                    file.Tag.Disc = uint.Parse(regexRet.Value);
+                }
+                else
+                {
+                    file.Tag.Disc = 1;
+                }
+                
                 //file.Save();
 
                 Picture pic;
