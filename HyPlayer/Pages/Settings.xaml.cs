@@ -51,7 +51,7 @@ public sealed partial class Settings : Page
         ComboBoxSongBr.SelectedIndex = ComboBoxSongBr.Items.IndexOf(ComboBoxSongBr.Items.First(t =>
                 ((ComboBoxItem)t).Tag.ToString() == Common.Setting.audioRate));
         ComboBoxSongDownloadBr.SelectedIndex = ComboBoxSongDownloadBr.Items.IndexOf(ComboBoxSongDownloadBr.Items.First(t =>
-                ((ComboBoxItem)t).Tag.ToString() == Common.Setting.audioRate));
+                ((ComboBoxItem)t).Tag.ToString() == Common.Setting.downloadAudioRate));
         TextBoxXREALIP.Text = ApplicationData.Current.LocalSettings.Values["xRealIp"] != null
             ? ApplicationData.Current.LocalSettings.Values["xRealIp"].ToString()
             : "";
@@ -379,7 +379,7 @@ public sealed partial class Settings : Page
     {
         if (isbyprogram) return;
         var selectedItem = (ComboBoxItem)((ComboBox)sender).SelectedItem;
-        Common.Setting.audioRate = selectedItem.Tag.ToString();
+        Common.Setting.downloadAudioRate = selectedItem.Tag.ToString();
     }
 
     private async void CheckCanaryChannelButton_Click(object sender, RoutedEventArgs e)
