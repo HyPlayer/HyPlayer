@@ -61,6 +61,7 @@ internal class DownloadObject
             if (Common.Setting.writedownloadFileInfo)
                 await WriteInfoToFile().ConfigureAwait(false);
             DownloadManager.WritingTasks.RemoveAll(t => t.IsCompleted);
+            Status = 2;
         }));
 
         /*
@@ -112,6 +113,8 @@ internal class DownloadObject
     {
         return Task.Run(async () =>
         {
+            var streamAbscraction = new UwpStorageFileAbstraction(downloadOperation.ResultFile);
+            var file = File.Create(streamAbscraction);
             try
             {
                 /*
@@ -119,8 +122,6 @@ internal class DownloadObject
                     (await downloadOperation.GetResultRandomAccessStreamReference().OpenReadAsync()).AsStreamForRead(),
                     await downloadOperation.ResultFile.OpenStreamForWriteAsync(), downloadOperation.ResultFile.Name);
                     */
-                var streamAbscraction = new UwpStorageFileAbstraction(downloadOperation.ResultFile);
-                var file = File.Create(streamAbscraction);
                 if (Common.Setting.write163Info)
                     The163KeyHelper.TrySetMusicInfo(file.Tag, dontuseme);
                 //写相关信息
@@ -128,7 +129,18 @@ internal class DownloadObject
                 file.Tag.Performers = ncsong.Artist.Select(t => t.name).ToArray();
                 file.Tag.Title = ncsong.songname;
                 file.Tag.Track = (uint)(ncsong.TrackId == -1 ? ncsong.Order + 1 : ncsong.TrackId);
-                file.Tag.Disc = uint.Parse(Regex.Match(ncsong.CDName, "[0-9]+").Value);
+                
+                // 获取 Disc Id
+                var regexRet = Regex.Match(ncsong.CDName ?? "01", "[0-9]+");
+                if (regexRet.Success)
+                {
+                    file.Tag.Disc = uint.Parse(regexRet.Value);
+                }
+                else
+                {
+                    file.Tag.Disc = 1;
+                }
+                
                 //file.Save();
 
                 Picture pic;
@@ -153,7 +165,6 @@ internal class DownloadObject
                     {
                         outputStream = httpStream;
                     }
-
                     pic = new Picture(ByteVector.FromStream(outputStream.AsStreamForRead()));
                     DownloadManager.AlbumPicturesCache[ncsong.Album.id] = pic;
                 }
@@ -168,13 +179,16 @@ internal class DownloadObject
                 };
                 file.Tag.Pictures[0].MimeType = "image/jpeg";
                 file.Tag.Pictures[0].Description = "cover.jpg";
-                file.Save();
-                streamAbscraction.Release();
             }
             catch (Exception ex)
             {
                 Common.ErrorMessageList.Add("写入音乐信息时出现错误" + ex.Message);
                 Common.AddToTeachingTipLists("写入音乐信息时出现错误", ex.Message);
+            }
+            finally
+            {
+                file.Save();
+                streamAbscraction.Release();
             }
         });
     }
@@ -234,7 +248,6 @@ internal class DownloadObject
         if (HavedSize == TotalSize)
         {
             if (Status == 2) return;
-            Status = 2;
             completedFired = true;
         }
     }
