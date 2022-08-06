@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -17,6 +18,7 @@ using Microsoft.Toolkit.Uwp.Helpers;
 using NeteaseCloudMusicApi;
 using TagLib;
 using File = TagLib.File;
+using Windows.Web.Http;
 
 #endregion
 
@@ -113,7 +115,7 @@ internal class DownloadObject
     {
         return Task.Run(async () =>
         {
-            var streamAbscraction = new UwpStorageFileAbstraction(downloadOperation.ResultFile);
+            using var streamAbscraction = new UwpStorageFileAbstraction(downloadOperation.ResultFile);
             var file = File.Create(streamAbscraction);
             try
             {
@@ -129,7 +131,7 @@ internal class DownloadObject
                 file.Tag.Performers = ncsong.Artist.Select(t => t.name).ToArray();
                 file.Tag.Title = ncsong.songname;
                 file.Tag.Track = (uint)(ncsong.TrackId == -1 ? ncsong.Order + 1 : ncsong.TrackId);
-                
+
                 // 获取 Disc Id
                 var regexRet = Regex.Match(ncsong.CDName ?? "01", "[0-9]+");
                 if (regexRet.Success)
@@ -140,31 +142,32 @@ internal class DownloadObject
                 {
                     file.Tag.Disc = 1;
                 }
-                
+
                 //file.Save();
 
                 Picture pic;
                 if (!DownloadManager.AlbumPicturesCache.ContainsKey(ncsong.Album.id))
                 {
-                    var ras = RandomAccessStreamReference.CreateFromUri(new Uri(ncsong.Album.cover + "?param=" +
-                        StaticSource
-                            .PICSIZE_DOWNLOAD_ALBUMCOVER));
-                    var httpStream = await ras.OpenReadAsync();
-                    IRandomAccessStream outputStream;
-                    if (httpStream.ContentType != "image/pjpeg")
-                    {
-                        var bitmapInput =
-                            await (await BitmapDecoder.CreateAsync(CodecIds[httpStream.ContentType], httpStream))
-                                .GetSoftwareBitmapAsync();
-                        outputStream = new InMemoryRandomAccessStream();
-                        var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
-                        encoder.SetSoftwareBitmap(bitmapInput);
-                        await encoder.FlushAsync();
-                    }
-                    else
-                    {
-                        outputStream = httpStream;
-                    }
+                    using HttpClient httpClient = new HttpClient();
+                    var responseMessage = await httpClient.GetAsync(new Uri(ncsong.Album.cover + "?param=" +
+                                                                            StaticSource.PICSIZE_DOWNLOAD_ALBUMCOVER));
+                    using IRandomAccessStream outputStream = new InMemoryRandomAccessStream();
+                    using IRandomAccessStream inputStream = new InMemoryRandomAccessStream();
+                    await responseMessage.Content.WriteToStreamAsync(inputStream);
+                    SoftwareBitmap softwareBitmap;
+                    const uint FILE_HEADER_CAPACITY = 10;
+                    var buffer = new Windows.Storage.Streams.Buffer(FILE_HEADER_CAPACITY);
+                    inputStream.Seek(0);
+                    inputStream.ReadAsync(buffer, FILE_HEADER_CAPACITY, InputStreamOptions.None);
+
+                    string pictureMime = GetMIMEFromFileHeader(buffer);
+                    inputStream.Seek(0);
+                    BitmapDecoder decoder = await BitmapDecoder.CreateAsync(CodecIds[pictureMime], inputStream);
+                    softwareBitmap = await decoder.GetSoftwareBitmapAsync();
+                    BitmapEncoder encoder =
+                        await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
+                    encoder.SetSoftwareBitmap(softwareBitmap);
+                    await encoder.FlushAsync();
                     pic = new Picture(ByteVector.FromStream(outputStream.AsStreamForRead()));
                     DownloadManager.AlbumPicturesCache[ncsong.Album.id] = pic;
                 }
@@ -188,9 +191,36 @@ internal class DownloadObject
             finally
             {
                 file.Save();
-                streamAbscraction.Release();
             }
         });
+    }
+
+    string GetMIMEFromFileHeader(Windows.Storage.Streams.Buffer buffer)
+    {
+        if (buffer.Length < 10) return "image/pjpeg";
+        var byteArray = buffer.ToArray();
+        if (byteArray[1] == 0x89 && byteArray[1] == 0x50 && byteArray[2] == 0x4e &&
+            byteArray[3] == 0x47)
+        {
+            // PNG
+            return "image/x-png";
+        }
+
+        if (byteArray[6] == 0x4a && byteArray[7] == 0x46 && byteArray[8] == 0x49 &&
+            byteArray[9] == 0x46)
+        {
+            // JPEG
+            return "image/pjpeg";
+        }
+
+        if (byteArray[0] == 0x52 && byteArray[1] == 0x49 && byteArray[2] == 0x46 &&
+            byteArray[3] == 0x46 && byteArray[8] == 0x57)
+        {
+            // WEBP
+            return "image/webp";
+        }
+
+        return "image/pjpeg";
     }
 
     private Task DownloadLyric()
@@ -481,7 +511,7 @@ internal static class DownloadManager
     }
 }
 
-public class UwpStorageFileAbstraction : File.IFileAbstraction
+public class UwpStorageFileAbstraction : File.IFileAbstraction, IDisposable
 {
     private readonly IStorageFile file;
 
@@ -515,11 +545,9 @@ public class UwpStorageFileAbstraction : File.IFileAbstraction
     {
     }
 
-    public void Release()
+    public void Dispose()
     {
-        WriteStream.Close();
-        WriteStream.Dispose();
-        ReadStream.Close();
-        ReadStream.Dispose();
+        ReadStream?.Dispose();
+        WriteStream?.Dispose();
     }
 }
