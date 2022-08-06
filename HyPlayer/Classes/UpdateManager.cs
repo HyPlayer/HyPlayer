@@ -20,6 +20,7 @@ public static class UpdateManager
         AppCenter,
         AppCenterCanary
     }
+
     public class RemoteVersionResult
     {
         public UpdateSource UpdateSource { get; set; }
@@ -46,6 +47,7 @@ public static class UpdateManager
             DownloadLink = "ms-windows-store://pdp/?productid=9N5TD916686K"
         };
     }
+
     class LatestApplicationUpdate
     {
         public string Version { get; set; }
@@ -55,24 +57,27 @@ public static class UpdateManager
         public string UpdateLog { get; set; }
         public int Size { get; set; }
     }
+
     public static async Task<RemoteVersionResult> GetVersionFromAppCenter(bool isCanary)
     {
         var versionsGetter = new HttpClient();
         var versionsResponse = await versionsGetter.GetAsync(
-                new Uri($"https://hyplayer.kengwang.com.cn/appDistributor/AppCenter/{(isCanary ? 2 : 3)}/latest"));
+            new Uri($"https://hyplayer.kengwang.com.cn/appDistributor/AppCenter/{(isCanary ? 2 : 3)}/latest"));
         if (!versionsResponse.IsSuccessStatusCode)
         {
-            Common.AddToTeachingTipLists("获取更新失败",await versionsResponse.Content.ReadAsStringAsync());
+            Common.AddToTeachingTipLists("获取更新失败", await versionsResponse.Content.ReadAsStringAsync());
             throw new HttpRequestException("获取更新失败");
         }
 
-        var versionResp = JsonConvert.DeserializeObject<LatestApplicationUpdate>(await versionsResponse.Content.ReadAsStringAsync());
+        var versionResp =
+            JsonConvert.DeserializeObject<LatestApplicationUpdate>(await versionsResponse.Content.ReadAsStringAsync());
         return new RemoteVersionResult
         {
             UpdateSource = isCanary ? UpdateSource.AppCenterCanary : UpdateSource.AppCenter,
             IsMandatory = versionResp?.Mandatory ?? false,
             Version = Version.Parse(versionResp?.Version ?? ""),
-            DownloadLink = versionResp?.DownloadUrl
+            DownloadLink = versionResp?.DownloadUrl,
+            UpdateLog = versionResp?.UpdateLog ?? ""
         };
     }
 
@@ -110,14 +115,15 @@ public static class UpdateManager
             ContentDialog contentDialog = new ContentDialog();
             contentDialog.Title = title;
             contentDialog.Content = message;
-                contentDialog.PrimaryButtonText = "更新";
-                contentDialog.PrimaryButtonClick += async (_, _) =>
-                    await Windows.System.Launcher.LaunchUriAsync(
-                        new Uri(remoteResult.DownloadLink));
+            contentDialog.PrimaryButtonText = "更新";
+            contentDialog.PrimaryButtonClick += async (_, _) =>
+                await Windows.System.Launcher.LaunchUriAsync(
+                    new Uri(remoteResult.DownloadLink));
             contentDialog.CloseButtonText = "取消";
             await contentDialog.ShowAsync();
         }
     }
+
     public static async Task GetUserCanaryChannelAvailability(string userEmail)
     {
         var usersGetter = new HttpClient();
@@ -132,6 +138,6 @@ public static class UpdateManager
             Common.Setting.canaryChannelAvailability = false;
             Common.AddToTeachingTipLists("未搜索到邮箱", "未搜索到此邮箱,请检查此邮箱是否是申请内测通道所使用的邮箱。\nCanary通道未能解锁");
             if (Common.Setting.UpdateSource == 2) Common.Setting.UpdateSource = 1;
-        } 
+        }
     }
 }
