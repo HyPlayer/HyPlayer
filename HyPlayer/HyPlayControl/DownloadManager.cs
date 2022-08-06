@@ -152,8 +152,18 @@ internal class DownloadObject
                     var httpStream = await responseMessage.Content.ReadAsInputStreamAsync();
                     SoftwareBitmap softwareBitmap;
                     IRandomAccessStream inputStream = new InMemoryRandomAccessStream();
-                    httpStream.AsStreamForRead().CopyTo(inputStream.AsStreamForWrite());
+                    await httpStream.AsStreamForRead().CopyToAsync(inputStream.AsStreamForWrite());
                     IRandomAccessStream outputStream=new InMemoryRandomAccessStream();
+                    BinaryReader binaryReader = new BinaryReader(inputStream.AsStreamForRead());
+                    string fileFormat = "";
+                    for (int i = 0; i < 4; i++)
+                    {
+                        fileFormat += binaryReader.ReadByte().ToString();
+                    }
+                    var coverDecoderID = new Guid();
+                    if (fileFormat.Contains("FFD8FF")) coverDecoderID = BitmapDecoder.JpegDecoderId;
+                    if (fileFormat.Contains("89504E47")) coverDecoderID = BitmapDecoder.PngDecoderId;
+                    if (fileFormat.Contains("52494646")) coverDecoderID = BitmapDecoder.WebpDecoderId;
                     BitmapDecoder decoder = await BitmapDecoder.CreateAsync(inputStream);
                     softwareBitmap = await decoder.GetSoftwareBitmapAsync();
                     BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
