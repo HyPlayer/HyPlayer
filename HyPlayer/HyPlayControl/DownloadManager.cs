@@ -158,7 +158,7 @@ internal class DownloadObject
                     const uint FILE_HEADER_CAPACITY = 10;
                     var buffer = new Windows.Storage.Streams.Buffer(FILE_HEADER_CAPACITY);
                     inputStream.Seek(0);
-                    inputStream.ReadAsync(buffer, FILE_HEADER_CAPACITY, InputStreamOptions.None);
+                    await inputStream.ReadAsync(buffer, FILE_HEADER_CAPACITY, InputStreamOptions.None);
 
                     string pictureMime = GetMIMEFromFileHeader(buffer);
                     inputStream.Seek(0);
@@ -199,7 +199,7 @@ internal class DownloadObject
     {
         if (buffer.Length < 10) return "image/pjpeg";
         var byteArray = buffer.ToArray();
-        if (byteArray[1] == 0x89 && byteArray[1] == 0x50 && byteArray[2] == 0x4e &&
+        if (byteArray[0] == 0x89 && byteArray[1] == 0x50 && byteArray[2] == 0x4e &&
             byteArray[3] == 0x47)
         {
             // PNG
@@ -219,8 +219,8 @@ internal class DownloadObject
             // WEBP
             return "image/webp";
         }
-
-        return "image/pjpeg";
+        
+        throw new ArgumentOutOfRangeException();
     }
 
     private Task DownloadLyric()
