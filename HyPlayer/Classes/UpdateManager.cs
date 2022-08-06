@@ -1,11 +1,14 @@
 using System;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.Services.Store;
 using Windows.UI.Xaml.Controls;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using HttpClient = Windows.Web.Http.HttpClient;
 
 namespace HyPlayer.Classes;
 
@@ -43,23 +46,33 @@ public static class UpdateManager
             DownloadLink = "ms-windows-store://pdp/?productid=9N5TD916686K"
         };
     }
-
+    class LatestApplicationUpdate
+    {
+        public string Version { get; set; }
+        public DateTime Date { get; set; }
+        public bool Mandatory { get; set; }
+        public string DownloadUrl { get; set; }
+        public string UpdateLog { get; set; }
+        public int Size { get; set; }
+    }
     public static async Task<RemoteVersionResult> GetVersionFromAppCenter(bool isCanary)
     {
-        var versionsGetter = new WebClient();
-        versionsGetter.Headers.Add("X-API-Token", "50f1aa0749d70814b0e91493444759885119a58d");
-        var versions =
-            JObject.Parse(
-                await versionsGetter.DownloadStringTaskAsync(
-                    $"https://api.appcenter.ms/v0.1/apps/kengwang/hyplayer/distribution_groups/{(isCanary ? "canary" : "release")}/releases/latest"));
-        if (versions?["version"] == null) return new RemoteVersionResult();
-        return new RemoteVersionResult()
+        var versionsGetter = new HttpClient();
+        var versionsResponse = await versionsGetter.GetAsync(
+                new Uri($"https://hyplayer.kengwang.com.cn/appDistributor/AppCenter/{(isCanary ? 2 : 3)}/latest"));
+        if (!versionsResponse.IsSuccessStatusCode)
+        {
+            Common.AddToTeachingTipLists("获取更新失败",await versionsResponse.Content.ReadAsStringAsync());
+            throw new HttpRequestException("获取更新失败");
+        }
+
+        var versionResp = JsonConvert.DeserializeObject<LatestApplicationUpdate>(await versionsResponse.Content.ReadAsStringAsync());
+        return new RemoteVersionResult
         {
             UpdateSource = isCanary ? UpdateSource.AppCenterCanary : UpdateSource.AppCenter,
-            IsMandatory = versions["mandatory_update"]?.ToString()=="True",
-            Version = Version.Parse(versions["version"]?.ToString() ?? ""),
-            UpdateLog = "更新日志:\n" + versions["release_notes"]?.ToString().Replace("* ","") + $"\n更新发布于 {TimeZoneInfo.ConvertTimeFromUtc(DateTime.Parse(versions["uploaded_at"]?.ToString()), TimeZoneInfo.Local)}",
-            DownloadLink = versions["download_url"]?.ToString()
+            IsMandatory = versionResp?.Mandatory ?? false,
+            Version = Version.Parse(versionResp?.Version ?? ""),
+            DownloadLink = versionResp?.DownloadUrl
         };
     }
 
@@ -107,12 +120,9 @@ public static class UpdateManager
     }
     public static async Task GetUserCanaryChannelAvailability(string userEmail)
     {
-        var usersGetter = new WebClient();
-        usersGetter.Headers.Add("X-API-Token", "50f1aa0749d70814b0e91493444759885119a58d");
-        var users = JArray.Parse(
-                await usersGetter.DownloadStringTaskAsync(
-                    "https://api.appcenter.ms/v0.1/apps/kengwang/HyPlayer/distribution_groups/Canary/members"));
-        if (users.Where(t => t["email"].ToString() == userEmail).FirstOrDefault() != null)
+        var usersGetter = new HttpClient();
+        var userResp = await usersGetter.GetAsync(new Uri($"https://hyplayer.kengwang.com.cn/user/email/{userEmail}"));
+        if (userResp.IsSuccessStatusCode)
         {
             Common.AddToTeachingTipLists("Canary版本已解锁", "感谢您参加HyPlayer测试\nCanary版本现已解锁\n请到“关于”页面检测更新");
             Common.Setting.canaryChannelAvailability = true;
