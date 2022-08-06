@@ -17,6 +17,7 @@ using Microsoft.Toolkit.Uwp.Helpers;
 using NeteaseCloudMusicApi;
 using TagLib;
 using File = TagLib.File;
+using Windows.Web.Http;
 
 #endregion
 
@@ -146,27 +147,22 @@ internal class DownloadObject
                 Picture pic;
                 if (!DownloadManager.AlbumPicturesCache.ContainsKey(ncsong.Album.id))
                 {
-                    var ras = RandomAccessStreamReference.CreateFromUri(new Uri(ncsong.Album.cover + "?param=" +
-                        StaticSource
-                            .PICSIZE_DOWNLOAD_ALBUMCOVER));
-                    var httpStream = await ras.OpenReadAsync();
-                    IRandomAccessStream outputStream;
-                    if (httpStream.ContentType != "image/pjpeg")
-                    {
-                        var bitmapInput =
-                            await (await BitmapDecoder.CreateAsync(CodecIds[httpStream.ContentType], httpStream))
-                                .GetSoftwareBitmapAsync();
-                        outputStream = new InMemoryRandomAccessStream();
-                        var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
-                        encoder.SetSoftwareBitmap(bitmapInput);
-                        await encoder.FlushAsync();
-                    }
-                    else
-                    {
-                        outputStream = httpStream;
-                    }
+                    HttpClient httpClient=new HttpClient();
+                    var responseMessage = await httpClient.GetAsync(new Uri(ncsong.Album.cover + "?param=" +StaticSource.PICSIZE_DOWNLOAD_ALBUMCOVER));
+                    var httpStream = await responseMessage.Content.ReadAsInputStreamAsync();
+                    SoftwareBitmap softwareBitmap;
+                    IRandomAccessStream inputStream = new InMemoryRandomAccessStream();
+                    httpStream.AsStreamForRead().CopyTo(inputStream.AsStreamForWrite());
+                    IRandomAccessStream outputStream=new InMemoryRandomAccessStream();
+                    BitmapDecoder decoder = await BitmapDecoder.CreateAsync(inputStream);
+                    softwareBitmap = await decoder.GetSoftwareBitmapAsync();
+                    BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
+                    encoder.SetSoftwareBitmap(softwareBitmap);
+                    await encoder.FlushAsync();
                     pic = new Picture(ByteVector.FromStream(outputStream.AsStreamForRead()));
                     DownloadManager.AlbumPicturesCache[ncsong.Album.id] = pic;
+                    inputStream.Dispose();
+                    outputStream.Dispose();
                 }
                 else
                 {
