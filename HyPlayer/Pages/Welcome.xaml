@@ -7,46 +7,36 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
-    <Page.Background>
-        <LinearGradientBrush StartPoint="0.1,0.1" EndPoint="1,1.4">
-            <GradientStop Offset="0.85" Color="#FF33A2D7" />
-            <GradientStop Offset="0.5" Color="Transparent" />
-        </LinearGradientBrush>
-    </Page.Background>
-
-    <controls:WrapPanel
-        HorizontalAlignment="Center"
-        VerticalAlignment="Center"
-        HorizontalSpacing="100">
-        <StackPanel
-            Margin="0,100,0,0"
-            HorizontalAlignment="Stretch"
-            Orientation="Vertical"
-            Spacing="30">
-            <TextBlock
-                VerticalAlignment="Center"
-                FontSize="56"
-                FontWeight="Bold"
-                Text="欢迎使用 HyPlayer"
-                TextAlignment="Center" />
-            <TextBlock
-                x:Name="TBHINT"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                FontSize="28"
-                Text="点击侧边栏登录解锁更多功能"
-                TextAlignment="Center" />
-            <TextBlock
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                FontSize="28"
-                Text="推荐您在登录后进入设置进行个性化"
-                TextAlignment="Center" />
+    <Grid>
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="18"
+                    Margin="0,0,0,64">
+            <controls:ImageEx
+                x:Name="ImageE"
+                Width="128"
+                Height="128"
+                Source="Assets/icon.png" />
+            <StackPanel VerticalAlignment="Center" 
+                        Spacing="8">
+                <TextBlock x:Name="TBHINT"
+                           Text="欢迎使用Hyplayer!" 
+                           Style="{StaticResource TitleTextBlockStyle}"/>
+                <TextBlock Text="推荐您在登录后进入设置进行个性化" 
+                           Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                           FontSize="18"/>
+                <Button x:Name="LoginBtn" 
+                        Click="LoginBtn_Click">
+                    <StackPanel Orientation="Horizontal" 
+                                Spacing="8">
+                        <FontIcon Glyph="&#xE0AD;" 
+                                  FontSize="14"/>
+                        <TextBlock Text="登录"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
         </StackPanel>
-        <controls:ImageEx
-            x:Name="ImageE"
-            Width="350"
-            Height="350"
-            Source="Assets/icon.png" />
-    </controls:WrapPanel>
+
+    </Grid>
 </Page>
