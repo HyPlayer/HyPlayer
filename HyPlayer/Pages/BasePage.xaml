@@ -207,7 +207,7 @@
             </Grid>
         </muxc:NavigationView>
         <!--  登录弹窗  -->
-        <ContentDialog x:Name="DialogLogin" Width="400">
+        <ContentDialog x:Name="DialogLogin" Width="400" x:FieldModifier="Public">
             <StackPanel Orientation="Vertical">
                 <Button
                     x:Name="ButtonCloseLoginForm"

@@ -1,5 +1,7 @@
 ﻿#region
 
+using System;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 
@@ -30,5 +32,13 @@ public sealed partial class Welcome : Page
     {
         base.OnNavigatedFrom(e);
         ImageE.Source = null;
+    }
+
+    private async void LoginBtn_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+    {
+        var frame = Window.Current.Content as Frame;
+        var mainpage = frame.Content as MainPage;
+        var content = mainpage.MainFrame.Content as BasePage;
+        await content.DialogLogin.ShowAsync();
     }
 }
