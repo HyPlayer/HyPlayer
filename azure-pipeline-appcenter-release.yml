@@ -104,4 +104,4 @@ steps:
 - task: PowerShell@2
   inputs:
     targetType: 'inline'
-    script: 'Invoke-WebRequest ''https://hyplayer.kengwang.com.cn/channel/2/broadcastUpdate/$(hyplayerAPI.secretKey)'''
+    script: 'Invoke-WebRequest ''https://hyplayer.kengwang.com.cn/channel/3/broadcastUpdate/$(hyplayerAPI.secretKey)'''
