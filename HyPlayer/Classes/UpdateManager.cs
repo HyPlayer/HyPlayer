@@ -62,7 +62,7 @@ public static class UpdateManager
     {
         var versionsGetter = new HttpClient();
         var versionsResponse = await versionsGetter.GetAsync(
-            new Uri($"https://hyplayer.kengwang.com.cn/appDistributor/AppCenter/{(isCanary ? 2 : 3)}/latest"));
+            new Uri($"https://hyplayer.kengwang.com.cn/Channel/{(isCanary ? 2 : 3)}/latest"));
         if (!versionsResponse.IsSuccessStatusCode)
         {
             Common.AddToTeachingTipLists("获取更新失败", await versionsResponse.Content.ReadAsStringAsync());
