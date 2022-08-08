@@ -48,7 +48,7 @@ public sealed partial class Settings : Page
         isbyprogram = true;
         InitializeComponent();
         RomajiStatus.Text = (Common.KawazuConv == null ? "请下载资源文件" : "可以转换");
-        ButtonDownloadRomaji.Visibility = Common.KawazuConv != null ? Visibility.Visible : Visibility.Collapsed;
+        ButtonDownloadRomaji.Visibility = Common.KawazuConv == null ? Visibility.Visible : Visibility.Collapsed;
         ComboBoxSongBr.SelectedIndex = ComboBoxSongBr.Items.IndexOf(ComboBoxSongBr.Items.First(t =>
                 ((ComboBoxItem)t).Tag.ToString() == Common.Setting.audioRate));
         ComboBoxSongDownloadBr.SelectedIndex = ComboBoxSongDownloadBr.Items.IndexOf(ComboBoxSongDownloadBr.Items.First(t =>
@@ -110,6 +110,7 @@ public sealed partial class Settings : Page
         try
         {
             await dl.StartAsync().AsTask(process);
+            if (dl.Progress.TotalBytesToReceive > 5000 ) OnRomajiDownloadDone(dl);
         }
         catch (Exception E)
         {
@@ -125,10 +126,7 @@ public sealed partial class Settings : Page
             return;
         }
 
-        RomajiStatus.Text = $"正在下载资源文件 ({obj.Progress.BytesReceived * 100 / obj.Progress.TotalBytesToReceive:D}%)";
-        if (obj.Progress.BytesReceived == obj.Progress.TotalBytesToReceive &&
-            obj.Progress.TotalBytesToReceive > 5000)
-            OnRomajiDownloadDone(obj);
+        RomajiStatus.Text = $"正在下载资源文件 ({obj.Progress.BytesReceived * 100 / obj.Progress.TotalBytesToReceive:D}%)";            
     }
 
     private async Task OnRomajiDownloadDone(DownloadOperation obj)
