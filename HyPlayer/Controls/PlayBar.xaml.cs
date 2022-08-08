@@ -743,6 +743,7 @@ public sealed partial class PlayBar
             anim1 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongTitle");
             anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
             anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
+            anim4 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongAlbum");
             anim3.Configuration = new DirectConnectedAnimationConfiguration();
             if (anim2 != null) anim2.Configuration = new DirectConnectedAnimationConfiguration();
 
@@ -752,6 +753,7 @@ public sealed partial class PlayBar
                 anim3?.TryStart(TbSingerName);
                 anim1?.TryStart(TbSongName);
                 anim2?.TryStart(AlbumImage);
+                anim4?.TryStart(TbAlbumName);
             }
             catch
             {

@@ -243,7 +243,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 LyricBox.Margin = new Thickness(15);
                 break;
         }
-        
+
         if (WindowMode == ExpandedWindowMode.LyricOnly)
             LyricWidth = nowwidth - 30;
         else
@@ -253,6 +253,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             else
                 LyricWidth = nowwidth - 30;
         }
+
         needRedesign++;
         realclick = true;
     }
@@ -627,11 +628,14 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             if (Common.Setting.expandAnimation &&
                 Common.BarPlayBar.GridSongInfoContainer.Visibility == Visibility.Visible)
             {
-                ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TextBlockSongTitle);
-                if (ImageAlbum.Visibility == Visibility.Visible)
+                if (TextBlockSongTitle.ActualSize.X != 0 && TextBlockSongTitle.ActualSize.Y != 0)
+                    ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongTitle", TextBlockSongTitle);
+                if (ImageAlbum.ActualSize.X != 0 && ImageAlbum.ActualSize.Y != 0)
                     ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongImg", ImageAlbum);
-
-                ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TextBlockSinger);
+                if (TextBlockSinger.ActualSize.X != 0 && TextBlockSinger.ActualSize.Y != 0)
+                    ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongArtist", TextBlockSinger);
+                if (TextBlockAlbum.ActualSize.X != 0 && TextBlockAlbum.ActualSize.Y != 0)
+                    ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("SongAlbum", TextBlockAlbum);
             }
         }
         catch
