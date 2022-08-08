@@ -64,7 +64,6 @@ public sealed partial class Settings : Page
         var version = packageId.Version;
         VersionCode.Text = string.Format("Version {0}.{1}.{2}.{3}  (Package ID: {4})", version.Major, version.Minor,
             version.Build, version.Revision, packageId.Name);
-        if (version.Revision != 0) VersionCode.Text += " Preview";
         var deviceInfo = new EasClientDeviceInformation();
         DeviceInfo.Text = deviceInfo.Id.ToString();
         _lyricItem = new LyricItem(new SongLyric
