@@ -491,10 +491,12 @@ public sealed partial class PlayBar
 
             if (HyPlayList.NowPlayingItem?.PlayItem == null) return;
             canslide = false;
+            SliderProgress.Minimum = 0;
+            SliderProgress.Maximum = HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds;
             SliderProgress.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
             canslide = true;
             TextBlockNowTime.Text =
-                HyPlayList.Player.PlaybackSession.Position.ToString(@"hh\:mm\:ss");
+                HyPlayList.Player.PlaybackSession.Position.ToString(@"m\:ss");
             PlayStateIcon.Glyph =
                 HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
                     ? "\uEDB4"
@@ -502,13 +504,7 @@ public sealed partial class PlayBar
 
             TbSingerName.Content = HyPlayList.NowPlayingItem.PlayItem.ArtistString;
             TbSongName.Text = HyPlayList.NowPlayingItem.PlayItem.Name;
-            TbAlbumName.Content = HyPlayList.NowPlayingItem.PlayItem.AlbumString;
-
-            canslide = false;
-            SliderProgress.Minimum = 0;
-            SliderProgress.Maximum = HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds;
-            SliderProgress.Value = 0;
-            canslide = true;
+            TbAlbumName.Content = HyPlayList.NowPlayingItem.PlayItem.AlbumString;            
 
             // 新版随机播放算法
             realSelectSong = false;
@@ -744,6 +740,7 @@ public sealed partial class PlayBar
             anim2 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongImg");
             anim3 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongArtist");
             anim4 = ConnectedAnimationService.GetForCurrentView().GetAnimation("SongAlbum");
+            anim4.Configuration = new DirectConnectedAnimationConfiguration();
             anim3.Configuration = new DirectConnectedAnimationConfiguration();
             if (anim2 != null) anim2.Configuration = new DirectConnectedAnimationConfiguration();
 
