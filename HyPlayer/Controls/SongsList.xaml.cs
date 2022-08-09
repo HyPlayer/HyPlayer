@@ -352,7 +352,7 @@ public sealed partial class SongsList : UserControl, IDisposable
         if (SongContainer.SelectionMode == ListViewSelectionMode.Single)
         {
             IsManualSelect = false;
-            SongContainer.SelectedIndex = int.Parse(element.Tag.ToString());
+            SongContainer.SelectedItem=element.DataContext;
             IsManualSelect = true;
         }
 
