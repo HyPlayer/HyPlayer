@@ -31,7 +31,7 @@ steps:
 
 - task: NuGetToolInstaller@1.208.1
 
-- task: NuGetCommand@2
+- task: NuGetCommand@2.208.1
   inputs:
     restoreSolution: '$(solution)'
 

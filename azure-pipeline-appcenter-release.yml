@@ -29,7 +29,7 @@ steps:
     versionSpec: 4.4.1
     checkLatest: true
 
-- task: NuGetCommand@2
+- task: NuGetCommand@2.208.1
   displayName: 'NuGet restore **\*.sln'
   inputs:
     restoreSolution: '$(solution)'
