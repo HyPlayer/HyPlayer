@@ -79,7 +79,7 @@ steps:
     ArtifactName: 'azure-$(VERSION)'
   condition: succeededOrFailed()
 
-- task: ArchiveFiles@2
+- task: ArchiveFiles@2.206.0
   displayName: 'Archive Appx Package'
   inputs:
     rootFolderOrFile: '$(Build.ArtifactStagingDirectory)\AppxPackages'
