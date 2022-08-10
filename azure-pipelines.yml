@@ -29,7 +29,7 @@ steps:
   inputs:
     script: 'dotnet --list-sdks'
 
-- task: NuGetToolInstaller@1
+- task: NuGetToolInstaller@1.208.1
 
 - task: NuGetCommand@2
   inputs:

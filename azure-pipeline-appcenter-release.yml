@@ -23,7 +23,7 @@ steps:
 - checkout: self
   submodules: true
 
-- task: NuGetToolInstaller@0
+- task: NuGetToolInstaller@1.208.1
   displayName: 'Use NuGet 4.4.1'
   inputs:
     versionSpec: 4.4.1
