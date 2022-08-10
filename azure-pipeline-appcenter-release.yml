@@ -72,7 +72,7 @@ steps:
    Move-Item $SYMPATH $(Agent.HomeDirectory)/$(VERSION).appxsym
   displayName: 'PowerShell Script'
 
-- task: PublishBuildArtifacts@1
+- task: PublishBuildArtifacts@1.200.0
   displayName: 'Publish artifact: drop'
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)\AppxPackages'
