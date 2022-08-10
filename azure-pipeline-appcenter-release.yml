@@ -34,7 +34,7 @@ steps:
   inputs:
     restoreSolution: '$(solution)'
 
-- task: UseDotNet@2
+- task: UseDotNet@2.207.2
   displayName: 'Use .NET 6'
   inputs:
     version: 6.0.x
