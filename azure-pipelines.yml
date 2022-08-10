@@ -64,7 +64,7 @@ steps:
   inputs:
     PathtoPublish: '$(build.artifactstagingdirectory)'
 
-- task: ArchiveFiles@2
+- task: ArchiveFiles@2.206.0
   inputs:
     rootFolderOrFile: '$(build.artifactstagingdirectory)/AppxPackages'
     includeRootFolder: true
