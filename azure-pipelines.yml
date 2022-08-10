@@ -41,7 +41,7 @@ steps:
   inputs:
     secureFile: '$(signingCert.secureFilePath)'
  
-- task: VSBuild@1
+- task: VSBuild@1.208.0
   inputs:
     solution: '$(solution)'
     vsVersion: '17.0'
