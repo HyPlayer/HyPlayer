@@ -50,7 +50,7 @@ steps:
    Set-Content -Path **\Package.appxmanifest -Value $MANIFEST.OuterXml
   displayName: 'Set Version'
 
-- task: DownloadSecureFile@1
+- task: DownloadSecureFile@1.200.0
   name: certificate
   displayName: 'Download CA certificate'
   inputs:
