@@ -25,7 +25,7 @@ steps:
     version: '6.0.x'
 
 # Add a Command To List the Current .NET SDKs (Sanity Check)
-- task: CmdLine@2
+- task: CmdLine@2.201.1
   inputs:
     script: 'dotnet --list-sdks'
 
