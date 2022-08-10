@@ -35,7 +35,7 @@ steps:
   inputs:
     restoreSolution: '$(solution)'
 
-- task: DownloadSecureFile@1
+- task: DownloadSecureFile@1.200.0
   name: certificate
   displayName: 'Download CA certificate'
   inputs:
