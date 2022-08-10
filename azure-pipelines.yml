@@ -73,7 +73,7 @@ steps:
     replaceExistingArchive: true
     verbose: true
 
-- task: GitHubRelease@1
+- task: GitHubRelease@1.201.0
   inputs:
     gitHubConnection: 'github connection 1'
     repositoryName: 'HyPlayer/HyPlayer'
