@@ -56,7 +56,7 @@ steps:
   inputs:
     secureFile: '$(signingCert.secureFilePath)'
 
-- task: VSBuild@1
+- task: VSBuild@1.208.0
   displayName: 'Build solution HyPlayer.sln'
   inputs:
     solution: '$(solution)'
