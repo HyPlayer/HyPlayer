@@ -224,6 +224,17 @@
                 Spacing="15"
                 Visibility="Collapsed">
                 <Button
+                    x:Name="Btn_Collapse"
+                    Width="40"
+                    Height="40"
+                    Padding="-5"
+                    Click="ButtonCollapse_OnClick"
+                    CornerRadius="20"
+                    Background="Transparent"
+                    BorderBrush="Transparent">
+                    <FontIcon Glyph="&#xE972;" />
+                </Button>
+                <Button
                     x:Name="Btn_Sub"
                     Width="40"
                     Height="40"
@@ -600,7 +611,7 @@
                 Padding="-5"
                 HorizontalAlignment="Center"
                 Background="Transparent"
-                BorderBrush="Transparent"            
+                BorderBrush="Transparent"
                 CornerRadius="20"
                 Flyout="{StaticResource VolumeFlyout}">
                 <FontIcon x:Name="BtnVolIcon" Glyph="&#xE15D;" />
