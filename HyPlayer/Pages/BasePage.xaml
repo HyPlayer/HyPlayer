@@ -8,6 +8,7 @@
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
     NavigationCacheMode="Disabled"
+    xmlns:controls1="using:HyPlayer.Controls"
     mc:Ignorable="d">
 
     <Page.Resources>
@@ -207,140 +208,143 @@
             </Grid>
         </muxc:NavigationView>
         <!--  登录弹窗  -->
-        <ContentDialog x:Name="DialogLogin" Width="400" x:FieldModifier="Public">
-            <StackPanel Orientation="Vertical">
+        <ContentDialog x:Name="DialogLogin" x:FieldModifier="Public" >
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="300"/>
+                </Grid.ColumnDefinitions>
                 <Button
                     x:Name="ButtonCloseLoginForm"
+                    Grid.Column="1"
+                    Canvas.ZIndex="1"
+                    Padding="8"
                     HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
                     Background="Transparent"
-                    Click="ButtonCloseLoginForm_Click"
-                    Style="{StaticResource ButtonRevealStyle}">
+                    BorderBrush="Transparent"
+                    Click="ButtonCloseLoginForm_Click">
                     <FontIcon
                         FontSize="15"
                         Glyph="&#xE106;" />
                 </Button>
-                <Pivot
-                    x:Name="LoginPivot"
-                    Width="300"
-                    SelectionChanged="Pivot_SelectionChanged">
-                    <PivotItem Header="密码登录">
-                        <StackPanel Orientation="Vertical">
-                            <Image Height="100" Source="/Assets/icon.png" />
-                            <TextBlock
-                                Padding="0,3,0,10"
-                                HorizontalAlignment="Center"
-                                FontSize="20"
-                                Text="登录到网易云音乐" />
-                            <TextBox
-                                x:Name="TextBoxAccount"
-                                Margin="5"
-                                KeyDown="TextBoxAccount_OnKeyDown"
-                                PlaceholderText="手机 / 邮箱" />
-                            <PasswordBox
-                                x:Name="TextBoxPassword"
-                                Margin="5"
-                                KeyDown="TextBoxPassword_OnKeyDown"
-                                PlaceholderText="密码" />
-                            <Button
-                                Name="ButtonLogin"
-                                Margin="0,15,0,15"
-                                HorizontalAlignment="Stretch"
-                                Click="ButtonLogin_OnClick"
-                                Content="登录"
-                                Style="{StaticResource AccentButtonStyle}" />
-                        </StackPanel>
-                    </PivotItem>
-                    <PivotItem Header="扫码登录">
-                        <StackPanel Orientation="Vertical" Spacing="15">
-                            <Image
-                                x:Name="QrContainer"
-                                Height="200"
-                                Margin="0,46,0,46"
-                                Source="/Assets/icon.png"
-                                Tapped="LoadQr" />
-                            <Button
-                                x:Name="BtnScaleQrCode"
-                                HorizontalAlignment="Center"
-                                Click="BtnScaleQrCode_Click"
-                                Content="放大二维码"
-                                Style="{StaticResource ButtonRevealStyle}" />
-                        </StackPanel>
-                    </PivotItem>
-                </Pivot>
-                <muxc:InfoBar
-                    x:Name="InfoBarLoginHint"
-                    Title="登录代表你同意相关条款"
-                    IsClosable="False"
-                    IsOpen="True" />
-                <Grid Margin="0,5,0,0" RowSpacing="5">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition />
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
-                    <Button
-                        Grid.Column="0"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        Content="第三方账号登录">
-                        <Button.Flyout>
-                            <Flyout>
-                                <StackPanel
-                                    Height="50"
-                                    Orientation="Horizontal"
-                                    Spacing="10">
-                                    <Button
-                                        x:Name="QQLogin"
-                                        MinWidth="48"
-                                        MinHeight="48"
-                                        Click="ThirdPartyLogin_Click"
-                                        CornerRadius="5"
-                                        Style="{StaticResource ButtonRevealStyle}"
-                                        Tag="QQ">
-                                        <Button.Content>
-                                            <Image Source="/Assets/ThirdPartyIcons/QQ.png" Stretch="Fill" />
-                                        </Button.Content>
-                                    </Button>
-                                    <Button
-                                        x:Name="WXLogin"
-                                        MinWidth="48"
-                                        MinHeight="48"
-                                        Click="ThirdPartyLogin_Click"
-                                        CornerRadius="5"
-                                        Style="{StaticResource ButtonRevealStyle}"
-                                        Tag="WX">
-                                        <Button.Content>
-                                            <Image Source="/Assets/ThirdPartyIcons/WX.png" Stretch="Fill" />
-                                        </Button.Content>
-                                    </Button>
-                                    <Button
-                                        x:Name="WBLogin"
-                                        MinWidth="48"
-                                        MinHeight="48"
-                                        Click="ThirdPartyLogin_Click"
-                                        CornerRadius="5"
-                                        Style="{StaticResource ButtonRevealStyle}"
-                                        Tag="WB">
-                                        <Button.Content>
-                                            <Image Source="/Assets/ThirdPartyIcons/SinaWB.png" Stretch="Fill" />
-                                        </Button.Content>
-                                    </Button>
-                                </StackPanel>
-                            </Flyout>
-                        </Button.Flyout>
-                    </Button>
-                    <Button
-                        x:Name="BtnLoginHelp"
-                        Grid.Column="1"
-                        HorizontalAlignment="Right"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        Click="BtnLoginHelp_Click">
-                        无法登录?
-                    </Button>
+                <Grid Grid.Column="0">
+                    <Image Height="100" Source="/Assets/icon.png" />
                 </Grid>
+                <Grid Grid.Column="1" Margin="12,0,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <controls1:PivotView>
+                        <controls1:PivotEx>
+                            <PivotItem Header="密码登录">
+                                <Grid Margin="0,48,0,0">
+                                    <StackPanel Orientation="Vertical" Spacing="12">
+                                        <TextBox
+                                            x:Name="TextBoxAccount"
+                                            KeyDown="TextBoxAccount_OnKeyDown"
+                                            PlaceholderText="手机 / 邮箱" />
+                                        <PasswordBox
+                                            x:Name="TextBoxPassword"
+                                            KeyDown="TextBoxPassword_OnKeyDown"
+                                            PlaceholderText="密码" />
+                                        <Grid>
+                                            <TextBlock Text="登录代表你同意相关条款" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" VerticalAlignment="Center"/>
+                                            <Button
+                                                Name="ButtonLogin"
+                                                HorizontalAlignment="Right"
+                                                Click="ButtonLogin_OnClick"
+                                                Content="登录"
+                                                Style="{StaticResource AccentButtonStyle}" />
+                                        </Grid>
 
+                                    </StackPanel>
+                                </Grid>
+                            </PivotItem>
+                            <PivotItem Header="扫码登录" Tapped="LoadQr">
+                                <Grid Margin="0,36,0,0">
+                                    <Image                                      
+                                        x:Name="QrContainer"
+                                        Height="160"
+                                        Margin="0,12,0,0"
+                                        HorizontalAlignment="Left"
+                                        Source="/Assets/icon.png"
+                                        Tapped="LoadQr" />
+                                    <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Spacing="8" Margin="0,12,0,0">
+                                        <Button Tapped="LoadQr">
+                                            <StackPanel Spacing="14" Orientation="Horizontal">
+                                                <FontIcon Glyph="&#xE149;" FontSize="14"/>
+                                                <TextBlock Text="刷新"/>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button
+                                            x:Name="BtnScaleQrCode"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Bottom"
+                                            Content="查看大图">
+                                            <Button.Flyout>
+                                                <Flyout Placement="Left">
+                                                    <Image
+                                                    x:Name="QrContainer2"
+                                                    Height="320"
+                                                    Margin="0,12,0,0"
+                                                    HorizontalAlignment="Center"
+                                                    Source="{x:Bind QrContainer.Source,Mode=OneWay}"/>
+                                                </Flyout>
+                                            </Button.Flyout>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </PivotItem>
+                        </controls1:PivotEx>
+                    </controls1:PivotView>
 
-            </StackPanel>
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" Width="400" HorizontalAlignment="Stretch" Margin="3,12,0,0" >
+                        <Button
+                            x:Name="QQLogin"
+                            ToolTipService.ToolTip="使用QQ登录"
+                            Height="32" Padding="2"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            Click="ThirdPartyLogin_Click"
+                            Tag="QQ">
+                            <Image Source="/Assets/ThirdPartyIcons/QQ.png" Stretch="Fill" />
+                        </Button>
+                        <Button
+                            x:Name="WXLogin"
+                            ToolTipService.ToolTip="使用微信登录"
+                            Height="32" Padding="4"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            Click="ThirdPartyLogin_Click"
+                            Tag="WX">
+                            <Image Source="/Assets/ThirdPartyIcons/WX.png" Stretch="Fill" />
+                        </Button>
+                        <Button
+                            x:Name="WBLogin"
+                            ToolTipService.ToolTip="使用微博登录"
+                            Height="32" Padding="5"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            Click="ThirdPartyLogin_Click"
+                            CornerRadius="5"
+                            Tag="WB">
+                            <Button.Content>
+                                <Image Source="/Assets/ThirdPartyIcons/SinaWB.png" Stretch="Fill" />
+                            </Button.Content>
+                        </Button>
+                        <HyperlinkButton Content="无法登录?" NavigateUri="https://blog.kengwang.com.cn/hyplayer-login-help" HorizontalAlignment="Right"/>
+                    </StackPanel>
+                    <muxc:InfoBar
+                        Grid.Row="1"
+                        x:Name="InfoBarLoginHint"
+                        IsClosable="True"
+                        IsOpen="False" />
+                </Grid>
+            </Grid>
+
         </ContentDialog>
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
