@@ -479,8 +479,7 @@ public sealed partial class BasePage : Page
         if (nowitem.Tag.ToString() == "PageMe" && !Common.Logined)
         {
             foreach (Cookie ncapiCookie in Common.ncapi.Cookies) ncapiCookie.Expired = true; //清一遍Cookie防止出错
-            InfoBarLoginHint.IsOpen = true;
-            await DialogLogin.ShowAsync();
+            await DialogLogin.ShowAsync();         
             return;
         }
 
@@ -665,8 +664,7 @@ public sealed partial class BasePage : Page
                 }
                 else if (res["code"].ToString() == "801")
                 {
-                    InfoBarLoginHint.Title = "请扫描上方二维码登录";
-                    //
+                    InfoBarLoginHint.Title = "请扫描上方二维码登录";                 
                 }
                 else if (res["code"].ToString() == "803")
                 {
@@ -736,8 +734,6 @@ public sealed partial class BasePage : Page
     {
         DialogLogin.Width = 550;
         DialogLogin.Height = Window.Current.Bounds.Height;
-        LoginPivot.Width = 520;
-        LoginPivot.Height = 550;
         QrContainer.Height = 500;
         QrContainer.Width = QrContainer.Height;
     }
@@ -797,10 +793,6 @@ public sealed partial class BasePage : Page
         }
     }
 
-    private void BtnLoginHelp_Click(object sender, RoutedEventArgs e)
-    {
-        _ = Launcher.LaunchUriAsync(new Uri(@"https://blog.kengwang.com.cn/hyplayer-login-help"));
-    }
 
     private void TheTeachingTip_OnCloseButtonClick(TeachingTip sender, object args)
     {
