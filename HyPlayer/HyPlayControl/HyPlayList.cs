@@ -730,8 +730,7 @@ public static class HyPlayList
 
         Player_SourceChanged(null, null);
         MediaSystemControls.IsEnabled = true;
-        if (ms != null)
-            Player.Source = ms;
+        Player.Source = ms;
         //Player.Play();
     }
 
