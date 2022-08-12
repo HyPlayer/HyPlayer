@@ -728,7 +728,7 @@
             <VisualStateGroup>
                 <VisualState>
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="1024" />
+                        <AdaptiveTrigger MinWindowWidth="1160" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="TbSongName.FontSize" Value="22" />
