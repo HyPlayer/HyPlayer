@@ -192,7 +192,6 @@ public sealed partial class Settings : Page
         {
             StorageApplicationPermissions.FutureAccessList.AddOrReplace("downloadFolder", folder);
             Common.Setting.downloadDir = folder.Path;
-            TextBoxDownloadDir.Text = Common.Setting.downloadDir;
         }
     }
 
@@ -206,7 +205,6 @@ public sealed partial class Settings : Page
         {
             StorageApplicationPermissions.FutureAccessList.AddOrReplace("searchingFolder", folder);
             Common.Setting.searchingDir = folder.Path;
-            TextBoxSearchingDir.Text = Common.Setting.searchingDir;
         }
     }
 

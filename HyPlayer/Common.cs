@@ -700,7 +700,7 @@ namespace HyPlayer
             {
                 try
                 {
-                    return GetSettings("searchingDir", KnownFolders.MusicLibrary.Path ?? downloadDir);
+                    return GetSettings("searchingDir", downloadDir);
                 }
                 catch
                 {

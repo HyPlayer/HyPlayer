@@ -482,7 +482,8 @@
                                             <TextBox
                                                 x:Name="TextBoxDownloadDir"
                                                 Width="256"
-                                                Text="{x:Bind hyplayer:Common.Setting.downloadDir, Mode=TwoWay}" />
+                                                Text="{x:Bind hyplayer:Common.Setting.downloadDir, Mode=OneWay}" 
+                                                IsReadOnly="True" />
                                             <Button
                                                 x:Name="ButtonDownloadSelect"
                                                 Click="ButtonDownloadSelect_OnClick"
@@ -496,7 +497,8 @@
                                             <TextBox
                                                 x:Name="TextBoxSearchingDir"
                                                 Width="256"
-                                                Text="{x:Bind hyplayer:Common.Setting.searchingDir, Mode=TwoWay}" />
+                                                Text="{x:Bind hyplayer:Common.Setting.searchingDir, Mode=OneWay}"
+                                                IsReadOnly="True"/>
                                             <Button
                                                 x:Name="ButtonSearchingSelect"
                                                 Click="ButtonSearchingSelect_OnClick"
