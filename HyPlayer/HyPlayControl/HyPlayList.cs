@@ -730,8 +730,16 @@ public static class HyPlayList
 
         Player_SourceChanged(null, null);
         MediaSystemControls.IsEnabled = true;
-        Player.Source = ms;
-        //Player.Play();
+        try
+        {
+            await ms.OpenAsync();
+            Player.Source = ms;
+        }
+        catch (Exception e)
+        {
+            Player.Source = null;
+            PlayerOnMediaFailed(Player, e.Message);
+        }
     }
 
     public static async void Player_SourceChanged(MediaPlayer sender, object args)
