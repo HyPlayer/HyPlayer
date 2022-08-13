@@ -752,6 +752,8 @@
                         <Setter Target="AlbumImageHover.Width" Value="NaN" />
                         <Setter Target="PlayProgress.Margin" Value="70,-5,10,0" />
                         <Setter Target="MainBtnsGrid.Margin" Value="50,5,0,0" />
+                        <Setter Target="TbSongTag.Visibility" Value="Visible"/>
+                        <Setter Target="SongInfoTag.Visibility" Value="Visible"/>
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState>
@@ -831,7 +833,8 @@
                         <Setter Target="TbSingerName.FontSize" Value="10" />
                         <Setter Target="TbSongName.FontSize" Value="18" />
                         <Setter Target="MainBtnsGrid.Margin" Value="-100,5,0,0" />
-
+                        <Setter Target="TbSongTag.Visibility" Value="Collapsed"/>
+                        <Setter Target="SongInfoTag.Visibility" Value="Collapsed"/>
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
