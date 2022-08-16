@@ -35,6 +35,8 @@ using Windows.Storage.Streams;
 using System.Threading.Tasks;
 using System.IO;
 using Microsoft.Toolkit.Uwp.Helpers;
+using System.Security.Cryptography;
+using System.Text;
 #endregion
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
@@ -97,10 +99,11 @@ public sealed partial class PlayBar
     public async Task RefreshTile()
     {
         if (HyPlayList.NowPlayingItem?.PlayItem == null || !Common.Setting.enableTile) return;
-        string filename = HyPlayList.NowPlayingItem.PlayItem.Album.name;
-        foreach (var InvalidPathChar in Path.GetInvalidPathChars())
+        var albumNameMD5 = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(HyPlayList.NowPlayingItem.PlayItem.Album.name));
+        StringBuilder filename = new StringBuilder();
+        foreach (var item in albumNameMD5)
         {
-           filename = filename.Replace(InvalidPathChar.ToString(),string.Empty);
+            filename.Append(item.ToString());
         }
         if (Common.Setting.saveTileBackgroundToLocalFolder&&Common.Setting.tileBackgroundAvailability) 
         {
