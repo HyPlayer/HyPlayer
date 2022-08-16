@@ -160,7 +160,7 @@ internal class DownloadObject
                     inputStream.Seek(0);
                     await inputStream.ReadAsync(buffer, FILE_HEADER_CAPACITY, InputStreamOptions.None);
 
-                    string pictureMime = GetMIMEFromFileHeader(buffer);
+                    string pictureMime = DownloadManager.GetMIMEFromFileHeader(buffer);
                     inputStream.Seek(0);
                     BitmapDecoder decoder = await BitmapDecoder.CreateAsync(CodecIds[pictureMime], inputStream);
                     softwareBitmap = await decoder.GetSoftwareBitmapAsync();
@@ -193,34 +193,6 @@ internal class DownloadObject
                 file.Save();
             }
         });
-    }
-
-    string GetMIMEFromFileHeader(Windows.Storage.Streams.Buffer buffer)
-    {
-        if (buffer.Length < 10) return "image/pjpeg";
-        var byteArray = buffer.ToArray();
-        if (byteArray[0] == 0x89 && byteArray[1] == 0x50 && byteArray[2] == 0x4e &&
-            byteArray[3] == 0x47)
-        {
-            // PNG
-            return "image/x-png";
-        }
-
-        if (byteArray[6] == 0x4a && byteArray[7] == 0x46 && byteArray[8] == 0x49 &&
-            byteArray[9] == 0x46)
-        {
-            // JPEG
-            return "image/pjpeg";
-        }
-
-        if (byteArray[0] == 0x52 && byteArray[1] == 0x49 && byteArray[2] == 0x46 &&
-            byteArray[3] == 0x46 && byteArray[8] == 0x57)
-        {
-            // WEBP
-            return "image/webp";
-        }
-        
-        throw new ArgumentOutOfRangeException();
     }
 
     private Task DownloadLyric()
@@ -508,6 +480,33 @@ internal static class DownloadManager
         }
 
         songs.ForEach(t => { DownloadLists.Add(new DownloadObject(t)); });
+    }
+    public static string GetMIMEFromFileHeader(Windows.Storage.Streams.Buffer buffer)
+    {
+        if (buffer.Length < 10) throw new ArgumentOutOfRangeException();
+        var byteArray = buffer.ToArray();
+        if (byteArray[0] == 0x89 && byteArray[1] == 0x50 && byteArray[2] == 0x4e &&
+            byteArray[3] == 0x47)
+        {
+            // PNG
+            return "image/x-png";
+        }
+
+        if (byteArray[6] == 0x4a && byteArray[7] == 0x46 && byteArray[8] == 0x49 &&
+            byteArray[9] == 0x46)
+        {
+            // JPEG
+            return "image/pjpeg";
+        }
+
+        if (byteArray[0] == 0x52 && byteArray[1] == 0x49 && byteArray[2] == 0x46 &&
+            byteArray[3] == 0x46 && byteArray[8] == 0x57)
+        {
+            // WEBP
+            return "image/webp";
+        }
+
+        throw new ArgumentOutOfRangeException();
     }
 }
 

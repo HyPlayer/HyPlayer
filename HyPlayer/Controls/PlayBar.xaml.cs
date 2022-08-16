@@ -30,7 +30,11 @@ using Microsoft.Toolkit.Uwp.Notifications;
 using NeteaseCloudMusicApi;
 using Windows.UI.StartScreen;
 using Windows.Data.Xml.Dom;
-
+using Windows.Graphics.Imaging;
+using Windows.Storage.Streams;
+using System.Threading.Tasks;
+using System.IO;
+using Microsoft.Toolkit.Uwp.Helpers;
 #endregion
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
@@ -90,15 +94,49 @@ public sealed partial class PlayBar
         HyPlayList.MediaSystemControls.UpdateTimelineProperties(timelineProperties);
     }
 
-    public void RefreshTile()
+    public async Task RefreshTile()
     {
         if (HyPlayList.NowPlayingItem?.PlayItem == null || !Common.Setting.enableTile) return;
+        string filename = HyPlayList.NowPlayingItem.PlayItem.Album.name;
+        foreach (var InvalidPathChar in Path.GetInvalidPathChars())
+        {
+           filename = filename.Replace(InvalidPathChar.ToString(),string.Empty);
+        }
+        if (Common.Setting.saveTileBackgroundToLocalFolder&&Common.Setting.tileBackgroundAvailability) 
+        {
+            StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync("LocalTileBackground", CreationCollisionOption.OpenIfExists);
+            if (!await storageFolder.FileExistsAsync(filename+ ".jpg"))
+            {
+                StorageFile storageFile = await storageFolder.CreateFileAsync(filename + ".jpg");
+                using Windows.Web.Http.HttpClient httpClient = new Windows.Web.Http.HttpClient();
+                var responseMessage = await httpClient.GetAsync(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover));
+                using IRandomAccessStream outputStream = new InMemoryRandomAccessStream();
+                using IRandomAccessStream inputStream = new InMemoryRandomAccessStream();
+                await responseMessage.Content.WriteToStreamAsync(inputStream);
+                SoftwareBitmap softwareBitmap;
+                const uint FILE_HEADER_CAPACITY = 10;
+                var buffer = new Windows.Storage.Streams.Buffer(FILE_HEADER_CAPACITY);
+                inputStream.Seek(0);
+                await inputStream.ReadAsync(buffer, FILE_HEADER_CAPACITY, InputStreamOptions.None);
+                string pictureMime = DownloadManager.GetMIMEFromFileHeader(buffer);
+                inputStream.Seek(0);
+                BitmapDecoder decoder = await BitmapDecoder.CreateAsync(inputStream);
+                softwareBitmap = await decoder.GetSoftwareBitmapAsync();
+                BitmapEncoder encoder =
+                await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
+                encoder.SetSoftwareBitmap(softwareBitmap);
+                await encoder.FlushAsync();
+                var fileStream = (await storageFile.OpenAsync(FileAccessMode.ReadWrite)).AsStream();
+                await outputStream.AsStream().CopyToAsync(fileStream);
+                fileStream.Close();
+                outputStream.Dispose();
+            } 
+        }
         var cover = Common.Setting.tileBackgroundAvailability ?  new TileBackgroundImage()
             {
-                Source = (int)HyPlayList.NowPlayingItem.ItemType > 1
-            ? HyPlayList.NowPlayingItem.PlayItem.Album.cover
-            : "https://s2.loli.net/2022/07/24/vwmY7t19uXLHPOr.png",
-                HintOverlay=50
+                Source = Common.Setting.saveTileBackgroundToLocalFolder? "ms-appdata:///local/LocalTileBackground/" + filename + ".jpg" 
+                : HyPlayList.NowPlayingItem.PlayItem.Album.cover,
+                HintOverlay = 50
             }: null;
         var tileContent = new TileContent()
         {

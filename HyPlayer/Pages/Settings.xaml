@@ -705,6 +705,12 @@
                             <CheckBox x:Name="TileBackgroundAvailability" 
                                       Content="启用磁贴背景(部分系统下可能导致磁贴不显示)" 
                                       IsChecked="{x:Bind hyplayer:Common.Setting.tileBackgroundAvailability ,Mode=TwoWay}" />
+                            <CheckBox x:Name="SaveTileBackgroundToLocalFolder" 
+                                      Content="磁贴背景缓存至本地(Windows 10需打开此项才会显示磁贴)" 
+                                      IsChecked="{x:Bind hyplayer:Common.Setting.saveTileBackgroundToLocalFolder ,Mode=TwoWay}" />
+                            <Button x:Name="ClearTileCache"
+                                    Content="清除磁贴背景缓存"
+                                    Click="ClearTileCache_Click"/>
                             <Button
                                 x:Name="RestartBtn"
                                 Margin="0,0,0,10"

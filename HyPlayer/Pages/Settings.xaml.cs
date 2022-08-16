@@ -27,6 +27,7 @@ using HyPlayer.Controls;
 using Kawazu;
 using Microsoft.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
+using Microsoft.Toolkit.Uwp.Helpers;
 
 #endregion
 
@@ -379,8 +380,14 @@ public sealed partial class Settings : Page
         Common.Setting.downloadAudioRate = selectedItem.Tag.ToString();
     }
 
-    private async void CheckCanaryChannelButton_Click(object sender, RoutedEventArgs e)
+    private void CheckCanaryChannelButton_Click(object sender, RoutedEventArgs e)
     {
         UpdateManager.GetUserCanaryChannelAvailability(canaryEmail.Text);
+    }
+
+    private async void ClearTileCache_Click(object sender, RoutedEventArgs e)
+    {
+        var storageFolder = await ApplicationData.Current.LocalFolder.TryGetItemAsync("LocalTileBackground");
+        if (storageFolder!=null) await storageFolder.DeleteAsync();
     }
 }

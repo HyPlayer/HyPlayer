@@ -990,6 +990,7 @@ namespace HyPlayer
                 if (!value)
                 {
                     tileBackgroundAvailability = false;
+                    saveTileBackgroundToLocalFolder = false;
                 }
                 OnPropertyChanged();
             }
@@ -1009,6 +1010,15 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values["tileBackgroundAvailability"] = value;
+                OnPropertyChanged();
+            }
+        }
+        public bool saveTileBackgroundToLocalFolder
+        {
+            get => GetSettings("saveTileBackgroundToLocalFolder", false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["saveTileBackgroundToLocalFolder"] = value;
                 OnPropertyChanged();
             }
         }
