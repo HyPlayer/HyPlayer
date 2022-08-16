@@ -104,7 +104,7 @@ public sealed partial class PlayBar
         }
         if (Common.Setting.saveTileBackgroundToLocalFolder&&Common.Setting.tileBackgroundAvailability) 
         {
-            StorageFolder storageFolder = await ApplicationData.Current.LocalFolder.CreateFolderAsync("LocalTileBackground", CreationCollisionOption.OpenIfExists);
+            StorageFolder storageFolder = await ApplicationData.Current.TemporaryFolder.CreateFolderAsync("LocalTileBackground", CreationCollisionOption.OpenIfExists);
             if (!await storageFolder.FileExistsAsync(filename+ ".jpg"))
             {
                 StorageFile storageFile = await storageFolder.CreateFileAsync(filename + ".jpg");
@@ -134,7 +134,7 @@ public sealed partial class PlayBar
         }
         var cover = Common.Setting.tileBackgroundAvailability ?  new TileBackgroundImage()
             {
-                Source = Common.Setting.saveTileBackgroundToLocalFolder? "ms-appdata:///local/LocalTileBackground/" + filename + ".jpg" 
+                Source = Common.Setting.saveTileBackgroundToLocalFolder? "ms-appdata:///temp/LocalTileBackground/" + filename + ".jpg" 
                 : HyPlayList.NowPlayingItem.PlayItem.Album.cover,
                 HintOverlay = 50
             }: null;

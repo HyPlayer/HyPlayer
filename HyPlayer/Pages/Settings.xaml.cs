@@ -387,7 +387,7 @@ public sealed partial class Settings : Page
 
     private async void ClearTileCache_Click(object sender, RoutedEventArgs e)
     {
-        var storageFolder = await ApplicationData.Current.LocalFolder.TryGetItemAsync("LocalTileBackground");
+        var storageFolder = await ApplicationData.Current.TemporaryFolder.TryGetItemAsync("LocalTileBackground");
         if (storageFolder!=null) await storageFolder.DeleteAsync();
     }
 }
