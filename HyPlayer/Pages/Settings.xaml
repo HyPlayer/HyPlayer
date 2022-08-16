@@ -700,8 +700,11 @@
                                 Content="输出高清图片到SMTC"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.highQualityCoverInSMTC, Mode=TwoWay}" />
                             <CheckBox x:Name="DisableTile" 
-                                      Content="停用磁贴" 
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.disableTile ,Mode=TwoWay}" />
+                                      Content="启用磁贴" 
+                                      IsChecked="{x:Bind hyplayer:Common.Setting.enableTile ,Mode=TwoWay}" />
+                            <CheckBox x:Name="TileBackgroundAvailability" 
+                                      Content="启用磁贴背景(部分系统下可能导致磁贴不显示)" 
+                                      IsChecked="{x:Bind hyplayer:Common.Setting.tileBackgroundAvailability ,Mode=TwoWay}" />
                             <Button
                                 x:Name="RestartBtn"
                                 Margin="0,0,0,10"

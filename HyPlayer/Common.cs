@@ -981,12 +981,16 @@ namespace HyPlayer
             }
         }
         
-        public bool disableTile
+        public bool enableTile
         {
-            get => GetSettings("disableTile", Environment.OSVersion.Version.Build >= 22000);
+            get => GetSettings("enableTile", Environment.OSVersion.Version.Build < 22000);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["disableTile"] = value;
+                ApplicationData.Current.LocalSettings.Values["enableTile"] = value;
+                if (!value)
+                {
+                    tileBackgroundAvailability = false;
+                }
                 OnPropertyChanged();
             }
         }
@@ -996,6 +1000,15 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values["canaryChannelAvailability"] = value;
+                OnPropertyChanged();
+            }
+        }
+        public bool tileBackgroundAvailability
+        {
+            get => GetSettings("tileBackgroundAvailability", false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["tileBackgroundAvailability"] = value;
                 OnPropertyChanged();
             }
         }

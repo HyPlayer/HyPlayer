@@ -92,10 +92,13 @@ public sealed partial class PlayBar
 
     public void RefreshTile()
     {
-        if (HyPlayList.NowPlayingItem?.PlayItem == null || Common.Setting.disableTile) return;
-        var cover = (int)HyPlayList.NowPlayingItem.ItemType > 1
+        if (HyPlayList.NowPlayingItem?.PlayItem == null || !Common.Setting.enableTile) return;
+        var cover = Common.Setting.tileBackgroundAvailability ?  new TileBackgroundImage()
+            {
+                Source = (int)HyPlayList.NowPlayingItem.ItemType > 1
             ? HyPlayList.NowPlayingItem.PlayItem.Album.cover
-            : "https://s2.loli.net/2022/07/24/vwmY7t19uXLHPOr.png";
+            : "https://s2.loli.net/2022/07/24/vwmY7t19uXLHPOr.png",
+            }: null;
         var tileContent = new TileContent()
         {
             Visual = new TileVisual()
@@ -103,13 +106,17 @@ public sealed partial class PlayBar
                 DisplayName = "HyPlayer 正在播放",
                 TileSmall = new TileBinding()
                 {
-                    Content = new TileBindingContentAdaptive()
+                    Content =new TileBindingContentAdaptive()
+                    {
+                        BackgroundImage=cover,
+                    }
                 },
                 TileMedium = new TileBinding()
                 {
                     Branding = TileBranding.NameAndLogo,
                     Content = new TileBindingContentAdaptive()
                     {
+                        BackgroundImage = cover,
                         Children =
                 {
                     new AdaptiveText()
@@ -139,6 +146,7 @@ public sealed partial class PlayBar
                     Branding = TileBranding.NameAndLogo,
                     Content = new TileBindingContentAdaptive()
                     {
+                        BackgroundImage=cover,
                         Children =
                 {
                     new AdaptiveText()
@@ -166,6 +174,7 @@ public sealed partial class PlayBar
                     Branding = TileBranding.NameAndLogo,
                     Content = new TileBindingContentAdaptive()
                     {
+                        BackgroundImage=cover,
                         Children =
                 {
                     new AdaptiveText()
