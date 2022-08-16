@@ -52,7 +52,7 @@ steps:
     msbuildArchitecture: 'x64'
     customVersion: 'latest'
 
-- task: CopyFiles@2
+- task: CopyFiles@2.209.0
   displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
   inputs:
     SourceFolder: '$(system.defaultworkingdirectory)'
