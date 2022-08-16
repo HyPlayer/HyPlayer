@@ -117,12 +117,6 @@ public sealed partial class PlayBar
                 using IRandomAccessStream inputStream = new InMemoryRandomAccessStream();
                 await responseMessage.Content.WriteToStreamAsync(inputStream);
                 SoftwareBitmap softwareBitmap;
-                const uint FILE_HEADER_CAPACITY = 10;
-                var buffer = new Windows.Storage.Streams.Buffer(FILE_HEADER_CAPACITY);
-                inputStream.Seek(0);
-                await inputStream.ReadAsync(buffer, FILE_HEADER_CAPACITY, InputStreamOptions.None);
-                string pictureMime = DownloadManager.GetMIMEFromFileHeader(buffer);
-                inputStream.Seek(0);
                 BitmapDecoder decoder = await BitmapDecoder.CreateAsync(inputStream);
                 softwareBitmap = await decoder.GetSoftwareBitmapAsync();
                 BitmapEncoder encoder =
