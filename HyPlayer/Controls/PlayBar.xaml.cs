@@ -98,6 +98,7 @@ public sealed partial class PlayBar
                 Source = (int)HyPlayList.NowPlayingItem.ItemType > 1
             ? HyPlayList.NowPlayingItem.PlayItem.Album.cover
             : "https://s2.loli.net/2022/07/24/vwmY7t19uXLHPOr.png",
+                HintOverlay=50
             }: null;
         var tileContent = new TileContent()
         {
