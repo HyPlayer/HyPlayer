@@ -28,15 +28,11 @@ using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
 using Microsoft.Toolkit.Uwp.Notifications;
 using NeteaseCloudMusicApi;
-using Windows.UI.StartScreen;
-using Windows.Data.Xml.Dom;
 using Windows.Graphics.Imaging;
 using Windows.Storage.Streams;
 using System.Threading.Tasks;
 using System.IO;
 using Microsoft.Toolkit.Uwp.Helpers;
-using System.Security.Cryptography;
-using System.Text;
 #endregion
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
@@ -99,20 +95,16 @@ public sealed partial class PlayBar
     public async Task RefreshTile()
     {
         if (HyPlayList.NowPlayingItem?.PlayItem == null || !Common.Setting.enableTile) return;
-        var albumNameMD5 = MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(HyPlayList.NowPlayingItem.PlayItem.Album.name));
-        StringBuilder filename = new StringBuilder();
-        foreach (var item in albumNameMD5)
-        {
-            filename.Append(item.ToString());
-        }
+        string fileName = (int)HyPlayList.NowPlayingItem.ItemType <= 1 ? "LocalMusic" : HyPlayList.NowPlayingItem.PlayItem.Album.id;
+        string downloadLink = (int)HyPlayList.NowPlayingItem.ItemType <= 1 ? "https://s2.loli.net/2022/07/24/vwmY7t19uXLHPOr.png" : HyPlayList.NowPlayingItem.PlayItem.Album.cover;
         if (Common.Setting.saveTileBackgroundToLocalFolder&&Common.Setting.tileBackgroundAvailability) 
         {
             StorageFolder storageFolder = await ApplicationData.Current.TemporaryFolder.CreateFolderAsync("LocalTileBackground", CreationCollisionOption.OpenIfExists);
-            if (!await storageFolder.FileExistsAsync(filename+ ".jpg"))
+            if (!await storageFolder.FileExistsAsync(fileName+ ".jpg"))
             {
-                StorageFile storageFile = await storageFolder.CreateFileAsync(filename + ".jpg");
+                StorageFile storageFile = await storageFolder.CreateFileAsync(fileName + ".jpg");
                 using Windows.Web.Http.HttpClient httpClient = new Windows.Web.Http.HttpClient();
-                var responseMessage = await httpClient.GetAsync(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover));
+                var responseMessage = await httpClient.GetAsync(new Uri(downloadLink));
                 using IRandomAccessStream outputStream = new InMemoryRandomAccessStream();
                 using IRandomAccessStream inputStream = new InMemoryRandomAccessStream();
                 await responseMessage.Content.WriteToStreamAsync(inputStream);
@@ -131,8 +123,8 @@ public sealed partial class PlayBar
         }
         var cover = Common.Setting.tileBackgroundAvailability ?  new TileBackgroundImage()
             {
-                Source = Common.Setting.saveTileBackgroundToLocalFolder? "ms-appdata:///temp/LocalTileBackground/" + filename + ".jpg" 
-                : HyPlayList.NowPlayingItem.PlayItem.Album.cover,
+                Source = Common.Setting.saveTileBackgroundToLocalFolder? "ms-appdata:///temp/LocalTileBackground/" + fileName + ".jpg" 
+                : downloadLink,
                 HintOverlay = 50
             }: null;
         var tileContent = new TileContent()
