@@ -402,7 +402,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         try
         {
             OnSongChange(HyPlayList.List[HyPlayList.NowPlaying]);
-            LoadLyricsBox();
             ChangeWindowMode();
             needRedesign++;
         }
