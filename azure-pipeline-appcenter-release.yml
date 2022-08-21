@@ -86,7 +86,7 @@ steps:
     archiveFile: '$(Agent.HomeDirectory)/$(Build.BuildId).zip'
     verbose: true
 
-- task: AppCenterDistribute@3
+- task: AppCenterDistribute@3.209.1
   displayName: 'Deploy $(Agent.HomeDirectory)/$(Build.BuildId).zip to Visual Studio App Center'
   inputs:
     serverEndpoint: HyPlayer/AppCenter
