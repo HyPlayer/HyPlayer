@@ -47,6 +47,9 @@
                     <Setter Property="Background" Value="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}" />
                 </Style>
             </ListView.Resources>
+            <ListView.Footer>
+                <Grid Height="150" />
+            </ListView.Footer>
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="hyPlayControl:DownloadObject">
                     <Grid Height="90" Padding="10" ColumnSpacing="13">
