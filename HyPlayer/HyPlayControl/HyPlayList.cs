@@ -245,7 +245,7 @@ public static class HyPlayList
 
         Common.AddToTeachingTipLists("播放失败 切到下一曲",
             "歌曲" + NowPlayingItem.PlayItem.Name + "\r\n" + reason);
-        MoveSongPointer();
+        SongMoveNext();
     }
 
     public static async Task PickLocalFile()
