@@ -1063,11 +1063,11 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 // 切换上下曲
                 if (e.Cumulative.Translation.X > 150)
                 {
-                    HyPlayList.SongMoveNext();
+                    HyPlayList.SongMovePrevious();
                 }
                 else if (e.Cumulative.Translation.X < -150)
                 {
-                    HyPlayList.SongMovePrevious();
+                	HyPlayList.SongMoveNext();
                 }
             }
         }
