@@ -1003,34 +1003,51 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private void ImageAlbum_OnManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
     {
         if (e.PointerDeviceType == PointerDeviceType.Mouse) return;
-        if (Math.Abs(e.Cumulative.Translation.Y) > Math.Abs(e.Cumulative.Translation.X))
+        switch (Common.Setting.gestureMode)
         {
-            // 竖直方向滑动
-            if (e.Cumulative.Translation.Y >= 0)
-                Common.PageMain.ExpandedPlayerPositionOffset.Y = e.Cumulative.Translation.Y;
-            else
-            {
+            case 3:
+                ImageRotateTransform.Angle = e.Cumulative.Translation.Y;
+                HyPlayList.Player.Position =
+                    HyPlayList.Player.Position.Add(TimeSpan.FromMilliseconds(e.Delta.Translation.Y * 10));
+                break;
+            case 2:
+                ImageRotateTransform.Angle = e.Cumulative.Translation.Y;
+                return;
+            case 1:
                 ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;
-            }
+                ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
+                break;
+            case 0 when Math.Abs(e.Cumulative.Translation.Y) > Math.Abs(e.Cumulative.Translation.X):
+            {
+                // 竖直方向滑动
+                if (e.Cumulative.Translation.Y >= 0)
+                    Common.PageMain.ExpandedPlayerPositionOffset.Y = e.Cumulative.Translation.Y;
+                else
+                {
+                    ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;
+                }
 
-            if (e.Cumulative.Translation.Y > 150)
-            {
-                e.Complete();
-                Common.BarPlayBar.CollapseExpandedPlayer();
+                if (e.Cumulative.Translation.Y > 200)
+                {
+                    e.Complete();
+                    Common.BarPlayBar.CollapseExpandedPlayer();
+                }
+
+                break;
             }
-        }
-        else
-        {
-            ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
-            if (e.Cumulative.Translation.X > 150)
+            case 0:
             {
-                e.Complete();
-                HyPlayList.SongMovePrevious();
-            }
-            else if (e.Cumulative.Translation.X < -150)
-            {
-                e.Complete();
-                HyPlayList.SongMoveNext();
+                ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
+                if (e.Cumulative.Translation.X > 400)
+                {
+                    e.Complete();
+                }
+                else if (e.Cumulative.Translation.X < -400)
+                {
+                    e.Complete();
+                }
+
+                break;
             }
         }
     }
@@ -1039,6 +1056,21 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     {
         ImageResetPositionAni.Begin();
         Common.PageMain.ImageResetPositionAni.Begin();
+        if (Common.Setting.gestureMode == 0)
+        {
+            if (Math.Abs(e.Cumulative.Translation.Y) < Math.Abs(e.Cumulative.Translation.X))
+            {
+                // 切换上下曲
+                if (e.Cumulative.Translation.X > 150)
+                {
+                    HyPlayList.SongMoveNext();
+                }
+                else if (e.Cumulative.Translation.X < -150)
+                {
+                    HyPlayList.SongMovePrevious();
+                }
+            }
+        }
     }
 }
 

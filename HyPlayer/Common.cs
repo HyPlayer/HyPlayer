@@ -673,6 +673,12 @@ namespace HyPlayer
             set => ApplicationData.Current.LocalSettings.Values["enableTouchGestureAction"] = value;
         }
         
+        public int gestureMode
+        {
+            get => GetSettings("gestureMode", 0);
+            set => ApplicationData.Current.LocalSettings.Values["gestureMode"] = value;
+        }
+        
         public int maxDownloadCount
         {
             get => GetSettings("maxDownloadCount", 1);

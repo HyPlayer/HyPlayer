@@ -153,6 +153,7 @@
                             <TransformGroup>
                                 <ScaleTransform x:Name="ImageScale" CenterX="300" CenterY="300" />
                                 <TranslateTransform x:Name="ImagePositionOffset" />
+                                <RotateTransform x:Name="ImageRotateTransform" CenterX="280" CenterY="280" />
                             </TransformGroup>
                         </controls:ImageEx.RenderTransform>
                         <controls:ImageEx.ContextFlyout>

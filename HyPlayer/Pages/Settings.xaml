@@ -487,6 +487,17 @@
                                         <ToggleSwitch HorizontalAlignment="Right" MinWidth="10"
                                                       IsOn="{x:Bind hyplayer:Common.Setting.enableTouchGestureAction, Mode=TwoWay}" />
                                     </Grid>
+                                    <Grid>
+                                        <TextBlock Text="触摸手势模式" VerticalAlignment="Center" />
+                                        <ComboBox
+                                            HorizontalAlignment="Right"
+                                            SelectedIndex="{x:Bind hyplayer:Common.Setting.gestureMode, Mode=TwoWay}">
+                                            <ComboBoxItem Content="基本手势" />
+                                            <ComboBoxItem Content="平移" />
+                                            <ComboBoxItem Content="搓碟" />
+                                            <ComboBoxItem Content="真·搓碟" />
+                                        </ComboBox>
+                                    </Grid>
                                 </StackPanel>
                             </controls:Expander>
                         </StackPanel>
