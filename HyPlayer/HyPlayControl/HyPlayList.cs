@@ -255,17 +255,6 @@ public static class HyPlayList
             if ((NowPlayingItem.ItemType == HyPlayItemType.Netease && !NowPlayingItem.PlayItem.IsLocalFile) ||
                 NowPlayingItem.ItemType == HyPlayItemType.Radio)
             {
-                List[NowPlaying] = LoadNcSong(new NCSong
-                {
-                    Type = NowPlayingItem.ItemType,
-                    Album = NowPlayingItem.PlayItem.Album,
-                    Artist = NowPlayingItem.PlayItem.Artist,
-                    LengthInMilliseconds = NowPlayingItem.PlayItem.LengthInMilliseconds,
-                    sid = NowPlayingItem.PlayItem.Id,
-                    TrackId = NowPlayingItem.PlayItem.TrackId,
-                    CDName = NowPlayingItem.PlayItem.CDName,
-                    songname = NowPlayingItem.PlayItem.Name
-                });
                 LoadPlayerSong();
                 Player.Play();
             }
@@ -610,6 +599,7 @@ public static class HyPlayList
                     if (json["data"]?[0]?["freeTrialInfo"]?.HasValues == true && Common.Setting.jumpVipSongPlaying)
                     {
                         PlayerOnMediaFailed(Player, "当前歌曲为 VIP 试听, 已自动跳过");
+                        return null;
                     }
                     playUrl = json["data"][0]["url"]?.ToString();
                     var tag = json["data"]?[0]?["level"]?.ToString() switch
@@ -626,11 +616,13 @@ public static class HyPlayList
                 else
                 {
                     PlayerOnMediaFailed(Player, "下载链接获取失败"); //传一个播放失败
+                    return null;
                 }
             }
             catch
             {
                 PlayerOnMediaFailed(Player, "下载链接获取失败"); //传一个播放失败
+                return null;
             }
 
         return playUrl;

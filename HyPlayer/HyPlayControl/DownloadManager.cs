@@ -403,7 +403,12 @@ internal sealed class DownloadObject : INotifyPropertyChanged
             if (json["data"]?[0]?["freeTrialInfo"]?.HasValues == true && Common.Setting.jumpVipSongDownloading)
             {
                 Status = DownloadStatus.Paused;
-                Common.Invoke(() => Message = "VIP 试听歌曲, 跳过");
+                Common.Invoke(() =>
+                {
+                    HasPaused = true;
+                    Progress = 100;
+                    Message = "VIP 试听歌曲, 跳过";
+                });
                 return;
             }
 
