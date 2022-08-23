@@ -599,11 +599,11 @@ public static class HyPlayList
             try
             {
                 var json = await Common.ncapi.RequestAsync(
-                    CloudMusicApiProviders.SongUrl,
+                    CloudMusicApiProviders.SongUrlV1,
                     new Dictionary<string, object>
                     {
                         { "id", NowPlayingItem.PlayItem.Id },
-                        { "br", Common.Setting.audioRate }
+                        { "level", Common.Setting.audioRate }
                     });
                 if (json["data"]?[0]?["code"]?.ToString() == "200")
                 {

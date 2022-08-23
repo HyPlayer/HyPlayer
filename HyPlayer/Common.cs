@@ -622,7 +622,7 @@ namespace HyPlayer
 
         public string audioRate
         {
-            get => GetSettings("audioRate", "320000");
+            get => GetSettings("audioRate", "exhigh");
             set
             {
                 ApplicationData.Current.LocalSettings.Values["audioRate"] = value;
@@ -632,7 +632,7 @@ namespace HyPlayer
 
         public string downloadAudioRate
         {
-            get => GetSettings("downloadAudioRate", "999000");
+            get => GetSettings("downloadAudioRate", "hires");
             set
             {
                 ApplicationData.Current.LocalSettings.Values["downloadAudioRate"] = value;

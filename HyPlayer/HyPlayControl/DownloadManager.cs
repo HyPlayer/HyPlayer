@@ -333,8 +333,8 @@ internal class DownloadObject
                         break;
                 }
 
-            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrl,
-                new Dictionary<string, object> { { "id", ncsong.sid }, { "br", Common.Setting.downloadAudioRate } });
+            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrlV1,
+                new Dictionary<string, object> { { "id", ncsong.sid }, { "level", Common.Setting.downloadAudioRate } });
 
             if (json["data"][0]["code"].ToString() != "200")
             {

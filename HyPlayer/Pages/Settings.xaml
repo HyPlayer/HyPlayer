@@ -164,22 +164,20 @@
                                     <ComboBox x:Name="ComboBoxSongBr"
                                               SelectionChanged="ComboBoxSongBr_SelectionChanged"
                                               HorizontalAlignment="Right">
-                                        <ComboBoxItem Content="标准 (128k)" Tag="128000" />
-                                        <ComboBoxItem Content="较高 (192k)" Tag="192000" />
-                                        <ComboBoxItem Content="极高 (320k)" Tag="320000" />
-                                        <ComboBoxItem Content="无损 (VIP)" Tag="999000" />
-                                        <ComboBoxItem Content="Hi-Res (VIP)" Tag="9999000" />
+                                        <ComboBoxItem Content="标准 (128k)" Tag="standard" />
+                                        <ComboBoxItem Content="极高 (320k)" Tag="exhigh" />
+                                        <ComboBoxItem Content="无损 (VIP)" Tag="lossless" />
+                                        <ComboBoxItem Content="Hi-Res (VIP)" Tag="hires" />
                                     </ComboBox>
                                     <TextBlock Text="歌曲下载音质" Grid.Row="1" HorizontalAlignment="Left"
                                                VerticalAlignment="Center" />
                                     <ComboBox x:Name="ComboBoxSongDownloadBr"
                                               SelectionChanged="ComboBoxSongDownloadBr_SelectionChanged" Grid.Row="1"
                                               HorizontalAlignment="Right">
-                                        <ComboBoxItem Content="标准 (128k)" Tag="128000" />
-                                        <ComboBoxItem Content="较高 (192k)" Tag="192000" />
-                                        <ComboBoxItem Content="极高 (320k)" Tag="320000" />
-                                        <ComboBoxItem Content="无损 (VIP)" Tag="999000" />
-                                        <ComboBoxItem Content="Hi-Res (VIP)" Tag="9999000" />
+                                        <ComboBoxItem Content="标准 (128k)" Tag="standard" />
+                                        <ComboBoxItem Content="极高 (320k)" Tag="exhigh" />
+                                        <ComboBoxItem Content="无损 (VIP)" Tag="lossless" />
+                                        <ComboBoxItem Content="Hi-Res (VIP)" Tag="hires" />
                                     </ComboBox>
                                 </Grid>
                             </controls:Expander>
