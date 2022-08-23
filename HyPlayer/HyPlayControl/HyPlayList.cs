@@ -242,30 +242,10 @@ public static class HyPlayList
         //歌曲崩溃了的话就是这个
         //SongMoveNext();
         Common.ErrorMessageList.Add("歌曲" + NowPlayingItem.PlayItem.Name + " 播放失败: " + reason);
-        if (_crashedTime == NowPlayingItem.PlayItem.Id)
-        {
-            Common.AddToTeachingTipLists("播放失败 切到下一曲",
-                "歌曲" + NowPlayingItem.PlayItem.Name + "\r\n" + reason);
-            MoveSongPointer();
-            _crashedTime = "jump";
-        }
-        else
-        {
-            _crashedTime = NowPlayingItem.PlayItem.Id;
-            if ((NowPlayingItem.ItemType == HyPlayItemType.Netease && !NowPlayingItem.PlayItem.IsLocalFile) ||
-                NowPlayingItem.ItemType == HyPlayItemType.Radio)
-            {
-                LoadPlayerSong();
-                Player.Play();
-            }
-            else
-            {
-                //本地歌曲炸了的话就Move下一首吧
-                Common.AddToTeachingTipLists("播放失败 切到下一曲",
-                    "歌曲" + NowPlayingItem.PlayItem.Name + "\r\n" + reason);
-                MoveSongPointer();
-            }
-        }
+
+        Common.AddToTeachingTipLists("播放失败 切到下一曲",
+            "歌曲" + NowPlayingItem.PlayItem.Name + "\r\n" + reason);
+        MoveSongPointer();
     }
 
     public static async Task PickLocalFile()
@@ -601,6 +581,7 @@ public static class HyPlayList
                         PlayerOnMediaFailed(Player, "当前歌曲为 VIP 试听, 已自动跳过");
                         return null;
                     }
+
                     playUrl = json["data"][0]["url"]?.ToString();
                     var tag = json["data"]?[0]?["level"]?.ToString() switch
                     {
