@@ -666,6 +666,12 @@ namespace HyPlayer
             get => GetSettings("xboxHidePointer", false);
             set => ApplicationData.Current.LocalSettings.Values["xboxHidePointer"] = value;
         }
+        
+        public int maxDownloadCount
+        {
+            get => GetSettings("maxDownloadCount", 1);
+            set => ApplicationData.Current.LocalSettings.Values["maxDownloadCount"] = value;
+        }
 
         public int Volume
         {

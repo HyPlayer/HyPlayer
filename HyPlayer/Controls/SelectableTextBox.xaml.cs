@@ -8,16 +8,16 @@ namespace HyPlayer.Controls;
 public sealed partial class SelectableTextBox : UserControl
 {
     public static readonly DependencyProperty SelectableProperty = DependencyProperty.Register(
-        "Selectable", typeof(bool), typeof(SelectableTextBox), new PropertyMetadata(true));
+        nameof(Selectable), typeof(bool), typeof(SelectableTextBox), new PropertyMetadata(true));
 
     public static readonly DependencyProperty TextProperty = DependencyProperty.Register(
-        "Text", typeof(string), typeof(SelectableTextBox), new PropertyMetadata(default(string)));
+        nameof(Text), typeof(string), typeof(SelectableTextBox), new PropertyMetadata(default(string)));
 
     public static readonly DependencyProperty MaxLinesProperty = DependencyProperty.Register(
-        "MaxLines", typeof(int), typeof(SelectableTextBox), new PropertyMetadata(default(int)));
+        nameof(MaxLines), typeof(int), typeof(SelectableTextBox), new PropertyMetadata(default(int)));
 
     public static readonly DependencyProperty TextWrappingProperty = DependencyProperty.Register(
-        "TextWrapping", typeof(TextWrapping), typeof(SelectableTextBox), new PropertyMetadata(default(TextWrapping)));
+        nameof(TextWrapping), typeof(TextWrapping), typeof(SelectableTextBox), new PropertyMetadata(default(TextWrapping)));
 
     public SelectableTextBox()
     {

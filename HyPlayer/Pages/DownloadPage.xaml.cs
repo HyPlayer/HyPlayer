@@ -1,12 +1,12 @@
 ﻿#region
 
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Navigation;
-using HyPlayer.Controls;
+using Windows.UI.Xaml.Data;
+using Windows.UI.Xaml.Media.Imaging;
 using HyPlayer.HyPlayControl;
 
 #endregion
@@ -18,63 +18,103 @@ namespace HyPlayer.Pages;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class DownloadPage : Page, IDisposable
+public sealed partial class DownloadPage : Page
 {
     public DownloadPage()
     {
         InitializeComponent();
     }
 
-    public void Dispose()
-    {
-        DLList.Children.Clear();
-    }
-
-    protected override void OnNavigatedTo(NavigationEventArgs e)
-    {
-        base.OnNavigatedTo(e);
-        HyPlayList.OnTimerTicked += DownloadPage_Elapsed;
-    }
-
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
-    {
-        base.OnNavigatedFrom(e);
-        HyPlayList.OnTimerTicked -= DownloadPage_Elapsed;
-    }
-
-    private void DownloadPage_Elapsed()
-    {
-        _ = Common.Invoke(() =>
-        {
-            if (DLList.Children.Count != DownloadManager.DownloadLists.Count)
-            {
-                while (DLList.Children.Count > DownloadManager.DownloadLists.Count)
-                    DLList.Children.RemoveAt(DLList.Children.Count - 1);
-
-                while (DLList.Children.Count < DownloadManager.DownloadLists.Count)
-                    DLList.Children.Add(new SingleDownload(DLList.Children.Count));
-            }
-
-            foreach (var uiElement in DLList.Children)
-            {
-                var dl = (SingleDownload)uiElement;
-                dl.UpdateUI();
-            }
-        });
-    }
-
-    private void Button_Cleanall_Click(object sender, RoutedEventArgs e)
-    {
-        DownloadManager.DownloadLists.ForEach(t =>
-        {
-            if (t.Status == 1)
-                t.downloadOperation = null;
-        });
-        DownloadManager.DownloadLists = new List<DownloadObject>();
-    }
-
     private async void OpenDownloadFolder_Click(object sender, RoutedEventArgs e)
     {
         await Launcher.LaunchFolderPathAsync(Common.Setting.downloadDir);
+    }
+
+    private void Button_CleanAll_Click(object sender, RoutedEventArgs e)
+    {
+        DownloadManager.DownloadLists.Clear();
+    }
+
+    private void PauseBtn_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as Button)?.DataContext is not DownloadObject downloadObject) return;
+        switch (downloadObject.Status)
+        {
+            case DownloadObject.DownloadStatus.Downloading or DownloadObject.DownloadStatus.Queueing:
+                downloadObject.Pause();
+                break;
+            case DownloadObject.DownloadStatus.Paused:
+                downloadObject.Resume();
+                break;
+            case DownloadObject.DownloadStatus.Error:
+                downloadObject.Message = "等待中";
+                downloadObject.Progress = 0;
+                downloadObject.Status = DownloadObject.DownloadStatus.Queueing;
+                break;
+        }
+    }
+
+    private void RemoveBtn_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as Button)?.DataContext is not DownloadObject downloadObject) return;
+        downloadObject.Remove();
+    }
+
+    private void PauseAllBtn_Click(object sender, RoutedEventArgs e)
+    {
+        foreach (var downloadObject in DownloadManager.DownloadLists.Where(t =>
+                     t.Status is DownloadObject.DownloadStatus.Downloading or DownloadObject.DownloadStatus.Queueing))
+        {
+            downloadObject.Pause();
+        }
+    }
+
+    private void Resume_All(object sender, RoutedEventArgs e)
+    {
+        foreach (var downloadObject in DownloadManager.DownloadLists.Where(t =>
+                     t.Status != DownloadObject.DownloadStatus.Downloading))
+        {
+            if (downloadObject.Status == DownloadObject.DownloadStatus.Paused)
+            {
+                downloadObject.Message = "排队中";
+                downloadObject.HasPaused = false;
+            }
+
+            if (downloadObject.Status == DownloadObject.DownloadStatus.Error)
+            {
+                downloadObject.Message = "排队中";
+                downloadObject.Progress = 0;
+                downloadObject.HasPaused = false;
+                downloadObject.HasError = false;
+            }
+            downloadObject.Status = DownloadObject.DownloadStatus.Queueing;
+        }
+    }
+}
+
+public class ImageUrlToImageSourceConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        return new BitmapImage(new Uri(value.ToString() + "?param=70y70"));
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class PausedToStringConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        if (parameter is true) return "重试";
+        return value is true ? "继续" : "暂停";
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    {
+        throw new NotImplementedException();
     }
 }

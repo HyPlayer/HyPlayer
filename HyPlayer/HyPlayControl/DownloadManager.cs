@@ -2,8 +2,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -24,7 +28,7 @@ using Windows.Web.Http;
 
 namespace HyPlayer.HyPlayControl;
 
-internal class DownloadObject
+internal sealed class DownloadObject : INotifyPropertyChanged
 {
     private static readonly Dictionary<string, Guid> CodecIds = new()
     {
@@ -33,25 +37,115 @@ internal class DownloadObject
         { "image/webp", BitmapDecoder.WebpDecoderId }
     };
 
-    public bool completedFired;
-    private PlayItem dontuseme;
-    public DownloadOperation downloadOperation;
+    public PlayItem DontUsePlayItem;
+    private DownloadOperation _downloadOperation;
 
-    public string filename;
+    public string FileName
+    {
+        get => _fileName;
+        set => SetField(ref _fileName, value);
+    }
 
-    public string fullpath;
-    public ulong HavedSize;
+    public string FullPath { get; set; }
+
+    public ulong HadSize
+    {
+        get => _hadSize;
+        set => SetField(ref _hadSize, value);
+    }
+
     public NCSong ncsong;
 
-    public int progress;
+    public int Progress
+    {
+        get => _progress;
+        set => SetField(ref _progress, value);
+    }
+
+    public enum DownloadStatus
+    {
+        Queueing,
+        Downloading,
+        Finished,
+        Paused,
+        Error
+    }
 
     // 0 - 排队 1 - 下载中 2 - 下载完成  3 - 暂停
-    public int Status;
-    public ulong TotalSize;
+    public DownloadStatus Status { get; set; }
+
+    public bool HasError
+    {
+        get => _hasError;
+        set => SetField(ref _hasError, value);
+    }
+
+    public bool HasPaused
+    {
+        get => _hasPaused;
+        set => SetField(ref _hasPaused, value);
+    }
+
+    public string Message
+    {
+        get => _message;
+        set => SetField(ref _message, value);
+    }
+
+
+    private ulong _totalSize;
+    private int _progress;
+    private ulong _hadSize;
+    private string _fileName;
+    private string _message;
+    private bool _hasError;
+    private bool _hasPaused;
+
+    public ulong TotalSize
+    {
+        get => _totalSize;
+        set => SetField(ref _totalSize, value);
+    }
 
     public DownloadObject(NCSong song)
     {
         ncsong = song;
+    }
+
+    public void Pause()
+    {
+        if (_downloadOperation is { Progress.Status: BackgroundTransferStatus.Running })
+            _downloadOperation?.Pause();
+        Status = DownloadStatus.Paused;
+        Common.Invoke(() =>
+        {
+            Message = "暂停中";
+            HasPaused = true;
+            HasError = false;
+        });
+    }
+
+    public void Resume()
+    {
+        _downloadOperation?.Resume();
+        Status = DownloadStatus.Downloading;
+        Common.Invoke(() =>
+        {
+            Message = "下载中";
+            HasPaused = false;
+        });
+    }
+
+    public void Remove()
+    {
+        if (_downloadOperation is { Progress.Status: BackgroundTransferStatus.Running })
+            _downloadOperation?.Pause();
+        Status = DownloadStatus.Finished;
+        Common.Invoke(() =>
+        {
+            Message = "已移除";
+            HasPaused = false;
+        });
     }
 
     private void Wc_DownloadFileCompleted()
@@ -63,69 +157,22 @@ internal class DownloadObject
             if (Common.Setting.writedownloadFileInfo)
                 await WriteInfoToFile().ConfigureAwait(false);
             DownloadManager.WritingTasks.RemoveAll(t => t.IsCompleted);
-            Status = 2;
+            Status = DownloadStatus.Finished;
         }));
-
-        /*
-        try
-        {
-            var downloadToastContent = new ToastContent
-            {
-                Visual = new ToastVisual
-                {
-                    BindingGeneric = new ToastBindingGeneric
-                    {
-                        Children =
-                        {
-                            new AdaptiveText
-                            {
-                                Text = "下载完成",
-                                HintStyle = AdaptiveTextStyle.Header
-                            },
-                            new AdaptiveText
-                            {
-                                Text = filename
-                            }
-                        }
-                    }
-                },
-                Launch = "",
-                Scenario = ToastScenario.Reminder,
-                Audio = new ToastAudio { Silent = true }
-            };
-            var toast = new ToastNotification(downloadToastContent.GetXml())
-            {
-                Tag = "HyPlayerDownloadDone",
-                Data = new NotificationData()
-            };
-            toast.Data.SequenceNumber = 0;
-            var notifier = ToastNotificationManager.CreateToastNotifier();
-            notifier.Show(toast);
-            
-        }
-        catch (Exception ex)
-        {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-        }
-        */
-        Common.AddToTeachingTipLists("下载完成", filename);
+        Common.Invoke(() => Message = "下载完成");
     }
 
     private Task WriteInfoToFile()
     {
+        Common.Invoke(() => Message = "正在写文件信息");
         return Task.Run(async () =>
         {
-            using var streamAbscraction = new UwpStorageFileAbstraction(downloadOperation.ResultFile);
-            var file = File.Create(streamAbscraction);
+            using var streamAbstraction = new UwpStorageFileAbstraction(_downloadOperation.ResultFile);
+            var file = File.Create(streamAbstraction);
             try
             {
-                /*
-                var streamAbscraction = new UwpStorageFileAbstraction(
-                    (await downloadOperation.GetResultRandomAccessStreamReference().OpenReadAsync()).AsStreamForRead(),
-                    await downloadOperation.ResultFile.OpenStreamForWriteAsync(), downloadOperation.ResultFile.Name);
-                    */
                 if (Common.Setting.write163Info)
-                    The163KeyHelper.TrySetMusicInfo(file.Tag, dontuseme);
+                    The163KeyHelper.TrySetMusicInfo(file.Tag, DontUsePlayItem);
                 //写相关信息
                 file.Tag.Album = ncsong.Album.name;
                 file.Tag.Performers = ncsong.Artist.Select(t => t.name).ToArray();
@@ -185,8 +232,15 @@ internal class DownloadObject
             }
             catch (Exception ex)
             {
+                Status = DownloadStatus.Error;
+                Common.Invoke(() =>
+                {
+                    HasError = true;
+                    HasPaused = true;
+                    Progress = 100;
+                    Message = "写入音乐信息时出现错误" + ex.Message;
+                });
                 Common.ErrorMessageList.Add("写入音乐信息时出现错误" + ex.Message);
-                Common.AddToTeachingTipLists("写入音乐信息时出现错误", ex.Message);
             }
             finally
             {
@@ -197,6 +251,7 @@ internal class DownloadObject
 
     private Task DownloadLyric()
     {
+        Common.Invoke(() => Message = "下载歌词中");
         //下载歌词
         return Task.Run(async () =>
         {
@@ -222,9 +277,9 @@ internal class DownloadObject
                         return "[" + t.LyricTime.ToString(@"mm\:ss\.ff") + "]" + t.PureLyric;
                     }));
                     if (string.IsNullOrWhiteSpace(lrctxt)) return;
-                    var sf = await (await StorageFolder.GetFolderFromPathAsync(Path.GetDirectoryName(fullpath)))
+                    var sf = await (await StorageFolder.GetFolderFromPathAsync(Path.GetDirectoryName(FullPath)))
                         .CreateFileAsync(
-                            Path.GetFileName(Path.ChangeExtension(fullpath, "lrc")),
+                            Path.GetFileName(Path.ChangeExtension(FullPath, "lrc")),
                             CreationCollisionOption.ReplaceExisting);
                     if (Common.Setting.usingGBK)
                         await FileIO.WriteBytesAsync(sf,
@@ -236,71 +291,66 @@ internal class DownloadObject
             }
             catch (Exception ex)
             {
+                Status = DownloadStatus.Error;
+                Common.Invoke(() =>
+                {
+                    Message = "下载歌词错误: " + ex.Message;
+                    HasError = true;
+                    HasPaused = true;
+                    Progress = 100;
+                });
                 Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         });
     }
 
+    private static string GetSize(double size)
+    {
+        string[] units = { "B", "KB", "MB", "GB", "TB", "PB" };
+        const double mod = 1024.0;
+        var i = 0;
+        while (size >= mod)
+        {
+            size /= mod;
+            i++;
+        }
+
+        return Math.Round(size, 2) + units[i];
+    }
+
     private void Wc_DownloadProgressChanged(DownloadOperation obj)
     {
         if (obj.Progress.TotalBytesToReceive == 0) return;
-        TotalSize = obj.Progress.TotalBytesToReceive;
-        HavedSize = obj.Progress.BytesReceived;
-        progress = (int)(obj.Progress.BytesReceived * 100 / obj.Progress.TotalBytesToReceive);
-        if (HavedSize == TotalSize)
+        if (Status != DownloadStatus.Downloading) return;
+
+        Common.Invoke((() =>
         {
-            if (Status == 2) return;
-            completedFired = true;
-        }
+            TotalSize = obj.Progress.TotalBytesToReceive;
+            HadSize = obj.Progress.BytesReceived;
+            Progress = (int)(obj.Progress.BytesReceived * 100 / obj.Progress.TotalBytesToReceive);
+            Message = $"下载中: {GetSize(obj.Progress.BytesReceived)} / {GetSize(obj.Progress.TotalBytesToReceive)}";
+        }));
+
+        if (HadSize == TotalSize && Status == DownloadStatus.Finished) return;
     }
 
     public static void DownloadStartToast(string songname)
     {
-        /*
-        var downloadToastContent = new ToastContent
-        {
-            Visual = new ToastVisual
-            {
-                BindingGeneric = new ToastBindingGeneric
-                {
-                    Children =
-                    {
-                        new AdaptiveText
-                        {
-                            Text = "下载开始",
-                            HintStyle = AdaptiveTextStyle.Header
-                        },
-                        new AdaptiveText
-                        {
-                            Text = songname
-                        }
-                    }
-                }
-            },
-            Launch = "",
-            Scenario = ToastScenario.Reminder,
-            Audio = new ToastAudio { Silent = true }
-        };
-        var toast = new ToastNotification(downloadToastContent.GetXml())
-        {
-            Tag = "HyPlayerDownloadStart",
-            Data = new NotificationData()
-        };
-
-        toast.Data.SequenceNumber = 0;
-        var notifier = ToastNotificationManager.CreateToastNotifier();
-        notifier.Show(toast);
-        */
         Common.AddToTeachingTipLists("下载开始", "歌曲" + songname + "下载开始");
     }
 
     public async Task StartDownload()
     {
-        if (downloadOperation != null) return;
-        Status = 1;
+        if (_downloadOperation != null) { Resume(); return; }
+        Status = DownloadStatus.Downloading;
+        Common.Invoke(() =>
+        {
+            HasError = false;
+            HasPaused = false;
+        });
         try
         {
-            filename = Common.Setting.downloadFileName
+            FileName = Common.Setting.downloadFileName
                 .Replace("{$SINGER}", string.Join(';', ncsong.Artist.Select(t => t.name)).EscapeForPath())
                 .Replace("{$SONGNAME}", ncsong.songname.EscapeForPath())
                 .Replace("{$ALBUM}", ncsong.Album.name.EscapeForPath())
@@ -309,7 +359,7 @@ internal class DownloadObject
                 .Replace("{$CDNAME}", ncsong.CDName?.EscapeForPath());
             var folderName = Common.Setting.downloadDir;
             var nowFolder = await StorageFolder.GetFolderFromPathAsync(folderName);
-            var ses = filename.Replace('\\', '/').Split('/');
+            var ses = FileName.Replace('\\', '/').Split('/');
             for (var index = 0; index < ses.Length - 1; index++)
             {
                 var s = ses[index];
@@ -317,19 +367,19 @@ internal class DownloadObject
                 nowFolder = await nowFolder.CreateFolderAsync(s, CreationCollisionOption.OpenIfExists);
             }
 
-            if (await nowFolder.FileExistsAsync(Path.GetFileName(filename + ".mp3")) ||
-                await nowFolder.FileExistsAsync(Path.GetFileName(filename + ".flac")))
+            if (await nowFolder.FileExistsAsync(Path.GetFileName(FileName + ".mp3")) ||
+                await nowFolder.FileExistsAsync(Path.GetFileName(FileName + ".flac")))
                 switch (Common.Setting.downloadNameOccupySolution)
                 {
                     case 0:
-                        Common.AddToTeachingTipLists("文件已存在，自动跳过", ncsong.songname + "\n已自动将其从下载列表中移除");
-                        DownloadManager.DownloadLists.Remove(DownloadManager.DownloadLists.FirstOrDefault());
+                        Status = DownloadStatus.Paused;
+                        Common.Invoke(() => { Message = "歌曲已存在, 跳过"; });
                         return;
                     case 1:
-                        await (await nowFolder.GetFileAsync(Path.GetFileName(filename))).DeleteAsync();
+                        await (await nowFolder.GetFileAsync(Path.GetFileName(FileName))).DeleteAsync();
                         break;
                     case 2:
-                        filename = Path.GetFileNameWithoutExtension(filename) + ncsong.sid;
+                        FileName = Path.GetFileNameWithoutExtension(FileName) + ncsong.sid;
                         break;
                 }
 
@@ -338,20 +388,26 @@ internal class DownloadObject
 
             if (json["data"]?[0]?["code"]?.ToString() != "200")
             {
-                Common.AddToTeachingTipLists("无法下载", "无法下载歌曲 " + ncsong.songname + "\n已自动将其从下载列表中移除");
-                DownloadManager.DownloadLists.Remove(DownloadManager.DownloadLists.FirstOrDefault());
-                return; //未获取到
-            }
-            
-            if (json["data"]?[0]?["freeTrialInfo"]?.HasValues == true && Common.Setting.jumpVipSongDownloading)
-            {
-                Common.AddToTeachingTipLists("自动跳过", "歌曲 " + ncsong.songname + "\nVIP 试听歌曲, 已自动跳过");
-                DownloadManager.DownloadLists.Remove(DownloadManager.DownloadLists.FirstOrDefault());
-                return; //未获取到
+                Status = DownloadStatus.Error;
+                Common.Invoke(() =>
+                {
+                    Message = "获取下载链接错误";
+                    HasError = true;
+                    HasPaused = true;
+                    Progress = 100;
+                });
+                return;
             }
 
-            filename += "." + json["data"][0]["type"].ToString().ToLowerInvariant();
-            dontuseme = new PlayItem
+            if (json["data"]?[0]?["freeTrialInfo"]?.HasValues == true && Common.Setting.jumpVipSongDownloading)
+            {
+                Status = DownloadStatus.Paused;
+                Common.Invoke(() => Message = "VIP 试听歌曲, 跳过");
+                return;
+            }
+
+            FileName += "." + json?["data"]?[0]?["type"]?.ToString().ToLowerInvariant();
+            DontUsePlayItem = new PlayItem
             {
                 Bitrate = json["data"][0]["br"].ToObject<int>(),
                 Tag = "下载",
@@ -369,23 +425,38 @@ internal class DownloadObject
                 //md5 = json["data"][0]["md5"].ToString()
             };
 
-            downloadOperation = DownloadManager.Downloader.CreateDownload(
+            _downloadOperation = DownloadManager.Downloader.CreateDownload(
                 new Uri(json["data"][0]["url"].ToString()),
-                await nowFolder.CreateFileAsync(Path.GetFileName(filename))
+                await nowFolder.CreateFileAsync(Path.GetFileName(FileName))
             );
-            fullpath = downloadOperation.ResultFile.Path;
-            //downloadOperation.IsRandomAccessRequired = true;
+            FullPath = _downloadOperation.ResultFile.Path;
+            //_downloadOperation.IsRandomAccessRequired = true;
             var process = new Progress<DownloadOperation>(Wc_DownloadProgressChanged);
-            DownloadStartToast(filename);
-            await downloadOperation.StartAsync().AsTask(process);
+            //DownloadStartToast(FileName);
+            await _downloadOperation.StartAsync().AsTask(process);
             Wc_DownloadFileCompleted();
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists("无法下载歌曲 " + ncsong.songname + "\n已自动将其从下载列表中移除", ex.Message);
-            DownloadManager.DownloadLists.Remove(DownloadManager.DownloadLists.FirstOrDefault());
+            Status = DownloadStatus.Error;
+            Common.Invoke(() => { Message = "下载错误: " + ex.Message; });
             Common.ErrorMessageList.Add("无法下载歌曲 " + ncsong.songname + "\n已自动将其从下载列表中移除" + ex.Message);
         }
+    }
+
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    private void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    private bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
     }
 }
 
@@ -393,7 +464,7 @@ internal static class DownloadManager
 {
     private static readonly Timer _timer = new(1000);
     private static bool Timered;
-    public static List<DownloadObject> DownloadLists = new();
+    public static ObservableCollection<DownloadObject> DownloadLists = new();
     public static BackgroundDownloader Downloader = new();
     public static List<Task> WritingTasks = new();
     public static Dictionary<string, Picture> AlbumPicturesCache = new();
@@ -419,61 +490,26 @@ internal static class DownloadManager
     private static void Timer_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
     {
         if (DownloadLists.Count == 0) return;
-        if (DownloadLists[0].Status == 1) return;
-        if (DownloadLists[0].Status == 3)
-            for (var i = 0; i < DownloadLists.Count; i++)
+        for (var i = 0; i < DownloadLists.Count; i++)
+        {
+            switch (DownloadLists[i].Status)
             {
-                if (DownloadLists[i].Status == 2) DownloadLists.RemoveAt(i);
-                if (DownloadLists[i].Status == 1) return;
-                if (DownloadLists[i].Status == 0)
-                {
+                case DownloadObject.DownloadStatus.Downloading:
+                    return;
+                case DownloadObject.DownloadStatus.Queueing:
                     DownloadLists[i].StartDownload();
                     return;
-                }
+                case DownloadObject.DownloadStatus.Finished:
+                    var i1 = i;
+                    Common.Invoke(() => { DownloadLists.RemoveAt(i1); });
+                    break;
+                case DownloadObject.DownloadStatus.Paused:
+                case DownloadObject.DownloadStatus.Error:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
-
-        if (DownloadLists[0].Status == 2)
-        {
-            DownloadLists.RemoveAt(0);
-            if (DownloadLists.Count != 0) return;
-            /*
-            var downloadToastContent = new ToastContent
-            {
-                Visual = new ToastVisual
-                {
-                    BindingGeneric = new ToastBindingGeneric
-                    {
-                        Children =
-                        {
-                            new AdaptiveText
-                            {
-                                Text = "下载全部完成",
-                                HintStyle = AdaptiveTextStyle.Header
-                            }
-                        }
-                    }
-                },
-                Launch = "",
-                Scenario = ToastScenario.Reminder,
-                Audio = new ToastAudio { Silent = true }
-            };
-            var toast = new ToastNotification(downloadToastContent.GetXml())
-            {
-                Tag = "HyPlayerDownloadAllDone",
-                Data = new NotificationData()
-            };
-            toast.Data.SequenceNumber = 0;
-            var notifier = ToastNotificationManager.CreateToastNotifier();
-            notifier.Show(toast);
-            */
-            Common.AddToTeachingTipLists("下载全部完成");
-            AlbumPicturesCache.Clear();
-            _timer.Stop();
-            Timered = false;
-            return;
         }
-
-        if (DownloadLists[0].Status == 0) DownloadLists[0].StartDownload();
     }
 
     public static void AddDownload(List<NCSong> songs)
@@ -488,6 +524,7 @@ internal static class DownloadManager
 
         songs.ForEach(t => { DownloadLists.Add(new DownloadObject(t)); });
     }
+
     public static string GetMIMEFromFileHeader(Windows.Storage.Streams.Buffer buffer)
     {
         if (buffer.Length < 10) throw new ArgumentOutOfRangeException();

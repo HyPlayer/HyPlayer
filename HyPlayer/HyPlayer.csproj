@@ -173,9 +173,6 @@
     <Compile Include="Controls\SingleComment.xaml.cs">
       <DependentUpon>SingleComment.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\SingleDownload.xaml.cs">
-      <DependentUpon>SingleDownload.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Controls\SongListSelect.cs">
       <DependentUpon>SongListSelect.xaml</DependentUpon>
     </Compile>
@@ -370,10 +367,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\SimpleLinerList.xaml" />
-    <Page Include="Controls\SingleDownload.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Controls\SongListSelect.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
