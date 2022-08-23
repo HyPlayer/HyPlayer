@@ -555,7 +555,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         ImageAlbum.Source = img;
                         if (Common.Setting.expandedPlayerBackgroundType == 0)
                             Background = new ImageBrush
-                                { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                            { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                     }
                     else
                     {
@@ -1001,16 +1001,34 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private void ImageAlbum_OnManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
     {
         if (e.PointerDeviceType == PointerDeviceType.Mouse) return;
-        if (e.Cumulative.Translation.Y >= 0)
-            Common.PageMain.ExpandedPlayerPositionOffset.Y = e.Cumulative.Translation.Y;
+        if (Math.Abs(e.Cumulative.Translation.Y) > Math.Abs(e.Cumulative.Translation.X))
+        {
+            // 竖直方向滑动
+            if (e.Cumulative.Translation.Y >= 0)
+                Common.PageMain.ExpandedPlayerPositionOffset.Y = e.Cumulative.Translation.Y;
+            else
+            {
+                ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;
+            }
+            if (e.Cumulative.Translation.Y > 150)
+            {
+                e.Complete();
+                Common.BarPlayBar.CollapseExpandedPlayer();
+            }
+        }
         else
         {
-            ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;
-        }
-        if (e.Cumulative.Translation.Y > 150)
-        {
-            e.Complete();
-            Common.BarPlayBar.CollapseExpandedPlayer();
+            ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
+            if (e.Cumulative.Translation.X > 150)
+            {
+                e.Complete();
+                HyPlayList.SongMovePrevious();
+            }
+            else if (e.Cumulative.Translation.X < -150)
+            {
+                e.Complete();
+                HyPlayList.SongMoveNext();
+            }
         }
     }
 
