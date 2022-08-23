@@ -53,6 +53,20 @@
             </DoubleAnimation>
 
         </Storyboard>
+        <Storyboard x:Name="ImageResetPositionAni" x:Key="ImageResetPositionAni">
+            <DoubleAnimation
+                To="0"
+                Duration="0:0:0.25"
+                Storyboard.TargetName="ImagePositionOffset"
+                Storyboard.TargetProperty="X">
+            </DoubleAnimation>
+            <DoubleAnimation
+                To="0"
+                Duration="0:0:0.25"
+                Storyboard.TargetName="ImagePositionOffset"
+                Storyboard.TargetProperty="Y">
+            </DoubleAnimation>
+        </Storyboard>
         <pages:AlbumShadowConverter x:Key="ShadowConverter" />
         <ui:AttachedDropShadow
             x:Key="AlbumDropShadow"
@@ -103,6 +117,8 @@
                     <Border x:Name="ShadowTarget" Grid.Row="1" />
                     <controls:ImageEx
                         x:Name="ImageAlbum"
+                        ManipulationDelta="ImageAlbum_OnManipulationDelta"
+                        ManipulationCompleted="ImageAlbum_OnManipulationCompleted"
                         Grid.Row="1"
                         MaxWidth="600"
                         MaxHeight="600"
@@ -134,7 +150,10 @@
                             </ani:AnimationSet>
                         </ani:Explicit.Animations>
                         <controls:ImageEx.RenderTransform>
-                            <ScaleTransform x:Name="ImageScale" CenterX="300" CenterY="300" />
+                            <TransformGroup>
+                                <ScaleTransform x:Name="ImageScale" CenterX="300" CenterY="300" />
+                                <TranslateTransform x:Name="ImagePositionOffset" />
+                            </TransformGroup>
                         </controls:ImageEx.RenderTransform>
                         <controls:ImageEx.ContextFlyout>
                             <MenuFlyout>
@@ -183,7 +202,7 @@
                             <HyperlinkButton
                                 Name="TextBlockSinger"
                                 Click="TextBlockSinger_OnTapped"
-                                FontSize="18" Style="{StaticResource TextBlockButtonStyle}"/>
+                                FontSize="18" Style="{StaticResource TextBlockButtonStyle}" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="5">
                             <TextBlock
@@ -196,7 +215,7 @@
                             <HyperlinkButton
                                 Name="TextBlockAlbum"
                                 Click="TextBlockAlbum_OnTapped"
-                                FontSize="18"  Style="{StaticResource TextBlockButtonStyle}"/>
+                                FontSize="18" Style="{StaticResource TextBlockButtonStyle}" />
                         </StackPanel>
                     </StackPanel>
                 </Grid>

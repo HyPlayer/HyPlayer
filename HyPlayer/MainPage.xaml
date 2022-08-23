@@ -11,6 +11,20 @@
     <Page.Resources>
         <hyplayer:PlayBarMarginConverter x:Key="PlayBarMarginConverter" />
         <hyplayer:PlayBarCornerRadiusConverter x:Key="PlayBarCornerRadiusConverter" />
+        <Storyboard x:FieldModifier="public" x:Name="ImageResetPositionAni" x:Key="ImageResetPositionAni">
+            <DoubleAnimation
+                To="0"
+                Duration="0:0:0.25"
+                Storyboard.TargetName="ExpandedPlayerPositionOffset"
+                Storyboard.TargetProperty="X">
+            </DoubleAnimation>
+            <DoubleAnimation
+                To="0"
+                Duration="0:0:0.25"
+                Storyboard.TargetName="ExpandedPlayerPositionOffset"
+                Storyboard.TargetProperty="Y">
+            </DoubleAnimation>
+        </Storyboard>
     </Page.Resources>
     <Grid>
         <VisualStateManager.VisualStateGroups>
@@ -46,7 +60,11 @@
             CacheSize="0"
             IsNavigationStackEnabled="False"
             SourcePageType="hyPlayerPage:BlankPage"
-            Visibility="Collapsed" />
+            Visibility="Collapsed" >
+            <Frame.RenderTransform>
+                <TranslateTransform x:FieldModifier="public" x:Name="ExpandedPlayerPositionOffset" />
+            </Frame.RenderTransform>
+        </Frame>
         <Grid
             Name="GridPlayBar"
             Height="110"
