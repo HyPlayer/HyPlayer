@@ -70,7 +70,7 @@
                         </Grid.RowDefinitions>
                         <controls:ImageEx CornerRadius="4" BorderBrush="Gray" BorderThickness="1" EnableLazyLoading="True" x:Phase="3" Grid.Column="0" Grid.Row="0" Grid.RowSpan="3"
                                           Source="{x:Bind ncsong.Album.cover, Converter={StaticResource ImageUrlToImageSourceConverter}}" />
-                        <TextBlock VerticalAlignment="Center" Grid.Column="1" Grid.Row="0" Text="{x:Bind ncsong.songname}"
+                        <TextBlock Grid.ColumnSpan="2" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0" Text="{x:Bind ncsong.songname}"
                                  FontSize="18" FontWeight="Bold" />
                         <TextBlock VerticalAlignment="Center" Grid.Column="1" Grid.Row="1" Text="{x:Bind ncsong.ArtistString}"
                                  Foreground="{ThemeResource TextFillColorTertiaryBrush}"
