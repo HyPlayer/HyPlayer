@@ -3,6 +3,7 @@
 using System;
 using System.Net;
 using Windows.Storage;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Navigation;
@@ -43,6 +44,10 @@ public sealed partial class MainPage
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
+        if (ApplicationView.GetForCurrentView().IsFullScreenMode)
+        {
+            ApplicationView.GetForCurrentView().ExitFullScreenMode();
+        }
         (GridPlayBar.Children[0] as PlayBar).RefreshSongList();
         switch (e.Parameter)
         {

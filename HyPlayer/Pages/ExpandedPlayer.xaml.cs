@@ -398,6 +398,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         }
 
         Current_SizeChanged(null, null);
+        Redesign();
         //LeftPanel.Visibility = Visibility.Collapsed;
         programClick = true;
         BtnToggleFullScreen.IsChecked = ApplicationView.GetForCurrentView().IsFullScreenMode;
@@ -571,7 +572,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
                         if (Common.Setting.expandedPlayerBackgroundType == 0)
                             Background = new ImageBrush
-                                { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                            { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                     }
                 }
                 catch (Exception)
