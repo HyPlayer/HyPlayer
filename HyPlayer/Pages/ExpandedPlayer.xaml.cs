@@ -2,10 +2,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.Devices.Input;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
@@ -81,6 +83,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     public ExpandedPlayer()
     {
         InitializeComponent();
+        ImageAlbum.ManipulationMode = ManipulationModes.TranslateX | ManipulationModes.TranslateY;
         loaded = true;
         Common.PageExpandedPlayer = this;
         HyPlayList.OnPause += HyPlayList_OnPause;
@@ -552,7 +555,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         ImageAlbum.Source = img;
                         if (Common.Setting.expandedPlayerBackgroundType == 0)
                             Background = new ImageBrush
-                                { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                            { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                     }
                     else
                     {
@@ -993,6 +996,46 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             var ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
             ImageAlbumAni.Begin();
         }
+    }
+
+    private void ImageAlbum_OnManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
+    {
+        if (e.PointerDeviceType == PointerDeviceType.Mouse) return;
+        if (Math.Abs(e.Cumulative.Translation.Y) > Math.Abs(e.Cumulative.Translation.X))
+        {
+            // 竖直方向滑动
+            if (e.Cumulative.Translation.Y >= 0)
+                Common.PageMain.ExpandedPlayerPositionOffset.Y = e.Cumulative.Translation.Y;
+            else
+            {
+                ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;
+            }
+            if (e.Cumulative.Translation.Y > 150)
+            {
+                e.Complete();
+                Common.BarPlayBar.CollapseExpandedPlayer();
+            }
+        }
+        else
+        {
+            ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
+            if (e.Cumulative.Translation.X > 150)
+            {
+                e.Complete();
+                HyPlayList.SongMovePrevious();
+            }
+            else if (e.Cumulative.Translation.X < -150)
+            {
+                e.Complete();
+                HyPlayList.SongMoveNext();
+            }
+        }
+    }
+
+    private void ImageAlbum_OnManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
+    {
+        ImageResetPositionAni.Begin();
+        Common.PageMain.ImageResetPositionAni.Begin();
     }
 }
 
