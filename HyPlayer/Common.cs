@@ -149,6 +149,7 @@ namespace HyPlayer
 
             Invoke(() =>
             {
+                if (TeachingTipList.Count == 0) return;
                 var (title, subtitle) = TeachingTipList.Pop(); // deconstruction
                 GlobalTip.Title = title;
                 GlobalTip.Subtitle = subtitle ?? "";
@@ -619,6 +620,26 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        
+        public bool jumpVipSongPlaying
+        {
+            get => GetSettings("jumpVipSongPlaying", false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["jumpVipSongPlaying"] = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        public bool jumpVipSongDownloading
+        {
+            get => GetSettings("jumpVipSongDownloading", false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["jumpVipSongDownloading"] = value;
+                OnPropertyChanged();
+            }
+        }
 
         public string audioRate
         {
@@ -1023,13 +1044,12 @@ namespace HyPlayer
             }
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         public async void OnPropertyChanged([CallerMemberName] string propertyName = "")
         {
-            if (PropertyChanged != null)
-                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                    () => { PropertyChanged(this, new PropertyChangedEventArgs(propertyName)); });
+            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                () => { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); });
         }
 
         public static T GetSettings<T>(string propertyName, T defaultValue)

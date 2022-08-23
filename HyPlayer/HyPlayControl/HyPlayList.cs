@@ -607,6 +607,10 @@ public static class HyPlayList
                     });
                 if (json["data"]?[0]?["code"]?.ToString() == "200")
                 {
+                    if (json["data"]?[0]?["freeTrialInfo"]?.HasValues == true && Common.Setting.jumpVipSongPlaying)
+                    {
+                        PlayerOnMediaFailed(Player, "当前歌曲为 VIP 试听, 已自动跳过");
+                    }
                     playUrl = json["data"][0]["url"]?.ToString();
                     var tag = json["data"]?[0]?["level"]?.ToString() switch
                     {

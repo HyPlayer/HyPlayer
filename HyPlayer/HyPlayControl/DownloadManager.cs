@@ -336,9 +336,16 @@ internal class DownloadObject
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrlV1,
                 new Dictionary<string, object> { { "id", ncsong.sid }, { "level", Common.Setting.downloadAudioRate } });
 
-            if (json["data"][0]["code"].ToString() != "200")
+            if (json["data"]?[0]?["code"]?.ToString() != "200")
             {
                 Common.AddToTeachingTipLists("无法下载", "无法下载歌曲 " + ncsong.songname + "\n已自动将其从下载列表中移除");
+                DownloadManager.DownloadLists.Remove(DownloadManager.DownloadLists.FirstOrDefault());
+                return; //未获取到
+            }
+            
+            if (json["data"]?[0]?["freeTrialInfo"]?.HasValues == true && Common.Setting.jumpVipSongDownloading)
+            {
+                Common.AddToTeachingTipLists("自动跳过", "歌曲 " + ncsong.songname + "\nVIP 试听歌曲, 已自动跳过");
                 DownloadManager.DownloadLists.Remove(DownloadManager.DownloadLists.FirstOrDefault());
                 return; //未获取到
             }
