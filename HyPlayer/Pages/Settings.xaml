@@ -638,6 +638,11 @@
                                         <ToggleSwitch HorizontalAlignment="Right" MinWidth="10"
                                                       IsOn="{x:Bind hyplayer:Common.Setting.usingGBK, Mode=TwoWay}" />
                                     </Grid>
+                                    <Grid>
+                                        <TextBlock Text="最大同时下载任务数" VerticalAlignment="Center" />
+                                        <controls:NumberBox HorizontalAlignment="Right" MinWidth="10" SmallChange="1" LargeChange="5"
+                                                      Value="{x:Bind hyplayer:Common.Setting.maxDownloadCount, Mode=TwoWay}" Minimum="1" Maximum="100" />
+                                    </Grid>
                                 </StackPanel>
                             </controls:Expander>
 

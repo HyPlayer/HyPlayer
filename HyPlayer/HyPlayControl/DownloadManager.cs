@@ -347,6 +347,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
         {
             HasError = false;
             HasPaused = false;
+            Message = "获取下载链接";
         });
         try
         {
@@ -490,14 +491,17 @@ internal static class DownloadManager
     private static void Timer_Elapsed(object sender, ElapsedEventArgs elapsedEventArgs)
     {
         if (DownloadLists.Count == 0) return;
+        var maxDownloadCount = Common.Setting.maxDownloadCount;
         for (var i = 0; i < DownloadLists.Count; i++)
         {
             switch (DownloadLists[i].Status)
             {
                 case DownloadObject.DownloadStatus.Downloading:
-                    return;
+                    if (--maxDownloadCount <= 0) return;
+                    continue;
                 case DownloadObject.DownloadStatus.Queueing:
                     DownloadLists[i].StartDownload();
+                    --maxDownloadCount;
                     return;
                 case DownloadObject.DownloadStatus.Finished:
                     var i1 = i;
