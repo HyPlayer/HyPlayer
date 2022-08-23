@@ -482,6 +482,11 @@
                                         <ToggleSwitch HorizontalAlignment="Right" MinWidth="10"
                                                       IsOn="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur, Mode=TwoWay}" />
                                     </Grid>
+                                    <Grid>
+                                        <TextBlock Text="启用触摸手势控制 (歌词页面-专辑封面)" VerticalAlignment="Center" />
+                                        <ToggleSwitch HorizontalAlignment="Right" MinWidth="10"
+                                                      IsOn="{x:Bind hyplayer:Common.Setting.enableTouchGestureAction, Mode=TwoWay}" />
+                                    </Grid>
                                 </StackPanel>
                             </controls:Expander>
                         </StackPanel>

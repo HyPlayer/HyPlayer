@@ -667,6 +667,12 @@ namespace HyPlayer
             set => ApplicationData.Current.LocalSettings.Values["xboxHidePointer"] = value;
         }
         
+        public bool enableTouchGestureAction
+        {
+            get => GetSettings("enableTouchGestureAction", false);
+            set => ApplicationData.Current.LocalSettings.Values["enableTouchGestureAction"] = value;
+        }
+        
         public int maxDownloadCount
         {
             get => GetSettings("maxDownloadCount", 1);

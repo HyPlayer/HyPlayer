@@ -83,7 +83,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     public ExpandedPlayer()
     {
         InitializeComponent();
-        ImageAlbum.ManipulationMode = ManipulationModes.TranslateX | ManipulationModes.TranslateY;
+        if (Common.Setting.enableTouchGestureAction)
+            ImageAlbum.ManipulationMode = ManipulationModes.TranslateX | ManipulationModes.TranslateY;
         loaded = true;
         Common.PageExpandedPlayer = this;
         HyPlayList.OnPause += HyPlayList_OnPause;
@@ -556,7 +557,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         ImageAlbum.Source = img;
                         if (Common.Setting.expandedPlayerBackgroundType == 0)
                             Background = new ImageBrush
-                            { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                                { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                     }
                     else
                     {
@@ -572,7 +573,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
                         if (Common.Setting.expandedPlayerBackgroundType == 0)
                             Background = new ImageBrush
-                            { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                                { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                     }
                 }
                 catch (Exception)
@@ -1011,6 +1012,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             {
                 ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;
             }
+
             if (e.Cumulative.Translation.Y > 150)
             {
                 e.Complete();
