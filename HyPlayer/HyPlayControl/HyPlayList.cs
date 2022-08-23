@@ -608,15 +608,14 @@ public static class HyPlayList
                 if (json["data"]?[0]?["code"]?.ToString() == "200")
                 {
                     playUrl = json["data"][0]["url"]?.ToString();
-                    var bitrate = json["data"][0]["br"]?.ToObject<int>() ?? 0;
-                    string tag;
-                    if (bitrate > 999000)
-                        tag = "Hi-Res";
-                    else if (bitrate > 320000)
-                        tag = "无损";
-                    else
-                        tag = $"{bitrate / 1000}K";
-                    if (bitrate == 0) tag = "在线";
+                    var tag = json["data"]?[0]?["level"]?.ToString() switch
+                    {
+                        "standard" => "128K",
+                        "exhigh" => "320K",
+                        "lossless" => "无损",
+                        "hires" => "Hi-Res",
+                        _ => "在线"
+                    };
                     NowPlayingItem.PlayItem.Tag = tag;
                     _ = Common.Invoke(() => { Common.BarPlayBar.TbSongTag.Text = tag; });
                 }
