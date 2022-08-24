@@ -373,6 +373,9 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         //    t.Width = LyricWidth;
         //    t.RefreshFontSize();
         //});
+
+        ImageRotateTransform.CenterX = ImageAlbum.ActualSize.X / 2;
+        ImageRotateTransform.CenterY = ImageAlbum.ActualSize.Y / 2;
     }
 
 
@@ -1006,12 +1009,12 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         switch (Common.Setting.gestureMode)
         {
             case 3:
-                ImageRotateTransform.Angle = e.Cumulative.Translation.Y;
-                HyPlayList.Player.Position =
-                    HyPlayList.Player.Position.Add(TimeSpan.FromMilliseconds(e.Delta.Translation.Y * 10));
+                ImageRotateTransform.Angle += e.Delta.Translation.Y;
+                HyPlayList.Player.PlaybackSession.Position =
+                    HyPlayList.Player.PlaybackSession.Position.Add(TimeSpan.FromMilliseconds(e.Delta.Translation.Y * 10));
                 break;
             case 2:
-                ImageRotateTransform.Angle = e.Cumulative.Translation.Y;
+                ImageRotateTransform.Angle += e.Delta.Translation.Y;
                 return;
             case 1:
                 ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;
