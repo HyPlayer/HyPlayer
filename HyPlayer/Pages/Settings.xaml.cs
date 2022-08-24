@@ -50,10 +50,20 @@ public sealed partial class Settings : Page
         InitializeComponent();
         RomajiStatus.Text = (Common.KawazuConv == null ? "请下载资源文件" : "可以转换");
         ButtonDownloadRomaji.Visibility = Common.KawazuConv == null ? Visibility.Visible : Visibility.Collapsed;
-        ComboBoxSongBr.SelectedIndex = ComboBoxSongBr.Items.IndexOf(ComboBoxSongBr.Items.First(t =>
+        if (Common.Setting.audioRate.EndsWith('0') || Common.Setting.downloadAudioRate.EndsWith('0'))
+        {
+            Common.Setting.audioRate = "exhigh";
+            Common.Setting.downloadAudioRate = "hires";
+        }
+        else
+        {
+            ComboBoxSongBr.SelectedIndex = ComboBoxSongBr.Items.IndexOf(ComboBoxSongBr.Items.First(t =>
                 ((ComboBoxItem)t).Tag.ToString() == Common.Setting.audioRate));
-        ComboBoxSongDownloadBr.SelectedIndex = ComboBoxSongDownloadBr.Items.IndexOf(ComboBoxSongDownloadBr.Items.First(t =>
-                ((ComboBoxItem)t).Tag.ToString() == Common.Setting.downloadAudioRate));
+            ComboBoxSongDownloadBr.SelectedIndex = ComboBoxSongDownloadBr.Items.IndexOf(
+                ComboBoxSongDownloadBr.Items.First(t =>
+                    ((ComboBoxItem)t).Tag.ToString() == Common.Setting.downloadAudioRate));
+        }
+
         TextBoxXREALIP.Text = ApplicationData.Current.LocalSettings.Values["xRealIp"] != null
             ? ApplicationData.Current.LocalSettings.Values["xRealIp"].ToString()
             : "";
@@ -110,7 +120,7 @@ public sealed partial class Settings : Page
         try
         {
             await dl.StartAsync().AsTask(process);
-            if (dl.Progress.TotalBytesToReceive > 5000 ) OnRomajiDownloadDone(dl);
+            if (dl.Progress.TotalBytesToReceive > 5000) OnRomajiDownloadDone(dl);
         }
         catch (Exception E)
         {
@@ -126,7 +136,7 @@ public sealed partial class Settings : Page
             return;
         }
 
-        RomajiStatus.Text = $"正在下载资源文件 ({obj.Progress.BytesReceived * 100 / obj.Progress.TotalBytesToReceive:D}%)";            
+        RomajiStatus.Text = $"正在下载资源文件 ({obj.Progress.BytesReceived * 100 / obj.Progress.TotalBytesToReceive:D}%)";
     }
 
     private async Task OnRomajiDownloadDone(DownloadOperation obj)
@@ -388,6 +398,6 @@ public sealed partial class Settings : Page
     private async void ClearTileCache_Click(object sender, RoutedEventArgs e)
     {
         var storageFolder = await ApplicationData.Current.TemporaryFolder.TryGetItemAsync("LocalTileBackground");
-        if (storageFolder!=null) await storageFolder.DeleteAsync();
+        if (storageFolder != null) await storageFolder.DeleteAsync();
     }
 }
