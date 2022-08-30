@@ -213,6 +213,7 @@
         <Grid
             x:Name="GridSongInfoContainer"
             Grid.Column="0"
+            Grid.ColumnSpan="2"
             HorizontalAlignment="Left"
             x:FieldModifier="public"
             Canvas.ZIndex="2"
@@ -597,13 +598,14 @@
                 Background="Transparent"
                 BorderBrush="Transparent"
                 Click="ToggleButton_Click"
-                Content="词"
                 FontSize="18"
                 CornerRadius="20"
                 FontWeight="SemiBold"
                 IsChecked="{x:Bind Mode=OneWay, Path=hy:Common.Setting.toastLyric}"
                 IsThreeState="False"
-                ToolTipService.ToolTip="桌面歌词" />
+                ToolTipService.ToolTip="桌面歌词" >
+                <FontIcon Glyph="&#xE66C;"/>
+            </ToggleButton>
             <Button
                 x:Name="BtnVolume"
                 Width="40"
@@ -728,7 +730,7 @@
             <VisualStateGroup>
                 <VisualState>
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="1160" />
+                        <AdaptiveTrigger MinWindowWidth="1000" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="TbSongName.FontSize" Value="22" />
