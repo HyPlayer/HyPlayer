@@ -37,7 +37,7 @@
                                     EnableLazyLoading="True"
                                     IsCacheEnabled="False"
                                     Source="{x:Bind Cover}"
-                                    Stretch="UniformToFill"
+                                    Stretch="Uniform"
                                     Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}" />
                                 <Rectangle
                                     x:Name="RectangleImageAcrylic"
