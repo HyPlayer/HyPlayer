@@ -20,7 +20,7 @@
         <TextBlock
             Grid.Row="0"
             Margin="24,24,24,0"
-            FontSize="44"
+            FontSize="36"
             FontWeight="Bold"
             Text="最近播放" />
         <NavigationView
@@ -41,6 +41,7 @@
         </NavigationView>
         <controls:SongsList
             x:Name="SongsList"
+            Margin="20,0,20,0"
             Grid.Row="2"
             Songs="{x:Bind Songs, Mode=OneWay}" />
     </Grid>

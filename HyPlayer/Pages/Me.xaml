@@ -29,26 +29,18 @@
                                 Margin="0,15,0,15"
                                 HorizontalAlignment="Stretch"
                                 Tag="{x:Bind ResourceId}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="60" />
-                                </Grid.ColumnDefinitions>
                                 <controls:ImageEx
                                     x:Name="RectangleImageBack"
-                                    Grid.Column="0"
-                                    Grid.ColumnSpan="2"
                                     Height="85"
                                     Margin="0,-10,0,-10"
                                     CornerRadius="10"
                                     EnableLazyLoading="True"
                                     IsCacheEnabled="False"
                                     Source="{x:Bind Cover}"
-                                    Stretch="UniformToFill"
+                                    Stretch="Uniform"
                                     Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}" />
                                 <Rectangle
                                     x:Name="RectangleImageAcrylic"
-                                    Grid.Column="0"
-                                    Grid.ColumnSpan="2"
                                     Margin="0,-10,0,-10"
                                     Fill="{ThemeResource SystemControlAcrylicElementBrush}"
                                     RadiusX="10"
@@ -59,20 +51,12 @@
                                     Background="Transparent"
                                     Tag="{x:Bind ResourceId}"
                                     Tapped="SongListItemClicked">
-                                    <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                        <TextBlock
-                                            x:Name="OrderId"
-                                            Width="48"
-                                            Margin="12,0,0,0"
-                                            HorizontalAlignment="Center"
-                                            VerticalAlignment="Top"
-                                            FontSize="24"
-                                            FontWeight="Bold"
-                                            Text="{x:Bind DspOrder}" />
+                                    <StackPanel Orientation="Horizontal">
                                         <controls:ImageEx
                                             x:Name="ImageRect"
-                                            Width="75"
-                                            Height="75"
+                                            Margin="10,0,0,0"
+                                            Width="80"
+                                            Height="80"
                                             CornerRadius="10"
                                             EnableLazyLoading="True"
                                             IsCacheEnabled="False"
@@ -125,16 +109,20 @@
                                         </Grid>
                                     </StackPanel>
                                 </Grid>
-                                <Button
-                                    Grid.Column="1"
-                                    HorizontalAlignment="Right"
+                                <Button x:Name="PlayBtn"
+                                    Margin="10,0,0,0"
+                                    HorizontalAlignment="Left"
+                                    Height="80"
+                                    Width="80"
+                                    CornerRadius="12"
+                                    VerticalAlignment="Center"
                                     Click="BtnPlayClick"
                                     Tag="{x:Bind ResourceId}"
                                     ToolTipService.ToolTip="播放"
                                     Visibility="{x:Bind CanPlay}">
                                     <FontIcon
                                         Name="PlayStateIcon"
-                                        Glyph="&#xEDB5;" />
+                                        Glyph="&#xEDB5;"  />
                                 </Button>
                             </Grid>
                         </ListViewItem>
@@ -189,7 +177,7 @@
         </VisualStateManager.VisualStateGroups>
         <ScrollViewer>
 
-            <Grid Margin="0,0,0,130">
+            <Grid Margin="-10,20,-13,130">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
@@ -217,8 +205,8 @@
                         LastChildFill="True">
                         <Rectangle
                             x:Name="RectangleImage"
-                            Width="150"
-                            Height="150"
+                            Width="130"
+                            Height="130"
                             Margin="20"
                             controls:DockPanel.Dock="Left"
                             RadiusX="10"

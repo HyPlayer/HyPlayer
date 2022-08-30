@@ -7,7 +7,7 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="50" />
+            <RowDefinition Height="100" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -20,8 +20,8 @@
 
         <StackPanel Orientation="Horizontal" Spacing="20">
             <TextBlock
-                Margin="30,-5,0,0"
-                FontSize="44"
+                Margin="30,30,0,0"
+                FontSize="36"
                 FontWeight="Bold"
                 Text="我的云盘"
                 TextWrapping="Wrap" />
