@@ -41,10 +41,11 @@
         <controls1:SongsList
             x:Name="SongsList"
             Grid.RowSpan="2"
+            Margin="20"
             IsSearchEnabled="True"
             Songs="{x:Bind Songs}">
             <controls1:SongsList.ListHeader>
-                <Grid x:Name="GridPersonalInformation" Margin="12,32,12,12">
+                <Grid x:Name="GridPersonalInformation" Margin="0,15,0,12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
@@ -63,14 +64,14 @@
                         Grid.ColumnSpan="2"
                         Margin="0,0,0,0"
                         Background="{ThemeResource SongListPageAcrylicBrush}"
-                        CornerRadius="16"
+                        CornerRadius="12"
                         Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}" />
                     <Border
                         x:Name="RectangleImage"
                         Grid.Column="0"
-                        Width="200"
-                        Height="200"
-                        Margin="20,20,15,20"
+                        Width="130"
+                        Height="130"
+                        Margin="20,20,0,20"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Top"
                         CornerRadius="16">

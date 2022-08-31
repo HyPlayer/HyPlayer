@@ -31,8 +31,8 @@
                         Margin="40,105,0,0"
                         x:Name="GreetingText">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="Hi~ " Style="{StaticResource HeaderTextBlockStyle}"/>
-                    <TextBlock x:Name="TbHelloUserName" Style="{StaticResource HeaderTextBlockStyle}" FontWeight="Normal" />
+                    <TextBlock Text="Hi~ " FontWeight="Bold" Style="{StaticResource HeaderTextBlockStyle}"/>
+                    <TextBlock x:Name="TbHelloUserName" Style="{StaticResource HeaderTextBlockStyle}" FontWeight="Bold" />
                 </StackPanel>
                 <TextBlock
                     Margin="0,5,0,0"

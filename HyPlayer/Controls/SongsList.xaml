@@ -34,7 +34,7 @@
                         HorizontalContentAlignment="Stretch"
                         Content="{x:Bind ListHeader}" />
                     <Grid
-                        Margin="0,16,0,0"
+                        Margin="0,16,-10,0"
                         ColumnSpacing="12"
                         Visibility="{x:Bind IsSearchEnabled}">
                         <Grid.ColumnDefinitions>
@@ -166,7 +166,7 @@
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="classes:NCSong" ScrollViewer.CanContentRenderOutsideBounds="False">
                     <Grid
-                        Margin="-15,15,0,15"
+                        Margin="-5,15,-10,15"
                         HorizontalAlignment="Stretch"
                         Background="Transparent"
                         IsRightTapEnabled="True"
@@ -192,33 +192,34 @@
                         <Rectangle
                             x:Name="RectangleImageAcrylic"
                             Grid.ColumnSpan="2"
-                            Margin="0,-10,0,-10"
+                            Margin="-5,-10,0,-10"
                             Fill="{ThemeResource SystemControlAcrylicElementBrush}"
                             RadiusX="10"
                             RadiusY="10"
                             Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}" />
 
                         <StackPanel Grid.Column="0" Orientation="Horizontal">
-                            <TextBlock
-                                x:Name="OrderId"
-                                Width="48"
-                                Margin="12,0,0,0"
-                                HorizontalAlignment="Left"
-                                VerticalAlignment="Top"
-                                FontSize="24"
-                                FontWeight="Bold"
-                                Text="{x:Bind DspOrder}" />
                             <controls:ImageEx
                                 x:Name="ImageRect"
                                 Width="80"
                                 Height="80"
                                 x:Phase="4"
+                                Margin="5,0,0,0"
                                 CornerRadius="10"
                                 EnableLazyLoading="True"
                                 IsCacheEnabled="False"
                                 IsEnabled="{x:Bind IsAvailable}"
                                 Source="{x:Bind Cover}"
                                 Stretch="UniformToFill" />
+                            <TextBlock
+                                x:Name="OrderId"
+                                Width="48"
+                                Margin="-73,0,0,0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
+                                FontSize="24"
+                                FontWeight="Bold"
+                                Text="{x:Bind DspOrder}" />
                             <Grid Padding="7,0,0,0">
                                 <Grid.RowDefinitions>
                                     <RowDefinition />
