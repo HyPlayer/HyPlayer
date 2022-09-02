@@ -3,5 +3,8 @@
   "extends": [
     "config:base"
   ],
-  "ignorePaths": ["azure-pipeline*.yml"],
+  "ignorePaths": [
+    "azure-pipeline*.yml",
+    ".github/workflows/*"
+  ],
 }
