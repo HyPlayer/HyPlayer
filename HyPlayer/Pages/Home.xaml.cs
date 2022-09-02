@@ -12,6 +12,7 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using NeteaseCloudMusicApi;
+using Windows.UI.Xaml.Media.Imaging;
 
 #endregion
 
@@ -67,6 +68,10 @@ public sealed partial class Home : Page
             UnLoginedContent.Visibility = Visibility.Collapsed;
             LoginedContent.Visibility = Visibility.Visible;
             TbHelloUserName.Text = Common.LoginedUser.name;
+            UserImageRect.ImageSource = Common.Setting.noImage
+    ? null
+    : new BitmapImage(new Uri(Common.LoginedUser.avatar, UriKind.RelativeOrAbsolute));
+
         });
         //我们直接Batch吧
         try
@@ -182,5 +187,51 @@ public sealed partial class Home : Page
     private void LikedSongListTapped(object sender, TappedRoutedEventArgs e)
     {
         Common.NavigatePage(typeof(SongListDetail), Common.MySongLists[0].plid);
+    }
+
+    private async void HeartBeatTapped(object sender, TappedRoutedEventArgs e)
+    {
+        HyPlayList.RemoveAllSong();
+        try
+        {
+            var jsoon = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
+                new Dictionary<string, object> { { "id", Common.MySongLists[0].plid } });
+            var jsona = await Common.ncapi.RequestAsync(
+                CloudMusicApiProviders.PlaymodeIntelligenceList,
+                new Dictionary<string, object>
+                {
+                    { "pid", Common.MySongLists[0].plid },
+                    { "id", jsoon["playlist"]["trackIds"][0]["id"].ToString() }
+                });
+
+            var Songs = new List<NCSong>();
+            foreach (var token in jsona["data"])
+            {
+                var ncSong = NCSong.CreateFromJson(token["songInfo"]);
+                Songs.Add(ncSong);
+            }
+
+            try
+            {
+                HyPlayList.AppendNcSongs(Songs);
+                HyPlayList.SongAppendDone();
+                HyPlayList.SongMoveTo(0);
+            }
+            catch (Exception ex)
+            {
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+        }
+
+    }
+
+    private void UserTapped(object sender, TappedRoutedEventArgs e)
+    {
+            Common.NavigatePage(typeof(Me), null,null);
+
     }
 }
