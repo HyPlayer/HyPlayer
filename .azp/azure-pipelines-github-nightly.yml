@@ -9,7 +9,7 @@ trigger:
       - develop
   paths:
     exclude:
-      - *.md
+      - '*.md'
 
 pool:
   vmImage: 'windows-2022'
