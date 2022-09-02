@@ -13,98 +13,57 @@
                 FontSize="44"
                 FontWeight="Bold"
                 Margin="24,24,0,0" />
-            <Rectangle
-                Height=" 150"
+            <Grid Height="320" Margin="0,70,0,0" VerticalAlignment="Top">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition x:Name="BtnsColm" Width="610"/>
+                </Grid.ColumnDefinitions>
+                <Rectangle
+                    Grid.Row="0"
+                Height=" 110"
                 VerticalAlignment="Top"
                 RadiusX="10"
                 RadiusY="10"
-                Margin="15,85,15,0">
-                <Rectangle.Fill>
-                    <LinearGradientBrush EndPoint="1,0" StartPoint="0,1">
-                        <GradientStop Color="DeepSkyBlue" Offset="1" />
-                        <GradientStop Color="{ThemeResource SystemAccentColor}" Offset="0.6" />
-                    </LinearGradientBrush>
-                </Rectangle.Fill>
-            </Rectangle>
-            <!--  欢迎语  -->
-            <StackPanel Orientation="Vertical"
-                        Margin="40,105,0,0"
+                Margin="15,30,15,0">
+                    <Rectangle.Fill>
+                        <LinearGradientBrush EndPoint="1,0" StartPoint="0,1">
+                            <GradientStop Color="DeepSkyBlue" Offset="1" />
+                            <GradientStop Color="{ThemeResource SystemAccentColor}" Offset="0.6" />
+                        </LinearGradientBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+                <!--  欢迎语  -->
+                <StackPanel
+                    Orientation="Vertical"
+                        Margin="40,40,20,0"
                         x:Name="GreetingText">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="Hi~ " FontWeight="Bold" Style="{StaticResource HeaderTextBlockStyle}"/>
-                    <TextBlock x:Name="TbHelloUserName" Style="{StaticResource HeaderTextBlockStyle}" FontWeight="Bold" />
-                </StackPanel>
-                <TextBlock
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Hi~ " FontWeight="Bold" Style="{StaticResource HeaderTextBlockStyle}" FontSize="36"/>
+                        <TextBlock x:Name="TbHelloUserName" Style="{StaticResource HeaderTextBlockStyle}" FontWeight="Bold" FontSize="36" />
+                    </StackPanel>
+                    <TextBlock
                     Margin="0,5,0,0"
                     x:Name="TbRamdomWelcome"
-                    FontSize="20"
+                    FontSize="18"
                     Text="用音乐开启新的一天吧" />
-            </StackPanel>
-            <StackPanel x:Name="HomeBtns" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,115,48,0"
+                </StackPanel>
+                <StackPanel Grid.Column="1" x:Name="HomeBtns" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,35,20,0"
                         Spacing="20">
-                <Button
-                    x:Name="DailyRcmBtn"
-                    Height="90"
-                    Width="90"
-                    CornerRadius="16"
-                    VerticalAlignment="Top"
-                    HorizontalAlignment="Center"
-                    Margin="0,0,0,0"               
-                    Tapped="dailyRcmTapped">
-                    <StackPanel>
-                        <FontIcon
-                            x:Name="IconDailyRcm"
-                            FontSize="36"
-                            Glyph="&#xE163;" />
-                        <TextBlock
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Top"
-                            Text="每日推荐"
-                            FontWeight="Bold"
-                            Margin="0,0,0,0"
-                            FontSize="12" />
-
-                    </StackPanel>
-                </Button>
-                <Button
-                    x:Name="PersonalFMBtn"
-                    Height="90"
-                    Width="90"
-                    CornerRadius="16"
-                    VerticalAlignment="Top"
-                    HorizontalAlignment="Center"
-                    Margin="0,0,0,0"
-                    Tapped="FMTapped">
-                    <StackPanel>
-                        <FontIcon
-                            x:Name="IconFM"
-                            FontSize="36"
-                            Glyph="&#xEFA9;" />
-                        <TextBlock
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Top"
-                            Text="私人FM"
-                            FontWeight="Bold"
-                            Margin="0,4,0,0"
-                            FontSize="12" />
-
-                    </StackPanel>
-                </Button>
-                <Button
+                    <Button
                     x:Name="LikedSongListBtn"
-                    Height="90"
-                    Width="90"
+                    Height="100"
+                    Width="100"
                     CornerRadius="16"
                     VerticalAlignment="Top"
                     HorizontalAlignment="Center"
                     Margin="0,0,0,0"
                     Tapped="LikedSongListTapped">
-                    <StackPanel>
-                        <FontIcon
+                        <StackPanel>
+                            <FontIcon
                             x:Name="IconLiked"
                             FontSize="36"
-                            Glyph="&#xE00B;" />
-                        <TextBlock
+                            Glyph="&#xE006;" />
+                            <TextBlock
                             HorizontalAlignment="Center"
                             VerticalAlignment="Top"
                             Text="喜欢音乐"
@@ -112,11 +71,119 @@
                             Margin="0,4,0,0"
                             FontSize="12" />
 
-                    </StackPanel>
-                </Button>
-            </StackPanel>
+                        </StackPanel>
+                    </Button>
+                    <Button
+                    x:Name="DailyRcmBtn"
+                    Height="100"
+                    Width="100"
+                    CornerRadius="16"
+                    VerticalAlignment="Top"
+                    HorizontalAlignment="Center"
+                    Margin="0,0,0,0"               
+                    Tapped="dailyRcmTapped">
+                        <StackPanel>
+                            <FontIcon
+                            x:Name="IconDailyRcm"
+                            FontSize="36"
+                            Glyph="&#xE163;" />
+                            <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Top"
+                            Text="每日推荐"
+                            FontWeight="Bold"
+                            Margin="0,0,0,0"
+                            FontSize="12" />
+
+                        </StackPanel>
+                    </Button>
+                    <Button
+                    x:Name="PersonalFMBtn"
+                    Height="100"
+                    Width="100"
+                    CornerRadius="16"
+                    VerticalAlignment="Top"
+                    HorizontalAlignment="Center"
+                    Margin="0,0,0,0"
+                    Tapped="FMTapped">
+                        <StackPanel>
+                            <FontIcon
+                            x:Name="IconFM"
+                            FontSize="36"
+                            Glyph="&#xEFA9;" />
+                            <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Top"
+                            Text="私人FM"
+                            FontWeight="Bold"
+                            Margin="0,4,0,0"
+                            FontSize="12" />
+
+                        </StackPanel>
+                    </Button>
+                    <Button
+                    x:Name="HeartBeatBtn"
+                    Height="100"
+                    Width="100"
+                    CornerRadius="16"
+                    VerticalAlignment="Top"
+                    HorizontalAlignment="Center"
+                    Margin="0,0,0,0"               
+                    Tapped="HeartBeatTapped">
+                        <StackPanel>
+                            <FontIcon
+                            x:Name="IconHeartBeat"
+                            FontSize="36"
+                            Glyph="&#xE95E;" />
+                            <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Top"
+                            Text="心动模式"
+                            FontWeight="Bold"
+                            Margin="0,0,0,0"
+                            FontSize="12" />
+
+                        </StackPanel>
+                    </Button>
+                    <Button
+                    x:Name="UserBtn"
+                    Height="100"
+                    Width="100"
+                    CornerRadius="16"
+                    VerticalAlignment="Top"
+                    HorizontalAlignment="Center"
+                    Margin="0,0,0,0"               
+                    Tapped="UserTapped" 
+                    BorderBrush="{x:Null}"
+                    Background="Transparent" >
+                        <Grid>
+                            <Rectangle
+                            Margin="-27">
+                                <Rectangle.Fill>
+                                    <ImageBrush x:Name="UserImageRect" Stretch="UniformToFill">
+                                        <ImageBrush.ImageSource>
+                                            <BitmapImage UriSource="/Assets/icon.png" />
+                                        </ImageBrush.ImageSource>
+                                    </ImageBrush>
+
+                                </Rectangle.Fill>
+                            </Rectangle>
+                            <TextBlock
+                            x:Name="UserName"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Top"
+                            Text="我的歌单"
+                            FontWeight="Bold"
+                            Margin="0,35,0,0"
+                            FontSize="12" />
+                        </Grid>
+                    </Button>
+
+
+                </StackPanel>
+            </Grid>
             <StackPanel
-                Margin="0,230,0,0"
+                Margin="0,220,0,0"
                 x:Name="MainContainer"
                 Padding="15"
                 Orientation="Vertical"
@@ -173,7 +240,8 @@
                     <StackPanel
                         Background="#1A808080"
                         CornerRadius="8"
-                        Orientation="Vertical">
+                        Orientation="Vertical"
+                        Margin="0,10,0,0">
                         <StackPanel Orientation="Horizontal" Margin="20,20,0,0" Spacing="12">
                             <FontIcon Glyph="&#xEA37;"/>
                             <TextBlock                           
@@ -233,29 +301,41 @@
                         <AdaptiveTrigger MinWindowWidth="1" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
-                        <Setter Target="GreetingText.Visibility" Value="Collapsed" />
-                        <Setter Target="HomeBtns.Spacing" Value="10" />
-
-                    </VisualState.Setters>
-
-                </VisualState>
-                <VisualState>
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="740" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="GreetingText.Visibility" Value="Visible" />
-                        <Setter Target="HomeBtns.Spacing" Value="10" />
+                        <Setter Target="BtnsColm.Width" Value="480"/>
+                        <Setter Target="LikedSongListBtn.Visibility" Value="Collapsed"/>
+                        <Setter Target="HomeBtns.Margin" Value="0,35,20,0"/>
+                        <Setter Target="HomeBtns.Spacing" Value="20" />
                     </VisualState.Setters>
 
                 </VisualState>
 
                 <VisualState>
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="1150" />
+                        <AdaptiveTrigger MinWindowWidth="800" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
-                        <Setter Target="GreetingText.Visibility" Value="Visible" />
+                        <Setter Target="BtnsColm.Width" Value="560"/>
+                        <Setter Target="HomeBtns.Margin" Value="-100,35,20,0"/>
+                        <Setter Target="HomeBtns.Spacing" Value="10" />
+                    </VisualState.Setters>
+
+                </VisualState>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="900" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="HomeBtns.Spacing" Value="10" />
+                        <Setter Target="BtnsColm.Width" Value="560"/>
+                    </VisualState.Setters>
+
+                </VisualState>
+
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1300" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>

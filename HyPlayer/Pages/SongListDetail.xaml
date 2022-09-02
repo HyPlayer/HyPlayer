@@ -68,7 +68,7 @@
                         Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}" />
                     <Border
                         x:Name="RectangleImage"
-                        Grid.Column="0"
+                        Grid.Column="2"
                         Width="130"
                         Height="130"
                         Margin="20,20,0,20"
@@ -86,11 +86,12 @@
                     <StackPanel
                         Name="StackPanelUserInfo"
                         Grid.Column="1"
-                        Margin="16,20,40,20"
+                        Margin="166,20,40,20"
                         HorizontalAlignment="Left"
                         Orientation="Vertical">
                         <TextBlock
                             IsTextSelectionEnabled="True"
+                            Margin="0,0,-30,0"
                             x:Name="TextBoxPLName"
                             FontWeight="Bold"
                             Foreground="{ThemeResource DefaultTextForegroundThemeBrush}"
@@ -118,11 +119,11 @@
                     </StackPanel>
                     <StackPanel
                         Grid.Column="2"
-                        Margin="16"
+                        Margin="0,0,0,10"
                         Orientation="Horizontal"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Bottom"
-                        Spacing="8">
+                        Spacing="6">
                         <Button
                             x:Name="ButtonIntel"
                             Background="OrangeRed"
@@ -207,14 +208,16 @@
                         <AdaptiveTrigger MinWindowWidth="0" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
-                        <Setter Target="RectangleImage.Visibility" Value="Collapsed" />
+                        <Setter Target="RectangleImage.Width" Value="90" />
+                        <Setter Target="RectangleImage.Height" Value="90" />
+                        <Setter Target="StackPanelUserInfo.Margin" Value="126,20,40,20"/>
                         <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="1" />
                         <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="10" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState>
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="1024" />
+                        <AdaptiveTrigger MinWindowWidth="700" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="RectangleImage.Visibility" Value="Visible" />
