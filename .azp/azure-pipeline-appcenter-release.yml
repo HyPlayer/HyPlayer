@@ -101,7 +101,7 @@ steps:
     isSilent: false
   condition: succeededOrFailed()
 
-- task: PowerShell@2
+- task: PowerShell@2.210.0
   inputs:
     targetType: 'inline'
     script: |
