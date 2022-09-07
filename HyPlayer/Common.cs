@@ -170,7 +170,6 @@ namespace HyPlayer
             if (Setting.forceMemoryGarbage)
             {
                 if (NavigationHistory.Count >= 1 && PageBase.NavMain.SelectedItem == NavigationHistory.Peek().Item)
-                    PageBase.NavMain.SelectedItem = PageBase.NavItemBlank;
                 NavigationHistory.Push(new NavigationHistoryItem
                 {
                     PageType = SourcePageType,
@@ -188,7 +187,6 @@ namespace HyPlayer
             }
 
             if (previousNavigationItem == PageBase.NavMain.SelectedItem)
-                PageBase.NavMain.SelectedItem = PageBase.NavItemBlank;
             previousNavigationItem = PageBase.NavMain.SelectedItem;
         }
 

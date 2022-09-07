@@ -719,6 +719,13 @@ public sealed partial class PlayBar
 
     public void ShowExpandedPlayer()
     {
+        Common.PageMain.GridPlayBar.Margin = new Thickness(16);
+        PlayProgress.Margin = new Thickness(15, 80, 8, 0);
+        Blank.Width = new GridLength(3,GridUnitType.Star );
+        Blank1.Width = new GridLength(1, GridUnitType.Star);
+        Blank2.Width = new GridLength(1, GridUnitType.Star);
+        Blank3.Width = new GridLength(1, GridUnitType.Star);
+        Blank4.Width = new GridLength(1, GridUnitType.Star);
         ButtonExpand.Visibility = Visibility.Collapsed;
         ButtonCollapse.Visibility = Visibility.Visible;
         Common.PageMain.GridPlayBar.Background = null;
@@ -762,6 +769,13 @@ public sealed partial class PlayBar
 
     public void CollapseExpandedPlayer()
     {
+        Common.PageMain.GridPlayBar.Margin = new Thickness(336,16,16,16);
+        PlayProgress.Margin = new Thickness(115, 80, 8, 0);
+        Blank.Width = new GridLength(6, GridUnitType.Star);
+        Blank1.Width = new GridLength(0);
+        Blank2.Width = new GridLength(0);
+        Blank3.Width=new GridLength(0);
+        Blank4.Width = new GridLength(0);
         if (Common.PageExpandedPlayer == null) return;
         Common.PageExpandedPlayer.StartCollapseAnimation();
         GridSongAdvancedOperation.Visibility = Visibility.Collapsed;
@@ -1140,7 +1154,6 @@ public sealed partial class PlayBar
 
     private async void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
-        InitializedAni.Begin();
         PlayBarBackgroundFadeIn.Begin();
         HyPlayList.PlayerOutgoingVolume = (double)Common.Setting.Volume / 100;
         SliderAudioRate.Value = HyPlayList.PlayerOutgoingVolume * 100;
@@ -1281,7 +1294,7 @@ public class PlayBarImageRadiusConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {
-        return value is true ? new CornerRadius(8) : new CornerRadius(8, 0, 0, 0);
+        return value is true ? new CornerRadius(8) : new CornerRadius(8, 8, 0, 0);
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)
