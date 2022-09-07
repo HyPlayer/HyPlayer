@@ -330,7 +330,7 @@ public sealed partial class BasePage : Page
             };
 
         Common.Logined = true;
-        NavItemLogin.Content   = Common.LoginedUser.name;
+        NavItemLogin.Content = Common.LoginedUser.name;
         NavItemLogin.Icon = new BitmapIcon
         {
             UriSource = new Uri(Common.LoginedUser.avatar + "?param=" + StaticSource.PICSIZE_NAVITEM_USERAVATAR),
@@ -474,7 +474,6 @@ public sealed partial class BasePage : Page
         var nowitem = sender.SelectedItem as NavigationViewItem;
         if (Common.NavigationHistory.Count > 1)
             NavMain.IsBackEnabled = true;
-        
         if (nowitem.Tag is null) return;
 
         if (nowitem.Tag.ToString() == "PageMe" && !Common.Logined)
@@ -751,32 +750,11 @@ public sealed partial class BasePage : Page
 
         var currMargin = AppTitleBar.Margin;
         if (sender.PaneDisplayMode == NavigationViewPaneDisplayMode.Top)
-        {
-            BtnSet.Margin = new Thickness(0,0,0,0);
-            BtnSearch.Visibility = Visibility.Visible;
             AppTitleBar.Margin = new Thickness(topIndent, currMargin.Top, currMargin.Right, currMargin.Bottom);
-        }
         else if (sender.DisplayMode == NavigationViewDisplayMode.Minimal)
-        {
-            BtnSet.Margin = new Thickness(0,0,0,0);
-            BtnSearch.Visibility = Visibility.Visible;
             AppTitleBar.Margin = new Thickness(minimalIndent, currMargin.Top, currMargin.Right, currMargin.Bottom);
-        }
-        else if (sender.DisplayMode == NavigationViewDisplayMode.Expanded)
-        {
-            BtnSet.Margin = new Thickness(0, 0, 0, 0);
-            BtnSearch.Visibility = Visibility.Visible;
-            SearchIcon.Visibility = Visibility.Collapsed;
-            NavSearchItem.Height = 60;
-        }
         else
-        {
             AppTitleBar.Margin = new Thickness(expandedIndent, currMargin.Top, currMargin.Right, currMargin.Bottom);
-            BtnSet.Margin = new Thickness(4, 0, 0, 0);
-            BtnSearch.Visibility=Visibility.Collapsed;
-            SearchIcon.Visibility = Visibility.Visible;
-            NavSearchItem.Height = 40;
-        }
     }
 
     private async void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)
@@ -820,38 +798,4 @@ public sealed partial class BasePage : Page
     {
         Common.TeachingTipList.Clear();
     }
-
-    private void BtnHome_Click(object sender, RoutedEventArgs e)
-    {
-        Common.NavigatePage(typeof(Home), null, new EntranceNavigationTransitionInfo());
-    }
-
-    private void BtnSet_Click(object sender, RoutedEventArgs e)
-    {
-        Common.NavigatePage(typeof(Settings), null, new EntranceNavigationTransitionInfo());
-    }
-
-    private async void BtnLogOut_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            await Common.ncapi.RequestAsync(CloudMusicApiProviders.Logout);
-            Common.Logined = false;
-            Common.LoginedUser = new NCUser();
-            ApplicationData.Current.LocalSettings.Values["cookie"] = "";
-            Common.ncapi = new CloudMusicApi();
-            Common.PageMain.MainFrame.Navigate(typeof(BlankPage));
-            Common.PageMain.MainFrame.Navigate(typeof(BasePage));
-            ((App)Application.Current).InitializeJumpList();
-        }
-        catch
-        {
-        }
-
-    }
-    private void SearchBtn_Clicked(object sender, RoutedEventArgs e)
-    {
-        Common.NavigatePage(typeof(Search), null, null);
-    }
-
 }

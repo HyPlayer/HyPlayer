@@ -234,9 +234,4 @@ public sealed partial class Home : Page
             Common.NavigatePage(typeof(Me), null,null);
 
     }
-
-    private void SearchBtn_Clicked(object sender, RoutedEventArgs e)
-    {
-        Common.NavigatePage(typeof(Search), null, null);
-    }
 }
