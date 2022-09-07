@@ -201,7 +201,6 @@
                     FontWeight="ExtraBlack"
                     Tag="PageSettings"
                     Tapped="NavigationViewItem_Tapped" />
-                <muxc:NavigationViewItem x:Name="NavItemBlank" x:FieldModifier="public" IsEnabled="False" Height="130" />
             </muxc:NavigationView.FooterMenuItems>
             <Grid>
                 <Frame x:Name="BaseFrame" Grid.Row="1" Margin="0,48,0,0"/>

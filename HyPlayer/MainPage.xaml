@@ -38,6 +38,30 @@
                         <Setter Target="GridPlayBar.Visibility" Value="Visible" />
                     </VisualState.Setters>
                 </VisualState>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="650" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="GridPlayBar.Margin" Value="66,16,16,16" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1000" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="GridPlayBar.Margin" Value="336,16,16,16" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="200" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="GridPlayBar.Margin" Value="16,16,16,16" />
+                    </VisualState.Setters>
+                </VisualState>
 
                 <VisualState>
                     <VisualState.StateTriggers>

@@ -211,6 +211,40 @@
             Fill="{ThemeResource SystemControlAltMediumLowAcrylicElementMediumBrush}"
             Visibility="{x:Bind hy:Common.Setting.playbarBackgroundAcrylic, Mode=OneWay}" />
         <Grid
+                x:Name="PlayProgress"
+                Grid.ColumnSpan="3"
+            Margin="115,80,8,0"
+                HorizontalAlignment="Stretch">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock
+                    x:Name="TextBlockTotalTime"
+                    Grid.Column="3"
+                    Margin="5,5,0,0"
+                    controls:DockPanel.Dock="Right" />
+            <Border Grid.Column="1" Padding="5,0,5,0">
+                <Slider
+                        x:Name="SliderProgress"
+                        Margin="-5,0,-5,0"
+                        ValueChanged="SliderProgress_ValueChanged">
+                    <Slider.ThumbToolTipValueConverter>
+                        <local:ThumbConverter SecondValue="{Binding SecondValue}" />
+
+                    </Slider.ThumbToolTipValueConverter>
+                </Slider>
+            </Border>
+            <TextBlock
+                    x:Name="TextBlockNowTime"
+                    Grid.Column="0"
+                    Margin="0,5,5,0"
+                    controls:DockPanel.Dock="Left" />
+
+        </Grid>
+
+        <Grid
             x:Name="GridSongInfoContainer"
             Grid.Column="0"
             Grid.ColumnSpan="2"
@@ -220,7 +254,7 @@
             CornerRadius="8,0,0,0">
             <StackPanel
                 x:Name="GridSongAdvancedOperation"
-                Margin="25,0,0,0"
+                Margin="25,-30,0,0"
                 Orientation="Horizontal"
                 Spacing="15"
                 Visibility="Collapsed">
@@ -233,7 +267,7 @@
                     CornerRadius="20"
                     Background="Transparent"
                     BorderBrush="Transparent">
-                    <FontIcon Glyph="&#xE972;" />
+                    <FontIcon Glyph="&#xE972;" FontSize="16" />
                 </Button>
                 <Button
                     x:Name="Btn_Sub"
@@ -245,7 +279,7 @@
                     Background="Transparent"
                     BorderBrush="Transparent"
                     ToolTipService.ToolTip="添加到歌单">
-                    <FontIcon Glyph="&#xE1DA;" />
+                    <FontIcon Glyph="&#xE1DA;" FontSize="16"/>
                 </Button>
                 <Button
                     x:Name="Btn_Down"
@@ -257,7 +291,7 @@
                     Background="Transparent"
                     BorderBrush="Transparent"
                     ToolTipService.ToolTip="下载音乐">
-                    <FontIcon Glyph="&#xE118;" />
+                    <FontIcon Glyph="&#xE118;" FontSize="16"/>
                 </Button>
                 <Button
                     x:Name="Btn_Comment"
@@ -270,7 +304,7 @@
                     BorderBrush="Transparent"
                     ToolTipService.ToolTip="查看评论"
                     Visibility="{x:Bind Mode=OneWay, Path=hy:Common.Setting.notClearMode}">
-                    <FontIcon Glyph="&#xE8F2;" />
+                    <FontIcon Glyph="&#xE8F2;" FontSize="16"/>
                 </Button>
                 <Button
                     x:Name="Btn_Share"
@@ -282,7 +316,7 @@
                     Background="Transparent"
                     BorderBrush="Transparent"
                     ToolTipService.ToolTip="分享">
-                    <FontIcon Glyph="&#xE72D;" />
+                    <FontIcon Glyph="&#xE72D;" FontSize="16" />
                 </Button>
             </StackPanel>
             <StackPanel
@@ -348,7 +382,7 @@
                     <Grid
                         x:Name="SongInfoTag"
                         Height="20"
-                        Margin="0,14,0,0"
+                        Margin="-115,20,0,0"
                         Padding="3,0,3,0"
                         HorizontalAlignment="Left"
                         BorderBrush="Red"
@@ -371,7 +405,8 @@
         <Grid
             x:Name="MainControlGrid"
             Grid.Column="1"
-            Margin="-80,5,-80,0"
+            Grid.ColumnSpan="2"
+            Margin="0,5,0,0"
             Canvas.ZIndex="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="5*" />
@@ -385,11 +420,16 @@
                 Grid.Row="0"
                 Margin="0,5,0,0">
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition x:Name="Blank" Width="6.5*"/>
                     <ColumnDefinition />
                     <ColumnDefinition />
                     <ColumnDefinition />
                     <ColumnDefinition />
                     <ColumnDefinition />
+                    <ColumnDefinition x:Name="Blank1" Width="0"  />
+                    <ColumnDefinition x:Name="Blank2" Width="0"  />
+                    <ColumnDefinition x:Name="Blank3" Width="0"  />
+                    <ColumnDefinition x:Name="Blank4" Width="0"  />
                     <ColumnDefinition />
                     <ColumnDefinition />
                     <ColumnDefinition />
@@ -397,7 +437,7 @@
                 </Grid.ColumnDefinitions>
                 <Button
                     x:Name="BtnMore"
-                    Grid.Column="0"
+                    Grid.Column="1"
                     Grid.ColumnSpan="3"
                     Width="40"
                     Height="40"
@@ -465,7 +505,7 @@
                 </Button>
                 <Button
                     x:Name="BtnPlayRollType"
-                    Grid.Column="2"
+                    Grid.Column="1"
                     Width="38"
                     Height="38"
                     HorizontalAlignment="Center"
@@ -477,12 +517,12 @@
                     ToolTipService.ToolTip="{x:Bind FlyoutPlayRollType.Text, Mode=OneWay}">
                     <FontIcon
                         x:Name="IconPlayType"
-                        FontSize="13"
+                        FontSize="14"
                         Glyph="&#xE169;" />
                 </Button>
                 <Button
                     x:Name="BtnPreviousSong"
-                    Grid.Column="3"
+                    Grid.Column="2"
                     Width="38"
                     Height="38"
                     HorizontalAlignment="Center"
@@ -493,14 +533,14 @@
                     CornerRadius="30">
                     <FontIcon
                         x:Name="IconPrevious"
-                        FontSize="13"
+                        FontSize="14"
                         Glyph="&#xE892;" />
                 </Button>
                 <Button
                     x:Name="BtnPlayStateChange"
-                    Grid.Column="4"
-                    Width="52"
-                    Height="52"
+                    Grid.Column="3"
+                    Width="40"
+                    Height="40"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     AutomationProperties.AcceleratorKey="Space"
@@ -513,13 +553,13 @@
                     <FontIcon
                         x:Name="PlayStateIcon"
                         FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        FontSize="20"
+                        FontSize="16"
                         Glyph="&#xEDB5;" />
                     <!--  EDB4  -->
                 </Button>
                 <Button
                     x:Name="BtnNextSong"
-                    Grid.Column="5"
+                    Grid.Column="4"
                     Width="40"
                     Height="40"
                     HorizontalAlignment="Center"
@@ -529,11 +569,11 @@
                     BorderThickness="0"
                     Click="BtnNextSong_OnClick"
                     CornerRadius="30">
-                    <FontIcon FontSize="13" Glyph="&#xE101;" />
+                    <FontIcon FontSize="14" Glyph="&#xE101;" />
                 </Button>
                 <Button
                     x:Name="BtnLike"
-                    Grid.Column="6"
+                    Grid.Column="5"
                     Width="40"
                     Height="40"
                     HorizontalAlignment="Center"
@@ -547,67 +587,25 @@
                         FontSize="14"
                         Glyph="&#xE00B;" />
                 </Button>
-            </Grid>
-            <Grid
-                x:Name="PlayProgress"
-                Grid.Row="1"
-                ColumnSpacing="5">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBlock
-                    x:Name="TextBlockTotalTime"
-                    Grid.Column="3"
-                    Margin="5,5,0,0"
-                    controls:DockPanel.Dock="Right" />
-                <Border Grid.Column="1" Padding="5,0,5,0">
-                    <Slider
-                        x:Name="SliderProgress"
-                        Margin="-5,0,-5,0"
-                        ValueChanged="SliderProgress_ValueChanged">
-                        <Slider.ThumbToolTipValueConverter>
-                            <local:ThumbConverter SecondValue="{Binding SecondValue}" />
-
-                        </Slider.ThumbToolTipValueConverter>
-                    </Slider>
-                </Border>
-                <TextBlock
-                    x:Name="TextBlockNowTime"
-                    Grid.Column="0"
-                    Margin="0,5,5,0"
-                    controls:DockPanel.Dock="Left" />
-
-            </Grid>
-        </Grid>
-        <controls:UniformGrid
-            x:Name="Btns"
-            Grid.Column="2"
-            Margin="50,0,0,0"
-            HorizontalAlignment="Right"
-            ColumnSpacing="20"
-            Columns="3"
-            CornerRadius="20">
-            <ToggleButton
+                <ToggleButton
                 x:Name="ButtonDesktopLyrics"
+                    Grid.Column="10"
                 Width="40"
                 Height="40"
-                Padding="-5"
                 HorizontalAlignment="Center"
                 Background="Transparent"
                 BorderBrush="Transparent"
                 Click="ToggleButton_Click"
-                FontSize="18"
                 CornerRadius="20"
                 FontWeight="SemiBold"
                 IsChecked="{x:Bind Mode=OneWay, Path=hy:Common.Setting.toastLyric}"
                 IsThreeState="False"
                 ToolTipService.ToolTip="桌面歌词" >
-                <FontIcon Glyph="&#xE66C;"/>
-            </ToggleButton>
-            <Button
+                    <FontIcon Glyph="&#xE66C;" FontSize="14"/>
+                </ToggleButton>
+                <Button
                 x:Name="BtnVolume"
+                    Grid.Column="11"
                 Width="40"
                 Height="40"
                 Padding="-5"
@@ -616,11 +614,12 @@
                 BorderBrush="Transparent"
                 CornerRadius="20"
                 Flyout="{StaticResource VolumeFlyout}">
-                <FontIcon x:Name="BtnVolIcon" Glyph="&#xE15D;" />
-                <!--  E198  -->
-            </Button>
-            <Button
+                    <FontIcon x:Name="BtnVolIcon" Glyph="&#xE15D;"  FontSize="16"/>
+                    <!--  E198  -->
+                </Button>
+                <Button
                 x:Name="ButtonPlayList"
+                    Grid.Column="12"
                 Width="40"
                 Height="40"
                 Padding="-5"
@@ -629,11 +628,11 @@
                 BorderBrush="Transparent"
                 Click="ButtonPlayList_OnClick"
                 CornerRadius="20"  >
-                <Button.Flyout>
-                    <Flyout>
-                        <StackPanel Orientation="Vertical">
-                            <controls:DockPanel LastChildFill="True">
-                                <TextBlock
+                    <Button.Flyout>
+                        <Flyout>
+                            <StackPanel Orientation="Vertical">
+                                <controls:DockPanel LastChildFill="True">
+                                    <TextBlock
                                     x:Name="PlayListTitle"
                                     Margin="16,0,0,0"
                                     DoubleTapped="PlayListTitle_DoubleTapped"
@@ -642,33 +641,33 @@
                                     HorizontalTextAlignment="Center"
                                     IsDoubleTapEnabled="True"
                                     Text="播放列表" />
-                                <Button
+                                    <Button
                                     Margin="5,-5,10,5"
                                     controls:DockPanel.Dock="Right"
                                     Click="ButtonCleanAll_OnClick"
                                     Content="清除"
                                     Foreground="OrangeRed"/>
-                                <Button
+                                    <Button
                                     Margin="0,-5,0,5"
                                     HorizontalAlignment="Right"
                                     controls:DockPanel.Dock="Right"
                                     Click="ButtonAddLocal_OnClick"
                                     Content="添加本地"/>
-                            </controls:DockPanel>
-                            <ListView
+                                </controls:DockPanel>
+                                <ListView
                                 x:Name="ListBoxPlayList"
                                 Width="400"
                                 Height="500"
                                 SelectionChanged="ListBoxPlayList_OnSelectionChanged"
                                 SelectionMode="Single">
-                                <ListView.ItemTemplate>
-                                    <DataTemplate x:DataType="classes:HyPlayItem">
-                                        <StackPanel Margin="0,5,0,5" Orientation="Horizontal">
-                                            <StackPanel Width="345" Orientation="Vertical">
-                                                <TextBlock FontWeight="Bold" Text="{x:Bind Path=PlayItem.Name}" />
-                                                <TextBlock Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" Text="{x:Bind Path=PlayItem.ArtistString}" />
-                                            </StackPanel>
-                                            <Button
+                                    <ListView.ItemTemplate>
+                                        <DataTemplate x:DataType="classes:HyPlayItem">
+                                            <StackPanel Margin="0,5,0,5" Orientation="Horizontal">
+                                                <StackPanel Width="345" Orientation="Vertical">
+                                                    <TextBlock FontWeight="Bold" Text="{x:Bind Path=PlayItem.Name}" />
+                                                    <TextBlock Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" Text="{x:Bind Path=PlayItem.ArtistString}" />
+                                                </StackPanel>
+                                                <Button
                                                 Width="24"
                                                 Height="24"
                                                 Padding="-5"
@@ -676,27 +675,23 @@
                                                 BorderBrush="Transparent"
                                                 Click="PlayListRemove_OnClick"
                                                 Tag="{x:Bind Path=PlayItem}">
-                                                <FontIcon
+                                                    <FontIcon
                                                     HorizontalAlignment="Left"
                                                     FontSize="16"
                                                     Glyph="&#xE10A;" />
-                                            </Button>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ListView.ItemTemplate>
-                            </ListView>
-                        </StackPanel>
-                    </Flyout>
-                </Button.Flyout>
-                <FontIcon Glyph="&#xE142;" />
-            </Button>
-            <controls:UniformGrid.RenderTransform>
-                <TranslateTransform x:Name="BtnsAni" />
-            </controls:UniformGrid.RenderTransform>
-        </controls:UniformGrid>
-        <Button
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListView.ItemTemplate>
+                                </ListView>
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                    <FontIcon Glyph="&#xE142;" FontSize="16" />
+                </Button>
+                <Button
             x:Name="ButtonExpand"
-            Grid.Column="3"
+            Grid.Column="13"
             Width="40"
             Height="40"
             Padding="-5"
@@ -705,14 +700,14 @@
             CornerRadius="20"
             Background="Transparent"
             BorderBrush="Transparent">
-            <FontIcon FontSize="24" Glyph="&#xE971;" />
-            <Button.RenderTransform>
-                <TranslateTransform x:Name="BtnExpandAni" />
-            </Button.RenderTransform>
-        </Button>
-        <Button
+                    <FontIcon FontSize="20" Glyph="&#xE971;" />
+                    <Button.RenderTransform>
+                        <TranslateTransform x:Name="BtnExpandAni" />
+                    </Button.RenderTransform>
+                </Button>
+                <Button
             x:Name="ButtonCollapse"
-            Grid.Column="3"
+            Grid.Column="13"
             Width="40"
             Height="40"
             Padding="-5"
@@ -722,11 +717,13 @@
             Click="ButtonCollapse_OnClick"
             CornerRadius="20"
             Visibility="Collapsed">
-            <FontIcon FontSize="24" Glyph="&#xE972;" />
-        </Button>
+                    <FontIcon FontSize="20" Glyph="&#xE972;" />
+                </Button>
+            </Grid>
+        </Grid>
 
 
-        <VisualStateManager.VisualStateGroups>
+        <!-- VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState>
                     <VisualState.StateTriggers>
@@ -840,6 +837,6 @@
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
-        </VisualStateManager.VisualStateGroups>
+        </VisualStateManager.VisualStateGroups!-->
     </Grid>
 </UserControl>
