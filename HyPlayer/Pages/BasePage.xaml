@@ -89,7 +89,7 @@
             IsTitleBarAutoPaddingEnabled="False"
             ItemInvoked="NavMain_ItemInvoked"
             PaneDisplayMode="Auto"
-            SelectionChanged="NavMain_OnSelectionChanged">
+            SelectionChanged="NavMain_OnSelectionChanged" >
             <muxc:NavigationView.MenuItems>
                 <muxc:NavigationViewItem
                     x:Name="NavSearchItem"
@@ -100,15 +100,14 @@
                     </muxc:NavigationViewItem.Icon>
                     <Button
                         x:Name="BtnSearch"
-                Width="240"
+                Width="220"
                 Height=" 36"
-                        Margin="-30,0,0,0"
+                        Margin="-40,0,0,0"
                 CornerRadius="18"
                 HorizontalAlignment="Center" 
                 VerticalAlignment="Top" Click="SearchBtn_Clicked">
                         <StackPanel Orientation="Horizontal" >
-                            <FontIcon Glyph="&#xE71E;" FontSize="16" />
-                            <TextBlock Text="搜索" FontSize="12" Margin="4,0,0,0"/>
+                            <FontIcon Glyph="&#xE71E;" FontSize="16"/>
                         </StackPanel>
 
                     </Button>
@@ -225,19 +224,19 @@
                 <muxc:NavigationViewItem Height="50" IsTapEnabled="False">
                     <Grid HorizontalAlignment="Stretch" Margin="-10,0,-20,0">
                         <StackPanel Spacing="12" Orientation="Horizontal"   >
-                            <Button BorderThickness="0" x:Name="BtnSet" Background="{ThemeResource SystemAccentColor}" Click="BtnSet_Click" Width="80">
-                                <StackPanel Orientation="Horizontal" Margin="-13,0,-10,0"  >
+                            <Button BorderThickness="0" x:Name="BtnSet" Background="{ThemeResource SystemAccentColor}" Click="BtnSet_Click" Width="90">
+                                <StackPanel Orientation="Horizontal" Margin="-16,0,-10,0"  >
                                     <FontIcon Glyph="&#xE713;" FontSize="16" VerticalAlignment="Center" Margin="0,2,0,0"/>
-                                    <TextBlock Text="设置" Margin="12,0,0,0" FontWeight="Bold"/>
+                                    <TextBlock Text="设置" Margin="15,0,0,0" FontWeight="Bold"/>
                                 </StackPanel>
                             </Button>
-                            <Button  Width="120" x:Name="BtnHome" BorderThickness="0" Click="BtnHome_Click">
+                            <Button  Width="110" x:Name="BtnHome" BorderThickness="0" Click="BtnHome_Click">
                                 <StackPanel Orientation="Horizontal" >
                                     <FontIcon  Glyph="&#xE10F;" FontSize="16" Margin="0,3,0,0"/>
                                     <TextBlock Margin="5,0,0,0" Text="主页" FontWeight="Bold"/>
                                 </StackPanel>
                             </Button>
-                            <Button x:Name="BtnLogOut" Background="OrangeRed" BorderThickness="0"  Click="BtnLogOut_Click">
+                            <Button x:Name="BtnLogOut" Background="OrangeRed" BorderThickness="0"  Click="BtnLogOut_Click" Width="83">
                                 <StackPanel Orientation="Horizontal">
                                     <FontIcon Glyph="&#xF3B1;" FontSize="16" Margin="0,0,0,0" />
                                     <TextBlock Text="退出" FontWeight="Bold" Margin="8,0,0,0"/>
