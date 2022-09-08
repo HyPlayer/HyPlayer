@@ -73,6 +73,7 @@
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <TextBlock
+                                                Margin="4,0,0,0"
                                                 Grid.Row="0"
                                                 FontSize="20"
                                                 FontWeight="Bold"
@@ -81,7 +82,7 @@
                                             <TextBlock
                                                 Name="TextBlockAlia"
                                                 Grid.Row="1"
-                                                Margin="0,2,0,-6"
+                                                Margin="5,2,0,-6"
                                                 FontSize="12"
                                                 Foreground="{ThemeResource TextFillColorTertiaryBrush}"
                                                 MaxLines="1"
@@ -91,7 +92,7 @@
                                             <TextBlock
                                                 Name="TextBlockArtist"
                                                 Grid.Row="2"
-                                                Margin="0,7,0,-6"
+                                                Margin="5,7,0,-6"
                                                 FontSize="12"
                                                 Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                                                 MaxLines="1"
@@ -100,7 +101,7 @@
                                             <TextBlock
                                                 Name="TextBlockAlbum"
                                                 Grid.Row="3"
-                                                Margin="0,7,0,0"
+                                                Margin="5,7,0,0"
                                                 FontSize="13"
                                                 Foreground="Gray"
                                                 MaxLines="1"
@@ -110,19 +111,21 @@
                                     </StackPanel>
                                 </Grid>
                                 <Button x:Name="PlayBtn"
-                                    Margin="10,0,0,0"
+                                    Margin="100,50,0,0"
                                     HorizontalAlignment="Left"
-                                    Height="80"
-                                    Width="80"
-                                    CornerRadius="12"
+                                    Height="25"
+                                    Width="50"
+                                    CornerRadius="6"
                                     VerticalAlignment="Center"
                                     Click="BtnPlayClick"
                                     Tag="{x:Bind ResourceId}"
                                     ToolTipService.ToolTip="播放"
-                                    Visibility="{x:Bind CanPlay}">
+                                    Visibility="{x:Bind CanPlay}"
+                                        >
                                     <FontIcon
                                         Name="PlayStateIcon"
-                                        Glyph="&#xEDB5;"  />
+                                        Glyph="&#xEDB5;" 
+                                        FontSize="14"/>
                                 </Button>
                             </Grid>
                         </ListViewItem>
