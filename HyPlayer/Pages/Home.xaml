@@ -12,20 +12,7 @@
                 Text="主页"
                 FontSize="44"
                 FontWeight="Bold"
-                Margin="30,25,0,0" />
-            <Button
-                Width="150"
-                Height=" 34"
-                Margin="0,40,30,0"
-                CornerRadius="17"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Top" Click="SearchBtn_Clicked">
-                <StackPanel Orientation="Horizontal" >
-                    <FontIcon Glyph="&#xE71E;" FontSize="16" />
-                    <TextBlock Text="搜索" FontSize="12" Margin="4,0,0,0"/>
-                </StackPanel>
-
-            </Button>
+                Margin="24,24,0,0" />
             <Grid Height="320" Margin="0,70,0,0" VerticalAlignment="Top">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />

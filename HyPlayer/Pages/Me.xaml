@@ -247,12 +247,8 @@
                              Margin="0,0,46,18"
                              Background="OrangeRed"
                              x:Name="ButtonLogout"
-                             Click="Logout_OnClick">
-                        <StackPanel Orientation="Horizontal">
-                            <FontIcon Glyph="&#xF3B1;"/>
-                            <TextBlock Margin="5,0,0,0" Text="退出登录"/>
-                        </StackPanel>
-                    </Button>
+                             Click="Logout_OnClick"
+                             Content="退出登录"/>
                 </Grid>
                 <Grid
                     x:Name="MainGrid"
