@@ -36,7 +36,6 @@
                     </DoubleAnimation>
                     <FadeInThemeAnimation TargetName="PlayAllBtn" />
                 </Storyboard>
-
                 <Storyboard x:Name="StoryboardIn">
                     <DoubleAnimation
                         Storyboard.TargetName="Transform"
@@ -76,7 +75,7 @@
                 Style="{StaticResource AccentButtonStyle}"
                 ToolTipService.ToolTip="播放全部">
                 <Button.Content>
-                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE102;" />
+                    <FontIcon Glyph="&#xE102;" />
                 </Button.Content>
             </Button>
             <Grid

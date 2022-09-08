@@ -37,7 +37,6 @@
             Grid.Row="0"
             IsActive="True"
             Visibility="{x:Bind IsLoading, Mode=OneWay}" />
-
         <controls1:SongsList
             x:Name="SongsList"
             Grid.RowSpan="2"
@@ -97,7 +96,7 @@
                             Foreground="{ThemeResource DefaultTextForegroundThemeBrush}"
                             Text="歌单名"
                             Style="{StaticResource TitleTextBlockStyle}"
-                            TextWrapping="Wrap" />
+                            TextWrapping="NoWrap" />
                         <StackPanel Margin="0,2,0,0" Orientation="Horizontal">
                             <TextBlock
                                 Padding="0,8,0,3"
@@ -118,12 +117,13 @@
 
                     </StackPanel>
                     <StackPanel
+                        x:Name="Btns"
                         Grid.Column="2"
-                        Margin="0,0,0,10"
+                        Margin="0,25,20,25"
                         Orientation="Horizontal"
                         HorizontalAlignment="Right"
-                        VerticalAlignment="Bottom"
-                        Spacing="6">
+                        VerticalAlignment="Top"
+                        Spacing="10">
                         <Button
                             x:Name="ButtonIntel"
                             Background="OrangeRed"
@@ -212,17 +212,23 @@
                         <Setter Target="RectangleImage.Height" Value="90" />
                         <Setter Target="StackPanelUserInfo.Margin" Value="126,20,40,20"/>
                         <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="1" />
+                        <Setter Target="Btns.Margin" Value="0,20,5,10"/>
                         <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="10" />
+                        <Setter Target="Btns.VerticalAlignment" Value="Bottom"/>
+                        <Setter Target="Btns.Spacing" Value="5"/>
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState>
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="700" />
+                        <AdaptiveTrigger MinWindowWidth="1300" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="RectangleImage.Visibility" Value="Visible" />
                         <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="5" />
                         <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="6" />
+                        <Setter Target="Btns.VerticalAlignment" Value="Top"/>
+                        <Setter Target="Btns.Margin" Value="0,20,10,10"/>
+                        <Setter Target="Btns.Spacing" Value="10"/>
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
