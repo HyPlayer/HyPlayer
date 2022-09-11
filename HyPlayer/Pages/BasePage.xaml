@@ -70,7 +70,6 @@
                     Margin="12,0,0,0"
                     VerticalAlignment="Top"
                     Style="{StaticResource CaptionTextBlockStyle}"
-                    FontWeight="Bold"
                     Text="HyPlayer" />
             </StackPanel>
         </Border>
@@ -90,9 +89,12 @@
             ItemInvoked="NavMain_ItemInvoked"
             PaneDisplayMode="Auto"
             SelectionChanged="NavMain_OnSelectionChanged" >
+            <muxc:NavigationView.AutoSuggestBox>
+                <AutoSuggestBox x:Name="SearchAutoSuggestBox" QuerySubmitted="AutoSuggestBox_QuerySubmitted" QueryIcon="Find" PlaceholderText="搜索..."/>
+            </muxc:NavigationView.AutoSuggestBox>
             <muxc:NavigationView.MenuItems>
                 <muxc:NavigationViewItem
-                    x:Name="NavSearchItem"
+                    x:Name="NavSearchItem" Visibility="Collapsed"
                     Tag="PageSearch" 
                     Height="60">
                     <muxc:NavigationViewItem.Icon>
@@ -109,41 +111,46 @@
                         <StackPanel Orientation="Horizontal" >
                             <FontIcon Glyph="&#xE71E;" FontSize="16"/>
                         </StackPanel>
-
                     </Button>
-
+                </muxc:NavigationViewItem>
+                <muxc:NavigationViewItemHeader Content="发现"/>
+                <muxc:NavigationViewItem
+                    Content="主页" 
+                    Tag="PageHome">
+                    <muxc:NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE10F;" />
+                    </muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
+                <muxc:NavigationViewItem Content="每日推荐" Tag="DailyRcmd">
+                    <muxc:NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE163;" />
+                    </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
                 <muxc:NavigationViewItem
-                    Content="发现音乐"
-                    FontWeight="Bold">
-                    <muxc:NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE12B;" />
-                    </muxc:NavigationViewItem.Icon>
-                    <muxc:NavigationViewItem.MenuItems>
-                        <muxc:NavigationViewItem Content="每日推荐" Tag="DailyRcmd">
-                            <muxc:NavigationViewItem.Icon>
-                                <FontIcon Glyph="&#xE163;" />
-                            </muxc:NavigationViewItem.Icon>
-                        </muxc:NavigationViewItem>
-                        <muxc:NavigationViewItem
                             Content="私人FM"
                             SelectsOnInvoked="False"
                             Tag="PersonalFM">
-                            <muxc:NavigationViewItem.Icon>
-                                <FontIcon Glyph="&#xEFA9;" />
-                            </muxc:NavigationViewItem.Icon>
-                        </muxc:NavigationViewItem>
-                        <muxc:NavigationViewItem
+                    <muxc:NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xEFA9;" />
+                    </muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
+                <muxc:NavigationViewItem
                             Content="心动模式"
                             SelectsOnInvoked="False"
                             Tag="HeartBeat">
-                            <muxc:NavigationViewItem.Icon>
-                                <FontIcon Glyph="&#xE95E;" />
-                            </muxc:NavigationViewItem.Icon>
-                        </muxc:NavigationViewItem>
-                    </muxc:NavigationViewItem.MenuItems>
+                    <muxc:NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE95E;" />
+                    </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
-                <muxc:NavigationViewItem Content="离线音乐" Tag="PageLocal" FontWeight="Bold">
+                <muxc:NavigationViewItem Visibility="Collapsed"
+                    Content="发现音乐">
+                    <muxc:NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE12B;" />
+                    </muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
+                <muxc:NavigationViewItemHeader Content="音乐"/>
+
+                <muxc:NavigationViewItem Content="离线音乐" Tag="PageLocal">
                     <muxc:NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE8B7;" />
                     </muxc:NavigationViewItem.Icon>
@@ -151,20 +158,20 @@
                 <muxc:NavigationViewItem
                     x:Name="PageHistory"
                     Content="播放历史"
-                    FontWeight="Bold"
                     Icon="Clock"
                     Tag="PageHistory" />
-                <muxc:NavigationViewItem Content="我的收藏" Tag="PageFavorite" FontWeight="Bold">
+
+                <muxc:NavigationViewItem Content="我的收藏" Tag="PageFavorite">
                     <muxc:NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE734;" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
-                <muxc:NavigationViewItem Content="我的云盘" Tag="MusicCloud" FontWeight="Bold">
+                <muxc:NavigationViewItem Content="我的云盘" Tag="MusicCloud">
                     <muxc:NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE753;" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
-                <muxc:NavigationViewItemSeparator />
+                <muxc:NavigationViewItemHeader Content="歌单"/>
                 <muxc:NavigationViewItem
                     x:Name="NavItemsAddPlaylist"
                     Content="创建歌单"
@@ -195,48 +202,38 @@
                     Visibility="Collapsed" />
             </muxc:NavigationView.MenuItems>
             <muxc:NavigationView.FooterMenuItems>
-                <muxc:NavigationViewItem
-                    Content="主页"
-                    Tag="PageHome"
-                    FontWeight="Bold"
-                    Visibility="{x:Bind local:Common.Setting.notClearMode, Mode=OneWay}">
-                    <muxc:NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE10F;" />
-                    </muxc:NavigationViewItem.Icon>
-                </muxc:NavigationViewItem>
+
 
                 <muxc:NavigationViewItem
                     x:Name="NavItemLogin"
                     Content="登录"
                     Icon="Contact"
                     Tag="PageMe"
-                    FontWeight="Bold"
                     Tapped="NavigationViewItem_Tapped" />
                 <muxc:NavigationViewItem
                     Content="设置"
                     Icon="Setting"
-                    FontWeight="ExtraBlack"
-                    Tag="PageSettings"
+                    Tag="PageSettings" 
                     Tapped="NavigationViewItem_Tapped" />
-                <muxc:NavigationViewItem Height="50" IsTapEnabled="False">
+                <muxc:NavigationViewItem Height="50" IsTapEnabled="False" SelectsOnInvoked="False" Visibility="Collapsed">
                     <Grid HorizontalAlignment="Stretch" Margin="-10,0,-20,0">
                         <StackPanel Spacing="12" Orientation="Horizontal"   >
-                            <Button BorderThickness="0" x:Name="BtnSet" Background="{ThemeResource SystemAccentColor}" Click="BtnSet_Click" Width="90">
+                            <Button BorderThickness="0" x:Name="BtnSet" Click="BtnSet_Click" Width="90">
                                 <StackPanel Orientation="Horizontal" Margin="-16,0,-10,0"  >
                                     <FontIcon Glyph="&#xE713;" FontSize="16" VerticalAlignment="Center" Margin="0,2,0,0"/>
-                                    <TextBlock Text="设置" Margin="15,0,0,0" FontWeight="Bold"/>
+                                    <TextBlock Text="设置" Margin="15,0,0,0" />
                                 </StackPanel>
                             </Button>
                             <Button  Width="110" x:Name="BtnHome" BorderThickness="0" Click="BtnHome_Click">
                                 <StackPanel Orientation="Horizontal" >
                                     <FontIcon  Glyph="&#xE10F;" FontSize="16" Margin="0,3,0,0"/>
-                                    <TextBlock Margin="5,0,0,0" Text="主页" FontWeight="Bold"/>
+                                    <TextBlock Margin="5,0,0,0" Text="主页"/>
                                 </StackPanel>
                             </Button>
-                            <Button x:Name="BtnLogOut" Background="OrangeRed" BorderThickness="0"  Click="BtnLogOut_Click" Width="83">
+                            <Button x:Name="BtnLogOut" BorderThickness="0"  Click="BtnLogOut_Click" Width="83">
                                 <StackPanel Orientation="Horizontal">
                                     <FontIcon Glyph="&#xF3B1;" FontSize="16" Margin="0,0,0,0" />
-                                    <TextBlock Text="退出" FontWeight="Bold" Margin="8,0,0,0"/>
+                                    <TextBlock Text="退出" Margin="8,0,0,0"/>
                                 </StackPanel>
                             </Button>
                         </StackPanel>

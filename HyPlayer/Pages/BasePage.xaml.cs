@@ -448,7 +448,7 @@ public sealed partial class BasePage : Page
                         IsRightTapEnabled = true
                     };
                     if (jToken["privacy"].ToString() != "0")
-                        item.Icon.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 214, 133));
+                        item.Icon.Foreground = new SolidColorBrush(Color.FromArgb(255, 211, 39, 100));
 
                     item.RightTapped += (_, __) =>
                     {
@@ -797,5 +797,25 @@ public sealed partial class BasePage : Page
     private void TheTeachingTip_OnCloseButtonClick(TeachingTip sender, object args)
     {
         Common.TeachingTipList.Clear();
+    }
+
+    private void SearchBtn_Clicked(object sender, RoutedEventArgs e)
+    {
+
+    }
+
+    private void BtnSet_Click(object sender, RoutedEventArgs e)
+    {
+
+    }
+
+    private void BtnLogOut_Click(object sender, RoutedEventArgs e)
+    {
+
+    }
+
+    private void BtnHome_Click(object sender, RoutedEventArgs e)
+    {
+
     }
 }

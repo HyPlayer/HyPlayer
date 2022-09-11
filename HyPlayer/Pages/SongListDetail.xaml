@@ -92,7 +92,6 @@
                             IsTextSelectionEnabled="True"
                             Margin="0,0,-30,0"
                             x:Name="TextBoxPLName"
-                            FontWeight="Bold"
                             Foreground="{ThemeResource DefaultTextForegroundThemeBrush}"
                             Text="歌单名"
                             Style="{StaticResource TitleTextBlockStyle}"
