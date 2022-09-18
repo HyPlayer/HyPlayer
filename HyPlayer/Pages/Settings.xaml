@@ -706,6 +706,7 @@
                                             <ComboBoxItem Content="跳过" />
                                             <ComboBoxItem Content="覆盖" />
                                             <ComboBoxItem Content="追加 ID" />
+                                            <ComboBoxItem Content="仅更新信息" />
                                         </ComboBox>
                                     </Grid>
                                 </StackPanel>

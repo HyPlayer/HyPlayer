@@ -40,6 +40,16 @@ internal sealed class DownloadObject : INotifyPropertyChanged
     public PlayItem DontUsePlayItem;
     private DownloadOperation _downloadOperation;
 
+    private IStorageFile _resultFileBackingField;
+    public IStorageFile ResultFile
+    {
+        get => _resultFileBackingField ?? _downloadOperation.ResultFile;
+        set
+        {
+            _resultFileBackingField = value;
+        }
+    }
+
     public string FileName
     {
         get => _fileName;
@@ -167,11 +177,11 @@ internal sealed class DownloadObject : INotifyPropertyChanged
         Common.Invoke(() => Message = "正在写文件信息");
         return Task.Run(async () =>
         {
-            using var streamAbstraction = new UwpStorageFileAbstraction(_downloadOperation.ResultFile);
+            using var streamAbstraction = new UwpStorageFileAbstraction(ResultFile);
             var file = File.Create(streamAbstraction);
             try
             {
-                if (Common.Setting.write163Info)
+                if (Common.Setting.write163Info && DontUsePlayItem is not null)
                     The163KeyHelper.TrySetMusicInfo(file.Tag, DontUsePlayItem);
                 //写相关信息
                 file.Tag.Album = ncsong.Album.name;
@@ -241,6 +251,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                     Message = "写入音乐信息时出现错误" + ex.Message;
                 });
                 Common.ErrorMessageList.Add("写入音乐信息时出现错误" + ex.Message);
+                Common.AddToTeachingTipLists("写入信息错误: " + ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
             finally
             {
@@ -299,7 +310,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                     HasPaused = true;
                     Progress = 100;
                 });
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                Common.AddToTeachingTipLists("下载歌词错误: " + ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         });
     }
@@ -347,7 +358,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
         {
             HasError = false;
             HasPaused = false;
-            Message = "获取下载链接";
+            Message = "正在预加载";
         });
         try
         {
@@ -382,8 +393,26 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                     case 2:
                         FileName = Path.GetFileNameWithoutExtension(FileName) + ncsong.sid;
                         break;
+                    case 3:
+                        if (await nowFolder.FileExistsAsync(Path.GetFileName(FileName + ".mp3")))
+                        {
+                            ResultFile = await nowFolder.GetFileAsync(Path.GetFileName(FileName + ".mp3"));
+                        }
+                        if (await nowFolder.FileExistsAsync(Path.GetFileName(FileName + ".flac")))
+                        {
+                            ResultFile = await nowFolder.GetFileAsync(Path.GetFileName(FileName + ".flac"));
+                        }
+                        FullPath = ResultFile.Path;
+                        Wc_DownloadFileCompleted();
+                        return;
+                        break;
                 }
-
+            Common.Invoke(() =>
+            {
+                HasError = false;
+                HasPaused = false;
+                Message = "正在获取下载链接";
+            });
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrlV1,
                 new Dictionary<string, object> { { "id", ncsong.sid }, { "level", Common.Setting.downloadAudioRate } });
 
