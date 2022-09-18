@@ -1204,7 +1204,7 @@ public static class HyPlayList
         {
             bool? hasMore = true;
             var page = 0;
-            while (hasMore.HasValue && hasMore.Value)
+            while (hasMore is true)
                 try
                 {
                     var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.DjProgram,

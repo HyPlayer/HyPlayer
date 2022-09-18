@@ -506,6 +506,7 @@ internal static class DownloadManager
 
     public static bool CheckDownloadAbilityAndToast()
     {
+        Common.AddToTeachingTipLists("开始下载");
         return true;
     }
 

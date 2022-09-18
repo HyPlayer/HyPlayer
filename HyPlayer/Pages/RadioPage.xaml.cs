@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -128,7 +129,42 @@ public sealed partial class RadioPage : Page, IDisposable
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
     {
-        await HyPlayList.AppendRadioList(Radio.id);
+        await HyPlayList.AppendRadioList(Radio.id, asc);
         HyPlayList.SongAppendDone();
+    }
+
+    private async void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
+    {
+        var result = new List<NCSong>();
+        try
+        {
+            bool? hasMore = true;
+            var page = 0;
+            while (hasMore is true)
+                try
+                {
+                    var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.DjProgram,
+                        new Dictionary<string, object>
+                        {
+                            { "rid", Radio.id },
+                            { "offset", page++ * 100 },
+                            { "limit", 100 },
+                            { "asc", asc }
+                        });
+                    hasMore = json["more"]?.ToObject<bool>();
+                    if (json["programs"] is not null)
+                        result.AddRange(json["programs"].Select(t => (NCSong)NCFmItem.CreateFromJson(t)).ToList());
+                }
+                catch (Exception ex)
+                {
+                    Common.AddToTeachingTipLists(ex.Message,
+                        (ex.InnerException ?? new Exception()).Message);
+                }
+        }
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+        }
+        DownloadManager.AddDownload(result);
     }
 }
