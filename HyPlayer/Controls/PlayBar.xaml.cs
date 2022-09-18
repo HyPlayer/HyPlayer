@@ -442,6 +442,7 @@ public sealed partial class PlayBar
             if (!Common.Setting.noImage && !Common.IsInBackground)
                 if (mpi.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
                 {
+                    Btn_Comment.Visibility = Visibility.Collapsed;
                     var storageFile = HyPlayList.NowPlayingStorageFile;
                     if (mpi.PlayItem.DontSetLocalStorageFile != null)
                         storageFile = mpi.PlayItem.DontSetLocalStorageFile;
@@ -461,6 +462,9 @@ public sealed partial class PlayBar
                 }
                 else
                 {
+                    if (Common.Setting.notClearMode)
+                        Btn_Comment.Visibility = Visibility.Visible;
+
                     Common.Invoke(() =>
                     {
                         AlbumImage.Source =
@@ -564,7 +568,7 @@ public sealed partial class PlayBar
 
             if (HyPlayList.NowPlayingItem.PlayItem.Tag != "在线")
                 TbSongTag.Text = HyPlayList.NowPlayingItem.PlayItem.Tag;
-            Btn_Share.IsEnabled = HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease;
+            Btn_Share.IsEnabled = HyPlayList.NowPlayingItem.ItemType is not HyPlayItemType.Local or HyPlayItemType.LocalProgressive;
         });
         var isLiked = Common.LikedSongs.Contains(mpi.PlayItem.Id);
         if (mpi.ItemType != HyPlayItemType.Local)
@@ -1002,13 +1006,9 @@ public sealed partial class PlayBar
 
     private void Btn_Down_OnClick(object sender, RoutedEventArgs e)
     {
-        if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
+        if (HyPlayList.NowPlayingItem.ItemType is HyPlayItemType.Netease or HyPlayItemType.Radio)
         {
             DownloadManager.AddDownload(HyPlayList.NowPlayingItem.ToNCSong());
-        }
-        else if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Radio)
-        {
-            //TODO: 电台的下载操作
         }
     }
 

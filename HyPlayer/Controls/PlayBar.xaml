@@ -802,7 +802,7 @@
                 </VisualState>
                 <VisualState>
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="800" />
+                        <AdaptiveTrigger MinWindowWidth="999" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="AlbumImageHover.Width" Value="0" />
