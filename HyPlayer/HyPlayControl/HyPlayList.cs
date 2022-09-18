@@ -875,10 +875,23 @@ public static class HyPlayList
 
         //先进行歌词转换以免被搞
         Lyrics = Utils.ConvertPureLyric(pureLyricInfo.PureLyrics, unionTranslation);
-        Utils.ConvertTranslation(pureLyricInfo.TrLyrics, Lyrics);
-        if (Lyrics.Count != 0 && Lyrics[0].LyricTime != TimeSpan.Zero)
-            Lyrics.Insert(0,
-                new SongLyric { LyricTime = TimeSpan.Zero, PureLyric = "" });
+        if (Lyrics.Count == 0)
+        {
+            if (Common.Setting.showComposerInLyric)
+                Lyrics.Add(new SongLyric
+                {
+                    LyricTime = TimeSpan.Zero,
+                    PureLyric = pureLyricInfo.PureLyrics
+                });
+        }
+        else
+        {
+            Utils.ConvertTranslation(pureLyricInfo.TrLyrics, Lyrics);
+            if (Lyrics.Count != 0 && Lyrics[0].LyricTime != TimeSpan.Zero)
+                Lyrics.Insert(0,
+                    new SongLyric { LyricTime = TimeSpan.Zero, PureLyric = "" });
+        }
+
         LyricPos = 0;
 
         OnLyricLoaded?.Invoke();

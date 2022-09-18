@@ -814,6 +814,16 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        
+        public bool showComposerInLyric
+        {
+            get => GetSettings("showComposerInLyric", true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["showComposerInLyric"] = value;
+                OnPropertyChanged();
+            }
+        }
 
         public bool advancedMusicHistoryStorage
         {

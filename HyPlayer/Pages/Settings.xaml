@@ -151,6 +151,13 @@
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.noUseHotLyric, Mode=TwoWay}" />
                                     </Grid>
+                                    <Grid>
+                                        <TextBlock VerticalAlignment="Center" Text="显示作词作曲信息" />
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.showComposerInLyric, Mode=TwoWay}" />
+                                    </Grid>
                                 </StackPanel>
                             </controls:Expander>
                         </StackPanel>
