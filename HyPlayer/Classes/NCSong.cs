@@ -6,6 +6,7 @@ using System.Linq;
 using Windows.Storage;
 using Windows.UI.Xaml.Media.Imaging;
 using Newtonsoft.Json.Linq;
+using TagLib;
 
 #endregion
 
@@ -239,6 +240,7 @@ public class PlayItem
     public List<NCArtist> Artist;
     public int Bitrate;
     public string CDName;
+    public Tag LocalFileTag;
     public StorageFile DontSetLocalStorageFile; //如非特殊原因请不要设置这个东西!
     public string Id;
     public bool IsLocalFile;

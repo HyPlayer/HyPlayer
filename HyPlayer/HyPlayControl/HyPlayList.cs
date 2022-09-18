@@ -752,14 +752,26 @@ public static class HyPlayList
             {
                 if (NowPlayingItem.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
                 {
-                    if (NowPlayingStorageFile != null)
+                    if (!Common.Setting.useTaglibPicture || NowPlayingItem.PlayItem.LocalFileTag is null ||
+                        NowPlayingItem.PlayItem.LocalFileTag.Pictures.Length == 0)
                     {
-                        var thumbnail =
-                            await NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999);
-                        if (thumbnail is { CanRead: true })
-                            _controlsDisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromStream(thumbnail);
-                        else
-                            RandomAccessStreamReference.CreateFromUri(new Uri("/Assets/icon.png", UriKind.Relative));
+                        if (NowPlayingStorageFile != null)
+                        {
+                            var thumbnail =
+                                await NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999);
+                            if (thumbnail is { CanRead: true })
+                                _controlsDisplayUpdater.Thumbnail =
+                                    RandomAccessStreamReference.CreateFromStream(thumbnail);
+                            else
+                                RandomAccessStreamReference.CreateFromUri(new Uri("/Assets/icon.png",
+                                    UriKind.Relative));
+                        }
+                    }
+                    else
+                    {
+                        _controlsDisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromStream(
+                            new MemoryStream(NowPlayingItem.PlayItem.LocalFileTag.Pictures[0].Data.Data)
+                                .AsRandomAccessStream());
                     }
                 }
                 else
@@ -1269,10 +1281,9 @@ public static class HyPlayList
     public static async Task<HyPlayItem> LoadStorageFile(StorageFile sf, bool nocheck163 = false)
     {
         var mdp = await sf.Properties.GetMusicPropertiesAsync();
-
+        var tag = File.Create(new UwpStorageFileAbstraction(sf)).Tag;
         if (nocheck163 ||
-            !The163KeyHelper.TryGetMusicInfo(File.Create(new UwpStorageFileAbstraction(sf)).Tag,
-                out var mi))
+            !The163KeyHelper.TryGetMusicInfo(tag, out var mi))
         {
             //TagLib.File afi = TagLib.File.Create(new UwpStorageFileAbstraction(sf), ReadStyle.Average);
             var contributingArtists =
@@ -1284,6 +1295,7 @@ public static class HyPlayList
                 PlayItem = new PlayItem
                 {
                     IsLocalFile = true,
+                    LocalFileTag = tag,
                     Bitrate = (int)mdp.Bitrate,
                     Tag = sf.Provider.DisplayName,
                     Id = null,
@@ -1323,16 +1335,13 @@ public static class HyPlayList
             },
             Url = sf.Path,
             SubExt = sf.FileType,
+            LocalFileTag = tag,
             Bitrate = mi.bitrate,
             IsLocalFile = true,
             Type = HyPlayItemType.Netease,
             LengthInMilliseconds = mdp.Duration.TotalMilliseconds,
             Id = mi.musicId.ToString(),
             Artist = null,
-            Size = sf.GetBasicPropertiesAsync()
-                .GetAwaiter()
-                .GetResult()
-                .Size.ToString(),
             Name = mi.musicName,
             TrackId = (int)mdp.TrackNumber,
             CDName = "01",

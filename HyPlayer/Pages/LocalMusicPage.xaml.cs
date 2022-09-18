@@ -114,13 +114,13 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
             var undeterminedAlbum = new NCAlbum
             {
                 AlbumType = HyPlayItemType.LocalProgressive,
-                name = "未知专辑"
+                name = "未知专辑 - 播放后加载"
             };
             var undeterminedArtistList = new List<NCArtist>
             {
                 new()
                 {
-                    name = "未知歌手",
+                    name = "未知歌手 - 播放后加载",
                     Type = HyPlayItemType.LocalProgressive
                 }
             };
@@ -156,6 +156,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 
     private void ListBoxLocalMusicContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        if (ListBoxLocalMusicContainer.SelectedIndex == -1) return;
         HyPlayList.RemoveAllSong();
         HyPlayList.List.AddRange(localHyItems);
         HyPlayList.SongAppendDone();
