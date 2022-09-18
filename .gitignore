@@ -601,3 +601,4 @@ fabric.properties
 NeteaseCloudMusicApi
 *.pfx
 *.pfx
+/HyPlayer/Assets/ThirdPartyIcons

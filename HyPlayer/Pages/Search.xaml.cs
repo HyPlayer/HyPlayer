@@ -12,6 +12,7 @@ using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
+using Windows.UI.Xaml.Automation;
 
 #endregion
 
@@ -60,7 +61,7 @@ public sealed partial class Search : Page, IDisposable
         SearchResultContainer.ListItems.Clear();
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    protected async override void OnNavigatedTo(NavigationEventArgs e)
     {
         var list = HistoryManagement.GetSearchHistory();
         foreach (var item in list)
@@ -71,6 +72,11 @@ public sealed partial class Search : Page, IDisposable
             };
             btn.Click += Btn_Click;
             SearchHistory.Children.Add(btn);
+        }
+        if((string)e.Parameter != null)
+        {
+            SearchKeywordBox.Text = (string)e.Parameter;
+            SearchKeywordBox_QuerySubmitted(SearchKeywordBox, null);
         }
 
         if (Text != string.Empty) LoadResult();
