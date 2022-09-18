@@ -446,8 +446,17 @@ public sealed partial class PlayBar
                     if (mpi.PlayItem.DontSetLocalStorageFile != null)
                         storageFile = mpi.PlayItem.DontSetLocalStorageFile;
                     var img = new BitmapImage();
-                    await img.SetSourceAsync(
-                        await storageFile?.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
+
+                    if (!Common.Setting.useTaglibPicture || mpi.PlayItem.LocalFileTag is null || mpi.PlayItem.LocalFileTag.Pictures.Length == 0)
+                    {
+                        await img.SetSourceAsync(
+                            await storageFile?.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
+                    }
+                    else
+                    {
+                        await img.SetSourceAsync(new MemoryStream(mpi.PlayItem.LocalFileTag.Pictures[0].Data.Data).AsRandomAccessStream());
+                    }
+                    
                     Common.Invoke(() => { AlbumImage.Source = img; });
                 }
                 else
@@ -1150,8 +1159,6 @@ public sealed partial class PlayBar
         HyPlayList.OnPlayListAddDone += HyPlayList_OnPlayListAdd;
         HyPlayList.OnSongRemoveAll += HyPlayListOnOnSongRemoveAll;
         Common.OnEnterForegroundFromBackground += () => LoadPlayingFile(HyPlayList.NowPlayingItem);
-        if (Common.Setting.playButtonAccentColor)
-            BtnPlayStateChange.Background = Resources["AccentPlayButtonColor"] as Brush;
         if(Common.Setting.playbarButtonsTransparent)
         {
             BtnPlayRollType.Background = new SolidColorBrush(Colors.Transparent);
@@ -1162,6 +1169,8 @@ public sealed partial class PlayBar
         }
         if (Common.Setting.playButtonAccentColor)
             BtnPlayStateChange.Background = Resources["AccentPlayButtonColor"] as Brush;
+        else
+            PlayBarBackgroundAni.Children.RemoveAt(2);
 
         AlbumImage.Source = new BitmapImage(new Uri("ms-appx:Assets/icon.png"));
         if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
