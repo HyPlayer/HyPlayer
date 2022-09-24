@@ -32,13 +32,17 @@ Skype 群组: https://join.skype.com/umOViUQNItVd
 
 ## 下载
 
-目前已经上架 Microsoft Store,但是更新速度较为缓慢
+目前已经在 Microsoft Store 下架，请使用AppCenter或GitHub通道进行下载
 
 Microsoft Store: [点击查看](https://www.microsoft.com/store/productId/9N5TD916686K)
 
-[Azure DevOps](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=29&branchName=develop) : [![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/Github%20-%20Nightly?branchName=develop)](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=29&branchName=develop)
+[Azure DevOps](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=33&branchName=develop) : [![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/Github%20Nightly?branchName=develop)](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=33&branchName=develop)
 
-Azure 编译包会编译 Commit 并发布 Release: [查看Release](https://github.com/HyPlayer/HyPlayer/releases/tag/azure-build)
+[GitHub Release](https://github.com/HyPlayer/HyPlayer/releases/latest/) GitHub Release状态:![Build Status](https://img.shields.io/github/v/release/kengwang/HyPlayer)
+
+[HyPlayer AppCenter申请通道](https://hyplayer.kengwang.com.cn/) : Release状态:![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/AppCenter%20-%20Release?branchName=develop)
+								 Canary状态:![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/AppCenter%20-%20Canary?branchName=refs%2Fpull%2F264%2Fmerge)
+Azure 编译包会编译 Commit 并发布 Pre-release: [查看Pre-release](https://github.com/HyPlayer/HyPlayer/releases/tag/azure-build)
 
 ## 界面预览
 
@@ -48,7 +52,7 @@ Azure 编译包会编译 Commit 并发布 Release: [查看Release](https://githu
 
 | 平台 | Azure DevOps                                                 | AppVeyor |
 | ---- | ------------------------------------------------------------ | -------- |
-| 状态 | [![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/Github%20-%20Nightly?branchName=develop)](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=29&branchName=master) | 暂无     |
+| 状态 | [![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/Github%20Nightly?branchName=develop)](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=33&branchName=develop) | 暂无     |
 
 ## 隐私策略
 
