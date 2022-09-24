@@ -409,8 +409,7 @@ public static class HyPlayList
         OnSongMoveNext?.Invoke();
         if (List.Count == 0) return;
         MoveSongPointer(true);
-        LoadPlayerSong();
-        Player.Play();
+        _ = LoadPlayerSong();
     }
 
     public static void SongMovePrevious()
@@ -428,8 +427,7 @@ public static class HyPlayList
             NowPlaying = ShuffleList[ShufflingIndex];
         }
 
-        LoadPlayerSong();
-        Player.Play();
+        _ = LoadPlayerSong();
     }
 
     public static void SongMoveTo(int index)
@@ -439,8 +437,8 @@ public static class HyPlayList
         if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
             ShufflingIndex = ShuffleList.FindIndex(t => t == index);
 
-        LoadPlayerSong();
-        Player.Play();
+        _ = LoadPlayerSong();
+
     }
 
     public static void RemoveSong(int index)
@@ -455,8 +453,7 @@ public static class HyPlayList
         if (index == NowPlaying)
         {
             List.RemoveAt(index);
-            LoadPlayerSong();
-            Player.Play();
+            _ = LoadPlayerSong();
         }
 
         if (index < NowPlaying)
@@ -556,7 +553,7 @@ public static class HyPlayList
         OnMediaEnd?.Invoke(NowPlayingItem);
         MoveSongPointer();
         //然后尝试加载下一首歌
-        LoadPlayerSong();
+        _ = LoadPlayerSong();
     }
 
     private static async Task<string> GetNowPlayingUrl()
