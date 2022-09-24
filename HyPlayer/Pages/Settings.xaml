@@ -1103,6 +1103,7 @@
                                                     <ComboBoxItem Content="Microsoft Store" />
                                                     <ComboBoxItem Content="App Center" />
                                                     <ComboBoxItem Content="App Center(Canary)" IsEnabled="{x:Bind hyplayer:Common.Setting.canaryChannelAvailability, Mode=OneWay}" />
+                                                    <ComboBoxItem Content="GitHub" />
                                                 </ComboBox>
                                                 <Button
                                                     x:Name="CheckUpdate"

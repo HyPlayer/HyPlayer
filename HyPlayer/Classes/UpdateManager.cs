@@ -9,6 +9,8 @@ using Windows.UI.Xaml.Controls;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using HttpClient = Windows.Web.Http.HttpClient;
+using System.Text.Json.Serialization;
+using Windows.UI.Xaml;
 
 namespace HyPlayer.Classes;
 
@@ -18,7 +20,8 @@ public static class UpdateManager
     {
         MicrosoftStore,
         AppCenter,
-        AppCenterCanary
+        AppCenterCanary,
+        GitHub
     }
 
     public class RemoteVersionResult
@@ -80,6 +83,37 @@ public static class UpdateManager
             UpdateLog = versionResp?.UpdateLog ?? ""
         };
     }
+    public static async Task<RemoteVersionResult> GetVersionFromGitHub()
+    {
+        var versionsGetter = new HttpClient();
+        versionsGetter.DefaultRequestHeaders.Add("user-agent", "HyPlayer-UpdateChecker");
+        var versionsResponse = await versionsGetter.GetAsync(
+            new Uri("https://api.github.com/repos/HyPlayer/HyPlayer/releases/latest"));
+        if (!versionsResponse.IsSuccessStatusCode)
+        {
+            Common.AddToTeachingTipLists("获取更新失败", await versionsResponse.Content.ReadAsStringAsync());
+            throw new HttpRequestException("获取更新失败");
+        }
+
+        var versionData =
+            JObject.Parse(await versionsResponse.Content.ReadAsStringAsync());
+        var versionResp = new LatestApplicationUpdate()
+        {
+            Version = versionData["tag_name"].ToString(),
+            Date = DateTime.Parse(versionData["published_at"].ToString()),
+            Mandatory = false,
+            DownloadUrl = versionData["html_url"].ToString(),
+            UpdateLog = versionData["body"].ToString(),
+        };
+        return new RemoteVersionResult
+        {
+            UpdateSource = UpdateSource.GitHub,
+            IsMandatory = versionResp?.Mandatory ?? false,
+            Version = Version.Parse(versionResp?.Version ?? ""),
+            DownloadLink = versionResp?.DownloadUrl,
+            UpdateLog = versionResp?.UpdateLog ?? ""
+        };
+    }
 
     public static async Task<RemoteVersionResult> GetRemoteVersion(UpdateSource updateSource)
     {
@@ -88,6 +122,7 @@ public static class UpdateManager
             UpdateSource.MicrosoftStore => await GetVersionFromStore(),
             UpdateSource.AppCenter => await GetVersionFromAppCenter(false),
             UpdateSource.AppCenterCanary => await GetVersionFromAppCenter(true),
+            UpdateSource.GitHub => await GetVersionFromGitHub(),
             _ => throw new ArgumentOutOfRangeException(nameof(updateSource), updateSource, null)
         };
     }
