@@ -97,7 +97,7 @@ steps:
     title: 'V$(VERSION)'
     releaseNotesFilePath: 'CHANGELOG_RELEASE.md'
     assets: '$(Agent.HomeDirectory)/$(Build.BuildId).zip'
-    changeLogType: 'commitBased'
+    addChangeLog: false
 
 - task: AppCenterDistribute@3
   displayName: 'Deploy $(Agent.HomeDirectory)/$(Build.BuildId).zip to Visual Studio App Center'
