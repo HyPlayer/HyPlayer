@@ -481,7 +481,7 @@ public sealed partial class PlayBar
             //IGNORE
         }
 
-        _ = Common.Invoke(() => SliderAudioRate.Value = HyPlayList.Player.Volume * 100);
+        //SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
 
         _ = Common.Invoke(() =>
         {
