@@ -66,29 +66,11 @@ namespace HyPlayer
         public static TeachingTip GlobalTip;
         public static readonly Stack<KeyValuePair<string, string?>> TeachingTipList = new();
         private static object previousNavigationItem;
-        public static TimeSpan ABStartPoint = TimeSpan.Zero;
-        public static TimeSpan ABEndPoint = TimeSpan.Zero;
         public static List<string> ErrorMessageList = new();
-
         public static EnterForegroundFromBackgroundEvent OnEnterForegroundFromBackground;
         public static ObservableCollection<string> Logs = new();
-
-        public static bool ABRepeatStatus = false;
-
-
         public static bool NavigatingBack;
         private static int _teachingTipSecondCounter = 3;
-
-        public static string ABStartPointFriendlyValue =>
-            ABStartPoint.Hours + ":"
-                               + ABStartPoint.Minutes + ":"
-                               + ABStartPoint.Seconds;
-
-        public static string ABEndPointFriendlyValue =>
-            ABEndPoint.Hours + ":"
-                             + ABEndPoint.Minutes + ":"
-                             + ABEndPoint.Seconds;
-
         public static IAsyncAction Invoke(Action action,
             CoreDispatcherPriority Priority = CoreDispatcherPriority.Normal)
         {
@@ -1081,6 +1063,47 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        public TimeSpan ABStartPoint
+        {
+            get => _abStartPoint;
+            set
+            {
+                _abStartPoint = value;
+                OnPropertyChanged("ABStartPointFriendlyValue");
+            }
+        }
+        public string ABStartPointFriendlyValue =>
+                                 ABStartPoint.Hours + ":"
+                               + ABStartPoint.Minutes + ":"
+                               + ABStartPoint.Seconds;
+        private TimeSpan _abStartPoint = TimeSpan.Zero;
+        public TimeSpan ABEndPoint
+        {
+            get => _abEndPoint;
+            set
+            {
+                _abEndPoint = value;
+                OnPropertyChanged("ABEndPointFriendlyValue");
+            }
+        }
+        private TimeSpan _abEndPoint = TimeSpan.Zero;
+        
+        public string ABEndPointFriendlyValue =>
+                               ABEndPoint.Hours + ":"
+                             + ABEndPoint.Minutes + ":"
+                             + ABEndPoint.Seconds;
+        public bool ABRepeatStatus
+        {
+            get => _abRepeatStatus;
+            set
+            {
+                _abRepeatStatus = value;
+                if (value) HyPlayList.OnPlayPositionChange += HyPlayList.CheckABTimeRemaining;
+                else HyPlayList.OnPlayPositionChange -= HyPlayList.CheckABTimeRemaining;
+                OnPropertyChanged();
+            }
+        }
+        private static bool _abRepeatStatus = false;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 

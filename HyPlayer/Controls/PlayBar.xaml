@@ -463,6 +463,32 @@
                                     <FontIcon Glyph="&#xE142;" />
                                 </MenuFlyoutItem.Icon>
                             </MenuFlyoutItem>
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem
+                            x:Name="ABRepeatStateButton"
+                                Text="AB循环"
+                                Click="ABRepeatStateButton_Click">
+                            <MenuFlyoutItem.Icon>
+                                    <FontIcon Glyph="&#xE001;"
+                                        Visibility="{x:Bind hy:Common.Setting.ABRepeatStatus, Mode=OneWay }" />
+                            </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>    
+                            <MenuFlyoutItem
+                            HorizontalContentAlignment="Left"
+                            Click="SetABStartPointButton_Click"
+                            Text="设置开始点" />
+                            <MenuFlyoutItem
+                            Name="ABStartPointItem"
+                            HorizontalAlignment="Left"
+                            Text="{x:Bind hy:Common.Setting.ABStartPointFriendlyValue, Mode=OneWay}" />
+                            <MenuFlyoutItem
+                            HorizontalContentAlignment="Left"
+                            Click="SetABEndPointButton_Click"
+                            Text="设置结束点" />
+                            <MenuFlyoutItem
+                            Name="ABEndPointItem"
+                            HorizontalAlignment="Left"
+                            Text="{x:Bind hy:Common.Setting.ABEndPointFriendlyValue, Mode=OneWay}" />
                         </MenuFlyout>
                     </Button.Flyout>
                     <FontIcon Glyph="&#xE712;" />

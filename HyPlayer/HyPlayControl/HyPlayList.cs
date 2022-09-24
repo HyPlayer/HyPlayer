@@ -1396,8 +1396,8 @@ public static class HyPlayList
 
     public static void CheckABTimeRemaining(TimeSpan currentTime)
     {
-        if (currentTime >= Common.ABEndPoint && Common.ABEndPoint != TimeSpan.Zero &&
-            Common.ABEndPoint > Common.ABStartPoint) Player.PlaybackSession.Position = Common.ABStartPoint;
+        if (currentTime >= Common.Setting.ABEndPoint && Common.Setting.ABEndPoint != TimeSpan.Zero &&
+            Common.Setting.ABEndPoint > Common.Setting.ABStartPoint) Player.PlaybackSession.Position = Common.Setting.ABStartPoint;
     }
 }
 

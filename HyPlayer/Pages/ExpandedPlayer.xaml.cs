@@ -957,25 +957,14 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.CompactOverlay);
         Common.PageMain.ExpandedPlayer.Navigate(typeof(CompactPlayerPage));
     }
-
-    private void ChangeABRepeatStatus_Click(object sender, RoutedEventArgs e)
-    {
-        if (Common.ABRepeatStatus)
-            HyPlayList.OnPlayPositionChange += HyPlayList.CheckABTimeRemaining;
-        else
-            HyPlayList.OnPlayPositionChange -= HyPlayList.CheckABTimeRemaining;
-    }
-
     private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)
     {
-        Common.ABStartPoint = HyPlayList.Player.PlaybackSession.Position;
-        ABStartPointItem.Text = Common.ABStartPointFriendlyValue;
+        Common.Setting.ABStartPoint = HyPlayList.Player.PlaybackSession.Position;
     }
 
     private void SetABEndPointButton_Click(object sender, RoutedEventArgs e)
     {
-        Common.ABEndPoint = HyPlayList.Player.PlaybackSession.Position;
-        ABEndPointItem.Text = Common.ABEndPointFriendlyValue;
+        Common.Setting.ABEndPoint = HyPlayList.Player.PlaybackSession.Position;
     }
 
     private void Page_Loaded(object sender, RoutedEventArgs e)

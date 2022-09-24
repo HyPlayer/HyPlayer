@@ -1257,6 +1257,20 @@ public sealed partial class PlayBar
         HyPlayList.SongAppendDone();
         HyPlayList.SongMoveTo(0);
     }
+    private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)
+    {
+        Common.Setting.ABStartPoint = HyPlayList.Player.PlaybackSession.Position;
+    }
+
+    private void SetABEndPointButton_Click(object sender, RoutedEventArgs e)
+    {
+        Common.Setting.ABEndPoint = HyPlayList.Player.PlaybackSession.Position;
+    }
+
+    private void ABRepeatStateButton_Click(object sender, RoutedEventArgs e)
+    {
+        Common.Setting.ABRepeatStatus=!Common.Setting.ABRepeatStatus;
+    }
 }
 
 public class ThumbConverter : DependencyObject, IValueConverter
