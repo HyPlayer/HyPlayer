@@ -96,7 +96,6 @@ steps:
     tag: '$(VERSION)'
     title: 'V$(VERSION)'
     releaseNotesFilePath: 'CHANGELOG_RELEASE.md'
-    changeLogCompareToRelease: 'lastFullRelease'
     assets: '$(Agent.HomeDirectory)/$(Build.BuildId).zip'
     changeLogType: 'commitBased'
 
