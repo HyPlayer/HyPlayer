@@ -442,7 +442,7 @@ public sealed partial class PlayBar
             if (!Common.Setting.noImage && !Common.IsInBackground)
                 if (mpi.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
                 {
-                    Btn_Comment.Visibility = Visibility.Collapsed;
+                    _ = Common.Invoke(()=>Btn_Comment.Visibility = Visibility.Collapsed);
                     var storageFile = HyPlayList.NowPlayingStorageFile;
                     if (mpi.PlayItem.DontSetLocalStorageFile != null)
                         storageFile = mpi.PlayItem.DontSetLocalStorageFile;
@@ -463,7 +463,7 @@ public sealed partial class PlayBar
                 else
                 {
                     if (Common.Setting.notClearMode)
-                        Btn_Comment.Visibility = Visibility.Visible;
+                        _ = Common.Invoke(() => Btn_Comment.Visibility = Visibility.Visible);
 
                     Common.Invoke(() =>
                     {
