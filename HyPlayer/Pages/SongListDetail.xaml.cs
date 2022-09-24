@@ -205,7 +205,7 @@ public sealed partial class SongListDetail : Page, IDisposable
 
         SongsList.ListSource = "pl" + playList?.plid;
         LoadSongListDetail();
-        LoadSongListItem();
+        _ = LoadSongListItem();
     }
 
 
@@ -235,7 +235,7 @@ public sealed partial class SongListDetail : Page, IDisposable
     private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
     {
         page++;
-        LoadSongListItem();
+        _ = LoadSongListItem();
     }
 
     private void ButtonComment_OnClick(object sender, RoutedEventArgs e)

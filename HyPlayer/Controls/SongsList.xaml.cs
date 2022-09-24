@@ -175,7 +175,7 @@ public sealed partial class SongsList : UserControl, IDisposable
     {
         if (playitem?.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive || playitem?.PlayItem == null)
         {
-            Common.Invoke(() =>
+            _ = Common.Invoke(() =>
             {
                 if (MultiSelect) return;
                 IsManualSelect = false;
@@ -187,7 +187,7 @@ public sealed partial class SongsList : UserControl, IDisposable
 
         var idx = VisibleSongs.ToList().FindIndex(t => t.sid == playitem.PlayItem.Id);
         if (idx == -1) return;
-        Common.Invoke(() =>
+        _ = Common.Invoke(() =>
         {
             IsManualSelect = false;
             SongContainer.SelectedIndex = idx;
@@ -407,7 +407,7 @@ public sealed partial class SongsList : UserControl, IDisposable
     private void SongListRoot_Loaded(object sender, RoutedEventArgs e)
     {
         MultiSelect = false;
-        IndicateNowPlayingItem();
+        _ = IndicateNowPlayingItem();
     }
 }
 

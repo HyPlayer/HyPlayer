@@ -71,13 +71,13 @@ public sealed partial class Comments : Page, IDisposable
         }
 
         LoadHotComments();
-        LoadComments(sortType);
+        _ = LoadComments(sortType);
     }
 
 
     private void LoadHotComments()
     {
-        LoadComments(2, HotCommentList);
+        _ = LoadComments(2, HotCommentList);
     }
 
     private async Task LoadComments(int type, StackPanel addingPanel = null)
@@ -128,14 +128,14 @@ public sealed partial class Comments : Page, IDisposable
     private void NextPage_Click(object sender, RoutedEventArgs e)
     {
         page++;
-        LoadComments(sortType);
+        _ = LoadComments(sortType);
         ScrollTop();
     }
 
     private void PrevPage_Click(object sender, RoutedEventArgs e)
     {
         page--;
-        LoadComments(sortType);
+        _ = LoadComments(sortType);
         ScrollTop();
     }
 
@@ -163,7 +163,7 @@ public sealed partial class Comments : Page, IDisposable
                     });
                 CommentEdit.Text = string.Empty;
                 await Task.Delay(1000);
-                LoadComments(3);
+                _ = LoadComments(3);
             }
             catch (Exception ex)
             {
@@ -187,14 +187,14 @@ public sealed partial class Comments : Page, IDisposable
     private void ComboBoxSortType_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         sortType = ComboBoxSortType.SelectedIndex + 1;
-        LoadComments(sortType);
+        _ = LoadComments(sortType);
     }
 
     private void SkipPage_Click(object sender, RoutedEventArgs e)
     {
         if (int.TryParse(PageSelect.Text, out page))
         {
-            LoadComments(sortType);
+            _ = LoadComments(sortType);
             ScrollTop();
         }
     }
@@ -226,7 +226,7 @@ public sealed partial class Comments : Page, IDisposable
     {
         if (int.TryParse(PageSelect.Text, out page))
         {
-            LoadComments(sortType);
+            _ = LoadComments(sortType);
             ScrollTop();
         }
     }

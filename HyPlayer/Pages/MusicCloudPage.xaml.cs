@@ -90,14 +90,14 @@ public sealed partial class MusicCloudPage : Page, IDisposable
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        LoadMusicCloudItem();
+        _ = LoadMusicCloudItem();
     }
 
 
     private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
     {
         page++;
-        LoadMusicCloudItem();
+        _ = LoadMusicCloudItem();
     }
 
     private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)

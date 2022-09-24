@@ -744,7 +744,7 @@ public static class HyPlayList
         //加载歌词
         if (NowPlayingItem.PlayItem != null)
         {
-            LoadLyrics(NowPlayingItem);
+            _ = LoadLyrics(NowPlayingItem);
             try
             {
                 if (NowPlayingItem.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)

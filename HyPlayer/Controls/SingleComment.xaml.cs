@@ -115,7 +115,7 @@ public sealed partial class SingleComment : UserControl
                     });
                 ReplyText.Text = string.Empty;
                 await Task.Delay(1000);
-                LoadFloorComments(false);
+                _ = LoadFloorComments(false);
             }
             catch (Exception ex)
             {
@@ -137,7 +137,7 @@ public sealed partial class SingleComment : UserControl
 
     private void LoadMore_Click(object sender, RoutedEventArgs e)
     {
-        LoadFloorComments(true);
+        _ = LoadFloorComments(true);
     }
 
     private void ReplyBtn_Click(object sender, RoutedEventArgs e)
@@ -146,7 +146,7 @@ public sealed partial class SingleComment : UserControl
         {
             time = null;
             SubCmtsConainer.Visibility = Visibility.Visible;
-            LoadFloorComments(false);
+            _ = LoadFloorComments(false);
         }
         else
         {

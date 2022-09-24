@@ -53,13 +53,13 @@ public sealed partial class PageFavorite : Page, IDisposable
         switch ((NavView.SelectedItem as NavigationViewItem)?.Tag.ToString())
         {
             case "Album":
-                LoadAlbumResult();
+                _ = LoadAlbumResult();
                 break;
             case "Artist":
-                LoadArtistResult();
+                _ = LoadArtistResult();
                 break;
             case "Radio":
-                LoadRadioResult();
+                _ = LoadRadioResult();
                 break;
         }
     }

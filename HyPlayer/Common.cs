@@ -125,11 +125,11 @@ namespace HyPlayer
             _teachingTipSecondCounter = 3;
             if (TeachingTipList.Count == 0)
             {
-                Invoke(() => GlobalTip.IsOpen = false); //在显示完列表中所有的TeachingTip之后关闭TeachingTip
+                _ = Invoke(() => GlobalTip.IsOpen = false); //在显示完列表中所有的TeachingTip之后关闭TeachingTip
                 return;
             }
 
-            Invoke(() =>
+            _ = Invoke(() =>
             {
                 if (TeachingTipList.Count == 0) return;
                 var (title, subtitle) = TeachingTipList.Pop(); // deconstruction
@@ -1001,7 +1001,7 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values["AudioRenderDeviceID"] = value;
-                HyPlayList.OnAudioRenderDeviceChangedOrInitialized();
+                _ = HyPlayList.OnAudioRenderDeviceChangedOrInitialized();
                 OnPropertyChanged();
             }
         }

@@ -46,7 +46,7 @@ public sealed partial class TestPage : Page
 
     private void NavigateResourceId(object sender, RoutedEventArgs e)
     {
-        Common.NavigatePageResource(ResourceId);
+        _ = Common.NavigatePageResource(ResourceId);
     }
 
     private async void PlayResourceId(object sender, RoutedEventArgs e)
@@ -72,7 +72,7 @@ public sealed partial class TestPage : Page
         var file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("dump-" +
             DateTime.Now.ToString("yyyyMMddHHmmss") + "-" + Guid.NewGuid() + ".txt");
         await FileIO.WriteTextAsync(file, info);
-        Launcher.LaunchFileAsync(file);
+        _ = Launcher.LaunchFileAsync(file);
     }
 
     private void DisablePopUpButton_Click(object sender, RoutedEventArgs e)

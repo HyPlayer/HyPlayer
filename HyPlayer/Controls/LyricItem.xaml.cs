@@ -129,7 +129,7 @@ public sealed partial class LyricItem : UserControl
             TextBoxTranslation.Visibility = Visibility.Collapsed;
 
         if (Common.KawazuConv != null && Common.ShowLyricSound)
-            LoadRomaji();
+            _ = LoadRomaji();
         else
             TextBoxSound.Visibility = Visibility.Collapsed;
 

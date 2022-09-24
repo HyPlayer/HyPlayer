@@ -111,7 +111,7 @@ public sealed partial class Settings : Page
         var downloader = new BackgroundDownloader();
         var dl = downloader.CreateDownload(new Uri("https://api.kengwang.com.cn/hyplayer/getromaji.php"),
             sf);
-        HandleDownloadAsync(dl, true);
+        _ = HandleDownloadAsync(dl, true);
     }
 
     private async Task HandleDownloadAsync(DownloadOperation dl, bool b)
@@ -120,7 +120,7 @@ public sealed partial class Settings : Page
         try
         {
             await dl.StartAsync().AsTask(process);
-            if (dl.Progress.TotalBytesToReceive > 5000) OnRomajiDownloadDone(dl);
+            if (dl.Progress.TotalBytesToReceive > 5000) _ = OnRomajiDownloadDone(dl);
         }
         catch (Exception E)
         {
@@ -174,7 +174,7 @@ public sealed partial class Settings : Page
 
     private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
     {
-        GetRomaji();
+        _ = GetRomaji();
     }
 
     private void ButtonXREALIPSave_OnClick(object sender, RoutedEventArgs e)
@@ -244,7 +244,7 @@ public sealed partial class Settings : Page
 
     private void ClearHistory_Click(object sender, RoutedEventArgs e)
     {
-        HistoryManagement.ClearHistory();
+        _ = HistoryManagement.ClearHistory();
     }
 
 
@@ -392,7 +392,7 @@ public sealed partial class Settings : Page
 
     private void CheckCanaryChannelButton_Click(object sender, RoutedEventArgs e)
     {
-        UpdateManager.GetUserCanaryChannelAvailability(canaryEmail.Text);
+        _ = UpdateManager.GetUserCanaryChannelAvailability(canaryEmail.Text);
     }
 
     private async void ClearTileCache_Click(object sender, RoutedEventArgs e)

@@ -76,7 +76,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
         if (ListBoxLocalMusicContainer.Items != null) ListBoxLocalMusicContainer.Items.Clear();
         localHyItems.Clear();
         index = 0;
-        LoadLocalMusic();
+        _ = LoadLocalMusic();
 
         ListBoxLocalMusicContainer.SelectionChanged += ListBoxLocalMusicContainer_SelectionChanged;
     }
@@ -172,7 +172,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 
     private void Add_Local(object sender, RoutedEventArgs e)
     {
-        HyPlayList.PickLocalFile();
+        _ = HyPlayList.PickLocalFile();
     }
 
     private void OnPropertyChanged([CallerMemberName] string propertyName = null)

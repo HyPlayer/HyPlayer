@@ -52,7 +52,7 @@ public sealed partial class GroupedSongsList : IDisposable
     {
         InitializeComponent();
         HyPlayList.OnPlayItemChange += HyPlayListOnOnPlayItemChange;
-        IndicateNowPlayingItem();
+        _ = IndicateNowPlayingItem();
     }
 
     public CollectionViewSource GroupedSongs
@@ -120,7 +120,7 @@ public sealed partial class GroupedSongsList : IDisposable
 
     private void HyPlayListOnOnPlayItemChange(HyPlayItem playitem)
     {
-        Common.Invoke(() =>
+        _ = Common.Invoke(() =>
         {
             if (playitem?.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive ||
                 playitem?.PlayItem == null)

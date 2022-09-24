@@ -46,7 +46,7 @@ public sealed partial class MVPage : Page, IDisposable
         {
             mvid = input.mvid.ToString();
             songid = input.sid;
-            LoadRelateive();
+            _ = LoadRelateive();
         }
         else
         {
@@ -58,8 +58,8 @@ public sealed partial class MVPage : Page, IDisposable
     private void LoadThings()
     {
         HyPlayList.Player.Pause();
-        LoadVideo();
-        LoadVideoInfo();
+        _ = LoadVideo();
+        _ = LoadVideoInfo();
         LoadComment();
     }
 
@@ -173,7 +173,7 @@ public sealed partial class MVPage : Page, IDisposable
     private void VideoQualityBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         mvquality = VideoQualityBox.SelectedItem.ToString();
-        LoadVideo();
+        _ = LoadVideo();
     }
 
     private void RelativeList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)

@@ -82,7 +82,7 @@ public class PivotEx : Pivot
     {
         base.OnApplyTemplate();
 
-        UpdateCurrentScrollViewer();
+        _ = UpdateCurrentScrollViewer();
     }
 
     private async Task UpdateCurrentScrollViewer()
@@ -185,7 +185,7 @@ public class PivotEx : Pivot
         }
 
         var container = ContainerFromIndex(SelectedIndex) as PivotItem;
-        if (container == args.Item) UpdateCurrentScrollViewer();
+        if (container == args.Item) _ = UpdateCurrentScrollViewer();
     }
 
     private Task<double?> TryScrollVerticalOffsetAsync(ScrollViewer scrollViewer)
@@ -236,7 +236,7 @@ public class PivotEx : Pivot
 
     private void PivotEx_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        UpdateCurrentScrollViewer();
+        _ = UpdateCurrentScrollViewer();
     }
 
     public CompositionPropertySet GetProgressPropertySet()

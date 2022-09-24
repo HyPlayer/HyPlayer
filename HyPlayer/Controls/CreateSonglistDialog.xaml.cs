@@ -37,7 +37,7 @@ public sealed partial class CreateSonglistDialog : ContentDialog
         }
 
         Common.AddToTeachingTipLists("创建成功");
-        Common.PageBase.LoadSongList();
+        _ = Common.PageBase.LoadSongList();
         Common.ncapi.RealIP = realIpBackup; // Restore user setting
     }
 

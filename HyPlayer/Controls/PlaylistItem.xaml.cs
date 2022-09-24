@@ -83,7 +83,7 @@ public sealed partial class PlaylistItem : UserControl, IDisposable
         }
 
         Common.AddToTeachingTipLists("成功公开歌单");
-        Common.PageBase.LoadSongList();
+        _ = Common.PageBase.LoadSongList();
     }
 
     private async void ItemDelPlayList_Click(object sender, RoutedEventArgs e)
@@ -103,7 +103,7 @@ public sealed partial class PlaylistItem : UserControl, IDisposable
         }
 
 
-        Common.PageBase.LoadSongList();
+        _ = Common.PageBase.LoadSongList();
         Common.NavigateRefresh();
     }
 

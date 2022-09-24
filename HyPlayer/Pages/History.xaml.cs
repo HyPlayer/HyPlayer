@@ -47,11 +47,11 @@ public sealed partial class History : Page
                 break;
             case "SongRankWeek":
                 //听歌排行加载部分 - 优先级靠下
-                LoadRankWeek();
+                _ = LoadRankWeek();
                 break;
             case "SongRankAll":
                 //听歌排行加载部分 - 优先级靠下
-                LoadRankAll();
+                _ = LoadRankAll();
                 break;
         }
     }

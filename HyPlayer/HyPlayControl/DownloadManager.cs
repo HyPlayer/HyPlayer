@@ -127,7 +127,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
         if (_downloadOperation is { Progress.Status: BackgroundTransferStatus.Running })
             _downloadOperation?.Pause();
         Status = DownloadStatus.Paused;
-        Common.Invoke(() =>
+        _ = Common.Invoke(() =>
         {
             Message = "暂停中";
             HasPaused = true;
@@ -139,7 +139,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
     {
         _downloadOperation?.Resume();
         Status = DownloadStatus.Downloading;
-        Common.Invoke(() =>
+        _ = Common.Invoke(() =>
         {
             Message = "下载中";
             HasPaused = false;
@@ -151,7 +151,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
         if (_downloadOperation is { Progress.Status: BackgroundTransferStatus.Running })
             _downloadOperation?.Pause();
         Status = DownloadStatus.Finished;
-        Common.Invoke(() =>
+        _ = Common.Invoke(() =>
         {
             Message = "已移除";
             HasPaused = false;
@@ -169,12 +169,12 @@ internal sealed class DownloadObject : INotifyPropertyChanged
             DownloadManager.WritingTasks.RemoveAll(t => t.IsCompleted);
             Status = DownloadStatus.Finished;
         }));
-        Common.Invoke(() => Message = "下载完成");
+        _ = Common.Invoke(() => Message = "下载完成");
     }
 
     private Task WriteInfoToFile()
     {
-        Common.Invoke(() => Message = "正在写文件信息");
+        _ = Common.Invoke(() => Message = "正在写文件信息");
         return Task.Run(async () =>
         {
             using var streamAbstraction = new UwpStorageFileAbstraction(ResultFile);
@@ -243,7 +243,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
             catch (Exception ex)
             {
                 Status = DownloadStatus.Error;
-                Common.Invoke(() =>
+                _ = Common.Invoke(() =>
                 {
                     HasError = true;
                     HasPaused = true;
@@ -262,7 +262,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
 
     private Task DownloadLyric()
     {
-        Common.Invoke(() => Message = "下载歌词中");
+        _ = Common.Invoke(() => Message = "下载歌词中");
         //下载歌词
         return Task.Run(async () =>
         {
@@ -303,7 +303,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
             catch (Exception ex)
             {
                 Status = DownloadStatus.Error;
-                Common.Invoke(() =>
+                _ = Common.Invoke(() =>
                 {
                     Message = "下载歌词错误: " + ex.Message;
                     HasError = true;
@@ -334,7 +334,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
         if (obj.Progress.TotalBytesToReceive == 0) return;
         if (Status != DownloadStatus.Downloading) return;
 
-        Common.Invoke((() =>
+        _ = Common.Invoke((() =>
         {
             TotalSize = obj.Progress.TotalBytesToReceive;
             HadSize = obj.Progress.BytesReceived;
@@ -354,7 +354,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
     {
         if (_downloadOperation != null) { Resume(); return; }
         Status = DownloadStatus.Downloading;
-        Common.Invoke(() =>
+        _ = Common.Invoke(() =>
         {
             HasError = false;
             HasPaused = false;
@@ -385,7 +385,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                 {
                     case 0:
                         Status = DownloadStatus.Paused;
-                        Common.Invoke(() => { Message = "歌曲已存在, 跳过"; });
+                        _ = Common.Invoke(() => { Message = "歌曲已存在, 跳过"; });
                         return;
                     case 1:
                         await (await nowFolder.GetFileAsync(Path.GetFileName(FileName))).DeleteAsync();
@@ -405,9 +405,8 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                         FullPath = ResultFile.Path;
                         Wc_DownloadFileCompleted();
                         return;
-                        break;
                 }
-            Common.Invoke(() =>
+            _ = Common.Invoke(() =>
             {
                 HasError = false;
                 HasPaused = false;
@@ -419,7 +418,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
             if (json["data"]?[0]?["code"]?.ToString() != "200")
             {
                 Status = DownloadStatus.Error;
-                Common.Invoke(() =>
+                _ = Common.Invoke(() =>
                 {
                     Message = "获取下载链接错误";
                     HasError = true;
@@ -432,7 +431,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
             if (json["data"]?[0]?["freeTrialInfo"]?.HasValues == true && Common.Setting.jumpVipSongDownloading)
             {
                 Status = DownloadStatus.Paused;
-                Common.Invoke(() =>
+                _ = Common.Invoke(() =>
                 {
                     HasPaused = true;
                     Progress = 100;
@@ -474,7 +473,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
         catch (Exception ex)
         {
             Status = DownloadStatus.Error;
-            Common.Invoke(() => { Message = "下载错误: " + ex.Message; });
+            _ = Common.Invoke(() => { Message = "下载错误: " + ex.Message; });
             Common.ErrorMessageList.Add("无法下载歌曲 " + ncsong.songname + "\n已自动将其从下载列表中移除" + ex.Message);
         }
     }
@@ -535,12 +534,12 @@ internal static class DownloadManager
                     if (--maxDownloadCount <= 0) return;
                     continue;
                 case DownloadObject.DownloadStatus.Queueing:
-                    DownloadLists[i].StartDownload();
+                    _ = DownloadLists[i].StartDownload();
                     --maxDownloadCount;
                     return;
                 case DownloadObject.DownloadStatus.Finished:
                     var i1 = i;
-                    Common.Invoke(() => { DownloadLists.RemoveAt(i1); });
+                    _ = Common.Invoke(() => { DownloadLists.RemoveAt(i1); });
                     break;
                 case DownloadObject.DownloadStatus.Paused:
                 case DownloadObject.DownloadStatus.Error:

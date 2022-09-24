@@ -67,7 +67,7 @@ public sealed partial class PlayBar
 
     private void HyPlayListOnOnSongRemoveAll()
     {
-        Common.Invoke(() =>
+        _ = Common.Invoke(() =>
         {
             PlayItems.Clear();
             PlayListTitle.Text = "播放列表";
@@ -331,7 +331,7 @@ public sealed partial class PlayBar
     private void HyPlayList_OnPlayListAdd()
     {
         RefreshSongList();
-        HistoryManagement.SetcurPlayingListHistory(HyPlayList.List
+        _ = HistoryManagement.SetcurPlayingListHistory(HyPlayList.List
             .Where(t => t.ItemType == HyPlayItemType.Netease)
             .Select(t => t.PlayItem.Id).ToList());
     }
@@ -458,14 +458,14 @@ public sealed partial class PlayBar
                         await img.SetSourceAsync(new MemoryStream(mpi.PlayItem.LocalFileTag.Pictures[0].Data.Data).AsRandomAccessStream());
                     }
                     
-                    Common.Invoke(() => { AlbumImage.Source = img; });
+                    _ = Common.Invoke(() => { AlbumImage.Source = img; });
                 }
                 else
                 {
                     if (Common.Setting.notClearMode)
                         _ = Common.Invoke(() => Btn_Comment.Visibility = Visibility.Visible);
 
-                    Common.Invoke(() =>
+                    _ = Common.Invoke(() =>
                     {
                         AlbumImage.Source =
                             new BitmapImage(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=" +
@@ -474,16 +474,16 @@ public sealed partial class PlayBar
                 }
 
             ApplicationView.GetForCurrentView().Title = HyPlayList.NowPlayingItem.PlayItem.Name + " - " +
-                                                        HyPlayList.NowPlayingItem.PlayItem.ArtistString;
+                                                                                      HyPlayList.NowPlayingItem.PlayItem.ArtistString;
         }
         catch (Exception)
         {
             //IGNORE
         }
 
-        //SliderAudioRate.Value = HyPlayList.Player.Volume * 100;
+        _ = Common.Invoke(() => SliderAudioRate.Value = HyPlayList.Player.Volume * 100);
 
-        Common.Invoke(() =>
+        _ = Common.Invoke(() =>
         {
             if (Common.IsInFm)
             {
@@ -573,7 +573,7 @@ public sealed partial class PlayBar
         var isLiked = Common.LikedSongs.Contains(mpi.PlayItem.Id);
         if (mpi.ItemType != HyPlayItemType.Local)
         {
-            Common.Invoke(() =>
+            _ = Common.Invoke(() =>
             {
                 IconLiked.Foreground = isLiked
                     ? new SolidColorBrush(Colors.Red)
@@ -592,7 +592,7 @@ public sealed partial class PlayBar
             HistoryManagement.AddNCSongHistory(mpi.PlayItem.Id);
         }
 
-        RefreshTile();
+        _ = RefreshTile();
         /*
         verticalAnimation.To = TbSongName.ActualWidth - TbSongName.Tb.ActualWidth;
         verticalAnimation.SpeedRatio = 0.1;
@@ -655,7 +655,7 @@ public sealed partial class PlayBar
     private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
     {
         if (HyPlayList.NowPlayingItem.PlayItem?.Name != null && HyPlayList.Player.Source == null)
-            HyPlayList.LoadPlayerSong();
+            _ = HyPlayList.LoadPlayerSong();
 
         if (Common.Setting.fadeInOutPause && HyPlayList.Player.Source != null)
         {
@@ -831,7 +831,7 @@ public sealed partial class PlayBar
 
     private void ButtonAddLocal_OnClick(object sender, RoutedEventArgs e)
     {
-        HyPlayList.PickLocalFile();
+        _ = HyPlayList.PickLocalFile();
     }
 
     private void SliderProgress_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
@@ -898,7 +898,7 @@ public sealed partial class PlayBar
         {
             case HyPlayItemType.Netease:
                 {
-                    Api.LikeSong(HyPlayList.NowPlayingItem.PlayItem.Id,
+                    _ = Api.LikeSong(HyPlayList.NowPlayingItem.PlayItem.Id,
                         !isLiked);
                     if (isLiked)
                         Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.Id);

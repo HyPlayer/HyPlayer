@@ -69,9 +69,9 @@ public sealed partial class ArtistPage : Page
                                  res["data"]["artist"]["mvSize"];
             HotSongContainer.ListSource = "sh" + artist.id;
             AllSongContainer.ListSource = "content";
-            LoadHotSongs();
-            LoadSongs();
-            LoadAlbum();
+            _ = LoadHotSongs();
+            _ = LoadSongs();
+            _ = LoadAlbum();
         }
         catch (Exception ex)
         {
@@ -160,9 +160,9 @@ public sealed partial class ArtistPage : Page
     {
         page++;
         if (mp.SelectedIndex == 1)
-            LoadSongs();
+            _ = LoadSongs();
         else if (mp.SelectedIndex == 2)
-            LoadAlbum();
+            _ = LoadAlbum();
     }
 
     private async Task LoadAlbum()
@@ -208,9 +208,9 @@ public sealed partial class ArtistPage : Page
     {
         page--;
         if (mp.SelectedIndex == 1)
-            LoadSongs();
+            _ = LoadSongs();
         else if (mp.SelectedIndex == 2)
-            LoadAlbum();
+            _ = LoadAlbum();
     }
 
     private void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)

@@ -61,8 +61,8 @@ public sealed partial class Me : Page, IDisposable
             uid = Common.LoginedUser.id;
         }
 
-        LoadInfo();
-        LoadPlayList();
+        _ = LoadInfo();
+        _ = LoadPlayList();
     }
 
     public async Task LoadPlayList()
@@ -169,7 +169,7 @@ public sealed partial class Me : Page, IDisposable
             Common.ncapi = new CloudMusicApi();
             Common.PageMain.MainFrame.Navigate(typeof(BlankPage));
             Common.PageMain.MainFrame.Navigate(typeof(BasePage));
-            ((App)Application.Current).InitializeJumpList();
+            _ = ((App)Application.Current).InitializeJumpList();
         }
         catch
         {
@@ -191,6 +191,6 @@ public sealed partial class Me : Page, IDisposable
 
     private void SongListItemClicked(object sender, TappedRoutedEventArgs e)
     {
-        Common.NavigatePageResource(((Grid)sender).Tag.ToString());
+        _ = Common.NavigatePageResource(((Grid)sender).Tag.ToString());
     }
 }

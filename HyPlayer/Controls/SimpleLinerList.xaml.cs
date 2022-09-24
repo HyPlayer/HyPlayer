@@ -50,7 +50,7 @@ public partial class SimpleLinerList : UserControl
     private void ItemList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (ItemList.SelectedIndex >= 0)
-            Common.NavigatePageResource(ListItems[ItemList.SelectedIndex].ResourceId);
+            _ = Common.NavigatePageResource(ListItems[ItemList.SelectedIndex].ResourceId);
     }
 
     private async void BtnPlayClick(object sender, RoutedEventArgs e)

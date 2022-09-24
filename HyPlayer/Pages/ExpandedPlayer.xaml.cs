@@ -131,7 +131,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void HyPlayList_OnPlay()
     {
-        Common.Invoke(() =>
+        _ = Common.Invoke(() =>
         {
             if (Common.Setting.albumRotate)
                 //网易云音乐圆形唱片
@@ -146,7 +146,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void HyPlayList_OnPause()
     {
-        Common.Invoke(() =>
+        _ = Common.Invoke(() =>
         {
             if (Common.Setting.albumRotate)
                 RotateAnimationSet.Stop();
@@ -182,7 +182,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void HyPlayList_OnLyricLoaded()
     {
-        Common.Invoke(LoadLyricsBox);
+        _ = Common.Invoke(LoadLyricsBox);
         needRedesign++;
     }
 
@@ -426,7 +426,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void RefreshLyricTime()
     {
-        Common.Invoke(UpdateFocusingLyric);
+        _ = Common.Invoke(UpdateFocusingLyric);
     }
 
     private void UpdateFocusingLyric()
@@ -491,7 +491,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         LyricBox.ItemsSource = source;
         LyricBox.Width = LyricWidth;
         lastlrcid = HyPlayList.NowPlayingItem.GetHashCode();
-        InitLyricTime();
+        _ = InitLyricTime();
     }
 
     private async Task InitLyricTime()
@@ -503,7 +503,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     public void OnSongChange(HyPlayItem mpi)
     {
-        Common.Invoke(() =>
+        _ = Common.Invoke(() =>
         {
             TextBlockSinger.Content = mpi?.PlayItem?.ArtistString;
             TextBlockSongTitle.Text = mpi?.PlayItem?.Name;
@@ -608,7 +608,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             }
 
             needRedesign++;
-            LoadCoverImage();
+            _ = LoadCoverImage();
             LoadLyricColor();
         });
     }
@@ -949,12 +949,12 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void BtnCopyLyricClicked(object sender, RoutedEventArgs e)
     {
-        new LyricShareDialog { Lyrics = HyPlayList.Lyrics }.ShowAsync();
+        _ = new LyricShareDialog { Lyrics = HyPlayList.Lyrics }.ShowAsync();
     }
 
     private void BtnToggleTinyModeClick(object sender, RoutedEventArgs e)
     {
-        ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.CompactOverlay);
+        _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.CompactOverlay);
         Common.PageMain.ExpandedPlayer.Navigate(typeof(CompactPlayerPage));
     }
     private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)

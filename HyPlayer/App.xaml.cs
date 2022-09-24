@@ -64,7 +64,7 @@ sealed partial class App : Application
         MemoryManager.AppMemoryUsageLimitChanging += MemoryManagerOnAppMemoryUsageLimitChanging;
         if (Common.Setting.themeRequest != 0)
             RequestedTheme = Common.Setting.themeRequest == 1 ? ApplicationTheme.Light : ApplicationTheme.Dark;
-        InitializeThings();
+        _ = InitializeThings();
 #if !DEBUG
         LoadMicrosoftStoreSDK();
 #endif
@@ -127,7 +127,7 @@ sealed partial class App : Application
         Common.IsInBackground = false;
 
         if (!Common.Setting.forceMemoryGarbage) return;
-        InitializeThings();
+        _ = InitializeThings();
         Common.NavigateBack();
 
         //ClearExtendedExecution(executionSession);
@@ -221,7 +221,7 @@ sealed partial class App : Application
     protected override async void OnFileActivated(FileActivatedEventArgs args)
     {
         HyPlayList.PlaySourceId = "local";
-        InitializeJumpList();
+        _ = InitializeJumpList();
         Common.isExpanded = true;
         ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = "[]";
         var rootFrame = Window.Current.Content as Frame;
@@ -266,7 +266,7 @@ sealed partial class App : Application
     /// <param name="e">有关启动请求和过程的详细信息。</param>
     protected override void OnLaunched(LaunchActivatedEventArgs e)
     {
-        InitializeJumpList();
+        _ = InitializeJumpList();
         var rootFrame = Window.Current.Content as Frame;
 
         // 不要在窗口已包含内容时重复应用程序初始化，

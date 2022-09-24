@@ -79,7 +79,7 @@ public sealed partial class Search : Page, IDisposable
             SearchKeywordBox_QuerySubmitted(SearchKeywordBox, null);
         }
 
-        if (Text != string.Empty) LoadResult();
+        if (Text != string.Empty) _ = LoadResult();
     }
 
     protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
@@ -323,7 +323,7 @@ public sealed partial class Search : Page, IDisposable
     private void Btn_Click(object sender, RoutedEventArgs e)
     {
         Text = (sender as Button).Content.ToString();
-        LoadResult();
+        _ = LoadResult();
     }
 
     private void LoadPlaylistResult(JObject json)
@@ -458,13 +458,13 @@ public sealed partial class Search : Page, IDisposable
     private void PrevPage_OnClick(object sender, RoutedEventArgs e)
     {
         page--;
-        LoadResult();
+        _ = LoadResult();
     }
 
     private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
     {
         page++;
-        LoadResult();
+        _ = LoadResult();
     }
 
     private void NavigationView_OnSelectionChanged(NavigationView sender,
@@ -482,7 +482,7 @@ public sealed partial class Search : Page, IDisposable
             SearchResultContainer.Visibility = Visibility.Visible;
         }
 
-        LoadResult();
+        _ = LoadResult();
     }
 
     private async void SearchKeywordBox_GotFocus(object sender, RoutedEventArgs e)
@@ -509,7 +509,7 @@ public sealed partial class Search : Page, IDisposable
     private void SearchKeywordBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
         Text = sender.Text;
-        LoadResult();
+        _ = LoadResult();
     }
 
     private void SearchKeywordBox_SuggestionChosen(AutoSuggestBox sender,

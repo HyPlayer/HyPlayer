@@ -64,8 +64,8 @@ public sealed partial class AlbumPage : Page, IDisposable
                 break;
         }
 
-        LoadAlbumInfo();
-        LoadAlbumDynamic();
+        _ = LoadAlbumInfo();
+        _ = LoadAlbumDynamic();
     }
 
     private async Task LoadAlbumDynamic()

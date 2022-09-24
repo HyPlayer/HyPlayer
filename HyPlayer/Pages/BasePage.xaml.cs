@@ -340,8 +340,8 @@ public sealed partial class BasePage : Page
         InfoBarLoginHint.Message = "欢迎 " + Common.LoginedUser.name;
         DialogLogin.Hide();
         //加载我喜欢的歌
-        LoadMyLikelist();
-        LoadSongList();
+        _ = LoadMyLikelist();
+        _ = LoadSongList();
 
         // 执行签到操作
         DoDailySign();
@@ -350,7 +350,7 @@ public sealed partial class BasePage : Page
         HyPlayList.OnMediaEnd += Scrobble;
 
         HyPlayList.LoginDoneCall();
-        ((App)Application.Current).InitializeJumpList();
+        _ = ((App)Application.Current).InitializeJumpList();
         NavMain.SelectedItem = NavItemLogin;
         //Common.NavigatePage(typeof(Me));
         return true;
@@ -551,7 +551,7 @@ public sealed partial class BasePage : Page
             case "SonglistCreate":
             {
                 await new CreateSonglistDialog().ShowAsync();
-                LoadSongList();
+                _ = LoadSongList();
                 break;
             }
             case "PersonalFM":
@@ -560,7 +560,7 @@ public sealed partial class BasePage : Page
                 break;
             }
             case "HeartBeat":
-                LoadHeartBeat();
+                _ = LoadHeartBeat();
                 break;
         }
     }
@@ -642,7 +642,7 @@ public sealed partial class BasePage : Page
                 new Dictionary<string, object>
                     { { "timestamp", (DateTime.Now.Ticks - 621356256000000000) / 10000 } });
 
-            ReFreshQr(key);
+            _ = ReFreshQr(key);
             nowqrkey = key["unikey"].ToString();
             while (!Common.Logined && nowqrkey == key["unikey"].ToString())
             {
@@ -655,7 +655,7 @@ public sealed partial class BasePage : Page
                             { { "timestamp", (DateTime.Now.Ticks - 621356256000000000) / 10000 } });
                     try
                     {
-                        ReFreshQr(key);
+                        _ = ReFreshQr(key);
                     }
                     catch (Exception ex)
                     {
@@ -767,7 +767,7 @@ public sealed partial class BasePage : Page
                     { "id", nowplid }
                 });
             Common.AddToTeachingTipLists("成功公开歌单");
-            LoadSongList();
+            _ = LoadSongList();
         }
         catch (Exception ex)
         {
@@ -785,7 +785,7 @@ public sealed partial class BasePage : Page
                     { "ids", nowplid }
                 });
             Common.AddToTeachingTipLists("成功删除");
-            LoadSongList();
+            _ = LoadSongList();
         }
         catch (Exception ex)
         {

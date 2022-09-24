@@ -89,13 +89,13 @@ public sealed partial class RadioPage : Page, IDisposable
                 : new BitmapImage(new Uri(Radio.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
         Songs.Clear();
         SongContainer.ListSource = "rd" + Radio.id;
-        LoadProgram();
+        _ = LoadProgram();
     }
 
     private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
     {
         page++;
-        LoadProgram();
+        _ = LoadProgram();
     }
 
     private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
@@ -124,7 +124,7 @@ public sealed partial class RadioPage : Page, IDisposable
         page = 0;
         i = 0;
         asc = !asc;
-        LoadProgram();
+        _ = LoadProgram();
     }
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)

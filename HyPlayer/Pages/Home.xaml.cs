@@ -47,7 +47,7 @@ public sealed partial class Home : Page
 
     private void LoadUnLoginedContent()
     {
-        LoadRanklist();
+        _ = LoadRanklist();
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -63,7 +63,7 @@ public sealed partial class Home : Page
 
     private async void LoadLoginedContent()
     {
-        Common.Invoke(() =>
+        _ = Common.Invoke(() =>
         {
             UnLoginedContent.Visibility = Visibility.Collapsed;
             LoginedContent.Visibility = Visibility.Visible;
@@ -108,7 +108,7 @@ public sealed partial class Home : Page
             */
 
             //榜单
-            Common.Invoke(() =>
+            _ = Common.Invoke(() =>
             {
                 RankPlayList.Children.Clear();
                 foreach (var bditem in ret["/api/toplist"]["list"])
@@ -119,7 +119,7 @@ public sealed partial class Home : Page
             try
             {
                 var ret1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendResource);
-                Common.Invoke(() =>
+                _ = Common.Invoke(() =>
                 {
                     RecommendSongListContainer.Children.Clear();
                     foreach (var item in ret1["recommend"])

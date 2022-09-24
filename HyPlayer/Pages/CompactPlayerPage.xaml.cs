@@ -58,10 +58,10 @@ public sealed partial class CompactPlayerPage : Page
     {
         InitializeComponent();
         HyPlayList.OnPlayPositionChange +=
-            position => Common.Invoke(() => NowProgress = position.TotalMilliseconds);
+            position => _ = Common.Invoke(() => NowProgress = position.TotalMilliseconds);
         HyPlayList.OnPlayItemChange += OnChangePlayItem;
-        HyPlayList.OnPlay += () => Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB4");
-        HyPlayList.OnPause += () => Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB5");
+        HyPlayList.OnPlay += () => _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB4");
+        HyPlayList.OnPause += () => _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB5");
         HyPlayList.OnLyricChange += OnLyricChanged;
         CompactPlayerAni.Begin();
     }
@@ -121,7 +121,7 @@ public sealed partial class CompactPlayerPage : Page
     private void OnLyricChanged()
     {
         if (HyPlayList.Lyrics.Count <= HyPlayList.LyricPos) return;
-        Common.Invoke(() =>
+        _ = Common.Invoke(() =>
         {
             LyricText = HyPlayList.Lyrics[HyPlayList.LyricPos].PureLyric;
             LyricTranslation = HyPlayList.Lyrics[HyPlayList.LyricPos].Translation;
@@ -130,7 +130,7 @@ public sealed partial class CompactPlayerPage : Page
 
     private void OnChangePlayItem(HyPlayItem item)
     {
-        Common.Invoke(async () =>
+        _ = Common.Invoke(async () =>
         {
             NowPlayingName = item?.PlayItem?.Name;
             NowPlayingArtists = item?.PlayItem?.ArtistString;
@@ -193,7 +193,7 @@ public sealed partial class CompactPlayerPage : Page
 
     private void ExitCompactMode(object sender, DoubleTappedRoutedEventArgs e)
     {
-        ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
+        _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
         Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer));
     }
 
