@@ -20,14 +20,12 @@ using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using Kawazu;
 using Microsoft.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
-using Microsoft.Toolkit.Uwp.Helpers;
 
 #endregion
 

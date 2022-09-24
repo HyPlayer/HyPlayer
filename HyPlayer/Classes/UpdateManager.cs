@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
@@ -9,8 +8,6 @@ using Windows.UI.Xaml.Controls;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using HttpClient = Windows.Web.Http.HttpClient;
-using System.Text.Json.Serialization;
-using Windows.UI.Xaml;
 
 namespace HyPlayer.Classes;
 

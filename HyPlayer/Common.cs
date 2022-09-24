@@ -31,8 +31,6 @@ using Microsoft.UI.Xaml.Controls;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Windows.ApplicationModel;
-using Windows.Services.Store;
 #if !DEBUG
 using Microsoft.AppCenter.Crashes;
 #endif
