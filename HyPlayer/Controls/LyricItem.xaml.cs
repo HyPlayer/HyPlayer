@@ -122,7 +122,7 @@ public sealed partial class LyricItem : UserControl
     {
         TextBoxPureLyric.FontSize = actualsize;
         TextBoxTranslation.FontSize = actualsize;
-        TextBoxPureLyric.Text = Lrc.PureLyric;
+        TextBoxPureLyric.Text = Lrc.PureLyric ?? string.Empty;
         if (Lrc.HaveTranslation && Common.ShowLyricTrans && !string.IsNullOrWhiteSpace(Lrc.Translation))
             TextBoxTranslation.Text = Lrc.Translation;
         else

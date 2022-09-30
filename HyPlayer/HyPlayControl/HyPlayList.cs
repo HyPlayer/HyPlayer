@@ -1297,7 +1297,7 @@ public static class HyPlayList
         {
             //TagLib.File afi = TagLib.File.Create(new UwpStorageFileAbstraction(sf), ReadStyle.Average);
             var contributingArtists =
-                mdp.Producers as string[] ?? new[] { "未知歌手" };
+                string.IsNullOrEmpty(mdp.Artist) ? "未知歌手" : mdp.Artist;
 
 
             var hyPlayItem = new HyPlayItem
@@ -1311,10 +1311,7 @@ public static class HyPlayList
                     Id = null,
                     Name = string.IsNullOrWhiteSpace(mdp.Title) ? sf.Name : mdp.Title,
                     Type = HyPlayItemType.Local,
-                    Artist = contributingArtists.Select(t => new NCArtist
-                    {
-                        name = t
-                    }).ToList(),
+                    Artist = new List<NCArtist> {new NCArtist {name = contributingArtists, Type = HyPlayItemType.Local}},
                     Album = new NCAlbum
                     {
                         name = mdp.Album
