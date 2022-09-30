@@ -391,7 +391,7 @@ public static class HyPlayList
             }
         }
 
-        Player_SourceChanged(null, null);
+        //Player_SourceChanged(null, null);
     }
 
     /********        方法         ********/

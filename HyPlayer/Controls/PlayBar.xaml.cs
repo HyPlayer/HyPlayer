@@ -33,6 +33,7 @@ using Windows.Storage.Streams;
 using System.Threading.Tasks;
 using System.IO;
 using Microsoft.Toolkit.Uwp.Helpers;
+
 #endregion
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
@@ -95,12 +96,18 @@ public sealed partial class PlayBar
     public async Task RefreshTile()
     {
         if (HyPlayList.NowPlayingItem?.PlayItem == null || !Common.Setting.enableTile) return;
-        string fileName = (int)HyPlayList.NowPlayingItem.ItemType <= 1 ? "LocalMusic" : HyPlayList.NowPlayingItem.PlayItem.Album.id;
-        string downloadLink = (int)HyPlayList.NowPlayingItem.ItemType <= 1 ? "https://s2.loli.net/2022/07/24/vwmY7t19uXLHPOr.png" : HyPlayList.NowPlayingItem.PlayItem.Album.cover;
-        if (Common.Setting.saveTileBackgroundToLocalFolder&&Common.Setting.tileBackgroundAvailability) 
+        string fileName = (int)HyPlayList.NowPlayingItem.ItemType <= 1
+            ? "LocalMusic"
+            : HyPlayList.NowPlayingItem.PlayItem.Album.id;
+        string downloadLink = (int)HyPlayList.NowPlayingItem.ItemType <= 1
+            ? "https://s2.loli.net/2022/07/24/vwmY7t19uXLHPOr.png"
+            : HyPlayList.NowPlayingItem.PlayItem.Album.cover;
+        if (Common.Setting.saveTileBackgroundToLocalFolder && Common.Setting.tileBackgroundAvailability)
         {
-            StorageFolder storageFolder = await ApplicationData.Current.TemporaryFolder.CreateFolderAsync("LocalTileBackground", CreationCollisionOption.OpenIfExists);
-            if (!await storageFolder.FileExistsAsync(fileName+ ".jpg"))
+            StorageFolder storageFolder =
+                await ApplicationData.Current.TemporaryFolder.CreateFolderAsync("LocalTileBackground",
+                    CreationCollisionOption.OpenIfExists);
+            if (!await storageFolder.FileExistsAsync(fileName + ".jpg"))
             {
                 StorageFile storageFile = await storageFolder.CreateFileAsync(fileName + ".jpg");
                 using Windows.Web.Http.HttpClient httpClient = new Windows.Web.Http.HttpClient();
@@ -112,21 +119,25 @@ public sealed partial class PlayBar
                 BitmapDecoder decoder = await BitmapDecoder.CreateAsync(inputStream);
                 softwareBitmap = await decoder.GetSoftwareBitmapAsync();
                 BitmapEncoder encoder =
-                await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
+                    await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
                 encoder.SetSoftwareBitmap(softwareBitmap);
                 await encoder.FlushAsync();
                 var fileStream = (await storageFile.OpenAsync(FileAccessMode.ReadWrite)).AsStream();
                 await outputStream.AsStream().CopyToAsync(fileStream);
                 fileStream.Close();
                 outputStream.Dispose();
-            } 
+            }
         }
-        var cover = Common.Setting.tileBackgroundAvailability ?  new TileBackgroundImage()
+
+        var cover = Common.Setting.tileBackgroundAvailability
+            ? new TileBackgroundImage()
             {
-                Source = Common.Setting.saveTileBackgroundToLocalFolder? "ms-appdata:///temp/LocalTileBackground/" + fileName + ".jpg" 
-                : downloadLink,
+                Source = Common.Setting.saveTileBackgroundToLocalFolder
+                    ? "ms-appdata:///temp/LocalTileBackground/" + fileName + ".jpg"
+                    : downloadLink,
                 HintOverlay = 50
-            }: null;
+            }
+            : null;
         var tileContent = new TileContent()
         {
             Visual = new TileVisual()
@@ -134,9 +145,9 @@ public sealed partial class PlayBar
                 DisplayName = "HyPlayer 正在播放",
                 TileSmall = new TileBinding()
                 {
-                    Content =new TileBindingContentAdaptive()
+                    Content = new TileBindingContentAdaptive()
                     {
-                        BackgroundImage=cover,
+                        BackgroundImage = cover,
                     }
                 },
                 TileMedium = new TileBinding()
@@ -146,27 +157,27 @@ public sealed partial class PlayBar
                     {
                         BackgroundImage = cover,
                         Children =
-                {
-                    new AdaptiveText()
-                    {
-                        Text = HyPlayList.NowPlayingItem?.PlayItem.Name,
-                        HintStyle = AdaptiveTextStyle.Base
-                    },
-                    new AdaptiveText()
-                    {
-                        Text = HyPlayList.NowPlayingItem?.PlayItem.ArtistString,
-                        HintStyle = AdaptiveTextStyle.CaptionSubtle,
-                        HintWrap = true,
-                        HintMaxLines = 2
-                    },
-                    new AdaptiveText()
-                    {
-                        Text = HyPlayList.NowPlayingItem?.PlayItem.AlbumString,
-                        HintStyle = AdaptiveTextStyle.CaptionSubtle,
-                        HintWrap = true,
-                        HintMaxLines = 2
-                    }
-                }
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = HyPlayList.NowPlayingItem?.PlayItem.Name,
+                                HintStyle = AdaptiveTextStyle.Base
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = HyPlayList.NowPlayingItem?.PlayItem.ArtistString,
+                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                                HintWrap = true,
+                                HintMaxLines = 2
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = HyPlayList.NowPlayingItem?.PlayItem.AlbumString,
+                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                                HintWrap = true,
+                                HintMaxLines = 2
+                            }
+                        }
                     }
                 },
                 TileWide = new TileBinding()
@@ -174,27 +185,27 @@ public sealed partial class PlayBar
                     Branding = TileBranding.NameAndLogo,
                     Content = new TileBindingContentAdaptive()
                     {
-                        BackgroundImage=cover,
+                        BackgroundImage = cover,
                         Children =
-                {
-                    new AdaptiveText()
-                    {
-                        Text = HyPlayList.NowPlayingItem?.PlayItem.Name,
-                        HintStyle = AdaptiveTextStyle.Base
-                    },
-                    new AdaptiveText()
-                    {
-                        Text = HyPlayList.NowPlayingItem?.PlayItem.ArtistString,
-                        HintStyle = AdaptiveTextStyle.CaptionSubtle,
-                        HintWrap = true,
-                        HintMaxLines = 3
-                    },
-                    new AdaptiveText()
-                    {
-                        Text = HyPlayList.NowPlayingItem?.PlayItem.AlbumString,
-                        HintStyle = AdaptiveTextStyle.CaptionSubtle
-                    }
-                }
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = HyPlayList.NowPlayingItem?.PlayItem.Name,
+                                HintStyle = AdaptiveTextStyle.Base
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = HyPlayList.NowPlayingItem?.PlayItem.ArtistString,
+                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                                HintWrap = true,
+                                HintMaxLines = 3
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = HyPlayList.NowPlayingItem?.PlayItem.AlbumString,
+                                HintStyle = AdaptiveTextStyle.CaptionSubtle
+                            }
+                        }
                     }
                 },
                 TileLarge = new TileBinding()
@@ -202,27 +213,27 @@ public sealed partial class PlayBar
                     Branding = TileBranding.NameAndLogo,
                     Content = new TileBindingContentAdaptive()
                     {
-                        BackgroundImage=cover,
+                        BackgroundImage = cover,
                         Children =
-                {
-                    new AdaptiveText()
-                    {
-                        Text = HyPlayList.NowPlayingItem?.PlayItem.Name,
-                        HintStyle = AdaptiveTextStyle.Base
-                    },
-                    new AdaptiveText()
-                    {
-                        Text = HyPlayList.NowPlayingItem?.PlayItem.ArtistString,
-                        HintStyle = AdaptiveTextStyle.CaptionSubtle,
-                        HintWrap = true,
-                        HintMaxLines = 3
-                    },
-                    new AdaptiveText()
-                    {
-                        Text = HyPlayList.NowPlayingItem?.PlayItem.AlbumString,
-                        HintStyle = AdaptiveTextStyle.CaptionSubtle
-                    }
-                }
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = HyPlayList.NowPlayingItem?.PlayItem.Name,
+                                HintStyle = AdaptiveTextStyle.Base
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = HyPlayList.NowPlayingItem?.PlayItem.ArtistString,
+                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                                HintWrap = true,
+                                HintMaxLines = 3
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = HyPlayList.NowPlayingItem?.PlayItem.AlbumString,
+                                HintStyle = AdaptiveTextStyle.CaptionSubtle
+                            }
+                        }
                     }
                 }
             }
@@ -346,9 +357,9 @@ public sealed partial class PlayBar
                 canslide = false;
                 SliderProgress.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
                 canslide = true;
-                if(HyPlayList.Player.PlaybackSession.Position.Hours == 0)
+                if (HyPlayList.Player.PlaybackSession.Position.Hours == 0)
                 {
-                    if(HyPlayList.Player.PlaybackSession.Position.Minutes < 10)
+                    if (HyPlayList.Player.PlaybackSession.Position.Minutes < 10)
                         TextBlockNowTime.Text =
                             HyPlayList.Player.PlaybackSession.Position.ToString(@"m\:ss");
                     else
@@ -360,6 +371,7 @@ public sealed partial class PlayBar
                     TextBlockNowTime.Text =
                         HyPlayList.Player.PlaybackSession.Position.ToString(@"hh\:mm\:ss");
                 }
+
                 PlayStateIcon.Glyph =
                     HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
                         ? "\uEDB4"
@@ -442,23 +454,27 @@ public sealed partial class PlayBar
             if (!Common.Setting.noImage && !Common.IsInBackground)
                 if (mpi.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
                 {
-                    _ = Common.Invoke(()=>Btn_Comment.Visibility = Visibility.Collapsed);
+                    _ = Common.Invoke(() => Btn_Comment.Visibility = Visibility.Collapsed);
                     var storageFile = HyPlayList.NowPlayingStorageFile;
                     if (mpi.PlayItem.DontSetLocalStorageFile != null)
                         storageFile = mpi.PlayItem.DontSetLocalStorageFile;
-                    var img = new BitmapImage();
+                    _ = Common.Invoke(async () =>
+                    {
+                        var img = new BitmapImage();
+                        if (!Common.Setting.useTaglibPicture || mpi.PlayItem.LocalFileTag is null ||
+                            mpi.PlayItem.LocalFileTag.Pictures.Length == 0)
+                        {
+                            await img.SetSourceAsync(
+                                await storageFile?.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
+                        }
+                        else
+                        {
+                            await img.SetSourceAsync(new MemoryStream(mpi.PlayItem.LocalFileTag.Pictures[0].Data.Data)
+                                .AsRandomAccessStream());
+                        }
 
-                    if (!Common.Setting.useTaglibPicture || mpi.PlayItem.LocalFileTag is null || mpi.PlayItem.LocalFileTag.Pictures.Length == 0)
-                    {
-                        await img.SetSourceAsync(
-                            await storageFile?.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
-                    }
-                    else
-                    {
-                        await img.SetSourceAsync(new MemoryStream(mpi.PlayItem.LocalFileTag.Pictures[0].Data.Data).AsRandomAccessStream());
-                    }
-                    
-                    _ = Common.Invoke(() => { AlbumImage.Source = img; });
+                        AlbumImage.Source = img;
+                    });
                 }
                 else
                 {
@@ -474,7 +490,7 @@ public sealed partial class PlayBar
                 }
 
             ApplicationView.GetForCurrentView().Title = HyPlayList.NowPlayingItem.PlayItem.Name + " - " +
-                                                                                      HyPlayList.NowPlayingItem.PlayItem.ArtistString;
+                                                        HyPlayList.NowPlayingItem.PlayItem.ArtistString;
         }
         catch (Exception)
         {
@@ -524,11 +540,11 @@ public sealed partial class PlayBar
                 AlbumImage.Source = null;
                 return;
             }
-            
+
             var totalTime = TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds);
-            if(totalTime.Hours == 0)
+            if (totalTime.Hours == 0)
             {
-                if(totalTime.Minutes<10)
+                if (totalTime.Minutes < 10)
                     TextBlockTotalTime.Text = totalTime.ToString(@"m\:ss");
                 else
                     TextBlockTotalTime.Text = totalTime.ToString(@"mm\:ss");
@@ -554,7 +570,7 @@ public sealed partial class PlayBar
 
             TbSingerName.Content = HyPlayList.NowPlayingItem.PlayItem.ArtistString;
             TbSongName.Text = HyPlayList.NowPlayingItem.PlayItem.Name;
-            TbAlbumName.Content = HyPlayList.NowPlayingItem.PlayItem.AlbumString;            
+            TbAlbumName.Content = HyPlayList.NowPlayingItem.PlayItem.AlbumString;
 
             // 新版随机播放算法
             realSelectSong = false;
@@ -568,7 +584,8 @@ public sealed partial class PlayBar
 
             if (HyPlayList.NowPlayingItem.PlayItem.Tag != "在线")
                 TbSongTag.Text = HyPlayList.NowPlayingItem.PlayItem.Tag;
-            Btn_Share.IsEnabled = HyPlayList.NowPlayingItem.ItemType is not HyPlayItemType.Local or HyPlayItemType.LocalProgressive;
+            Btn_Share.IsEnabled =
+                HyPlayList.NowPlayingItem.ItemType is not HyPlayItemType.Local or HyPlayItemType.LocalProgressive;
         });
         var isLiked = Common.LikedSongs.Contains(mpi.PlayItem.Id);
         if (mpi.ItemType != HyPlayItemType.Local)
@@ -897,29 +914,29 @@ public sealed partial class PlayBar
         switch (HyPlayList.NowPlayingItem.ItemType)
         {
             case HyPlayItemType.Netease:
-                {
-                    _ = Api.LikeSong(HyPlayList.NowPlayingItem.PlayItem.Id,
-                        !isLiked);
-                    if (isLiked)
-                        Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.Id);
-                    else
-                        Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.Id);
-                    isLiked = !isLiked;
-                    IconLiked.Foreground = isLiked
-                        ? new SolidColorBrush(Colors.Red)
-                        : IconPrevious.Foreground;
-                    FlyoutLiked.Foreground = isLiked
-                        ? new SolidColorBrush(Colors.Red)
-                        : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-                    IconLiked.Glyph = isLiked
-                        ? "\uE00B"
-                        : "\uE006";
-                    FlyoutLiked.Glyph = isLiked
-                        ? "\uE00B"
-                        : "\uE006";
-                    //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
-                    break;
-                }
+            {
+                _ = Api.LikeSong(HyPlayList.NowPlayingItem.PlayItem.Id,
+                    !isLiked);
+                if (isLiked)
+                    Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.Id);
+                else
+                    Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.Id);
+                isLiked = !isLiked;
+                IconLiked.Foreground = isLiked
+                    ? new SolidColorBrush(Colors.Red)
+                    : IconPrevious.Foreground;
+                FlyoutLiked.Foreground = isLiked
+                    ? new SolidColorBrush(Colors.Red)
+                    : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+                IconLiked.Glyph = isLiked
+                    ? "\uE00B"
+                    : "\uE006";
+                FlyoutLiked.Glyph = isLiked
+                    ? "\uE00B"
+                    : "\uE006";
+                //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
+                break;
+            }
             case HyPlayItemType.Radio:
                 _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.ResourceLike,
                     new Dictionary<string, object>
@@ -1159,7 +1176,7 @@ public sealed partial class PlayBar
         HyPlayList.OnPlayListAddDone += HyPlayList_OnPlayListAdd;
         HyPlayList.OnSongRemoveAll += HyPlayListOnOnSongRemoveAll;
         Common.OnEnterForegroundFromBackground += () => LoadPlayingFile(HyPlayList.NowPlayingItem);
-        if(Common.Setting.playbarButtonsTransparent)
+        if (Common.Setting.playbarButtonsTransparent)
         {
             BtnPlayRollType.Background = new SolidColorBrush(Colors.Transparent);
             BtnPreviousSong.Background = new SolidColorBrush(Colors.Transparent);
@@ -1167,6 +1184,7 @@ public sealed partial class PlayBar
             BtnNextSong.Background = new SolidColorBrush(Colors.Transparent);
             BtnLike.Background = new SolidColorBrush(Colors.Transparent);
         }
+
         if (Common.Setting.playButtonAccentColor)
             BtnPlayStateChange.Background = Resources["AccentPlayButtonColor"] as Brush;
         else
@@ -1257,6 +1275,7 @@ public sealed partial class PlayBar
         HyPlayList.SongAppendDone();
         HyPlayList.SongMoveTo(0);
     }
+
     private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)
     {
         Common.Setting.ABStartPoint = HyPlayList.Player.PlaybackSession.Position;
@@ -1269,7 +1288,7 @@ public sealed partial class PlayBar
 
     private void ABRepeatStateButton_Click(object sender, RoutedEventArgs e)
     {
-        Common.Setting.ABRepeatStatus=!Common.Setting.ABRepeatStatus;
+        Common.Setting.ABRepeatStatus = !Common.Setting.ABRepeatStatus;
     }
 }
 
