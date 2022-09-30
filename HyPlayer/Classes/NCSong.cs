@@ -414,7 +414,7 @@ public class NCAlbum
 
     public static NCAlbum CreateFromJson(JToken album)
     {
-        if (!album.HasValues) return new NCAlbum();
+        if (album?.HasValues is not true) return new NCAlbum();
         return new NCAlbum
         {
             AlbumType = HyPlayItemType.Netease,
