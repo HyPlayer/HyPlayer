@@ -6,5 +6,5 @@
   "ignorePaths": [
     ".azp/*",
     ".github/workflows/*"
-  ],
+  ]
 }
