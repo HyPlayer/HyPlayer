@@ -90,7 +90,14 @@
             PaneDisplayMode="Auto"
             SelectionChanged="NavMain_OnSelectionChanged" >
             <muxc:NavigationView.AutoSuggestBox>
-                <AutoSuggestBox x:Name="SearchAutoSuggestBox" QuerySubmitted="AutoSuggestBox_QuerySubmitted" QueryIcon="Find" PlaceholderText="搜索..."/>
+                <AutoSuggestBox x:Name="SearchAutoSuggestBox" 
+                                QuerySubmitted="AutoSuggestBox_QuerySubmitted" 
+                                QueryIcon="Find" 
+                                PlaceholderText="搜索..." 
+                                GotFocus="SearchAutoSuggestBox_GotFocus" 
+                                LostFocus="SearchAutoSuggestBox_LostFocus"
+                                TextChanged="SearchAutoSuggestBox_TextChanged"
+                                SuggestionChosen="SearchAutoSuggestBox_SuggestionChosen"/>
             </muxc:NavigationView.AutoSuggestBox>
             <muxc:NavigationView.MenuItems>
                 <muxc:NavigationViewItem
@@ -102,12 +109,12 @@
                     </muxc:NavigationViewItem.Icon>
                     <Button
                         x:Name="BtnSearch"
-                Width="220"
-                Height=" 36"
+                        Width="220"
+                        Height=" 36"
                         Margin="-40,0,0,0"
-                CornerRadius="18"
-                HorizontalAlignment="Center" 
-                VerticalAlignment="Top" Click="SearchBtn_Clicked">
+                        CornerRadius="18"
+                        HorizontalAlignment="Center" 
+                        VerticalAlignment="Top" Click="SearchBtn_Clicked">
                         <StackPanel Orientation="Horizontal" >
                             <FontIcon Glyph="&#xE71E;" FontSize="16"/>
                         </StackPanel>
