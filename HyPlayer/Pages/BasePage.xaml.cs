@@ -799,25 +799,7 @@ public sealed partial class BasePage : Page
         Common.TeachingTipList.Clear();
     }
 
-    private void SearchBtn_Clicked(object sender, RoutedEventArgs e)
-    {
 
-    }
-
-    private void BtnSet_Click(object sender, RoutedEventArgs e)
-    {
-
-    }
-
-    private void BtnLogOut_Click(object sender, RoutedEventArgs e)
-    {
-
-    }
-
-    private void BtnHome_Click(object sender, RoutedEventArgs e)
-    {
-
-    }
     private async void SearchAutoSuggestBox_GotFocus(object sender, RoutedEventArgs e)
     {
         if (string.IsNullOrWhiteSpace((sender as AutoSuggestBox)?.Text))
@@ -865,4 +847,8 @@ public sealed partial class BasePage : Page
         }
     }
 
+    private void SearchAutoSuggestBox_SuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+    {
+        sender.Text = args.SelectedItem.ToString();
+    }
 }
