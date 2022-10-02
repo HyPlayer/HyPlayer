@@ -804,6 +804,16 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        
+        public bool useTaglibPicture
+        {
+            get => GetSettings("useTaglibPicture", true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["useTaglibPicture"] = value;
+                OnPropertyChanged();
+            }
+        }
 
         public bool advancedMusicHistoryStorage
         {

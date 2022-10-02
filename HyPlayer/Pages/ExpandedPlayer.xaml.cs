@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -554,8 +555,15 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         if (mpi.PlayItem.DontSetLocalStorageFile != null)
                             storageFile = mpi.PlayItem.DontSetLocalStorageFile;
                         var img = new BitmapImage();
-                        await img.SetSourceAsync(
-                            await storageFile.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
+                        if (!Common.Setting.useTaglibPicture || mpi.PlayItem.LocalFileTag is null || mpi.PlayItem.LocalFileTag.Pictures.Length == 0)
+                        {
+                            await img.SetSourceAsync(
+                                await storageFile?.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
+                        }
+                        else
+                        {
+                            await img.SetSourceAsync(new MemoryStream(mpi.PlayItem.LocalFileTag.Pictures[0].Data.Data).AsRandomAccessStream());
+                        }
 
                         ImageAlbum.Source = img;
                         if (Common.Setting.expandedPlayerBackgroundType == 0)

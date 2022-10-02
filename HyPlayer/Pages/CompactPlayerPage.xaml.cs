@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using Windows.Storage.FileProperties;
 using Windows.UI;
 using Windows.UI.ViewManagement;
@@ -139,9 +140,15 @@ public sealed partial class CompactPlayerPage : Page
                     if (item.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
                     {
                         img = new BitmapImage();
-                        await img.SetSourceAsync(
-                            await HyPlayList.NowPlayingStorageFile?.GetThumbnailAsync(ThumbnailMode.SingleItem,
-                                9999));
+                        if (!Common.Setting.useTaglibPicture || item.PlayItem?.LocalFileTag is null || item.PlayItem.LocalFileTag.Pictures.Length == 0)
+                        {
+                            await img.SetSourceAsync(
+                                await HyPlayList.NowPlayingStorageFile?.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
+                        }
+                        else
+                        {
+                            await img.SetSourceAsync(new MemoryStream(item.PlayItem.LocalFileTag.Pictures[0].Data.Data).AsRandomAccessStream());
+                        }
                     }
                     else
                     {
