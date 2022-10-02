@@ -865,5 +865,4 @@ public sealed partial class BasePage : Page
         }
     }
 
-    privat
 }
