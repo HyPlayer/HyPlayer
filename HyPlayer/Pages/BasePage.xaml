@@ -90,29 +90,16 @@
             PaneDisplayMode="Auto"
             SelectionChanged="NavMain_OnSelectionChanged" >
             <muxc:NavigationView.AutoSuggestBox>
-                <AutoSuggestBox x:Name="SearchAutoSuggestBox" QuerySubmitted="AutoSuggestBox_QuerySubmitted" QueryIcon="Find" PlaceholderText="搜索..."/>
+                <AutoSuggestBox x:Name="SearchAutoSuggestBox" 
+                                QuerySubmitted="AutoSuggestBox_QuerySubmitted" 
+                                QueryIcon="Find" 
+                                PlaceholderText="搜索..." 
+                                GotFocus="SearchAutoSuggestBox_GotFocus" 
+                                LostFocus="SearchAutoSuggestBox_LostFocus"
+                                TextChanged="SearchAutoSuggestBox_TextChanged"
+                                SuggestionChosen="SearchAutoSuggestBox_SuggestionChosen"/>
             </muxc:NavigationView.AutoSuggestBox>
             <muxc:NavigationView.MenuItems>
-                <muxc:NavigationViewItem
-                    x:Name="NavSearchItem" Visibility="Collapsed"
-                    Tag="PageSearch" 
-                    Height="60">
-                    <muxc:NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE1A3;" Visibility="Collapsed" x:Name="SearchIcon"/>
-                    </muxc:NavigationViewItem.Icon>
-                    <Button
-                        x:Name="BtnSearch"
-                Width="220"
-                Height=" 36"
-                        Margin="-40,0,0,0"
-                CornerRadius="18"
-                HorizontalAlignment="Center" 
-                VerticalAlignment="Top" Click="SearchBtn_Clicked">
-                        <StackPanel Orientation="Horizontal" >
-                            <FontIcon Glyph="&#xE71E;" FontSize="16"/>
-                        </StackPanel>
-                    </Button>
-                </muxc:NavigationViewItem>
                 <muxc:NavigationViewItemHeader Content="发现"/>
                 <muxc:NavigationViewItem
                     Content="主页" 
@@ -215,6 +202,8 @@
                     Icon="Setting"
                     Tag="PageSettings" 
                     Tapped="NavigationViewItem_Tapped" />
+                <!--抱歉，这部分先暂时删了-->
+                <!--
                 <muxc:NavigationViewItem Height="50" IsTapEnabled="False" SelectsOnInvoked="False" Visibility="Collapsed">
                     <Grid HorizontalAlignment="Stretch" Margin="-10,0,-20,0">
                         <StackPanel Spacing="12" Orientation="Horizontal"   >
@@ -238,7 +227,7 @@
                             </Button>
                         </StackPanel>
                     </Grid>
-                </muxc:NavigationViewItem>
+                </muxc:NavigationViewItem>-->
                 <muxc:NavigationViewItem x:Name="NavItemBlank" x:FieldModifier="public" IsEnabled="False" Height="130" />
             </muxc:NavigationView.FooterMenuItems>
             <Grid>
