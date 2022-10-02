@@ -818,4 +818,56 @@ public sealed partial class BasePage : Page
     {
 
     }
+
+    private async void SearchAutoSuggestBox_GotFocus(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace((sender as AutoSuggestBox)?.Text))
+            try
+            {
+                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchHot);
+
+                ((AutoSuggestBox)sender).ItemsSource =
+                    json["result"]["hots"].ToArray().ToList().Select(t => t["first"].ToString());
+            }
+            catch (Exception ex)
+            {
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            }
+    }
+
+    private void SearchAutoSuggestBox_LostFocus(object sender, RoutedEventArgs e)
+    {
+        ((AutoSuggestBox)sender).ItemsSource = null;
+
+    }
+
+    private async void SearchAutoSuggestBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+    {
+        if (string.IsNullOrEmpty(sender.Text))
+        {
+            SearchAutoSuggestBox_GotFocus(sender, null);
+            return;
+        }
+
+        try
+        {
+            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchSuggest,
+                new Dictionary<string, object> { { "keywords", sender.Text }, { "type", "mobile" } });
+
+            if (json["result"] != null && json["result"]["allMatch"] != null &&
+                json["result"]["allMatch"].HasValues)
+                sender.ItemsSource = json["result"]["allMatch"].ToArray().ToList()
+                    .Select(t => t["keyword"].ToString())
+                    .ToList();
+        }
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+        }
+    }
+
+    private void SearchAutoSuggestBox_SuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+    {
+        sender.Text = args.SelectedItem.ToString();
+    }
 }
