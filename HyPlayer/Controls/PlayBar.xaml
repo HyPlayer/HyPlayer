@@ -633,7 +633,7 @@
                 IsChecked="{x:Bind Mode=OneWay, Path=hy:Common.Setting.toastLyric}"
                 IsThreeState="False"
                 ToolTipService.ToolTip="桌面歌词">
-                <FontIcon Glyph="&#xE66C;" />
+                <FontIcon FontFamily="Segoe UI Symbol" Glyph="&#xE147;" />
             </ToggleButton>
             <Button
                 x:Name="BtnVolume"
