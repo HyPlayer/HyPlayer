@@ -11,7 +11,6 @@ namespace HyPlayer.Classes
     internal static class LastFMManager
     {
         public static LastfmClient LastfmClient = new LastfmClient("641ef15109503085d966e37b73bdcb72", "35c02c12c9c0fdc6f6c1de5d0a9227b5");
-        public static IScrobbler Scrobbler;
         public static async Task<LastResponse> TryLoginLastfmAccountFromInternet(string userName, string password)
         {
             var response = await LastfmClient.Auth.GetSessionTokenAsync(userName,password);
