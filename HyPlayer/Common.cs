@@ -1102,6 +1102,15 @@ namespace HyPlayer
             }
         }
         private static bool _abRepeatStatus = false;
+        public bool UseLastFMScrobbler
+        {
+            get => GetSettings("UseLastFMScrobbler", false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["UseLastFMScrobbler"] = value;
+                OnPropertyChanged();
+            }
+        }
 
         public event PropertyChangedEventHandler? PropertyChanged;
 

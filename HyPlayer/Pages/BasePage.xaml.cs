@@ -210,6 +210,7 @@ public sealed partial class BasePage : Page
             {
                 Common.NavigatePage(typeof(Welcome));
             }
+                LastFMManager.TryLoginLastfmAccountFromSession();
         }
         catch
         {

@@ -707,6 +707,18 @@ public static class HyPlayList
         {
             await ms.OpenAsync();
             Player.Source = ms;
+            if (NowPlayingItem.ItemType == HyPlayItemType.Netease && Common.Setting.UseLastFMScrobbler)
+            {
+                try
+                {
+                    await LastFMManager.UpdateNowPlayingAsync(NowPlayingItem);
+                    await LastFMManager.ScrobbleAsync(NowPlayingItem);
+                }
+                catch(Exception ex)
+                {
+                    Common.AddToTeachingTipLists("同步Last.FM信息时发生错误", ex.Message);
+                }                
+            }
         }
         catch (Exception e)
         {

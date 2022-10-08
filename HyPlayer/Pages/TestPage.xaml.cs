@@ -95,6 +95,9 @@ public sealed partial class TestPage : Page
 
     private async void Login_Click(object sender, RoutedEventArgs e)
     {
+        if (string.IsNullOrEmpty(UserName.Text) || string.IsNullOrEmpty(Password.Text)) LastFMManager.TryLoginLastfmAccountFromSession();
+        else
+        {
             var response = await LastFMManager.TryLoginLastfmAccountFromInternet(UserName.Text, Password.Text);
             if (response.Success)
             {
@@ -104,6 +107,7 @@ public sealed partial class TestPage : Page
             {
                 Common.AddToTeachingTipLists("LastFM Login Failed", response.Status.ToString());
             }
+        }
     }
 
     private async void Scrobble_Click(object sender, RoutedEventArgs e)
@@ -122,5 +126,9 @@ public sealed partial class TestPage : Page
         {
             Common.AddToTeachingTipLists("LastFM NowPlayingItem Updated");
         }
+    }
+    private void Logoff_Click(object sender, RoutedEventArgs e)
+    {
+        if (LastFMManager.TryLogoffLastFM()) Common.AddToTeachingTipLists("Succeed");
     }
 }
