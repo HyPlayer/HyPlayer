@@ -61,7 +61,6 @@ namespace HyPlayer.Classes
                 Common.AddToTeachingTipLists("Last.FM登录过期", "Last.FM登录过期，请重新登录");
                 OnLogoffDone.Invoke();
             }
-            else Common.AddToTeachingTipLists("LastFM Logined");
             return LastfmSessionStatus;
         }
         public static bool TryLogoffLastFM()
@@ -72,7 +71,7 @@ namespace HyPlayer.Classes
         }
         public static async Task<bool> ScrobbleAsync(HyPlayItem scrobbleHyPlayItem)
         {
-            if (Common.Setting.LastFMLogined == false) return false;
+            if (Common.Setting.LastFMLogined == false || Common.Setting.UseLastFMScrobbler == false) return false;
             var scrobbleItem = LastFMUtils.GetScrobble(scrobbleHyPlayItem);
             var response= await LastfmClient.Scrobbler.ScrobbleAsync(scrobbleItem);
             if (!response.Success)
@@ -83,7 +82,7 @@ namespace HyPlayer.Classes
         }
         public static async Task<bool> UpdateNowPlayingAsync(HyPlayItem nowPlayingHyPlayItem)
         {
-            if (Common.Setting.LastFMLogined == false) return false;
+            if (Common.Setting.LastFMLogined == false || Common.Setting.UpdateLastFMNowPlaying == false) return false;
             var nowPlayingItem = LastFMUtils.GetScrobble(nowPlayingHyPlayItem);
             var response = await LastfmClient.Track.UpdateNowPlayingAsync(nowPlayingItem);
             if (!response.Success) throw new Exception(response.Status.ToString());
