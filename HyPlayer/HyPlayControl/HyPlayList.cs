@@ -707,12 +707,11 @@ public static class HyPlayList
         {
             await ms.OpenAsync();
             Player.Source = ms;
-            if (NowPlayingItem.ItemType == HyPlayItemType.Netease && Common.Setting.UseLastFMScrobbler)
+            if (NowPlayingItem.ItemType == HyPlayItemType.Netease)
             {
                 try
                 {
                     await LastFMManager.UpdateNowPlayingAsync(NowPlayingItem);
-                    await LastFMManager.ScrobbleAsync(NowPlayingItem);
                 }
                 catch(Exception ex)
                 {

@@ -92,43 +92,4 @@ public sealed partial class TestPage : Page
         public bool IsLowCache { get; set; }
         public List<string> ErrorMessageList { get; set; }
     }
-
-    private async void Login_Click(object sender, RoutedEventArgs e)
-    {
-        if (string.IsNullOrEmpty(UserName.Text) || string.IsNullOrEmpty(Password.Text)) LastFMManager.TryLoginLastfmAccountFromSession();
-        else
-        {
-            var response = await LastFMManager.TryLoginLastfmAccountFromInternet(UserName.Text, Password.Text);
-            if (response.Success)
-            {
-                Common.AddToTeachingTipLists("LastFM Logined");
-            }
-            else
-            {
-                Common.AddToTeachingTipLists("LastFM Login Failed", response.Status.ToString());
-            }
-        }
-    }
-
-    private async void Scrobble_Click(object sender, RoutedEventArgs e)
-    {
-        var response = await LastFMManager.ScrobbleAsync(HyPlayList.NowPlayingItem);
-        if (response)
-        {
-            Common.AddToTeachingTipLists("LastFM Scrobbled");
-        }
-    }
-
-    private async void UpdateNowPlaying_Click(object sender, RoutedEventArgs e)
-    {
-        var response = await LastFMManager.UpdateNowPlayingAsync(HyPlayList.NowPlayingItem);
-        if (response)
-        {
-            Common.AddToTeachingTipLists("LastFM NowPlayingItem Updated");
-        }
-    }
-    private void Logoff_Click(object sender, RoutedEventArgs e)
-    {
-        if (LastFMManager.TryLogoffLastFM()) Common.AddToTeachingTipLists("Succeed");
-    }
 }

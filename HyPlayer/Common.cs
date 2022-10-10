@@ -31,6 +31,7 @@ using Microsoft.UI.Xaml.Controls;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using IF.Lastfm.Core.Api;
 #if !DEBUG
 using Microsoft.AppCenter.Crashes;
 #endif
@@ -1111,6 +1112,44 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        public bool UpdateLastFMNowPlaying
+        {
+            get => GetSettings("UpdateLastFMNowPlaying", false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["UpdateLastFMNowPlaying"] = value;
+                OnPropertyChanged();
+            }
+        }
+        public string LastFMUserName
+        {
+            get => GetSettings("lastFMUserName", string.Empty);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["lastFMUserName"] = value;
+                OnPropertyChanged();
+            }
+        }
+        public string LastFMToken
+        {
+            get => GetSettings("lastFMToken", string.Empty);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["lastFMToken"] = value;
+                OnPropertyChanged();
+                OnPropertyChanged("LastFMLogined");
+            }
+        }
+        public bool LastFMIsSubscriber
+        {
+            get => GetSettings("", false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["lastFMisSubscriber"] = value;
+                OnPropertyChanged();
+            }
+        }
+        public bool LastFMLogined => LastFMManager.LastfmClient.Auth.Authenticated;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 

@@ -21,18 +21,6 @@
             <Button Click="PlayResourceId" Content="Play" />
             <Button x:Name="DisablePopUp" Content="停用警告弹窗" Click="DisablePopUpButton_Click" />
         </StackPanel>
-        <StackPanel>
-            <TextBlock Text="LastFM UserName"/>
-            <TextBox x:Name="UserName"/>
-            <TextBlock Text="LastFM Password"/>
-            <TextBox x:Name="Password"/>
-            <StackPanel Orientation="Horizontal">
-                <Button x:Name="Login" Content="Login" Click="Login_Click"/>
-                <Button x:Name="Scrobble" Content="Scrobble" Click="Scrobble_Click"/>
-                <Button x:Name="UpdateNowPlaying" Content="UpdateNowPlaying" Click="UpdateNowPlaying_Click"/>
-                <Button x:Name="Logoff" Content="Logoff" Click="Logoff_Click"/>
-            </StackPanel>
-        </StackPanel>
         <ListView ItemsSource="{x:Bind hyplayer:Common.Logs}" />
     </StackPanel>
 </Page>

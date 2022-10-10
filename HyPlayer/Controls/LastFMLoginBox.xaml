@@ -1,0 +1,25 @@
+﻿<ContentDialog
+    x:Class="HyPlayer.Controls.LastFMLoginPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="登录Last.FM"
+    DefaultButton="Secondary"
+    PrimaryButtonText="取消"
+    SecondaryButtonText="登录"
+    PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
+    SecondaryButtonClick="ContentDialog_SecondaryButtonClick"
+    CornerRadius="6">
+    <StackPanel Orientation="Vertical">
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Text="Last.FM用户名："/>
+            <TextBox x:Name="LastFMUserName"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Text="Last.FM密码"/>
+            <PasswordBox x:Name="LastFMPassword"/>
+        </StackPanel>
+    </StackPanel>
+</ContentDialog>

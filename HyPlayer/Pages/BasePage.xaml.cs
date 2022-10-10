@@ -210,11 +210,18 @@ public sealed partial class BasePage : Page
             {
                 Common.NavigatePage(typeof(Welcome));
             }
-                LastFMManager.TryLoginLastfmAccountFromSession();
         }
         catch
         {
             // ignored
+        }
+        try
+        {
+            LastFMManager.InitializeLastFMManager();
+        }
+        catch(Exception ex)
+        {
+            Common.AddToTeachingTipLists("登录Last.FM登录失败", ex.Message);
         }
     }
 
@@ -368,6 +375,17 @@ public sealed partial class BasePage : Page
             { "sourceId", HyPlayList.PlaySourceId ?? "-1" },
             { "time", TimeSpan.FromMilliseconds(item.PlayItem.LengthInMilliseconds).TotalSeconds }
         });
+        if (item.ItemType == HyPlayItemType.Netease)
+        {
+            try
+            {
+                await LastFMManager.ScrobbleAsync(item);
+            }
+            catch (Exception ex)
+            {
+                Common.AddToTeachingTipLists("记录上传至Last.FM时发生错误", ex.Message);
+            }
+        }
     }
 
     private static void DoDailySign()

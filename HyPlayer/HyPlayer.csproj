@@ -152,6 +152,9 @@
     <Compile Include="Controls\GroupedSongsList.xaml.cs">
       <DependentUpon>GroupedSongsList.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\LastFMLoginBox.xaml.cs">
+      <DependentUpon>LastFMLoginBox.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\LyricItem.xaml.cs">
       <DependentUpon>LyricItem.xaml</DependentUpon>
     </Compile>
@@ -331,6 +334,10 @@
     <Content Include="Assets\Wide310x150Logo.scale-125.png" />
     <Content Include="Assets\Wide310x150Logo.scale-150.png" />
     <Content Include="Assets\Wide310x150Logo.scale-400.png" />
+    <Page Include="Controls\LastFMLoginBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Resources\UnsupportedFontIcon.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
