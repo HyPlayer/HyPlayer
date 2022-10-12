@@ -707,17 +707,6 @@ public static class HyPlayList
         {
             await ms.OpenAsync();
             Player.Source = ms;
-            if (NowPlayingItem.ItemType == HyPlayItemType.Netease)
-            {
-                try
-                {
-                    await LastFMManager.UpdateNowPlayingAsync(NowPlayingItem);
-                }
-                catch(Exception ex)
-                {
-                    Common.AddToTeachingTipLists("同步Last.FM信息时发生错误", ex.Message);
-                }                
-            }
         }
         catch (Exception e)
         {
@@ -1404,6 +1393,20 @@ public static class HyPlayList
         if (currentTime >= Common.Setting.ABEndPoint && Common.Setting.ABEndPoint != TimeSpan.Zero &&
             Common.Setting.ABEndPoint > Common.Setting.ABStartPoint) Player.PlaybackSession.Position = Common.Setting.ABStartPoint;
     }
+    public static async void UpdateLastFMNowPlayingAsync(HyPlayItem NowPlayingItem)
+    {
+        if (NowPlayingItem.ItemType == HyPlayItemType.Netease)
+        {
+            try
+            {
+                await LastFMManager.UpdateNowPlayingAsync(NowPlayingItem);
+            }
+            catch (Exception ex)
+            {
+                Common.AddToTeachingTipLists("同步Last.FM正在播放信息时发生错误", ex.Message);
+            }
+        }
+}
 }
 
 public enum PlayMode

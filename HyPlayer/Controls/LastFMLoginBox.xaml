@@ -4,22 +4,36 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:HyPlayer.Controls"
     mc:Ignorable="d"
     Title="登录Last.FM"
-    DefaultButton="Secondary"
-    PrimaryButtonText="取消"
-    SecondaryButtonText="登录"
-    PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
-    SecondaryButtonClick="ContentDialog_SecondaryButtonClick"
+    DefaultButton="Primary"
+    CloseButtonText="取消"
     CornerRadius="6">
-    <StackPanel Orientation="Vertical">
-        <StackPanel Orientation="Horizontal">
-            <TextBlock Text="Last.FM用户名："/>
-            <TextBox x:Name="LastFMUserName"/>
-        </StackPanel>
-        <StackPanel Orientation="Horizontal">
-            <TextBlock Text="Last.FM密码"/>
-            <PasswordBox x:Name="LastFMPassword"/>
-        </StackPanel>
-    </StackPanel>
+    <controls:PivotView FontFamily="Black">
+        <controls:PivotEx SelectionChanged="PivotEx_SelectionChanged" x:Name="MainPivot">
+            <PivotItem FontFamily="Thick" Header="使用账号密码登录">
+                <StackPanel Margin="0,60,0,0" Orientation="Vertical">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Last.FM用户名："/>
+                        <TextBox x:Name="LastFMUserName"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Last.FM密码"/>
+                        <PasswordBox x:Name="LastFMPassword"/>
+                    </StackPanel>
+                    <Button x:Name="LoginButton" Content="登录" HorizontalAlignment="Right" Click="LoginButton_Click"/>
+                </StackPanel>
+            </PivotItem>
+            <PivotItem FontFamily="Thick" Header="使用浏览器登录">
+                <StackPanel Margin="0,60,0,0" Orientation="Vertical">
+                    <StackPanel Orientation="Horizontal">
+                        <Button x:Name="CopyLink" Click="CopyLink_Click" Content="复制链接"/>
+                        <Button x:Name="ReLaunchLauncher" Click="ReLaunchLauncher_Click" Content="重新打开浏览器"/>
+                    </StackPanel>
+                </StackPanel>
+            </PivotItem>
+        </controls:PivotEx>
+    </controls:PivotView>
+
 </ContentDialog>

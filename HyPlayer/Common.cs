@@ -1149,7 +1149,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        public bool LastFMLogined => LastFMManager.LastfmClient.Auth.Authenticated;
+        public bool LastFMLogined => LastFMManager.LastfmLogined;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
