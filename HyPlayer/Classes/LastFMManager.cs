@@ -1,23 +1,23 @@
 ﻿using IF.Lastfm.Core.Api;
-using IF.Lastfm.Core.Api.Helpers;
+using IF.Lastfm.Core.Api.Enums;
 using IF.Lastfm.Core.Objects;
 using System;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using Windows.System;
-using Windows.Web;
-using System.Xml;
 using Newtonsoft.Json.Linq;
 using HyPlayer.HyPlayControl;
+using Newtonsoft.Json;
 
 namespace HyPlayer.Classes
 {
     internal static class LastFMManager
     {
         public delegate void LoginDoneEvent();
+        public delegate void LoginErrorEvent(Exception exception);
         public delegate void LogoffDoneEvent();
         public static event LoginDoneEvent OnLoginDone;
+        public static event LoginErrorEvent OnLoginError;
         public static event LogoffDoneEvent OnLogoffDone;
         public static string LastFMAPIKey = "641ef15109503085d966e37b73bdcb72";
         public static string LastFMAPISecret = "35c02c12c9c0fdc6f6c1de5d0a9227b5";
@@ -27,73 +27,75 @@ namespace HyPlayer.Classes
         {
             OnLoginDone += LastFMManager_OnLoginDone;
             OnLogoffDone += LastFMManager_OnLogoffDone;
+            OnLoginError+=LastFMManager_OnLoginError;
             HyPlayList.OnPlayItemChange += HyPlayList.UpdateLastFMNowPlayingAsync;
             TryLoginLastfmAccountFromSession();
         }
 
-        private static void LastFMManager_OnLogoffDone()
+        public static void LastFMManager_OnLogoffDone()
         {
             Common.Setting.LastFMUserName = null;
             Common.Setting.LastFMToken = null;
             Common.Setting.LastFMIsSubscriber = false;
         }
 
-        private static void LastFMManager_OnLoginDone()
+        public static void LastFMManager_OnLoginDone()
         {
             Common.Setting.LastFMUserName = LastfmClient.Auth.UserSession.Username;
             Common.Setting.LastFMToken = LastfmClient.Auth.UserSession.Token;
             Common.Setting.LastFMIsSubscriber = LastfmClient.Auth.UserSession.IsSubscriber;
         }
-
-        public static async Task<LastResponse> TryLoginLastfmAccountFromInternet(string userName, string password)
+        public static void LastFMManager_OnLoginError(Exception ex)
         {
-            if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password)) throw new Exception("用户名或密码不能为空");
+            if (!string.IsNullOrEmpty(Common.Setting.LastFMUserName)) Common.Setting.LastFMUserName = null;
+            if (!string.IsNullOrEmpty(Common.Setting.LastFMToken)) Common.Setting.LastFMToken = null;
+            Common.Setting.LastFMIsSubscriber = false;
+        }
+
+        public static async Task TryLoginLastfmAccountFromInternet(string userName, string password)
+        {
+            if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password)) OnLoginError.Invoke(new Exception("用户名或密码不能为空"));
             var response = await LastfmClient.Auth.GetSessionTokenAsync(userName,password);
             if (response.Success) OnLoginDone.Invoke();
             else
             {
-                OnLogoffDone.Invoke();
-                throw new Exception(response.Status.ToString());
+                OnLoginError.Invoke(new Exception(response.Status.ToString()));
             }
-            return response;
         }
-        public static bool TryLoginLastfmAccountFromSession()
+        public static void TryLoginLastfmAccountFromSession()
         {
-            if (string.IsNullOrEmpty(Common.Setting.LastFMUserName) || string.IsNullOrEmpty(Common.Setting.LastFMToken)) return false;
+            if (string.IsNullOrEmpty(Common.Setting.LastFMUserName) || string.IsNullOrEmpty(Common.Setting.LastFMToken)) return;
             LastUserSession session = new LastUserSession
             {
                 Username = Common.Setting.LastFMUserName,
                 Token = Common.Setting.LastFMToken,
                 IsSubscriber = Common.Setting.LastFMIsSubscriber
             };
-            var LastfmSessionStatus = LastfmClient.Auth.LoadSession(session);
-            if (!LastfmSessionStatus)
-            {
-                Common.AddToTeachingTipLists("Last.FM登录过期", "Last.FM登录过期，请重新登录");
-                OnLogoffDone.Invoke();
-            }
-            return LastfmSessionStatus;
+            LastfmClient.Auth.LoadSession(session);
         }
-        public static async void TryLoginLastfmAccountFromBrowser(string token="")
+        public static async Task TryLoginLastfmAccountFromBrowser(string token)
         {
             var signature = LastFMUtils.GetLastFMAPISignature(token);
             HttpClient httpClient = new HttpClient();
-            string result = string.Empty;
-            result = await httpClient.GetStringAsync("https://ws.audioscrobbler.com/2.0/?method=auth.getSession&format=json&token=" + token + "&api_key=" + LastFMAPIKey + "&api_sig=" + signature );
-            httpClient.Dispose();
-            JObject sessionJsonData = JObject.Parse(result);
-            LastUserSession session = new LastUserSession
+            string sessionStringData = string.Empty;
+            try
             {
-                Username = sessionJsonData["session"]["name"].ToString(),
-                Token = sessionJsonData["session"]["key"].ToString(),
-                IsSubscriber = sessionJsonData["session"]["subscriber"].ToString() == "1",
-            };
-            LastfmClient.Auth.LoadSession(session);
-            OnLoginDone.Invoke();
+                sessionStringData = await httpClient.GetStringAsync("https://ws.audioscrobbler.com/2.0/?method=auth.getSession&format=json&token=" + token + "&api_key=" + LastFMAPIKey + "&api_sig=" + signature);
+                JObject sessionJsonObject = JObject.Parse(sessionStringData);
+                LastUserSession session = JsonConvert.DeserializeObject<LastUserSession>(sessionJsonObject["session"].ToString());
+                LastfmClient.Auth.LoadSession(session);
+                OnLoginDone.Invoke();
+            }
+            catch (Exception ex)
+            {
+                OnLoginError.Invoke(ex);
+            }
+            httpClient.Dispose();
         }
         public static bool TryLogoffLastFM()
         {
-            LastfmClient = new LastfmClient("641ef15109503085d966e37b73bdcb72", "35c02c12c9c0fdc6f6c1de5d0a9227b5");
+            LastfmClient.Dispose();
+	        LastfmClient = new LastfmClient(LastFMAPIKey, LastFMAPISecret);
             OnLogoffDone.Invoke();
             return true;
         }
@@ -104,6 +106,7 @@ namespace HyPlayer.Classes
             var response= await LastfmClient.Scrobbler.ScrobbleAsync(scrobbleItem);
             if (!response.Success)
             {
+                if (response.Status == LastResponseStatus.BadAuth) OnLoginError.Invoke(new Exception(response.Status.ToString()));
                 throw response.Exception;
             }
             return response.Success;
@@ -113,7 +116,11 @@ namespace HyPlayer.Classes
             if (Common.Setting.LastFMLogined == false || Common.Setting.UpdateLastFMNowPlaying == false) return false;
             var nowPlayingItem = LastFMUtils.GetScrobble(nowPlayingHyPlayItem);
             var response = await LastfmClient.Track.UpdateNowPlayingAsync(nowPlayingItem);
-            if (!response.Success) throw new Exception(response.Status.ToString());
+            if (!response.Success)
+            {
+                if (response.Status == LastResponseStatus.BadAuth) OnLoginError.Invoke(new Exception(response.Status.ToString()));
+                throw new Exception(response.Status.ToString());
+            }
             return response.Success;
         }
     }

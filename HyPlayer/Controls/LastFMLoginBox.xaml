@@ -4,36 +4,72 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:controls="using:HyPlayer.Controls"
+    xmlns:controls1="using:HyPlayer.Controls"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d"
     Title="登录Last.FM"
-    DefaultButton="Primary"
     CloseButtonText="取消"
-    CornerRadius="6">
-    <controls:PivotView FontFamily="Black">
-        <controls:PivotEx SelectionChanged="PivotEx_SelectionChanged" x:Name="MainPivot">
-            <PivotItem FontFamily="Thick" Header="使用账号密码登录">
-                <StackPanel Margin="0,60,0,0" Orientation="Vertical">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Last.FM用户名："/>
-                        <TextBox x:Name="LastFMUserName"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Last.FM密码"/>
-                        <PasswordBox x:Name="LastFMPassword"/>
-                    </StackPanel>
-                    <Button x:Name="LoginButton" Content="登录" HorizontalAlignment="Right" Click="LoginButton_Click"/>
-                </StackPanel>
-            </PivotItem>
-            <PivotItem FontFamily="Thick" Header="使用浏览器登录">
-                <StackPanel Margin="0,60,0,0" Orientation="Vertical">
-                    <StackPanel Orientation="Horizontal">
-                        <Button x:Name="CopyLink" Click="CopyLink_Click" Content="复制链接"/>
-                        <Button x:Name="ReLaunchLauncher" Click="ReLaunchLauncher_Click" Content="重新打开浏览器"/>
-                    </StackPanel>
-                </StackPanel>
-            </PivotItem>
-        </controls:PivotEx>
-    </controls:PivotView>
+    CornerRadius="20">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="300"/>
+        </Grid.ColumnDefinitions>
+        <Grid Grid.Column="0">
+                <Image Height="100" Source="/Assets/icon.png" />
+        </Grid>
+            <Grid Grid.Column="1" Margin="12,0,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <controls1:PivotView>
+                    <controls1:PivotEx SelectionChanged="Pivot_SelectionChanged">
+                        <PivotItem Header="密码登录">
+                            <Grid Margin="0,48,0,0">
+                                <StackPanel Orientation="Vertical" Spacing="12">
+                                    <TextBox
+                                            x:Name="TextBoxAccount"
+                                            KeyDown="TextBoxAccount_OnKeyDown"
+                                            PlaceholderText="Last.FM账号" />
+                                    <PasswordBox
+                                            x:Name="TextBoxPassword"
+                                            KeyDown="TextBoxPassword_OnKeyDown"
+                                            PlaceholderText="Last.FM密码" />
+                                    <Grid>
+                                        <TextBlock Text="登录代表你同意相关条款" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" VerticalAlignment="Center"/>
+                                        <Button
+                                                Name="ButtonLogin"
+                                                HorizontalAlignment="Right"
+                                                Click="ButtonLogin_OnClick"
+                                                Content="登录"
+                                                Style="{StaticResource AccentButtonStyle}" />
+                                    </Grid>
 
-</ContentDialog>
+                                </StackPanel>
+                            </Grid>
+                        </PivotItem>
+                        <PivotItem Header="使用浏览器登录">
+                            <Grid Margin="0,36,0,0">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Top" Spacing="8" Margin="0,12,0,0">
+                                    <TextBlock Text="等待浏览器完成认证中..."/>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button x:Name="ButtonCopyLink" Content="复制认证地址" Click="ButtonCopyLink_Click" Margin="0,0,15,0"/>
+                                    <Button x:Name="ButtonRelaunchBrowser" Content="重新打开浏览器" Click="ButtonRelaunchBrowser_Click"/>
+                                </StackPanel>
+                            </StackPanel>
+                            </Grid>
+                        </PivotItem>
+                    </controls1:PivotEx>
+                </controls1:PivotView>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Width="400" HorizontalAlignment="Stretch" Margin="3,12,0,0" >
+                    <muxc:InfoBar
+                        Grid.Row="1"
+                        x:Name="InfoBarLoginHint"
+                        IsClosable="True"
+                        IsOpen="False" />
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </ContentDialog>

@@ -1,21 +1,10 @@
 ﻿using HyPlayer.Classes;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.System;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Automation.Peers;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.UI.Xaml.Input;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“内容对话框”项模板
 
@@ -25,42 +14,52 @@ namespace HyPlayer.Controls
     {
         public LastFMLoginPage()
         {
-            this.InitializeComponent();
-            LastFMManager.OnLoginDone += OnLoginDone;
+            InitializeComponent();
+            LastFMManager.OnLoginDone += Hide;
+            LastFMManager.OnLoginError += OnLoginError;
         }
-
-        private async void LoginButton_Click(object sender, RoutedEventArgs args)
+        private void OnLoginError(Exception ex)
         {
-            try
+            InfoBarLoginHint.IsOpen = true;
+            InfoBarLoginHint.Message = ex.Message;
+            return;
+        }
+        private void TextBoxAccount_OnKeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == VirtualKey.Enter) TextBoxPassword.Focus(FocusState.Keyboard);
+        }
+        private void TextBoxPassword_OnKeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == VirtualKey.Enter) ButtonLogin_OnClick(null, null);
+        }
+        private async void ButtonLogin_OnClick(object sender, RoutedEventArgs args)
+        {
+            if (string.IsNullOrWhiteSpace(TextBoxAccount.Text) || string.IsNullOrWhiteSpace(TextBoxPassword.Password))
             {
-                await LastFMManager.TryLoginLastfmAccountFromInternet(LastFMUserName.Text, LastFMPassword.Password);
+                InfoBarLoginHint.IsOpen = true;
+                InfoBarLoginHint.Message = "用户名或密码不能为空";
+                return;
             }
-            catch(Exception ex)
-            {
-                Common.AddToTeachingTipLists("登录LastFM时发生错误",ex.Message);
-            }
+            else await LastFMManager.TryLoginLastfmAccountFromInternet(TextBoxAccount.Text, TextBoxPassword.Password);
         }
-        private void OnLoginDone()
+        private void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            Hide();
+            if ((sender as Pivot).SelectedIndex == 1) _ = Launcher.LaunchUriAsync(new Uri("https://www.last.fm/api/auth?api_key=" + LastFMManager.LastFMAPIKey + "&cb=hyplayer://link.last.fm"));
         }
 
-        private void CopyLink_Click(object sender, RoutedEventArgs e)
+        private void ButtonCopyLink_Click(object sender, RoutedEventArgs e)
         {
-            DataPackage dataPackage = new DataPackage();
-            dataPackage.RequestedOperation = DataPackageOperation.Copy;
-            dataPackage.SetText("http://www.last.fm/api/auth/?api_key=" + LastFMManager.LastFMAPIKey + "&cb=hyplayer://link.last.fm");
-            Clipboard.SetContent(dataPackage);
+            DataPackage package = new DataPackage();
+            package.SetWebLink(new Uri("https://www.last.fm/api/auth?api_key=" + LastFMManager.LastFMAPIKey + "&cb=hyplayer://link.last.fm"));
+            package.RequestedOperation = DataPackageOperation.Copy;
+            Clipboard.SetContent(package);
+            InfoBarLoginHint.IsOpen = true;
+            InfoBarLoginHint.Message = "已复制";
         }
 
-        private void ReLaunchLauncher_Click(object sender, RoutedEventArgs e)
+        private void ButtonRelaunchBrowser_Click(object sender, RoutedEventArgs e)
         {
-            _ = Launcher.LaunchUriAsync(new Uri("http://www.last.fm/api/auth/?api_key=" + LastFMManager.LastFMAPIKey + "&cb=hyplayer://link.last.fm"));
-        }
-
-        private void PivotEx_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (MainPivot.SelectedIndex == 1) _ = Launcher.LaunchUriAsync(new Uri("http://www.last.fm/api/auth/?api_key=" + LastFMManager.LastFMAPIKey + "&cb=hyplayer://link.last.fm"));
+            _ = Launcher.LaunchUriAsync(new Uri("https://www.last.fm/api/auth?api_key=" + LastFMManager.LastFMAPIKey + "&cb=hyplayer://link.last.fm"));
         }
     }
 }
