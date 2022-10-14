@@ -103,6 +103,7 @@ CheckNetIsolation LoopbackExempt -a -n="48848aaaaaaccd.hyplayer_fkcggvf9kbkw0"
 * Windows Community Toolkit [CommunityToolkit/WindowsCommunityToolkit](https://github.com/CommunityToolkit/WindowsCommunityToolkit) (MIT Licence)
 * TagLibSharp [mono/taglib-sharp](https://github.com/mono/taglib-sharp) (LGPL)
 * Opportunity.LrcParser [OpportunityLiu/LrcParser](https://github.com/OpportunityLiu/LrcParser) ([Apache-2.0 Licence](https://github.com/OpportunityLiu/LrcParser/blob/master/LICENSE))
+* Inflatable Last.fm [inflatablefriends/lastfm](https://github.com/inflatablefriends/lastfm) ([MIT Licence](https://github.com/inflatablefriends/lastfm/blob/next/LICENCE.md))
 
 
 
