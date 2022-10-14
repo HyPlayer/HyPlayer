@@ -7,7 +7,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using HyPlayer.HyPlayControl;
-using Newtonsoft.Json;
 
 namespace HyPlayer.Classes
 {
@@ -77,12 +76,16 @@ namespace HyPlayer.Classes
         {
             var signature = LastFMUtils.GetLastFMAPISignature(token);
             HttpClient httpClient = new HttpClient();
-            string sessionStringData = string.Empty;
             try
             {
-                sessionStringData = await httpClient.GetStringAsync("https://ws.audioscrobbler.com/2.0/?method=auth.getSession&format=json&token=" + token + "&api_key=" + LastFMAPIKey + "&api_sig=" + signature);
+                var sessionStringData = await httpClient.GetStringAsync("https://ws.audioscrobbler.com/2.0/?method=auth.getSession&format=json&token=" + token + "&api_key=" + LastFMAPIKey + "&api_sig=" + signature);
                 JObject sessionJsonObject = JObject.Parse(sessionStringData);
-                LastUserSession session = JsonConvert.DeserializeObject<LastUserSession>(sessionJsonObject["session"].ToString());
+                var session = new LastUserSession()
+                {
+                    Username = sessionJsonObject["session"]["name"].ToString(),
+                    Token = sessionJsonObject["session"]["key"].ToString(),
+                    IsSubscriber = (bool)sessionJsonObject["session"]["subscriber"]
+                };
                 LastfmClient.Auth.LoadSession(session);
                 OnLoginDone.Invoke();
             }
