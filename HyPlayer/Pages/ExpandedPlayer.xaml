@@ -63,7 +63,7 @@
                     <QuadraticEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-            <DoubleAnimation
+            <!--DoubleAnimation
                 AutoReverse="True"
                 RepeatBehavior="Forever"
                 Storyboard.TargetName="Shadow1Scale"
@@ -74,20 +74,20 @@
                 <DoubleAnimation.EasingFunction>
                     <QuadraticEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
+            </DoubleAnimation-->
             <DoubleAnimation
                 AutoReverse="False" 
                 RepeatBehavior="Forever"
                 Storyboard.TargetName="Shadow1Rotate"
                 Storyboard.TargetProperty="Angle"
-                From="0"
-                To="360"
-                Duration="0:0:12">
+                From="360"
+                To="0"
+                Duration="0:0:11">
                 <DoubleAnimation.EasingFunction>
                     <QuadraticEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-            <DoubleAnimation
+            <!--DoubleAnimation
                 AutoReverse="True"
                 RepeatBehavior="Forever"
                 Storyboard.TargetName="Shadow2Scale"
@@ -98,7 +98,7 @@
                 <DoubleAnimation.EasingFunction>
                     <QuadraticEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
+            </DoubleAnimation-->
             <DoubleAnimation
                 AutoReverse="True"
                 RepeatBehavior="Forever"
@@ -118,7 +118,7 @@
                 Storyboard.TargetProperty="Angle"
                 From="0"
                 To="360"
-                Duration="0:0:14">
+                Duration="0:0:8">
                 <DoubleAnimation.EasingFunction>
                     <QuadraticEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
@@ -141,7 +141,7 @@
                 Storyboard.TargetName="Shadow3Scale"
                 Storyboard.TargetProperty="ScaleY"
                 From="1"
-                To="0.85"
+                To="0.75"
                 Duration="0:0:1.9">
                 <DoubleAnimation.EasingFunction>
                     <QuadraticEase EasingMode="EaseInOut" />
@@ -154,7 +154,7 @@
                 Storyboard.TargetProperty="Angle"
                 From="0"
                 To="360"
-                Duration="0:0:17">
+                Duration="0:0:6.5">
                 <DoubleAnimation.EasingFunction>
                     <QuadraticEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
@@ -223,7 +223,7 @@
                         <RowDefinition Height="10*" />
                     </Grid.RowDefinitions>
                     <Border x:Name="ShadowTarget" Grid.Row="1" />
-                    <Rectangle Grid.Row="1" RadiusX="325" RadiusY="325" Fill="{ThemeResource SystemAltLowColor}" Width=" 600" Height="600" HorizontalAlignment="Center">
+                    <Rectangle x:Name="Shadow1" Grid.Row="1" RadiusX="325" RadiusY="325" Fill="{ThemeResource SystemAltLowColor}" Width=" 600" Height="600" HorizontalAlignment="Center">
                         <Rectangle.RenderTransform>
                             <TransformGroup>
                                 <ScaleTransform x:Name="Shadow1Scale" CenterX="300" CenterY="300" />
@@ -231,7 +231,7 @@
                             </TransformGroup>
                         </Rectangle.RenderTransform> 
                     </Rectangle>
-                    <Rectangle Grid.Row="1" RadiusX="325" RadiusY="325" Fill="{ThemeResource SystemAltLowColor}" Width=" 600" Height="600" HorizontalAlignment="Center">
+                    <Rectangle x:Name="Shadow2" Grid.Row="1" RadiusX="325" RadiusY="325" Fill="{ThemeResource SystemAltLowColor}" Width=" 600" Height="600" HorizontalAlignment="Center">
                         <Rectangle.RenderTransform>
                             <TransformGroup>
                                 <ScaleTransform x:Name="Shadow2Scale" CenterX="300" CenterY="300" />
@@ -239,7 +239,7 @@
                             </TransformGroup>
                         </Rectangle.RenderTransform>
                     </Rectangle>
-                    <Rectangle Grid.Row="1" RadiusX="325" RadiusY="325" Fill="{ThemeResource SystemAltLowColor}" Width=" 600" Height="600" HorizontalAlignment="Center">
+                    <Rectangle x:Name="Shadow3" Grid.Row="1" RadiusX="325" RadiusY="325" Fill="{ThemeResource SystemAltLowColor}" Width=" 600" Height="600" HorizontalAlignment="Center">
                         <Rectangle.RenderTransform>
                             <TransformGroup>
                                 <ScaleTransform x:Name="Shadow3Scale" CenterX="300" CenterY="300" />
