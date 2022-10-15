@@ -59,6 +59,7 @@ public sealed partial class BasePage : Page
         InitializeComponent();
         Common.PageBase = this;
         Common.GlobalTip = TheTeachingTip;
+        if (!Common.Setting.ForceAcrylicBackground) Background = null;
         HyPlayList.OnTimerTicked += () => Common.RollTeachingTip();
         if (HyPlayList.Player == null)
             HyPlayList.InitializeHyPlaylist();

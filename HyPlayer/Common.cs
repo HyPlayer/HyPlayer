@@ -1117,22 +1117,32 @@ namespace HyPlayer
 
         private static bool _abRepeatStatus = false;
 
-        public bool UseLastFMScrobbler
+        public bool ForceAcrylicBackground
         {
-            get => GetSettings("UseLastFMScrobbler", false);
+            get => GetSettings("forceAcrylicBackground", false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["UseLastFMScrobbler"] = value;
+                ApplicationData.Current.LocalSettings.Values["forceAcrylicBackground"] = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        public bool UseLastFMScrobbler
+        {
+            get => GetSettings("useLastFMScrobbler", false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["useLastFMScrobbler"] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool UpdateLastFMNowPlaying
         {
-            get => GetSettings("UpdateLastFMNowPlaying", false);
+            get => GetSettings("updateLastFMNowPlaying", false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["UpdateLastFMNowPlaying"] = value;
+                ApplicationData.Current.LocalSettings.Values["updateLastFMNowPlaying"] = value;
                 OnPropertyChanged();
             }
         }

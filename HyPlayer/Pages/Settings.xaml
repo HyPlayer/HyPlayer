@@ -432,6 +432,13 @@
                                             IsOn="{x:Bind hyplayer:Common.Setting.playButtonAccentColor, Mode=TwoWay}" />
                                     </Grid>
                                     <Grid>
+                                        <TextBlock VerticalAlignment="Center" Text="使用亚克力窗口背景 (不推荐, 否则为 Mica)" />
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.ForceAcrylicBackground, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
                                         <TextBlock VerticalAlignment="Center" Text="播放栏按钮透明" />
                                         <ToggleSwitch
                                             MinWidth="10"
