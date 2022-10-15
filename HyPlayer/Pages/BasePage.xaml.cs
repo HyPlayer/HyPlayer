@@ -63,7 +63,7 @@ public sealed partial class BasePage : Page
         HyPlayList.OnTimerTicked += () => Common.RollTeachingTip();
         if (HyPlayList.Player == null)
             HyPlayList.InitializeHyPlaylist();
-        if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Desktop")
+        if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Desktop" && Common.Setting.EnableTitleBarImmerse)
         {
             CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
             var titleBar = ApplicationView.GetForCurrentView().TitleBar;

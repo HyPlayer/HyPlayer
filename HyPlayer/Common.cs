@@ -1127,6 +1127,16 @@ namespace HyPlayer
             }
         }
         
+        public bool EnableTitleBarImmerse
+        {
+            get => GetSettings("enableTitleBarImmerse", true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["enableTitleBarImmerse"] = value;
+                OnPropertyChanged();
+            }
+        }
+        
         public bool UseLastFMScrobbler
         {
             get => GetSettings("useLastFMScrobbler", false);

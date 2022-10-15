@@ -446,6 +446,13 @@
                                             IsOn="{x:Bind hyplayer:Common.Setting.playbarButtonsTransparent, Mode=TwoWay}" />
                                     </Grid>
                                     <Grid>
+                                        <TextBlock VerticalAlignment="Center" Text="开启标题栏沉浸" />
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.EnableTitleBarImmerse, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
                                         <TextBlock VerticalAlignment="Center" Text="播放条背景防糊优化" />
                                         <ToggleSwitch
                                             MinWidth="10"
