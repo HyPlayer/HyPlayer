@@ -375,16 +375,13 @@ public sealed partial class BasePage : Page
             { "sourceId", HyPlayList.PlaySourceId ?? "-1" },
             { "time", TimeSpan.FromMilliseconds(item.PlayItem.LengthInMilliseconds).TotalSeconds }
         });
-        if (item.ItemType == HyPlayItemType.Netease)
+        try
         {
-            try
-            {
-                await LastFMManager.ScrobbleAsync(item);
-            }
-            catch (Exception ex)
-            {
-                Common.AddToTeachingTipLists("记录上传至Last.FM时发生错误", ex.Message);
-            }
+            await LastFMManager.ScrobbleAsync(item);
+        }
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists("记录上传至Last.FM时发生错误", ex.Message);
         }
     }
 
