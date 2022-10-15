@@ -31,6 +31,7 @@ using Microsoft.UI.Xaml.Controls;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using IF.Lastfm.Core.Api;
 #if !DEBUG
 using Microsoft.AppCenter.Crashes;
 #endif
@@ -69,6 +70,7 @@ namespace HyPlayer
         public static ObservableCollection<string> Logs = new();
         public static bool NavigatingBack;
         private static int _teachingTipSecondCounter = 3;
+
         public static IAsyncAction Invoke(Action action,
             CoreDispatcherPriority Priority = CoreDispatcherPriority.Normal)
         {
@@ -325,6 +327,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+
         public bool playbarBackgroundElay
         {
             get => GetSettings("playbarBackgroundElay", false);
@@ -600,7 +603,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
         public bool jumpVipSongPlaying
         {
             get => GetSettings("jumpVipSongPlaying", false);
@@ -610,7 +613,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
         public bool jumpVipSongDownloading
         {
             get => GetSettings("jumpVipSongDownloading", false);
@@ -646,19 +649,19 @@ namespace HyPlayer
             get => GetSettings("xboxHidePointer", false);
             set => ApplicationData.Current.LocalSettings.Values["xboxHidePointer"] = value;
         }
-        
+
         public bool enableTouchGestureAction
         {
             get => GetSettings("enableTouchGestureAction", false);
             set => ApplicationData.Current.LocalSettings.Values["enableTouchGestureAction"] = value;
         }
-        
+
         public int gestureMode
         {
             get => GetSettings("gestureMode", 0);
             set => ApplicationData.Current.LocalSettings.Values["gestureMode"] = value;
         }
-        
+
         public int maxDownloadCount
         {
             get => GetSettings("maxDownloadCount", 1);
@@ -784,7 +787,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
         public bool useTaglibPicture
         {
             get => GetSettings("useTaglibPicture", true);
@@ -794,7 +797,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
         public bool showComposerInLyric
         {
             get => GetSettings("showComposerInLyric", true);
@@ -1019,7 +1022,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
         public bool enableTile
         {
             get => GetSettings("enableTile", Environment.OSVersion.Version.Build < 22000);
@@ -1031,9 +1034,11 @@ namespace HyPlayer
                     tileBackgroundAvailability = false;
                     saveTileBackgroundToLocalFolder = false;
                 }
+
                 OnPropertyChanged();
             }
         }
+
         public bool canaryChannelAvailability
         {
             get => GetSettings("canaryChannelAvailability", false);
@@ -1043,6 +1048,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+
         public bool tileBackgroundAvailability
         {
             get => GetSettings("tileBackgroundAvailability", false);
@@ -1052,6 +1058,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+
         public bool saveTileBackgroundToLocalFolder
         {
             get => GetSettings("saveTileBackgroundToLocalFolder", false);
@@ -1061,6 +1068,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+
         public TimeSpan ABStartPoint
         {
             get => _abStartPoint;
@@ -1070,11 +1078,14 @@ namespace HyPlayer
                 OnPropertyChanged("ABStartPointFriendlyValue");
             }
         }
+
         public string ABStartPointFriendlyValue =>
-                                 ABStartPoint.Hours + ":"
+            ABStartPoint.Hours + ":"
                                + ABStartPoint.Minutes + ":"
                                + ABStartPoint.Seconds;
+
         private TimeSpan _abStartPoint = TimeSpan.Zero;
+
         public TimeSpan ABEndPoint
         {
             get => _abEndPoint;
@@ -1084,12 +1095,14 @@ namespace HyPlayer
                 OnPropertyChanged("ABEndPointFriendlyValue");
             }
         }
+
         private TimeSpan _abEndPoint = TimeSpan.Zero;
-        
+
         public string ABEndPointFriendlyValue =>
-                               ABEndPoint.Hours + ":"
+            ABEndPoint.Hours + ":"
                              + ABEndPoint.Minutes + ":"
                              + ABEndPoint.Seconds;
+
         public bool ABRepeatStatus
         {
             get => _abRepeatStatus;
@@ -1101,7 +1114,61 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+
         private static bool _abRepeatStatus = false;
+
+        public bool UseLastFMScrobbler
+        {
+            get => GetSettings("UseLastFMScrobbler", false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["UseLastFMScrobbler"] = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool UpdateLastFMNowPlaying
+        {
+            get => GetSettings("UpdateLastFMNowPlaying", false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["UpdateLastFMNowPlaying"] = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string LastFMUserName
+        {
+            get => GetSettings("lastFMUserName", string.Empty);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["lastFMUserName"] = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string LastFMToken
+        {
+            get => GetSettings("lastFMToken", string.Empty);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["lastFMToken"] = value;
+                OnPropertyChanged();
+                OnPropertyChanged("LastFMLogined");
+            }
+        }
+
+        public bool LastFMIsSubscriber
+        {
+            get => GetSettings("lastFMIsSubscriber", false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["lastFMisSubscriber"] = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool LastFMLogined => LastFMManager.LastfmLogined;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -1367,10 +1434,12 @@ namespace HyPlayer
             return Convert.ToBase64String(value);
         }
 
+        private static MD5? _md5;
+
         public static byte[] ComputeMd5(this byte[] value)
         {
-            var md5 = MD5.Create();
-            return md5.ComputeHash(value);
+            _md5 ??= MD5.Create();
+            return _md5.ComputeHash(value);
         }
 
         public static byte[] RandomBytes(this Random random, int length)

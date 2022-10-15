@@ -215,6 +215,14 @@ public sealed partial class BasePage : Page
         {
             // ignored
         }
+        try
+        {
+            LastFMManager.InitializeLastFMManager();
+        }
+        catch(Exception ex)
+        {
+            Common.AddToTeachingTipLists("登录Last.FM登录失败", ex.Message);
+        }
     }
 
     private async void ButtonLogin_OnClick(object sender, RoutedEventArgs e)
@@ -367,6 +375,14 @@ public sealed partial class BasePage : Page
             { "sourceId", HyPlayList.PlaySourceId ?? "-1" },
             { "time", TimeSpan.FromMilliseconds(item.PlayItem.LengthInMilliseconds).TotalSeconds }
         });
+        try
+        {
+            await LastFMManager.ScrobbleAsync(item);
+        }
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists("记录上传至Last.FM时发生错误", ex.Message);
+        }
     }
 
     private static void DoDailySign()
