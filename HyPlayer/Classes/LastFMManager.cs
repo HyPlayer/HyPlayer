@@ -46,9 +46,12 @@ namespace HyPlayer.Classes
         }
         public static void LastFMManager_OnLoginError(Exception ex)
         {
-            if (!string.IsNullOrEmpty(Common.Setting.LastFMUserName)) Common.Setting.LastFMUserName = null;
-            if (!string.IsNullOrEmpty(Common.Setting.LastFMToken)) Common.Setting.LastFMToken = null;
-            Common.Setting.LastFMIsSubscriber = false;
+            if (LastfmLogined)
+            {
+                LastfmClient.Dispose();
+                LastfmClient = new LastfmClient(LastFMAPIKey, LastFMAPISecret);
+            }
+            OnLogoffDone.Invoke();
         }
 
         public static async Task TryLoginLastfmAccountFromInternet(string userName, string password)
@@ -104,7 +107,7 @@ namespace HyPlayer.Classes
         }
         public static async Task<bool> ScrobbleAsync(HyPlayItem scrobbleHyPlayItem)
         {
-            if (Common.Setting.LastFMLogined == false || Common.Setting.UseLastFMScrobbler == false) return false;
+            if (!LastfmLogined || !Common.Setting.UseLastFMScrobbler) return false;
             var scrobbleItem = LastFMUtils.GetScrobble(scrobbleHyPlayItem);
             var response= await LastfmClient.Scrobbler.ScrobbleAsync(scrobbleItem);
             if (!response.Success)
@@ -116,7 +119,7 @@ namespace HyPlayer.Classes
         }
         public static async Task<bool> UpdateNowPlayingAsync(HyPlayItem nowPlayingHyPlayItem)
         {
-            if (Common.Setting.LastFMLogined == false || Common.Setting.UpdateLastFMNowPlaying == false) return false;
+            if (!LastfmLogined || !Common.Setting.UpdateLastFMNowPlaying) return false;
             var nowPlayingItem = LastFMUtils.GetScrobble(nowPlayingHyPlayItem);
             var response = await LastfmClient.Track.UpdateNowPlayingAsync(nowPlayingItem);
             if (!response.Success)

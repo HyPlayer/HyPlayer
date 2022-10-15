@@ -166,7 +166,7 @@ sealed partial class App : Application
         if (args.Kind == ActivationKind.Protocol)
         {
             var launchUri = ((ProtocolActivatedEventArgs)args).Uri;
-            if (launchUri.Host == "link.last.fm") LastFMManager.TryLoginLastfmAccountFromBrowser(launchUri.Query.Replace("?token=", string.Empty));
+            if (launchUri.Host == "link.last.fm") _ = LastFMManager.TryLoginLastfmAccountFromBrowser(launchUri.Query.Replace("?token=", string.Empty));
         }
     }
 
