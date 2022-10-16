@@ -183,7 +183,7 @@
     </UserControl.Resources>
     <Grid
         x:Name="GridThis"
-        Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
+        Background="Transparent"
         CornerRadius="8,8,0,0">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*" />
