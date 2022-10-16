@@ -438,6 +438,15 @@
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.ForceAcrylicBackground, Mode=TwoWay}" />
                                     </Grid>
+                                    <!--Grid Visibility="{x:Bind hyplayer:Common.Setting.ForceAcrylicBackground, Mode=OneWay}">
+                                        <TextBlock VerticalAlignment="Center" Text="提高Acrylic透明度" />
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.TintOpacityValue, Mode=TwoWay}" />
+
+                                    </Grid-->
+
                                     <Grid>
                                         <TextBlock VerticalAlignment="Center" Text="播放栏按钮透明" />
                                         <ToggleSwitch
@@ -584,7 +593,7 @@
                                             IsOn="{x:Bind hyplayer:Common.Setting.expandedUseAcrylic, Mode=TwoWay}" />
                                     </Grid>
                                     <Grid>
-                                        <TextBlock VerticalAlignment="Center" Text="播放条使用亚克力背景 (否则为纯色)" />
+                                        <TextBlock VerticalAlignment="Center" Text="播放条使用封面亚克力背景 (否则为窗口亚克力背景)" />
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"

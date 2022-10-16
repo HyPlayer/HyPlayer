@@ -62,6 +62,7 @@ public sealed partial class PlayBar
     {
         Common.BarPlayBar = this;
         InitializeComponent();
+        if (!Common.Setting.ForceAcrylicBackground) GridThis.Background = null;
     }
 
     public TimeSpan nowtime => HyPlayList.Player.PlaybackSession.Position;
