@@ -358,6 +358,16 @@ namespace HyPlayer
             }
         }
 
+        public bool TintOpacityValue
+        {
+            get => GetSettings("TintOpacityValue", false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["TintOpacityValue"] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool downloadLyric
         {
             get => GetSettings("downloadLyric", true);

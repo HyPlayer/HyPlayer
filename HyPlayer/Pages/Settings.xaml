@@ -438,14 +438,14 @@
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.ForceAcrylicBackground, Mode=TwoWay}" />
                                     </Grid>
-                                    <!--Grid Visibility="{x:Bind hyplayer:Common.Setting.ForceAcrylicBackground, Mode=OneWay}">
+                                    <Grid Visibility="{x:Bind hyplayer:Common.Setting.ForceAcrylicBackground, Mode=OneWay}">
                                         <TextBlock VerticalAlignment="Center" Text="提高Acrylic透明度" />
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.TintOpacityValue, Mode=TwoWay}" />
 
-                                    </Grid-->
+                                    </Grid>
 
                                     <Grid>
                                         <TextBlock VerticalAlignment="Center" Text="播放栏按钮透明" />
