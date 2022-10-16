@@ -26,6 +26,7 @@ using HyPlayer.Controls;
 using Kawazu;
 using Microsoft.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
+using Windows.UI.Xaml.Data;
 
 #endregion
 
@@ -397,5 +398,29 @@ public sealed partial class Settings : Page
     {
         var storageFolder = await ApplicationData.Current.TemporaryFolder.TryGetItemAsync("LocalTileBackground");
         if (storageFolder != null) await storageFolder.DeleteAsync();
+    }
+
+    private async void LoginLastFMAccount_Click(object sender, RoutedEventArgs e)
+    {
+        var LoginBox = new LastFMLoginPage();
+        await LoginBox.ShowAsync();
+    }
+
+    private void LogoffLastFMAccount_Click(object sender, RoutedEventArgs e)
+    {
+        LastFMManager.TryLogoffLastFM();
+    }
+}
+public class ReversedBooleanToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        if (value is true) return Visibility.Collapsed;
+        return Visibility.Visible;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    {
+        throw new NotImplementedException();
     }
 }

@@ -59,10 +59,11 @@ public sealed partial class BasePage : Page
         InitializeComponent();
         Common.PageBase = this;
         Common.GlobalTip = TheTeachingTip;
+        if (!Common.Setting.ForceAcrylicBackground) Background = null;
         HyPlayList.OnTimerTicked += () => Common.RollTeachingTip();
         if (HyPlayList.Player == null)
             HyPlayList.InitializeHyPlaylist();
-        if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Desktop")
+        if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Desktop" && Common.Setting.EnableTitleBarImmerse)
         {
             CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
             var titleBar = ApplicationView.GetForCurrentView().TitleBar;
@@ -214,6 +215,14 @@ public sealed partial class BasePage : Page
         catch
         {
             // ignored
+        }
+        try
+        {
+            LastFMManager.InitializeLastFMManager();
+        }
+        catch(Exception ex)
+        {
+            Common.AddToTeachingTipLists("登录Last.FM登录失败", ex.Message);
         }
     }
 
@@ -367,6 +376,14 @@ public sealed partial class BasePage : Page
             { "sourceId", HyPlayList.PlaySourceId ?? "-1" },
             { "time", TimeSpan.FromMilliseconds(item.PlayItem.LengthInMilliseconds).TotalSeconds }
         });
+        try
+        {
+            await LastFMManager.ScrobbleAsync(item);
+        }
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists("记录上传至Last.FM时发生错误", ex.Message);
+        }
     }
 
     private static void DoDailySign()

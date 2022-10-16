@@ -8,8 +8,12 @@
     xmlns:hyplayer="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="using:HyPlayer.Pages"
+    xmlns:classes="using:HyPlayer.Classes"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
+    <UserControl.Resources>
+        <pages:ReversedBooleanToVisibilityConverter x:Key="ReversedBooleanToVisibilityConverter" />
+    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="75" />
@@ -353,6 +357,48 @@
                                     </Grid>
                                 </StackPanel>
                             </controls:Expander>
+                            <controls:Expander
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch"
+                                Header="Last.FM设定"
+                                IsExpanded="True">
+                                <controls:Expander.Transitions>
+                                    <TransitionCollection>
+                                        <RepositionThemeTransition />
+                                    </TransitionCollection>
+                                </controls:Expander.Transitions>
+                                <StackPanel Orientation="Vertical" Spacing="16">
+                                    <Grid>
+                                        <TextBlock VerticalAlignment="Center" Text="上传播放记录至Last.FM" />
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.UseLastFMScrobbler, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock VerticalAlignment="Center" Text="上传正在播放至Last.FM" />
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.UpdateLastFMNowPlaying, Mode=TwoWay}" />
+                                    </Grid>
+                                    
+                                    <StackPanel Orientation="Horizontal" Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay}">
+                                        <TextBlock Text="已登录账号："
+                                                   Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay}"/>
+                                        <TextBlock Text="{x:Bind hyplayer:Common.Setting.LastFMUserName, Mode=OneWay}"
+                                                   Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay}"/>
+                                    </StackPanel>
+                                    <Grid>
+                                        <Button x:Name="LogoffLastFMAccount" Click="LogoffLastFMAccount_Click" 
+                                            Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay}"
+                                            Content="注销LastFM账号"/>
+                                        <Button x:Name="LoginLastFMAccount" Click="LoginLastFMAccount_Click"  
+                                            Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay, Converter={StaticResource ReversedBooleanToVisibilityConverter}}"
+                                            Content="登录LastFM账号"/>
+                                    </Grid>
+                                </StackPanel>
+                            </controls:Expander>
                         </StackPanel>
                     </ScrollViewer>
                 </PivotItem>
@@ -386,11 +432,25 @@
                                             IsOn="{x:Bind hyplayer:Common.Setting.playButtonAccentColor, Mode=TwoWay}" />
                                     </Grid>
                                     <Grid>
+                                        <TextBlock VerticalAlignment="Center" Text="使用亚克力窗口背景 (不推荐, 否则为 Mica)" />
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.ForceAcrylicBackground, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
                                         <TextBlock VerticalAlignment="Center" Text="播放栏按钮透明" />
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.playbarButtonsTransparent, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock VerticalAlignment="Center" Text="开启标题栏沉浸" />
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.EnableTitleBarImmerse, Mode=TwoWay}" />
                                     </Grid>
                                     <Grid>
                                         <TextBlock VerticalAlignment="Center" Text="播放条背景防糊优化" />

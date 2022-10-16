@@ -79,6 +79,12 @@
                         <uap:Codec Name="lpcm"/>
                     </uap:MediaPlayback>
                 </uap:Extension>
+                <uap:Extension Category="windows.protocol">
+                    <uap:Protocol Name="hyplayer" ReturnResults="none">
+                        <uap:Logo>Assets\icon.png</uap:Logo>
+                        <uap:DisplayName>HyPlayer</uap:DisplayName>
+                    </uap:Protocol>
+                </uap:Extension>
             </Extensions>
         </Application>
     </Applications>

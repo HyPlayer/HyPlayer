@@ -20,6 +20,9 @@ using Microsoft.AppCenter;
 using Microsoft.AppCenter.Analytics;
 using Microsoft.AppCenter.Crashes;
 using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
+using Windows.ApplicationModel.Activation;
+using System.Linq;
+using HyPlayer.Classes;
 #if !DEBUG
 using Microsoft.Services.Store.Engagement;
 #endif
@@ -141,23 +144,30 @@ sealed partial class App : Application
     protected override void OnActivated(IActivatedEventArgs args)
     {
         base.OnActivated(args);
-        if (args.Kind != ActivationKind.ToastNotification) return;
-        var rootFrame = Window.Current.Content as Frame;
-        if (rootFrame == null)
+        if (args.Kind == ActivationKind.ToastNotification) 
         {
-            rootFrame = new Frame();
-            Window.Current.Content = rootFrame;
-        }
+            var rootFrame = Window.Current.Content as Frame;
+            if (rootFrame == null)
+            {
+                rootFrame = new Frame();
+                Window.Current.Content = rootFrame;
+            }
 
-        rootFrame.Navigate(typeof(MainPage));
-        Window.Current.Activate();
-        Common.BarPlayBar.InitializeDesktopLyric();
-        if (Common.isExpanded) return;
-        var animation = Common.Setting.expandAnimation;
-        Common.Setting.expandAnimation = false;
-        Common.BarPlayBar.ShowExpandedPlayer();
-        var a = Common.Setting.expandAnimation;
-        Common.Setting.expandAnimation = animation;
+            rootFrame.Navigate(typeof(MainPage));
+            Window.Current.Activate();
+            Common.BarPlayBar.InitializeDesktopLyric();
+            if (Common.isExpanded) return;
+            var animation = Common.Setting.expandAnimation;
+            Common.Setting.expandAnimation = false;
+            Common.BarPlayBar.ShowExpandedPlayer();
+            var a = Common.Setting.expandAnimation;
+            Common.Setting.expandAnimation = animation;
+        }
+        if (args.Kind == ActivationKind.Protocol)
+        {
+            var launchUri = ((ProtocolActivatedEventArgs)args).Uri;
+            if (launchUri.Host == "link.last.fm") _ = LastFMManager.TryLoginLastfmAccountFromBrowser(launchUri.Query.Replace("?token=", string.Empty));
+        }
     }
 
     private async void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
