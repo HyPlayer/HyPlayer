@@ -4,25 +4,14 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:HyPlayer"
-    xmlns:pages="using:HyPlayer.Pages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
+    Background="{x:Bind local:Common.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource BooleanToBrushesConverter}}"
     NavigationCacheMode="Disabled"
     xmlns:controls1="using:HyPlayer.Controls"
     mc:Ignorable="d">
-    <Page.Background >
-        <AcrylicBrush 
-                    x:Name="BackgroundAcrylic"
-                BackgroundSource="HostBackdrop"
-                              TintColor="{ThemeResource SystemRevealAltHighColor}"
-                              TintOpacity="{x:Bind local:Common.Setting.TintOpacityValue, Mode = OneWay , Converter={StaticResource AcrylicTransConverter} }"
-                              TintLuminosityOpacity="0.5"
-                              FallbackColor="{ThemeResource SystemRevealAltHighColor}"/>
-
-    </Page.Background>
     <Page.Resources>
-        <pages:AcrylicTransConverter x:Key="AcrylicTransCoverter"/>
         <ResourceDictionary x:Key="Default">
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary>

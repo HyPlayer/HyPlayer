@@ -1073,22 +1073,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         }
     }
 }
-
-public class AlbumShadowConverter : IValueConverter
-{
-    public object Convert(object value, Type targetType, object parameter, string language)
-    {
-        return Common.Setting.albumRound || Common.Setting.expandAlbumBreath
-            ? 0
-            : (double)Common.Setting.expandedCoverShadowDepth / 10;
-    }
-
-    public object ConvertBack(object value, Type targetType, object parameter, string language)
-    {
-        throw new NotImplementedException();
-    }
-}
-
 internal enum ExpandedWindowMode
 {
     Both,

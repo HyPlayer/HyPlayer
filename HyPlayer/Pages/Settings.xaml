@@ -7,13 +7,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hyplayer="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:pages="using:HyPlayer.Pages"
-    xmlns:classes="using:HyPlayer.Classes"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
-    <UserControl.Resources>
-        <pages:ReversedBooleanToVisibilityConverter x:Key="ReversedBooleanToVisibilityConverter" />
-    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="75" />
@@ -436,9 +431,9 @@
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.ForceAcrylicBackground, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:Common.Setting.acrylicBackgroundStatus, Mode=TwoWay}" />
                                     </Grid>
-                                    <Grid Visibility="{x:Bind hyplayer:Common.Setting.ForceAcrylicBackground, Mode=OneWay}">
+                                    <Grid Visibility="{x:Bind hyplayer:Common.Setting.acrylicBackgroundStatus, Mode=OneWay}">
                                         <TextBlock VerticalAlignment="Center" Text="提高Acrylic透明度" />
                                         <ToggleSwitch
                                             MinWidth="10"

@@ -8,13 +8,7 @@
     NavigationCacheMode="Disabled"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:hyPlayControl="using:HyPlayer.HyPlayControl"
-    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
-    xmlns:pages="using:HyPlayer.Pages"
-    xmlns:controls1="using:HyPlayer.Controls">
-    <Page.Resources>
-        <pages:ImageUrlToImageSourceConverter x:Key="ImageUrlToImageSourceConverter" />
-        <pages:PausedToStringConverter x:Key="PausedToStringConverter" />
-    </Page.Resources>
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="50" />

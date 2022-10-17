@@ -9,8 +9,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
     <Page.Resources>
-        <hyplayer:PlayBarMarginConverter x:Key="PlayBarMarginConverter" />
-        <hyplayer:PlayBarCornerRadiusConverter x:Key="PlayBarCornerRadiusConverter" />
         <Storyboard x:FieldModifier="public" x:Name="ImageResetPositionAni" x:Key="ImageResetPositionAni">
             <DoubleAnimation
                 To="0"

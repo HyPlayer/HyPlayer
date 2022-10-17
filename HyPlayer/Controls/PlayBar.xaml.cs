@@ -1292,42 +1292,4 @@ public sealed partial class PlayBar
     }
 }
 
-public class ThumbConverter : DependencyObject, IValueConverter
-{
-    // Using a DependencyProperty as the backing store for SecondValue.  This enables animation, styling, binding, etc...
-    public static readonly DependencyProperty SecondValueProperty =
-        DependencyProperty.Register("SecondValue", typeof(double), typeof(ThumbConverter),
-            new PropertyMetadata(0d));
 
-    public double SecondValue
-    {
-        get => (double)GetValue(SecondValueProperty);
-        set => SetValue(SecondValueProperty, value);
-    }
-
-
-    public object Convert(object value, Type targetType, object parameter, string language)
-    {
-        // assuming you want to display precentages
-
-        return TimeSpan.FromMilliseconds(double.Parse(value.ToString())).ToString(@"hh\:mm\:ss");
-    }
-
-    public object ConvertBack(object value, Type targetType, object parameter, string language)
-    {
-        throw new NotImplementedException();
-    }
-}
-
-public class PlayBarImageRadiusConverter : IValueConverter
-{
-    public object Convert(object value, Type targetType, object parameter, string language)
-    {
-        return value is true ? new CornerRadius(8) : new CornerRadius(8, 0, 0, 0);
-    }
-
-    public object ConvertBack(object value, Type targetType, object parameter, string language)
-    {
-        throw new NotImplementedException();
-    }
-}
