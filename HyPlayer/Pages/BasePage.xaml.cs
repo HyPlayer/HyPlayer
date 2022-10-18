@@ -60,7 +60,6 @@ public sealed partial class BasePage : Page
         InitializeComponent();
         Common.PageBase = this;
         Common.GlobalTip = TheTeachingTip;
-        if (!Common.Setting.ForceAcrylicBackground) Background = null;
         HyPlayList.OnTimerTicked += () => Common.RollTeachingTip();
         if (HyPlayList.Player == null)
             HyPlayList.InitializeHyPlaylist();
@@ -870,16 +869,4 @@ public sealed partial class BasePage : Page
         sender.Text = args.SelectedItem.ToString();
     }
 
-}
-public class AcrylicTransConverter : IValueConverter
-{
-    public object Convert(object value, Type targetType, object parameter, string language)
-    {
-        return value is true ? new double[1] : new double[(int)0.5];
-    }
-
-    public object ConvertBack(object value, Type targetType, object parameter, string language)
-    {
-        throw new NotImplementedException();
-    }
 }

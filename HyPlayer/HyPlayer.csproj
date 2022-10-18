@@ -131,6 +131,7 @@
     </Compile>
     <Compile Include="Classes\Api.cs" />
     <Compile Include="Classes\CloudUpload.cs" />
+    <Compile Include="Classes\Converters.cs" />
     <Compile Include="Classes\Extensions.cs" />
     <Compile Include="Classes\LastFMManager.cs" />
     <Compile Include="Classes\NCMFile.cs" />
@@ -334,6 +335,10 @@
     <Content Include="Assets\Wide310x150Logo.scale-125.png" />
     <Content Include="Assets\Wide310x150Logo.scale-150.png" />
     <Content Include="Assets\Wide310x150Logo.scale-400.png" />
+    <Page Include="Classes\ConvertersDictionary.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\LastFMLoginBox.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

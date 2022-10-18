@@ -10,6 +10,7 @@
                 <ResourceDictionary Source="/Resources/Acrylic.xaml" />
                 <ResourceDictionary Source="/Resources/Theme.xaml" />
                 <ResourceDictionary Source="/Resources/UnsupportedFontIcon.xaml"/>
+                <ResourceDictionary Source="/Classes/ConvertersDictionary.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <Style TargetType="controls:ImageEx" x:Key="BaseStyle">
                 <Setter Property="IsCacheEnabled" Value="False" />

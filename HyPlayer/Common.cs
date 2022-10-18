@@ -365,6 +365,7 @@ namespace HyPlayer
             {
                 ApplicationData.Current.LocalSettings.Values["TintOpacityValue"] = value;
                 OnPropertyChanged();
+                OnPropertyChanged("acrylicBackgroundStatus");
             }
         }
 
@@ -1127,12 +1128,12 @@ namespace HyPlayer
 
         private static bool _abRepeatStatus = false;
 
-        public bool ForceAcrylicBackground
+        public bool acrylicBackgroundStatus
         {
-            get => GetSettings("forceAcrylicBackground", false);
+            get => GetSettings("acrylicBackgroundStatus", false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["forceAcrylicBackground"] = value;
+                ApplicationData.Current.LocalSettings.Values["acrylicBackgroundStatus"] = value;
                 OnPropertyChanged();
             }
         }

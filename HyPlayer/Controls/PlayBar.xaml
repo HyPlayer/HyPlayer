@@ -19,7 +19,6 @@
             <GradientStop x:Name="PlayBtnGradient" Offset="0.2" Color="{ThemeResource SystemAccentColorLight2}" />
             <GradientStop Offset="0.8" Color="{ThemeResource SystemAccentColorDark1}" />
         </LinearGradientBrush>
-        <local:PlayBarImageRadiusConverter x:Key="PlayBarImageRadiusConverter" />
         <Flyout x:Key="VolumeFlyout">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -597,7 +596,7 @@
                         Margin="-5,0,-5,0"
                         ValueChanged="SliderProgress_ValueChanged">
                         <Slider.ThumbToolTipValueConverter>
-                            <local:ThumbConverter SecondValue="{Binding SecondValue}" />
+                            <classes:ThumbConverter SecondValue="{Binding SecondValue}" />
 
                         </Slider.ThumbToolTipValueConverter>
                     </Slider>

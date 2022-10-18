@@ -1,0 +1,15 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:classes="using:HyPlayer.Classes">
+    <classes:ReversedBooleanConverter x:Key="ReversedBooleanConverter"/>
+    <classes:PlayBarMarginConverter x:Key="PlayBarMarginConverter" />
+    <classes:PlayBarCornerRadiusConverter x:Key="PlayBarCornerRadiusConverter" />
+    <classes:SongListSelectModeConverter x:Key="SelectModeConverter" />
+    <classes:PlayBarImageRadiusConverter x:Key="PlayBarImageRadiusConverter" />
+    <classes:ImageUrlToImageSourceConverter x:Key="ImageUrlToImageSourceConverter" />
+    <classes:PausedToStringConverter x:Key="PausedToStringConverter" />
+    <classes:AlbumShadowConverter x:Key="ShadowConverter" />
+    <classes:ReversedBooleanToVisibilityConverter x:Key="ReversedBooleanToVisibilityConverter" />
+    <classes:BooleanToBrushesConverter x:Key="BooleanToBrushesConverter" />
+</ResourceDictionary>

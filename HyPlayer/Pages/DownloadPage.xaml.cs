@@ -91,30 +91,3 @@ public sealed partial class DownloadPage : Page
         }
     }
 }
-
-public class ImageUrlToImageSourceConverter : IValueConverter
-{
-    public object Convert(object value, Type targetType, object parameter, string language)
-    {
-        return new BitmapImage(new Uri(value.ToString() + "?param=70y70"));
-    }
-
-    public object ConvertBack(object value, Type targetType, object parameter, string language)
-    {
-        throw new NotImplementedException();
-    }
-}
-
-public class PausedToStringConverter : IValueConverter
-{
-    public object Convert(object value, Type targetType, object parameter, string language)
-    {
-        if (parameter is true) return "重试";
-        return value is true ? "继续" : "暂停";
-    }
-
-    public object ConvertBack(object value, Type targetType, object parameter, string language)
-    {
-        throw new NotImplementedException();
-    }
-}

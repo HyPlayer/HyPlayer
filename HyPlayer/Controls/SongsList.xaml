@@ -12,9 +12,6 @@
     d:DesignHeight="300"
     Loaded="SongListRoot_Loaded"
     mc:Ignorable="d">
-    <UserControl.Resources>
-        <hycontrols:SongListSelectModeConverter x:Key="SelectModeConverter" />
-    </UserControl.Resources>
     <Grid>
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
