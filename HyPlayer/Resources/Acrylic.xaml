@@ -49,14 +49,14 @@
         x:Key="TransparentBackgroundAcrylic"
         BackgroundSource="HostBackdrop"
         TintColor="{ThemeResource SystemRevealAltHighColor}"
-        TintOpacity="1"
-        TintLuminosityOpacity="0.5"
+        TintOpacity="0.15"
+        TintLuminosityOpacity="0.25"
         FallbackColor="{ThemeResource SystemRevealAltHighColor}"/>
     <AcrylicBrush 
         x:Key="NormalBackgroundAcrylic"
         BackgroundSource="HostBackdrop"
         TintColor="{ThemeResource SystemRevealAltHighColor}"
-        TintOpacity="0.5"
-        TintLuminosityOpacity="0.5"
+        TintOpacity="0.25"
+        TintLuminosityOpacity="0.6"
         FallbackColor="{ThemeResource SystemRevealAltHighColor}"/>
 </ResourceDictionary>
