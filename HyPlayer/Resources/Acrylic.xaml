@@ -56,7 +56,7 @@
         x:Key="NormalBackgroundAcrylic"
         BackgroundSource="HostBackdrop"
         TintColor="{ThemeResource SystemRevealAltHighColor}"
-        TintOpacity="0.25"
+        TintOpacity="0.3"
         TintLuminosityOpacity="0.6"
         FallbackColor="{ThemeResource SystemRevealAltHighColor}"/>
 </ResourceDictionary>

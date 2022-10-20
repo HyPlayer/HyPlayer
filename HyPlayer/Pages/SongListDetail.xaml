@@ -133,8 +133,10 @@
                                 <FontIcon
                                     x:Name="IconLiked"
                                     FontSize="16"
+                                    Foreground="White"
                                     Glyph="&#xE00B;" />
                                 <TextBlock
+                                    Foreground="White"
                                     Margin="4,0,0,0"
                                     Text="心动模式" />
                             </StackPanel>
