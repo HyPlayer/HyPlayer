@@ -42,7 +42,7 @@
             Grid.RowSpan="2"
             Margin="20"
             IsSearchEnabled="True"
-            Songs="{x:Bind Songs}">
+            Songs="{x:Bind Songs}" >
             <controls1:SongsList.ListHeader>
                 <Grid x:Name="GridPersonalInformation" Margin="0,15,0,12">
                     <Grid.ColumnDefinitions>

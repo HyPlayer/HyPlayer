@@ -687,7 +687,7 @@
                                 x:Name="ListBoxPlayList"
                                 Width="400"
                                 Height="500"
-                                SelectionChanged="ListBoxPlayList_OnSelectionChanged"
+                                SelectionChanged="ListBoxPlayList_OnSelectionChanged" ItemContainerStyle="{ThemeResource ListViewItemStyle}"
                                 SelectionMode="Single">
                                 <ListView.ItemTemplate>
                                     <DataTemplate x:DataType="classes:HyPlayItem">
