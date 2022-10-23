@@ -839,9 +839,9 @@ public sealed partial class PlayBar
                 new AcrylicBrush()
                 { BackgroundSource = AcrylicBackgroundSource.HostBackdrop,
                     FallbackColor = Color.FromArgb(255, 0, 0, 0),
-                    TintLuminosityOpacity = 0.25,
+                    TintLuminosityOpacity = 0.5,
                     TintColor = (Color)Resources["SystemRevealAltHighColor"],
-                 TintOpacity=0.6,
+                 TintOpacity=0.2,
                 };
         Window.Current.SetTitleBar(Common.PageBase.AppTitleBar);
         Common.isExpanded = false;
