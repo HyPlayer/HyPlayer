@@ -11,6 +11,8 @@
                 <ResourceDictionary Source="/Resources/Theme.xaml" />
                 <ResourceDictionary Source="/Resources/UnsupportedFontIcon.xaml"/>
                 <ResourceDictionary Source="/Classes/ConvertersDictionary.xaml"/>
+                <ResourceDictionary Source="/Resources/ListView.xaml"/>
+
             </ResourceDictionary.MergedDictionaries>
             <Style TargetType="controls:ImageEx" x:Key="BaseStyle">
                 <Setter Property="IsCacheEnabled" Value="False" />

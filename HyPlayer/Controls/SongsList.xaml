@@ -48,7 +48,7 @@
             ItemsSource="{x:Bind VisibleSongs}"
             SelectionChanged="SongContainer_SelectionChanged"
             SelectionMode="{x:Bind MultiSelect, Converter={StaticResource SelectModeConverter}, Mode=OneWay}"
-            ShowsScrollingPlaceholders="True">
+            ShowsScrollingPlaceholders="True" ItemContainerStyle="{ThemeResource ListViewItemStyle}">
             <ListView.Footer>
                 <ContentControl Margin="0,0,0,130" Content="{x:Bind Footer}" />
             </ListView.Footer>
@@ -231,7 +231,7 @@
                                 Width="80"
                                 Height="80"
                                 x:Phase="4"
-                                Margin="5,0,0,0"
+                                Margin="12,0,0,0"
                                 CornerRadius="10"
                                 EnableLazyLoading="True"
                                 IsCacheEnabled="False"
