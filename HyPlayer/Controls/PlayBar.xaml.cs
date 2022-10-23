@@ -836,7 +836,13 @@ public sealed partial class PlayBar
         Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
         if (!Common.Setting.playbarBackgroundAcrylic)
             Common.PageMain.GridPlayBar.Background =
-                Application.Current.Resources["ApplicationPageBackgroundThemeBrush"] as SolidColorBrush;
+                new AcrylicBrush()
+                { BackgroundSource = AcrylicBackgroundSource.HostBackdrop,
+                    FallbackColor = Color.FromArgb(255, 0, 0, 0),
+                    TintLuminosityOpacity = 0.25,
+                    TintColor = (Color)Resources["SystemRevealAltHighColor"],
+                 TintOpacity=0.6,
+                };
         Window.Current.SetTitleBar(Common.PageBase.AppTitleBar);
         Common.isExpanded = false;
     }
