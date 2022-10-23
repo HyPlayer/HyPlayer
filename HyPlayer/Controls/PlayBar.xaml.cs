@@ -838,7 +838,7 @@ public sealed partial class PlayBar
             Common.PageMain.GridPlayBar.Background =
                 new AcrylicBrush()
                 { BackgroundSource = AcrylicBackgroundSource.HostBackdrop,
-                    FallbackColor = Color.FromArgb(255, 0, 0, 0),
+                    FallbackColor = (Color)Resources["SystemRevealAltHighColor"],
                     TintLuminosityOpacity = 0.5,
                     TintColor = (Color)Resources["SystemRevealAltHighColor"],
                  TintOpacity=0.2,
