@@ -92,6 +92,7 @@
                             IsTextSelectionEnabled="True"
                             Margin="0,0,-30,0"
                             x:Name="TextBoxPLName"
+                            FontWeight="Bold"
                             Foreground="{ThemeResource DefaultTextForegroundThemeBrush}"
                             Text="歌单名"
                             Style="{StaticResource TitleTextBlockStyle}"
@@ -132,8 +133,10 @@
                                 <FontIcon
                                     x:Name="IconLiked"
                                     FontSize="16"
+                                    Foreground="White"
                                     Glyph="&#xE00B;" />
                                 <TextBlock
+                                    Foreground="White"
                                     Margin="4,0,0,0"
                                     Text="心动模式" />
                             </StackPanel>

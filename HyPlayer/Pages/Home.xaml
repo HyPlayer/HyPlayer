@@ -38,13 +38,14 @@
                         Margin="40,40,20,0"
                         x:Name="GreetingText">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Hi~ " FontWeight="Bold" Style="{StaticResource HeaderTextBlockStyle}" FontSize="36"/>
-                        <TextBlock x:Name="TbHelloUserName" Style="{StaticResource HeaderTextBlockStyle}" FontWeight="Bold" FontSize="36" />
+                        <TextBlock Text="Hi~ " FontWeight="Bold" Foreground="White" Style="{StaticResource HeaderTextBlockStyle}" FontSize="36"/>
+                        <TextBlock x:Name="TbHelloUserName" Foreground="White" Style="{StaticResource HeaderTextBlockStyle}" FontWeight="Bold" FontSize="36" />
                     </StackPanel>
                     <TextBlock
                     Margin="0,5,0,0"
                     x:Name="TbRamdomWelcome"
                     FontSize="18"
+                    Foreground="AntiqueWhite"
                     Text="用音乐开启新的一天吧" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" x:Name="HomeBtns" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,35,20,0"

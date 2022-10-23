@@ -7,13 +7,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hyplayer="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:pages="using:HyPlayer.Pages"
-    xmlns:classes="using:HyPlayer.Classes"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
-    <UserControl.Resources>
-        <pages:ReversedBooleanToVisibilityConverter x:Key="ReversedBooleanToVisibilityConverter" />
-    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="75" />
@@ -432,13 +427,6 @@
                                             IsOn="{x:Bind hyplayer:Common.Setting.playButtonAccentColor, Mode=TwoWay}" />
                                     </Grid>
                                     <Grid>
-                                        <TextBlock VerticalAlignment="Center" Text="使用亚克力窗口背景 (不推荐, 否则为 Mica)" />
-                                        <ToggleSwitch
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.ForceAcrylicBackground, Mode=TwoWay}" />
-                                    </Grid>
-                                    <Grid>
                                         <TextBlock VerticalAlignment="Center" Text="播放栏按钮透明" />
                                         <ToggleSwitch
                                             MinWidth="10"
@@ -533,6 +521,20 @@
                                     </TransitionCollection>
                                 </controls:Expander.Transitions>
                                 <StackPanel Orientation="Vertical" Spacing="16">
+                                    <Grid>
+                                        <TextBlock VerticalAlignment="Center" Text="使用亚克力窗口背景 (不推荐, 否则为 Mica)" />
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.acrylicBackgroundStatus, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid Visibility="{x:Bind hyplayer:Common.Setting.acrylicBackgroundStatus, Mode=OneWay}">
+                                        <TextBlock VerticalAlignment="Center" Text="提高Acrylic透明度" />
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.TintOpacityValue, Mode=TwoWay}" />
+                                    </Grid>
                                     <Grid>
                                         <TextBlock VerticalAlignment="Center" Text="无图模式(需重启应用)" />
                                         <ToggleSwitch

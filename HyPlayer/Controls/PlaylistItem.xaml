@@ -95,6 +95,7 @@
                     HorizontalAlignment="Left"
                     x:Name="TextBlockPLName"
                     MaxWidth="180"
+                    FontWeight="Bold" 
                     TextTrimming="CharacterEllipsis"
                     ToolTipService.ToolTip="{x:Bind TextBlockPLName.Text,Mode=OneWay}"
                     Margin="10,12,10,27"

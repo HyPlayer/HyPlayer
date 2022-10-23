@@ -24,7 +24,6 @@
                         TintOpacity="0.5" />
                     <DataTemplate x:Key="ListItemTemplate" x:DataType="classes:SimpleListItem">
                         <ListViewItem>
-                            
                             <Grid
                                 Margin="0,15,0,15"
                                 HorizontalAlignment="Stretch"
@@ -61,7 +60,8 @@
                                             EnableLazyLoading="True"
                                             IsCacheEnabled="False"
                                             Source="{x:Bind Cover}"
-                                            Stretch="UniformToFill" />
+                                            Stretch="UniformToFill" >
+                                        </controls:ImageEx>
                                         <Grid Padding="7,0,0,0">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition />
@@ -247,6 +247,7 @@
                              Margin="0,0,46,18"
                              Background="OrangeRed"
                              x:Name="ButtonLogout"
+                             Foreground="White"
                              Click="Logout_OnClick"
                              Content="退出登录"/>
                 </Grid>

@@ -67,7 +67,6 @@
                 Storyboard.TargetProperty="Y">
             </DoubleAnimation>
         </Storyboard>
-        <pages:AlbumShadowConverter x:Key="ShadowConverter" />
         <ui:AttachedDropShadow
             x:Key="AlbumDropShadow"
             BlurRadius="20"

@@ -7,13 +7,12 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
-    Background="{ThemeResource AcrylicBackgroundFillColorDefaultBrush}"
+    Background="{x:Bind local:Common.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource BooleanToBrushesConverter}}"
     NavigationCacheMode="Disabled"
     xmlns:controls1="using:HyPlayer.Controls"
     mc:Ignorable="d">
-
     <Page.Resources>
-        <ResourceDictionary>
+        <ResourceDictionary x:Key="Default">
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary>
                     <ResourceDictionary.ThemeDictionaries>

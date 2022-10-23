@@ -38,6 +38,7 @@ using NavigationViewItem = Microsoft.UI.Xaml.Controls.NavigationViewItem;
 using NavigationViewItemInvokedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs;
 using NavigationViewPaneDisplayMode = Microsoft.UI.Xaml.Controls.NavigationViewPaneDisplayMode;
 using NavigationViewSelectionChangedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewSelectionChangedEventArgs;
+using Windows.UI.Xaml.Data;
 
 #endregion
 
@@ -59,7 +60,6 @@ public sealed partial class BasePage : Page
         InitializeComponent();
         Common.PageBase = this;
         Common.GlobalTip = TheTeachingTip;
-        if (!Common.Setting.ForceAcrylicBackground) Background = null;
         HyPlayList.OnTimerTicked += () => Common.RollTeachingTip();
         if (HyPlayList.Player == null)
             HyPlayList.InitializeHyPlaylist();
@@ -868,4 +868,5 @@ public sealed partial class BasePage : Page
     {
         sender.Text = args.SelectedItem.ToString();
     }
+
 }
