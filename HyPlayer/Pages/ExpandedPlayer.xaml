@@ -33,7 +33,7 @@
                 Storyboard.TargetName="ImageScale"
                 Storyboard.TargetProperty="ScaleX"
                 From="1"
-                To="0.92"
+                To="0.9"
                 Duration="0:0:4">
                 <DoubleAnimation.EasingFunction>
                     <QuadraticEase EasingMode="EaseInOut" />
@@ -45,7 +45,7 @@
                 Storyboard.TargetName="ImageScale"
                 Storyboard.TargetProperty="ScaleY"
                 From="1"
-                To="0.92"
+                To="0.9"
                 Duration="0:0:4">
                 <DoubleAnimation.EasingFunction>
                     <QuadraticEase EasingMode="EaseInOut" />
