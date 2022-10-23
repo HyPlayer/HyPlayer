@@ -15,7 +15,7 @@
     <Page.Resources>
         <!-- ReSharper disable once Xaml.RedundantResource -->
         <Storyboard x:Key="ImageAlbumAni">
-            <!--DoubleAnimation
+            <DoubleAnimation
                 AutoReverse="True"
                 RepeatBehavior="Forever"
                 Storyboard.TargetName="ImageAlbum"
@@ -26,7 +26,7 @@
                 <DoubleAnimation.EasingFunction>
                     <QuadraticEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
-            </DoubleAnimation-->
+            </DoubleAnimation>
             <DoubleAnimation
                 AutoReverse="True"
                 RepeatBehavior="Forever"
@@ -47,114 +47,6 @@
                 From="1"
                 To="0.9"
                 Duration="0:0:4">
-                <DoubleAnimation.EasingFunction>
-                    <QuadraticEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation
-                AutoReverse="True"
-                RepeatBehavior="Forever"
-                Storyboard.TargetName="Shadow1Scale"
-                Storyboard.TargetProperty="ScaleX"
-                From="0.9"
-                To="0.75"
-                Duration="0:0:1.2">
-                <DoubleAnimation.EasingFunction>
-                    <QuadraticEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation
-                AutoReverse="True"
-                RepeatBehavior="Forever"
-                Storyboard.TargetName="Shadow1Scale"
-                Storyboard.TargetProperty="ScaleY"
-                From="1"
-                To="0.9"
-                Duration="0:0:1.4">
-                <DoubleAnimation.EasingFunction>
-                    <QuadraticEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation
-                AutoReverse="False" 
-                RepeatBehavior="Forever"
-                Storyboard.TargetName="Shadow1Rotate"
-                Storyboard.TargetProperty="Angle"
-                From="0"
-                To="360"
-                Duration="0:0:12">
-                <DoubleAnimation.EasingFunction>
-                    <QuadraticEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation
-                AutoReverse="True"
-                RepeatBehavior="Forever"
-                Storyboard.TargetName="Shadow2Scale"
-                Storyboard.TargetProperty="ScaleX"
-                From="1"
-                To="0.8"
-                Duration="0:0:0.9">
-                <DoubleAnimation.EasingFunction>
-                    <QuadraticEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation
-                AutoReverse="True"
-                RepeatBehavior="Forever"
-                Storyboard.TargetName="Shadow2Scale"
-                Storyboard.TargetProperty="ScaleY"
-                From="0.7"
-                To="0.9"
-                Duration="0:0:0.7">
-                <DoubleAnimation.EasingFunction>
-                    <QuadraticEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation
-                AutoReverse="False" 
-                RepeatBehavior="Forever"
-                Storyboard.TargetName="Shadow2Rotate"
-                Storyboard.TargetProperty="Angle"
-                From="0"
-                To="360"
-                Duration="0:0:14">
-                <DoubleAnimation.EasingFunction>
-                    <QuadraticEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation
-                AutoReverse="True"
-                RepeatBehavior="Forever"
-                Storyboard.TargetName="Shadow3Scale"
-                Storyboard.TargetProperty="ScaleX"
-                From="0.9"
-                To="0.75"
-                Duration="0:0:2.2">
-                <DoubleAnimation.EasingFunction>
-                    <QuadraticEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation
-                AutoReverse="True"
-                RepeatBehavior="Forever"
-                Storyboard.TargetName="Shadow3Scale"
-                Storyboard.TargetProperty="ScaleY"
-                From="1"
-                To="0.85"
-                Duration="0:0:1.9">
-                <DoubleAnimation.EasingFunction>
-                    <QuadraticEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation
-                AutoReverse="False" 
-                RepeatBehavior="Forever"
-                Storyboard.TargetName="Shadow3Rotate"
-                Storyboard.TargetProperty="Angle"
-                From="0"
-                To="360"
-                Duration="0:0:17">
                 <DoubleAnimation.EasingFunction>
                     <QuadraticEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
@@ -222,31 +114,6 @@
                         <RowDefinition Height="10*" />
                     </Grid.RowDefinitions>
                     <Border x:Name="ShadowTarget" Grid.Row="1" />
-                    <Rectangle Grid.Row="1" RadiusX="325" RadiusY="325" Fill="{ThemeResource SystemAltLowColor}" Width=" 600" Height="600" HorizontalAlignment="Center">
-                        <Rectangle.RenderTransform>
-                            <TransformGroup>
-                                <ScaleTransform x:Name="Shadow1Scale" CenterX="300" CenterY="300" />
-                                <RotateTransform x:Name="Shadow1Rotate" CenterX="300" CenterY="300"/>
-                            </TransformGroup>
-                        </Rectangle.RenderTransform> 
-                    </Rectangle>
-                    <Rectangle Grid.Row="1" RadiusX="325" RadiusY="325" Fill="{ThemeResource SystemAltLowColor}" Width=" 600" Height="600" HorizontalAlignment="Center">
-                        <Rectangle.RenderTransform>
-                            <TransformGroup>
-                                <ScaleTransform x:Name="Shadow2Scale" CenterX="300" CenterY="300" />
-                                <RotateTransform x:Name="Shadow2Rotate" CenterX="300" CenterY="300"/>
-                            </TransformGroup>
-                        </Rectangle.RenderTransform>
-                    </Rectangle>
-                    <Rectangle Grid.Row="1" RadiusX="325" RadiusY="325" Fill="{ThemeResource SystemAltLowColor}" Width=" 600" Height="600" HorizontalAlignment="Center">
-                        <Rectangle.RenderTransform>
-                            <TransformGroup>
-                                <ScaleTransform x:Name="Shadow3Scale" CenterX="300" CenterY="300" />
-                                <RotateTransform x:Name="Shadow3Rotate" CenterX="300" CenterY="300"/>
-                            </TransformGroup>
-                        </Rectangle.RenderTransform>
-                    </Rectangle>
-
                     <controls:ImageEx
                         x:Name="ImageAlbum"
                         ManipulationDelta="ImageAlbum_OnManipulationDelta"
@@ -285,7 +152,7 @@
                             <TransformGroup>
                                 <ScaleTransform x:Name="ImageScale" CenterX="300" CenterY="300" />
                                 <TranslateTransform x:Name="ImagePositionOffset" />
-                                <RotateTransform x:Name="ImageRotateTransform" CenterX="300" CenterY="300" />
+                                <RotateTransform x:Name="ImageRotateTransform" CenterX="280" CenterY="280" />
                             </TransformGroup>
                         </controls:ImageEx.RenderTransform>
                         <controls:ImageEx.ContextFlyout>
@@ -580,7 +447,7 @@
                     </MenuFlyout>
                 </Button.Flyout>
                 <Button.Content>
-                    <FontIcon Glyph="&#xE712;" />
+                    <FontIcon Glyph="&#xEDE3;" />
                 </Button.Content>
             </Button>
         </Grid>
