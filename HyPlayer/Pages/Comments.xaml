@@ -95,7 +95,7 @@
                         x:Name="CommentList"
                         Margin="10"
                         Orientation="Vertical"
-                        Spacing="30" />
+                        Spacing="16" />
 
                 </StackPanel>
 

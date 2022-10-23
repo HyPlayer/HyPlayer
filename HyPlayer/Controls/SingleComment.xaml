@@ -11,88 +11,86 @@
     mc:Ignorable="d">
 
     <StackPanel Orientation="Vertical">
-        <Grid Margin="10,0,10,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="70" />
-                <ColumnDefinition Width="10" />
-                <!--  White Space  -->
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-
-            <Rectangle 
+        <Grid Margin="12,0">
+            <Border                 
                 Grid.ColumnSpan="3"
-                Margin=" 0,-5,-10,-5" 
-                RadiusX="10" 
-                RadiusY="10"
-                Fill="{ThemeResource SystemControlBackgroundListLowBrush}"/>
+                CornerRadius="8"
+                Background="{ThemeResource SystemControlBackgroundListLowBrush}">
+                <Grid Margin="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
+                        <PersonPicture
+                        x:Name="UserAvatar"
+                        Grid.Column="0"
+                        Width="32"
+                        Height="32"
+                        ProfilePicture="{x:Bind AvatarSource, Mode=OneWay}"
+                        Tapped="NavToUser_Click" />
+                        <StackPanel Margin="8,0,0,0">
+                            <HyperlinkButton
+                                x:Name="Nickname"
+                                Padding="0"
+                                Click="NavToUser_Click"
+                                Content="{x:Bind comment.Nickname}" Style="{StaticResource TextBlockButtonStyle}" />
+                            <TextBlock Text="{x:Bind comment.SendTime}" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
+                        </StackPanel>
+                    </StackPanel>
 
-            <PersonPicture
-                x:Name="UserAvatar"
-                Grid.Column="0"
-                Width="60"
-                Height="60"
-                MaxWidth="60"
-                MaxHeight="60"
-                Margin="10,10,0,0"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Top"
-                ProfilePicture="{x:Bind AvatarSource, Mode=OneWay}"
-                Tapped="NavToUser_Click" />
-            <StackPanel Grid.Column="2" Orientation="Vertical" Margin="0,10,0,10">
-                <HyperlinkButton
-                    x:Name="Nickname"
-                    Padding="0"
-                    Click="NavToUser_Click"
-                    Content="{x:Bind comment.Nickname}" Style="{StaticResource TextBlockButtonStyle}" />
-                <TextBlock Foreground="Gray" Text="{x:Bind comment.SendTime}" />
-                <controls:SelectableTextBox
-                    x:Name="CommentContent"
-                    Margin="0,2,10,0"
-                    FontSize="17"
-                    Text="{x:Bind comment.content}"
-                    TextWrapping="Wrap" />
-                <StackPanel
-                    Margin="0,10,0,0"
-                    HorizontalAlignment="Right"
-                    Orientation="Horizontal"
-                    Spacing="4">
-                    <ToggleButton
-                        x:Name="Like"
-                        Height="35"
-                        Click="Like_Click"
-                        IsChecked="{x:Bind comment.HasLiked}"
-                        ToolTipService.ToolTip="点赞"  Background="Transparent" BorderBrush="Transparent">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <FontIcon Glyph="&#xE19F;" FontSize="15" />
-                            <TextBlock x:Name="LikeCountTB" Text="{x:Bind comment.likedCount}" />
+                    <StackPanel Grid.Row="1" Margin="0,12,0,0">
+
+                        <TextBlock
+                            x:Name="CommentContent"
+                            FontSize="16"
+                            Text="{x:Bind comment.content}"
+                            TextWrapping="Wrap" IsTextSelectionEnabled="True"/>
+                        <StackPanel
+                            HorizontalAlignment="Right"
+                            Orientation="Horizontal"
+                            Spacing="4">
+                            <ToggleButton
+                                x:Name="Like"
+                                Height="35"
+                                Click="Like_Click"
+                                IsChecked="{x:Bind comment.HasLiked}"
+                                ToolTipService.ToolTip="点赞"  Background="Transparent" BorderBrush="Transparent">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE19F;" FontSize="15" />
+                                    <TextBlock x:Name="LikeCountTB" Text="{x:Bind comment.likedCount}" />
+                                </StackPanel>
+                            </ToggleButton>
+                            <Button
+                                x:Name="Delete"
+                                Height="35"
+                                Click="Delete_Click"
+                                ToolTipService.ToolTip="删除"
+                                Visibility="{x:Bind comment.IsByMyself}" Background="Transparent" BorderBrush="Transparent">
+                                <FontIcon Glyph="&#xE107;" FontSize="15" />
+                            </Button>
+                            <ToggleButton
+                                x:Name="ReplyBtn"
+                                Height="35"
+                                Click="ReplyBtn_Click"
+                                ToolTipService.ToolTip="回复" Background="Transparent" BorderBrush="Transparent">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE134;" FontSize="15" />
+                                    <TextBlock Text="{x:Bind comment.ReplyCount}" />
+                                </StackPanel>
+                            </ToggleButton>
                         </StackPanel>
-                    </ToggleButton>
-                    <Button
-                        x:Name="Delete"
-                        Height="35"
-                        Click="Delete_Click"
-                        ToolTipService.ToolTip="删除"
-                        Visibility="{x:Bind comment.IsByMyself}" Background="Transparent" BorderBrush="Transparent">
-                        <FontIcon Glyph="&#xE107;" FontSize="15" />
-                    </Button>
-                    <ToggleButton
-                        x:Name="ReplyBtn"
-                        Height="35"
-                        Click="ReplyBtn_Click"
-                        ToolTipService.ToolTip="回复" Background="Transparent" BorderBrush="Transparent">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <FontIcon Glyph="&#xE134;" FontSize="15" />
-                            <TextBlock Text="{x:Bind comment.ReplyCount}" />
-                        </StackPanel>
-                    </ToggleButton>
-                </StackPanel>
-            </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+
         </Grid>
 
 
         <Border
             x:Name="SubCmtsConainer"
-            Margin="5"
+            Margin="12"
             Background="#26808080"
             CornerRadius="4"
             Visibility="Collapsed">
@@ -115,14 +113,12 @@
                         Content="回复"
                         Style="{StaticResource AccentButtonStyle}" />
                 </Grid>
-                <StackPanel x:Name="SubCmts" Margin="10" />
+                <StackPanel x:Name="SubCmts" Margin="8" />
                 <Button
                     x:Name="LoadMore"
                     HorizontalAlignment="Stretch"
                     Click="LoadMore_Click"
-                    Content="加载更多"
-                    CornerRadius="5"
-                    Style="{StaticResource ButtonRevealStyle}" />
+                    Content="加载更多"/>
             </StackPanel>
         </Border>
     </StackPanel>
