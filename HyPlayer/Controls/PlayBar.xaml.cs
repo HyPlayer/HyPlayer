@@ -1226,8 +1226,14 @@ public sealed partial class PlayBar
             Common.BarPlayBar.ShowExpandedPlayer();
         if (!Common.Setting.playbarBackgroundAcrylic)
             Common.PageMain.GridPlayBar.Background =
-                Application.Current.Resources[
-                    "ApplicationPageBackgroundThemeBrush"] as Brush; /*new BackdropBlurBrush() { Amount = 30.0 };*/
+                new AcrylicBrush()
+                {
+                    BackgroundSource = AcrylicBackgroundSource.HostBackdrop,
+                    FallbackColor = (Color)Resources["SystemRevealAltHighColor"],
+                    TintLuminosityOpacity = 0.5,
+                    TintColor = (Color)Resources["SystemRevealAltHighColor"],
+                    TintOpacity = 0.2,
+                };
         if (Common.Setting.hotlyricOnStartup)
             try
             {
