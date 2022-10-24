@@ -39,6 +39,13 @@ public sealed partial class MainPage
         NavigationCacheMode = NavigationCacheMode.Required;
         InitializeComponent();
         _ = HyPlayList.OnAudioRenderDeviceChangedOrInitialized();
+        ActualThemeChanged += MainPage_ActualThemeChanged;
+    }
+
+    private void MainPage_ActualThemeChanged(FrameworkElement sender, object args)
+    {
+        Common.Setting.OnPropertyChanged("acrylicBackgroundStatus");
+        Common.Setting.OnPropertyChanged("playbarBackgroundAcrylic");
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

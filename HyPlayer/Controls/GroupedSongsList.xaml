@@ -181,7 +181,7 @@
                                         Name="TextBlockSongname"
                                         x:Phase="0"
                                         FontSize="20"
-                                        Foreground="{x:Bind hycontrols:SongsList.GetBrush(IsAvailable)}"
+                                        Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
                                         Text="{x:Bind songname}" />
                                     <TextBlock
                                         Name="TextBlockTransName"
