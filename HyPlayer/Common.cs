@@ -61,7 +61,16 @@ namespace HyPlayer
         public static KawazuConverter? KawazuConv;
         public static List<NCPlayList> MySongLists = new();
         public static readonly Stack<NavigationHistoryItem> NavigationHistory = new();
-        public static bool isExpanded = false;
+        public static bool isExpanded
+        {
+            get => _isExpanded;
+            set
+            {
+                _isExpanded = value;
+                Setting.OnPropertyChanged("playbarBackgroundAcrylic");
+            }
+        }
+        private static bool _isExpanded = false;
         public static TeachingTip GlobalTip;
         public static readonly Stack<KeyValuePair<string, string?>> TeachingTipList = new();
         private static object previousNavigationItem;
@@ -1135,6 +1144,7 @@ namespace HyPlayer
             {
                 ApplicationData.Current.LocalSettings.Values["acrylicBackgroundStatus"] = value;
                 OnPropertyChanged();
+                OnPropertyChanged("playbarBackgroundAcrylic");
             }
         }
         

@@ -751,7 +751,6 @@ public sealed partial class PlayBar
     {
         ButtonExpand.Visibility = Visibility.Collapsed;
         ButtonCollapse.Visibility = Visibility.Visible;
-        Common.PageMain.GridPlayBar.Background = null;
         PlayBarBackgroundFadeOut.Begin();
         //Common.PageMain.MainFrame.Visibility = Visibility.Collapsed;
         Common.PageMain.ExpandedPlayer.Visibility = Visibility.Visible;
@@ -834,15 +833,6 @@ public sealed partial class PlayBar
         //Common.PageMain.MainFrame.Visibility = Visibility.Visible;
         Common.PageMain.MainFrame.Visibility = Visibility.Visible;
         Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
-        if (!Common.Setting.playbarBackgroundAcrylic)
-            Common.PageMain.GridPlayBar.Background =
-                new AcrylicBrush()
-                { BackgroundSource = AcrylicBackgroundSource.HostBackdrop,
-                    FallbackColor = (Color)Resources["SystemRevealAltHighColor"],
-                    TintLuminosityOpacity = 0.5,
-                    TintColor = (Color)Resources["SystemRevealAltHighColor"],
-                 TintOpacity=0.2,
-                };
         Window.Current.SetTitleBar(Common.PageBase.AppTitleBar);
         Common.isExpanded = false;
     }
@@ -1225,15 +1215,6 @@ public sealed partial class PlayBar
         if (Common.isExpanded)
             Common.BarPlayBar.ShowExpandedPlayer();
         if (!Common.Setting.playbarBackgroundAcrylic)
-            Common.PageMain.GridPlayBar.Background =
-                new AcrylicBrush()
-                {
-                    BackgroundSource = AcrylicBackgroundSource.HostBackdrop,
-                    FallbackColor = (Color)Resources["SystemRevealAltHighColor"],
-                    TintLuminosityOpacity = 0.5,
-                    TintColor = (Color)Resources["SystemRevealAltHighColor"],
-                    TintOpacity = 0.2,
-                };
         if (Common.Setting.hotlyricOnStartup)
             try
             {
