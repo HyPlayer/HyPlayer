@@ -82,19 +82,19 @@ public static class HyPlayList
     private static string _crashedTime;
 
     public static string PlaySourceId;
-    private static double _playerOutgoingVolume;
-
-    public static double PlayerOutgoingVolume
+    private static double _userVolume;
+    public static double UserVolume
     {
-        get => _playerOutgoingVolume;
+        get => _userVolume;
         set
         {
-            _playerOutgoingVolume = value;
-            Player.Volume = _playerOutgoingVolume;
+            _userVolume = value;
             Common.Setting.Volume = (int)(value * 100);
-            OnVolumeChange?.Invoke(_playerOutgoingVolume);
         }
     }
+    public static double FadeVolume;
+
+    public static double FadeTargetVolume;
 
     /*********        基本       ********/
     public static PlayMode NowPlayType

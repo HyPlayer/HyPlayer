@@ -33,6 +33,7 @@ using Windows.Storage.Streams;
 using System.Threading.Tasks;
 using System.IO;
 using Microsoft.Toolkit.Uwp.Helpers;
+using System.Diagnostics;
 
 #endregion
 
@@ -390,18 +391,18 @@ public sealed partial class PlayBar
             if (Common.Setting.fadeInOut && isFadeInOutPausing == 0)
             {
                 if (HyPlayList.Player.PlaybackSession.Position.TotalSeconds <= Common.Setting.fadeInOutTime)
-                    HyPlayList.Player.Volume =
+                    HyPlayList.FadeVolume =
                         HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds /
-                        Common.Setting.fadeInOutTime / 1000 * HyPlayList.PlayerOutgoingVolume;
+                        Common.Setting.fadeInOutTime / 1000 * HyPlayList.FadeTargetVolume;
                 else if (HyPlayList.Player.PlaybackSession.NaturalDuration.TotalSeconds -
                          HyPlayList.Player.PlaybackSession.Position.TotalSeconds <=
                          Common.Setting.fadeInOutTime)
-                    HyPlayList.Player.Volume =
+                    HyPlayList.FadeVolume =
                         (HyPlayList.Player.PlaybackSession.NaturalDuration.TotalSeconds -
                          HyPlayList.Player.PlaybackSession.Position.TotalSeconds) / Common.Setting.fadeInOutTime *
-                        HyPlayList.PlayerOutgoingVolume;
+                        HyPlayList.FadeTargetVolume;
                 else
-                    HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume;
+                    HyPlayList.FadeVolume = HyPlayList.FadeTargetVolume;
             }
             else if (isFadeInOutPausing != 0)
             {
@@ -412,11 +413,11 @@ public sealed partial class PlayBar
                 {
                     if (isFadeInOutPausing == 1)
                     {
-                        HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume;
+                        HyPlayList.FadeVolume = HyPlayList.FadeTargetVolume;
                     }
                     else
                     {
-                        HyPlayList.Player.Volume = 0;
+                        HyPlayList.FadeVolume = 0;
                         HyPlayList.Player.Pause();
                     }
 
@@ -426,11 +427,12 @@ public sealed partial class PlayBar
 
                 if (isFadeInOutPausing == 1)
                     // Fade In
-                    HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume * fadeRatio;
+                    HyPlayList.FadeVolume = HyPlayList.FadeTargetVolume * fadeRatio;
                 else
                     // Fade Out
-                    HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume * (1 - fadeRatio);
+                    HyPlayList.FadeVolume = HyPlayList.FadeTargetVolume * (1 - fadeRatio);
             }
+            HyPlayList.Player.Volume = HyPlayList.FadeVolume * HyPlayList.UserVolume;
         }
         catch (Exception)
         {
@@ -701,7 +703,7 @@ public sealed partial class PlayBar
 
     private void SliderAudioRate_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
-        HyPlayList.PlayerOutgoingVolume = e.NewValue / 100;
+        HyPlayList.UserVolume = e.NewValue / 100;
     }
 
     private void BtnMute_OnCllick(object sender, RoutedEventArgs e)
@@ -1168,8 +1170,10 @@ public sealed partial class PlayBar
     {
         InitializedAni.Begin();
         PlayBarBackgroundFadeIn.Begin();
-        HyPlayList.PlayerOutgoingVolume = (double)Common.Setting.Volume / 100;
-        SliderAudioRate.Value = HyPlayList.PlayerOutgoingVolume * 100;
+        //HyPlayList.PlayerOutgoingVolume = (double)Common.Setting.Volume / 100;
+        HyPlayList.FadeTargetVolume = 1;
+        HyPlayList.FadeVolume = 1;
+        SliderAudioRate.Value = (double)Common.Setting.Volume;
         HyPlayList.OnPlayItemChange += LoadPlayingFile;
         HyPlayList.OnPlayPositionChange += OnPlayPositionChange;
         //HyPlayList.OnPlayPositionChange += UpdateMSTC;
