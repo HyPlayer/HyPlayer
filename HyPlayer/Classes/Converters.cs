@@ -7,12 +7,39 @@ using Windows.UI.Xaml.Media.Imaging;
 
 namespace HyPlayer.Classes
 {
-    public class BooleanToBrushesConverter : IValueConverter
+    public class BooleanToWindowBrushesConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value is true && Common.Setting.TintOpacityValue is true) return Application.Current.Resources["TransparentBackgroundAcrylic"] as Brush;
-            if (value is true && Common.Setting.TintOpacityValue is false) return Application.Current.Resources["NormalBackgroundAcrylic"] as Brush;
+            if (value is true && Common.Setting.TintOpacityValue is true) return Application.Current.Resources["TransparentWindowBackgroundAcrylic"] as Brush;
+            if (value is true && Common.Setting.TintOpacityValue is false) return Application.Current.Resources["NormalWindowBackgroundAcrylic"] as Brush;
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+    public class BooleanToBarPlayBarBrushesConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value is true) return Application.Current.Resources["SystemControlAcrylicWindowBrush"] as Brush;
+            return null;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+    public class BooleanToGridPlayBarBrushesConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            if (value is false && Common.Setting.acrylicBackgroundStatus is true && Common.isExpanded is false) return Application.Current.Resources["GridPlayBarBackgroundAcrylic"] as Brush;
+            if (value is false && Common.Setting.acrylicBackgroundStatus is false && Common.isExpanded is false) return Application.Current.Resources["ApplicationPageBackgroundThemeBrush"] as Brush;
             return null;
         }
 

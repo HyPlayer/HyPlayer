@@ -46,17 +46,24 @@
         TintColor="#4D76B3"
         FallbackColor="#2B2B2B" />
     <AcrylicBrush 
-        x:Key="TransparentBackgroundAcrylic"
+        x:Key="TransparentWindowBackgroundAcrylic"
         BackgroundSource="HostBackdrop"
         TintColor="{ThemeResource SystemRevealAltHighColor}"
         TintOpacity="0.15"
         TintLuminosityOpacity="0.25"
         FallbackColor="{ThemeResource SystemRevealAltHighColor}"/>
     <AcrylicBrush 
-        x:Key="NormalBackgroundAcrylic"
+        x:Key="NormalWindowBackgroundAcrylic"
         BackgroundSource="HostBackdrop"
         TintColor="{ThemeResource SystemRevealAltHighColor}"
         TintOpacity="0.25"
         TintLuminosityOpacity="0.67"
+        FallbackColor="{ThemeResource SystemRevealAltHighColor}"/>
+    <AcrylicBrush 
+        x:Key="GridPlayBarBackgroundAcrylic"
+        BackgroundSource="HostBackdrop"
+        TintColor="{ThemeResource SystemRevealAltHighColor}"
+        TintOpacity="0.2"
+        TintLuminosityOpacity="0.5"
         FallbackColor="{ThemeResource SystemRevealAltHighColor}"/>
 </ResourceDictionary>
