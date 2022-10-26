@@ -226,7 +226,7 @@
                                 </controls:Expander.Transitions>
                                 <StackPanel Orientation="Vertical" Spacing="8">
                                     <Grid>
-                                        <TextBlock VerticalAlignment="Center" Text="切歌时" />
+                                        <TextBlock VerticalAlignment="Center" Text="启用渐入渐出" />
                                         <ToggleSwitch
                                             x:Name="FadeInOut"
                                             MinWidth="10"
@@ -241,27 +241,27 @@
                                             HorizontalAlignment="Right"
                                             IsEnabled="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=OneWay}"
                                             Maximum="12"
-                                            Minimum="0"
+                                            Minimum="1"
                                             ToolTipService.ToolTip="{x:Bind FadeTime.Value}"
                                             Value="{x:Bind hyplayer:Common.Setting.fadeInOutTime, Mode=TwoWay}" />
                                     </Grid>
-                                    <Grid>
+                                    <!--<Grid>
                                         <TextBlock VerticalAlignment="Center" Text="播放暂停时" />
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
                                             VerticalAlignment="Center"
                                             IsOn="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=TwoWay}" />
-                                    </Grid>
+                                    </Grid>-->
                                     <Grid Visibility="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=OneWay}">
-                                        <TextBlock VerticalAlignment="Center" Text="渐入渐出时间 单位: 0.1s" />
+                                        <TextBlock VerticalAlignment="Center" Text="播放渐入渐出时间 单位: 0.1s" />
                                         <Slider
                                             x:Name="FadeTimePause"
                                             Width="256"
                                             HorizontalAlignment="Right"
                                             IsEnabled="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=OneWay}"
                                             Maximum="50"
-                                            Minimum="0"
+                                            Minimum="1"
                                             ToolTipService.ToolTip="{x:Bind FadeTimePause.Value}"
                                             Value="{x:Bind hyplayer:Common.Setting.fadeInOutTimePause, Mode=TwoWay}" />
                                     </Grid>

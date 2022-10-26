@@ -21,6 +21,7 @@ using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
 using Opportunity.LrcParser;
 using File = TagLib.File;
+using HyPlayer.Controls;
 
 #endregion
 
@@ -93,8 +94,6 @@ public static class HyPlayList
         }
     }
     public static double FadeVolume;
-
-    public static double FadeTargetVolume;
 
     /*********        基本       ********/
     public static PlayMode NowPlayType
