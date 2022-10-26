@@ -818,7 +818,10 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         fop.FileTypeFilter.Add(".lrc");
         // register provider - by default encoding is not supported 
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-        HyPlayList.Lyrics = Utils.ConvertPureLyric(await FileIO.ReadTextAsync(await fop.PickSingleFileAsync()), true);
+        var lrcFile = await fop.PickSingleFileAsync();
+        if (lrcFile is null) return;
+        var lrcText = await FileIO.ReadTextAsync(lrcFile);
+        HyPlayList.Lyrics = Utils.ConvertPureLyric(lrcText, true);
         LoadLyricsBox();
     }
 

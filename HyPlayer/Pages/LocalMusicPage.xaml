@@ -51,10 +51,9 @@
                     <Grid Grid.Row="1">
                         <ListView
                             Name="ListBoxLocalMusicContainer"
-                            ScrollViewer.VerticalScrollBarVisibility="Visible"
-                            ScrollViewer.VerticalScrollMode="Enabled"
                             SelectionChanged="ListBoxLocalMusicContainer_SelectionChanged"
-                            SelectionMode="Single">
+                            SelectionMode="Single"
+                            ItemsSource="{x:Bind localHyItems, Mode=OneWay}">
                             <ListView.ItemTemplate>
                                 <DataTemplate x:DataType="classes:HyPlayItem">
                                     <Grid>

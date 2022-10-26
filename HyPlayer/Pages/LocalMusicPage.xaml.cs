@@ -28,7 +28,6 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     private static readonly string[] supportedFormats = { ".flac", ".mp3", ".ncm", ".ape", ".m4a", ".wav" };
     private readonly ObservableCollection<HyPlayItem> localHyItems;
     private string _notificationText;
-    private Task FileScanTask;
     private int index;
 
     public LocalMusicPage()
@@ -53,7 +52,6 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     {
         base.OnNavigatedFrom(e);
         localHyItems.Clear();
-        FileScanTask?.Dispose();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -70,22 +68,18 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
         HyPlayList.SongMoveTo(0);
     }
 
-    private void Refresh_Click(object sender, RoutedEventArgs e)
+    private async void Refresh_Click(object sender, RoutedEventArgs e)
     {
         ListBoxLocalMusicContainer.SelectionChanged -= ListBoxLocalMusicContainer_SelectionChanged;
-        if (ListBoxLocalMusicContainer.Items != null) ListBoxLocalMusicContainer.Items.Clear();
         localHyItems.Clear();
         index = 0;
-        _ = LoadLocalMusic();
-
+        await LoadLocalMusic();
         ListBoxLocalMusicContainer.SelectionChanged += ListBoxLocalMusicContainer_SelectionChanged;
     }
 
     private async Task LoadLocalMusic()
     {
-        FileScanTask?.Dispose();
         NotificationText = "正在扫描...";
-        ListBoxLocalMusicContainer.ItemsSource = localHyItems;
         var folder = !string.IsNullOrEmpty(Common.Setting.searchingDir)
             ? await StorageFolder.GetFolderFromPathAsync(Common.Setting.searchingDir)
             : KnownFolders.MusicLibrary;
@@ -147,7 +141,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
                     }
                 });
         }
-
+        OnPropertyChanged(nameof(localHyItems));
         NotificationText = "扫描完成, 共 " + files.Count + " 首音乐";
         FileLoadingIndicateRing.IsActive = false;
         FileLoadingIndicateRing.Visibility = Visibility.Collapsed;
