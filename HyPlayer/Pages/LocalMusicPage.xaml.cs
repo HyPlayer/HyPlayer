@@ -141,7 +141,6 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
                     }
                 });
         }
-        OnPropertyChanged(nameof(localHyItems));
         NotificationText = "扫描完成, 共 " + files.Count + " 首音乐";
         FileLoadingIndicateRing.IsActive = false;
         FileLoadingIndicateRing.Visibility = Visibility.Collapsed;
@@ -159,8 +158,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 
     private async void UploadCloud_Click(object sender, RoutedEventArgs e)
     {
-        var sf = await StorageFile.GetFileFromPathAsync(((sender as Button).Tag as HyPlayItem)
-            .PlayItem.Url);
+        var sf = await StorageFile.GetFileFromPathAsync((sender as Button).Tag as string);
         await CloudUpload.UploadMusic(sf);
     }
 
