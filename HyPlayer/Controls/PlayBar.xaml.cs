@@ -47,7 +47,7 @@ public sealed partial class PlayBar
     private SolidColorBrush BackgroundElayBrush = new(Colors.Transparent);
     private bool canslide;
 
-    private long FadeInOutStartTime;
+    public static long FadeInOutStartTime;
     private double FadeInOutLastVolume;
     private double FadeTime;
     private bool PlayorNext;

@@ -706,6 +706,7 @@ public static class HyPlayList
         {
             await ms.OpenAsync();
             Player.Source = ms;
+            PlayBar.FadeInOutStartTime = DateTime.Now.Ticks;
         }
         catch (Exception e)
         {
