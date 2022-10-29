@@ -7,7 +7,6 @@
     xmlns:controls1="using:HyPlayer.Controls"
     xmlns:hyplayer="using:HyPlayer"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
-    xmlns:pages="using:HyPlayer.Pages"
     xmlns:ui="using:Microsoft.Toolkit.Uwp.UI"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
     Loaded="Page_Loaded"
@@ -116,6 +115,7 @@
                     <Border x:Name="ShadowTarget" Grid.Row="1" />
                     <controls:ImageEx
                         x:Name="ImageAlbum"
+                        ManipulationMode="Rotate,TranslateX,TranslateY"
                         ManipulationDelta="ImageAlbum_OnManipulationDelta"
                         ManipulationCompleted="ImageAlbum_OnManipulationCompleted"
                         Grid.Row="1"

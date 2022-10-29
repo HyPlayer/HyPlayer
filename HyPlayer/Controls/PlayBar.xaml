@@ -7,6 +7,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hy="using:HyPlayer"
     xmlns:local="using:HyPlayer.Controls"
+    Background="{x:Bind hy:Common.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource BooleanToBarPlayBarBrushesConverter}}"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:media="using:Microsoft.Toolkit.Uwp.UI.Media"
     d:DesignHeight="102.667"
@@ -594,7 +595,10 @@
                     <Slider
                         x:Name="SliderProgress"
                         Margin="-5,0,-5,0"
-                        ValueChanged="SliderProgress_ValueChanged">
+                        ManipulationMode="TranslateX"
+                        ManipulationCompleted="SliderProgress_ManipulationCompleted"
+                        ManipulationStarting="SliderProgress_OnManipulationStarting"
+                        ManipulationStarted="SliderProgress_ManipulationStarted">
                         <Slider.ThumbToolTipValueConverter>
                             <classes:ThumbConverter SecondValue="{Binding SecondValue}" />
 
