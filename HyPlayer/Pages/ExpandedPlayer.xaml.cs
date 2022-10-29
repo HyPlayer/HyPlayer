@@ -1009,13 +1009,17 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         {
             case 3:
                 if (!Common.Setting.albumRound) return;
-                ImageRotateTransform.Angle += e.Delta.Rotation;
+                double delta = e.Delta.Rotation;
+                if (delta == 0) delta = e.Delta.Translation.Y;
+                ImageRotateTransform.Angle += delta;
                 HyPlayList.Player.PlaybackSession.Position =
                     HyPlayList.Player.PlaybackSession.Position.Add(TimeSpan.FromMilliseconds((int)e.Delta.Rotation)*100);
                 break;
             case 2:
                 if (!Common.Setting.albumRound) return;
-                ImageRotateTransform.Angle += e.Delta.Rotation;
+                double deltaa = e.Delta.Rotation;
+                if (deltaa == 0) deltaa = e.Delta.Translation.Y;
+                ImageRotateTransform.Angle += deltaa;
                 return;
             case 1:
                 ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;
