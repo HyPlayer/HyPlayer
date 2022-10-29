@@ -69,7 +69,7 @@
             Margin="{x:Bind hyplayer:Common.Setting.playBarMargin, Mode = OneWay , Converter={StaticResource PlayBarMarginConverter} }"
             VerticalAlignment="Bottom"
             x:FieldModifier="public"
-            Background="{ThemeResource SystemControlAcrylicElementMediumHighBrush}"
+            Background="{x:Bind hyplayer:Common.Setting.playbarBackgroundAcrylic, Mode=OneWay, Converter={StaticResource BooleanToGridPlayBarBrushesConverter}}"
             CornerRadius="{x:Bind hyplayer:Common.Setting.playBarMargin, Mode = OneWay , Converter={StaticResource PlayBarCornerRadiusConverter} }"
             Visibility="Visible">
             <controls2:PlayBar />

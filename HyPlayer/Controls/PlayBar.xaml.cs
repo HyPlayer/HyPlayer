@@ -751,7 +751,6 @@ public sealed partial class PlayBar
     {
         ButtonExpand.Visibility = Visibility.Collapsed;
         ButtonCollapse.Visibility = Visibility.Visible;
-        Common.PageMain.GridPlayBar.Background = null;
         PlayBarBackgroundFadeOut.Begin();
         //Common.PageMain.MainFrame.Visibility = Visibility.Collapsed;
         Common.PageMain.ExpandedPlayer.Visibility = Visibility.Visible;
@@ -834,9 +833,6 @@ public sealed partial class PlayBar
         //Common.PageMain.MainFrame.Visibility = Visibility.Visible;
         Common.PageMain.MainFrame.Visibility = Visibility.Visible;
         Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
-        if (!Common.Setting.playbarBackgroundAcrylic)
-            Common.PageMain.GridPlayBar.Background =
-                Application.Current.Resources["ApplicationPageBackgroundThemeBrush"] as SolidColorBrush;
         Window.Current.SetTitleBar(Common.PageBase.AppTitleBar);
         Common.isExpanded = false;
     }
@@ -1219,9 +1215,6 @@ public sealed partial class PlayBar
         if (Common.isExpanded)
             Common.BarPlayBar.ShowExpandedPlayer();
         if (!Common.Setting.playbarBackgroundAcrylic)
-            Common.PageMain.GridPlayBar.Background =
-                Application.Current.Resources[
-                    "ApplicationPageBackgroundThemeBrush"] as Brush; /*new BackdropBlurBrush() { Amount = 30.0 };*/
         if (Common.Setting.hotlyricOnStartup)
             try
             {
