@@ -43,8 +43,8 @@ namespace HyPlayer.Controls;
 public sealed partial class PlayBar
 {
     private SolidColorBrush BackgroundElayBrush = new(Colors.Transparent);
+    private bool LastPlayerStatus; // False-Stopped True-Playing
     private bool canslide;
-
     private double FadeInOutStartTime;
 
     private int isFadeInOutPausing; // 0 - Not      1 - FadeIn      2 - FadeOut
@@ -76,7 +76,7 @@ public sealed partial class PlayBar
     }
 
 
-    private void UpdateMSTC(TimeSpan pos)
+    private void UpdateSMTC(TimeSpan pos)
     {
         // Create our timeline properties object 
         var timelineProperties = new SystemMediaTransportControlsTimelineProperties();
@@ -354,9 +354,7 @@ public sealed partial class PlayBar
             try
             {
                 if (HyPlayList.NowPlayingItem?.PlayItem == null) return;
-                canslide = false;
                 SliderProgress.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
-                canslide = true;
                 if (HyPlayList.Player.PlaybackSession.Position.Hours == 0)
                 {
                     if (HyPlayList.Player.PlaybackSession.Position.Minutes < 10)
@@ -851,11 +849,6 @@ public sealed partial class PlayBar
         _ = HyPlayList.PickLocalFile();
     }
 
-    private void SliderProgress_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
-    {
-        if (canslide) HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(SliderProgress.Value);
-    }
-
     private void PlayListRemove_OnClick(object sender, RoutedEventArgs e)
     {
         try
@@ -1289,6 +1282,23 @@ public sealed partial class PlayBar
     private void ABRepeatStateButton_Click(object sender, RoutedEventArgs e)
     {
         Common.Setting.ABRepeatStatus = !Common.Setting.ABRepeatStatus;
+    }
+
+    private void SliderProgress_ManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
+    {
+        if (canslide) HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(SliderProgress.Value);
+        if (LastPlayerStatus) HyPlayList.Player.Play();
+    }
+
+    private void SliderProgress_ManipulationStarted(object sender, ManipulationStartedRoutedEventArgs e)
+    {
+        LastPlayerStatus = HyPlayList.IsPlaying;
+        HyPlayList.Player.Pause();
+    }
+
+    private void SliderProgress_ManipulationStarting(object sender, ManipulationStartingRoutedEventArgs e)
+    {
+        if (canslide) HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(SliderProgress.Value);
     }
 }
 
