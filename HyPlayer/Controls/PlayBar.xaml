@@ -595,7 +595,10 @@
                     <Slider
                         x:Name="SliderProgress"
                         Margin="-5,0,-5,0"
-                        ValueChanged="SliderProgress_ValueChanged">
+                        ManipulationMode="TranslateX"
+                        ManipulationCompleted="SliderProgress_ManipulationCompleted"
+                        ManipulationStarting="SliderProgress_OnManipulationStarting"
+                        ManipulationStarted="SliderProgress_ManipulationStarted">
                         <Slider.ThumbToolTipValueConverter>
                             <classes:ThumbConverter SecondValue="{Binding SecondValue}" />
 

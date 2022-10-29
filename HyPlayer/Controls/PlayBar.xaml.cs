@@ -43,14 +43,15 @@ namespace HyPlayer.Controls;
 public sealed partial class PlayBar
 {
     private SolidColorBrush BackgroundElayBrush = new(Colors.Transparent);
-    private bool canslide;
-
+    private bool _isSliding = false;
     private double FadeInOutStartTime;
 
     private int isFadeInOutPausing; // 0 - Not      1 - FadeIn      2 - FadeOut
     public PlayMode NowPlayType = PlayMode.DefaultRoll;
     public ObservableCollection<HyPlayItem> PlayItems = new();
 
+    private ManipulationStartedRoutedEventArgs? _slidingEventArgs = null;
+    
     private bool realSelectSong;
     /*
     private Storyboard TbSongNameScrollStoryBoard;
@@ -76,7 +77,7 @@ public sealed partial class PlayBar
     }
 
 
-    private void UpdateMSTC(TimeSpan pos)
+    private void UpdateSMTC(TimeSpan pos)
     {
         // Create our timeline properties object 
         var timelineProperties = new SystemMediaTransportControlsTimelineProperties();
@@ -354,9 +355,12 @@ public sealed partial class PlayBar
             try
             {
                 if (HyPlayList.NowPlayingItem?.PlayItem == null) return;
-                canslide = false;
-                SliderProgress.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
-                canslide = true;
+                var showingTimespan = ts;
+                if (!_isSliding)
+                {
+                    SliderProgress.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
+                }
+
                 if (HyPlayList.Player.PlaybackSession.Position.Hours == 0)
                 {
                     if (HyPlayList.Player.PlaybackSession.Position.Minutes < 10)
@@ -556,11 +560,17 @@ public sealed partial class PlayBar
 
 
             if (HyPlayList.NowPlayingItem?.PlayItem == null) return;
-            canslide = false;
+
+            if (_isSliding)
+            {
+                _slidingEventArgs?.Complete();
+                _isSliding = false;
+            }
+
             SliderProgress.Minimum = 0;
             SliderProgress.Maximum = HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds;
             SliderProgress.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
-            canslide = true;
+
             TextBlockNowTime.Text =
                 HyPlayList.Player.PlaybackSession.Position.ToString(@"m\:ss");
             PlayStateIcon.Glyph =
@@ -845,11 +855,6 @@ public sealed partial class PlayBar
     private void ButtonAddLocal_OnClick(object sender, RoutedEventArgs e)
     {
         _ = HyPlayList.PickLocalFile();
-    }
-
-    private void SliderProgress_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
-    {
-        if (canslide) HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(SliderProgress.Value);
     }
 
     private void PlayListRemove_OnClick(object sender, RoutedEventArgs e)
@@ -1283,6 +1288,22 @@ public sealed partial class PlayBar
     {
         Common.Setting.ABRepeatStatus = !Common.Setting.ABRepeatStatus;
     }
+
+    private void SliderProgress_ManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
+    {
+        _slidingEventArgs = null;
+        HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(SliderProgress.Value);
+        _isSliding = false;
+    }
+
+    private void SliderProgress_ManipulationStarted(object sender, ManipulationStartedRoutedEventArgs e)
+    {
+        _isSliding = true;
+        _slidingEventArgs = e;
+    }
+
+    private void SliderProgress_OnManipulationStarting(object sender, ManipulationStartingRoutedEventArgs e)
+    {
+        HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(SliderProgress.Value);
+    }
 }
-
-
