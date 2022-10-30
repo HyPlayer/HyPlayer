@@ -130,7 +130,7 @@ public static class UpdateManager
         var localVersion = new Version(Package.Current.Id.Version.Major, Package.Current.Id.Version.Minor,
             Package.Current.Id.Version.Build, Package.Current.Id.Version.Revision);
         var title = "发现新版本";
-        if (remoteResult.Version == null || remoteResult.Version == localVersion)
+        if (remoteResult.Version == null || remoteResult.Version <= localVersion)
         {
             if (isStartup) return;
             title = "你已是最新版";
