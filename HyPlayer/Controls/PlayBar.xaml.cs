@@ -534,6 +534,10 @@ public sealed partial class PlayBar
                 }
             }
 
+            // 恢复播放音量
+            if (!Common.Setting.fadeInOut)
+                HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume;
+            
             if (HyPlayList.NowPlayingItem.PlayItem == null)
             {
                 TbSingerName.Content = null;
