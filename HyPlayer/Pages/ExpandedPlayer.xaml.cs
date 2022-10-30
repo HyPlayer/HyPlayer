@@ -858,15 +858,12 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             // 强制颜色
             switch (Common.Setting.expandedPlayerBackgroundType)
             {
-                case 2: //System
+                case 2 or 5: //System or Desktop Acrylic
                     return Application.Current.RequestedTheme == ApplicationTheme.Light;
-                    break;
                 case 3: // White
                     return true;
-                    break;
                 case 4: // Black
                     return false;
-                    break;
             }
 
         if (HyPlayList.NowPlayingItem.PlayItem == null) return false;
