@@ -469,6 +469,7 @@
                                             <ComboBoxItem Content="跟随系统" />
                                             <ComboBoxItem Content="强制白色" />
                                             <ComboBoxItem Content="强制黑色" />
+                                            <ComboBoxItem Content="桌面亚克力" />
                                         </ComboBox>
                                     </Grid>
                                     <Grid>
