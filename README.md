@@ -28,37 +28,22 @@ Telegram 群组: https://t.me/joinchat/6tJqI3m-b402NDRl
 
 Telegram 频道: https://t.me/hyplayer
 
-Skype 群组: https://join.skype.com/umOViUQNItVd
-
 ## 下载
 
-目前已经在 Microsoft Store 下架，请使用AppCenter或GitHub通道进行下载
+目前已经在 Microsoft Store 下架，请使用 AppCenter 或 GitHub 通道进行下载
 
-Microsoft Store: [点击查看](https://www.microsoft.com/store/productId/9N5TD916686K)
+|分发方式|分发链接|分发状态|
+|-------|-------|-------|
+| App Center Release (**推荐**) | [申请链接](https://hyplayer.kengwang.com.cn/#/insider) | ![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/AppCenter%20-%20Release?branchName=develop) |
+| App Center Canary | [申请链接](https://hyplayer.kengwang.com.cn/#/insider) | [![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/AppCenter%20-%20Canary?branchName=develop)](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=34&branchName=develop) |
+| Microsoft Store | [商店链接](https://www.microsoft.com/store/productId/9N5TD916686K) | **已废弃** |
+| Azure DevOps | [分发链接](https://dev.azure.com/kengwang/HyPlayer/_build) | [![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/Github%20Nightly?branchName=develop)](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=33&branchName=develop) |
+| Github Release | [分发链接](https://github.com/HyPlayer/HyPlayer/releases/latest) | ![Release Status](https://img.shields.io/github/v/release/kengwang/HyPlayer) |
 
-[Azure DevOps](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=33&branchName=develop) : [![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/Github%20Nightly?branchName=develop)](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=33&branchName=develop)
-
-Azure 编译包会编译 Commit 并发布 Pre-release: [查看Pre-release](https://github.com/HyPlayer/HyPlayer/releases/tag/azure-build)
-
-[GitHub Release](https://github.com/HyPlayer/HyPlayer/releases/latest/)
-
-GitHub Release状态: ![Build Status](https://img.shields.io/github/v/release/kengwang/HyPlayer)
-
-[HyPlayer AppCenter申请通道](https://hyplayer.kengwang.com.cn/)
-
-AppCenter Release状态: ![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/AppCenter%20-%20Release?branchName=develop)
-
-AppCenter Canary状态: ![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/AppCenter%20-%20Canary?branchName=refs%2Fpull%2F264%2Fmerge)
 
 ## 界面预览
 
 [界面预览](PREVIEW.md)
-
-## 自动编译状态
-
-| 平台 | Azure DevOps                                                 | AppVeyor |
-| ---- | ------------------------------------------------------------ | -------- |
-| 状态 | [![Build Status](https://dev.azure.com/kengwang/HyPlayer/_apis/build/status/Github%20Nightly?branchName=develop)](https://dev.azure.com/kengwang/HyPlayer/_build/latest?definitionId=33&branchName=develop) | 暂无     |
 
 ## 隐私策略
 
@@ -80,7 +65,7 @@ AppCenter Canary状态: ![Build Status](https://dev.azure.com/kengwang/HyPlayer/
 
 ### 关于无版权
 
-HyPlayer 不内置解灰以及 VIP 歌曲解锁
+HyPlayer 不内置解灰以及 VIP 歌曲解锁, 且不会在之后的版本中内置解灰
 
 你可以通过使用 [UnblockNeteaseMusic](https://github.com/nondanee/UnblockNeteaseMusic) 进行解灰.
 
