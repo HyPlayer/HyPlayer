@@ -418,6 +418,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
         if (Common.Setting.expandedPlayerBackgroundType == 0 && !Common.Setting.expandedUseAcrylic)
             PageContainer.Background = new BackdropBlurBrush { Amount = 50.0 };
+        if (Common.Setting.expandedPlayerBackgroundType == 5)
+            PageContainer.Background = (Brush) new BooleanToWindowBrushesConverter().Convert(Common.Setting.acrylicBackgroundStatus, null, null, null);
 
         NowPlaybackSpeed = "x" + HyPlayList.Player.PlaybackSession.PlaybackRate;
     }
