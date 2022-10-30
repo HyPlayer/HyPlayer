@@ -26,7 +26,7 @@ namespace HyPlayer.Pages;
 public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 {
     private static readonly string[] supportedFormats = { ".flac", ".mp3", ".ncm", ".ape", ".m4a", ".wav" };
-    private readonly ObservableCollection<HyPlayItem> localHyItems;
+    private ObservableCollection<HyPlayItem> localHyItems;
     private string _notificationText;
     private int index;
 
@@ -52,6 +52,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     {
         base.OnNavigatedFrom(e);
         localHyItems.Clear();
+        localHyItems = null;
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

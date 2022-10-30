@@ -1003,23 +1003,23 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void ImageAlbum_OnManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
     {
-        //if (e.PointerDeviceType == PointerDeviceType.Mouse || !Common.Setting.enableTouchGestureAction) return;
-        
+        if (e.PointerDeviceType == PointerDeviceType.Mouse || !Common.Setting.enableTouchGestureAction) return;
+        double manipulationDeltaRotateValue = new double();
         switch (Common.Setting.gestureMode)
         {
             case 3:
                 if (!Common.Setting.albumRound) return;
-                double delta = e.Delta.Rotation;
-                if (delta == 0) delta = e.Delta.Translation.Y;
-                ImageRotateTransform.Angle += delta;
+                manipulationDeltaRotateValue = e.Delta.Rotation;
+                if (manipulationDeltaRotateValue == 0) manipulationDeltaRotateValue = e.Delta.Translation.Y;
+                ImageRotateTransform.Angle += manipulationDeltaRotateValue;
                 HyPlayList.Player.PlaybackSession.Position =
-                    HyPlayList.Player.PlaybackSession.Position.Add(TimeSpan.FromMilliseconds((int)e.Delta.Rotation)*100);
+                    HyPlayList.Player.PlaybackSession.Position.Add(TimeSpan.FromMilliseconds((int)manipulationDeltaRotateValue)*100);
                 break;
             case 2:
                 if (!Common.Setting.albumRound) return;
-                double deltaa = e.Delta.Rotation;
-                if (deltaa == 0) deltaa = e.Delta.Translation.Y;
-                ImageRotateTransform.Angle += deltaa;
+                manipulationDeltaRotateValue = e.Delta.Rotation;
+                if (manipulationDeltaRotateValue == 0) manipulationDeltaRotateValue = e.Delta.Translation.Y;
+                ImageRotateTransform.Angle += manipulationDeltaRotateValue;
                 return;
             case 1:
                 ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;
