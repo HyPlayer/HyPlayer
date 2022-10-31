@@ -78,19 +78,30 @@ namespace HyPlayer.Classes
         public static async Task TryLoginLastfmAccountFromBrowser(string token)
         {
             var signature = LastFMUtils.GetLastFMAPISignature(token);
+            HttpResponseMessage responseData = new();
             HttpClient httpClient = new HttpClient();
             try
             {
-                var sessionStringData = await httpClient.GetStringAsync("https://ws.audioscrobbler.com/2.0/?method=auth.getSession&format=json&token=" + token + "&api_key=" + LastFMAPIKey + "&api_sig=" + signature);
-                JObject sessionJsonObject = JObject.Parse(sessionStringData);
-                var session = new LastUserSession()
+                responseData = await httpClient.GetAsync("https://ws.audioscrobbler.com/2.0/?method=auth.getSession&format=json&token=" + token + "&api_key=" + LastFMAPIKey + "&api_sig=" + signature);
+                if (responseData != null && responseData.IsSuccessStatusCode)
                 {
-                    Username = sessionJsonObject["session"]["name"].ToString(),
-                    Token = sessionJsonObject["session"]["key"].ToString(),
-                    IsSubscriber = (bool)sessionJsonObject["session"]["subscriber"]
-                };
-                LastfmClient.Auth.LoadSession(session);
-                OnLoginDone.Invoke();
+                    string sessionStringData = await responseData.Content.ReadAsStringAsync();
+                    JObject sessionJsonObject = JObject.Parse(sessionStringData);
+                    var session = new LastUserSession()
+                    {
+                        Username = sessionJsonObject["session"]["name"].ToString(),
+                        Token = sessionJsonObject["session"]["key"].ToString(),
+                        IsSubscriber = (bool)sessionJsonObject["session"]["subscriber"]
+                    };
+                    LastfmClient.Auth.LoadSession(session);
+                    OnLoginDone.Invoke();
+                }
+                else if (responseData!=null)
+                {
+                    string errorMessageStringData = await responseData.Content.ReadAsStringAsync();
+                    JObject errorMessageJsonObject = JObject.Parse(errorMessageStringData);
+                    OnLoginError.Invoke(new Exception(errorMessageJsonObject["message"].ToString()));
+                }
             }
             catch (Exception ex)
             {
