@@ -28,23 +28,12 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     private static readonly string[] supportedFormats = { ".flac", ".mp3", ".ncm", ".ape", ".m4a", ".wav" };
     private ObservableCollection<HyPlayItem> localHyItems;
     private string _notificationText;
-    private Task CurrentLocalFileScanTask;
     private int index;
-
-    public delegate void CurrentLocalFileScanTaskFinished();
-    public event CurrentLocalFileScanTaskFinished OnCurrentLocalFileScanTaskFinished;
 
     public LocalMusicPage()
     {
         InitializeComponent();
         localHyItems = new ObservableCollection<HyPlayItem>();
-        OnCurrentLocalFileScanTaskFinished += LocalMusicPage_OnCurrentLocalFileScanTaskFinished;
-    }
-
-    private void LocalMusicPage_OnCurrentLocalFileScanTaskFinished()
-    {
-        CurrentLocalFileScanTask.Dispose();
-        CurrentLocalFileScanTask = null;
     }
 
     public string NotificationText
@@ -80,17 +69,17 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
         HyPlayList.SongMoveTo(0);
     }
 
-    private void Refresh_Click(object sender, RoutedEventArgs e)
+    private async void Refresh_Click(object sender, RoutedEventArgs e)
     {
-        if (CurrentLocalFileScanTask != null) return;
+        ListBoxLocalMusicContainer.SelectionChanged -= ListBoxLocalMusicContainer_SelectionChanged;
+        localHyItems.Clear();
         index = 0;
-        CurrentLocalFileScanTask = LoadLocalMusic(); 
+        await LoadLocalMusic();
+        ListBoxLocalMusicContainer.SelectionChanged += ListBoxLocalMusicContainer_SelectionChanged;
     }
 
     private async Task LoadLocalMusic()
     {
-        ListBoxLocalMusicContainer.SelectionChanged -= ListBoxLocalMusicContainer_SelectionChanged;
-        localHyItems.Clear();
         NotificationText = "正在扫描...";
         var folder = !string.IsNullOrEmpty(Common.Setting.searchingDir)
             ? await StorageFolder.GetFolderFromPathAsync(Common.Setting.searchingDir)
@@ -156,8 +145,6 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
         NotificationText = "扫描完成, 共 " + files.Count + " 首音乐";
         FileLoadingIndicateRing.IsActive = false;
         FileLoadingIndicateRing.Visibility = Visibility.Collapsed;
-        ListBoxLocalMusicContainer.SelectionChanged += ListBoxLocalMusicContainer_SelectionChanged;
-        OnCurrentLocalFileScanTaskFinished.Invoke();
     }
 
 
