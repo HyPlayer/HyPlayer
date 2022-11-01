@@ -13,6 +13,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
+using System.Threading;
 
 #endregion
 
@@ -28,6 +29,8 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     private static readonly string[] supportedFormats = { ".flac", ".mp3", ".ncm", ".ape", ".m4a", ".wav" };
     private ObservableCollection<HyPlayItem> localHyItems;
     private string _notificationText;
+    private Task CurrentFileScanTask;
+    private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
     private int index;
 
     public LocalMusicPage()
@@ -48,10 +51,18 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 
     public event PropertyChangedEventHandler PropertyChanged;
 
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        if (CurrentFileScanTask != null && CurrentFileScanTask.IsCompleted == false)
+        {
+            NotificationText = "正在等待本地扫描进程结束...";
+            cancellationTokenSource.Cancel();
+            await CurrentFileScanTask;
+        }
         localHyItems.Clear();
+        if (CurrentFileScanTask != null) CurrentFileScanTask.Dispose();
+        cancellationTokenSource.Dispose();
         localHyItems = null;
     }
 
@@ -69,18 +80,17 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
         HyPlayList.SongMoveTo(0);
     }
 
-    private async void Refresh_Click(object sender, RoutedEventArgs e)
+    private void Refresh_Click(object sender, RoutedEventArgs e)
     {
-        ListBoxLocalMusicContainer.SelectionChanged -= ListBoxLocalMusicContainer_SelectionChanged;
-        localHyItems.Clear();
         index = 0;
-        await LoadLocalMusic();
-        ListBoxLocalMusicContainer.SelectionChanged += ListBoxLocalMusicContainer_SelectionChanged;
+        if ( CurrentFileScanTask == null || CurrentFileScanTask.IsCompleted == true) CurrentFileScanTask = LoadLocalMusic();
     }
 
     private async Task LoadLocalMusic()
     {
+        ListBoxLocalMusicContainer.SelectionChanged -= ListBoxLocalMusicContainer_SelectionChanged;
         NotificationText = "正在扫描...";
+        localHyItems.Clear();
         var folder = !string.IsNullOrEmpty(Common.Setting.searchingDir)
             ? await StorageFolder.GetFolderFromPathAsync(Common.Setting.searchingDir)
             : KnownFolders.MusicLibrary;
@@ -94,6 +104,8 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
         if (!Common.Setting.localProgressiveLoad)
         {
             foreach (var storageFile in files)
+            {
+                if (cancellationTokenSource.IsCancellationRequested) return;
                 try
                 {
                     var item = await HyPlayList.LoadStorageFile(storageFile);
@@ -103,6 +115,8 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
                 {
                     //ignore
                 }
+            }
+                
         }
         else
         {
@@ -120,7 +134,9 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
                 }
             };
             foreach (var storageFile in files)
-                localHyItems.Add(new HyPlayItem
+            {
+                if (cancellationTokenSource.IsCancellationRequested) return;
+                var item = new HyPlayItem
                 {
                     ItemType = HyPlayItemType.LocalProgressive,
                     PlayItem = new PlayItem
@@ -140,11 +156,14 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
                         Type = HyPlayItemType.LocalProgressive,
                         Url = storageFile.Path
                     }
-                });
+                };
+                localHyItems.Add(item);
+            }
         }
         NotificationText = "扫描完成, 共 " + files.Count + " 首音乐";
         FileLoadingIndicateRing.IsActive = false;
         FileLoadingIndicateRing.Visibility = Visibility.Collapsed;
+        ListBoxLocalMusicContainer.SelectionChanged += ListBoxLocalMusicContainer_SelectionChanged;
     }
 
 
