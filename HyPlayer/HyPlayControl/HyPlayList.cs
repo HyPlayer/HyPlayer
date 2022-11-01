@@ -1400,7 +1400,7 @@ public static class HyPlayList
     }
     public static async void UpdateLastFMNowPlayingAsync(HyPlayItem NowPlayingItem)
     {
-        if (NowPlayingItem.ItemType == HyPlayItemType.Netease)
+        if ( NowPlayingItem!=null && NowPlayingItem.ItemType == HyPlayItemType.Netease)
         {
             try
             {
