@@ -84,8 +84,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     public ExpandedPlayer()
     {
         InitializeComponent();
-        if (Common.Setting.enableTouchGestureAction)
-            ImageAlbum.ManipulationMode = ManipulationModes.TranslateX | ManipulationModes.TranslateY;
         loaded = true;
         Common.PageExpandedPlayer = this;
         HyPlayList.OnPause += HyPlayList_OnPause;
@@ -818,7 +816,10 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         fop.FileTypeFilter.Add(".lrc");
         // register provider - by default encoding is not supported 
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-        HyPlayList.Lyrics = Utils.ConvertPureLyric(await FileIO.ReadTextAsync(await fop.PickSingleFileAsync()), true);
+        var lrcFile = await fop.PickSingleFileAsync();
+        if (lrcFile is null) return;
+        var lrcText = await FileIO.ReadTextAsync(lrcFile);
+        HyPlayList.Lyrics = Utils.ConvertPureLyric(lrcText, true);
         LoadLyricsBox();
     }
 
@@ -1002,16 +1003,23 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void ImageAlbum_OnManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
     {
-        if (e.PointerDeviceType == PointerDeviceType.Mouse) return;
+        //if (e.PointerDeviceType == PointerDeviceType.Mouse || !Common.Setting.enableTouchGestureAction) return;
+        
         switch (Common.Setting.gestureMode)
         {
             case 3:
-                ImageRotateTransform.Angle += e.Delta.Translation.Y;
+                if (!Common.Setting.albumRound) return;
+                double delta = e.Delta.Rotation;
+                if (delta == 0) delta = e.Delta.Translation.Y;
+                ImageRotateTransform.Angle += delta;
                 HyPlayList.Player.PlaybackSession.Position =
-                    HyPlayList.Player.PlaybackSession.Position.Add(TimeSpan.FromMilliseconds(e.Delta.Translation.Y * 10));
+                    HyPlayList.Player.PlaybackSession.Position.Add(TimeSpan.FromMilliseconds((int)e.Delta.Rotation)*100);
                 break;
             case 2:
-                ImageRotateTransform.Angle += e.Delta.Translation.Y;
+                if (!Common.Setting.albumRound) return;
+                double deltaa = e.Delta.Rotation;
+                if (deltaa == 0) deltaa = e.Delta.Translation.Y;
+                ImageRotateTransform.Angle += deltaa;
                 return;
             case 1:
                 ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;

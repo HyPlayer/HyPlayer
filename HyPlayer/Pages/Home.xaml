@@ -27,7 +27,7 @@
                 Margin="15,30,15,0">
                     <Rectangle.Fill>
                         <LinearGradientBrush EndPoint="1,0" StartPoint="0,1">
-                            <GradientStop Color="DeepSkyBlue" Offset="1" />
+                            <GradientStop Color="{ThemeResource SystemAccentColorLight2}" Offset="1" />
                             <GradientStop Color="{ThemeResource SystemAccentColor}" Offset="0.6" />
                         </LinearGradientBrush>
                     </Rectangle.Fill>

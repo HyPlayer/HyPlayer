@@ -1291,9 +1291,10 @@ public static class HyPlayList
     public static async Task<HyPlayItem> LoadStorageFile(StorageFile sf, bool nocheck163 = false)
     {
         var mdp = await sf.Properties.GetMusicPropertiesAsync();
-        var tag = File.Create(new UwpStorageFileAbstraction(sf)).Tag;
+        var abstraction = new UwpStorageFileAbstraction(sf);
+        var tagFile = File.Create(abstraction);
         if (nocheck163 ||
-            !The163KeyHelper.TryGetMusicInfo(tag, out var mi))
+            !The163KeyHelper.TryGetMusicInfo(tagFile.Tag, out var mi))
         {
             //TagLib.File afi = TagLib.File.Create(new UwpStorageFileAbstraction(sf), ReadStyle.Average);
             var contributingArtists =
@@ -1305,7 +1306,7 @@ public static class HyPlayList
                 PlayItem = new PlayItem
                 {
                     IsLocalFile = true,
-                    LocalFileTag = tag,
+                    LocalFileTag = tagFile.Tag,
                     Bitrate = (int)mdp.Bitrate,
                     Tag = sf.Provider.DisplayName,
                     Id = null,
@@ -1327,6 +1328,8 @@ public static class HyPlayList
             };
             if (sf.Provider.Id == "network" || Common.Setting.safeFileAccess)
                 hyPlayItem.PlayItem.DontSetLocalStorageFile = sf;
+            tagFile.Dispose();
+            abstraction.Dispose();
             return hyPlayItem;
         }
 
@@ -1342,7 +1345,7 @@ public static class HyPlayList
             },
             Url = sf.Path,
             SubExt = sf.FileType,
-            LocalFileTag = tag,
+            LocalFileTag = tagFile.Tag,
             Bitrate = mi.bitrate,
             IsLocalFile = true,
             Type = HyPlayItemType.Netease,
@@ -1359,6 +1362,8 @@ public static class HyPlayList
             .ToList();
         if (sf.Provider.Id == "network")
             hpi.DontSetLocalStorageFile = sf;
+        tagFile.Dispose();
+        abstraction.Dispose();
         return new HyPlayItem
         {
             ItemType = HyPlayItemType.Local,

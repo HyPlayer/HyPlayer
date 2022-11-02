@@ -46,7 +46,6 @@ public sealed partial class PlayBar
 {
     private SolidColorBrush BackgroundElayBrush = new(Colors.Transparent);
     private bool canslide;
-
     public static long FadeInOutStartTime;
     private double FadeInOutLastVolume;
     private double FadeTime;
@@ -54,9 +53,12 @@ public sealed partial class PlayBar
     private bool isFadeInOutPausing;
     private bool isPausingChanged;
     private bool FadeType; //false - FadeIn     true - FadeOut
+    private bool _isSliding = false;
     public PlayMode NowPlayType = PlayMode.DefaultRoll;
     public ObservableCollection<HyPlayItem> PlayItems = new();
 
+    private ManipulationStartedRoutedEventArgs? _slidingEventArgs = null;
+    
     private bool realSelectSong;
     private bool isLettingNextAudioFrametoSetFadeVolume;
     private bool _skipaFrame;
@@ -85,7 +87,7 @@ DoubleAnimation verticalAnimation;
     }
 
 
-    private void UpdateMSTC(TimeSpan pos)
+    private void UpdateSMTC(TimeSpan pos)
     {
         // Create our timeline properties object 
         var timelineProperties = new SystemMediaTransportControlsTimelineProperties();
@@ -363,9 +365,12 @@ public void OnPlayPositionChange(TimeSpan ts)
             try
             {
                 if (HyPlayList.NowPlayingItem?.PlayItem == null) return;
-                canslide = false;
-                SliderProgress.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
-                canslide = true;
+                var showingTimespan = ts;
+                if (!_isSliding)
+                {
+                    SliderProgress.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
+                }
+
                 if (HyPlayList.Player.PlaybackSession.Position.Hours == 0)
                 {
                     if (HyPlayList.Player.PlaybackSession.Position.Minutes < 10)
@@ -676,11 +681,17 @@ public void OnPlayPositionChange(TimeSpan ts)
 
 
             if (HyPlayList.NowPlayingItem?.PlayItem == null) return;
-            canslide = false;
+
+            if (_isSliding)
+            {
+                _slidingEventArgs?.Complete();
+                _isSliding = false;
+            }
+
             SliderProgress.Minimum = 0;
             SliderProgress.Maximum = HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds;
             SliderProgress.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
-            canslide = true;
+
             TextBlockNowTime.Text =
                 HyPlayList.Player.PlaybackSession.Position.ToString(@"m\:ss");
             if (isFadeInOutPausing)
@@ -871,7 +882,6 @@ public void OnPlayPositionChange(TimeSpan ts)
     {
         ButtonExpand.Visibility = Visibility.Collapsed;
         ButtonCollapse.Visibility = Visibility.Visible;
-        Common.PageMain.GridPlayBar.Background = null;
         PlayBarBackgroundFadeOut.Begin();
         //Common.PageMain.MainFrame.Visibility = Visibility.Collapsed;
         Common.PageMain.ExpandedPlayer.Visibility = Visibility.Visible;
@@ -954,9 +964,6 @@ public void OnPlayPositionChange(TimeSpan ts)
         //Common.PageMain.MainFrame.Visibility = Visibility.Visible;
         Common.PageMain.MainFrame.Visibility = Visibility.Visible;
         Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
-        if (!Common.Setting.playbarBackgroundAcrylic)
-            Common.PageMain.GridPlayBar.Background =
-                Application.Current.Resources["ApplicationPageBackgroundThemeBrush"] as SolidColorBrush;
         Window.Current.SetTitleBar(Common.PageBase.AppTitleBar);
         Common.isExpanded = false;
     }
@@ -969,11 +976,6 @@ public void OnPlayPositionChange(TimeSpan ts)
     private void ButtonAddLocal_OnClick(object sender, RoutedEventArgs e)
     {
         _ = HyPlayList.PickLocalFile();
-    }
-
-    private void SliderProgress_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
-    {
-        if (canslide) HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(SliderProgress.Value);
     }
 
     private void PlayListRemove_OnClick(object sender, RoutedEventArgs e)
@@ -1341,9 +1343,6 @@ public void OnPlayPositionChange(TimeSpan ts)
         if (Common.isExpanded)
             Common.BarPlayBar.ShowExpandedPlayer();
         if (!Common.Setting.playbarBackgroundAcrylic)
-            Common.PageMain.GridPlayBar.Background =
-                Application.Current.Resources[
-                    "ApplicationPageBackgroundThemeBrush"] as Brush; /*new BackdropBlurBrush() { Amount = 30.0 };*/
         if (Common.Setting.hotlyricOnStartup)
             try
             {
@@ -1412,6 +1411,22 @@ public void OnPlayPositionChange(TimeSpan ts)
     {
         Common.Setting.ABRepeatStatus = !Common.Setting.ABRepeatStatus;
     }
+
+    private void SliderProgress_ManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
+    {
+        _slidingEventArgs = null;
+        HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(SliderProgress.Value);
+        _isSliding = false;
+    }
+
+    private void SliderProgress_ManipulationStarted(object sender, ManipulationStartedRoutedEventArgs e)
+    {
+        _isSliding = true;
+        _slidingEventArgs = e;
+    }
+
+    private void SliderProgress_OnManipulationStarting(object sender, ManipulationStartingRoutedEventArgs e)
+    {
+        HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(SliderProgress.Value);
+    }
 }
-
-

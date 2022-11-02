@@ -29,6 +29,7 @@ internal class CloudUpload
     {
         try
         {
+            Common.AddToTeachingTipLists("上传本地音乐至音乐云盘中", "正在上传: " + file.DisplayName);
             //首先获取基本信息
             //var tagfile = File.Create(new UwpStorageFileAbstraction(file));
             var basicprop = await file.GetBasicPropertiesAsync();
@@ -106,7 +107,7 @@ internal class CloudUpload
                 {
                     { "songid", res2["songId"] }
                 });
-
+            Common.AddToTeachingTipLists("上传本地音乐至音乐云盘成功", "成功上传: " + file.DisplayName);
             return new Dictionary<string, JObject>
             {
                 { "res", res },
