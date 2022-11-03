@@ -175,6 +175,9 @@ public sealed partial class BasePage : Page
                             case "secure":
                                 cookie.Secure = cookiesetarr[1].Trim().ToLower() == "true";
                                 break;
+                            case "httponly":
+                                cookie.HttpOnly = cookiesetarr[1].Trim().ToLower() == "true";
+                                break;
                         }
                     }
                     catch
@@ -319,10 +322,8 @@ public sealed partial class BasePage : Page
                 thiscookiestr += "; Expires=" + cookie.Expires.ToString("R");
             if (!string.IsNullOrEmpty(cookie.Path))
                 thiscookiestr += "; Path=" + cookie.Path;
-            if (!cookie.Secure)
-                thiscookiestr += "; Secure";
-            if (cookie.HttpOnly)
-                thiscookiestr += "; HttpOnly";
+            thiscookiestr += "; Secure=" + cookie.Secure;
+            thiscookiestr += "; HttpOnly=" + cookie.HttpOnly;
             cookiestr += thiscookiestr + "\r\n";
         }
 

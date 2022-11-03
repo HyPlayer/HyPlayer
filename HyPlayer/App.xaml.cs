@@ -107,8 +107,8 @@ sealed partial class App : Application
     {
         try
         {
-            var sf = await ApplicationData.Current.LocalCacheFolder.GetFolderAsync("Romaji");
-            Common.KawazuConv = new KawazuConverter(sf.Path);
+            var sf = await ApplicationData.Current.LocalCacheFolder.TryGetItemAsync("Romaji");
+            if (sf != null) Common.KawazuConv = new KawazuConverter(sf.Path);
         }
         catch
         {
