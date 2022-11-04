@@ -336,14 +336,21 @@ public sealed partial class SongsList : UserControl, IDisposable
 
     private async void Btn_Del_Click(object sender, RoutedEventArgs e)
     {
-        await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistTracks,
+        if (SongContainer.SelectedItem is null) return;
+        if (!(SongContainer.SelectedItem as NCSong).IsCloud)
+            await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistTracks,
             new Dictionary<string, object>
             {
                 { "op", "del" },
                 { "pid", ListSource.Substring(2, ListSource.Length - 2) },
-                { "tracks", VisibleSongs[SongContainer.SelectedIndex].sid }
+                { "tracks", (SongContainer.SelectedItem as NCSong).sid }
             });
-        VisibleSongs.RemoveAt(SongContainer.SelectedIndex);
+        else await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserCloudDelete,
+            new Dictionary<string, object>
+            {
+                { "id", (SongContainer.SelectedItem as NCSong).sid },
+            });
+        VisibleSongs.Remove(SongContainer.SelectedItem as NCSong);
     }
 
     private void Grid_RightTapped(object sender, RightTappedRoutedEventArgs e)

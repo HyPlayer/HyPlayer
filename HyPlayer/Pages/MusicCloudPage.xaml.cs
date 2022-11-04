@@ -87,7 +87,7 @@ public sealed partial class MusicCloudPage : Page, IDisposable
         base.OnNavigatedFrom(e);
     }
 
-    protected override async void OnNavigatedTo(NavigationEventArgs e)
+    protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
         _ = LoadMusicCloudItem();
@@ -118,6 +118,7 @@ public sealed partial class MusicCloudPage : Page, IDisposable
 
         var files =
             await fop.PickMultipleFilesAsync();
+        if (files == null) return;
         Common.AddToTeachingTipLists("请稍等", "正在上传 " + files.Count + " 个音乐文件");
         for (var i = 0; i < files.Count; i++)
         {
