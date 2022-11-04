@@ -237,7 +237,7 @@
                             <controls1:SelectableTextBox
                                 x:Name="TextBoxSignature"
                                 FontSize="16"
-                                Foreground="#aaffffff"
+                                Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
                                 Text="签名" />
 
                         </StackPanel>
