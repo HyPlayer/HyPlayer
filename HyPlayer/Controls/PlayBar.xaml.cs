@@ -1207,7 +1207,7 @@ public sealed partial class PlayBar
             try
             {
                 var list = await HistoryManagement.GetcurPlayingListHistory();
-                HyPlayList.AppendNcSongs(list);
+                HyPlayList.AppendNcSongs(list, isStartUp: true) ;
                 if (list.Count > 0)
                 {
                     int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"].ToString(),

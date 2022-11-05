@@ -401,7 +401,8 @@ public static class HyPlayList
         PlaySourceId = null;
         if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
             CreateShufflePlayLists();
-        _ = Common.Invoke(() => OnPlayListAddDone?.Invoke());
+        else
+            _ = Common.Invoke(() => OnPlayListAddDone?.Invoke());
     }
 
     public static void SongMoveNext()
@@ -474,13 +475,13 @@ public static class HyPlayList
         OnPlayItemChange?.Invoke(null);
     }
 
-    public static void RemoveAllSong()
+    public static void RemoveAllSong(bool isStartUp = false)
     {
         List.Clear();
         Player.Source = null;
         NowPlaying = -1;
         OnSongRemoveAll?.Invoke();
-        SongAppendDone();
+        if (isStartUp != true) SongAppendDone();
     }
 
     /********        相关事件处理        ********/
@@ -1048,11 +1049,11 @@ public static class HyPlayList
     }
 
     public static void AppendNcSongs(IList<NCSong> ncSongs,
-        bool needRemoveList = true)
+        bool needRemoveList = true, bool isStartUp = false)
     {
         if (ncSongs == null) return;
         if (needRemoveList)
-            RemoveAllSong();
+            RemoveAllSong(isStartUp);
         try
         {
             foreach (var ncSong in ncSongs)
@@ -1373,6 +1374,7 @@ public static class HyPlayList
 
     public static Task CreateShufflePlayLists()
     {
+        if (List.Count != 0) { 
         ShuffleList.Clear();
         HashSet<int> shuffledNumbers = new();
         while (shuffledNumbers.Count < List.Count)
@@ -1387,7 +1389,7 @@ public static class HyPlayList
 
         if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
             ShufflingIndex = ShuffleList.FindIndex(t => t == NowPlaying);
-
+        }
         // Call 一下来触发前端显示的播放列表更新
         OnPlayListAddDone?.Invoke();
         return Task.CompletedTask;
