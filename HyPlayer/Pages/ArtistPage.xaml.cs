@@ -172,7 +172,7 @@ public sealed partial class ArtistPage : Page
             var j1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistAlbum,
                 new Dictionary<string, object> { { "id", artist.id }, { "limit", 50 }, { "offset", page * 50 } });
 
-            AlbumContainer.ListItems = new ObservableCollection<SimpleListItem>();
+            AlbumContainer.ListItems.Clear();
             var i = 0;
             foreach (var albumjson in j1["hotAlbums"].ToArray())
                 AlbumContainer.ListItems.Add(new SimpleListItem
@@ -185,7 +185,7 @@ public sealed partial class ArtistPage : Page
                     LineThree = albumjson.Value<bool>("paid") ? "付费专辑" : "",
                     ResourceId = "al" + albumjson["id"],
                     CoverUri = albumjson["picUrl"] + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
-                    Order = i++,
+                    Order = page*50 + i++,
                     CanPlay = true
                 });
             if (int.Parse(j1["artist"]["albumSize"].ToString()) >= (page + 1) * 50)
