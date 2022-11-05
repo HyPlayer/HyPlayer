@@ -1374,21 +1374,21 @@ public static class HyPlayList
 
     public static Task CreateShufflePlayLists()
     {
-        if (List.Count != 0) { 
-        ShuffleList.Clear();
-        HashSet<int> shuffledNumbers = new();
-        while (shuffledNumbers.Count < List.Count)
+        if (List.Count != 0) 
         {
-            var buffer = Guid.NewGuid().ToByteArray();
-            var seed = BitConverter.ToInt32(buffer, 0);
-            var random = new Random(seed);
-            var indexShuffled = random.Next(List.Count);
-            if (shuffledNumbers.Add(indexShuffled))
-                ShuffleList.Add(indexShuffled);
-        }
-
-        if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
-            ShufflingIndex = ShuffleList.FindIndex(t => t == NowPlaying);
+            ShuffleList.Clear();
+            HashSet<int> shuffledNumbers = new();
+            while (shuffledNumbers.Count < List.Count)
+            {
+                var buffer = Guid.NewGuid().ToByteArray();
+                var seed = BitConverter.ToInt32(buffer, 0);
+                var random = new Random(seed);
+                var indexShuffled = random.Next(List.Count);
+                if (shuffledNumbers.Add(indexShuffled))
+                    ShuffleList.Add(indexShuffled);
+            }
+            if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
+                ShufflingIndex = ShuffleList.FindIndex(t => t == NowPlaying);
         }
         // Call 一下来触发前端显示的播放列表更新
         OnPlayListAddDone?.Invoke();
