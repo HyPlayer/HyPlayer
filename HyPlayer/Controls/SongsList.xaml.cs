@@ -282,8 +282,9 @@ public sealed partial class SongsList : UserControl, IDisposable
             HyPlayList.PlaySourceId = ListSource.Substring(2);
         }
         */
-
-        HyPlayList.SongMoveTo(origidx);
+        var targetPlayItemIndex = HyPlayList.List.FindIndex(t => t.PlayItem.Id == (SongContainer.SelectedItem as NCSong).sid);
+        if (HyPlayList.NowPlayType != PlayMode.Shuffled)HyPlayList.SongMoveTo(targetPlayItemIndex);
+        else HyPlayList.SongMoveTo(HyPlayList.ShuffleList.Where(t => t==targetPlayItemIndex).FirstOrDefault());
     }
 
     private void FlyoutItemPlayNext_Click(object sender, RoutedEventArgs e)
