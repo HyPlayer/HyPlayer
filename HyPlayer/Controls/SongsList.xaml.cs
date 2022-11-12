@@ -275,18 +275,11 @@ public sealed partial class SongsList : UserControl, IDisposable
         foreach (NCSong ncsong in SongContainer.SelectedItems)
             _ = HyPlayList.AppendNcSong(ncsong);
         HyPlayList.SongAppendDone();
-        /*
-        if (ListSource?.Substring(0, 2) == "pl" ||
-            ListSource?.Substring(0, 2) == "al")
-        {
-            HyPlayList.PlaySourceId = ListSource.Substring(2);
-        }
-        */
         var targetPlayItemIndex = HyPlayList.List.FindIndex(t => t.PlayItem.Id == (SongContainer.SelectedItem as NCSong).sid);
         HyPlayList.SongMoveTo(targetPlayItemIndex);
     }
 
-    private void FlyoutItemPlayNext_Click(object sender, RoutedEventArgs e)
+    private void FlyoutItemAddToPlaylist_Click(object sender, RoutedEventArgs e)
     {
         _ = HyPlayList.AppendNcSongRange(SongContainer.SelectedItems.Cast<NCSong>().ToList(),
             HyPlayList.NowPlaying + 1);
@@ -295,16 +288,16 @@ public sealed partial class SongsList : UserControl, IDisposable
 
     private async void FlyoutItemSinger_Click(object sender, RoutedEventArgs e)
     {
-        if (VisibleSongs[SongContainer.SelectedIndex].Artist[0].Type == HyPlayItemType.Radio)
+        if ((SongContainer.SelectedItem as NCSong).Artist.FirstOrDefault().Type == HyPlayItemType.Radio)
         {
-            Common.NavigatePage(typeof(Me), VisibleSongs[SongContainer.SelectedIndex].Artist[0].id);
+            Common.NavigatePage(typeof(Me), (SongContainer.SelectedItem as NCSong).Artist.FirstOrDefault().id);
         }
         else
         {
-            if (VisibleSongs[SongContainer.SelectedIndex].Artist.Count > 1)
-                await new ArtistSelectDialog(VisibleSongs[SongContainer.SelectedIndex].Artist).ShowAsync();
+            if ((SongContainer.SelectedItem as NCSong).Artist.Count > 1)
+                await new ArtistSelectDialog((SongContainer.SelectedItem as NCSong).Artist).ShowAsync();
             else
-                Common.NavigatePage(typeof(ArtistPage), VisibleSongs[SongContainer.SelectedIndex].Artist[0].id);
+                Common.NavigatePage(typeof(ArtistPage), (SongContainer.SelectedItem as NCSong).Artist.FirstOrDefault().id);
         }
     }
 
@@ -316,13 +309,13 @@ public sealed partial class SongsList : UserControl, IDisposable
         }
         else
         {
-            Common.NavigatePage(typeof(AlbumPage), VisibleSongs[SongContainer.SelectedIndex].Album);
+            Common.NavigatePage(typeof(AlbumPage), (SongContainer.SelectedItem as NCSong).Album);
         }
     }
 
     private void FlyoutItemComments_Click(object sender, RoutedEventArgs e)
     {
-        Common.NavigatePage(typeof(Comments), "sg" + VisibleSongs[SongContainer.SelectedIndex].sid);
+        Common.NavigatePage(typeof(Comments), "sg" + (SongContainer.SelectedItem as NCSong).sid);
     }
 
     private void FlyoutItemDownload_Click(object sender, RoutedEventArgs e)
@@ -333,12 +326,12 @@ public sealed partial class SongsList : UserControl, IDisposable
 
     private void BtnMV_Click(object sender, RoutedEventArgs e)
     {
-        Common.NavigatePage(typeof(MVPage), VisibleSongs[SongContainer.SelectedIndex]);
+        Common.NavigatePage(typeof(MVPage), (SongContainer.SelectedItem as NCSong));
     }
 
     private async void FlyoutCollection_Click(object sender, RoutedEventArgs e)
     {
-        await new SongListSelect(VisibleSongs[SongContainer.SelectedIndex].sid).ShowAsync();
+        await new SongListSelect((SongContainer.SelectedItem as NCSong).sid).ShowAsync();
     }
 
     private async void Btn_Del_Click(object sender, RoutedEventArgs e)
