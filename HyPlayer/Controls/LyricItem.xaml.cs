@@ -51,13 +51,40 @@ public sealed partial class LyricItem : UserControl
 
     private async Task LoadRomaji()
     {
-        if (Utilities.HasKana(Lrc.PureLyric))
-            TextBoxSound.Text =
-                await Common.KawazuConv?.Convert(Lrc.PureLyric, To.Romaji, Mode.Separated)! ?? string.Empty;
-        else
-            TextBoxSound.Visibility = Visibility.Collapsed;
-        if (string.IsNullOrEmpty(TextBoxSound.Text))
-            TextBoxSound.Visibility = Visibility.Collapsed;
+        var resultSound = string.Empty;
+
+        switch(Common.Setting.LyricRomajiSource)
+        {
+            case 0:
+                {
+                    if (!string.IsNullOrEmpty(Lrc.NeteaseRomaji)) resultSound = Lrc.NeteaseRomaji;
+                    else
+                    {
+                        if (Utilities.HasKana(Lrc.PureLyric))
+                        {
+                            resultSound = await Common.KawazuConv?.Convert(Lrc.PureLyric, To.Romaji, Mode.Separated);
+                        }
+                    }
+                    break;
+                }
+            case 1:
+                {
+                    resultSound = Lrc.NeteaseRomaji;
+                    break;
+                }
+            case 2:
+                {
+                    if (Utilities.HasKana(Lrc.PureLyric))
+                    {
+                        resultSound = await Common.KawazuConv?.Convert(Lrc.PureLyric, To.Romaji, Mode.Separated);
+                    }
+                    break;
+                }
+        }
+            
+        if (!string.IsNullOrEmpty(resultSound)) TextBoxSound.Text = resultSound;
+        else TextBoxSound.Visibility=Visibility.Collapsed;
+
     }
 
     public void RefreshFontSize()
@@ -128,7 +155,7 @@ public sealed partial class LyricItem : UserControl
         else
             TextBoxTranslation.Visibility = Visibility.Collapsed;
 
-        if (Common.KawazuConv != null && Common.ShowLyricSound)
+        if (Common.ShowLyricSound)
             _ = LoadRomaji();
         else
             TextBoxSound.Visibility = Visibility.Collapsed;

@@ -1209,6 +1209,17 @@ namespace HyPlayer
             }
         }
 
+        public int LyricRomajiSource
+        {
+            // 0-自动选择  1-网易云歌词优先 2-Kawazu转换优先
+            get => GetSettings("LyricRomajiSource", 0);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["LyricRomajiSource"] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool LastFMLogined => LastFMManager.LastfmLogined;
 
         public event PropertyChangedEventHandler? PropertyChanged;

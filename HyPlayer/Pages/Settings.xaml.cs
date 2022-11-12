@@ -47,7 +47,7 @@ public sealed partial class Settings : Page
     {
         isbyprogram = true;
         InitializeComponent();
-        RomajiStatus.Text = (Common.KawazuConv == null ? "请下载资源文件" : "可以转换");
+        RomajiStatus.Text = (Common.KawazuConv == null ? "请下载Kawazu资源文件" : "可以转换");
         ButtonDownloadRomaji.Visibility = Common.KawazuConv == null ? Visibility.Visible : Visibility.Collapsed;
         if (Common.Setting.audioRate.EndsWith('0') || Common.Setting.downloadAudioRate.EndsWith('0'))
         {

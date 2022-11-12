@@ -889,6 +889,7 @@ public static class HyPlayList
                 Lyrics.Insert(0,
                     new SongLyric { LyricTime = TimeSpan.Zero, PureLyric = "" });
         }
+        if (!string.IsNullOrEmpty(pureLyricInfo.NeteaseRomaji)) Utils.ConvertNeteaseRomaji(pureLyricInfo.NeteaseRomaji, Lyrics);
 
         LyricPos = 0;
 
@@ -946,7 +947,9 @@ public static class HyPlayList
                     return new PureLyricInfo
                     {
                         PureLyrics = json["lrc"]?["lyric"]?.ToString(),
-                        TrLyrics = json["tlyric"]?["lyric"]?.ToString()
+                        TrLyrics = json["tlyric"]?["lyric"]?.ToString(),
+                        NeteaseRomaji = json["romalrc"]?["lyric"]?.ToString()
+
                     };
                 }
                 catch (Exception)
@@ -1444,6 +1447,18 @@ public static class Utils
                 songLyric.Translation = lyricsLine.Content;
                 break;
             }
+    }
+    public static void ConvertNeteaseRomaji(string lyricAllText, List<SongLyric> lyrics)
+    {
+        if (string.IsNullOrEmpty(lyricAllText)) return;
+        var parsedlyrics = Lyrics.Parse(lyricAllText);
+        foreach (var lyricsLine in parsedlyrics.Lyrics.Lines)
+            foreach (var songLyric in lyrics)
+                if (songLyric.LyricTime.TotalMilliseconds == lyricsLine.Timestamp.TimeOfDay.TotalMilliseconds)
+                {
+                    songLyric.NeteaseRomaji = lyricsLine.Content;
+                    break;
+                }
     }
 }
 

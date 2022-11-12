@@ -37,6 +37,7 @@ public class PureLyricInfo
 {
     public string PureLyrics;
     public string TrLyrics;
+    public string NeteaseRomaji;
 }
 
 public class SongLyric
@@ -53,6 +54,7 @@ public class SongLyric
     public TimeSpan LyricTime;
     public string PureLyric;
     public string Translation;
+    public string NeteaseRomaji;
 
     public bool HaveTranslation => !string.IsNullOrEmpty(Translation);
 }

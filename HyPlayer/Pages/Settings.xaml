@@ -33,26 +33,61 @@
                             <controls:Expander
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
-                                Header="罗马字"
+                                Header="罗马字设置"
                                 IsExpanded="True">
                                 <controls:Expander.Transitions>
                                     <TransitionCollection>
                                         <RepositionThemeTransition />
                                     </TransitionCollection>
                                 </controls:Expander.Transitions>
-                                <Grid>
-                                    <TextBlock
+                                <StackPanel Orientation="Vertical" Spacing="16">
+                                    <Grid>
+                                        <TextBlock
                                         x:Name="RomajiStatus"
                                         HorizontalAlignment="Left"
                                         VerticalAlignment="Center"
                                         Text="获取中..." />
-                                    <Button
+                                        <Button
                                         x:Name="ButtonDownloadRomaji"
                                         HorizontalAlignment="Right"
                                         Click="ButtonBase_OnClick"
                                         Content="获取罗马字资源文件" />
-                                </Grid>
-                            </controls:Expander>
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"
+                                            Text="罗马字源"/>
+                                        <ComboBox
+                                                    x:Name="RomajiSource"
+                                                    HorizontalAlignment="Right"
+                                                    SelectedIndex="{x:Bind hyplayer:Common.Setting.LyricRomajiSource, Mode=TwoWay}">
+                                            <ComboBoxItem Content="自动选择" />
+                                            <ComboBoxItem Content="网易云音乐" />
+                                            <ComboBoxItem Content="Kawazu"/>
+                                        </ComboBox>
+                                    </Grid>
+                                    <Button Content="关于此选项">
+                                        <Button.Flyout>
+                                            <Flyout>
+                                                <RichTextBlock>
+                                                    <Paragraph>
+                                                        HyPlayer支持使用网易云音乐或者是Kawazu作为罗马字源
+                                                        <LineBreak/>
+                                                        此选项可选择优先从哪个源中获取罗马字
+                                                        <LineBreak/>
+                                                        自动选择：优先使用网易云音乐提供的罗马字
+                                                        <LineBreak/>
+                                                        如当前歌词网易云音乐没有提供罗马字，则使用Kawazu进行转换
+                                                        <LineBreak/>
+                                                        注：如需使用Kawazu作为罗马字源请先下载资源包
+                                                    </Paragraph>
+                                                </RichTextBlock>
+                                            </Flyout>
+                                        </Button.Flyout>
+                                    </Button>                                    
+                                </StackPanel>
+                                </controls:Expander>
 
                             <controls:Expander
                                 HorizontalAlignment="Stretch"
