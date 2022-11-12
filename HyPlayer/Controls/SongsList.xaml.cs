@@ -310,7 +310,14 @@ public sealed partial class SongsList : UserControl, IDisposable
 
     private void FlyoutItemAlbum_Click(object sender, RoutedEventArgs e)
     {
-        Common.NavigatePage(typeof(AlbumPage), VisibleSongs[SongContainer.SelectedIndex].Album);
+        if ((SongContainer.SelectedItem as NCSong).Album.id == "0")
+        {
+            Common.AddToTeachingTipLists("此歌曲无专辑页面");
+        }
+        else
+        {
+            Common.NavigatePage(typeof(AlbumPage), VisibleSongs[SongContainer.SelectedIndex].Album);
+        }
     }
 
     private void FlyoutItemComments_Click(object sender, RoutedEventArgs e)
