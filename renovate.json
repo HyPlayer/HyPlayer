@@ -6,5 +6,8 @@
   "ignorePaths": [
     ".azp/*",
     ".github/workflows/*"
-  ]
+  ],
+  "git-submodules": {
+    "enabled": true
+  }
 }
