@@ -1209,13 +1209,13 @@ namespace HyPlayer
             }
         }
 
-        public int LyricRomajiSource
+        public RomajiSource LyricRomajiSource
         {
-            // 0-自动选择  1-网易云歌词优先 2-Kawazu转换优先
-            get => GetSettings("LyricRomajiSource", 0);
+            //  0 - 不进行转换  1 - 自动选择  2 - 网易云优先  3 - Kawazu 转换优先
+            get => GetSettings("LyricRomajiSource", RomajiSource.None);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["LyricRomajiSource"] = value;
+                ApplicationData.Current.LocalSettings.Values["LyricRomajiSource"] = (int)value;
                 OnPropertyChanged();
             }
         }
@@ -1458,6 +1458,14 @@ namespace HyPlayer
         }
     }
 
+    public enum RomajiSource : int
+    {
+        None,
+        AutoSelect,
+        NeteaseOnly,
+        KawazuOnly
+    }
+    
     internal static class Extensions
     {
         public static byte[] ToByteArrayUtf8(this string value)

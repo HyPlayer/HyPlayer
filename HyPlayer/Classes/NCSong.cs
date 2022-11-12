@@ -54,9 +54,10 @@ public class SongLyric
     public TimeSpan LyricTime;
     public string PureLyric;
     public string Translation;
-    public string NeteaseRomaji;
+    public string Romaji;
 
     public bool HaveTranslation => !string.IsNullOrEmpty(Translation);
+    public bool HaveRomaji => !string.IsNullOrEmpty(Romaji);
 }
 
 public class NCRadio

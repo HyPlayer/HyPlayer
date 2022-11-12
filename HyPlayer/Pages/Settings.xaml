@@ -61,7 +61,8 @@
                                         <ComboBox
                                                     x:Name="RomajiSource"
                                                     HorizontalAlignment="Right"
-                                                    SelectedIndex="{x:Bind hyplayer:Common.Setting.LyricRomajiSource, Mode=TwoWay}">
+                                                    SelectedIndex="{x:Bind hyplayer:Common.Setting.LyricRomajiSource, Mode=TwoWay, Converter={StaticResource EnumToIntConverter}}">
+                                            <ComboBoxItem Content="不转换" />
                                             <ComboBoxItem Content="自动选择" />
                                             <ComboBoxItem Content="网易云音乐" />
                                             <ComboBoxItem Content="Kawazu"/>

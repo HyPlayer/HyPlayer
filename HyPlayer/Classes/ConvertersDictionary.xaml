@@ -11,6 +11,7 @@
     <classes:PausedToStringConverter x:Key="PausedToStringConverter" />
     <classes:AlbumShadowConverter x:Key="ShadowConverter" />
     <classes:ReversedBooleanToVisibilityConverter x:Key="ReversedBooleanToVisibilityConverter" />
+    <classes:EnumToIntConverter x:Key="EnumToIntConverter" />
     <classes:BooleanToWindowBrushesConverter x:Key="BooleanToWindowBrushesConverter" />
     <classes:BooleanToBarPlayBarBrushesConverter x:Key="BooleanToBarPlayBarBrushesConverter"/>
     <classes:BooleanToGridPlayBarBrushesConverter x:Key="BooleanToGridPlayBarBrushesConverter"/>

@@ -17,6 +17,7 @@ using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
 using HyPlayer.Classes;
+using Kawazu;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
 using Opportunity.LrcParser;
@@ -439,7 +440,6 @@ public static class HyPlayList
             ShufflingIndex = ShuffleList.FindIndex(t => t == index);
 
         _ = LoadPlayerSong();
-
     }
 
     public static void RemoveSong(int index)
@@ -885,11 +885,12 @@ public static class HyPlayList
         else
         {
             Utils.ConvertTranslation(pureLyricInfo.TrLyrics, Lyrics);
+            await Utils.ConvertRomaji(pureLyricInfo, Lyrics);
+
             if (Lyrics.Count != 0 && Lyrics[0].LyricTime != TimeSpan.Zero)
                 Lyrics.Insert(0,
                     new SongLyric { LyricTime = TimeSpan.Zero, PureLyric = "" });
         }
-        if (!string.IsNullOrEmpty(pureLyricInfo.NeteaseRomaji)) Utils.ConvertNeteaseRomaji(pureLyricInfo.NeteaseRomaji, Lyrics);
 
         LyricPos = 0;
 
@@ -949,7 +950,6 @@ public static class HyPlayList
                         PureLyrics = json["lrc"]?["lyric"]?.ToString(),
                         TrLyrics = json["tlyric"]?["lyric"]?.ToString(),
                         NeteaseRomaji = json["romalrc"]?["lyric"]?.ToString()
-
                     };
                 }
                 catch (Exception)
@@ -1316,7 +1316,8 @@ public static class HyPlayList
                     Id = null,
                     Name = string.IsNullOrWhiteSpace(mdp.Title) ? sf.Name : mdp.Title,
                     Type = HyPlayItemType.Local,
-                    Artist = new List<NCArtist> {new NCArtist {name = contributingArtists, Type = HyPlayItemType.Local}},
+                    Artist = new List<NCArtist>
+                        { new NCArtist { name = contributingArtists, Type = HyPlayItemType.Local } },
                     Album = new NCAlbum
                     {
                         name = mdp.Album
@@ -1377,7 +1378,7 @@ public static class HyPlayList
 
     public static Task CreateShufflePlayLists()
     {
-        if (List.Count != 0) 
+        if (List.Count != 0)
         {
             ShuffleList.Clear();
             HashSet<int> shuffledNumbers = new();
@@ -1390,9 +1391,11 @@ public static class HyPlayList
                 if (shuffledNumbers.Add(indexShuffled))
                     ShuffleList.Add(indexShuffled);
             }
+
             if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
                 ShufflingIndex = ShuffleList.FindIndex(t => t == NowPlaying);
         }
+
         // Call 一下来触发前端显示的播放列表更新
         OnPlayListAddDone?.Invoke();
         return Task.CompletedTask;
@@ -1401,11 +1404,13 @@ public static class HyPlayList
     public static void CheckABTimeRemaining(TimeSpan currentTime)
     {
         if (currentTime >= Common.Setting.ABEndPoint && Common.Setting.ABEndPoint != TimeSpan.Zero &&
-            Common.Setting.ABEndPoint > Common.Setting.ABStartPoint) Player.PlaybackSession.Position = Common.Setting.ABStartPoint;
+            Common.Setting.ABEndPoint > Common.Setting.ABStartPoint)
+            Player.PlaybackSession.Position = Common.Setting.ABStartPoint;
     }
+
     public static async void UpdateLastFMNowPlayingAsync(HyPlayItem NowPlayingItem)
     {
-        if ( NowPlayingItem!=null && NowPlayingItem.ItemType == HyPlayItemType.Netease)
+        if (NowPlayingItem != null && NowPlayingItem.ItemType == HyPlayItemType.Netease)
         {
             try
             {
@@ -1416,7 +1421,7 @@ public static class HyPlayList
                 Common.AddToTeachingTipLists("同步Last.FM正在播放信息时发生错误", ex.Message);
             }
         }
-}
+    }
 }
 
 public enum PlayMode
@@ -1441,24 +1446,65 @@ public static class Utils
     {
         var parsedlyrics = Lyrics.Parse(lyricAllText);
         foreach (var lyricsLine in parsedlyrics.Lyrics.Lines)
-        foreach (var songLyric in lyrics)
-            if (songLyric.LyricTime.TotalMilliseconds == lyricsLine.Timestamp.TimeOfDay.TotalMilliseconds)
-            {
-                songLyric.Translation = lyricsLine.Content;
-                break;
-            }
+        foreach (var songLyric in lyrics.Where(songLyric =>
+                     songLyric.LyricTime.TotalMilliseconds == lyricsLine.Timestamp.TimeOfDay.TotalMilliseconds))
+        {
+            songLyric.Translation = lyricsLine.Content;
+            break;
+        }
     }
+
     public static void ConvertNeteaseRomaji(string lyricAllText, List<SongLyric> lyrics)
     {
         if (string.IsNullOrEmpty(lyricAllText)) return;
         var parsedlyrics = Lyrics.Parse(lyricAllText);
         foreach (var lyricsLine in parsedlyrics.Lyrics.Lines)
-            foreach (var songLyric in lyrics)
-                if (songLyric.LyricTime.TotalMilliseconds == lyricsLine.Timestamp.TimeOfDay.TotalMilliseconds)
-                {
-                    songLyric.NeteaseRomaji = lyricsLine.Content;
-                    break;
-                }
+        foreach (var songLyric in lyrics.Where(songLyric =>
+                     songLyric.LyricTime.TotalMilliseconds == lyricsLine.Timestamp.TimeOfDay.TotalMilliseconds))
+        {
+            songLyric.Romaji = lyricsLine.Content;
+            break;
+        }
+    }
+
+    public static async Task ConvertKawazuRomaji(PureLyricInfo pureLyricInfo, List<SongLyric> lyrics)
+    {
+        if (Common.KawazuConv is null) return;
+        // 首先按照行将原文与歌词对应
+        // 按照 LRC 规范, 歌词中不会出现换行符
+        // 相信 Kawazu 不会莫名其妙蹦出换行
+        var lyricsTobeConvert = lyrics.Where(lyric => !string.IsNullOrWhiteSpace(lyric.PureLyric)).ToList();
+        var allLyric = string.Join("\r\n", lyricsTobeConvert.Select(lyric => lyric.PureLyric));
+        if (!Utilities.HasKana(allLyric)) return;
+        var convertedAllLyric = await Common.KawazuConv.Convert(allLyric, To.Romaji, Mode.Separated);
+        var convertedLines = convertedAllLyric.Split("\r");
+        for (var index = 0; index < convertedLines.Length; index++)
+        {
+            if (lyricsTobeConvert[index].PureLyric != convertedLines[index])
+                lyricsTobeConvert[index].Romaji = convertedLines[index];
+        }
+    }
+
+    public static async Task ConvertRomaji(PureLyricInfo pureLyricInfo, List<SongLyric> lyrics)
+    {
+        switch (Common.Setting.LyricRomajiSource)
+        {
+            case RomajiSource.None:
+                break;
+            case RomajiSource.AutoSelect:
+                if (!string.IsNullOrEmpty(pureLyricInfo.NeteaseRomaji))
+                    ConvertNeteaseRomaji(pureLyricInfo.NeteaseRomaji, lyrics);
+                else
+                    await ConvertKawazuRomaji(pureLyricInfo, lyrics);
+                break;
+            case RomajiSource.NeteaseOnly:
+                if (!string.IsNullOrEmpty(pureLyricInfo.NeteaseRomaji))
+                    ConvertNeteaseRomaji(pureLyricInfo.NeteaseRomaji, lyrics);
+                break;
+            case RomajiSource.KawazuOnly:
+                await ConvertKawazuRomaji(pureLyricInfo, lyrics);
+                break;
+        }
     }
 }
 

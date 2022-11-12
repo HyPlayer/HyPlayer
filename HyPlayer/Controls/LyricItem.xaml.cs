@@ -48,45 +48,7 @@ public sealed partial class LyricItem : UserControl
         ? Common.PageExpandedPlayer.ForegroundIdleTextBrush
         : Application.Current.Resources["TextFillColorTertiaryBrush"] as SolidColorBrush;
 
-
-    private async Task LoadRomaji()
-    {
-        var resultSound = string.Empty;
-
-        switch(Common.Setting.LyricRomajiSource)
-        {
-            case 0:
-                {
-                    if (!string.IsNullOrEmpty(Lrc.NeteaseRomaji)) resultSound = Lrc.NeteaseRomaji;
-                    else
-                    {
-                        if (Utilities.HasKana(Lrc.PureLyric))
-                        {
-                            resultSound = await Common.KawazuConv?.Convert(Lrc.PureLyric, To.Romaji, Mode.Separated);
-                        }
-                    }
-                    break;
-                }
-            case 1:
-                {
-                    resultSound = Lrc.NeteaseRomaji;
-                    break;
-                }
-            case 2:
-                {
-                    if (Utilities.HasKana(Lrc.PureLyric))
-                    {
-                        resultSound = await Common.KawazuConv?.Convert(Lrc.PureLyric, To.Romaji, Mode.Separated);
-                    }
-                    break;
-                }
-        }
-            
-        if (!string.IsNullOrEmpty(resultSound)) TextBoxSound.Text = resultSound;
-        else TextBoxSound.Visibility=Visibility.Collapsed;
-
-    }
-
+    
     public void RefreshFontSize()
     {
         TextBoxPureLyric.TextAlignment = LyricAlignment;
@@ -156,7 +118,8 @@ public sealed partial class LyricItem : UserControl
             TextBoxTranslation.Visibility = Visibility.Collapsed;
 
         if (Common.ShowLyricSound)
-            _ = LoadRomaji();
+            if (!string.IsNullOrEmpty(Lrc.Romaji)) TextBoxSound.Text = Lrc.Romaji;
+            else TextBoxSound.Visibility = Visibility.Collapsed;
         else
             TextBoxSound.Visibility = Visibility.Collapsed;
 
