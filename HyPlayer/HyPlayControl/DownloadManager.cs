@@ -202,7 +202,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                 //file.Save();
 
                 Picture pic;
-                if (!DownloadManager.AlbumPicturesCache.ContainsKey(ncsong.Album.id))
+                if (/*!DownloadManager.AlbumPicturesCache.ContainsKey(ncsong.Album.id)*/ true)
                 {
                     using HttpClient httpClient = new HttpClient();
                     var responseMessage = await httpClient.GetAsync(new Uri(ncsong.Album.cover + "?param=" +

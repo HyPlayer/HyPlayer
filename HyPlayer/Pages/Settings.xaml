@@ -57,7 +57,7 @@
                                         <TextBlock
                                             HorizontalAlignment="Left"
                                             VerticalAlignment="Center"
-                                            Text="罗马字源"/>
+                                            Text="罗马字源 (切歌后生效)"/>
                                         <ComboBox
                                                     x:Name="RomajiSource"
                                                     HorizontalAlignment="Right"
@@ -73,15 +73,13 @@
                                             <Flyout>
                                                 <RichTextBlock>
                                                     <Paragraph>
-                                                        HyPlayer支持使用网易云音乐或者是Kawazu作为罗马字源
-                                                        <LineBreak/>
-                                                        此选项可选择优先从哪个源中获取罗马字
+                                                        HyPlayer支持使用 网易云音乐 或者是 Kawazu (内置转换器) 作为罗马字源
                                                         <LineBreak/>
                                                         自动选择：优先使用网易云音乐提供的罗马字
                                                         <LineBreak/>
-                                                        如当前歌词网易云音乐没有提供罗马字，则使用Kawazu进行转换
+                                                        如当前歌词网易云音乐没有提供罗马字，则使用 Kawazu 进行转换
                                                         <LineBreak/>
-                                                        注：如需使用Kawazu作为罗马字源请先下载资源包
+                                                        注：如需使用 Kawazu 作为罗马字源请先下载资源包
                                                     </Paragraph>
                                                 </RichTextBlock>
                                             </Flyout>
@@ -1105,23 +1103,22 @@
                                                     IsTextSelectionEnabled="True"
                                                     Text="设备识别码" />
                                             </StackPanel>
-                                            <TextBlock
+                                            <controls1:SelectableTextBox
                                                 x:Name="DeviceInfo"
                                                 Grid.Row="1"
                                                 HorizontalAlignment="Left"
                                                 FontSize="13"
                                                 Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
-                                                HorizontalTextAlignment="Left"
                                                 TextWrapping="Wrap">
-                                                <TextBlock.ContextFlyout>
+                                                <controls1:SelectableTextBox.ContextFlyout>
                                                     <MenuFlyout>
                                                         <MenuFlyoutItem
                                                             Click="CopyDeviceCode_Click"
                                                             Icon="Copy"
                                                             Text="复制设备识别码" />
                                                     </MenuFlyout>
-                                                </TextBlock.ContextFlyout>
-                                            </TextBlock>
+                                                </controls1:SelectableTextBox.ContextFlyout>
+                                            </controls1:SelectableTextBox>
                                         </Grid>
                                     </Border>
                                 </Grid>
