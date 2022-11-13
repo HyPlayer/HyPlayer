@@ -419,17 +419,19 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         if (Common.Setting.expandedPlayerBackgroundType == 0 && !Common.Setting.expandedUseAcrylic)
             PageContainer.Background = new BackdropBlurBrush { Amount = 50.0 };
         if (Common.Setting.expandedPlayerBackgroundType == 5)
-            PageContainer.Background = (Brush) new BooleanToWindowBrushesConverter().Convert(Common.Setting.acrylicBackgroundStatus, null, null, null);
+            PageContainer.Background =
+                (Brush)new BooleanToWindowBrushesConverter().Convert(Common.Setting.acrylicBackgroundStatus, null, null,
+                    null);
 
         NowPlaybackSpeed = "x" + HyPlayList.Player.PlaybackSession.PlaybackRate;
     }
 
     private void RefreshLyricTime()
     {
-        _ = Common.Invoke(UpdateFocusingLyric);
+        _ = Common.Invoke(() => UpdateFocusingLyric());
     }
 
-    private void UpdateFocusingLyric()
+    private void UpdateFocusingLyric(bool recursionLock = false)
     {
         if (LyricBox.ItemsSource is not List<LyricItemModel> list ||
             HyPlayList.LyricPos < 0 || HyPlayList.LyricPos >= list.Count) return;
@@ -457,11 +459,14 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             {
                 var ele = LyricBox.GetOrCreateElement(k) as FrameworkElement;
                 ele?.UpdateLayout();
+
                 var transform = ele?.TransformToVisual((UIElement)LyricBoxContainer.Content);
                 var position = transform?.TransformPoint(new Point(0, 0));
 
                 if (position.HasValue)
                     LyricBoxContainer.ChangeView(null, position.Value.Y + MainGrid.ActualHeight / 8, null, false);
+                if (!recursionLock)
+                    UpdateFocusingLyric(true);
             }
             catch (Exception e)
             {
@@ -496,7 +501,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private async Task InitLyricTime()
     {
-        await Task.Delay(500);
+        await Task.Delay(1000);
         RefreshLyricTime();
     }
 
@@ -555,14 +560,16 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         if (mpi.PlayItem.DontSetLocalStorageFile != null)
                             storageFile = mpi.PlayItem.DontSetLocalStorageFile;
                         var img = new BitmapImage();
-                        if (!Common.Setting.useTaglibPicture || mpi.PlayItem.LocalFileTag is null || mpi.PlayItem.LocalFileTag.Pictures.Length == 0)
+                        if (!Common.Setting.useTaglibPicture || mpi.PlayItem.LocalFileTag is null ||
+                            mpi.PlayItem.LocalFileTag.Pictures.Length == 0)
                         {
                             await img.SetSourceAsync(
                                 await storageFile?.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
                         }
                         else
                         {
-                            await img.SetSourceAsync(new MemoryStream(mpi.PlayItem.LocalFileTag.Pictures[0].Data.Data).AsRandomAccessStream());
+                            await img.SetSourceAsync(new MemoryStream(mpi.PlayItem.LocalFileTag.Pictures[0].Data.Data)
+                                .AsRandomAccessStream());
                         }
 
                         ImageAlbum.Source = img;
@@ -957,6 +964,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.CompactOverlay);
         Common.PageMain.ExpandedPlayer.Navigate(typeof(CompactPlayerPage));
     }
+
     private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)
     {
         Common.Setting.ABStartPoint = HyPlayList.Player.PlaybackSession.Position;
@@ -1012,7 +1020,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 if (manipulationDeltaRotateValue == 0) manipulationDeltaRotateValue = e.Delta.Translation.Y;
                 ImageRotateTransform.Angle += manipulationDeltaRotateValue;
                 HyPlayList.Player.PlaybackSession.Position =
-                    HyPlayList.Player.PlaybackSession.Position.Add(TimeSpan.FromMilliseconds((int)manipulationDeltaRotateValue)*100);
+                    HyPlayList.Player.PlaybackSession.Position.Add(
+                        TimeSpan.FromMilliseconds((int)manipulationDeltaRotateValue) * 100);
                 break;
             case 2:
                 if (!Common.Setting.albumRound) return;
@@ -1074,12 +1083,13 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 }
                 else if (e.Cumulative.Translation.X < -150)
                 {
-                	HyPlayList.SongMoveNext();
+                    HyPlayList.SongMoveNext();
                 }
             }
         }
     }
 }
+
 internal enum ExpandedWindowMode
 {
     Both,

@@ -73,13 +73,15 @@
                                             <Flyout>
                                                 <RichTextBlock>
                                                     <Paragraph>
-                                                        HyPlayer支持使用 网易云音乐 或者是 Kawazu (内置转换器) 作为罗马字源
+                                                        HyPlayer支持使用: 
                                                         <LineBreak/>
-                                                        自动选择：优先使用网易云音乐提供的罗马字
+                                                        &#x27A4; 网易云音乐: 网易云音乐提供的罗马字歌词 
+                                                        <LineBreak/>
+                                                        &#x27A4; Kawazu: 内置罗马字转换器 (需下载资源包)
+                                                        <LineBreak/>
+                                                        &#x27A4; 自动选择：优先使用网易云音乐提供的罗马字
                                                         <LineBreak/>
                                                         如当前歌词网易云音乐没有提供罗马字，则使用 Kawazu 进行转换
-                                                        <LineBreak/>
-                                                        注：如需使用 Kawazu 作为罗马字源请先下载资源包
                                                     </Paragraph>
                                                 </RichTextBlock>
                                             </Flyout>
