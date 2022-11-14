@@ -44,13 +44,13 @@ namespace HyPlayer.Controls
         }
         private void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if ((sender as Pivot).SelectedIndex == 1) _ = Launcher.LaunchUriAsync(new Uri("https://www.last.fm/api/auth?api_key=" + LastFMManager.LastFMAPIKey + "&cb=hyplayer://link.last.fm"));
+            if ((sender as Pivot).SelectedIndex == 1) _ = Launcher.LaunchUriAsync(new Uri($"https://www.last.fm/api/auth?api_key={LastFMManager.LastFMAPIKey}&cb=hyplayer://link.last.fm"));
         }
 
         private void ButtonCopyLink_Click(object sender, RoutedEventArgs e)
         {
             DataPackage package = new DataPackage();
-            package.SetWebLink(new Uri("https://www.last.fm/api/auth?api_key=" + LastFMManager.LastFMAPIKey + "&cb=hyplayer://link.last.fm"));
+            package.SetWebLink(new Uri($"https://www.last.fm/api/auth?api_key={LastFMManager.LastFMAPIKey}&cb=hyplayer://link.last.fm"));
             package.RequestedOperation = DataPackageOperation.Copy;
             Clipboard.SetContent(package);
             InfoBarLoginHint.IsOpen = true;
@@ -59,7 +59,7 @@ namespace HyPlayer.Controls
 
         private void ButtonRelaunchBrowser_Click(object sender, RoutedEventArgs e)
         {
-            _ = Launcher.LaunchUriAsync(new Uri("https://www.last.fm/api/auth?api_key=" + LastFMManager.LastFMAPIKey + "&cb=hyplayer://link.last.fm"));
+            _ = Launcher.LaunchUriAsync(new Uri($"https://www.last.fm/api/auth?api_key={LastFMManager.LastFMAPIKey}&cb=hyplayer://link.last.fm"));
         }
     }
 }

@@ -1467,21 +1467,17 @@ public static class Utils
         }
     }
 
-    public static async Task ConvertKawazuRomaji(PureLyricInfo pureLyricInfo, List<SongLyric> lyrics)
+    public static async Task ConvertKawazuRomaji(List<SongLyric> lyrics)
     {
         if (Common.KawazuConv is null) return;
-        // 首先按照行将原文与歌词对应
-        // 按照 LRC 规范, 歌词中不会出现换行符
-        // 相信 Kawazu 不会莫名其妙蹦出换行
-        var lyricsTobeConvert = lyrics.Where(lyric => !string.IsNullOrWhiteSpace(lyric.PureLyric)).ToList();
-        var allLyric = string.Join("\r\n", lyricsTobeConvert.Select(lyric => lyric.PureLyric));
-        if (!Utilities.HasKana(allLyric)) return;
-        var convertedAllLyric = await Common.KawazuConv.Convert(allLyric, To.Romaji, Mode.Separated);
-        var convertedLines = convertedAllLyric.Split("\r");
-        for (var index = 0; index < convertedLines.Length; index++)
+        foreach(var lyricItem in lyrics)
         {
-            if (lyricsTobeConvert[index].PureLyric != convertedLines[index])
-                lyricsTobeConvert[index].Romaji = convertedLines[index];
+            if (string.IsNullOrWhiteSpace(lyricItem.PureLyric)) break;
+            else
+            {
+                if (Utilities.HasKana(lyricItem.PureLyric))
+                        lyricItem.Romaji=await Common.KawazuConv.Convert(lyricItem.PureLyric, To.Romaji, Mode.Separated);
+            }
         }
     }
 
@@ -1495,14 +1491,14 @@ public static class Utils
                 if (!string.IsNullOrEmpty(pureLyricInfo.NeteaseRomaji))
                     ConvertNeteaseRomaji(pureLyricInfo.NeteaseRomaji, lyrics);
                 else
-                    await ConvertKawazuRomaji(pureLyricInfo, lyrics);
+                    await ConvertKawazuRomaji(lyrics);
                 break;
             case RomajiSource.NeteaseOnly:
                 if (!string.IsNullOrEmpty(pureLyricInfo.NeteaseRomaji))
                     ConvertNeteaseRomaji(pureLyricInfo.NeteaseRomaji, lyrics);
                 break;
             case RomajiSource.KawazuOnly:
-                await ConvertKawazuRomaji(pureLyricInfo, lyrics);
+                await ConvertKawazuRomaji(lyrics);
                 break;
         }
     }

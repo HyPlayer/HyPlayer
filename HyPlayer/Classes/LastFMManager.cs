@@ -82,7 +82,7 @@ namespace HyPlayer.Classes
             HttpClient httpClient = new HttpClient();
             try
             {
-                responseData = await httpClient.GetAsync("https://ws.audioscrobbler.com/2.0/?method=auth.getSession&format=json&token=" + token + "&api_key=" + LastFMAPIKey + "&api_sig=" + signature);
+                responseData = await httpClient.GetAsync($"https://ws.audioscrobbler.com/2.0/?method=auth.getSession&format=json&token={token}&api_key={LastFMAPIKey}&api_sig={signature}");
                 if (responseData != null && responseData.IsSuccessStatusCode)
                 {
                     string sessionStringData = await responseData.Content.ReadAsStringAsync();
@@ -149,7 +149,7 @@ namespace HyPlayer.Classes
         public static string GetLastFMAPISignature(string token)
         {
 
-            var byteData = HyPlayer.Extensions.ToByteArrayUtf8("api_key"+LastFMManager.LastFMAPIKey + "methodauth.getSessiontoken" + token + LastFMManager.LastFMAPISecret);
+            var byteData = HyPlayer.Extensions.ToByteArrayUtf8($"api_key{LastFMManager.LastFMAPIKey}methodauth.getSessiontoken{token}{LastFMManager.LastFMAPISecret}");
             var md5 = HyPlayer.Extensions.ComputeMd5(byteData);
             StringBuilder stringBuilder = new StringBuilder();
             foreach (var data in md5)

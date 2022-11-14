@@ -98,8 +98,8 @@ public sealed partial class Settings : Page
         RomajiStatus.Text = "正在下载资源文件 请稍等";
         try
         {
-            await (await ApplicationData.Current.LocalCacheFolder.GetFileAsync("RomajiData.zip"))
-                .DeleteAsync();
+            await (await ApplicationData.Current.LocalCacheFolder.TryGetItemAsync("RomajiData.zip"))
+                ?.DeleteAsync();
         }
         catch
         {
