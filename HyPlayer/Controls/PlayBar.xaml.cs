@@ -1212,7 +1212,6 @@ public sealed partial class PlayBar
                 {
                     int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"].ToString(),
                         out HyPlayList.NowPlaying);
-                    HyPlayList.Player_SourceChanged(null, null);
                     HyPlayList.SongAppendDone();
                 }
             }

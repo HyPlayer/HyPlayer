@@ -191,6 +191,7 @@ public static class HyPlayList
         };
         Player.BufferingStarted += Player_BufferingStarted;
         Player.BufferingEnded += Player_BufferingEnded;
+        Player.SourceChanged += Player_SourceChanged;
         SecTimer.Elapsed += (sender, args) => _ = Common.Invoke(() => OnTimerTicked?.Invoke());
         SecTimer.Start();
         OnTimerTicked += () =>
@@ -702,7 +703,6 @@ public static class HyPlayList
                 break;
         }
 
-        Player_SourceChanged(null, null);
         MediaSystemControls.IsEnabled = true;
         try
         {
@@ -719,9 +719,6 @@ public static class HyPlayList
     public static async void Player_SourceChanged(MediaPlayer sender, object args)
     {
         if (List.Count <= NowPlaying) return;
-        //我们先把进度给放到最开始,免得炸
-        Player.Pause();
-        Player.PlaybackSession.Position = TimeSpan.Zero;
         //当加载一个新的播放文件时,此时你应当加载歌词和 SystemMediaTransportControls
         //加载 SystemMediaTransportControls
         if (NowPlayingItem.PlayItem != null)
