@@ -577,8 +577,7 @@ public static class HyPlayList
                 {
                     if (json["data"]?[0]?["freeTrialInfo"]?.HasValues == true && Common.Setting.jumpVipSongPlaying)
                     {
-                        PlayerOnMediaFailed(Player, "当前歌曲为 VIP 试听, 已自动跳过");
-                        return null;
+                        throw new Exception ("当前歌曲为 VIP 试听, 已自动跳过");
                     }
 
                     playUrl = json["data"][0]["url"]?.ToString();
@@ -595,14 +594,12 @@ public static class HyPlayList
                 }
                 else
                 {
-                    PlayerOnMediaFailed(Player, "下载链接获取失败"); //传一个播放失败
-                    return null;
+                    throw new Exception("下载链接获取失败"); //传一个播放失败
                 }
             }
             catch
             {
-                PlayerOnMediaFailed(Player, "下载链接获取失败"); //传一个播放失败
-                return null;
+                throw new Exception("下载链接获取失败"); //传一个播放失败
             }
 
         return playUrl;
@@ -617,95 +614,94 @@ public static class HyPlayList
         }
 
         MediaSource ms = null;
-        switch (NowPlayingItem.ItemType)
+        try
         {
-            case HyPlayItemType.Netease:
-            case HyPlayItemType.Radio: //FM伪加载为普通歌曲
-                //先看看是不是本地文件
-                //本地文件的话尝试加载
-                //cnm的NCM,我试试其他方式
-                if (NowPlayingItem.PlayItem.IsLocalFile)
-                {
-                    await LoadLocalFile();
-                    ms = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
-                }
-                else
-                {
-                    if (Common.Setting.enableCache)
+            switch (NowPlayingItem.ItemType)
+            {
+                case HyPlayItemType.Netease:
+                case HyPlayItemType.Radio: //FM伪加载为普通歌曲
+                                           //先看看是不是本地文件
+                                           //本地文件的话尝试加载
+                                           //cnm的NCM,我试试其他方式
+                    if (NowPlayingItem.PlayItem.IsLocalFile)
                     {
-                        //再检测是否已经缓存且大小正常
-                        try
-                        {
-                            // 加载本地缓存文件
-                            var sf =
-                                await (await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir))
-                                    .GetFileAsync(NowPlayingItem.PlayItem.Id +
-                                                  ".cache");
-                            if ((await sf.GetBasicPropertiesAsync()).Size.ToString() ==
-                                NowPlayingItem.PlayItem.Size || NowPlayingItem.PlayItem.Size == null)
-                                ms = MediaSource.CreateFromStorageFile(sf);
-                            else
-                                throw new Exception("File Size Not Match");
-                        }
-                        catch
-                        {
-                            try
-                            {
-                                var playUrl = await GetNowPlayingUrl();
-                                //尝试从DownloadOperation下载
-                                if (playUrl != null)
-                                {
-                                    var destinationFile =
-                                        await (await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync(
-                                            "songCache",
-                                            CreationCollisionOption.OpenIfExists)).CreateFileAsync(
-                                            NowPlayingItem.PlayItem.Id +
-                                            ".cache",
-                                            CreationCollisionOption.ReplaceExisting);
-                                    var downloadOperation =
-                                        Downloader.CreateDownload(new Uri(playUrl), destinationFile);
-                                    downloadOperation.IsRandomAccessRequired = true;
-                                    ms = MediaSource.CreateFromDownloadOperation(downloadOperation);
-                                }
-                            }
-                            catch
-                            {
-                                var playUrl = await GetNowPlayingUrl();
-                                if (playUrl != null)
-                                    ms = MediaSource.CreateFromUri(new Uri(playUrl));
-                            }
-                        }
+                        await LoadLocalFile();
+                        ms = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
                     }
                     else
                     {
-                        var playUrl = await GetNowPlayingUrl();
-                        if (playUrl != null)
+                        if (Common.Setting.enableCache)
+                        {
+                            //再检测是否已经缓存且大小正常
+                            try
+                            {
+                                // 加载本地缓存文件
+                                var sf =
+                                    await (await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir))
+                                        .GetFileAsync(NowPlayingItem.PlayItem.Id +
+                                                      ".cache");
+                                if ((await sf.GetBasicPropertiesAsync()).Size.ToString() ==
+                                    NowPlayingItem.PlayItem.Size || NowPlayingItem.PlayItem.Size == null)
+                                    ms = MediaSource.CreateFromStorageFile(sf);
+                                else
+                                    throw new Exception("File Size Not Match");
+                            }
+                            catch
+                            {
+                                try
+                                {
+                                    var playUrl = await GetNowPlayingUrl();
+                                    //尝试从DownloadOperation下载
+                                    if (playUrl != null)
+                                    {
+                                        var destinationFile =
+                                            await (await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync(
+                                                "songCache",
+                                                CreationCollisionOption.OpenIfExists)).CreateFileAsync(
+                                                NowPlayingItem.PlayItem.Id +
+                                                ".cache",
+                                                CreationCollisionOption.ReplaceExisting);
+                                        var downloadOperation =
+                                            Downloader.CreateDownload(new Uri(playUrl), destinationFile);
+                                        downloadOperation.IsRandomAccessRequired = true;
+                                        ms = MediaSource.CreateFromDownloadOperation(downloadOperation);
+                                    }
+                                }
+                                catch
+                                {
+                                    var playUrl = await GetNowPlayingUrl();
+                                    if (playUrl != null)
+                                        ms = MediaSource.CreateFromUri(new Uri(playUrl));
+                                }
+                            }
+                        }
+                        else
+                        {
+                            var playUrl = await GetNowPlayingUrl();
                             ms = MediaSource.CreateFromUri(new Uri(playUrl));
+                        }
                     }
-                }
 
-                break;
-            case HyPlayItemType.Local:
-            case HyPlayItemType.LocalProgressive:
-                try
-                {
-                    await LoadLocalFile();
-                    ms = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
-                }
-                catch
-                {
-                    ms = MediaSource.CreateFromUri(new Uri(NowPlayingItem.PlayItem.Url));
-                }
+                    break;
+                case HyPlayItemType.Local:
+                case HyPlayItemType.LocalProgressive:
+                    try
+                    {
+                        await LoadLocalFile();
+                        ms = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
+                    }
+                    catch
+                    {
+                        ms = MediaSource.CreateFromUri(new Uri(NowPlayingItem.PlayItem.Url));
+                    }
 
-                break;
-            default:
-                ms = null;
-                break;
-        }
+                    break;
+                default:
+                    ms = null;
+                    break;
+            }
 
-        MediaSystemControls.IsEnabled = true;
-        try
-        {
+            MediaSystemControls.IsEnabled = true;
             await ms.OpenAsync();
             Player.Source = ms;
         }
