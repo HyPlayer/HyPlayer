@@ -445,7 +445,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
         var item = list[HyPlayList.LyricPos];
         if (item == null) return;
-
+         
         if (lastitem != null) lastitem.IsShow = false;
 
         item.IsShow = true;
