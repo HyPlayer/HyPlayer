@@ -321,7 +321,7 @@ public static class HyPlayList
                         }
                     };
                     hyitem.PlayItem.Artist = Info.artist.Select(t => new NCArtist
-                    { name = t[0].ToString(), id = t[1].ToString() })
+                            { name = t[0].ToString(), id = t[1].ToString() })
                         .ToList();
 
                     List.Add(hyitem);
@@ -1254,15 +1254,13 @@ public static class HyPlayList
                     json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
                         new Dictionary<string, object> { ["ids"] = string.Join(",", nowIds) });
                     nowIndex++;
-                    int i = 0;
+                    var i = 0;
                     var ncSongs = (json["songs"] ?? new JArray()).Select(t =>
                     {
                         if (json["privileges"] == null) return null;
                         if (json["privileges"].ToList()[i++]["st"]?.ToString() == "0")
                             return NCSong.CreateFromJson(t);
-                        if (int.Parse(json["privileges"].ToList()[i++]["fee"]?.ToString())
-                        - int.Parse(json["privileges"].ToList()[i++]["payed"]?.ToString()) != 0)
-                            throw new UnauthorizedAccessException("此音乐需要付费");
+
                         return null;
                     }).ToList();
                     ncSongs.RemoveAll(t => t == null);
@@ -1436,7 +1434,7 @@ public static class Utils
     {
         var parsedlyrics = Lyrics.Parse(lyricAllText);
         return parsedlyrics.Lyrics.Lines.Select(lyricsLine => new SongLyric
-        { LyricTime = lyricsLine.Timestamp.TimeOfDay, PureLyric = lyricsLine.Content, Translation = null })
+                { LyricTime = lyricsLine.Timestamp.TimeOfDay, PureLyric = lyricsLine.Content, Translation = null })
             .OrderBy(t => t.LyricTime)
             .ToList();
     }
@@ -1445,12 +1443,12 @@ public static class Utils
     {
         var parsedlyrics = Lyrics.Parse(lyricAllText);
         foreach (var lyricsLine in parsedlyrics.Lyrics.Lines)
-            foreach (var songLyric in lyrics.Where(songLyric =>
-                         songLyric.LyricTime.TotalMilliseconds == lyricsLine.Timestamp.TimeOfDay.TotalMilliseconds))
-            {
-                songLyric.Translation = lyricsLine.Content;
-                break;
-            }
+        foreach (var songLyric in lyrics.Where(songLyric =>
+                     songLyric.LyricTime.TotalMilliseconds == lyricsLine.Timestamp.TimeOfDay.TotalMilliseconds))
+        {
+            songLyric.Translation = lyricsLine.Content;
+            break;
+        }
     }
 
     public static void ConvertNeteaseRomaji(string lyricAllText, List<SongLyric> lyrics)
@@ -1458,24 +1456,24 @@ public static class Utils
         if (string.IsNullOrEmpty(lyricAllText)) return;
         var parsedlyrics = Lyrics.Parse(lyricAllText);
         foreach (var lyricsLine in parsedlyrics.Lyrics.Lines)
-            foreach (var songLyric in lyrics.Where(songLyric =>
-                         songLyric.LyricTime.TotalMilliseconds == lyricsLine.Timestamp.TimeOfDay.TotalMilliseconds))
-            {
-                songLyric.Romaji = lyricsLine.Content;
-                break;
-            }
+        foreach (var songLyric in lyrics.Where(songLyric =>
+                     songLyric.LyricTime.TotalMilliseconds == lyricsLine.Timestamp.TimeOfDay.TotalMilliseconds))
+        {
+            songLyric.Romaji = lyricsLine.Content;
+            break;
+        }
     }
 
     public static async Task ConvertKawazuRomaji(List<SongLyric> lyrics)
     {
         if (Common.KawazuConv is null) return;
-        foreach (var lyricItem in lyrics)
+        foreach(var lyricItem in lyrics)
         {
             if (string.IsNullOrWhiteSpace(lyricItem.PureLyric)) break;
             else
             {
                 if (Utilities.HasKana(lyricItem.PureLyric))
-                    lyricItem.Romaji = await Common.KawazuConv.Convert(lyricItem.PureLyric, To.Romaji, Mode.Separated);
+                        lyricItem.Romaji=await Common.KawazuConv.Convert(lyricItem.PureLyric, To.Romaji, Mode.Separated);
             }
         }
     }
