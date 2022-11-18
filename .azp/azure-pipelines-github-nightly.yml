@@ -6,7 +6,7 @@
 trigger:
   branches:
     include:
-      - develop
+      - AzureCITest
   paths:
     exclude:
       - '*.md'
@@ -16,7 +16,8 @@ pool:
 
 variables:
 - group: HyPlayerDevelopBuild
-
+  buildPlatform: 'x64|ARM64'
+  buildConfiguration: 'Release'
 
 steps:
 - checkout: self
@@ -50,7 +51,7 @@ steps:
   inputs:
     solution: '$(solution)'
     vsVersion: '17.0'
-    msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)"  /p:AppxPackageDir="$(appxPackageDir)"  /p:AppxBundle=Auto  /p:PackageCertificateThumbprint=""  /p:UapAppxPackageBuildMode=SideloadOnly  /p:AppxPackageSigningEnabled=true  /p:PackageCertificateKeyFile="$(certificate.secureFilePath)" /p:PackageCertificatePassword="$(signingCert.password)"'
+    msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)"  /p:AppxPackageDir="$(appxPackageDir)"  /p:AppxBundle=Always  /p:PackageCertificateThumbprint=""  /p:UapAppxPackageBuildMode=SideloadOnly  /p:AppxPackageSigningEnabled=true  /p:PackageCertificateKeyFile="$(certificate.secureFilePath)" /p:PackageCertificatePassword="$(signingCert.password)"'
     platform: 'x64'
     configuration: '$(buildConfiguration)'
     clean: true
