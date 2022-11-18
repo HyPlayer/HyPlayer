@@ -16,6 +16,7 @@ pool:
 
 variables:
 - group: HyPlayerDevelopBuild
+  solution: 'HyPlayer.sln'
   buildPlatform: 'x64|ARM64'
   buildConfiguration: 'Release'
 
