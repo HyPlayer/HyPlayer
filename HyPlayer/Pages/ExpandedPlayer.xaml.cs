@@ -459,12 +459,16 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             try
             {
                 var ele = LyricBox.GetOrCreateElement(k) as FrameworkElement;
-                ele?.UpdateLayout();
-                ele.StartBringIntoView(new BringIntoViewOptions()
+                
+                if ((ele as LyricItemWrapper).SongLyric.PureLyric != "")
                 {
-                    VerticalAlignmentRatio = 0.5,
-                    AnimationDesired = true,
-                });//搞这么复杂干什么，直接两行搞定
+                    ele?.UpdateLayout();
+                    ele.StartBringIntoView(new BringIntoViewOptions()
+                    {
+                        VerticalAlignmentRatio = 0.5,
+                        AnimationDesired = true,
+                    });//搞这么复杂干什么，直接两行搞定
+                }
                 /*
                 var transform = ele?.TransformToVisual((UIElement)LyricBoxContainer.Content);
                 var position = transform?.TransformPoint(new Point(0, 0));
@@ -1112,7 +1116,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         }
     }
 
- 
+
 }
 
 internal enum ExpandedWindowMode
