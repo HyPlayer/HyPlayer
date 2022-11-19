@@ -1469,8 +1469,7 @@ public static class Utils
         if (Common.KawazuConv is null) return;
         foreach(var lyricItem in lyrics)
         {
-            if (string.IsNullOrWhiteSpace(lyricItem.PureLyric)) break;
-            else
+            if (!string.IsNullOrWhiteSpace(lyricItem.PureLyric))
             {
                 if (Utilities.HasKana(lyricItem.PureLyric))
                         lyricItem.Romaji=await Common.KawazuConv.Convert(lyricItem.PureLyric, To.Romaji, Mode.Separated);
