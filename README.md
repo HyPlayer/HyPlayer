@@ -107,6 +107,7 @@ CheckNetIsolation LoopbackExempt -a -n="48848aaaaaaccd.hyplayer_fkcggvf9kbkw0"
 * UI 设计: [aaaaaaccd](https://github.com/aaaaaaccd)
 * 部分功能: [EP012014 (天湖)](https://github.com/EP012014)
 * 部分功能: [Raspberry Kan](https://github.com/Raspberry-Monster)
+* 部分功能和一些修复: [Claris](https://github.com/ClarisS01017)
 * 图标提供 / UI 设计: [FUNNYTW](https://www.coolapk.com/u/1873068)
 * UI 设计: [Betta_Fish](https://github.com/zxbmmmmmmmmm)
 * [Contributors](https://github.com/HyPlayer/HyPlayer/graphs/contributors)
@@ -123,6 +124,6 @@ CheckNetIsolation LoopbackExempt -a -n="48848aaaaaaccd.hyplayer_fkcggvf9kbkw0"
 
 <img src="https://www.jetbrains.com/shop/static/images/jetbrains-logo-inv.svg" height="100">
 
-感谢由 [Jerbrains](https://www.jetbrains.com) 提供的 [开源许可证书](https://www.jetbrains.com/community/opensource/) 
+感谢由 [Jetbrains](https://www.jetbrains.com) 提供的 [开源许可证书](https://www.jetbrains.com/community/opensource/) 
 
 此项目部分内容通过 [Rider](https://www.jetbrains.com/rider/) 进行开发.
