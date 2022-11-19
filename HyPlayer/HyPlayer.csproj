@@ -144,6 +144,9 @@
     <Compile Include="Controls\ArtistSelectDialog.xaml.cs">
       <DependentUpon>ArtistSelectDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\CommentsList.xaml.cs">
+      <DependentUpon>CommentsList.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\CreateSonglistDialog.xaml.cs">
       <DependentUpon>CreateSonglistDialog.xaml</DependentUpon>
     </Compile>
@@ -336,6 +339,10 @@
     <Content Include="Assets\Wide310x150Logo.scale-150.png" />
     <Content Include="Assets\Wide310x150Logo.scale-400.png" />
     <Page Include="Classes\ConvertersDictionary.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\CommentsList.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

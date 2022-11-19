@@ -11,6 +11,8 @@ using Windows.UI.Xaml.Media.Imaging;
 using HyPlayer.Classes;
 using HyPlayer.Pages;
 using NeteaseCloudMusicApi;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 
 #endregion
 
@@ -18,48 +20,71 @@ using NeteaseCloudMusicApi;
 
 namespace HyPlayer.Controls;
 
-public sealed partial class SingleComment : UserControl
+public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
 {
     public static readonly DependencyProperty AvatarSourceProperty =
         DependencyProperty.Register("AvatarSource", typeof(BitmapImage), typeof(SingleComment),
             new PropertyMetadata(null));
+    public static readonly DependencyProperty MainCommentProperty =
+    DependencyProperty.Register("MainComment", typeof(Comment), typeof(SingleComment),
+        new PropertyMetadata(null));//主评论
 
-    private readonly Comment comment;
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    void NotifyPropertyChanged(string propertyName)
+    {
+        if (this.PropertyChanged != null)
+        {
+            this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
 
 
+    private ObservableCollection<Comment> floorComments = new ObservableCollection<Comment>();
     private Uri AvatarUri;
     private string time;
 
-    public SingleComment(Comment cmt)
+    public SingleComment()
     {
-        comment = cmt;
         InitializeComponent();
+        floorComments.CollectionChanged += FloorComments_CollectionChanged;
     }
 
+    private void FloorComments_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        NotifyPropertyChanged("floorComments");
+    }
 
     public BitmapImage AvatarSource
     {
         get => (BitmapImage)GetValue(AvatarSourceProperty);
         set => SetValue(AvatarSourceProperty, value);
     }
+    public Comment MainComment
+    {
+        get => (Comment)GetValue(MainCommentProperty);
+        set 
+        {
+            SetValue(MainCommentProperty, value);
+            NotifyPropertyChanged("MainComment");
+        }
+    }
 
     private async Task LoadFloorComments(bool IsLoadMoreComments)
     {
         try
         {
-            if (!IsLoadMoreComments) SubCmts.Children.Clear();
+            if (!IsLoadMoreComments) floorComments.Clear();
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentFloor,
                 new Dictionary<string, object>
                 {
-                    { "parentCommentId", comment.cid }, { "id", comment.resourceId },
-                    { "type", comment.resourceType },
+                    { "parentCommentId", MainComment.cid }, { "id", MainComment.resourceId },
+                    { "type", MainComment.resourceType },
                     { "time", time }
                 });
             foreach (var floorcomment in json["data"]["comments"].ToArray())
-                SubCmts.Children.Add(
-                    new SingleComment(
-                            Comment.CreateFromJson(floorcomment, comment.resourceId, comment.resourceType))
-                        { Margin = new Thickness { Left = 5, Right = 5, Top = 5, Bottom = 5 } });
+                floorComments.Add(
+                            Comment.CreateFromJson(floorcomment, MainComment.resourceId, MainComment.resourceType));//向子评论添加
             time = json["data"]["time"].ToString();
             if (json["data"]["hasMore"].ToString() == "True")
                 LoadMore.Visibility = Visibility.Visible;
@@ -76,12 +101,12 @@ public sealed partial class SingleComment : UserControl
         await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentLike,
             new Dictionary<string, object>
             {
-                { "id", comment.resourceId }, { "cid", comment.cid }, { "type", comment.resourceType },
-                { "t", comment.HasLiked ? "0" : "1" }
+                { "id", MainComment.resourceId }, { "cid", MainComment.cid }, { "type", MainComment.resourceType },
+                { "t", MainComment.HasLiked ? "0" : "1" }
             });
-        comment.likedCount += comment.HasLiked ? -1 : 1;
-        comment.HasLiked = !comment.HasLiked;
-        LikeCountTB.Text = comment.likedCount.ToString();
+        MainComment.likedCount += MainComment.HasLiked ? -1 : 1;
+        MainComment.HasLiked = !MainComment.HasLiked;
+        LikeCountTB.Text = MainComment.likedCount.ToString();
     }
 
     private async void Delete_Click(object sender, RoutedEventArgs e)
@@ -89,15 +114,15 @@ public sealed partial class SingleComment : UserControl
         await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment,
             new Dictionary<string, object>
             {
-                { "id", comment.resourceId }, { "t", "0" }, { "type", comment.resourceType },
-                { "commentId", comment.cid }
+                { "id", MainComment.resourceId }, { "t", "0" }, { "type", MainComment.resourceType },
+                { "commentId", MainComment.cid }
             });
         (Parent as StackPanel).Children.Remove(this);
     }
 
     private void NavToUser_Click(object sender, RoutedEventArgs e)
     {
-        Common.NavigatePage(typeof(Me), comment.uid);
+        Common.NavigatePage(typeof(Me), MainComment.uid);
     }
 
     private async void SendReply_Click(object sender, RoutedEventArgs e)
@@ -109,8 +134,8 @@ public sealed partial class SingleComment : UserControl
                 var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment,
                     new Dictionary<string, object>
                     {
-                        { "id", comment.resourceId }, { "commentId", comment.cid },
-                        { "type", comment.resourceType },
+                        { "id", MainComment.resourceId }, { "commentId", MainComment.cid },
+                        { "type", MainComment.resourceType },
                         { "t", "2" }, { "content", ReplyText.Text }
                     });
                 ReplyText.Text = string.Empty;
@@ -140,23 +165,10 @@ public sealed partial class SingleComment : UserControl
         _ = LoadFloorComments(true);
     }
 
-    private void ReplyBtn_Click(object sender, RoutedEventArgs e)
-    {
-        if (ReplyBtn.IsChecked.Value)
-        {
-            time = null;
-            SubCmtsConainer.Visibility = Visibility.Visible;
-            _ = LoadFloorComments(false);
-        }
-        else
-        {
-            SubCmtsConainer.Visibility = Visibility.Collapsed;
-        }
-    }
 
     private void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
-        AvatarUri = comment.AvatarUri;
+        AvatarUri = MainComment.AvatarUri;
         if (!Common.Setting.noImage)
         {
             AvatarSource = new BitmapImage();
@@ -164,5 +176,10 @@ public sealed partial class SingleComment : UserControl
         }
 
         ReplyBtn.Visibility = Visibility.Visible;
+    }
+
+    private void FloorCommentsExpander_Expanding(Microsoft.UI.Xaml.Controls.Expander sender, Microsoft.UI.Xaml.Controls.ExpanderExpandingEventArgs args)
+    {
+        LoadFloorComments(false);
     }
 }
