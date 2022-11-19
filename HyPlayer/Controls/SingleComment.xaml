@@ -35,8 +35,8 @@
                                 x:Name="Nickname"
                                 Padding="0"
                                 Click="NavToUser_Click"
-                                Content="{x:Bind MainComment.Nickname}" Style="{StaticResource TextBlockButtonStyle}" />
-                            <TextBlock Text="{x:Bind MainComment.SendTime}" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
+                                Content="{x:Bind MainComment.Nickname,Mode=OneWay}" Style="{StaticResource TextBlockButtonStyle}" />
+                            <TextBlock Text="{x:Bind MainComment.SendTime,Mode=OneWay}" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
                         </StackPanel>
                     </StackPanel>
 
@@ -45,7 +45,7 @@
                         <TextBlock
                             x:Name="CommentContent"
                             FontSize="16"
-                            Text="{x:Bind MainComment.content}"
+                            Text="{x:Bind MainComment.content,Mode=OneWay}"
                             TextWrapping="Wrap" IsTextSelectionEnabled="True"/>
                         <StackPanel
                             HorizontalAlignment="Right"
@@ -55,7 +55,7 @@
                                 x:Name="Like"
                                 Height="35"
                                 Click="Like_Click"
-                                IsChecked="{x:Bind MainComment.HasLiked}"
+                                IsChecked="{x:Bind MainComment.HasLiked,Mode=OneWay}"
                                 ToolTipService.ToolTip="点赞"  Background="Transparent" BorderBrush="Transparent">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <FontIcon Glyph="&#xE19F;" FontSize="15" />
@@ -67,7 +67,7 @@
                                 Height="35"
                                 Click="Delete_Click"
                                 ToolTipService.ToolTip="删除"
-                                Visibility="{x:Bind MainComment.IsByMyself}" Background="Transparent" BorderBrush="Transparent">
+                                Visibility="{x:Bind MainComment.IsByMyself,Mode=OneWay}" Background="Transparent" BorderBrush="Transparent">
                                 <FontIcon Glyph="&#xE107;" FontSize="15" />
                             </Button>
 
@@ -115,7 +115,7 @@
                         Content="回复"
                         Style="{StaticResource AccentButtonStyle}" />
                 </Grid>
-                <controls:CommentsList Comments="{x:Bind floorComments}"/>
+                <controls:CommentsList Comments="{x:Bind floorComments,Mode=OneWay}"/>
                 <Button
                     x:Name="LoadMore"
                     HorizontalAlignment="Stretch"

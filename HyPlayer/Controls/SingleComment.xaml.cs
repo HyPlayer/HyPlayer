@@ -13,6 +13,9 @@ using HyPlayer.Pages;
 using NeteaseCloudMusicApi;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using Windows.ApplicationModel.Core;
+using Windows.UI.Core;
 
 #endregion
 
@@ -31,12 +34,10 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
 
     public event PropertyChangedEventHandler PropertyChanged;
 
-    void NotifyPropertyChanged(string propertyName)
+    public async void OnPropertyChanged([CallerMemberName]string propertyName = "")
     {
-        if (this.PropertyChanged != null)
-        {
-            this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-        }
+        await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                () => { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); });
     }
 
 
@@ -52,7 +53,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
 
     private void FloorComments_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
-        NotifyPropertyChanged("floorComments");
+        OnPropertyChanged(nameof(floorComments));
     }
 
     public BitmapImage AvatarSource
@@ -63,11 +64,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
     public Comment MainComment
     {
         get => (Comment)GetValue(MainCommentProperty);
-        set 
-        {
-            SetValue(MainCommentProperty, value);
-            NotifyPropertyChanged("MainComment");
-        }
+        set => SetValue(MainCommentProperty, value);
     }
 
     private async Task LoadFloorComments(bool IsLoadMoreComments)
@@ -80,11 +77,13 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
                 {
                     { "parentCommentId", MainComment.cid }, { "id", MainComment.resourceId },
                     { "type", MainComment.resourceType },
-                    { "time", time }
+                    { "time", IsLoadMoreComments? 0 : time }
                 });
             foreach (var floorcomment in json["data"]["comments"].ToArray())
-                floorComments.Add(
-                            Comment.CreateFromJson(floorcomment, MainComment.resourceId, MainComment.resourceType));//向子评论添加
+            {
+                var floorComment = Comment.CreateFromJson(floorcomment, MainComment.resourceId, MainComment.resourceType);
+                floorComments.Add(floorComment);
+            }
             time = json["data"]["time"].ToString();
             if (json["data"]["hasMore"].ToString() == "True")
                 LoadMore.Visibility = Visibility.Visible;
@@ -174,7 +173,6 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
             AvatarSource = new BitmapImage();
             AvatarSource.UriSource = AvatarUri;
         }
-
         ReplyBtn.Visibility = Visibility.Visible;
     }
 
