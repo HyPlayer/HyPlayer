@@ -68,8 +68,7 @@ steps:
 
 - powershell: |
    cd "$(Build.ArtifactStagingDirectory)\AppxPackages\"
-   $SYMPATH = (Get-ChildItem -Include *.appxsym -Recurse) | Foreach-Object{$_.FullName}
-   Move-Item $SYMPATH $(Agent.HomeDirectory)/$(VERSION).appxsym
+   Move-Item *.appxsym $(Agent.HomeDirectory)/
   displayName: 'PowerShell Script'
 
 - task: PublishBuildArtifacts@1
@@ -107,7 +106,7 @@ steps:
     appFile: '$(Agent.HomeDirectory)/$(Build.BuildId).zip'
     buildVersion: '$(VERSION)'
     symbolsOption: UWP
-    appxsymPath: '$(Agent.HomeDirectory)/$(VERSION).appxsym'
+    appxsymPath: '$(Agent.HomeDirectory)/*.appxsym'
     releaseNotesOption: file
     releaseNotesFile: CHANGELOG.md
     distributionGroupId: '19bc0109-9e15-4776-b691-f007850cf08a'
