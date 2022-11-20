@@ -68,7 +68,7 @@ steps:
 
 - powershell: |
    cd "$(Build.ArtifactStagingDirectory)\AppxPackages\"
-   Move-Item *.appxsym $(Agent.HomeDirectory)/
+   Move-Item *.appxsym $(Agent.HomeDirectory)\
   displayName: 'PowerShell Script'
 
 - task: PublishBuildArtifacts@1
