@@ -68,7 +68,8 @@ steps:
 
 - powershell: |
    cd "$(Build.ArtifactStagingDirectory)\AppxPackages\"
-   Move-Item *.appxsym $(Agent.HomeDirectory)\
+   $SYMPATH = (Get-ChildItem -Include *.appxsym -Recurse) | Foreach-Object{$_.FullName}
+   Move-Item $SYMPATH $(Agent.HomeDirectory)
   displayName: 'PowerShell Script'
 
 - task: PublishBuildArtifacts@1
