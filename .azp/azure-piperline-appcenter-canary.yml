@@ -66,14 +66,8 @@ steps:
     clean: true
     msbuildArchitecture: x64
 
-- powershell: |
-   cd "$(Build.ArtifactStagingDirectory)\AppxPackages\"
-   $SYMPATH = (Get-ChildItem -Include *.appxsym -Recurse) | Foreach-Object{$_.FullName}
-   Move-Item $SYMPATH $(Agent.HomeDirectory)
-  displayName: 'PowerShell Script'
-
 - task: PublishBuildArtifacts@1
-  displayName: 'Publish artifact: drop'
+  displayName: 'Publish Azure Artifact: drop'
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)\AppxPackages'
     ArtifactName: 'azure-$(VERSION)'
@@ -106,8 +100,6 @@ steps:
     appSlug: kengwang/HyPlayer
     appFile: '$(Agent.HomeDirectory)/$(Build.BuildId).zip'
     buildVersion: '$(VERSION)'
-    symbolsOption: UWP
-    appxsymPath: '$(Agent.HomeDirectory)/*.appxsym'
     releaseNotesOption: file
     releaseNotesFile: CHANGELOG.md
     distributionGroupId: '19bc0109-9e15-4776-b691-f007850cf08a'
