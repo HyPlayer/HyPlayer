@@ -78,6 +78,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private bool programClick;
     private bool realclick;
     private int sclock;
+    private int scrollFailCount = 0;
     private ExpandedWindowMode WindowMode;
 
 
@@ -459,14 +460,36 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             {
                 var ele = LyricBox.GetOrCreateElement(k) as FrameworkElement;
                 ele?.UpdateLayout();
-
+                ele.StartBringIntoView(new BringIntoViewOptions()
+                {
+                    VerticalAlignmentRatio = 0.5,
+                    AnimationDesired = true,
+                });//搞这么复杂干什么，直接两行搞定
+                /*
                 var transform = ele?.TransformToVisual((UIElement)LyricBoxContainer.Content);
                 var position = transform?.TransformPoint(new Point(0, 0));
 
                 if (position.HasValue)
-                    LyricBoxContainer.ChangeView(null, position.Value.Y + MainGrid.ActualHeight / 8, null, false);
+                {
+                    double newOffset = position.Value.Y + MainGrid.ActualHeight / 8;
+                    Debug.WriteLine(LyricBoxContainer.VerticalOffset);
+                    Debug.WriteLine(newOffset);
+                    if (Math.Abs(newOffset - LyricBoxContainer.VerticalOffset) >= 100)
+                    {
+                        bool res = LyricBoxContainer.ChangeView(null, newOffset, null, false);
+                        Debug.WriteLine(res.ToString() + " " + k);
+                        if (!res && scrollFailCount <= 3)
+                        {
+                            scrollFailCount++;
+                            UpdateFocusingLyric(true);
+                            return;
+                        }
+                        else scrollFailCount = 0;
+                    }
+                }
                 if (!recursionLock)
                     UpdateFocusingLyric(true);
+                */
             }
             catch (Exception e)
             {
@@ -575,7 +598,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         ImageAlbum.Source = img;
                         if (Common.Setting.expandedPlayerBackgroundType == 0)
                             Background = new ImageBrush
-                                { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                            { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                     }
                     else
                     {
@@ -591,7 +614,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
                         if (Common.Setting.expandedPlayerBackgroundType == 0)
                             Background = new ImageBrush
-                                { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                            { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                     }
                 }
                 catch (Exception)
@@ -1034,37 +1057,37 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
                 break;
             case 0 when Math.Abs(e.Cumulative.Translation.Y) > Math.Abs(e.Cumulative.Translation.X):
-            {
-                // 竖直方向滑动
-                if (e.Cumulative.Translation.Y >= 0)
-                    Common.PageMain.ExpandedPlayerPositionOffset.Y = e.Cumulative.Translation.Y;
-                else
                 {
-                    ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;
-                }
+                    // 竖直方向滑动
+                    if (e.Cumulative.Translation.Y >= 0)
+                        Common.PageMain.ExpandedPlayerPositionOffset.Y = e.Cumulative.Translation.Y;
+                    else
+                    {
+                        ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;
+                    }
 
-                if (e.Cumulative.Translation.Y > 200)
-                {
-                    e.Complete();
-                    Common.BarPlayBar.CollapseExpandedPlayer();
-                }
+                    if (e.Cumulative.Translation.Y > 200)
+                    {
+                        e.Complete();
+                        Common.BarPlayBar.CollapseExpandedPlayer();
+                    }
 
-                break;
-            }
+                    break;
+                }
             case 0:
-            {
-                ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
-                if (e.Cumulative.Translation.X > 400)
                 {
-                    e.Complete();
-                }
-                else if (e.Cumulative.Translation.X < -400)
-                {
-                    e.Complete();
-                }
+                    ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
+                    if (e.Cumulative.Translation.X > 400)
+                    {
+                        e.Complete();
+                    }
+                    else if (e.Cumulative.Translation.X < -400)
+                    {
+                        e.Complete();
+                    }
 
-                break;
-            }
+                    break;
+                }
         }
     }
 
@@ -1088,6 +1111,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             }
         }
     }
+
+ 
 }
 
 internal enum ExpandedWindowMode
