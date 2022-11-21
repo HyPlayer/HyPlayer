@@ -12,6 +12,7 @@ using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
+using Microsoft.AppCenter.Crashes;
 
 #endregion
 
@@ -32,7 +33,7 @@ public sealed partial class Search : Page, IDisposable
 
     private readonly ObservableCollection<NCSong> SongResults;
     private int page;
-    private string Text = "";
+    private string searchText = "";
 
     public Search()
     {
@@ -62,23 +63,13 @@ public sealed partial class Search : Page, IDisposable
 
     protected async override void OnNavigatedTo(NavigationEventArgs e)
     {
-        var list = HistoryManagement.GetSearchHistory();
-        foreach (var item in list)
-        {
-            var btn = new Button
-            {
-                Content = item
-            };
-            btn.Click += Btn_Click;
-            SearchHistory.Children.Add(btn);
-        }
         if((string)e.Parameter != null)
         {
             SearchKeywordBox.Text = (string)e.Parameter;
             SearchKeywordBox_QuerySubmitted(SearchKeywordBox, null);
         }
 
-        if (Text != string.Empty) _ = LoadResult();
+        if (searchText != string.Empty) _ = LoadResult();
     }
 
     protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
@@ -89,26 +80,15 @@ public sealed partial class Search : Page, IDisposable
 
     private async Task LoadResult()
     {
-        if (string.IsNullOrEmpty(Text)) return;
-        if (Convert.ToBase64String(Text.ToByteArrayUtf8()) == "6Ieq5p2A")
+        if (string.IsNullOrEmpty(searchText)) return;
+        if (Convert.ToBase64String(searchText.ToByteArrayUtf8()) == "6Ieq5p2A")
         {
             _ = Launcher.LaunchUriAsync(new Uri(@"http://music.163.com/m/topic/18926801"));
             return;
         }
 
         TBNoRes.Visibility = Visibility.Collapsed;
-        HistoryManagement.AddSearchHistory(Text);
-        var list = HistoryManagement.GetSearchHistory();
-        SearchHistory.Children.Clear();
-        foreach (var item in list)
-        {
-            var btn = new Button
-            {
-                Content = item
-            };
-            btn.Click += Btn_Click;
-            SearchHistory.Children.Add(btn);
-        }
+        HistoryManagement.AddSearchHistory(searchText);
 
         SearchResultContainer.ListItems.Clear();
         SongResults.Clear();
@@ -117,7 +97,7 @@ public sealed partial class Search : Page, IDisposable
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Cloudsearch,
                 new Dictionary<string, object>
                 {
-                    { "keywords", Text },
+                    { "keywords", searchText },
                     { "type", ((NavigationViewItem)NavigationViewSelector.SelectedItem).Tag.ToString() },
                     { "offset", page * 30 }
                 });
@@ -321,7 +301,7 @@ public sealed partial class Search : Page, IDisposable
 
     private void Btn_Click(object sender, RoutedEventArgs e)
     {
-        Text = (sender as Button).Content.ToString();
+        searchText = (sender as Button).Content.ToString();
         _ = LoadResult();
     }
 
@@ -507,7 +487,7 @@ public sealed partial class Search : Page, IDisposable
 
     private void SearchKeywordBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
-        Text = sender.Text;
+        searchText = sender.Text;
         _ = LoadResult();
     }
 
@@ -540,5 +520,20 @@ public sealed partial class Search : Page, IDisposable
         {
             Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
+    }
+
+
+    private async void HistoryComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if((sender as ComboBox) is not null)
+        {
+            SearchKeywordBox.Text= (sender as ComboBox).SelectedItem as String;//将历史放上去
+            await LoadResult();
+        }
+    }
+
+    private void Expander_Expanding(Microsoft.UI.Xaml.Controls.Expander sender, Microsoft.UI.Xaml.Controls.ExpanderExpandingEventArgs args)
+    {
+        HistoryComboBox.IsDropDownOpen = true;//一展开就展示历史
     }
 }

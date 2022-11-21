@@ -3,7 +3,9 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls" 
     xmlns:hycontrol="using:HyPlayer.Controls"
+    xmlns:hyplayer="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
@@ -12,7 +14,7 @@
     <Grid Margin="24,24,24,0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="75" />
+            <RowDefinition Height="Auto" />
             <RowDefinition />
         </Grid.RowDefinitions>
         <TextBlock
@@ -35,21 +37,31 @@
                 QuerySubmitted="SearchKeywordBox_QuerySubmitted"
                 SuggestionChosen="SearchKeywordBox_SuggestionChosen"
                 Tag="PageSearch"
+                Text="{x:Bind searchText,Mode=TwoWay}"
                 TextChanged="SearchKeywordBox_TextChanged" />
-            <StackPanel
-                Margin="0,0,15,45"
-                Orientation="Horizontal"
-                Spacing="5">
-                <TextBlock Margin="0,5,5,15" Text="搜索历史" />
-                <ScrollViewer VerticalAlignment="Stretch" HorizontalScrollMode="Enabled">
-                    <StackPanel
-                        x:Name="SearchHistory"
-                        Margin="0,0,0,10"
-                        VerticalAlignment="Top"
-                        Orientation="Horizontal"
-                        Spacing="5" />
-                </ScrollViewer>
-            </StackPanel>
+
+                <controls:Expander
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Stretch"
+                    Expanding="Expander_Expanding"
+                    Header="搜索历史"
+                    IsExpanded="False">
+                    <controls:Expander.Transitions>
+                        <TransitionCollection>
+                            <RepositionThemeTransition />
+                        </TransitionCollection>
+                    </controls:Expander.Transitions>
+                <ComboBox
+                    x:Name="HistoryComboBox"
+                    PlaceholderText="展开搜索历史"
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{x:Bind hyplayer:HistoryManagement.GetSearchHistory()}"
+                    SelectionChanged="HistoryComboBox_SelectionChanged"
+                    >
+
+                </ComboBox>
+            </controls:Expander>
+                
         </StackPanel>
         <NavigationView
             x:Name="NavigationViewSelector"

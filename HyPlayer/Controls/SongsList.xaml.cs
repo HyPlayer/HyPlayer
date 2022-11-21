@@ -302,7 +302,7 @@ public sealed partial class SongsList : UserControl, IDisposable
         _ = HyPlayList.AppendNcSongRange(SongContainer.SelectedItems.Cast<NCSong>().ToList(),
 
             HyPlayList.NowPlaying + 1);
-        if (SongContainer.SelectedItems.Cast<NCSong>().Where(t => t.IsAvailable) != null)
+        if (SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable).FirstOrDefault() != null)
         {
             var unAvailableSongNames = SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable).Select(t=>t.songname).ToArray();
             Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {string.Join("/",unAvailableSongNames)} 当前不可用\r已从播放列表中移除");

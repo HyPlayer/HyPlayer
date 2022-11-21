@@ -1116,7 +1116,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         }
     }
 
-
 }
 
 internal enum ExpandedWindowMode

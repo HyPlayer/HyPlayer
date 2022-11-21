@@ -1447,6 +1447,33 @@
                                         </StackPanel>
                                     </Grid>
                                 </Border>
+                                <Border
+                                    Height="64"
+                                    Background="#1A808080"
+                                    CornerRadius="4"
+                                    Tapped="UIElement_OnTapped">
+                                    <Grid Margin="8">
+                                        <StackPanel Orientation="Horizontal" Spacing="12">
+                                            <PersonPicture Height="44" ProfilePicture="https://qlogo4.store.qq.com/qzone/2318678921/2318678921/100"/>
+                                            <StackPanel>
+                                                <TextBlock
+                                                    Margin="1,0,0,0"
+                                                    Style="{StaticResource SubtitleTextBlockStyle}"
+                                                    Text="Claris" />
+                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                    <TextBlock Text="Developer" />
+                                                    <TextBlock Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" Text="Confident, Lively And Really ImpreSsive" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </StackPanel>
+                                        <StackPanel
+                                            HorizontalAlignment="Right"
+                                            Orientation="Horizontal"
+                                            Tapped="UIElement_OnTapped">
+                                            <HyperlinkButton Content="Github" NavigateUri="https://github.com/ClarisS01017" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
                             </StackPanel>
                             <VisualStateManager.VisualStateGroups>
                                 <VisualStateGroup>
