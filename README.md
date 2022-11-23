@@ -106,7 +106,6 @@ CheckNetIsolation LoopbackExempt -a -n="48848aaaaaaccd.hyplayer_fkcggvf9kbkw0"
 * 主开发者: [Kengwang](https://github.com/kengwang)
 * UI 设计: [aaaaaaccd](https://github.com/aaaaaaccd)
 * 部分功能: [EP012014 (天湖)](https://github.com/EP012014)
-* 部分功能: [Raspberry Kan](https://github.com/Raspberry-Monster)
 * 部分功能和一些修复: [Claris](https://github.com/ClarisS01017)
 * 图标提供 / UI 设计: [FUNNYTW](https://www.coolapk.com/u/1873068)
 * UI 设计: [Betta_Fish](https://github.com/zxbmmmmmmmmm)
