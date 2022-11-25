@@ -80,6 +80,11 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private int sclock;
     private int scrollFailCount = 0;
     private ExpandedWindowMode WindowMode;
+    private readonly BringIntoViewOptions DefaultBringIntoViewOptions = new BringIntoViewOptions()
+    {
+        VerticalAlignmentRatio = 0.5,
+        AnimationDesired = true,
+    };
 
 
     public ExpandedPlayer()
@@ -458,38 +463,12 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         if (k >= 0)
             try
             {
-                var ele = LyricBox.GetOrCreateElement(k) as FrameworkElement;
-                ele?.UpdateLayout();
-                ele.StartBringIntoView(new BringIntoViewOptions()
+                var ele = LyricBox.GetOrCreateElement(k) as FrameworkElement;    
+                if ((ele as LyricItemWrapper).SongLyric.PureLyric != "")
                 {
-                    VerticalAlignmentRatio = 0.5,
-                    AnimationDesired = true,
-                });//搞这么复杂干什么，直接两行搞定
-                /*
-                var transform = ele?.TransformToVisual((UIElement)LyricBoxContainer.Content);
-                var position = transform?.TransformPoint(new Point(0, 0));
-
-                if (position.HasValue)
-                {
-                    double newOffset = position.Value.Y + MainGrid.ActualHeight / 8;
-                    Debug.WriteLine(LyricBoxContainer.VerticalOffset);
-                    Debug.WriteLine(newOffset);
-                    if (Math.Abs(newOffset - LyricBoxContainer.VerticalOffset) >= 100)
-                    {
-                        bool res = LyricBoxContainer.ChangeView(null, newOffset, null, false);
-                        Debug.WriteLine(res.ToString() + " " + k);
-                        if (!res && scrollFailCount <= 3)
-                        {
-                            scrollFailCount++;
-                            UpdateFocusingLyric(true);
-                            return;
-                        }
-                        else scrollFailCount = 0;
-                    }
+                    ele?.UpdateLayout();
+                    ele.StartBringIntoView(DefaultBringIntoViewOptions);
                 }
-                if (!recursionLock)
-                    UpdateFocusingLyric(true);
-                */
             }
             catch (Exception e)
             {
@@ -1112,7 +1091,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         }
     }
 
- 
+
 }
 
 internal enum ExpandedWindowMode

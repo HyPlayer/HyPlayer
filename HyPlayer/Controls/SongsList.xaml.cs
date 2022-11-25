@@ -236,6 +236,7 @@ public sealed partial class SongsList : UserControl, IDisposable
                 HyPlayList.PlaySourceId = ListSource.Substring(2);
             if (SongContainer.SelectedItem!=null)
                 HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t =>t.PlayItem?.Id == (SongContainer.SelectedItem as NCSong).sid));
+
         }
         //else if (ListSource == null)
         //{
@@ -293,9 +294,15 @@ public sealed partial class SongsList : UserControl, IDisposable
     private void FlyoutItemAddToPlaylist_Click(object sender, RoutedEventArgs e)
     {
 
-        _ = HyPlayList.AppendNcSongRange(SongContainer.SelectedItems.Cast<NCSong>().Where(t => t.IsAvailable).ToList(),
+        if (!(SongContainer.SelectedItem as NCSong).IsAvailable)
+        {
+            Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).songname} 当前不可用");
+            return;
+        }
+        _ = HyPlayList.AppendNcSongRange(SongContainer.SelectedItems.Cast<NCSong>().ToList(),
+
             HyPlayList.NowPlaying + 1);
-        if (SongContainer.SelectedItems.Cast<NCSong>().Where(t => t.IsAvailable) != null)
+        if (SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable).FirstOrDefault() != null)
         {
             var unAvailableSongNames = SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable).Select(t=>t.songname).ToArray();
             Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {string.Join("/",unAvailableSongNames)} 当前不可用\r已从播放列表中移除");
