@@ -12,6 +12,7 @@ using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using NeteaseCloudMusicApi;
+using System.Collections.ObjectModel;
 
 #endregion
 
@@ -29,6 +30,8 @@ public sealed partial class Comments : Page, IDisposable
     private string resourceid;
     private int resourcetype;
     private int sortType = 1;
+    private ObservableCollection<Comment> hotComments=new ObservableCollection<Comment>();
+    private ObservableCollection<Comment> normalComments=new ObservableCollection<Comment>();
 
     public Comments()
     {
@@ -37,8 +40,8 @@ public sealed partial class Comments : Page, IDisposable
 
     public void Dispose()
     {
-        HotCommentList.Children.Clear();
-        CommentList.Children.Clear();
+        hotComments.Clear();
+        normalComments.Clear();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -77,13 +80,11 @@ public sealed partial class Comments : Page, IDisposable
 
     private void LoadHotComments()
     {
-        _ = LoadComments(2, HotCommentList);
+        _ = LoadComments(2);
     }
 
-    private async Task LoadComments(int type, StackPanel addingPanel = null)
+    private async Task LoadComments(int type)
     {
-        if (addingPanel == null)
-            addingPanel = CommentList;
         // type 1:按推荐排序,2:按热度排序,3:按时间排序
         if (string.IsNullOrEmpty(resourceid)) return;
         try
@@ -98,11 +99,16 @@ public sealed partial class Comments : Page, IDisposable
                     { "pageSize", 20 },
                     { "sortType", type }
                 });
-
-            addingPanel.Children.Clear();
+            if(type==2)
+                hotComments.Clear();
+            else normalComments.Clear();
             foreach (var comment in json["data"]["comments"].ToArray())
-                addingPanel.Children.Add(
-                    new SingleComment(Comment.CreateFromJson(comment, resourceid, resourcetype)));
+            {
+                Comment LoadedComment = Comment.CreateFromJson(comment, resourceid, resourcetype);
+                if (type == 2)
+                    hotComments.Add(LoadedComment);
+                else normalComments.Add(LoadedComment);
+            }
             if (type == 3)
                 cursor = json["data"]["cursor"].ToString();
             if (json["data"]["hasMore"].ToString() == "True")

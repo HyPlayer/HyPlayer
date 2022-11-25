@@ -434,6 +434,7 @@ public class NCAlbum
 
 public class Comment
 {
+    public Comment thisComment => this;//绑定回去用
     public Uri AvatarUri;
     public string cid;
     public string content;
