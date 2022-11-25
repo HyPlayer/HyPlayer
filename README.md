@@ -63,6 +63,10 @@ Telegram 频道: https://t.me/hyplayer
 
 请勿模仿
 
+### 关于桌面歌词
+
+本软件内置了以Toast通知形式实现的桌面歌词，如果有拖动桌面歌词/控制歌曲的需要我们建议下载[热词app](https://apps.microsoft.com/store/detail/9MXFFHVQVBV9)
+
 ### 关于无版权
 
 HyPlayer 不内置解灰以及 VIP 歌曲解锁, 且不会在之后的版本中内置解灰
