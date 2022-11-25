@@ -34,7 +34,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
 
     public event PropertyChangedEventHandler PropertyChanged;
 
-    public async void OnPropertyChanged([CallerMemberName]string propertyName = "")
+    public async void OnPropertyChanged([CallerMemberName] string propertyName = "")
     {
         await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                 () => { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); });
@@ -64,7 +64,11 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
     public Comment MainComment
     {
         get => (Comment)GetValue(MainCommentProperty);
-        set => SetValue(MainCommentProperty, value);
+        set
+        {
+            SetValue(MainCommentProperty, value);
+            ReplyCountIndicator.Text = value.ReplyCount.ToString();
+        }
     }
 
     private async Task LoadFloorComments(bool IsLoadMoreComments)
@@ -82,6 +86,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
             foreach (var floorcomment in json["data"]["comments"].ToArray())
             {
                 var floorComment = Comment.CreateFromJson(floorcomment, MainComment.resourceId, MainComment.resourceType);
+                floorComment.IsMainComment = false;
                 floorComments.Add(floorComment);
             }
             time = json["data"]["time"].ToString();
@@ -174,10 +179,16 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
             AvatarSource.UriSource = AvatarUri;
         }
         ReplyBtn.Visibility = Visibility.Visible;
+        FloorCommentsExpander.Visibility = MainComment.IsMainComment ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void FloorCommentsExpander_Expanding(Microsoft.UI.Xaml.Controls.Expander sender, Microsoft.UI.Xaml.Controls.ExpanderExpandingEventArgs args)
     {
         LoadFloorComments(false);
+    }
+
+    private void FloorCommentsExpander_Collapsed(Microsoft.UI.Xaml.Controls.Expander sender, Microsoft.UI.Xaml.Controls.ExpanderCollapsedEventArgs args)
+    {
+        floorComments.Clear();
     }
 }

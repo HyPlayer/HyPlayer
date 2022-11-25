@@ -62,7 +62,7 @@
                 <StackPanel>
                     <hycontrols:CommentsList
                     x:Name="HotComments" 
-                    Comments="{x:Bind normalComments}"/>
+                    Comments="{x:Bind hotComments}"/>
 
                     <Border BorderBrush="{ThemeResource SystemControlBackgroundListMediumRevealBorderBrush}" BorderThickness="0,1,0,0" HorizontalAlignment="Stretch" Margin="16,0,16,16"/>
 

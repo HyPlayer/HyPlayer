@@ -43,13 +43,13 @@ public class PureLyricInfo
 public class SongLyric
 {
     public static SongLyric PureSong = new()
-        { LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏" };
+    { LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏" };
 
     public static SongLyric NoLyric = new()
-        { LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏" };
+    { LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏" };
 
     public static SongLyric LoadingLyric = new()
-        { LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..." };
+    { LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..." };
 
     public TimeSpan LyricTime;
     public string PureLyric;
@@ -439,6 +439,7 @@ public class Comment
     public string cid;
     public string content;
     public bool HasLiked;
+    public bool IsMainComment = true;
     public int likedCount;
     public string Nickname;
     public int ReplyCount;

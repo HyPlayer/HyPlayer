@@ -30,8 +30,8 @@ public sealed partial class Comments : Page, IDisposable
     private string resourceid;
     private int resourcetype;
     private int sortType = 1;
-    private ObservableCollection<Comment> hotComments=new ObservableCollection<Comment>();
-    private ObservableCollection<Comment> normalComments=new ObservableCollection<Comment>();
+    private ObservableCollection<Comment> hotComments = new ObservableCollection<Comment>();
+    private ObservableCollection<Comment> normalComments = new ObservableCollection<Comment>();
 
     public Comments()
     {
@@ -99,7 +99,7 @@ public sealed partial class Comments : Page, IDisposable
                     { "pageSize", 20 },
                     { "sortType", type }
                 });
-            if(type==2)
+            if (type == 2)
                 hotComments.Clear();
             else normalComments.Clear();
             foreach (var comment in json["data"]["comments"].ToArray())
