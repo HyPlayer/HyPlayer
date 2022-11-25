@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:hycontrols="using:HyPlayer.Controls"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
 
@@ -59,12 +60,10 @@
                 </Grid>
 
                 <StackPanel>
-                    <StackPanel
-                        x:Name="HotCommentList"
-                        Margin="10"
-                        Orientation="Vertical"
-                        Spacing="30" />
-                    
+                    <hycontrols:CommentsList
+                    x:Name="HotComments" 
+                    Comments="{x:Bind normalComments}"/>
+
                     <Border BorderBrush="{ThemeResource SystemControlBackgroundListMediumRevealBorderBrush}" BorderThickness="0,1,0,0" HorizontalAlignment="Stretch" Margin="16,0,16,16"/>
 
                     <Grid>
@@ -91,11 +90,9 @@
                             <x:String>时间</x:String>
                         </ComboBox>
                     </Grid>
-                    <StackPanel
-                        x:Name="CommentList"
-                        Margin="10"
-                        Orientation="Vertical"
-                        Spacing="16" />
+                    <hycontrols:CommentsList
+                    x:Name="NormalComments" 
+                    Comments="{x:Bind normalComments}"/>
 
                 </StackPanel>
 

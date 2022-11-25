@@ -463,8 +463,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         if (k >= 0)
             try
             {
-                var ele = LyricBox.GetOrCreateElement(k) as FrameworkElement;
-                
+                var ele = LyricBox.GetOrCreateElement(k) as FrameworkElement;    
                 if ((ele as LyricItemWrapper).SongLyric.PureLyric != "")
                 {
                     ele?.UpdateLayout();
@@ -1091,6 +1090,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             }
         }
     }
+
 
 }
 

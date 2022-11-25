@@ -5,6 +5,7 @@
     xmlns:controls="using:HyPlayer.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     d:DesignHeight="670"
     d:DesignWidth="800"
     Loaded="UserControl_Loaded"
@@ -34,8 +35,8 @@
                                 x:Name="Nickname"
                                 Padding="0"
                                 Click="NavToUser_Click"
-                                Content="{x:Bind comment.Nickname}" Style="{StaticResource TextBlockButtonStyle}" />
-                            <TextBlock Text="{x:Bind comment.SendTime}" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
+                                Content="{x:Bind MainComment.Nickname,Mode=OneWay}" Style="{StaticResource TextBlockButtonStyle}" />
+                            <TextBlock Text="{x:Bind MainComment.SendTime,Mode=OneWay}" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
                         </StackPanel>
                     </StackPanel>
 
@@ -44,7 +45,7 @@
                         <TextBlock
                             x:Name="CommentContent"
                             FontSize="16"
-                            Text="{x:Bind comment.content}"
+                            Text="{x:Bind MainComment.content,Mode=OneWay}"
                             TextWrapping="Wrap" IsTextSelectionEnabled="True"/>
                         <StackPanel
                             HorizontalAlignment="Right"
@@ -54,11 +55,11 @@
                                 x:Name="Like"
                                 Height="35"
                                 Click="Like_Click"
-                                IsChecked="{x:Bind comment.HasLiked}"
+                                IsChecked="{x:Bind MainComment.HasLiked,Mode=OneWay}"
                                 ToolTipService.ToolTip="点赞"  Background="Transparent" BorderBrush="Transparent">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <FontIcon Glyph="&#xE19F;" FontSize="15" />
-                                    <TextBlock x:Name="LikeCountTB" Text="{x:Bind comment.likedCount}" />
+                                    <TextBlock x:Name="LikeCountTB" Text="{x:Bind MainComment.likedCount}" />
                                 </StackPanel>
                             </ToggleButton>
                             <Button
@@ -66,19 +67,10 @@
                                 Height="35"
                                 Click="Delete_Click"
                                 ToolTipService.ToolTip="删除"
-                                Visibility="{x:Bind comment.IsByMyself}" Background="Transparent" BorderBrush="Transparent">
+                                Visibility="{x:Bind MainComment.IsByMyself,Mode=OneWay}" Background="Transparent" BorderBrush="Transparent">
                                 <FontIcon Glyph="&#xE107;" FontSize="15" />
                             </Button>
-                            <ToggleButton
-                                x:Name="ReplyBtn"
-                                Height="35"
-                                Click="ReplyBtn_Click"
-                                ToolTipService.ToolTip="回复" Background="Transparent" BorderBrush="Transparent">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <FontIcon Glyph="&#xE134;" FontSize="15" />
-                                    <TextBlock Text="{x:Bind comment.ReplyCount}" />
-                                </StackPanel>
-                            </ToggleButton>
+
                         </StackPanel>
                     </StackPanel>
                 </Grid>
@@ -88,12 +80,22 @@
         </Grid>
 
 
-        <Border
-            x:Name="SubCmtsConainer"
-            Margin="12"
-            Background="#26808080"
-            CornerRadius="4"
-            Visibility="Collapsed">
+        <muxc:Expander
+            HorizontalAlignment="Stretch"
+            x:Name="FloorCommentsExpander"
+            Expanding="FloorCommentsExpander_Expanding">
+            <muxc:Expander.Header>
+                <ToggleButton
+                    x:Name="ReplyBtn"
+                    Height="35"
+                    IsChecked="{x:Bind FloorCommentsExpander.IsExpanded,Mode=TwoWay}"
+                    ToolTipService.ToolTip="回复" Background="Transparent" BorderBrush="Transparent">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE134;" FontSize="15" />
+                        <TextBlock Text="{x:Bind MainComment.ReplyCount}" />
+                    </StackPanel>
+                </ToggleButton>
+            </muxc:Expander.Header>
             <StackPanel Orientation="Vertical">
                 <Grid Margin="0,12,0,0">
                     <Grid.ColumnDefinitions>
@@ -113,13 +115,13 @@
                         Content="回复"
                         Style="{StaticResource AccentButtonStyle}" />
                 </Grid>
-                <StackPanel x:Name="SubCmts" Margin="8" />
+                <controls:CommentsList Comments="{x:Bind floorComments,Mode=OneWay}"/>
                 <Button
                     x:Name="LoadMore"
                     HorizontalAlignment="Stretch"
                     Click="LoadMore_Click"
                     Content="加载更多"/>
             </StackPanel>
-        </Border>
+        </muxc:Expander>
     </StackPanel>
 </UserControl>
