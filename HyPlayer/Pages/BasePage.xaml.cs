@@ -82,9 +82,9 @@ public sealed partial class BasePage : Page
         BaseFrame.IsNavigationStackEnabled = !Common.Setting.forceMemoryGarbage;
         Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
         Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
-        Window.Current.CoreWindow.Dispatcher.AcceleratorKeyActivated += Dispatcher_AcceleratorKeyActivated;
+       // Window.Current.CoreWindow.Dispatcher.AcceleratorKeyActivated += Dispatcher_AcceleratorKeyActivated;
     }
-
+    /*
     private void Dispatcher_AcceleratorKeyActivated(CoreDispatcher sender, AcceleratorKeyEventArgs args)
     {
         if(args.EventType== CoreAcceleratorKeyEventType.KeyDown)
@@ -129,7 +129,7 @@ public sealed partial class BasePage : Page
         }
         args.Handled = true;
     }
-
+    */
     private void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs args)
     {
         if (args.CurrentPoint.Properties.IsXButton1Pressed)
