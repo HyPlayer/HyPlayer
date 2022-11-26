@@ -13,6 +13,12 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using NeteaseCloudMusicApi;
 using System.Collections.ObjectModel;
+using Windows.UI.Xaml.Media;
+using Windows.System.Threading;
+using Windows.UI.Core;
+using Windows.UI.Xaml.Media.Animation;
+using System.Drawing;
+using Point = Windows.Foundation.Point;
 
 #endregion
 
@@ -30,6 +36,7 @@ public sealed partial class Comments : Page, IDisposable
     private string resourceid;
     private int resourcetype;
     private int sortType = 1;
+    private ScrollViewer MainScroll, HotCommentsScroll;
     private ObservableCollection<Comment> hotComments = new ObservableCollection<Comment>();
     private ObservableCollection<Comment> normalComments = new ObservableCollection<Comment>();
 
@@ -208,9 +215,25 @@ public sealed partial class Comments : Page, IDisposable
     private void ScrollTop()
     {
         var transform = AllCmtsTB.TransformToVisual(MainScroll);
-        var point = transform.TransformPoint(new Point(0, 0));
+        var point = transform.TransformPoint(new Point(0, -1000000));//一定要这么大
         var y = point.Y + MainScroll.VerticalOffset;
         MainScroll.ChangeView(null, y, null, false);
+        TimeSpan delay = TimeSpan.FromMilliseconds(320);//稍微等等再滚回去，免得回到热评区域
+        ThreadPoolTimer DelayTimer = ThreadPoolTimer.CreateTimer(
+    (source) =>
+
+    {
+        Dispatcher.RunAsync(
+        CoreDispatcherPriority.Low,
+        () =>
+        {
+            point = transform.TransformPoint(new Point(0, 25));//要超过判定区域，还要预留一点
+            y = point.Y + MainScroll.VerticalOffset;
+            MainScroll.ChangeView(null, y, null, false);
+        });
+
+    }, delay);
+
     }
 
     private void BackToTop_Click(object sender, RoutedEventArgs e)
@@ -226,6 +249,23 @@ public sealed partial class Comments : Page, IDisposable
         if ((sender as ScrollViewer).VerticalOffset > y + 25)
             BackToTop.Visibility = Visibility.Visible;
         else BackToTop.Visibility = Visibility.Collapsed;
+        if ((sender as ScrollViewer).VerticalOffset < 15)
+        {
+            TimeSpan delay = TimeSpan.FromMilliseconds(90);//先别急，如果是回到顶部触发的会滚回去一点
+            ThreadPoolTimer DelayTimer = ThreadPoolTimer.CreateTimer(
+        (source) =>
+
+        {
+            Dispatcher.RunAsync(
+            CoreDispatcherPriority.Low,
+            () =>
+            {
+                if ((sender as ScrollViewer).VerticalOffset < 15)
+                    ShiftCommentList(false);//回到热评
+            });
+
+        }, delay);
+        }
     }
 
     private void PageSelect_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
@@ -236,4 +276,67 @@ public sealed partial class Comments : Page, IDisposable
             ScrollTop();
         }
     }
+
+    private void HotComments_Loaded(object sender, RoutedEventArgs e)
+    {
+        TimeSpan delay = TimeSpan.FromMilliseconds(500);
+        ThreadPoolTimer DelayTimer = ThreadPoolTimer.CreateTimer(
+    (source) =>
+
+        {
+            Dispatcher.RunAsync(
+            CoreDispatcherPriority.Low,
+            () =>
+            {
+                HotCommentsScroll = HotComments.CommentPresentScrollViewer;
+                HotCommentsScroll.ViewChanged += HotCommentsScroll_ViewChanged;
+            });
+
+        }, delay);//缓一会再加载，要不然获取不到
+
+    }
+
+    private void HotCommentsScroll_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
+    {
+        if (HotCommentsScroll.ScrollableHeight - HotCommentsScroll.VerticalOffset <= 14)
+            ShiftCommentList(true);
+    }
+
+    private void ShiftCommentList(bool direction)
+    {
+        if (direction)
+        {
+            AllCommentsContainer.Visibility = Visibility.Visible;
+            var animation = (Storyboard)Resources["CommentFlyUp"];
+            animation.Begin();
+            HotCommentsContainer.Visibility = Visibility.Collapsed;
+            TimeSpan delay = TimeSpan.FromMilliseconds(500);
+            ThreadPoolTimer DelayTimer = ThreadPoolTimer.CreateTimer(
+            (source) =>
+
+            {
+                Dispatcher.RunAsync(
+                CoreDispatcherPriority.Low,
+                () =>
+                {
+                    MainScroll = NormalComments.CommentPresentScrollViewer;
+                    var transform = AllCmtsTB.TransformToVisual(MainScroll);
+                    var point = transform.TransformPoint(new Point(0, 25));//要超过判定区域，还要预留一点
+                    var y = point.Y + MainScroll.VerticalOffset;
+                    MainScroll.ChangeView(null, y, null, false);
+                    MainScroll.ViewChanged += MainScroll_ViewChanged;
+                });
+
+            }, delay);
+        }
+        else
+        {
+            HotCommentsContainer.Visibility = Visibility.Visible;
+            var animation = (Storyboard)Resources["CommentFlyDown"];
+            animation.Begin();
+            AllCommentsContainer.Visibility = Visibility.Collapsed;
+            BackToTop.Visibility = Visibility.Collapsed;
+        }
+    }
+
 }
