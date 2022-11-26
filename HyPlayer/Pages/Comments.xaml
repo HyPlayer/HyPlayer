@@ -90,7 +90,7 @@
                 </hycontrols:CommentsList.RenderTransform>
             </hycontrols:CommentsList>
         </Grid>
-        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="135" Spacing="4">
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="135" Spacing="4" Visibility="{x:Bind NormalComments.Visibility}">
             <TextBlock x:Name="PageIndicator" HorizontalAlignment="Center" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
             <StackPanel 
                         Orientation="Horizontal"
