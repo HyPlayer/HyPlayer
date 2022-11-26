@@ -181,6 +181,9 @@
     <Compile Include="Controls\SingleComment.xaml.cs">
       <DependentUpon>SingleComment.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\SongListItem.xaml.cs">
+      <DependentUpon>SongListItem.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\SongListSelect.cs">
       <DependentUpon>SongListSelect.xaml</DependentUpon>
     </Compile>
@@ -347,6 +350,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\LastFMLoginBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\SongListItem.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -178,7 +178,6 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
             AvatarSource = new BitmapImage();
             AvatarSource.UriSource = AvatarUri;
         }
-        ReplyBtn.Visibility = Visibility.Visible;
         FloorCommentsExpander.Visibility = MainComment.IsMainComment ? Visibility.Visible : Visibility.Collapsed;
     }
 

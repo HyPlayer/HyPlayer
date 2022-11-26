@@ -15,11 +15,11 @@
             x:Name="CommentsContainer"
             SelectionMode="None"
             HorizontalAlignment="Stretch"
-            ItemsSource="{x:Bind Comments}">
+            ItemsSource="{x:Bind Comments}" ItemContainerStyle="{ThemeResource ListViewItemStyle}">
             <ListView.ItemTemplate>
                 <DataTemplate
                     ScrollViewer.CanContentRenderOutsideBounds="False"
-                    x:DataType="classes:Comment">
+                    x:DataType="classes:Comment">   
                     <local:SingleComment MainComment="{x:Bind thisComment}">
                         
                     </local:SingleComment>

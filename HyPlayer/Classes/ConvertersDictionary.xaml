@@ -15,4 +15,7 @@
     <classes:BooleanToWindowBrushesConverter x:Key="BooleanToWindowBrushesConverter" />
     <classes:BooleanToBarPlayBarBrushesConverter x:Key="BooleanToBarPlayBarBrushesConverter"/>
     <classes:BooleanToGridPlayBarBrushesConverter x:Key="BooleanToGridPlayBarBrushesConverter"/>
+    <classes:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+    <classes:MillisecondConverter x:Key="MillisecondConverter"/>
+
 </ResourceDictionary>

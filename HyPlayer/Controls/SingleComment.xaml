@@ -51,17 +51,7 @@
                             HorizontalAlignment="Right"
                             Orientation="Horizontal"
                             Spacing="4">
-                            <ToggleButton
-                                x:Name="Like"
-                                Height="35"
-                                Click="Like_Click"
-                                IsChecked="{x:Bind MainComment.HasLiked,Mode=OneWay}"
-                                ToolTipService.ToolTip="点赞"  Background="Transparent" BorderBrush="Transparent">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <FontIcon Glyph="&#xE19F;" FontSize="15" />
-                                    <TextBlock x:Name="LikeCountTB" Text="{x:Bind MainComment.likedCount}" />
-                                </StackPanel>
-                            </ToggleButton>
+
                             <Button
                                 x:Name="Delete"
                                 Height="35"
@@ -88,16 +78,26 @@
             HorizontalContentAlignment="Stretch"
             Margin="12,-12,12,0">
             <muxc:Expander.Header>
-                <ToggleButton
-                    x:Name="ReplyBtn"
-                    Height="35"
-                    IsChecked="{x:Bind FloorCommentsExpander.IsExpanded,Mode=TwoWay}"
-                    ToolTipService.ToolTip="回复" Background="Transparent" BorderBrush="Transparent">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <FontIcon Glyph="&#xE134;" FontSize="15" />
-                        <TextBlock x:Name="ReplyCountIndicator"  Text="{x:Bind MainComment.ReplyCount}" />
+                <Grid>
+                    <ToggleButton
+                        x:Name="Like"
+                        Height="35"
+                        Click="Like_Click"
+                        IsChecked="{x:Bind MainComment.HasLiked,Mode=OneWay}"
+                        ToolTipService.ToolTip="点赞"  Background="Transparent" BorderBrush="Transparent">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE19F;" FontSize="15" />
+                            <TextBlock x:Name="LikeCountTB" Text="{x:Bind MainComment.likedCount}" />
+                        </StackPanel>
+                    </ToggleButton>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center"  HorizontalAlignment="Right">
+                        <TextBlock x:Name="ReplyCountIndicator"  Text="{x:Bind MainComment.ReplyCount}" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
+                        <TextBlock Text="条回复" HorizontalAlignment="Right" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
                     </StackPanel>
-                </ToggleButton>
+
+
+                </Grid>
+
             </muxc:Expander.Header>
             <StackPanel Orientation="Vertical">
                 <Grid Margin="0,12,0,12">

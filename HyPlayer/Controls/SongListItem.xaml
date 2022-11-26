@@ -1,0 +1,188 @@
+﻿<UserControl
+    x:Class="HyPlayer.Controls.SongListItem"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:HyPlayer.Controls"
+    xmlns:local1="using:HyPlayer"
+
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+
+    d:DesignHeight="300"
+    d:DesignWidth="400">
+
+    <Grid Name="SongGrid" Tapped="SongGrid_OnTapped">
+        <!--添加一个Grid以保证点击项目时能触发Tapped事件-->
+        <Grid Width="100000" Background="Transparent" VerticalAlignment="Stretch"/>
+        <!--展开后-->
+        <Grid Visibility="Collapsed"  Name="ExpandedGrid"
+              Margin="-10,15,-10,15"
+              HorizontalAlignment="Stretch"
+              Background="Transparent"
+              IsRightTapEnabled="True"
+              RightTapped="Grid_RightTapped"
+              ScrollViewer.CanContentRenderOutsideBounds="False"
+              Tag="{x:Bind Song.Order}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="80" />
+            </Grid.ColumnDefinitions>
+            <controls:ImageEx
+                            x:Name="RectangleImageBack"
+                            Grid.ColumnSpan="2"
+                            Height="85"
+                            Margin="0,-5,0,-5"
+                            CornerRadius="7"
+                            EnableLazyLoading="True"
+                            IsCacheEnabled="False"
+                            Source="{x:Bind Song.Cover}"
+                            Stretch="Fill"
+                            Visibility="{x:Bind local1:Common.Setting.itemOfListBackgroundAcrylicBlur}" />
+            <Rectangle
+                            x:Name="RectangleImageAcrylic"
+                            Grid.ColumnSpan="2"
+                            Margin="-5,-10,0,-10"
+                            Fill="{ThemeResource SystemControlAcrylicElementBrush}"
+                            RadiusX="10"
+                            RadiusY="10"
+                            Visibility="{x:Bind local1:Common.Setting.itemOfListBackgroundAcrylicBlur}" />
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                <controls:ImageEx
+                                x:Name="ImageRect"
+                                Width="80"
+                                Height="80"
+                                Margin="12,0,0,0"
+                                CornerRadius="10"
+                                EnableLazyLoading="True"
+                                IsCacheEnabled="False"
+                                IsEnabled="{x:Bind Song.IsAvailable}"
+                                Source="{x:Bind Song.Cover}"
+                                Stretch="UniformToFill" />
+                <TextBlock
+                                x:Name="OrderId"
+                                Width="48"
+                                Margin="-73,0,0,0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
+                                FontSize="24"
+                                FontWeight="Bold"
+                                Text="{x:Bind Song.DspOrder}" />
+                <Grid Padding="7,0,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center" >
+                        <StackPanel
+                                    Grid.Row="0"
+                                    Orientation="Horizontal"
+                                    Spacing="4" >
+                            <TextBlock
+                                        Name="TextBlockSongname"
+                                        FontSize="24"
+                                        FontWeight="SemiBold"
+                                        Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
+                                        Text="{x:Bind Song.songname}" />
+                            <TextBlock
+                                        Name="TextBlockTransName"
+                                        FontSize="24"
+                                        Foreground="Gray"
+                                        Text="{x:Bind ConvertTranslate(Song.transname)}" />
+                            <Image
+                                        Height="20"
+                                        Source="/Assets/cloud.png"
+                                        Visibility="{x:Bind Song.IsCloud}" />
+                            <Image
+                                        Height="20"
+                                        Source="/Assets/vip.png"
+                                        Visibility="{x:Bind Song.IsVip}" />
+                        </StackPanel>
+                        <TextBlock Margin="0,2,0,0"
+                                    Name="TextBlockAlia"
+                                    FontSize="12"
+                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                    Text="{x:Bind Song.alias}"
+                                    Visibility="Visible" />
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="4" Margin="0,2,0,0">
+                            <TextBlock
+                            Name="TextBlockArtist"
+                            FontSize="12"
+                            Foreground="Gray"
+                            Text="{x:Bind Song.ArtistString}" />
+                            <TextBlock
+                                FontSize="12"
+                                Foreground="Gray"
+                                Text="-" />
+                            <TextBlock
+                            Name="TextBlockAlbum"
+                            FontSize="12"
+                            Foreground="Gray"
+                            Text="{x:Bind Song.Album.name}" />
+                        </StackPanel>
+
+                    </StackPanel>
+
+                </Grid>
+            </StackPanel>
+
+            <StackPanel
+                            Grid.Column="1"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            Margin="0,0,8,0"
+                            Spacing="8">
+                <Button
+                                x:Name="More"
+                                Width="45"
+                                Height="35"
+                                Click="More_Click"
+                                Background="Transparent"
+                                Tag="{x:Bind Song.Order}"
+                                BorderBrush="Transparent"
+                                ToolTipService.ToolTip="更多">
+                    <FontIcon Glyph="&#xE10C;" />
+                </Button>
+
+            </StackPanel>
+            <TextBlock  Grid.Column="1" Text="{x:Bind Song.LengthInMilliseconds,Converter={StaticResource MillisecondConverter}}" Margin="0,0,10,0" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+
+        </Grid>
+        <!--默认(收缩)--><!--TODO 在设置中添加默认展开选项-->
+        <Grid  Name="DefaultGrid">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*" MaxWidth="32"/>
+
+                <ColumnDefinition Width="12*"/>
+                <ColumnDefinition Width="8*"/>
+                <ColumnDefinition Width="8*"/>
+                <ColumnDefinition Width="*"/>
+
+            </Grid.ColumnDefinitions>
+
+            <TextBlock  Text="{x:Bind Song.DspOrder}" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" VerticalAlignment="Center"/>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Image
+                    Height="20"
+                    Source="/Assets/cloud.png"
+                    Visibility="{x:Bind Song.IsCloud}" Margin="0,1,2,0"/>
+                <Image
+                    Height="20"
+                    Source="/Assets/vip.png"
+                    Visibility="{x:Bind Song.IsVip}"  Margin="0,1,2,0"/>
+                <TextBlock Text="{x:Bind Song.songname}" TextTrimming="WordEllipsis" FontSize="16" />
+                <TextBlock Text="(" Visibility="{x:Bind Song.alias,Converter={StaticResource NullToVisibilityConverter}}" Margin="2,0,0,0"  Foreground="Gray" VerticalAlignment="Center" />
+                <TextBlock Name="SongAlias" Text="{x:Bind Song.alias}"   Foreground="Gray" TextTrimming="WordEllipsis" VerticalAlignment="Center"/>
+                <TextBlock Text=")" Visibility="{x:Bind Song.alias,Converter={StaticResource NullToVisibilityConverter}}" Foreground="Gray" TextTrimming="WordEllipsis"  VerticalAlignment="Center"/>
+            </StackPanel>
+
+
+            <TextBlock Grid.Column="2" Text="{x:Bind Song.ArtistString}" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="3" TextTrimming="CharacterEllipsis" Text="{x:Bind Song.Album.name}" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" VerticalAlignment="Center"/>
+
+            <TextBlock Grid.Column="4" Text="{x:Bind Song.LengthInMilliseconds,Converter={StaticResource MillisecondConverter}}" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" HorizontalAlignment="Right"  VerticalAlignment="Center"/>
+        </Grid>    
+    </Grid>
+</UserControl>

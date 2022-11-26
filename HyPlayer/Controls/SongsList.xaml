@@ -47,7 +47,7 @@
             Padding="0"
             ItemsSource="{x:Bind VisibleSongs}"
             SelectionChanged="SongContainer_SelectionChanged"
-            SelectionMode="{x:Bind MultiSelect, Converter={StaticResource SelectModeConverter}, Mode=OneWay}"
+            SelectionMode="{x:Bind MultiSelect, Converter={StaticResource SelectModeConverter}, Mode=OneWay}" 
             ShowsScrollingPlaceholders="True" ItemContainerStyle="{ThemeResource ListViewItemStyle}">
             <ListView.Footer>
                 <ContentControl Margin="0,0,0,130" Content="{x:Bind Footer}" />
@@ -192,7 +192,8 @@
             </ListView.Resources>
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="classes:NCSong" ScrollViewer.CanContentRenderOutsideBounds="False">
-                    <Grid
+                    <hycontrols:SongListItem Song="{x:Bind}" />
+                    <!--<Grid
                         Margin="-10,15,-10,15"
                         HorizontalAlignment="Stretch"
                         Background="Transparent"
@@ -330,7 +331,7 @@
                                 <FontIcon Glyph="&#xE10C;" />
                             </Button>
                         </StackPanel>
-                    </Grid>
+                    </Grid>-->
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>

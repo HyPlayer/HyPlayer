@@ -324,12 +324,12 @@
                         IsCacheEnabled="False"
                         Stretch="UniformToFill" />
                 </Grid>
-                <StackPanel Margin="12,0,0,0" Orientation="Vertical">
+                <StackPanel Margin="12,0,0,0" Orientation="Vertical" VerticalAlignment="Center">
 
 
                     <local:SelectableTextBox
                         x:Name="TbSongName"
-                        Margin="0,3,0,0"
+                        Margin="0,8,0,0"
                         HorizontalAlignment="Stretch"
                         FontFamily="Bahnschrift SemiBold"
                         FontSize="22"
@@ -354,14 +354,14 @@
                         Style="{StaticResource TextBlockButtonStyle}"
                         Tapped="TbAlbumName_OnTapped" />
                     <Grid
-                        x:Name="SongInfoTag"
-                        Height="20"
-                        Margin="0,14,0,0"
-                        Padding="3,0,3,0"
-                        HorizontalAlignment="Left"
-                        BorderBrush="Red"
-                        BorderThickness="1.5"
-                        CornerRadius="4">
+                          x:Name="SongInfoTag"
+                          Height="20"
+                          Margin="0,8,0,0"
+                          Padding="3,0,3,0"
+                          HorizontalAlignment="Left"
+                          BorderBrush="Red"
+                          BorderThickness="1.5"
+                          CornerRadius="4">
                         <TextBlock
                             x:Name="TbSongTag"
                             x:FieldModifier="public"
