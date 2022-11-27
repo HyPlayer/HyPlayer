@@ -51,7 +51,7 @@ public sealed partial class PlayBar
     public ObservableCollection<HyPlayItem> PlayItems = new();
 
     private ManipulationStartedRoutedEventArgs? _slidingEventArgs = null;
-    
+
     private bool realSelectSong;
     /*
     private Storyboard TbSongNameScrollStoryBoard;
@@ -537,7 +537,7 @@ public sealed partial class PlayBar
             // 恢复播放音量
             if (!Common.Setting.fadeInOut)
                 HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume;
-            
+
             if (HyPlayList.NowPlayingItem.PlayItem == null)
             {
                 TbSingerName.Content = null;
@@ -1180,6 +1180,7 @@ public sealed partial class PlayBar
         //HyPlayList.OnPlayPositionChange += UpdateMSTC;
         HyPlayList.OnPlayListAddDone += HyPlayList_OnPlayListAdd;
         HyPlayList.OnSongRemoveAll += HyPlayListOnOnSongRemoveAll;
+        HyPlayList.OnLoginDone += HyPlayListOnOnLoginDone;
         Common.OnEnterForegroundFromBackground += () => LoadPlayingFile(HyPlayList.NowPlayingItem);
         if (Common.Setting.playbarButtonsTransparent)
         {
@@ -1203,43 +1204,27 @@ public sealed partial class PlayBar
         ListBoxPlayList.ItemsSource = PlayItems;
         realSelectSong = true;
         Common.Logs.Add("Now PlaySource is " + HyPlayList.PlaySourceId);
-        if (HyPlayList.PlaySourceId != "local")
-            try
-            {
-                var list = await HistoryManagement.GetcurPlayingListHistory();
-                HyPlayList.AppendNcSongs(list, isStartUp: true) ;
-                if (list.Count > 0)
-                {
-                    int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"].ToString(),
-                        out HyPlayList.NowPlaying);
-                    HyPlayList.SongAppendDone();
-                }
-            }
-            catch
-            {
-            }
-
 
         if (Common.isExpanded)
             Common.BarPlayBar.ShowExpandedPlayer();
         if (!Common.Setting.playbarBackgroundAcrylic)
-        if (Common.Setting.hotlyricOnStartup)
-            try
-            {
-                var uri = new Uri($"hot-lyric:///?from={Package.Current.Id.FamilyName}");
-                if (await Launcher.QueryUriSupportAsync(uri, LaunchQuerySupportType.Uri,
-                        "306200B4771A6.217957860C1A5_mb3g82vhcggpy") ==
-                    LaunchQuerySupportStatus.Available)
+            if (Common.Setting.hotlyricOnStartup)
+                try
                 {
-                    await Launcher.LaunchUriAsync(uri);
-                    Common.Setting.toastLyric = false;
-                    Bindings.Update();
-                    return;
+                    var uri = new Uri($"hot-lyric:///?from={Package.Current.Id.FamilyName}");
+                    if (await Launcher.QueryUriSupportAsync(uri, LaunchQuerySupportType.Uri,
+                            "306200B4771A6.217957860C1A5_mb3g82vhcggpy") ==
+                        LaunchQuerySupportStatus.Available)
+                    {
+                        await Launcher.LaunchUriAsync(uri);
+                        Common.Setting.toastLyric = false;
+                        Bindings.Update();
+                        return;
+                    }
                 }
-            }
-            catch
-            {
-            }
+                catch
+                {
+                }
 
         if (Common.Setting.playbarBackgroundElay)
         {
@@ -1268,6 +1253,26 @@ public sealed partial class PlayBar
         Storyboard.SetTargetProperty(verticalAnimation, "Horizontalofset");
         TbSongNameScrollStoryBoard.Begin();
         */
+    }
+
+    private async void HyPlayListOnOnLoginDone()
+    {
+        if (HyPlayList.PlaySourceId == "local") return;
+        try
+        {
+            var list = await HistoryManagement.GetcurPlayingListHistory();
+            HyPlayList.AppendNcSongs(list);
+            if (list.Count > 0)
+            {
+                int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"].ToString(),
+                    out HyPlayList.NowPlaying);
+                HyPlayList.SongAppendDone();
+            }
+        }
+        catch
+        {
+            // ignored
+        }
     }
 
     private void PlayListTitle_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)

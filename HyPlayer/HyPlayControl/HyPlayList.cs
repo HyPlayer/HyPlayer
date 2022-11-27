@@ -476,13 +476,13 @@ public static class HyPlayList
         OnPlayItemChange?.Invoke(null);
     }
 
-    public static void RemoveAllSong(bool isStartUp = false)
+    public static void RemoveAllSong()
     {
         List.Clear();
         Player.Source = null;
         NowPlaying = -1;
         OnSongRemoveAll?.Invoke();
-        if (isStartUp != true) SongAppendDone();
+        SongAppendDone();
     }
 
     /********        相关事件处理        ********/
@@ -1045,11 +1045,11 @@ public static class HyPlayList
     }
 
     public static void AppendNcSongs(IList<NCSong> ncSongs,
-        bool needRemoveList = true, bool isStartUp = false)
+        bool needRemoveList = true)
     {
         if (ncSongs == null) return;
         if (needRemoveList)
-            RemoveAllSong(isStartUp);
+            RemoveAllSong();
         try
         {
             foreach (var ncSong in ncSongs)
