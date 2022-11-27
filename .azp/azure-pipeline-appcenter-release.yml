@@ -72,7 +72,7 @@ steps:
       New-Item -ItemType Directory $(Agent.HomeDirectory)/SYMS
       Move-Item $SYMPATH $(Agent.HomeDirectory)/SYMS
       $BUNDLEPATH = (Get-ChildItem -Include *.msixbundle -Recurse) | Foreach-Object {$_.FullName}
-      Write-Host("##vso[task.setvariable variable=BUNDLEFILE]$BUNDLEPATH")
+      Write-Host("##vso[task.setvariable variable=BUNDLEPATH]$BUNDLEPATH")
     displayName: 'Move Symbol Files and write publish file location'
 
   - task: PublishBuildArtifacts@1
