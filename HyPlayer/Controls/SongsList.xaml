@@ -46,8 +46,9 @@
             Name="SongContainer"
             Padding="0"
             ItemsSource="{x:Bind VisibleSongs}"
-            SelectionChanged="SongContainer_SelectionChanged"
-            SelectionMode="{x:Bind MultiSelect, Converter={StaticResource SelectModeConverter}, Mode=OneWay}" 
+            IsItemClickEnabled="True"
+            ItemClick="SongContainer_ItemClick"
+            SelectionMode="{x:Bind MultiSelect, Converter={StaticResource SelectModeConverter}, Mode=OneWay}"
             ShowsScrollingPlaceholders="True" ItemContainerStyle="{ThemeResource ListViewItemStyle}">
             <ListView.Footer>
                 <ContentControl Margin="0,0,0,130" Content="{x:Bind Footer}" />

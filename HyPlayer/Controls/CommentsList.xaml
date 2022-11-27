@@ -15,7 +15,9 @@
             x:Name="CommentsContainer"
             SelectionMode="None"
             HorizontalAlignment="Stretch"
-            ItemsSource="{x:Bind Comments}" ItemContainerStyle="{ThemeResource ListViewItemStyle}">
+		      	HorizontalContentAlignment="Stretch"
+		      	ItemContainerStyle="{ThemeResource ListViewItemStyle}"
+            ItemsSource="{x:Bind Comments}">
             <ListView.ItemTemplate>
                 <DataTemplate
                     ScrollViewer.CanContentRenderOutsideBounds="False"

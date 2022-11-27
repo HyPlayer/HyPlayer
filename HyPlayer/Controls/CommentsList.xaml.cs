@@ -40,5 +40,10 @@ namespace HyPlayer.Controls
                 SetValue(CommentsProperty, value);
             }
         }
+        public ScrollViewer CommentPresentScrollViewer
+
+        {
+            get => (VisualTreeHelper.GetChild(CommentsContainer, 0) as Border).Child as ScrollViewer;
+        }
     }
 }
