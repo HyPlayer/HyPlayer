@@ -5,8 +5,8 @@
 
 trigger:
   branches:
-   include:
-     - develop
+    include:
+      - develop
   paths:
     include:
       - CHANGELOG_RELEASE.md
@@ -16,108 +16,110 @@ pool:
   vmImage: 'windows-2022'
 
 variables:
-- group: HyPlayerDevelopBuild
-  
+  - group: HyPlayerDevelopBuild
+
 steps:
 
-- checkout: self
-  submodules: true
+  - checkout: self
+    submodules: true
 
-- task: NuGetToolInstaller@0
-  displayName: 'Use NuGet 4.4.1'
-  inputs:
-    versionSpec: 4.4.1
-    checkLatest: true
+  - task: NuGetToolInstaller@0
+    displayName: 'Use NuGet 4.4.1'
+    inputs:
+      versionSpec: 4.4.1
+      checkLatest: true
 
-- task: NuGetCommand@2
-  displayName: 'NuGet restore **\*.sln'
-  inputs:
-    restoreSolution: '$(solution)'
+  - task: NuGetCommand@2
+    displayName: 'NuGet restore **\*.sln'
+    inputs:
+      restoreSolution: '$(solution)'
 
-- task: UseDotNet@2
-  displayName: 'Use .NET 6'
-  inputs:
-    version: 6.0.x
+  - task: UseDotNet@2
+    displayName: 'Use .NET 6'
+    inputs:
+      version: 6.0.x
 
-- powershell: |
-   $MANIFEST = [xml](Get-Content **\Package.appxmanifest)
-   $MAINVERSION = $MANIFEST.Package.Identity.Version -replace ".{1}$"
-   $VERSION = $MAINVERSION + $(Build.BuildId)
-   Write-Host("##vso[task.setvariable variable=VERSION]$VERSION")
-   echo "Currently Building Version Is"
-   echo $VERSION
-   $MANIFEST.Package.Identity.Version = $VERSION
-   Set-Content -Path **\Package.appxmanifest -Value $MANIFEST.OuterXml
-  displayName: 'Set Version'
+  - powershell: |
+      $MANIFEST = [xml](Get-Content **\Package.appxmanifest)
+      $MAINVERSION = $MANIFEST.Package.Identity.Version -replace ".{1}$"
+      $VERSION = $MAINVERSION + $(Build.BuildId)
+      Write-Host("##vso[task.setvariable variable=VERSION]$VERSION")
+      echo "Currently Building Version Is"
+      echo $VERSION
+      $MANIFEST.Package.Identity.Version = $VERSION
+      Set-Content -Path **\Package.appxmanifest -Value $MANIFEST.OuterXml
+    displayName: 'Set Version'
 
-- task: DownloadSecureFile@1
-  name: certificate
-  displayName: 'Download CA certificate'
-  inputs:
-    secureFile: '$(signingCert.secureFilePath)'
+  - task: DownloadSecureFile@1
+    name: certificate
+    displayName: 'Download CA certificate'
+    inputs:
+      secureFile: '$(signingCert.secureFilePath)'
 
-- task: VSBuild@1
-  displayName: 'Build solution HyPlayer.sln'
-  inputs:
-    solution: '$(solution)'
-    msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)" /p:AppxPackageDir="$(Build.ArtifactStagingDirectory)\AppxPackages\\" /p:AppxBundle=Always /p:PackageCertificateThumbprint=""  /p:UapAppxPackageBuildMode=SideloadOnly  /p:AppxPackageSigningEnabled=true  /p:PackageCertificateKeyFile="$(certificate.secureFilePath)" /p:PackageCertificatePassword="$(signingCert.password)"'
-    platform: x64
-    configuration: '$(buildConfiguration)'
-    clean: true
-    msbuildArchitecture: x64
+  - task: VSBuild@1
+    displayName: 'Build solution HyPlayer.sln'
+    inputs:
+      solution: '$(solution)'
+      msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)" /p:AppxPackageDir="$(Build.ArtifactStagingDirectory)\AppxPackages\\" /p:AppxBundle=Always /p:PackageCertificateThumbprint=""  /p:UapAppxPackageBuildMode=SideloadOnly  /p:AppxPackageSigningEnabled=true  /p:PackageCertificateKeyFile="$(certificate.secureFilePath)" /p:PackageCertificatePassword="$(signingCert.password)"'
+      platform: x64
+      configuration: '$(buildConfiguration)'
+      clean: true
+      msbuildArchitecture: x64
 
-- powershell: |
-   cd "$(Build.ArtifactStagingDirectory)\AppxPackages\"
-   $SYMPATH = (Get-ChildItem -Include *.appxsym -Recurse) | Foreach-Object{$_.FullName}
-   Move-Item $SYMPATH $(Agent.HomeDirectory)/$(VERSION).appxsym
-  displayName: 'PowerShell Script'
+  - powershell: |
+      cd "$(Build.ArtifactStagingDirectory)\AppxPackages\"
+      $SYMPATH = (Get-ChildItem -Include *.appxsym -Recurse) | Foreach-Object {$_.FullName}
+      New-Item -ItemType Directory $(Agent.HomeDirectory)/SYMS
+      Move-Item $SYMPATH $(Agent.HomeDirectory)/SYMS
+      $BUNDLEPATH = (Get-ChildItem -Include *.msixbundle -Recurse) | Foreach-Object {$_.FullName}
+      Write-Host("##vso[task.setvariable variable=BUNDLEFILE]$BUNDLEPATH")
+    displayName: 'Move Symbol Files and write publish file location'
 
-- task: PublishBuildArtifacts@1
-  displayName: 'Publish artifact: drop'
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)\AppxPackages'
-    ArtifactName: 'azure-$(VERSION)'
-  condition: succeededOrFailed()
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish artifact: drop'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)\AppxPackages'
+      ArtifactName: 'azure-$(VERSION)'
+    condition: succeededOrFailed()
 
-- task: ArchiveFiles@2
-  displayName: 'Archive Appx Package'
-  inputs:
-    rootFolderOrFile: '$(Build.ArtifactStagingDirectory)\AppxPackages'
-    archiveFile: '$(Agent.HomeDirectory)/$(Build.BuildId).zip'
-    verbose: true
-    
-- task: GitHubRelease@1
-  inputs:
-    gitHubConnection: 'github connection 1'
-    repositoryName: 'HyPlayer/HyPlayer'
-    action: 'create'
-    target: '$(Build.SourceVersion)'
-    tagSource: 'userSpecifiedTag'
-    tag: '$(VERSION)'
-    title: 'V$(VERSION)'
-    releaseNotesFilePath: 'CHANGELOG_RELEASE.md'
-    assets: '$(Agent.HomeDirectory)/$(Build.BuildId).zip'
-    addChangeLog: false
+  - task: ArchiveFiles@2
+    displayName: 'Archive Symbol Files'
+    inputs:
+      rootFolderOrFile: '$(Agent.HomeDirectory)/SYMS'
+      archiveFile: '$(Agent.HomeDirectory)/$(Build.BuildId).SYMS.zip'
+      verbose: true
 
-- task: AppCenterDistribute@3
-  displayName: 'Deploy $(Agent.HomeDirectory)/$(Build.BuildId).zip to Visual Studio App Center'
-  inputs:
-    serverEndpoint: HyPlayer/AppCenter
-    appSlug: kengwang/HyPlayer
-    appFile: '$(Agent.HomeDirectory)/$(Build.BuildId).zip'
-    buildVersion: '$(VERSION)'
-    symbolsOption: UWP
-    appxsymPath: '$(Agent.HomeDirectory)/$(VERSION).appxsym'
-    releaseNotesOption: file
-    releaseNotesFile: CHANGELOG_RELEASE.md
-    distributionGroupId: '19bc0109-9e15-4776-b691-f007850cf08a;e5e83d7f-28ae-45a5-b084-5d8ecd76e0b0'
-    isSilent: false
-  condition: succeededOrFailed()
+  - task: GitHubRelease@1
+    inputs:
+      gitHubConnection: 'github connection 1'
+      repositoryName: 'HyPlayer/HyPlayer'
+      action: 'create'
+      target: '$(Build.SourceVersion)'
+      tagSource: 'userSpecifiedTag'
+      tag: '$(VERSION)'
+      title: 'V$(VERSION)'
+      releaseNotesFilePath: 'CHANGELOG_RELEASE.md'
+      assets: '$(BUNDLEPATH)'
+      addChangeLog: false
 
-- task: PowerShell@2
-  inputs:
-    targetType: 'inline'
-    script: |
-      Invoke-WebRequest 'https://hyplayer.kengwang.com.cn/channel/3/broadcastUpdate/$(hyplayerAPI.secretKey)'
-      
-      Invoke-WebRequest 'https://hyplayer.kengwang.com.cn/channel/2/broadcastUpdate/$(hyplayerAPI.secretKey)'
+  - task: AppCenterDistribute@3
+    displayName: 'Deploy App Center'
+    inputs:
+      serverEndpoint: HyPlayer/AppCenter
+      appSlug: kengwang/HyPlayer
+      appFile: '$(BUNDLEPATH)'
+      buildVersion: '$(VERSION)'
+      symbolsOption: UWP
+      appxsymPath: '$(Agent.HomeDirectory)/$(Build.BuildId).SYMS.zip'
+      releaseNotesOption: file
+      releaseNotesFile: CHANGELOG.md
+      distributionGroupId: '19bc0109-9e15-4776-b691-f007850cf08a;e5e83d7f-28ae-45a5-b084-5d8ecd76e0b0'
+      isSilent: false
+    condition: succeededOrFailed()
+
+  - task: PowerShell@2
+    inputs:
+      targetType: 'inline'
+      script: |
+        Invoke-WebRequest 'https://hyplayer.kengwang.com.cn/channel/3/broadcastUpdate/$(hyplayerAPI.secretKey)'      
+        Invoke-WebRequest 'https://hyplayer.kengwang.com.cn/channel/2/broadcastUpdate/$(hyplayerAPI.secretKey)'
