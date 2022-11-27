@@ -476,10 +476,11 @@ public static class HyPlayList
         OnPlayItemChange?.Invoke(null);
     }
 
-    public static void RemoveAllSong()
+    public static void RemoveAllSong(bool resetPlaying = true)
     {
         List.Clear();
-        Player.Source = null;
+        if (resetPlaying)
+            Player.Source = null;
         NowPlaying = -1;
         OnSongRemoveAll?.Invoke();
         SongAppendDone();
@@ -577,7 +578,7 @@ public static class HyPlayList
                 {
                     if (json["data"]?[0]?["freeTrialInfo"]?.HasValues == true && Common.Setting.jumpVipSongPlaying)
                     {
-                        throw new Exception ("当前歌曲为 VIP 试听, 已自动跳过");
+                        throw new Exception("当前歌曲为 VIP 试听, 已自动跳过");
                     }
 
                     playUrl = json["data"][0]["url"]?.ToString();
@@ -620,9 +621,9 @@ public static class HyPlayList
             {
                 case HyPlayItemType.Netease:
                 case HyPlayItemType.Radio: //FM伪加载为普通歌曲
-                                           //先看看是不是本地文件
-                                           //本地文件的话尝试加载
-                                           //cnm的NCM,我试试其他方式
+                    //先看看是不是本地文件
+                    //本地文件的话尝试加载
+                    //cnm的NCM,我试试其他方式
                     if (NowPlayingItem.PlayItem.IsLocalFile)
                     {
                         await LoadLocalFile();
@@ -1463,12 +1464,12 @@ public static class Utils
     public static async Task ConvertKawazuRomaji(List<SongLyric> lyrics)
     {
         if (Common.KawazuConv is null) return;
-        foreach(var lyricItem in lyrics)
+        foreach (var lyricItem in lyrics)
         {
             if (!string.IsNullOrWhiteSpace(lyricItem.PureLyric))
             {
                 if (Utilities.HasKana(lyricItem.PureLyric))
-                        lyricItem.Romaji=await Common.KawazuConv.Convert(lyricItem.PureLyric, To.Romaji, Mode.Separated);
+                    lyricItem.Romaji = await Common.KawazuConv.Convert(lyricItem.PureLyric, To.Romaji, Mode.Separated);
             }
         }
     }

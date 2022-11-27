@@ -411,7 +411,7 @@ public sealed partial class SongsList : UserControl, IDisposable
             if (HyPlayList.PlaySourceId != ListSource.Substring(2))
             {
                 // Change Music Source
-                HyPlayList.RemoveAllSong();
+                HyPlayList.RemoveAllSong(!shiftSong);
                 await HyPlayList.AppendNcSource(ListSource);
                 HyPlayList.SongAppendDone();
             }
@@ -421,7 +421,9 @@ public sealed partial class SongsList : UserControl, IDisposable
                 HyPlayList.PlaySourceId = ListSource.Substring(2);
             if (!shiftSong)
                 HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem?.Id == (e.ClickedItem as NCSong).sid));
-
+            else
+                HyPlayList.NowPlaying =
+                    HyPlayList.List.FindIndex(song => song.PlayItem.Id == ((e.ClickedItem as NCSong).sid));
         }
         //else if (ListSource == null)
         //{
@@ -438,8 +440,10 @@ public sealed partial class SongsList : UserControl, IDisposable
                 ListSource?.Substring(0, 2) == "al")
                 HyPlayList.PlaySourceId = ListSource.Substring(2);
             if (!shiftSong)
-                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t =>
-                    t.PlayItem?.Id == (e.ClickedItem as NCSong).sid));
+                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem?.Id == (e.ClickedItem as NCSong).sid));
+            else
+                HyPlayList.NowPlaying =
+                    HyPlayList.List.FindIndex(song => song.PlayItem.Id == ((e.ClickedItem as NCSong).sid));
         }
     }
 
