@@ -65,7 +65,7 @@ public sealed partial class SongsList : UserControl, IDisposable
 
     private readonly ObservableCollection<NCSong> VisibleSongs = new();
 
-    public bool IsManualSelect = true;
+    //public bool IsManualSelect = true;
 
     public SongsList()
     {
@@ -79,9 +79,9 @@ public sealed partial class SongsList : UserControl, IDisposable
         set
         {
             /*SongContainer.SelectionMode = (value? ListViewSelectionMode.Multiple : ListViewSelectionMode.Single);*/
-            IsManualSelect = false;
+            //IsManualSelect = false;
             SetValue(MultiSelectProperty, value);
-            IsManualSelect = true;
+            //IsManualSelect = true;
         }
     }
 
@@ -178,9 +178,9 @@ public sealed partial class SongsList : UserControl, IDisposable
             _ = Common.Invoke(() =>
             {
                 if (MultiSelect) return;
-                IsManualSelect = false;
+                //IsManualSelect = false;
                 SongContainer.SelectedIndex = -1;
-                IsManualSelect = true;
+                //IsManualSelect = true;
             });
             return;
         }
@@ -189,9 +189,9 @@ public sealed partial class SongsList : UserControl, IDisposable
         if (idx == -1) return;
         _ = Common.Invoke(() =>
         {
-            IsManualSelect = false;
+            //IsManualSelect = false;
             SongContainer.SelectedIndex = idx;
-            IsManualSelect = true;
+            //IsManualSelect = true;
         });
     }
 
@@ -210,53 +210,7 @@ public sealed partial class SongsList : UserControl, IDisposable
         }
     }
 
-    private async void SongContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (!IsManualSelect) return;
-        if (SongContainer.SelectedItem == null || SongContainer.SelectedIndex < 0) return;
-        if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
-        if ((SongContainer.SelectedItem as NCSong).sid == HyPlayList.NowPlayingItem?.PlayItem?.Id) return;
-        if (!(SongContainer.SelectedItem as NCSong).IsAvailable)
-        {
-            Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).songname} 当前不可用");
-            return;
-        }
-        if (ListSource != null && ListSource != "content" && Songs.Count == VisibleSongs.Count)
-        {
-            if (HyPlayList.PlaySourceId != ListSource.Substring(2))
-            {
-                // Change Music Source
-                HyPlayList.RemoveAllSong();
-                await HyPlayList.AppendNcSource(ListSource);
-                HyPlayList.SongAppendDone();
-            }
 
-            if (ListSource.Substring(0, 2) == "pl" ||
-                ListSource.Substring(0, 2) == "al")
-                HyPlayList.PlaySourceId = ListSource.Substring(2);
-            if (SongContainer.SelectedItem!=null)
-                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t =>t.PlayItem?.Id == (SongContainer.SelectedItem as NCSong).sid));
-
-        }
-        //else if (ListSource == null)
-        //{
-        //    var ncsong = VisibleSongs[SongContainer.SelectedIndex];
-        //    _ = HyPlayList.AppendNCSong(ncsong);
-        //    HyPlayList.SongAppendDone();
-        //    HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
-        //}
-        else
-        {
-            HyPlayList.AppendNcSongs(VisibleSongs);
-            HyPlayList.SongAppendDone();
-            if (ListSource?.Substring(0, 2) == "pl" ||
-                ListSource?.Substring(0, 2) == "al")
-                HyPlayList.PlaySourceId = ListSource.Substring(2);
-
-            HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t =>
-                t.PlayItem?.Id == (SongContainer.SelectedItem as NCSong).sid));
-        }
-    }
 
     private void BtnPlay_Click(object sender, RoutedEventArgs e)
     {
@@ -304,8 +258,8 @@ public sealed partial class SongsList : UserControl, IDisposable
             HyPlayList.NowPlaying + 1);
         if (SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable).FirstOrDefault() != null)
         {
-            var unAvailableSongNames = SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable).Select(t=>t.songname).ToArray();
-            Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {string.Join("/",unAvailableSongNames)} 当前不可用\r已从播放列表中移除");
+            var unAvailableSongNames = SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable).Select(t => t.songname).ToArray();
+            Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {string.Join("/", unAvailableSongNames)} 当前不可用\r已从播放列表中移除");
         }
         HyPlayList.SongAppendDone();
     }
@@ -382,14 +336,14 @@ public sealed partial class SongsList : UserControl, IDisposable
         var element = sender as Grid;
         if (SongContainer.SelectionMode == ListViewSelectionMode.Single)
         {
-            IsManualSelect = false;
-            SongContainer.SelectedItem=element.DataContext;
-            IsManualSelect = true;
+            //IsManualSelect = false;
+            SongContainer.SelectedItem = element.DataContext;
+            //IsManualSelect = true;
         }
 
         SongContainer.ContextFlyout.ShowAt(element,
             new FlyoutShowOptions
-                { Position = e?.GetPosition(element) ?? new Point(element?.ActualWidth ?? 0, 80) });
+            { Position = e?.GetPosition(element) ?? new Point(element?.ActualWidth ?? 0, 80) });
     }
 
     public static Brush GetBrush(bool IsAvailable)
@@ -440,4 +394,53 @@ public sealed partial class SongsList : UserControl, IDisposable
         MultiSelect = false;
         _ = IndicateNowPlayingItem();
     }
+
+    private async void SongContainer_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem == null) return;
+        if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
+        bool shiftSong = ((e.ClickedItem as NCSong).sid == HyPlayList.NowPlayingItem?.PlayItem?.Id);
+
+        if (!(e.ClickedItem as NCSong).IsAvailable)
+        {
+            Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).songname} 当前不可用");
+            return;
+        }
+        if (ListSource != null && ListSource != "content" && Songs.Count == VisibleSongs.Count)
+        {
+            if (HyPlayList.PlaySourceId != ListSource.Substring(2))
+            {
+                // Change Music Source
+                HyPlayList.RemoveAllSong();
+                await HyPlayList.AppendNcSource(ListSource);
+                HyPlayList.SongAppendDone();
+            }
+
+            if (ListSource.Substring(0, 2) == "pl" ||
+                ListSource.Substring(0, 2) == "al")
+                HyPlayList.PlaySourceId = ListSource.Substring(2);
+            if (!shiftSong)
+                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem?.Id == (e.ClickedItem as NCSong).sid));
+
+        }
+        //else if (ListSource == null)
+        //{
+        //    var ncsong = VisibleSongs[SongContainer.SelectedIndex];
+        //    _ = HyPlayList.AppendNCSong(ncsong);
+        //    HyPlayList.SongAppendDone();
+        //    HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
+        //}
+        else
+        {
+            HyPlayList.AppendNcSongs(VisibleSongs);
+            HyPlayList.SongAppendDone();
+            if (ListSource?.Substring(0, 2) == "pl" ||
+                ListSource?.Substring(0, 2) == "al")
+                HyPlayList.PlaySourceId = ListSource.Substring(2);
+            if (!shiftSong)
+                HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t =>
+                    t.PlayItem?.Id == (e.ClickedItem as NCSong).sid));
+        }
+    }
+
 }
