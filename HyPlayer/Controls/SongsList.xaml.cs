@@ -70,6 +70,7 @@ public sealed partial class SongsList : UserControl, IDisposable
     public SongsList()
     {
         InitializeComponent();
+        HyPlayList.OnPlayItemChange += HyPlayListOnOnPlayItemChange;
     }
 
     public bool MultiSelect
@@ -152,9 +153,22 @@ public sealed partial class SongsList : UserControl, IDisposable
         Songs.Clear();
     }
 
-    private Task IndicateNowPlayingItem()
+    private async Task IndicateNowPlayingItem()
     {
-        return Task.CompletedTask;
+        var tryCount = 5;
+        while (--tryCount > 0)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(2));
+            try
+            {
+                HyPlayListOnOnPlayItemChange(HyPlayList.NowPlayingItem);
+                break;
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+        }
     }
 
     private void HyPlayListOnOnPlayItemChange(HyPlayItem playitem)
