@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
 using NeteaseCloudMusicApi;
 
@@ -18,20 +19,34 @@ namespace HyPlayer.Pages;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class History : Page
+public sealed partial class History : Page, IDisposable
 {
-    private readonly ObservableCollection<NCSong> Songs;
-
+    private readonly ObservableCollection<NCSong> Songs = new ();
+    public bool IsDisposed = false;
     public History()
     {
         InitializeComponent();
-        Songs = new ObservableCollection<NCSong>();
         HisModeNavView.SelectedItem = SongHis;
     }
 
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+        Dispose();
+    }
+
+    public void Dispose()
+    {
+        if (IsDisposed) return;
+        Songs.Clear();
+        IsDisposed = true;
+        GC.SuppressFinalize(this);
+        GC.Collect();
+    }
     private async void NavigationView_SelectionChanged(NavigationView sender,
         NavigationViewSelectionChangedEventArgs args)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(History));
         switch ((sender.SelectedItem as NavigationViewItem).Name)
         {
             case "SongHis":
@@ -58,6 +73,7 @@ public sealed partial class History : Page
 
     private async Task LoadRankAll()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(History));
         Songs.Clear();
         try
         {
@@ -80,6 +96,7 @@ public sealed partial class History : Page
 
     private async Task LoadRankWeek()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(History));
         Songs.Clear();
         try
         {

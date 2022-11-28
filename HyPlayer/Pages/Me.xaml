@@ -282,7 +282,8 @@
                         <muxc:ItemsRepeater
                             x:Name="MySongListBox"
                             Margin="0,60,0,0"
-                            ItemTemplate="{StaticResource ListItemTemplate}">
+                            ItemTemplate="{StaticResource ListItemTemplate}"
+                            ItemsSource="{x:Bind myPlayList}">
                             <muxc:ItemsRepeater.Layout>
                                 <muxc:StackLayout Orientation="Vertical" />
                             </muxc:ItemsRepeater.Layout>
@@ -306,7 +307,8 @@
                         <muxc:ItemsRepeater
                             x:Name="LikedSongList"
                             Margin="0,60,0,0"
-                            ItemTemplate="{StaticResource ListItemTemplate}" HorizontalAlignment="Stretch">
+                            ItemTemplate="{StaticResource ListItemTemplate}" HorizontalAlignment="Stretch"
+                            ItemsSource="{x:Bind likedPlayList}">
                             <muxc:ItemsRepeater.Layout>
                                 <muxc:StackLayout Orientation="Vertical" />
                             </muxc:ItemsRepeater.Layout>

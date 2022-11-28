@@ -35,6 +35,7 @@ public sealed partial class SongListDetail : Page, IDisposable
     private int page;
     private NCPlayList playList;
     public ObservableCollection<NCSong> Songs;
+    public bool IsDisposed = false;
 
     public SongListDetail()
     {
@@ -50,11 +51,19 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     public void Dispose()
     {
+        if (IsDisposed) return;
+        Songs.Clear();
+        SongsList.Dispose();
+        playList = null;
+        IsDisposed = true;
         ImageRect.ImageSource = null;
+        GC.SuppressFinalize(this);
+        GC.Collect();
     }
-
+    
     public void LoadSongListDetail()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(SongListDetail));
         if (playList.cover.StartsWith("http"))
             ImageRect.ImageSource =
                 Common.Setting.noImage
@@ -73,6 +82,7 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     public async Task LoadSongListItem()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(SongListDetail));
         IsLoading = true;
         if (playList.plid != "-666")
         {
@@ -89,6 +99,7 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     private async Task LoadDailyRcmdItems()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(SongListDetail));
         SongsList.ListSource = "content";
         try
         {
@@ -118,6 +129,7 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     private async Task LoadPlayListItems()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(SongListDetail));
         try
         {
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
@@ -169,8 +181,7 @@ public sealed partial class SongListDetail : Page, IDisposable
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
-        SongsList.Dispose();
-        ImageRect.ImageSource = null;
+        Dispose();
     }
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -211,6 +222,7 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(SongListDetail));
         if (playList.plid != "-666")
         {
             HyPlayList.RemoveAllSong();
@@ -234,17 +246,20 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(SongListDetail));
         page++;
         _ = LoadSongListItem();
     }
 
     private void ButtonComment_OnClick(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(SongListDetail));
         Common.NavigatePage(typeof(Comments), "pl" + playList.plid);
     }
 
     private async void ButtonHeartBeat_OnClick(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(SongListDetail));
         HyPlayList.RemoveAllSong();
         try
         {
@@ -288,11 +303,13 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(SongListDetail));
         DownloadManager.AddDownload(Songs.ToList());
     }
 
     private void LikeBtnClick(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(SongListDetail));
         _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistSubscribe,
             new Dictionary<string, object> { { "id", playList.plid }, { "t", playList.subscribed ? "0" : "1" } });
         playList.subscribed = !playList.subscribed;
@@ -300,11 +317,13 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     private void TextBoxAuthor_Tapped(object sender, RoutedEventArgs routedEventArgs)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(SongListDetail));
         Common.NavigatePage(typeof(Me), playList.creater.id);
     }
 
     private void BtnShare_Clicked(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(SongListDetail));
         var dataTransferManager = DataTransferManager.GetForCurrentView();
         dataTransferManager.DataRequested += (s, args) =>
         {
@@ -320,6 +339,7 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(SongListDetail));
         if (playList.plid != "-666")
             await HyPlayList.AppendPlayList(playList.plid);
         else

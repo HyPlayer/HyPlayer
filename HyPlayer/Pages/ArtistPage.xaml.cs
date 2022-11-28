@@ -22,7 +22,7 @@ namespace HyPlayer.Pages;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class ArtistPage : Page
+public sealed partial class ArtistPage : Page, IDisposable
 {
     public static readonly DependencyProperty SongHasMoreProperty = DependencyProperty.Register(
         "SongHasMore", typeof(bool), typeof(ArtistPage), new PropertyMetadata(default(bool)));
@@ -31,6 +31,7 @@ public sealed partial class ArtistPage : Page
     private readonly ObservableCollection<NCSong> hotSongs = new();
     private NCArtist artist;
     private int page;
+    public bool IsDisposed = false;
 
     public ArtistPage()
     {
@@ -79,8 +80,28 @@ public sealed partial class ArtistPage : Page
         }
     }
 
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+        Dispose();
+    }
+
+    public void Dispose()
+    {
+        if (IsDisposed) return;
+        allSongs.Clear();
+        hotSongs.Clear();
+        AllSongContainer.Dispose();
+        HotSongContainer.Dispose();
+        artist = null;
+        IsDisposed = true;
+        GC.SuppressFinalize(this);
+        GC.Collect();
+    }
+
     private async Task LoadHotSongs()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(ArtistPage));
         try
         {
             var j1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistTopSong,
@@ -109,6 +130,7 @@ public sealed partial class ArtistPage : Page
 
     private async Task LoadSongs()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(ArtistPage));
         try
         {
             var j1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistSongs,
@@ -144,6 +166,7 @@ public sealed partial class ArtistPage : Page
 
     private void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(ArtistPage));
         try
         {
             HyPlayList.AppendNcSongs(hotSongs);
@@ -158,6 +181,7 @@ public sealed partial class ArtistPage : Page
 
     private void NextPage_Click(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(ArtistPage));
         page++;
         if (mp.SelectedIndex == 1)
             _ = LoadSongs();
@@ -167,6 +191,7 @@ public sealed partial class ArtistPage : Page
 
     private async Task LoadAlbum()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(ArtistPage));
         try
         {
             var j1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistAlbum,
@@ -206,6 +231,7 @@ public sealed partial class ArtistPage : Page
 
     private void PrevPage_Click(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(ArtistPage));
         page--;
         if (mp.SelectedIndex == 1)
             _ = LoadSongs();
@@ -215,11 +241,13 @@ public sealed partial class ArtistPage : Page
 
     private void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(ArtistPage));
         page = 0;
     }
 
     private void PivotView_HeaderScrollProgressChanged(object sender, EventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(ArtistPage));
         GridPersonalInformation.Opacity = 1 - PivotView.HeaderScrollProgress * 1.4;
         RectangleImageBack.Opacity = 1 - PivotView.HeaderScrollProgress * 1.1;
         RectangleImageBackAcrylic.Opacity = 1 - PivotView.HeaderScrollProgress * 1.1;

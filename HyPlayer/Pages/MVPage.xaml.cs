@@ -27,6 +27,7 @@ public sealed partial class MVPage : Page, IDisposable
     private string mvid;
     private string mvquality = "1080";
     private string songid;
+    public bool IsDisposed = false;
 
     public MVPage()
     {
@@ -37,6 +38,12 @@ public sealed partial class MVPage : Page, IDisposable
     {
         MediaPlayerElement.Source = null;
         sources.Clear();
+        mvid = null;
+        mvquality = null;
+        songid = null;
+        IsDisposed = true;
+        GC.SuppressFinalize(this);
+        GC.Collect();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -65,6 +72,7 @@ public sealed partial class MVPage : Page, IDisposable
 
     private async Task LoadRelateive()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(MVPage));
         try
         {
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.MlogRcmdFeedList,
@@ -88,6 +96,7 @@ public sealed partial class MVPage : Page, IDisposable
 
     private void LoadComment()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(MVPage));
         if (Regex.IsMatch(mvid, "^[0-9]*$"))
             CommentFrame.Navigate(typeof(Comments), "mv" + mvid);
         else
@@ -98,10 +107,12 @@ public sealed partial class MVPage : Page, IDisposable
     {
         base.OnNavigatedFrom(e);
         MediaPlayerElement.MediaPlayer?.Pause();
+        Dispose();
     }
 
     private async Task LoadVideo()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(MVPage));
         if (Regex.IsMatch(mvid, "^[0-9]*$"))
             //纯MV
             try
@@ -142,6 +153,7 @@ public sealed partial class MVPage : Page, IDisposable
 
     private async Task LoadVideoInfo()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(MVPage));
         if (Regex.IsMatch(mvid, "^[0-9]*$"))
         {
             try
@@ -172,12 +184,14 @@ public sealed partial class MVPage : Page, IDisposable
 
     private void VideoQualityBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(MVPage));
         mvquality = VideoQualityBox.SelectedItem.ToString();
         _ = LoadVideo();
     }
 
     private void RelativeList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(MVPage));
         mvid = (RelativeList.SelectedItem is NCMlog ? (NCMlog)RelativeList.SelectedItem : default).id;
         LoadThings();
     }

@@ -24,21 +24,45 @@ namespace HyPlayer.Pages;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
+public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisposable
 {
     private static readonly string[] supportedFormats = { ".flac", ".mp3", ".ncm", ".ape", ".m4a", ".wav" };
-    private ObservableCollection<HyPlayItem> localHyItems;
+    private readonly ObservableCollection<HyPlayItem> localHyItems = new ();
     private string _notificationText;
     private Task CurrentFileScanTask;
-    private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+    private CancellationTokenSource cancellationTokenSource = new ();
     private int index;
+    public bool IsDisposed = false;
 
     public LocalMusicPage()
     {
         InitializeComponent();
-        localHyItems = new ObservableCollection<HyPlayItem>();
     }
 
+    public async void Dispose()
+    {
+        if (IsDisposed) return;
+        if (CurrentFileScanTask != null && CurrentFileScanTask.IsCompleted == false)
+        {
+            try
+            {
+                NotificationText = "正在等待本地扫描进程结束...";
+                cancellationTokenSource.Cancel();
+                await CurrentFileScanTask;
+            }
+            catch
+            {
+                CurrentFileScanTask = null;
+            }
+        }
+        CurrentFileScanTask = null;
+        cancellationTokenSource = null;
+        NotificationText = null;
+        localHyItems.Clear();
+        IsDisposed = true;
+        GC.SuppressFinalize(this);
+        GC.Collect();
+    }
     public string NotificationText
     {
         get => _notificationText;
@@ -54,22 +78,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
-        if (CurrentFileScanTask != null && CurrentFileScanTask.IsCompleted == false)
-        {
-            try
-            {
-                NotificationText = "正在等待本地扫描进程结束...";
-                cancellationTokenSource.Cancel();
-                await CurrentFileScanTask;
-            }
-            catch
-            {
-                CurrentFileScanTask = null;
-            }
-        }
-        if (CurrentFileScanTask != null) CurrentFileScanTask = null;
-        cancellationTokenSource = null;
-        localHyItems = null;
+        Dispose();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -80,6 +89,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 
     private void Playall_Click(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(LocalMusicPage));
         HyPlayList.RemoveAllSong();
         HyPlayList.List.AddRange(localHyItems);
         HyPlayList.SongAppendDone();

@@ -131,6 +131,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             var ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
             ImageAlbumAni.Pause();
         });
+        GC.SuppressFinalize(this);
+        GC.Collect();
     }
 
     private void HyPlayList_OnPlay()

@@ -23,7 +23,7 @@ namespace HyPlayer.Pages;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class Home : Page
+public sealed partial class Home : Page, IDisposable
 {
     private static List<string> RandomSlogen = new()
     {
@@ -31,11 +31,26 @@ public sealed partial class Home : Page
         "戴上耳机 享受新的一天吧"
     };
 
+    public bool IsDisposed = false;
+
     public Home()
     {
         InitializeComponent();
     }
 
+    public void Dispose()
+    {
+        if (IsDisposed) return;
+        RecommendSongListContainer.Children.Clear();
+        MainContainer.Children.Clear();
+        UnLoginedContent.Children.Clear();
+        RankList.Children.Clear();
+        RankPlayList.Children.Clear();
+        IsDisposed = true;
+        GC.SuppressFinalize(this);
+        GC.Collect();
+    }
+    
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
@@ -59,15 +74,17 @@ public sealed partial class Home : Page
         RankPlayList.Children.Clear();
         //MySongHis.Children.Clear();
         RecommendSongListContainer.Children.Clear();
+        Dispose();
     }
 
     private async void LoadLoginedContent()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Home));
         _ = Common.Invoke(() =>
         {
             UnLoginedContent.Visibility = Visibility.Collapsed;
             LoginedContent.Visibility = Visibility.Visible;
-            TbHelloUserName.Text = Common.LoginedUser.name;
+            TbHelloUserName.Text = Common.LoginedUser?.name ?? string.Empty;
             UserImageRect.ImageSource = Common.Setting.noImage
     ? null
     : new BitmapImage(new Uri(Common.LoginedUser.avatar, UriKind.RelativeOrAbsolute));
@@ -139,6 +156,7 @@ public sealed partial class Home : Page
 
     public async Task LoadRanklist()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Home));
         try
         {
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Toplist);
@@ -162,6 +180,7 @@ public sealed partial class Home : Page
 
     private void dailyRcmTapped(object sender, TappedRoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Home));
         Common.NavigatePage(typeof(SongListDetail), new NCPlayList
         {
             cover = "ms-appx:/Assets/icon.png",
@@ -181,16 +200,19 @@ public sealed partial class Home : Page
 
     private void FMTapped(object sender, TappedRoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Home));
         PersonalFM.InitPersonalFM();
     }
 
     private void LikedSongListTapped(object sender, TappedRoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Home));
         Common.NavigatePage(typeof(SongListDetail), Common.MySongLists[0].plid);
     }
 
     private async void HeartBeatTapped(object sender, TappedRoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Home));
         HyPlayList.RemoveAllSong();
         try
         {
@@ -226,12 +248,11 @@ public sealed partial class Home : Page
         {
             Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
-
     }
 
     private void UserTapped(object sender, TappedRoutedEventArgs e)
     {
-            Common.NavigatePage(typeof(Me), null,null);
-
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Home));
+        Common.NavigatePage(typeof(Me), null,null);
     }
 }
