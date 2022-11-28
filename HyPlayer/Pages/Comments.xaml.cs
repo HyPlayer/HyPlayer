@@ -106,13 +106,13 @@ public sealed partial class Comments : Page, IDisposable
                     { "pageSize", 20 },
                     { "sortType", type }
                 });
-            if (type == 2)
+            if (type == 2 && HotCommentsContainer.Visibility == Visibility.Visible)
                 hotComments.Clear();
             else normalComments.Clear();
             foreach (var comment in json["data"]["comments"].ToArray())
             {
                 Comment LoadedComment = Comment.CreateFromJson(comment, resourceid, resourcetype);
-                if (type == 2)
+                if (type == 2 && HotCommentsContainer.Visibility == Visibility.Visible)
                     hotComments.Add(LoadedComment);
                 else normalComments.Add(LoadedComment);
             }
@@ -223,7 +223,7 @@ public sealed partial class Comments : Page, IDisposable
     (source) =>
 
     {
-        Dispatcher.RunAsync(
+        _ = Dispatcher.RunAsync(
         CoreDispatcherPriority.Low,
         () =>
         {
@@ -256,7 +256,7 @@ public sealed partial class Comments : Page, IDisposable
         (source) =>
 
         {
-            Dispatcher.RunAsync(
+            _ =Dispatcher.RunAsync(
             CoreDispatcherPriority.Low,
             () =>
             {
@@ -284,7 +284,7 @@ public sealed partial class Comments : Page, IDisposable
     (source) =>
 
         {
-            Dispatcher.RunAsync(
+            _ = Dispatcher.RunAsync(
             CoreDispatcherPriority.Low,
             () =>
             {
@@ -315,7 +315,7 @@ public sealed partial class Comments : Page, IDisposable
             (source) =>
 
             {
-                Dispatcher.RunAsync(
+                _ = Dispatcher.RunAsync(
                 CoreDispatcherPriority.Low,
                 () =>
                 {
