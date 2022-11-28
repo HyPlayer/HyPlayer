@@ -123,7 +123,7 @@ public sealed partial class AlbumPage : Page, IDisposable
                     IsVip = jsonSong["fee"]?.ToString() == "1",
                     LengthInMilliseconds = double.Parse(jsonSong["dt"].ToString()),
                     mvid = jsonSong["mv"]?.ToObject<int>() ?? -1,
-                    Order = idx++,
+                    Order = ++idx,
                     sid = jsonSong["id"].ToString(),
                     songname = jsonSong["name"].ToString(),
                     transname = string.Join(" / ",
