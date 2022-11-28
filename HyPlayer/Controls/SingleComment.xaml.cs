@@ -68,6 +68,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         {
             SetValue(MainCommentProperty, value);
             ReplyCountIndicator.Text = value.ReplyCount.ToString();
+            LikeCountTB.Text = value.likedCount.ToString();
         }
     }
 
