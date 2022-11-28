@@ -117,7 +117,7 @@ public sealed partial class ArtistPage : Page, IDisposable
                 ncSong.IsAvailable =
                     json["privileges"][idx][
                         "st"].ToString() == "0";
-                ncSong.Order = ++idx;
+                ncSong.Order = idx++;
                 hotSongs.Add(ncSong);
             }
         }
