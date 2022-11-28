@@ -403,7 +403,7 @@ public sealed partial class SongsList : UserControl, IDisposable
 
         if (!(e.ClickedItem as NCSong).IsAvailable)
         {
-            Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).songname} 当前不可用");
+            Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {(e.ClickedItem as NCSong).songname} 当前不可用");
             return;
         }
         if (ListSource != null && ListSource != "content" && Songs.Count == VisibleSongs.Count)

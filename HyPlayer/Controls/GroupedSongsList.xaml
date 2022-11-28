@@ -17,7 +17,8 @@
             Name="SongContainer"
             Padding="10"
             ItemsSource="{x:Bind GroupedSongs.View, Mode=OneWay}"
-            SelectionChanged="SongContainer_SelectionChanged"
+            IsItemClickEnabled="True"
+            ItemClick="SongContainer_OnItemClick"
             SelectionMode="Single"
             ShowsScrollingPlaceholders="True">
             <ListView.Footer>
@@ -138,7 +139,6 @@
                         HorizontalAlignment="Stretch"
                         Background="Transparent"
                         IsRightTapEnabled="True"
-                        PointerPressed="Grid_PointerPressed"
                         RightTapped="Grid_RightTapped"
                         Tag="{x:Bind Order}">
                         <Grid.ColumnDefinitions>
