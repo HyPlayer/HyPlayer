@@ -75,6 +75,7 @@ public static class HyPlayList
 
     /********        API        ********/
     public static MediaPlayer Player;
+    public static MediaSource PlayerMediaSource;
     public static SystemMediaTransportControls MediaSystemControls;
     private static SystemMediaTransportControlsDisplayUpdater _controlsDisplayUpdater;
     private static readonly BackgroundDownloader Downloader = new();
@@ -202,6 +203,7 @@ public static class HyPlayList
         };
         HistoryManagement.InitializeHistoryTrack();
         Common.IsInFm = false;
+        OnMediaEnd += (_) => GC.Collect();
     }
 
     public static void UpdateSmtcPosition(MediaPlaybackSession sender, object args)
@@ -613,8 +615,6 @@ public static class HyPlayList
             MoveSongPointer();
             return;
         }
-
-        MediaSource ms = null;
         try
         {
             switch (NowPlayingItem.ItemType)
@@ -627,7 +627,7 @@ public static class HyPlayList
                     if (NowPlayingItem.PlayItem.IsLocalFile)
                     {
                         await LoadLocalFile();
-                        ms = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
+                        PlayerMediaSource = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
                     }
                     else
                     {
@@ -643,7 +643,7 @@ public static class HyPlayList
                                                       ".cache");
                                 if ((await sf.GetBasicPropertiesAsync()).Size.ToString() ==
                                     NowPlayingItem.PlayItem.Size || NowPlayingItem.PlayItem.Size == null)
-                                    ms = MediaSource.CreateFromStorageFile(sf);
+                                    PlayerMediaSource = MediaSource.CreateFromStorageFile(sf);
                                 else
                                     throw new Exception("File Size Not Match");
                             }
@@ -665,21 +665,21 @@ public static class HyPlayList
                                         var downloadOperation =
                                             Downloader.CreateDownload(new Uri(playUrl), destinationFile);
                                         downloadOperation.IsRandomAccessRequired = true;
-                                        ms = MediaSource.CreateFromDownloadOperation(downloadOperation);
+                                        PlayerMediaSource = MediaSource.CreateFromDownloadOperation(downloadOperation);
                                     }
                                 }
                                 catch
                                 {
                                     var playUrl = await GetNowPlayingUrl();
                                     if (playUrl != null)
-                                        ms = MediaSource.CreateFromUri(new Uri(playUrl));
+                                        PlayerMediaSource = MediaSource.CreateFromUri(new Uri(playUrl));
                                 }
                             }
                         }
                         else
                         {
                             var playUrl = await GetNowPlayingUrl();
-                            ms = MediaSource.CreateFromUri(new Uri(playUrl));
+                            PlayerMediaSource = MediaSource.CreateFromUri(new Uri(playUrl));
                         }
                     }
 
@@ -689,22 +689,22 @@ public static class HyPlayList
                     try
                     {
                         await LoadLocalFile();
-                        ms = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
+                        PlayerMediaSource = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
                     }
                     catch
                     {
-                        ms = MediaSource.CreateFromUri(new Uri(NowPlayingItem.PlayItem.Url));
+                        PlayerMediaSource = MediaSource.CreateFromUri(new Uri(NowPlayingItem.PlayItem.Url));
                     }
 
                     break;
                 default:
-                    ms = null;
+                    PlayerMediaSource = null;
                     break;
             }
 
             MediaSystemControls.IsEnabled = true;
-            await ms.OpenAsync();
-            Player.Source = ms;
+            await PlayerMediaSource?.OpenAsync();
+            Player.Source = PlayerMediaSource;
         }
         catch (Exception e)
         {

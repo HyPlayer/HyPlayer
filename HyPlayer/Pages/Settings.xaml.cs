@@ -98,7 +98,6 @@ public sealed partial class Settings : Page, IDisposable
         if (IsDisposed) return;
         StackPanelLyricSet.Children.Clear();
         GC.SuppressFinalize(this);
-        GC.Collect();
     }
 
     private async Task GetRomaji()

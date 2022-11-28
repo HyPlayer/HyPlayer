@@ -52,7 +52,6 @@ public sealed partial class AlbumPage : Page, IDisposable
         ImageRect.ImageSource = null;
         IsDisposed = true;
         GC.SuppressFinalize(this);
-        GC.Collect();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

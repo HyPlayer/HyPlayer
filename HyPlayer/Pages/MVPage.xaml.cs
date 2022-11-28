@@ -43,7 +43,6 @@ public sealed partial class MVPage : Page, IDisposable
         songid = null;
         IsDisposed = true;
         GC.SuppressFinalize(this);
-        GC.Collect();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

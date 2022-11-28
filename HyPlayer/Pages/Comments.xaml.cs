@@ -55,7 +55,6 @@ public sealed partial class Comments : Page, IDisposable
         resourceid = null;
         IsDisposed = true;
         GC.SuppressFinalize(false);
-        GC.Collect();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

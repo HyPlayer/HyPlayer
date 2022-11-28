@@ -40,7 +40,6 @@ public sealed partial class RadioPage : Page, IDisposable
         Songs.Clear();
         IsDisposed = true;
         GC.SuppressFinalize(this);
-        GC.Collect();
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
