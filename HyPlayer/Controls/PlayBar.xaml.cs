@@ -493,8 +493,8 @@ public sealed partial class PlayBar
                     });
                 }
 
-            ApplicationView.GetForCurrentView().Title = HyPlayList.NowPlayingItem.PlayItem.Name + " - " +
-                                                        HyPlayList.NowPlayingItem.PlayItem.ArtistString;
+            _ = Common.Invoke(() => ApplicationView.GetForCurrentView().Title =
+                    $"{HyPlayList.NowPlayingItem.PlayItem.Name} - {HyPlayList.NowPlayingItem.PlayItem.ArtistString}");
         }
         catch (Exception)
         {
