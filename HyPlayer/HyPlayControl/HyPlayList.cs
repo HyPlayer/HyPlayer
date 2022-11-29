@@ -72,7 +72,7 @@ public static class HyPlayList
     public static int ShufflingIndex = -1;
     public static List<SongLyric> Lyrics = new();
     public static TimeSpan LyricOffset = TimeSpan.Zero;
-
+    
     /********        API        ********/
     public static MediaPlayer Player;
     public static MediaSource PlayerMediaSource;
@@ -203,7 +203,6 @@ public static class HyPlayList
         };
         HistoryManagement.InitializeHistoryTrack();
         Common.IsInFm = false;
-        OnMediaEnd += (_) => GC.Collect();
     }
 
     public static void UpdateSmtcPosition(MediaPlaybackSession sender, object args)
