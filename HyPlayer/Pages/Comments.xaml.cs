@@ -158,7 +158,7 @@ public sealed partial class Comments : Page, IDisposable
         {
             try
             {
-                await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment,
+                var result = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment,
                     new Dictionary<string, object>
                     {
                         {
@@ -174,21 +174,24 @@ public sealed partial class Comments : Page, IDisposable
                             "content", CommentEdit.Text
                         }
                     });
+                
                 CommentEdit.Text = string.Empty;
                 await Task.Delay(1000);
                 _ = LoadComments(3);
+                Common.AddToTeachingTipLists("评论成功");
+                Common.RollTeachingTip();
             }
             catch (Exception ex)
             {
-                var dlg = new MessageDialog(ex.Message, "出现问题，评论失败");
-                await dlg.ShowAsync();
+                Common.AddToTeachingTipLists("出现问题，评论失败", ex.Message);
+                Common.RollTeachingTip();
             }
         }
 
         else if (string.IsNullOrWhiteSpace(CommentEdit.Text))
         {
-            var dlg = new MessageDialog("评论不能为空");
-            await dlg.ShowAsync();
+            Common.AddToTeachingTipLists("评论不能为空");
+            Common.RollTeachingTip();
         }
         else
         {
@@ -256,7 +259,7 @@ public sealed partial class Comments : Page, IDisposable
         (source) =>
 
         {
-            _ =Dispatcher.RunAsync(
+            _ = Dispatcher.RunAsync(
             CoreDispatcherPriority.Low,
             () =>
             {
