@@ -118,7 +118,7 @@ namespace HyPlayer.Classes
         }
         public static async Task<bool> ScrobbleAsync(HyPlayItem scrobbleHyPlayItem)
         {
-            if (scrobbleHyPlayItem is null) return false;
+            if (scrobbleHyPlayItem.PlayItem is null) return false;
             if (!LastfmLogined || !Common.Setting.UseLastFMScrobbler) return false;
             var scrobbleItem = LastFMUtils.GetScrobble(scrobbleHyPlayItem);
             var response= await LastfmClient.Scrobbler.ScrobbleAsync(scrobbleItem);
@@ -131,7 +131,7 @@ namespace HyPlayer.Classes
         }
         public static async Task<bool> UpdateNowPlayingAsync(HyPlayItem nowPlayingHyPlayItem)
         {
-            if (nowPlayingHyPlayItem is null) return false;
+            if (nowPlayingHyPlayItem.PlayItem is null) return false;
             if (!LastfmLogined || !Common.Setting.UpdateLastFMNowPlaying) return false;
             var nowPlayingItem = LastFMUtils.GetScrobble(nowPlayingHyPlayItem);
             var response = await LastfmClient.Track.UpdateNowPlayingAsync(nowPlayingItem);

@@ -340,14 +340,6 @@ public sealed partial class PlayBar
             .Update(data, "HyPlayerDesktopLyrics");
     }
 
-    private void HyPlayList_OnPlayListAdd()
-    {
-        RefreshSongList();
-        _ = HistoryManagement.SetcurPlayingListHistory(HyPlayList.List
-            .Where(t => t.ItemType == HyPlayItemType.Netease)
-            .Select(t => t.PlayItem.Id).ToList());
-    }
-
     public void OnPlayPositionChange(TimeSpan ts)
     {
         _ = Common.Invoke(() =>
@@ -449,7 +441,7 @@ public sealed partial class PlayBar
         BackgroundElayBrush = new SolidColorBrush(color);
     }
 
-    public async void LoadPlayingFile(HyPlayItem mpi)
+    public void LoadPlayingFile(HyPlayItem mpi)
     {
         if (HyPlayList.NowPlayingItem.PlayItem == null) return;
 
@@ -1178,7 +1170,7 @@ public sealed partial class PlayBar
         HyPlayList.OnPlayItemChange += LoadPlayingFile;
         HyPlayList.OnPlayPositionChange += OnPlayPositionChange;
         //HyPlayList.OnPlayPositionChange += UpdateMSTC;
-        HyPlayList.OnPlayListAddDone += HyPlayList_OnPlayListAdd;
+        HyPlayList.OnPlayListAddDone += RefreshSongList;
         HyPlayList.OnSongRemoveAll += HyPlayListOnOnSongRemoveAll;
         HyPlayList.OnLoginDone += HyPlayListOnOnLoginDone;
         Common.OnEnterForegroundFromBackground += () => LoadPlayingFile(HyPlayList.NowPlayingItem);

@@ -1391,7 +1391,7 @@ public static class HyPlayList
         }
 
         // Call 一下来触发前端显示的播放列表更新
-        OnPlayListAddDone?.Invoke();
+        _ = Common.Invoke(() => OnPlayListAddDone?.Invoke());
         return Task.CompletedTask;
     }
 
@@ -1404,7 +1404,7 @@ public static class HyPlayList
 
     public static async void UpdateLastFMNowPlayingAsync(HyPlayItem NowPlayingItem)
     {
-        if (NowPlayingItem != null && NowPlayingItem.ItemType == HyPlayItemType.Netease)
+        if (NowPlayingItem.PlayItem != null && NowPlayingItem.ItemType == HyPlayItemType.Netease)
         {
             try
             {
