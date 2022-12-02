@@ -474,7 +474,7 @@ public static class HyPlayList
     public static void ManualRemoveAllSong()
     {
         RemoveAllSong();
-        OnPlayItemChange?.Invoke(null);
+        _ = Common.Invoke(() => OnPlayItemChange?.Invoke(null));
     }
 
     public static void RemoveAllSong(bool resetPlaying = true)
@@ -734,7 +734,7 @@ public static class HyPlayList
         }
 
         //因为加载图片可能会高耗时,所以在此处加载
-        OnPlayItemChange?.Invoke(NowPlayingItem);
+        _ = Common.Invoke(() => OnPlayItemChange?.Invoke(NowPlayingItem));
         //加载歌词
         if (NowPlayingItem.PlayItem != null)
         {
@@ -1390,7 +1390,7 @@ public static class HyPlayList
         }
 
         // Call 一下来触发前端显示的播放列表更新
-        OnPlayListAddDone?.Invoke();
+        _ = Common.Invoke(() => OnPlayListAddDone?.Invoke());
         return Task.CompletedTask;
     }
 
@@ -1403,7 +1403,7 @@ public static class HyPlayList
 
     public static async void UpdateLastFMNowPlayingAsync(HyPlayItem NowPlayingItem)
     {
-        if (NowPlayingItem != null && NowPlayingItem.ItemType == HyPlayItemType.Netease)
+        if (NowPlayingItem.PlayItem != null && NowPlayingItem.ItemType == HyPlayItemType.Netease)
         {
             try
             {

@@ -21,6 +21,7 @@ using Microsoft.AppCenter.Analytics;
 using Microsoft.AppCenter.Crashes;
 using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
 using HyPlayer.Classes;
+using System.Linq;
 #if !DEBUG
 using Microsoft.Services.Store.Engagement;
 #endif
@@ -321,10 +322,12 @@ sealed partial class App : Application
     /// </summary>
     /// <param name="sender">挂起的请求的源。</param>
     /// <param name="e">有关挂起请求的详细信息。</param>
-    private void OnSuspending(object sender, SuspendingEventArgs e)
+    private async void OnSuspending(object sender, SuspendingEventArgs e)
     {
         var deferral = e.SuspendingOperation.GetDeferral();
-        //TODO: 保存应用程序状态并停止任何后台活动
+        await HistoryManagement.SetcurPlayingListHistory(HyPlayList.List
+            .Where(t => t.ItemType == HyPlayItemType.Netease)
+            .Select(t => t.PlayItem.Id).ToList());
         deferral.Complete();
     }
 }
