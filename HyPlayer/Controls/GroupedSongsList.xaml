@@ -60,12 +60,12 @@
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                     <MenuFlyoutItem
-                        x:Name="FlyoutItemPlayNext"
-                        Click="FlyoutItemPlayNext_Click"
+                        x:Name="FlyoutItemAddToPlayList"
+                        Click="FlyoutItemAddToPlayList_Click"
                         Style="{StaticResource MenuFlyoutItemRevealStyle}"
-                        Text="下一首播放">
+                        Text="添加到播放列表">
                         <MenuFlyoutItem.Icon>
-                            <SymbolIcon Symbol="Next" />
+                            <SymbolIcon Symbol="MusicInfo" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                     <MenuFlyoutSeparator />
