@@ -680,7 +680,7 @@ public sealed partial class PlayBar
     private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
     {
         if (HyPlayList.NowPlayingItem.PlayItem?.Name != null && HyPlayList.Player.Source == null)
-            _ = HyPlayList.LoadPlayerSong();
+            _ = HyPlayList.LoadPlayerSong(HyPlayList.List[HyPlayList.NowPlaying]);
 
         if (Common.Setting.fadeInOutPause && HyPlayList.Player.Source != null)
         {
