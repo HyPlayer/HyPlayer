@@ -532,8 +532,4 @@ public sealed partial class Search : Page, IDisposable
         }
     }
 
-    private void Expander_Expanding(Microsoft.UI.Xaml.Controls.Expander sender, Microsoft.UI.Xaml.Controls.ExpanderExpandingEventArgs args)
-    {
-        HistoryComboBox.IsDropDownOpen = true;//一展开就展示历史
-    }
 }
