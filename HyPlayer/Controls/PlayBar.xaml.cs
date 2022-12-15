@@ -383,7 +383,8 @@ public sealed partial class PlayBar
         });
         try
         {
-            if (Common.Setting.fadeInOut && isFadeInOutPausing == 0)
+            if (Common.Setting.fadeInOut && isFadeInOutPausing == 0 && 
+                    HyPlayList.Player.PlaybackSession.NaturalDuration-HyPlayList.Player.PlaybackSession.Position > TimeSpan.Zero)
             {
                 if (HyPlayList.Player.PlaybackSession.Position.TotalSeconds <= Common.Setting.fadeInOutTime)
                     HyPlayList.Player.Volume =
@@ -399,7 +400,8 @@ public sealed partial class PlayBar
                 else
                     HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume;
             }
-            else if (isFadeInOutPausing != 0)
+            else if (isFadeInOutPausing != 0 && 
+                        HyPlayList.Player.PlaybackSession.NaturalDuration - HyPlayList.Player.PlaybackSession.Position > TimeSpan.Zero)
             {
                 var fadeRatio =
                     (HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds - FadeInOutStartTime) /

@@ -161,7 +161,7 @@ public sealed partial class GroupedSongsList : IDisposable
         }
     }
 
-    private void FlyoutItemPlayNext_Click(object sender, RoutedEventArgs e)
+    private void FlyoutItemAddToPlayList_Click(object sender, RoutedEventArgs e)
     {
         if (!(SongContainer.SelectedItem as NCSong).IsAvailable)
         {
@@ -225,7 +225,7 @@ public sealed partial class GroupedSongsList : IDisposable
         var element = sender as Grid;
         if (SongContainer.SelectionMode == ListViewSelectionMode.Single)
         {
-            SongContainer.SelectedItem = sender;
+            SongContainer.SelectedItem = element.DataContext;
         }
 
         SongContainer.ContextFlyout.ShowAt(element,

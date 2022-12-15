@@ -556,10 +556,4 @@ public sealed partial class Search : Page, IDisposable
             await LoadResult();
         }
     }
-
-    private void Expander_Expanding(Microsoft.UI.Xaml.Controls.Expander sender, Microsoft.UI.Xaml.Controls.ExpanderExpandingEventArgs args)
-    {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
-        HistoryComboBox.IsDropDownOpen = true;//一展开就展示历史
-    }
 }

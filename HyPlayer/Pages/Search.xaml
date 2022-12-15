@@ -40,28 +40,15 @@
                 Text="{x:Bind searchText,Mode=TwoWay}"
                 TextChanged="SearchKeywordBox_TextChanged" />
 
-                <controls:Expander
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Stretch"
-                    Expanding="Expander_Expanding"
-                    Header="搜索历史"
-                    IsExpanded="False">
-                    <controls:Expander.Transitions>
-                        <TransitionCollection>
-                            <RepositionThemeTransition />
-                        </TransitionCollection>
-                    </controls:Expander.Transitions>
-                <ComboBox
+            <ComboBox
                     x:Name="HistoryComboBox"
                     PlaceholderText="展开搜索历史"
                     HorizontalAlignment="Stretch"
                     ItemsSource="{x:Bind hyplayer:HistoryManagement.GetSearchHistory()}"
                     SelectionChanged="HistoryComboBox_SelectionChanged"
-                    >
+                    Margin="15,0,15,5">
 
-                </ComboBox>
-            </controls:Expander>
-                
+            </ComboBox>
         </StackPanel>
         <NavigationView
             x:Name="NavigationViewSelector"
