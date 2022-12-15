@@ -58,6 +58,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         IsDisposed = true;
         ImageRect.ImageSource = null;
         GC.SuppressFinalize(this);
+        GC.Collect();
     }
     
     public void LoadSongListDetail()

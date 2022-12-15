@@ -41,6 +41,7 @@ public sealed partial class History : Page, IDisposable
         Songs.Clear();
         IsDisposed = true;
         GC.SuppressFinalize(this);
+        GC.Collect();
     }
     private async void NavigationView_SelectionChanged(NavigationView sender,
         NavigationViewSelectionChangedEventArgs args)

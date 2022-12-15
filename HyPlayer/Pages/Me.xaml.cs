@@ -43,6 +43,7 @@ public sealed partial class Me : Page, IDisposable
         myPlayList.Clear();
         likedPlayList.Clear();
         GC.SuppressFinalize(this);
+        GC.Collect();
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)

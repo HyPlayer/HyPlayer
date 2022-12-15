@@ -48,6 +48,7 @@ public sealed partial class Home : Page, IDisposable
         RankPlayList.Children.Clear();
         IsDisposed = true;
         GC.SuppressFinalize(this);
+        GC.Collect();
     }
     
     protected override void OnNavigatedTo(NavigationEventArgs e)

@@ -41,6 +41,7 @@ public sealed partial class MusicCloudPage : Page, IDisposable
         SongContainer.Dispose();
         IsDisposed = true;
         GC.SuppressFinalize(this);
+        GC.Collect();
     }
 
     public async Task LoadMusicCloudItem()

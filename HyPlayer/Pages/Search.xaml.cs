@@ -64,6 +64,7 @@ public sealed partial class Search : Page, IDisposable
         SearchResultContainer.ListItems.Clear();
         IsDisposed = true;
         GC.SuppressFinalize(this);
+        GC.Collect();
     }
 
     protected async override void OnNavigatedTo(NavigationEventArgs e)
