@@ -96,7 +96,6 @@ public sealed partial class ArtistPage : Page, IDisposable
         artist = null;
         IsDisposed = true;
         GC.SuppressFinalize(this);
-        GC.Collect();
     }
 
     private async Task LoadHotSongs()

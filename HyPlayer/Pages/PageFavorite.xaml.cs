@@ -36,7 +36,6 @@ public sealed partial class PageFavorite : Page, IDisposable
         ItemContainer.ListItems.Clear();
         IsDisposed = true;
         GC.SuppressFinalize(this);
-        GC.Collect();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
