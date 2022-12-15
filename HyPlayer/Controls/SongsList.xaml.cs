@@ -146,6 +146,8 @@ public sealed partial class SongsList : UserControl, IDisposable
         set => SetValue(ListSourceProperty, value);
     }
 
+    public bool IsAddingSongToPlaylist = false;
+
     public void Dispose()
     {
         HyPlayList.OnPlayItemChange -= HyPlayListOnOnPlayItemChange;
@@ -397,7 +399,8 @@ public sealed partial class SongsList : UserControl, IDisposable
 
     private async void SongContainer_ItemClick(object sender, ItemClickEventArgs e)
     {
-        if (e.ClickedItem == null) return;
+        if (e.ClickedItem == null || IsAddingSongToPlaylist) return;
+        IsAddingSongToPlaylist = true;
         if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
         bool shiftSong = ((e.ClickedItem as NCSong).sid == HyPlayList.NowPlayingItem?.PlayItem?.Id);
 
@@ -445,6 +448,6 @@ public sealed partial class SongsList : UserControl, IDisposable
                 HyPlayList.NowPlaying =
                     HyPlayList.List.FindIndex(song => song.PlayItem.Id == ((e.ClickedItem as NCSong).sid));
         }
+        IsAddingSongToPlaylist = false;
     }
-
 }
