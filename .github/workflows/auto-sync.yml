@@ -9,7 +9,7 @@ on:
 jobs:
   to_notabug:
     runs-on: ubuntu-latest
-    steps:                                              # <-- must use actions/checkout@v1 before mirroring!
+    steps:
     - uses: actions/checkout@v3
       with:
           fetch-depth: 0
@@ -21,7 +21,7 @@ jobs:
           ${{ secrets.SSH_KEY }}
   to_gitee:
     runs-on: ubuntu-latest
-    steps:                                              # <-- must use actions/checkout@v1 before mirroring!
+    steps:
     - uses: actions/checkout@v3
       with:
           fetch-depth: 0
