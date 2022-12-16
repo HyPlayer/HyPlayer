@@ -39,6 +39,7 @@ public sealed partial class Comments : Page, IDisposable
     private ScrollViewer MainScroll, HotCommentsScroll;
     private ObservableCollection<Comment> hotComments = new ObservableCollection<Comment>();
     private ObservableCollection<Comment> normalComments = new ObservableCollection<Comment>();
+    public bool IsDisposed = false;
 
     public Comments()
     {
@@ -47,8 +48,13 @@ public sealed partial class Comments : Page, IDisposable
 
     public void Dispose()
     {
+        if (IsDisposed) return;
         hotComments.Clear();
         normalComments.Clear();
+        cursor = null;
+        resourceid = null;
+        IsDisposed = true;
+        GC.SuppressFinalize(false);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -82,6 +88,12 @@ public sealed partial class Comments : Page, IDisposable
 
         LoadHotComments();
         _ = LoadComments(sortType);
+    }
+
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+        Dispose();
     }
 
 

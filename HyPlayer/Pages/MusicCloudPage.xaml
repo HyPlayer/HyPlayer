@@ -29,7 +29,8 @@
         <controls1:SongsList
             x:Name="SongContainer"
             Grid.Row="1"
-            IsSearchEnabled="True">
+            IsSearchEnabled="True"
+            Songs="{x:Bind Items}">
             <controls1:SongsList.Footer>
                 <Button
                     x:Name="NextPage"

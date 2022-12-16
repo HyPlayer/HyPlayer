@@ -24,23 +24,28 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class MusicCloudPage : Page, IDisposable
 {
-    private ObservableCollection<NCSong> Items = new();
+    private readonly ObservableCollection<NCSong> Items = new();
     private int page;
+    public bool IsDisposed = false;
 
     public MusicCloudPage()
     {
         InitializeComponent();
         SongContainer.ListSource = "content";
-        SongContainer.Songs = Items;
     }
 
     public void Dispose()
     {
-        Items = null;
+        if (IsDisposed) return;
+        Items.Clear();
+        SongContainer.Dispose();
+        IsDisposed = true;
+        GC.SuppressFinalize(this);
     }
 
     public async Task LoadMusicCloudItem()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(MusicCloudPage));
         try
         {
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserCloud,
@@ -85,6 +90,7 @@ public sealed partial class MusicCloudPage : Page, IDisposable
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        Dispose();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -96,17 +102,20 @@ public sealed partial class MusicCloudPage : Page, IDisposable
 
     private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(MusicCloudPage));
         page++;
         _ = LoadMusicCloudItem();
     }
 
     private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(MusicCloudPage));
         DownloadManager.AddDownload(Items.ToList());
     }
 
     private async void BtnUpload_Click(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(MusicCloudPage));
         var fop = new FileOpenPicker();
         fop.FileTypeFilter.Add(".flac");
         fop.FileTypeFilter.Add(".mp3");

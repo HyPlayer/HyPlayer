@@ -72,7 +72,7 @@ public static class HyPlayList
     public static int ShufflingIndex = -1;
     public static List<SongLyric> Lyrics = new();
     public static TimeSpan LyricOffset = TimeSpan.Zero;
-
+    
     /********        API        ********/
     public static MediaPlayer Player;
     public static SystemMediaTransportControls MediaSystemControls;
@@ -122,6 +122,10 @@ public static class HyPlayList
     {
         get
         {
+            if (Player.Source != null)
+            {
+                return (Player.Source as MediaSource).CustomProperties["nowPlayingItem"] as HyPlayItem;
+            }
             if (List.Count <= NowPlaying || NowPlaying == -1)
                 return new HyPlayItem { ItemType = HyPlayItemType.Netease };
             return List[NowPlaying];
@@ -412,7 +416,7 @@ public static class HyPlayList
         OnSongMoveNext?.Invoke();
         if (List.Count == 0) return;
         MoveSongPointer(true);
-        _ = LoadPlayerSong();
+        _ = LoadPlayerSong(List[NowPlaying]);
     }
 
     public static void SongMovePrevious()
@@ -430,7 +434,7 @@ public static class HyPlayList
             NowPlaying = ShuffleList[ShufflingIndex];
         }
 
-        _ = LoadPlayerSong();
+        _ = LoadPlayerSong(List[NowPlaying]);
     }
 
     public static void SongMoveTo(int index)
@@ -440,7 +444,7 @@ public static class HyPlayList
         if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
             ShufflingIndex = ShuffleList.FindIndex(t => t == index);
 
-        _ = LoadPlayerSong();
+        _ = LoadPlayerSong(List[NowPlaying]);
     }
 
     public static void RemoveSong(int index)
@@ -455,7 +459,7 @@ public static class HyPlayList
         if (index == NowPlaying)
         {
             List.RemoveAt(index);
-            _ = LoadPlayerSong();
+            _ = LoadPlayerSong(List[NowPlaying]);
         }
 
         if (index < NowPlaying)
@@ -556,14 +560,14 @@ public static class HyPlayList
         OnMediaEnd?.Invoke(NowPlayingItem);
         MoveSongPointer();
         //然后尝试加载下一首歌
-        _ = LoadPlayerSong();
+        _ = LoadPlayerSong(List[NowPlaying]);
     }
 
-    private static async Task<string> GetNowPlayingUrl()
+    private static async Task<string> GetNowPlayingUrl(HyPlayItem targetItem)
     {
-        var playUrl = NowPlayingItem.PlayItem.Url;
+        var playUrl = targetItem.PlayItem.Url;
         // 对了,先看看是否要刷新播放链接
-        if (string.IsNullOrEmpty(NowPlayingItem.PlayItem.Url) ||
+        if (string.IsNullOrEmpty(targetItem.PlayItem.Url) ||
             Common.Setting.songUrlLazyGet)
             try
             {
@@ -571,7 +575,7 @@ public static class HyPlayList
                     CloudMusicApiProviders.SongUrlV1,
                     new Dictionary<string, object>
                     {
-                        { "id", NowPlayingItem.PlayItem.Id },
+                        { "id", targetItem.PlayItem.Id },
                         { "level", Common.Setting.audioRate }
                     });
                 if (json["data"]?[0]?["code"]?.ToString() == "200")
@@ -590,7 +594,7 @@ public static class HyPlayList
                         "hires" => "Hi-Res",
                         _ => "在线"
                     };
-                    NowPlayingItem.PlayItem.Tag = tag;
+                    targetItem.PlayItem.Tag = tag;
                     _ = Common.Invoke(() => { Common.BarPlayBar.TbSongTag.Text = tag; });
                 }
                 else
@@ -606,9 +610,9 @@ public static class HyPlayList
         return playUrl;
     }
 
-    public static async Task LoadPlayerSong()
+    public static async Task LoadPlayerSong(HyPlayItem targetItem)
     {
-        if (NowPlayingItem.PlayItem?.Name == null)
+        if (targetItem.PlayItem?.Name == null)
         {
             MoveSongPointer();
             return;
@@ -617,14 +621,14 @@ public static class HyPlayList
         MediaSource ms = null;
         try
         {
-            switch (NowPlayingItem.ItemType)
+            switch (targetItem.ItemType)
             {
                 case HyPlayItemType.Netease:
                 case HyPlayItemType.Radio: //FM伪加载为普通歌曲
                     //先看看是不是本地文件
                     //本地文件的话尝试加载
                     //cnm的NCM,我试试其他方式
-                    if (NowPlayingItem.PlayItem.IsLocalFile)
+                    if (targetItem.PlayItem.IsLocalFile)
                     {
                         await LoadLocalFile();
                         ms = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
@@ -639,11 +643,14 @@ public static class HyPlayList
                                 // 加载本地缓存文件
                                 var sf =
                                     await (await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir))
-                                        .GetFileAsync(NowPlayingItem.PlayItem.Id +
+                                        .GetFileAsync(targetItem.PlayItem.Id +
                                                       ".cache");
                                 if ((await sf.GetBasicPropertiesAsync()).Size.ToString() ==
-                                    NowPlayingItem.PlayItem.Size || NowPlayingItem.PlayItem.Size == null)
+                                    targetItem.PlayItem.Size || targetItem.PlayItem.Size == null) 
+                                {
                                     ms = MediaSource.CreateFromStorageFile(sf);
+                                }
+                                    
                                 else
                                     throw new Exception("File Size Not Match");
                             }
@@ -651,7 +658,7 @@ public static class HyPlayList
                             {
                                 try
                                 {
-                                    var playUrl = await GetNowPlayingUrl();
+                                    var playUrl = await GetNowPlayingUrl(targetItem);
                                     //尝试从DownloadOperation下载
                                     if (playUrl != null)
                                     {
@@ -659,7 +666,7 @@ public static class HyPlayList
                                             await (await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync(
                                                 "songCache",
                                                 CreationCollisionOption.OpenIfExists)).CreateFileAsync(
-                                                NowPlayingItem.PlayItem.Id +
+                                                targetItem.PlayItem.Id +
                                                 ".cache",
                                                 CreationCollisionOption.ReplaceExisting);
                                         var downloadOperation =
@@ -670,7 +677,7 @@ public static class HyPlayList
                                 }
                                 catch
                                 {
-                                    var playUrl = await GetNowPlayingUrl();
+                                    var playUrl = await GetNowPlayingUrl(targetItem);
                                     if (playUrl != null)
                                         ms = MediaSource.CreateFromUri(new Uri(playUrl));
                                 }
@@ -678,7 +685,7 @@ public static class HyPlayList
                         }
                         else
                         {
-                            var playUrl = await GetNowPlayingUrl();
+                            var playUrl = await GetNowPlayingUrl(targetItem);
                             ms = MediaSource.CreateFromUri(new Uri(playUrl));
                         }
                     }
@@ -693,7 +700,7 @@ public static class HyPlayList
                     }
                     catch
                     {
-                        ms = MediaSource.CreateFromUri(new Uri(NowPlayingItem.PlayItem.Url));
+                        ms = MediaSource.CreateFromUri(new Uri(targetItem.PlayItem.Url));
                     }
 
                     break;
@@ -701,7 +708,7 @@ public static class HyPlayList
                     ms = null;
                     break;
             }
-
+            ms.CustomProperties.Add("nowPlayingItem", targetItem);
             MediaSystemControls.IsEnabled = true;
             await ms.OpenAsync();
             Player.Source = ms;

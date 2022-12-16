@@ -33,6 +33,7 @@ public sealed partial class AlbumPage : Page, IDisposable
     private readonly CollectionViewSource AlbumSongsViewSource = new() { IsSourceGrouped = true };
     private List<NCArtist> artists = new();
     private int page;
+    public bool IsDisposed = false;
 
     public AlbumPage()
     {
@@ -41,11 +42,15 @@ public sealed partial class AlbumPage : Page, IDisposable
 
     public void Dispose()
     {
+        if (IsDisposed) return;
         AlbumSongs.Clear();
         AlbumSongsViewSource.Source = null;
+        SongContainer.Dispose();
+        albumid = null;
         Album = null;
         artists = null;
         ImageRect.ImageSource = null;
+        IsDisposed = true;
         GC.SuppressFinalize(this);
     }
 
@@ -68,8 +73,15 @@ public sealed partial class AlbumPage : Page, IDisposable
         _ = LoadAlbumDynamic();
     }
 
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+        Dispose();
+    }
+
     private async Task LoadAlbumDynamic()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(AlbumPage));
         var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.AlbumDetailDynamic,
             new Dictionary<string, object> { { "id", albumid } });
         BtnSub.IsChecked = json["isSub"].ToObject<bool>();
@@ -77,6 +89,7 @@ public sealed partial class AlbumPage : Page, IDisposable
 
     private async Task LoadAlbumInfo()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(AlbumPage));
         JObject json;
         try
         {
@@ -145,6 +158,7 @@ public sealed partial class AlbumPage : Page, IDisposable
 
     private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(AlbumPage));
         try
         {
             HyPlayList.RemoveAllSong();
@@ -162,6 +176,7 @@ public sealed partial class AlbumPage : Page, IDisposable
 
     private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(AlbumPage));
         var songs = new List<NCSong>();
         foreach (var discSongs in (IEnumerable<DiscSongs>)AlbumSongsViewSource.Source) songs.AddRange(discSongs);
 
@@ -170,11 +185,13 @@ public sealed partial class AlbumPage : Page, IDisposable
 
     private void ButtonComment_OnClick(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(AlbumPage));
         Common.NavigatePage(typeof(Comments), "al" + Album.id);
     }
 
     private async void TextBoxAuthor_OnTapped(object sender, RoutedEventArgs routedEventArgs)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(AlbumPage));
         if (artists.Count > 1)
             await new ArtistSelectDialog(artists).ShowAsync();
         else
@@ -183,6 +200,7 @@ public sealed partial class AlbumPage : Page, IDisposable
 
     private void BtnSub_Click(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(AlbumPage));
         _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.AlbumSubscribe,
             new Dictionary<string, object>
                 { { "id", albumid }, { "t", BtnSub.IsChecked.GetValueOrDefault(false) ? "1" : "0" } });
@@ -190,6 +208,7 @@ public sealed partial class AlbumPage : Page, IDisposable
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(AlbumPage));
         await HyPlayList.AppendNcSource("al" + Album.id);
         HyPlayList.SongAppendDone();
     }

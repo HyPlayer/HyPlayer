@@ -29,6 +29,7 @@ public sealed partial class Me : Page, IDisposable
     private readonly ObservableCollection<SimpleListItem> likedPlayList = new();
     private readonly ObservableCollection<SimpleListItem> myPlayList = new();
     private string uid = "";
+    public bool IsDisposed = false;
 
     public Me()
     {
@@ -37,9 +38,11 @@ public sealed partial class Me : Page, IDisposable
 
     public void Dispose()
     {
+        if (IsDisposed) return;
         ImageRect.ImageSource = null;
         myPlayList.Clear();
         likedPlayList.Clear();
+        GC.SuppressFinalize(this);
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -67,9 +70,7 @@ public sealed partial class Me : Page, IDisposable
 
     public async Task LoadPlayList()
     {
-        List<SimpleListItem> mySongs = new();
-        List<SimpleListItem> likedSongs = new();
-
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Me));
         try
         {
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
@@ -83,7 +84,7 @@ public sealed partial class Me : Page, IDisposable
                 var ncp = NCPlayList.CreateFromJson(PlaylistItemJson);
                 if (ncp.creater.id != uid)
                     //GridContainerSub.Children.Add(new PlaylistItem(ncp));
-                    likedSongs.Add(
+                    likedPlayList.Add(
                         new SimpleListItem
                         {
                             CoverUri = ncp.cover + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
@@ -97,7 +98,7 @@ public sealed partial class Me : Page, IDisposable
                         }
                     );
                 else
-                    mySongs.Add(
+                    myPlayList.Add(
                         new SimpleListItem
                         {
                             CoverUri = ncp.cover + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
@@ -111,9 +112,6 @@ public sealed partial class Me : Page, IDisposable
                         }
                     );
             }
-
-            MySongListBox.ItemsSource = mySongs;
-            LikedSongList.ItemsSource = likedSongs;
         }
         catch (Exception ex)
         {
@@ -123,6 +121,7 @@ public sealed partial class Me : Page, IDisposable
 
     public async Task LoadInfo()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Me));
         if (uid == Common.LoginedUser?.id)
         {
             TextBoxUserName.Text = Common.LoginedUser.name;
@@ -160,6 +159,7 @@ public sealed partial class Me : Page, IDisposable
 
     private async void Logout_OnClick(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Me));
         try
         {
             await Common.ncapi.RequestAsync(CloudMusicApiProviders.Logout);
@@ -178,6 +178,7 @@ public sealed partial class Me : Page, IDisposable
 
     private async void BtnPlayClick(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Me));
         HyPlayList.RemoveAllSong();
         await HyPlayList.AppendNcSource(((Button)sender).Tag.ToString());
         HyPlayList.SongAppendDone();
@@ -191,6 +192,7 @@ public sealed partial class Me : Page, IDisposable
 
     private void SongListItemClicked(object sender, TappedRoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Me));
         _ = Common.NavigatePageResource(((Grid)sender).Tag.ToString());
     }
 

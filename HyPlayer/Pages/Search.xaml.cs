@@ -34,6 +34,7 @@ public sealed partial class Search : Page, IDisposable
     private readonly ObservableCollection<NCSong> SongResults;
     private int page;
     private string searchText = "";
+    public bool IsDisposed = false;
 
     public Search()
     {
@@ -58,7 +59,11 @@ public sealed partial class Search : Page, IDisposable
 
     public void Dispose()
     {
+        if (IsDisposed) return;
+        SongResults.Clear();
         SearchResultContainer.ListItems.Clear();
+        IsDisposed = true;
+        GC.SuppressFinalize(this);
     }
 
     protected async override void OnNavigatedTo(NavigationEventArgs e)
@@ -72,14 +77,15 @@ public sealed partial class Search : Page, IDisposable
         if (searchText != string.Empty) _ = LoadResult();
     }
 
-    protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
-        SearchResultContainer.ListItems.Clear();
-        GC.Collect();
+        base.OnNavigatedFrom(e);
+        Dispose();
     }
 
     private async Task LoadResult()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         if (string.IsNullOrEmpty(searchText)) return;
         if (Convert.ToBase64String(searchText.ToByteArrayUtf8()) == "6Ieq5p2A")
         {
@@ -141,6 +147,7 @@ public sealed partial class Search : Page, IDisposable
 
     private void LoadMVResult(JObject json)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         var i = 0;
         if (json["result"]["mvCount"].ToObject<int>() == 0)
         {
@@ -174,6 +181,7 @@ public sealed partial class Search : Page, IDisposable
 
     private void LoadMlogResult(JObject json)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         var i = 0;
         if (json["result"]["videoCount"].ToObject<int>() == 0)
         {
@@ -207,6 +215,7 @@ public sealed partial class Search : Page, IDisposable
 
     private void LoadLyricResult(JObject json)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         var i = 0;
         if (json["result"]["songCount"].ToObject<int>() == 0)
         {
@@ -238,6 +247,7 @@ public sealed partial class Search : Page, IDisposable
 
     private void LoadUserResult(JObject json)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         var i = 0;
         if (!json["result"].HasValues)
         {
@@ -269,6 +279,7 @@ public sealed partial class Search : Page, IDisposable
 
     private void LoadRadioResult(JObject json)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         var i = 0;
         if (json["result"]["djRadiosCount"].ToObject<int>() == 0)
         {
@@ -301,12 +312,14 @@ public sealed partial class Search : Page, IDisposable
 
     private void Btn_Click(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         searchText = (sender as Button).Content.ToString();
         _ = LoadResult();
     }
 
     private void LoadPlaylistResult(JObject json)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         var i = 0;
         if (json["result"]["playlistCount"].ToObject<int>() == 0)
         {
@@ -338,6 +351,7 @@ public sealed partial class Search : Page, IDisposable
 
     private void LoadArtistResult(JObject json)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         var i = 0;
         if (json["result"]["artistCount"].ToObject<int>() == 0)
         {
@@ -369,6 +383,7 @@ public sealed partial class Search : Page, IDisposable
 
     private void LoadAlbumResult(JObject json)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         var i = 0;
         if (json["result"]["albumCount"].ToObject<int>() == 0)
         {
@@ -402,6 +417,7 @@ public sealed partial class Search : Page, IDisposable
 
     private void LoadSongResult(JObject json)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         if (json["result"]["songCount"].ToObject<int>() == 0)
         {
             TBNoRes.Visibility = Visibility.Visible;
@@ -436,12 +452,14 @@ public sealed partial class Search : Page, IDisposable
 
     private void PrevPage_OnClick(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         page--;
         _ = LoadResult();
     }
 
     private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         page++;
         _ = LoadResult();
     }
@@ -449,6 +467,7 @@ public sealed partial class Search : Page, IDisposable
     private void NavigationView_OnSelectionChanged(NavigationView sender,
         NavigationViewSelectionChangedEventArgs args)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         page = 0;
         if ((args.SelectedItem as NavigationViewItem).Tag.ToString() == "1")
         {
@@ -466,6 +485,7 @@ public sealed partial class Search : Page, IDisposable
 
     private async void SearchKeywordBox_GotFocus(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         if (string.IsNullOrWhiteSpace((sender as AutoSuggestBox)?.Text))
             try
             {
@@ -482,11 +502,13 @@ public sealed partial class Search : Page, IDisposable
 
     private void SearchKeywordBox_LostFocus(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         ((AutoSuggestBox)sender).ItemsSource = null;
     }
 
     private void SearchKeywordBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         searchText = sender.Text;
         _ = LoadResult();
     }
@@ -494,11 +516,13 @@ public sealed partial class Search : Page, IDisposable
     private void SearchKeywordBox_SuggestionChosen(AutoSuggestBox sender,
         AutoSuggestBoxSuggestionChosenEventArgs args)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         sender.Text = args.SelectedItem.ToString();
     }
 
     private async void SearchKeywordBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         if (string.IsNullOrEmpty(sender.Text))
         {
             SearchKeywordBox_GotFocus(sender, null);
@@ -525,11 +549,11 @@ public sealed partial class Search : Page, IDisposable
 
     private async void HistoryComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if((sender as ComboBox) is not null)
+        if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
+        if ((sender as ComboBox) is not null)
         {
             SearchKeywordBox.Text= (sender as ComboBox).SelectedItem as String;//将历史放上去
             await LoadResult();
         }
     }
-
 }

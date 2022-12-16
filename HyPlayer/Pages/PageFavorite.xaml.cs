@@ -23,7 +23,8 @@ public sealed partial class PageFavorite : Page, IDisposable
 {
     private int i;
     private int page;
-
+    public bool IsDisposed = false;
+    
     public PageFavorite()
     {
         InitializeComponent();
@@ -31,7 +32,10 @@ public sealed partial class PageFavorite : Page, IDisposable
 
     public void Dispose()
     {
+        if (IsDisposed) return;
         ItemContainer.ListItems.Clear();
+        IsDisposed = true;
+        GC.SuppressFinalize(this);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -40,8 +44,15 @@ public sealed partial class PageFavorite : Page, IDisposable
         NavView.SelectedItem = NavView.MenuItems[0];
     }
 
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+        Dispose();
+    }
+
     private void NavView_OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(PageFavorite));
         page = 0;
         i = 0;
         ItemContainer.ListItems.Clear();
@@ -50,6 +61,7 @@ public sealed partial class PageFavorite : Page, IDisposable
 
     private void RealLoad()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(PageFavorite));
         switch ((NavView.SelectedItem as NavigationViewItem)?.Tag.ToString())
         {
             case "Album":
@@ -66,6 +78,7 @@ public sealed partial class PageFavorite : Page, IDisposable
 
     private async Task LoadRadioResult()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(PageFavorite));
         try
         {
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.DjSublist,
@@ -95,6 +108,7 @@ public sealed partial class PageFavorite : Page, IDisposable
 
     private async Task LoadArtistResult()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(PageFavorite));
         try
         {
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistSublist,
@@ -126,6 +140,7 @@ public sealed partial class PageFavorite : Page, IDisposable
 
     private async Task LoadAlbumResult()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(PageFavorite));
         try
         {
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.AlbumSublist,
@@ -157,6 +172,7 @@ public sealed partial class PageFavorite : Page, IDisposable
 
     private void BtnLoadMore_OnClick(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(PageFavorite));
         page++;
         RealLoad();
     }

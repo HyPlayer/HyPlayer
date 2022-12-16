@@ -23,6 +23,7 @@ public sealed partial class RadioPage : Page, IDisposable
     private int i;
     private int page;
     private NCRadio Radio;
+    public bool IsDisposed = false;
 
     public ObservableCollection<NCSong> Songs = new();
 
@@ -33,12 +34,23 @@ public sealed partial class RadioPage : Page, IDisposable
 
     public void Dispose()
     {
+        if (IsDisposed) return;
         ImageRect.ImageSource = null;
+        SongContainer.Dispose();
         Songs.Clear();
+        IsDisposed = true;
+        GC.SuppressFinalize(this);
+    }
+
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+        Dispose();
     }
 
     private async Task LoadProgram()
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(RadioPage));
         try
         {
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.DjProgram,
@@ -94,12 +106,14 @@ public sealed partial class RadioPage : Page, IDisposable
 
     private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(RadioPage));
         page++;
         _ = LoadProgram();
     }
 
     private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(RadioPage));
         try
         {
             await HyPlayList.AppendNcSource("rd" + Radio.id);
@@ -115,11 +129,13 @@ public sealed partial class RadioPage : Page, IDisposable
 
     private void TextBoxDJ_OnTapped(object sender, RoutedEventArgs routedEventArgs)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(RadioPage));
         Common.NavigatePage(typeof(Me), Radio.DJ.id);
     }
 
     private void Button_Click(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(RadioPage));
         Songs.Clear();
         page = 0;
         i = 0;
@@ -129,12 +145,14 @@ public sealed partial class RadioPage : Page, IDisposable
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(RadioPage));
         await HyPlayList.AppendRadioList(Radio.id, asc);
         HyPlayList.SongAppendDone();
     }
 
     private async void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
     {
+        if (IsDisposed) throw new ObjectDisposedException(nameof(RadioPage));
         var result = new List<NCSong>();
         try
         {
