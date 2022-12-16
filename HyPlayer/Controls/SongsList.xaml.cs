@@ -450,4 +450,12 @@ public sealed partial class SongsList : UserControl, IDisposable
         }
         IsAddingSongToPlaylist = false;
     }
+
+    private void FocusingCurrent_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (HyPlayList.NowPlayingItem?.PlayItem is null) return;
+        var idx = VisibleSongs.ToList().FindIndex(t => t.sid == HyPlayList.NowPlayingItem.PlayItem?.Id);
+        if (idx == -1) return;
+        SongContainer.ScrollIntoView(VisibleSongs[idx], ScrollIntoViewAlignment.Leading);
+    }
 }

@@ -69,6 +69,7 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="150" x:Name="SearchBoxColm"/>
                             <ColumnDefinition Width="50" />
+                            <ColumnDefinition Width="50" />
                             <ColumnDefinition Width="50" x:Name="MultiSelectColm"/>
                         </Grid.ColumnDefinitions>
                         <TextBox
@@ -85,10 +86,16 @@
                             Click="FilterBox_OnTextChanged">
                             <FontIcon Glyph="&#xE721;" />
                         </Button>
+                        <Button
+                            ToolTipService.ToolTip="跳转到当前播放"
+                            x:Name="FocusingCurrent"
+                            Grid.Column="3"
+                            Click="FocusingCurrent_OnClick">
+                            <FontIcon Glyph="&#xE819;" />
+                        </Button>
                         <ToggleButton
                             x:Name="MultiSelectBtn"
-                            Grid.Column="3"
-                            Margin="-10,0,0,0"
+                            Grid.Column="4"
                             IsChecked="{x:Bind MultiSelect, Mode=TwoWay}">
                             <FontIcon Glyph="&#xE762;" />
                         </ToggleButton>
