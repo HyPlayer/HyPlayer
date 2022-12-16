@@ -21,7 +21,7 @@
             <StackPanel VerticalAlignment="Center" 
                         Spacing="8">
                 <TextBlock x:Name="TBHINT"
-                           Text="欢迎使用Hyplayer!" 
+                           Text="欢迎使用HyPlayer!" 
                            Style="{StaticResource TitleTextBlockStyle}"/>
                 <TextBlock Text="推荐您在登录后进入设置进行个性化" 
                            Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
