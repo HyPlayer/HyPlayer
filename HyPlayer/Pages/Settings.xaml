@@ -277,7 +277,7 @@
                                             HorizontalAlignment="Right"
                                             IsEnabled="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=OneWay}"
                                             Maximum="12"
-                                            Minimum="0"
+                                            Minimum="1"
                                             ToolTipService.ToolTip="{x:Bind FadeTime.Value}"
                                             Value="{x:Bind hyplayer:Common.Setting.fadeInOutTime, Mode=TwoWay}" />
                                     </Grid>
@@ -297,7 +297,7 @@
                                             HorizontalAlignment="Right"
                                             IsEnabled="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=OneWay}"
                                             Maximum="50"
-                                            Minimum="0"
+                                            Minimum="1"
                                             ToolTipService.ToolTip="{x:Bind FadeTimePause.Value}"
                                             Value="{x:Bind hyplayer:Common.Setting.fadeInOutTimePause, Mode=TwoWay}" />
                                     </Grid>
