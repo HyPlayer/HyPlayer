@@ -82,7 +82,7 @@ public sealed partial class BasePage : Page
         BaseFrame.IsNavigationStackEnabled = !Common.Setting.forceMemoryGarbage;
         Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
         Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
-       // Window.Current.CoreWindow.Dispatcher.AcceleratorKeyActivated += Dispatcher_AcceleratorKeyActivated;
+        // Window.Current.CoreWindow.Dispatcher.AcceleratorKeyActivated += Dispatcher_AcceleratorKeyActivated;
     }
     /*
     private void Dispatcher_AcceleratorKeyActivated(CoreDispatcher sender, AcceleratorKeyEventArgs args)
@@ -163,16 +163,16 @@ public sealed partial class BasePage : Page
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        var dialog = new ContentDialog();
         if (!Common.Setting.DisablePopUp)
         {
+            var dialog = new ContentDialog();
             dialog.Title = "重要提示";
             dialog.Content = "本软件仅供学习交流使用，下载后请在 24 小时内删除。\r\n请勿使用此软件登录网易云音乐或进行违反网易云音乐用户协议的行为";
             dialog.CloseButtonText = "我已知晓";
             dialog.PrimaryButtonText = "退出软件";
             dialog.IsPrimaryButtonEnabled = true;
-            dialog.PrimaryButtonClick += (_, _) => Application.Current.Exit();
-            await dialog.ShowAsync();
+            dialog.PrimaryButtonClick += (_, _) => _ = ApplicationView.GetForCurrentView().TryConsolidateAsync();
+            _ = dialog.ShowAsync();
         }
         // 不要阻塞页面加载
         _ = UpdateManager.PopupVersionCheck(true);
@@ -269,7 +269,7 @@ public sealed partial class BasePage : Page
         {
             LastFMManager.InitializeLastFMManager();
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             Common.AddToTeachingTipLists("登录Last.FM登录失败", ex.Message);
         }
@@ -543,7 +543,7 @@ public sealed partial class BasePage : Page
         if (nowitem.Tag.ToString() == "PageMe" && !Common.Logined)
         {
             foreach (Cookie ncapiCookie in Common.ncapi.Cookies) ncapiCookie.Expired = true; //清一遍Cookie防止出错
-            await DialogLogin.ShowAsync();         
+            await DialogLogin.ShowAsync();
             return;
         }
 
@@ -613,16 +613,16 @@ public sealed partial class BasePage : Page
         switch (invokedItemTag)
         {
             case "SonglistCreate":
-            {
-                await new CreateSonglistDialog().ShowAsync();
-                _ = LoadSongList();
-                break;
-            }
+                {
+                    await new CreateSonglistDialog().ShowAsync();
+                    _ = LoadSongList();
+                    break;
+                }
             case "PersonalFM":
-            {
-                PersonalFM.InitPersonalFM();
-                break;
-            }
+                {
+                    PersonalFM.InitPersonalFM();
+                    break;
+                }
             case "HeartBeat":
                 _ = LoadHeartBeat();
                 break;
@@ -728,7 +728,7 @@ public sealed partial class BasePage : Page
                 }
                 else if (res["code"].ToString() == "801")
                 {
-                    InfoBarLoginHint.Title = "请扫描上方二维码登录";                 
+                    InfoBarLoginHint.Title = "请扫描上方二维码登录";
                 }
                 else if (res["code"].ToString() == "803")
                 {
@@ -914,6 +914,11 @@ public sealed partial class BasePage : Page
     private void SearchAutoSuggestBox_SuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
     {
         sender.Text = args.SelectedItem.ToString();
+    }
+
+    private Visibility SetVisiblePreview(int updateSource)
+    {
+        return updateSource == 2 ? Visibility.Visible : Visibility.Collapsed;//Canary更新就设置预览显示
     }
 
 }

@@ -12,7 +12,7 @@
     xmlns:controls1="using:HyPlayer.Controls"
     mc:Ignorable="d">
     <Page.Resources>
-        <ResourceDictionary x:Key="Default">
+        <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary>
                     <ResourceDictionary.ThemeDictionaries>
@@ -56,8 +56,9 @@
             Background="Transparent"
             Canvas.ZIndex="1"
             IsHitTestVisible="True">
-            <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
-                <Image
+            <Grid VerticalAlignment="Center">
+                <StackPanel VerticalAlignment="Center" Orientation="Horizontal" Grid.Column="0">
+                    <Image
                     x:Name="AppFontIcon"
                     Width="16"
                     Height="16"
@@ -65,13 +66,23 @@
                     VerticalAlignment="Top"
                     Source="/Assets/icon.png"
                     Stretch="Fill" />
-                <TextBlock
+                    <TextBlock
                     x:Name="AppTitle"
                     Margin="12,0,0,0"
                     VerticalAlignment="Top"
                     Style="{StaticResource CaptionTextBlockStyle}"
-                    Text="HyPlayer" />
-            </StackPanel>
+                    Text="HyPlayer"/>
+                    <TextBlock
+                    x:Name="IsPreviewIndicator"
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Top"
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Text="预览"
+                    Foreground="Gray"
+                    Visibility="{x:Bind SetVisiblePreview(local:Common.Setting.UpdateSource)}"/>
+                </StackPanel>
+            </Grid>
+
         </Border>
         <muxc:NavigationView
             x:Name="NavMain"
