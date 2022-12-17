@@ -31,7 +31,7 @@ public sealed partial class Search : Page, IDisposable
     public static readonly DependencyProperty HasPreviousPageProperty = DependencyProperty.Register(
         "HasPreviousPage", typeof(bool), typeof(Search), new PropertyMetadata(default(bool)));
 
-    private readonly ObservableCollection<NCSong> SongResults;
+    private readonly ObservableCollection<NCSong> SongResults = new ObservableCollection<NCSong>();
     private int page;
     private string searchText = "";
     public bool IsDisposed = false;
@@ -40,9 +40,6 @@ public sealed partial class Search : Page, IDisposable
     {
         InitializeComponent();
         NavigationViewSelector.SelectedItem = NavigationViewSelector.MenuItems[0];
-        SongResults = new ObservableCollection<NCSong>();
-        NavigationCacheMode = NavigationCacheMode.Required;
-        SongResults = new ObservableCollection<NCSong>();
     }
 
     public bool HasNextPage
@@ -66,7 +63,7 @@ public sealed partial class Search : Page, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    protected async override void OnNavigatedTo(NavigationEventArgs e)
+    protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         if((string)e.Parameter != null)
         {

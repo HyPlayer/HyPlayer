@@ -97,6 +97,7 @@ public sealed partial class Settings : Page, IDisposable
     {
         if (IsDisposed) return;
         StackPanelLyricSet.Children.Clear();
+        IsDisposed = true;
         GC.SuppressFinalize(this);
     }
 
