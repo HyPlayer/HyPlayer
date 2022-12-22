@@ -71,7 +71,7 @@ public sealed partial class Search : Page, IDisposable
             SearchKeywordBox_QuerySubmitted(SearchKeywordBox, null);
         }
 
-        if (searchText != string.Empty) _ = LoadResult();
+        //if (searchText != string.Empty) _ = LoadResult();
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
