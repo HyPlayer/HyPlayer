@@ -400,7 +400,6 @@ public sealed partial class SongsList : UserControl, IDisposable
     private async void SongContainer_ItemClick(object sender, ItemClickEventArgs e)
     {
         if (e.ClickedItem == null || IsAddingSongToPlaylist) return;
-        IsAddingSongToPlaylist = true;
         if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
         bool shiftSong = ((e.ClickedItem as NCSong).sid == HyPlayList.NowPlayingItem?.PlayItem?.Id);
 
@@ -409,6 +408,7 @@ public sealed partial class SongsList : UserControl, IDisposable
             Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {(e.ClickedItem as NCSong).songname} 当前不可用");
             return;
         }
+        IsAddingSongToPlaylist = true;
         if (ListSource != null && ListSource != "content" && Songs.Count == VisibleSongs.Count)
         {
             if (HyPlayList.PlaySourceId != ListSource.Substring(2))
