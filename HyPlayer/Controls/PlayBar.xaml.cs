@@ -383,6 +383,8 @@ public sealed partial class PlayBar
         });
         try
         {
+            if (HyPlayList.Player.Volume == 0 && HyPlayList.PlayerOutgoingVolume != 0)
+                isFadeInOutPausing = 1;
             if (Common.Setting.fadeInOut && isFadeInOutPausing == 0 && 
                     HyPlayList.Player.PlaybackSession.NaturalDuration-HyPlayList.Player.PlaybackSession.Position > TimeSpan.Zero)
             {
