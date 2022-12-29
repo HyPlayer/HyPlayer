@@ -63,7 +63,6 @@ public static class HyPlayList
 
     public delegate void VolumeChangeEvent(double newVolume);
 
-    private static int _gcCountDown = 5;
 
     public static int NowPlaying;
     private static readonly Timer SecTimer = new(1000); // 公用秒表
@@ -198,12 +197,6 @@ public static class HyPlayList
         Player.SourceChanged += Player_SourceChanged;
         SecTimer.Elapsed += (sender, args) => _ = Common.Invoke(() => OnTimerTicked?.Invoke());
         SecTimer.Start();
-        OnTimerTicked += () =>
-        {
-            if (--_gcCountDown >= 0) return;
-            _gcCountDown = 5;
-            GC.Collect();
-        };
         HistoryManagement.InitializeHistoryTrack();
         Common.IsInFm = false;
     }
@@ -477,7 +470,7 @@ public static class HyPlayList
     public static void ManualRemoveAllSong()
     {
         RemoveAllSong();
-        OnPlayItemChange?.Invoke(null);
+        NotifyPlayItemChanged(NowPlayingItem);
     }
 
     public static void RemoveAllSong(bool resetPlaying = true)
@@ -498,9 +491,19 @@ public static class HyPlayList
         switch (args.Button)
         {
             case SystemMediaTransportControlsButton.Play:
+                if (Common.Setting.fadeInOutPause && Player.Source != null)
+                {
+                    Common.BarPlayBar.OnFadeInOutRequested();
+                    return;
+                }
                 Player.Play();
                 break;
             case SystemMediaTransportControlsButton.Pause:
+                if (Common.Setting.fadeInOutPause && Player.Source != null)
+                {
+                    Common.BarPlayBar.OnFadeInOutRequested();
+                    return;
+                }
                 Player.Pause();
                 break;
             case SystemMediaTransportControlsButton.Previous:
@@ -739,13 +742,10 @@ public static class HyPlayList
 
             //记录下当前播放位置
             ApplicationData.Current.LocalSettings.Values["nowSongPointer"] = NowPlaying.ToString();
-        }
 
-        //因为加载图片可能会高耗时,所以在此处加载
-        OnPlayItemChange?.Invoke(NowPlayingItem);
-        //加载歌词
-        if (NowPlayingItem.PlayItem != null)
-        {
+            //因为加载图片可能会高耗时,所以在此处加载
+            NotifyPlayItemChanged(NowPlayingItem);
+            //加载歌词
             _ = LoadLyrics(NowPlayingItem);
             try
             {
@@ -789,7 +789,10 @@ public static class HyPlayList
             _controlsDisplayUpdater.Update();
         }
     }
-
+    public static void NotifyPlayItemChanged(HyPlayItem targetItem)
+    {
+        OnPlayItemChange?.Invoke(targetItem);
+    }
     private static void PlaybackSession_PositionChanged(MediaPlaybackSession sender, object args)
     {
         OnPlayPositionChange?.Invoke(Player.PlaybackSession.Position);

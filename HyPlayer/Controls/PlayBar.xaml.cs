@@ -383,8 +383,6 @@ public sealed partial class PlayBar
         });
         try
         {
-            if (HyPlayList.Player.Volume == 0 && HyPlayList.PlayerOutgoingVolume != 0)
-                isFadeInOutPausing = 1;
             if (Common.Setting.fadeInOut && isFadeInOutPausing == 0 && 
                     HyPlayList.Player.PlaybackSession.NaturalDuration-HyPlayList.Player.PlaybackSession.Position > TimeSpan.Zero)
             {
@@ -683,18 +681,11 @@ public sealed partial class PlayBar
     {
         if (HyPlayList.NowPlayingItem.PlayItem?.Name != null && HyPlayList.Player.Source == null)
             _ = HyPlayList.LoadPlayerSong(HyPlayList.List[HyPlayList.NowPlaying]);
-
         if (Common.Setting.fadeInOutPause && HyPlayList.Player.Source != null)
         {
-            if (isFadeInOutPausing == 0)
-                isFadeInOutPausing = HyPlayList.IsPlaying ? 2 : 1;
-            else
-                isFadeInOutPausing = isFadeInOutPausing == 1 ? 2 : 1;
-            FadeInOutStartTime = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
-            if (!HyPlayList.IsPlaying) HyPlayList.Player.Play();
+            OnFadeInOutRequested();
             return;
-        }
-
+        }       
         PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uEDB5" : "\uEDB4";
         if (HyPlayList.IsPlaying)
         {
@@ -707,6 +698,16 @@ public sealed partial class PlayBar
             if (Common.Setting.playbarBackgroundBreath)
                 PlayBarBackgroundAni.Begin();
         }
+    }
+    
+    public void OnFadeInOutRequested()
+    {
+        if (isFadeInOutPausing == 0)
+            isFadeInOutPausing = HyPlayList.IsPlaying ? 2 : 1;
+        else
+            isFadeInOutPausing = isFadeInOutPausing == 1 ? 2 : 1;
+        FadeInOutStartTime = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
+        if (!HyPlayList.IsPlaying) HyPlayList.Player.Play();
     }
 
     private void SliderAudioRate_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
@@ -1263,6 +1264,7 @@ public sealed partial class PlayBar
                 int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"].ToString(),
                     out HyPlayList.NowPlaying);
                 HyPlayList.SongAppendDone();
+                HyPlayList.NotifyPlayItemChanged(HyPlayList.NowPlayingItem);
             }
         }
         catch
