@@ -477,7 +477,7 @@ public static class HyPlayList
     public static void ManualRemoveAllSong()
     {
         RemoveAllSong();
-        _ = Common.Invoke(() => OnPlayItemChange?.Invoke(null));
+        OnPlayItemChange?.Invoke(null);
     }
 
     public static void RemoveAllSong(bool resetPlaying = true)
@@ -742,7 +742,7 @@ public static class HyPlayList
         }
 
         //因为加载图片可能会高耗时,所以在此处加载
-        _ = Common.Invoke(() => OnPlayItemChange?.Invoke(NowPlayingItem));
+        OnPlayItemChange?.Invoke(NowPlayingItem);
         //加载歌词
         if (NowPlayingItem.PlayItem != null)
         {
