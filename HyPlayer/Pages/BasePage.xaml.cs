@@ -419,10 +419,11 @@ public sealed partial class BasePage : Page
             string.IsNullOrEmpty(HyPlayList.PlaySourceId)*/) return;
         var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Scrobble, new Dictionary<string, object>
         {
-            { "id", item.PlayItem.Id },
+            { "id", Int64.Parse(item.PlayItem.Id) },
             { "sourceId", HyPlayList.PlaySourceId ?? "-1" },
-            { "time", TimeSpan.FromMilliseconds(item.PlayItem.LengthInMilliseconds).TotalSeconds }
+            { "time", ((int)TimeSpan.FromMilliseconds(item.PlayItem.LengthInMilliseconds).TotalSeconds) }
         });
+
         try
         {
             await LastFMManager.ScrobbleAsync(item);
