@@ -17,8 +17,9 @@
         <TextBlock
             Grid.Row="0"
             Margin="24,24,24,0"
-            FontSize="44"
+            FontSize="40"
             FontWeight="Bold"
+            CharacterSpacing="80"
             Text="设置" />
         <controls1:PivotView Grid.Row="1" FontFamily="Black">
             <controls1:PivotEx>

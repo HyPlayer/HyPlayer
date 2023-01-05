@@ -10,8 +10,9 @@
         <Grid>
             <TextBlock
                 Text="主页"
-                FontSize="44"
+                FontSize="40"
                 FontWeight="Bold"
+                CharacterSpacing="90"
                 Margin="24,24,0,0" />
             <Grid Height="320" Margin="0,70,0,0" VerticalAlignment="Top">
                 <Grid.ColumnDefinitions>
