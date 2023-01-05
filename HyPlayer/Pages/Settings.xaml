@@ -1306,19 +1306,19 @@
                                                 <TextBlock
                                                     Margin="1,0,0,0"
                                                     Style="{StaticResource SubtitleTextBlockStyle}"
-                                                    Text="aaaaaaccd" />
+                                                    Text="Aesthed" />
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                                     <TextBlock Text="Design" />
                                                     <TextBlock
                                                         d:Text=""
                                                         Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
-                                                        Text="High" />
+                                                        Text="Reap what I sow" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
                                         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
                                             <HyperlinkButton Content="Github" NavigateUri="https://github.com/aaaaaaccd" />
-                                            <HyperlinkButton Content="酷安@一只老白" NavigateUri="https://www.coolapk.com/u/2409682" />
+                                            <HyperlinkButton Content="酷安@Aesthed" NavigateUri="https://www.coolapk.com/u/2409682" />
 
                                         </StackPanel>
                                     </Grid>
