@@ -421,8 +421,9 @@ public sealed partial class BasePage : Page
         {
             { "id", item.PlayItem.Id },
             { "sourceId", HyPlayList.PlaySourceId ?? "-1" },
-            { "time", TimeSpan.FromMilliseconds(item.PlayItem.LengthInMilliseconds).TotalSeconds }
+            { "time", ((int)TimeSpan.FromMilliseconds(item.PlayItem.LengthInMilliseconds).TotalSeconds) }
         });
+
         try
         {
             await LastFMManager.ScrobbleAsync(item);
