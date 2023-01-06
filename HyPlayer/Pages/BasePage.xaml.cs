@@ -419,7 +419,7 @@ public sealed partial class BasePage : Page
             string.IsNullOrEmpty(HyPlayList.PlaySourceId)*/) return;
         var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Scrobble, new Dictionary<string, object>
         {
-            { "id", Int64.Parse(item.PlayItem.Id) },
+            { "id", item.PlayItem.Id },
             { "sourceId", HyPlayList.PlaySourceId ?? "-1" },
             { "time", ((int)TimeSpan.FromMilliseconds(item.PlayItem.LengthInMilliseconds).TotalSeconds) }
         });
