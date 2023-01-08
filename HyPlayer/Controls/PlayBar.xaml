@@ -342,7 +342,17 @@
                         HorizontalAlignment="Stretch"
                         FontSize="22"
                         FontWeight="Bold"
-                        ToolTipService.ToolTip="{x:Bind Mode=OneWay, Path=TbSongName.Text}" />
+                        ToolTipService.ToolTip="{x:Bind Mode=OneWay, Path=TbSongName.Text}" >
+                        <TextBlock.ContextFlyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem x:Name="CopySongNameFlyoutItem" Text="复制歌曲名" Click="CopySongDetailFlyoutItem_Click" >
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xE16F;"/>
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                            </MenuFlyout>
+                        </TextBlock.ContextFlyout>
+                    </TextBlock>
 
 
                     <HyperlinkButton  Grid.Row="1" 
@@ -352,7 +362,17 @@
                         Click="TbSingerName_OnTapped"
                         FontSize="12"
                         Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
-                        Style="{StaticResource TextBlockButtonStyle}" />
+                        Style="{StaticResource TextBlockButtonStyle}" >
+                        <HyperlinkButton.ContextFlyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem x:Name="CopySingerNameFlyoutItem" Text="复制歌手名" Click="CopySongDetailFlyoutItem_Click" >
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xE16F;"/>
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                            </MenuFlyout>
+                        </HyperlinkButton.ContextFlyout>
+                    </HyperlinkButton>
                     <HyperlinkButton Grid.Row="2"
                         x:Name="TbAlbumName"
                         Padding="0"
@@ -360,7 +380,17 @@
                         FontSize="12"
                         Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                         Style="{StaticResource TextBlockButtonStyle}"
-                        Tapped="TbAlbumName_OnTapped" />
+                        Click="TbAlbumName_OnTapped" >
+                        <HyperlinkButton.ContextFlyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem x:Name="CopyAlbumNameFlyoutItem" Text="复制专辑名" Click="CopySongDetailFlyoutItem_Click" >
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xE16F;"/>
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                            </MenuFlyout>
+                        </HyperlinkButton.ContextFlyout>
+                    </HyperlinkButton>
                     <Grid Grid.Row="3"
                         x:Name="SongInfoTag"
                         Height="20"

@@ -1312,4 +1312,27 @@ public sealed partial class PlayBar
     {
         HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(SliderProgress.Value);
     }
+
+    private void CopySongDetailFlyoutItem_Click(object sender, RoutedEventArgs e)
+    {
+        DataPackage package = new DataPackage();
+        switch ((sender as MenuFlyoutItem).Name)
+        {
+            case "CopySongNameFlyoutItem":
+                if (TbSongName.Text == null) return;
+                package.SetText(TbSongName.Text);
+                break;
+            case "CopySingerNameFlyoutItem":
+                if (TbSingerName.Content == null) return;
+                package.SetText(TbSingerName.Content.ToString());
+                break;
+            case "CopyAlbumNameFlyoutItem":
+                if (TbAlbumName.Content == null) return;
+                package.SetText(TbAlbumName.Content.ToString());
+                break;
+
+        }
+        package.RequestedOperation = DataPackageOperation.Copy;
+        Clipboard.SetContent(package);
+    }
 }
