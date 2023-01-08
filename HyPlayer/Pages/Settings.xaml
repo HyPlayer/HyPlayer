@@ -913,6 +913,11 @@
                                     Click="ButtonPROXYSave_OnClick"
                                     Content="设置" />
                             </StackPanel>
+                            <CheckBox
+                                x:Name="UseHttpCheckBox"
+                                Margin="0,12,0,0"
+                                Content="降级HTTPS为HTTP"
+                                IsChecked="{x:Bind hyplayer:Common.Setting.UseHttp, Mode=TwoWay}" />
 
                             <!--<CheckBox
                                 x:Name="LazySongUrlGetCheck"
@@ -920,7 +925,6 @@
                                 IsChecked="{x:Bind hyplayer:Common.Setting.songUrlLazyGet, Mode=TwoWay}" />-->
                             <CheckBox
                                 x:Name="XboxPointerSet"
-                                Margin="0,12,0,0"
                                 Content="Xbox上隐藏指针（不要开启!）"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.xboxHidePointer, Mode=TwoWay}" />
                             <CheckBox
