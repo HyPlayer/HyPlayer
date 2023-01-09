@@ -255,6 +255,8 @@ internal sealed class DownloadObject : INotifyPropertyChanged
             finally
             {
                 file.Save();
+                file.Dispose();
+                streamAbstraction.Dispose();
             }
         });
     }
