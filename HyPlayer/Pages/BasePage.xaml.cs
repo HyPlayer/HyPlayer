@@ -421,7 +421,7 @@ public sealed partial class BasePage : Page
         {
             { "id", item.PlayItem.Id },
             { "sourceId", HyPlayList.PlaySourceId ?? "-1" },
-            { "time", ((int)TimeSpan.FromMilliseconds(item.PlayItem.LengthInMilliseconds).TotalSeconds).ToString() }
+            { "time", TimeSpan.FromMilliseconds(item.PlayItem.LengthInMilliseconds).TotalSeconds.ToString("f0") }
         });
 
         try

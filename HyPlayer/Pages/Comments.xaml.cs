@@ -36,6 +36,7 @@ public sealed partial class Comments : Page, IDisposable
     private string resourceid;
     private int resourcetype;
     private int sortType = 1;
+    private bool IsShiftingPage = false;
     private ScrollViewer MainScroll, HotCommentsScroll;
     private ObservableCollection<Comment> hotComments = new ObservableCollection<Comment>();
     private ObservableCollection<Comment> normalComments = new ObservableCollection<Comment>();
@@ -106,6 +107,8 @@ public sealed partial class Comments : Page, IDisposable
     {
         // type 1:按推荐排序,2:按热度排序,3:按时间排序
         if (string.IsNullOrEmpty(resourceid)) return;
+        if (IsShiftingPage) return;
+        var isHotCommentsPage = HotCommentsContainer.Visibility == Visibility.Visible;
         try
         {
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentNew,
@@ -118,13 +121,13 @@ public sealed partial class Comments : Page, IDisposable
                     { "pageSize", 20 },
                     { "sortType", type }
                 });
-            if (type == 2 && HotCommentsContainer.Visibility == Visibility.Visible)
+            if (type == 2 && isHotCommentsPage)
                 hotComments.Clear();
             else normalComments.Clear();
             foreach (var comment in json["data"]["comments"].ToArray())
             {
                 Comment LoadedComment = Comment.CreateFromJson(comment, resourceid, resourcetype);
-                if (type == 2 && HotCommentsContainer.Visibility == Visibility.Visible)
+                if (type == 2 && isHotCommentsPage)
                     hotComments.Add(LoadedComment);
                 else normalComments.Add(LoadedComment);
             }
@@ -319,6 +322,7 @@ public sealed partial class Comments : Page, IDisposable
 
     private void ShiftCommentList(bool direction)
     {
+        IsShiftingPage = true;
         if (direction)
         {
             AllCommentsContainer.Visibility = Visibility.Visible;
@@ -352,6 +356,6 @@ public sealed partial class Comments : Page, IDisposable
             AllCommentsContainer.Visibility = Visibility.Collapsed;
             BackToTop.Visibility = Visibility.Collapsed;
         }
+        IsShiftingPage = false;
     }
-
 }

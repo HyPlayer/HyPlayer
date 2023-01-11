@@ -89,30 +89,31 @@
                     <TranslateTransform x:Name="MainCommentsAnimateTranslateTransform" />
                 </hycontrols:CommentsList.RenderTransform>
             </hycontrols:CommentsList>
-        </Grid>
-        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="135" Spacing="4" Visibility="{x:Bind NormalComments.Visibility}">
-            <TextBlock x:Name="PageIndicator" HorizontalAlignment="Center" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
-            <StackPanel 
+            
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="135" Spacing="4" Visibility="{x:Bind NormalComments.Visibility}">
+                <TextBlock x:Name="PageIndicator" HorizontalAlignment="Center" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
+                <StackPanel 
                         Orientation="Horizontal"
                         Spacing="12">
-                <Button
+                    <Button
                             x:Name="PrevPage"
                             Click="PrevPage_Click"
                             Content="上一页"
                             IsEnabled="False"/>
-                <AutoSuggestBox 
+                    <AutoSuggestBox 
                             x:Name="PageSelect" 
                             PlaceholderText="跳页"
                             QueryIcon="Forward" 
                             Width="110" 
                             QuerySubmitted="PageSelect_QuerySubmitted"/>
-                <Button
+                    <Button
                             x:Name="NextPage"
                             Click="NextPage_Click"
                             Content="下一页"
                             IsEnabled="False"/>
+                </StackPanel>
             </StackPanel>
-        </StackPanel>
+        </Grid>
         <Button
             x:Name="BackToTop"
             Width="50"

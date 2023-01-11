@@ -1381,9 +1381,10 @@ public static class HyPlayList
 
     public static Task CreateShufflePlayLists()
     {
+        ShuffleList.Clear();
+        ShufflingIndex = -1;
         if (List.Count != 0)
         {
-            ShuffleList.Clear();
             HashSet<int> shuffledNumbers = new();
             while (shuffledNumbers.Count < List.Count)
             {
