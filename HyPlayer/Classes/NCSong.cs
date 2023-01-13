@@ -233,7 +233,12 @@ public class SimpleListItem
     public int Order = 0;
     public string ResourceId;
     public string Title;
-    public BitmapImage Cover => Common.Setting.noImage ? null : new BitmapImage(new Uri(CoverUri));
+    public BitmapImage Cover =>
+        Common.Setting.noImage
+            ? null
+            : new BitmapImage(new Uri((string.IsNullOrEmpty(CoverUri) ? "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg" : CoverUri) +
+                                      "?param=" +
+                                      StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM));
     public int DspOrder => Order + 1;
 }
 
