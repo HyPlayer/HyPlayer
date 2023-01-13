@@ -23,9 +23,9 @@
                         TintLuminosityOpacity="0.5"
                         TintOpacity="0.5" />
                     <DataTemplate x:Key="ListItemTemplate" x:DataType="classes:SimpleListItem">
-                        <ListViewItem>
+                        <ListViewItem Style="{StaticResource ListViewItemStyle}" CornerRadius="0">
                             <Grid
-                                Margin="0,15,0,15"
+                                Margin="0,16"
                                 HorizontalAlignment="Stretch"
                                 Tag="{x:Bind ResourceId}">
                                 <controls:ImageEx
@@ -50,13 +50,14 @@
                                     Background="Transparent"
                                     Tag="{x:Bind ResourceId}"
                                     Tapped="SongListItemClicked">
+                                    <Grid/>
                                     <StackPanel Orientation="Horizontal">
                                         <controls:ImageEx
                                             x:Name="ImageRect"
                                             Margin="10,0,0,0"
                                             Width="80"
                                             Height="80"
-                                            CornerRadius="6"
+                                            CornerRadius="8"
                                             EnableLazyLoading="True"
                                             IsCacheEnabled="False"
                                             Source="{x:Bind Cover}"
@@ -269,8 +270,9 @@
                         x:Name="FirstGrid"
                         Grid.Column="0"
                         Margin="0,5,-15,0"
-                        Background="{ThemeResource SystemControlBackgroundListLowBrush}"
-                        CornerRadius="8">
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        CornerRadius="8"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
                         <TextBlock
                             Grid.Column="0"
                             Margin="25,20,0,60"
@@ -282,8 +284,9 @@
                         <muxc:ItemsRepeater
                             x:Name="MySongListBox"
                             Margin="0,60,0,0"
-                            ItemTemplate="{StaticResource ListItemTemplate}"
-                            ItemsSource="{x:Bind myPlayList}">
+                            ItemTemplate="{StaticResource ListItemTemplate}" 
+                            ItemsSource="{x:Bind myPlayList}"
+                            >
                             <muxc:ItemsRepeater.Layout>
                                 <muxc:StackLayout Orientation="Vertical" />
                             </muxc:ItemsRepeater.Layout>
@@ -295,7 +298,8 @@
                         Grid.Row="0"
                         Grid.Column="1"
                         Margin="-15,5,0,0"
-                        Background="{ThemeResource SystemControlBackgroundListLowBrush}"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         CornerRadius="8">
                         <TextBlock
                             Margin="30,20,0,0"
