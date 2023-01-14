@@ -1,4 +1,5 @@
 ## 修复优化
 
-* 修复播放本地音乐加载不正确的BUG
-* 修复DownloadManager写入信息后未正确释放文件的bug
+* 尝试修复在快速切换CommentPage时评论添加页面错误的bug
+* 修复在SimpleListItem Cover值为Null时程序崩溃的问题
+* 微调个人主页界面
