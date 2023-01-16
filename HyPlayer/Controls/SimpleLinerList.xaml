@@ -16,7 +16,7 @@
         Margin="0,0,0,120"
         ItemsSource="{x:Bind ListItems}"
         SelectionChanged="ItemList_SelectionChanged"
-        ShowsScrollingPlaceholders="True">
+        ShowsScrollingPlaceholders="True" ItemContainerStyle="{StaticResource ListViewItemStyle}">
         <interactivity:Interaction.Behaviors>
             <behaviors:QuickReturnHeaderBehavior />
         </interactivity:Interaction.Behaviors>

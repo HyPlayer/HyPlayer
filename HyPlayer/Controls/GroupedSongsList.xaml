@@ -20,7 +20,7 @@
             IsItemClickEnabled="True"
             ItemClick="SongContainer_OnItemClick"
             SelectionMode="Single"
-            ShowsScrollingPlaceholders="True">
+            ShowsScrollingPlaceholders="True" ItemContainerStyle="{StaticResource ListViewItemStyle}">
             <ListView.Footer>
                 <ContentControl Margin="0,0,0,130" Content="{x:Bind Footer}" />
             </ListView.Footer>
