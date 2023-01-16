@@ -15,4 +15,6 @@
     <classes:BooleanToWindowBrushesConverter x:Key="BooleanToWindowBrushesConverter" />
     <classes:BooleanToBarPlayBarBrushesConverter x:Key="BooleanToBarPlayBarBrushesConverter"/>
     <classes:BooleanToGridPlayBarBrushesConverter x:Key="BooleanToGridPlayBarBrushesConverter"/>
+    <classes:DateConverter x:Key="DateConverter"/>
+
 </ResourceDictionary>

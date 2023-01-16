@@ -77,6 +77,11 @@ public sealed partial class SongListDetail : Page, IDisposable
         DescriptionWrapper.Text = playList.desc;
         TextBoxAuthor.Content = playList.creater.name;
         ToggleButtonLike.IsChecked = playList.subscribed;
+        if(playList.trackCount != 0)
+            TextBoxPlayCount.Text = $"{playList.trackCount}首歌曲";
+            
+        if (playList.updateTime.Year != 0001)
+            TextBoxUpdateTime.Text = $"{DateConverter.FriendFormat(playList.updateTime)}更新";
     }
 
     public async Task LoadSongListItem()

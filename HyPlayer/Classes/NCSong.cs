@@ -294,6 +294,8 @@ public class NCPlayList
     public string plid;
     public bool subscribed;
     public long trackCount;
+    public DateTime createTime;
+    public DateTime updateTime;
 
     public static NCPlayList CreateFromJson(JToken json)
     {
@@ -320,8 +322,11 @@ public class NCPlayList
                 plid = json["id"].ToString(),
                 subscribed = !(json["subscribed"] == null || json["subscribed"].ToString() == "False"),
                 playCount = json[playcountpath].ToObject<long>(),
-                trackCount = json["trackCount"].ToObject<long>()
+                trackCount = json["trackCount"].ToObject<long>(),
             };
+            if (json["createTime"] != null) ncp.createTime = DateConverter.GetDateTimeFromTimeStamp(json["createTime"].ToObject<long>());
+            if (json["updateTime"] != null) ncp.updateTime = DateConverter.GetDateTimeFromTimeStamp(json["updateTime"].ToObject<long>());
+
             if (json[subcountpath] != null) ncp.bookCount = json[subcountpath].ToObject<long>();
 
             return ncp;
