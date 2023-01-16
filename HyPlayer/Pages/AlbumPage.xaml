@@ -23,12 +23,12 @@
                     LastChildFill="True">
                     <Rectangle
                         x:Name="RectangleImage"
-                        Width="250"
-                        Height="250"
-                        Margin="15"
+                        Width="200"
+                        Height="200"
+                        Margin="16"
                         controls:DockPanel.Dock="Left"
-                        RadiusX="10"
-                        RadiusY="10">
+                        RadiusX="12"
+                        RadiusY="12">
                         <Rectangle.Fill>
                             <ImageBrush x:Name="ImageRect" Stretch="UniformToFill">
                                 <ImageBrush.ImageSource>
@@ -37,67 +37,58 @@
                             </ImageBrush>
                         </Rectangle.Fill>
                     </Rectangle>
-                    <StackPanel x:Name="StackPanelUserInfo" Orientation="Vertical">
-                        <controls1:SelectableTextBox
+                    <StackPanel x:Name="StackPanelUserInfo" Orientation="Vertical" VerticalAlignment="Center">
+                        <TextBlock IsTextSelectionEnabled="True"
                             x:Name="TextBoxAlbumName"
-                            FontSize="36"
-                            FontWeight="Medium"
+                            Style="{StaticResource TitleTextBlockStyle}"
                             TextWrapping="Wrap" />
                         <StackPanel Orientation="Horizontal">
                             <TextBlock
                                 Padding="0,8,0,3"
-                                FontSize="18"
+                                FontSize="16"
                                 Foreground="Gray"
                                 Text="艺术家:" />
                             <HyperlinkButton
                                 x:Name="TextBoxAuthor"
-                                Margin="0,2,0,0"
                                 Click="TextBoxAuthor_OnTapped"
                                 Content="歌手"
-                                FontSize="18"
-                                Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}" />
+                                FontSize="16" Style="{StaticResource TextBlockButtonStyle}"/>
+
                         </StackPanel>
                         <StackPanel
-                            Margin="0,10,0,0"
                             Orientation="Horizontal"
                             Spacing="15">
                             <Button
-                                Background="{ThemeResource SystemControlForegroundAccentBrush}"
-                                Click="ButtonPlayAll_OnClick"
-                                Style="{StaticResource ButtonRevealStyle}">
+                                Style="{StaticResource AccentButtonStyle}"
+                                Click="ButtonPlayAll_OnClick">
                                 <StackPanel Orientation="Horizontal">
                                     <FontIcon
                                         x:Name="IconPlay"
                                         FontSize="16"
                                         Glyph="&#xEDB5;" />
                                     <TextBlock
-                                        Margin="5,0,0,0"
-                                        FontWeight="Bold"
-                                        Text="播放全部" />
+                                        Margin="4,0,0,0"
+                                        Text="播放" />
                                 </StackPanel>
                             </Button>
                             <Button
                                 Click="BtnAddAll_Clicked"
-                                Content="添加全部"
-                                Style="{StaticResource ButtonRevealStyle}" />
+                                Content="添加全部"/>
                             <Button
                                 Click="ButtonDownloadAll_OnClick"
-                                Content="下载全部"
-                                Style="{StaticResource ButtonRevealStyle}" />
+                                Content="下载全部"/>
                             <ToggleButton
                                 x:Name="BtnSub"
                                 Click="BtnSub_Click"
-                                Content="收藏"
-                                Style="{StaticResource ToggleButtonRevealStyle}" />
+                                Content="收藏" />
                             <Button
                                 Click="ButtonComment_OnClick"
-                                Content="评论"
-                                Style="{StaticResource ButtonRevealStyle}" />
+                                Content="评论"/>
                         </StackPanel>
                         <controls1:ExpandableTextBox
                             x:Name="TextBlockDesc"
                             MaxWidth="700"
-                            Margin="0,5,0,0"
+                            Margin="0,8,0,0"
                             HorizontalAlignment="Left"
                             FontSize="13"
                             Foreground="{ThemeResource SystemControlForegroundChromeHighBrush}"
