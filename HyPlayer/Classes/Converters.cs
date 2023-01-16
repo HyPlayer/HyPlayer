@@ -212,7 +212,7 @@ namespace HyPlayer.Classes
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value is long)//时间戳
+            if (value is long||value is int)//时间戳
             {
                 return FriendFormat(GetDateTimeFromTimeStamp((long)value));
             }

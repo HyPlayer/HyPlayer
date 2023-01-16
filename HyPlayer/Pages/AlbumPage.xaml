@@ -40,26 +40,35 @@
                     <StackPanel x:Name="StackPanelUserInfo" Orientation="Vertical" VerticalAlignment="Center">
                         <TextBlock IsTextSelectionEnabled="True"
                             x:Name="TextBoxAlbumName"
-                            Style="{StaticResource TitleTextBlockStyle}"
+                            Style="{ThemeResource TitleTextBlockStyle}"
                             TextWrapping="Wrap" />
                         <StackPanel Orientation="Horizontal">
                             <TextBlock
-                                Padding="0,8,0,3"
+                                Padding="0,8,0,4"
                                 FontSize="16"
-                                Foreground="Gray"
+                                Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                                 Text="艺术家:" />
                             <HyperlinkButton
                                 x:Name="TextBoxAuthor"
                                 Click="TextBoxAuthor_OnTapped"
                                 Content="歌手"
-                                FontSize="16" Style="{StaticResource TextBlockButtonStyle}"/>
-
+                                FontSize="16" Style="{ThemeResource TextBlockButtonStyle}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <TextBlock
+                                FontSize="16"
+                                Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                Text="发行时间:" />
+                            <TextBlock
+                                x:Name="TextBlockPublishTime"   
+                                Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                FontSize="16"/>
                         </StackPanel>
                         <StackPanel
                             Orientation="Horizontal"
                             Spacing="15">
                             <Button
-                                Style="{StaticResource AccentButtonStyle}"
+                                Style="{ThemeResource AccentButtonStyle}"
                                 Click="ButtonPlayAll_OnClick">
                                 <StackPanel Orientation="Horizontal">
                                     <FontIcon
@@ -90,8 +99,7 @@
                             MaxWidth="700"
                             Margin="0,8,0,0"
                             HorizontalAlignment="Left"
-                            FontSize="13"
-                            Foreground="{ThemeResource SystemControlForegroundChromeHighBrush}"
+                            FontSize="14"
                             MaxLines="7"
                             Text="专辑简介"
                             TextWrapping="WrapWholeWords" />
