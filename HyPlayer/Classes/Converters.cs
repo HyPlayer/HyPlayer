@@ -1,5 +1,6 @@
 ﻿using Opportunity.LrcParser;
 using System;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
@@ -208,6 +209,27 @@ namespace HyPlayer.Classes
         }
     }
 
+    public class NullableColorToColorConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+
+            if (value is Color c)
+            {
+                return c;
+            }
+            else
+            {
+                return Colors.Transparent;
+            }
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            return value;
+        }
+    }
+    
     public class DateConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)

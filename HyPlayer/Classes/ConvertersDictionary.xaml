@@ -1,8 +1,8 @@
 ﻿<ResourceDictionary
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:classes="using:HyPlayer.Classes">
-    <classes:ReversedBooleanConverter x:Key="ReversedBooleanConverter"/>
+    <classes:ReversedBooleanConverter x:Key="ReversedBooleanConverter" />
     <classes:PlayBarMarginConverter x:Key="PlayBarMarginConverter" />
     <classes:PlayBarCornerRadiusConverter x:Key="PlayBarCornerRadiusConverter" />
     <classes:SongListSelectModeConverter x:Key="SelectModeConverter" />
@@ -13,8 +13,9 @@
     <classes:ReversedBooleanToVisibilityConverter x:Key="ReversedBooleanToVisibilityConverter" />
     <classes:EnumToIntConverter x:Key="EnumToIntConverter" />
     <classes:BooleanToWindowBrushesConverter x:Key="BooleanToWindowBrushesConverter" />
-    <classes:BooleanToBarPlayBarBrushesConverter x:Key="BooleanToBarPlayBarBrushesConverter"/>
-    <classes:BooleanToGridPlayBarBrushesConverter x:Key="BooleanToGridPlayBarBrushesConverter"/>
-    <classes:DateConverter x:Key="DateConverter"/>
+    <classes:BooleanToBarPlayBarBrushesConverter x:Key="BooleanToBarPlayBarBrushesConverter" />
+    <classes:BooleanToGridPlayBarBrushesConverter x:Key="BooleanToGridPlayBarBrushesConverter" />
+    <classes:DateConverter x:Key="DateConverter" />
+    <classes:NullableColorToColorConverter x:Key="NullableColorToColorConverter" />
 
 </ResourceDictionary>

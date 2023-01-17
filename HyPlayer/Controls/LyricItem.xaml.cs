@@ -1,5 +1,6 @@
 ﻿#region
 
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -56,15 +57,61 @@ public sealed partial class LyricItem : UserControl, IDisposable
     public TextAlignment LyricAlignment =>
         Common.Setting.lyricAlignment ? TextAlignment.Left : TextAlignment.Center;
 
-    private SolidColorBrush AccentBrush => Common.PageExpandedPlayer != null
-        ? Common.PageExpandedPlayer.ForegroundAccentTextBrush
-        : Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush;
+    private SolidColorBrush AccentBrush => GetAccentBrush();
 
-    private SolidColorBrush IdleBrush => Common.PageExpandedPlayer != null
-        ? Common.PageExpandedPlayer.ForegroundIdleTextBrush
-        : Application.Current.Resources["TextFillColorTertiaryBrush"] as SolidColorBrush;
+    private SolidColorBrush IdleBrush => GetIdleBrush();
 
+    private SolidColorBrush? _pureIdleBrushCache; 
+    private SolidColorBrush? _pureAccentBrushCache; 
+    private Color? _karaokIdleColorCache; 
+    private Color? _karaokAccentColorCache; 
 
+    private Color GetKaraokAccentBrush()
+    {
+        if (Common.Setting.karaokLyricFocusingColor is not null)
+        {
+            return _karaokAccentColorCache ??= Common.Setting.karaokLyricFocusingColor.Value;
+        }
+        return Common.PageExpandedPlayer != null
+            ? Common.PageExpandedPlayer.ForegroundAccentTextBrush.Color
+            : (Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush)!.Color;
+    }
+
+    private Color GetKaraokIdleBrush()
+    {
+        if (Common.Setting.karaokLyricIdleColor is not null)
+        {
+            return _karaokIdleColorCache ??= Common.Setting.karaokLyricIdleColor.Value;
+        }
+
+        return Common.PageExpandedPlayer != null
+            ? Common.PageExpandedPlayer.ForegroundIdleTextBrush.Color
+            : (Application.Current.Resources["TextFillColorTertiaryBrush"] as SolidColorBrush)!.Color;
+    }
+    
+    private SolidColorBrush GetAccentBrush()
+    {
+        if (Common.Setting.pureLyricFocusingColor is not null)
+        {
+            return _pureAccentBrushCache ??= new SolidColorBrush(Common.Setting.pureLyricFocusingColor.Value);
+        }
+        return (Common.PageExpandedPlayer != null
+            ? Common.PageExpandedPlayer.ForegroundAccentTextBrush
+            : Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush)!;
+    }
+
+    private SolidColorBrush GetIdleBrush()
+    {
+        if (Common.Setting.pureLyricIdleColor is not null)
+        {
+            return _pureIdleBrushCache ??= new SolidColorBrush(Common.Setting.pureLyricIdleColor.Value);
+        }
+
+        return (Common.PageExpandedPlayer != null
+            ? Common.PageExpandedPlayer.ForegroundIdleTextBrush
+            : Application.Current.Resources["TextFillColorTertiaryBrush"] as SolidColorBrush)!;
+    }
+    
     public void RefreshFontSize()
     {
         TextBoxPureLyric.TextAlignment = LyricAlignment;
@@ -105,7 +152,9 @@ public sealed partial class LyricItem : UserControl, IDisposable
         if (isKaraok)
         {
             HyPlayList.OnPlayPositionChange += RefreshWordColor;
-            WordTextBlocks.ForEach(w => { w.FontSize = actualsize + Common.Setting.lyricScaleSize; });
+            WordTextBlocks.ForEach(w => { w.FontSize = actualsize + Common.Setting.lyricScaleSize;
+                w.Foreground = new SolidColorBrush(GetKaraokIdleBrush());
+            });
         }
 
         TextBoxPureLyric.FontSize = actualsize + Common.Setting.lyricScaleSize;
@@ -213,8 +262,8 @@ public sealed partial class LyricItem : UserControl, IDisposable
                 WordLyricContainer.Children.Add(textBlock);
                 var ani = new ColorAnimation
                 {
-                    From = IdleBrush.Color,
-                    To = AccentBrush.Color,
+                    From = GetKaraokIdleBrush(),
+                    To = GetKaraokAccentBrush(),
                     Duration = TimeSpan.FromMilliseconds(duration)
                 };
                 var storyboard = new Storyboard();

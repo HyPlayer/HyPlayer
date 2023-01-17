@@ -81,12 +81,14 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private int sclock;
     private int scrollFailCount = 0;
     private ExpandedWindowMode WindowMode;
+
     private readonly BringIntoViewOptions DefaultBringIntoViewOptions = new BringIntoViewOptions()
     {
         VerticalAlignmentRatio = 0.5,
         AnimationDesired = true,
     };
 
+    public Windows.UI.Color? albumMainColor;
 
     public ExpandedPlayer()
     {
@@ -134,7 +136,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             var ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
             ImageAlbumAni?.Pause();
         });
-        
     }
 
     private void HyPlayList_OnPlay()
@@ -467,8 +468,9 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         if (k >= 0)
             try
             {
-                var ele = LyricBox.GetOrCreateElement(k) as FrameworkElement;    
-                if ((ele as LyricItemWrapper).SongLyric.PureLyric != "" || (ele as LyricItemWrapper).SongLyric.KaraokLine != "")
+                var ele = LyricBox.GetOrCreateElement(k) as FrameworkElement;
+                if ((ele as LyricItemWrapper).SongLyric.PureLyric != "" ||
+                    (ele as LyricItemWrapper).SongLyric.KaraokLine != "")
                 {
                     ele?.UpdateLayout();
                     ele.StartBringIntoView(DefaultBringIntoViewOptions);
@@ -534,15 +536,29 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
             async void LoadLyricColor()
             {
-                if (await IsBrightAsync())
+                var isBright = await IsBrightAsync();
+                if (Common.Setting.lyricColor != 3 || albumMainColor == null)
                 {
-                    ForegroundAccentTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0, 0, 0));
-                    ForegroundIdleTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(114, 0, 0, 0));
+                    if (isBright)
+                    {
+                        ForegroundAccentTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0, 0, 0));
+                        ForegroundIdleTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(114, 0, 0, 0));
+                    }
+                    else
+                    {
+                        ForegroundAccentTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
+                        ForegroundIdleTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(66, 255, 255, 255));
+                    }
                 }
                 else
                 {
-                    ForegroundAccentTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
-                    ForegroundIdleTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(66, 255, 255, 255));
+                    ForegroundAccentTextBrush = new SolidColorBrush(albumMainColor.Value);
+                    var idleColor = albumMainColor.Value;
+                    idleColor.A -= 10;
+                    idleColor.R -= 10;
+                    idleColor.G -= 10;
+                    idleColor.B -= 10;
+                    ForegroundIdleTextBrush = new SolidColorBrush(idleColor);
                 }
 
 
@@ -581,7 +597,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         ImageAlbum.Source = img;
                         if (Common.Setting.expandedPlayerBackgroundType == 0)
                             Background = new ImageBrush
-                            { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                                { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                     }
                     else
                     {
@@ -597,7 +613,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
                         if (Common.Setting.expandedPlayerBackgroundType == 0)
                             Background = new ImageBrush
-                            { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                                { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                     }
                 }
                 catch (Exception)
@@ -866,7 +882,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private async Task<bool> IsBrightAsync()
     {
-        if (Common.Setting.lyricColor != 0) return Common.Setting.lyricColor == 2;
+        if (Common.Setting.lyricColor != 0 && Common.Setting.lyricColor != 3) return Common.Setting.lyricColor == 2;
         if (Common.Setting.expandedPlayerBackgroundType >= 2)
             // 强制颜色
             switch (Common.Setting.expandedPlayerBackgroundType)
@@ -897,9 +913,13 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             //var c = GetPixel(bytes, 0, 0, decoder.PixelWidth, decoder.PixelHeight);
             var Y = 0.299 * bytes[2] + 0.587 * bytes[1] + 0.114 * bytes[0];
             lastSongForBrush = HyPlayList.NowPlayingItem.PlayItem;
+            albumMainColor = Windows.UI.Color.FromArgb(255, bytes[2], bytes[1], bytes[0]);
             if (Common.Setting.expandedPlayerBackgroundType == 1)
+            {                
                 PageContainer.Background =
-                    new SolidColorBrush(Windows.UI.Color.FromArgb(255, bytes[2], bytes[1], bytes[0]));
+                    new SolidColorBrush(albumMainColor.Value);
+            }
+
             return Y >= 150;
         }
         catch
@@ -1040,37 +1060,37 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
                 break;
             case 0 when Math.Abs(e.Cumulative.Translation.Y) > Math.Abs(e.Cumulative.Translation.X):
+            {
+                // 竖直方向滑动
+                if (e.Cumulative.Translation.Y >= 0)
+                    Common.PageMain.ExpandedPlayerPositionOffset.Y = e.Cumulative.Translation.Y;
+                else
                 {
-                    // 竖直方向滑动
-                    if (e.Cumulative.Translation.Y >= 0)
-                        Common.PageMain.ExpandedPlayerPositionOffset.Y = e.Cumulative.Translation.Y;
-                    else
-                    {
-                        ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;
-                    }
-
-                    if (e.Cumulative.Translation.Y > 200)
-                    {
-                        e.Complete();
-                        Common.BarPlayBar.CollapseExpandedPlayer();
-                    }
-
-                    break;
+                    ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;
                 }
+
+                if (e.Cumulative.Translation.Y > 200)
+                {
+                    e.Complete();
+                    Common.BarPlayBar.CollapseExpandedPlayer();
+                }
+
+                break;
+            }
             case 0:
+            {
+                ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
+                if (e.Cumulative.Translation.X > 400)
                 {
-                    ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
-                    if (e.Cumulative.Translation.X > 400)
-                    {
-                        e.Complete();
-                    }
-                    else if (e.Cumulative.Translation.X < -400)
-                    {
-                        e.Complete();
-                    }
-
-                    break;
+                    e.Complete();
                 }
+                else if (e.Cumulative.Translation.X < -400)
+                {
+                    e.Complete();
+                }
+
+                break;
+            }
         }
     }
 
@@ -1094,8 +1114,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             }
         }
     }
-
-
 }
 
 internal enum ExpandedWindowMode

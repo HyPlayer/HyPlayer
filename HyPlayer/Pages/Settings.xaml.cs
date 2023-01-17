@@ -93,6 +93,15 @@ public sealed partial class Settings : Page, IDisposable
         BtnXboxReserve.Visibility = true ? Visibility.Visible : Visibility.Collapsed;
     }
 
+    public static readonly DependencyProperty IsAdvancedLyricColorSettingsShowProperty = DependencyProperty.Register(
+        "IsAdvancedLyricColorSettingsShow", typeof(bool), typeof(Settings), new PropertyMetadata(default(bool)));
+
+    public bool IsAdvancedLyricColorSettingsShow
+    {
+        get => (bool)GetValue(IsAdvancedLyricColorSettingsShowProperty);
+        set => SetValue(IsAdvancedLyricColorSettingsShowProperty, value);
+    }
+    
     public void Dispose()
     {
         if (IsDisposed) return;
@@ -448,5 +457,46 @@ public sealed partial class Settings : Page, IDisposable
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(Settings));
         LastFMManager.TryLogoffLastFM();
+    }
+
+    private void ResetPureLyricIdleColor(object sender, RoutedEventArgs e)
+    {
+        Common.Setting.pureLyricIdleColor = null;
+    }
+
+    private void ConfirmPureLyricIdleColor(object sender, RoutedEventArgs e)
+    {
+        Common.Setting.pureLyricIdleColor = PureLyricIdle.SelectedColor;
+    }
+    
+    private void ResetPureLyricFocusingColor(object sender, RoutedEventArgs e)
+    {
+        Common.Setting.pureLyricFocusingColor = null;
+    }
+
+    private void ConfirmPureLyricFocusingColor(object sender, RoutedEventArgs e)
+    {
+        Common.Setting.pureLyricFocusingColor = PureLyricFocusing.SelectedColor;
+    }
+    
+    
+    private void ResetKaraokLyricIdleColor(object sender, RoutedEventArgs e)
+    {
+        Common.Setting.karaokLyricIdleColor = null;
+    }
+
+    private void ConfirmKaraokLyricIdleColor(object sender, RoutedEventArgs e)
+    {
+        Common.Setting.karaokLyricIdleColor = KaraokLyricIdle.SelectedColor;
+    }
+    
+    private void ResetKaraokLyricFocusingColor(object sender, RoutedEventArgs e)
+    {
+        Common.Setting.karaokLyricFocusingColor = null;
+    }
+
+    private void ConfirmKaraokLyricFocusingColor(object sender, RoutedEventArgs e)
+    {
+        Common.Setting.karaokLyricFocusingColor = KaraokLyricFocusing.SelectedColor;
     }
 }

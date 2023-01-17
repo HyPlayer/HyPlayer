@@ -61,6 +61,7 @@ namespace HyPlayer
         public static KawazuConverter? KawazuConv;
         public static List<NCPlayList> MySongLists = new();
         public static readonly Stack<NavigationHistoryItem> NavigationHistory = new();
+
         public static bool isExpanded
         {
             get => _isExpanded;
@@ -70,6 +71,7 @@ namespace HyPlayer
                 Setting.OnPropertyChanged("playbarBackgroundAcrylic");
             }
         }
+
         private static bool _isExpanded = false;
         public static TeachingTip GlobalTip;
         public static readonly Stack<KeyValuePair<string, string?>> TeachingTipList = new();
@@ -305,175 +307,176 @@ namespace HyPlayer
             get
             {
                 var ret = 0;
-                if (ApplicationData.Current.LocalSettings.Values.ContainsKey("lyricSize"))
-                    if (int.TryParse(ApplicationData.Current.LocalSettings.Values["lyricSize"].ToString(), out ret))
+                if (ApplicationData.Current.LocalSettings.Values.ContainsKey(nameof(lyricSize)))
+                    if (int.TryParse(ApplicationData.Current.LocalSettings.Values[nameof(lyricSize)].ToString(),
+                            out ret))
                         return ret;
                 return ret;
             }
             set
             {
-                ApplicationData.Current.LocalSettings.Values["lyricSize"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(lyricSize)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool hotlyricOnStartup
         {
-            get => GetSettings("hotlyricOnStartup", false);
+            get => GetSettings(nameof(hotlyricOnStartup), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["hotlyricOnStartup"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(hotlyricOnStartup)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool playbarButtonsTransparent
         {
-            get => GetSettings("playbarButtonsTransparent", true);
+            get => GetSettings(nameof(playbarButtonsTransparent), true);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["playbarButtonsTransparent"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(playbarButtonsTransparent)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool playbarBackgroundElay
         {
-            get => GetSettings("playbarBackgroundElay", false);
+            get => GetSettings(nameof(playbarBackgroundElay), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["playbarBackgroundElay"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(playbarBackgroundElay)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool playButtonAccentColor
         {
-            get => GetSettings("playButtonAccentColor", false);
+            get => GetSettings(nameof(playButtonAccentColor), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["playButtonAccentColor"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(playButtonAccentColor)] = value;
                 OnPropertyChanged();
             }
         }
 
         public int expandedPlayerBackgroundType
         {
-            get => GetSettings("expandedPlayerBackgroundType", 0);
+            get => GetSettings(nameof(expandedPlayerBackgroundType), 0);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["expandedPlayerBackgroundType"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(expandedPlayerBackgroundType)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool TintOpacityValue
         {
-            get => GetSettings("TintOpacityValue", false);
+            get => GetSettings(nameof(TintOpacityValue), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["TintOpacityValue"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(TintOpacityValue)] = value;
                 OnPropertyChanged();
-                OnPropertyChanged("acrylicBackgroundStatus");
+                OnPropertyChanged(nameof(acrylicBackgroundStatus));
             }
         }
 
         public bool downloadLyric
         {
-            get => GetSettings("downloadLyric", true);
+            get => GetSettings(nameof(downloadLyric), true);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["downloadLyric"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(downloadLyric)] = value;
                 OnPropertyChanged();
             }
         }
-        
+
         public bool karaokLyric
         {
-            get => GetSettings("karaokLyric", false);
+            get => GetSettings(nameof(karaokLyric), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["karaokLyric"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(karaokLyric)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool downloadTranslation
         {
-            get => GetSettings("downloadTranslation", true);
+            get => GetSettings(nameof(downloadTranslation), true);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["downloadTranslation"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(downloadTranslation)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool usingGBK
         {
-            get => GetSettings("usingGBK", false);
+            get => GetSettings(nameof(usingGBK), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["usingGBK"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(usingGBK)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool writedownloadFileInfo
         {
-            get => GetSettings("writedownloadFileInfo", true);
+            get => GetSettings(nameof(writedownloadFileInfo), true);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["writedownloadFileInfo"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(writedownloadFileInfo)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool write163Info
         {
-            get => GetSettings("write163Info", true);
+            get => GetSettings(nameof(write163Info), true);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["write163Info"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(write163Info)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool displayShuffledList
         {
-            get => GetSettings("displayShuffledList", true);
+            get => GetSettings(nameof(displayShuffledList), true);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["displayShuffledList"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(displayShuffledList)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool doScrobble
         {
-            get => GetSettings("doScrobble", true);
+            get => GetSettings(nameof(doScrobble), true);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["doScrobble"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(doScrobble)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool localProgressiveLoad
         {
-            get => GetSettings("localProgressiveLoad", false);
+            get => GetSettings(nameof(localProgressiveLoad), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["localProgressiveLoad"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(localProgressiveLoad)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool shuffleNoRepeating
         {
-            get => GetSettings("shuffleNoRepeating", true);
+            get => GetSettings(nameof(shuffleNoRepeating), true);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["shuffleNoRepeating"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(shuffleNoRepeating)] = value;
                 OnPropertyChanged();
                 if (HyPlayList.NowPlayType == PlayMode.Shuffled && value) HyPlayList.CreateShufflePlayLists();
             }
@@ -481,101 +484,101 @@ namespace HyPlayer
 
         public int lyricScaleSize
         {
-            get => GetSettings("lyricScaleSize", 0);
+            get => GetSettings(nameof(lyricScaleSize), 0);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["lyricScaleSize"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(lyricScaleSize)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool forceMemoryGarbage
         {
-            get => GetSettings("forceMemoryGarbage", false);
-            set => ApplicationData.Current.LocalSettings.Values["forceMemoryGarbage"] = value;
+            get => GetSettings(nameof(forceMemoryGarbage), false);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(forceMemoryGarbage)] = value;
         }
 
         public bool expandedUseAcrylic
         {
-            get => GetSettings("expandedUseAcrylic", true);
-            set => ApplicationData.Current.LocalSettings.Values["expandedUseAcrylic"] = value;
+            get => GetSettings(nameof(expandedUseAcrylic), true);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(expandedUseAcrylic)] = value;
         }
 
         public bool playbarBackgroundBreath
         {
-            get => GetSettings("playbarBackgroundBreath", false);
-            set => ApplicationData.Current.LocalSettings.Values["playbarBackgroundBreath"] = value;
+            get => GetSettings(nameof(playbarBackgroundBreath), false);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(playbarBackgroundBreath)] = value;
         }
 
         public bool playbarBackgroundAcrylic
         {
-            get => GetSettings("playbarBackgroundAcrylic", false);
+            get => GetSettings(nameof(playbarBackgroundAcrylic), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["playbarBackgroundAcrylic"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(playbarBackgroundAcrylic)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool expandAlbumBreath
         {
-            get => GetSettings("expandAlbumBreath", false);
-            set => ApplicationData.Current.LocalSettings.Values["expandAlbumBreath"] = value;
+            get => GetSettings(nameof(expandAlbumBreath), false);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(expandAlbumBreath)] = value;
         }
 
         public bool listHeaderAcrylicBlur
         {
-            get => GetSettings("listHeaderAcrylicBlur", true);
-            set => ApplicationData.Current.LocalSettings.Values["listHeaderAcrylicBlur"] = value;
+            get => GetSettings(nameof(listHeaderAcrylicBlur), true);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(listHeaderAcrylicBlur)] = value;
         }
 
         public bool itemOfListBackgroundAcrylicBlur
         {
-            get => GetSettings("itemOfListBackgroundAcrylicBlur", false);
-            set => ApplicationData.Current.LocalSettings.Values["itemOfListBackgroundAcrylicBlur"] = value;
+            get => GetSettings(nameof(itemOfListBackgroundAcrylicBlur), false);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(itemOfListBackgroundAcrylicBlur)] = value;
         }
 
         public bool lyricDropshadow
         {
-            get => GetSettings("lyricDropshadow", false);
-            set => ApplicationData.Current.LocalSettings.Values["lyricDropshadow"] = value;
+            get => GetSettings(nameof(lyricDropshadow), false);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(lyricDropshadow)] = value;
         }
 
         public bool safeFileAccess
         {
-            get => GetSettings("safeFileAccess", false);
-            set => ApplicationData.Current.LocalSettings.Values["safeFileAccess"] = value;
+            get => GetSettings(nameof(safeFileAccess), false);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(safeFileAccess)] = value;
         }
 
         public List<string> scanLocalFolder
         {
             get
             {
-                var folders = GetSettings("scanLocalFolder", KnownFolders.MusicLibrary.Path);
+                var folders = GetSettings(nameof(scanLocalFolder), KnownFolders.MusicLibrary.Path);
                 return folders.Split("\r\n").ToList();
             }
-            set => ApplicationData.Current.LocalSettings.Values["safeFileAccess"] = string.Join("\r\n", value);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(safeFileAccess)] = string.Join("\r\n", value);
         }
 
         public int lyricColor
         {
-            get => GetSettings("lyricColor", 0);
-            set => ApplicationData.Current.LocalSettings.Values["lyricColor"] = value;
+            get => GetSettings(nameof(lyricColor), 0);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(lyricColor)] = value;
         }
 
         public int downloadNameOccupySolution
         {
-            get => GetSettings("downloadNameOccupySolution", 0);
-            set => ApplicationData.Current.LocalSettings.Values["downloadNameOccupySolution"] = value;
+            get => GetSettings(nameof(downloadNameOccupySolution), 0);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(downloadNameOccupySolution)] = value;
         }
 
 
         public bool albumRotate
         {
-            get => GetSettings("albumRotate", false);
+            get => GetSettings(nameof(albumRotate), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["albumRotate"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(albumRotate)] = value;
                 if (value) albumRound = true;
                 OnPropertyChanged();
             }
@@ -583,10 +586,10 @@ namespace HyPlayer
 
         public bool albumRound
         {
-            get => GetSettings("albumRound", false);
+            get => GetSettings(nameof(albumRound), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["albumRound"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(albumRound)] = value;
                 if (!value) albumRotate = false;
                 OnPropertyChanged();
             }
@@ -594,108 +597,177 @@ namespace HyPlayer
 
         public int albumBorderLength
         {
-            get => GetSettings("albumBorderLength", 0);
-            set => ApplicationData.Current.LocalSettings.Values["albumBorderLength"] = value;
+            get => GetSettings(nameof(albumBorderLength), 0);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(albumBorderLength)] = value;
         }
 
         public int romajiSize
         {
-            get => GetSettings("romajiSize", 15);
+            get => GetSettings(nameof(romajiSize), 15);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["romajiSize"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(romajiSize)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool noImage
         {
-            get => GetSettings("noImage", false);
-            set => ApplicationData.Current.LocalSettings.Values["noImage"] = value;
+            get => GetSettings(nameof(noImage), false);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(noImage)] = value;
         }
 
         public bool lyricAlignment
         {
-            get => GetSettings("lyricAlignment", false);
+            get => GetSettings(nameof(lyricAlignment), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["lyricAlignment"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(lyricAlignment)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool ancientSMTC
         {
-            get => GetSettings("ancientSMTC", false);
+            get => GetSettings(nameof(ancientSMTC), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["ancientSMTC"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(ancientSMTC)] = value;
                 OnPropertyChanged();
             }
         }
 
-        public bool jumpVipSongPlaying
+        public Color? pureLyricIdleColor
         {
-            get => GetSettings("jumpVipSongPlaying", false);
+            get
+            {
+                var bytes = GetSettings<byte[]?>(nameof(pureLyricIdleColor), null);
+                return bytes == null ? null : Color.FromArgb(bytes[0], bytes[1], bytes[2], bytes[3]);
+            }
             set
             {
-                ApplicationData.Current.LocalSettings.Values["jumpVipSongPlaying"] = value;
+                if (value.HasValue)
+                    ApplicationData.Current.LocalSettings.Values[nameof(pureLyricIdleColor)] = new[]
+                        { value.Value.A, value.Value.R, value.Value.G, value.Value.B };
+                else ApplicationData.Current.LocalSettings.Values[nameof(pureLyricIdleColor)] = null;
+                OnPropertyChanged();
+            }
+        }
+
+        public Color? pureLyricFocusingColor
+        {
+            get
+            {
+                var bytes = GetSettings<byte[]?>(nameof(pureLyricFocusingColor), null);
+                return bytes == null ? null : Color.FromArgb(bytes[0], bytes[1], bytes[2], bytes[3]);
+            }
+            set
+            {
+                if (value.HasValue)
+                    ApplicationData.Current.LocalSettings.Values[nameof(pureLyricFocusingColor)] = new[]
+                        { value.Value.A, value.Value.R, value.Value.G, value.Value.B };
+                else ApplicationData.Current.LocalSettings.Values[nameof(pureLyricFocusingColor)] = null;
+                OnPropertyChanged();
+            }
+        }
+        
+        public Color? karaokLyricIdleColor
+        {
+            get
+            {
+                var bytes = GetSettings<byte[]?>(nameof(karaokLyricIdleColor), null);
+                return bytes == null ? null : Color.FromArgb(bytes[0], bytes[1], bytes[2], bytes[3]);
+            }
+            set
+            {
+                if (value.HasValue)
+                    ApplicationData.Current.LocalSettings.Values[nameof(karaokLyricIdleColor)] = new[]
+                        { value.Value.A, value.Value.R, value.Value.G, value.Value.B };
+                else ApplicationData.Current.LocalSettings.Values[nameof(karaokLyricIdleColor)] = null;
+                OnPropertyChanged();
+            }
+        } 
+        
+        public Color? karaokLyricFocusingColor
+        {
+            get
+            {
+                var bytes = GetSettings<byte[]?>(nameof(karaokLyricFocusingColor), null);
+                return bytes == null ? null : Color.FromArgb(bytes[0], bytes[1], bytes[2], bytes[3]);
+            }
+            set
+            {
+                if (value.HasValue)
+                    ApplicationData.Current.LocalSettings.Values[nameof(karaokLyricFocusingColor)] = new[]
+                        { value.Value.A, value.Value.R, value.Value.G, value.Value.B };
+                else ApplicationData.Current.LocalSettings.Values[nameof(karaokLyricFocusingColor)] = null;
+                OnPropertyChanged();
+            }
+        }
+        
+
+        public bool jumpVipSongPlaying
+        {
+            get => GetSettings(nameof(jumpVipSongPlaying), false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(jumpVipSongPlaying)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool jumpVipSongDownloading
         {
-            get => GetSettings("jumpVipSongDownloading", false);
+            get => GetSettings(nameof(jumpVipSongDownloading), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["jumpVipSongDownloading"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(jumpVipSongDownloading)] = value;
                 OnPropertyChanged();
             }
         }
 
         public string audioRate
         {
-            get => GetSettings("audioRate", "exhigh");
+            get => GetSettings(nameof(audioRate), "exhigh");
             set
             {
-                ApplicationData.Current.LocalSettings.Values["audioRate"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(audioRate)] = value;
                 OnPropertyChanged();
             }
         }
 
         public string downloadAudioRate
         {
-            get => GetSettings("downloadAudioRate", "hires");
+            get => GetSettings(nameof(downloadAudioRate), "hires");
             set
             {
-                ApplicationData.Current.LocalSettings.Values["downloadAudioRate"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(downloadAudioRate)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool xboxHidePointer
         {
-            get => GetSettings("xboxHidePointer", false);
-            set => ApplicationData.Current.LocalSettings.Values["xboxHidePointer"] = value;
+            get => GetSettings(nameof(xboxHidePointer), false);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(xboxHidePointer)] = value;
         }
 
         public bool enableTouchGestureAction
         {
-            get => GetSettings("enableTouchGestureAction", false);
-            set => ApplicationData.Current.LocalSettings.Values["enableTouchGestureAction"] = value;
+            get => GetSettings(nameof(enableTouchGestureAction), false);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(enableTouchGestureAction)] = value;
         }
 
         public int gestureMode
         {
-            get => GetSettings("gestureMode", 0);
-            set => ApplicationData.Current.LocalSettings.Values["gestureMode"] = value;
+            get => GetSettings(nameof(gestureMode), 0);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(gestureMode)] = value;
         }
 
         public int maxDownloadCount
         {
-            get => GetSettings("maxDownloadCount", 1);
-            set => ApplicationData.Current.LocalSettings.Values["maxDownloadCount"] = value;
+            get => GetSettings(nameof(maxDownloadCount), 1);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(maxDownloadCount)] = value;
         }
 
         public int Volume
@@ -704,7 +776,7 @@ namespace HyPlayer
             {
                 try
                 {
-                    return GetSettings("Volume", 50);
+                    return GetSettings(nameof(Volume), 50);
                 }
                 catch
                 {
@@ -712,7 +784,7 @@ namespace HyPlayer
                 }
             }
 
-            set => ApplicationData.Current.LocalSettings.Values["Volume"] = value;
+            set => ApplicationData.Current.LocalSettings.Values[nameof(Volume)] = value;
         }
 
         public string downloadDir
@@ -721,8 +793,9 @@ namespace HyPlayer
             {
                 try
                 {
-                    return GetSettings("downloadDir", KnownFolders.MusicLibrary
-                        .CreateFolderAsync("HyPlayer", CreationCollisionOption.OpenIfExists).AsTask().Result.Path);
+                    return GetSettings(nameof(downloadDir), KnownFolders.MusicLibrary
+                        .CreateFolderAsync(nameof(HyPlayer), CreationCollisionOption.OpenIfExists).AsTask().Result
+                        .Path);
                 }
                 catch
                 {
@@ -731,17 +804,17 @@ namespace HyPlayer
             }
             set
             {
-                ApplicationData.Current.LocalSettings.Values["downloadDir"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(downloadDir)] = value;
                 OnPropertyChanged();
             }
         }
 
         public string downloadFileName
         {
-            get => GetSettings("downloadFileName", "{$SINGER} - {$SONGNAME}");
+            get => GetSettings(nameof(downloadFileName), "{$SINGER} - {$SONGNAME}");
             set
             {
-                ApplicationData.Current.LocalSettings.Values["downloadFileName"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(downloadFileName)] = value;
                 OnPropertyChanged();
             }
         }
@@ -752,7 +825,7 @@ namespace HyPlayer
             {
                 try
                 {
-                    return GetSettings("searchingDir", downloadDir);
+                    return GetSettings(nameof(searchingDir), downloadDir);
                 }
                 catch
                 {
@@ -761,7 +834,7 @@ namespace HyPlayer
             }
             set
             {
-                ApplicationData.Current.LocalSettings.Values["searchingDir"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(searchingDir)] = value;
                 OnPropertyChanged();
             }
         }
@@ -772,7 +845,7 @@ namespace HyPlayer
             {
                 try
                 {
-                    return GetSettings("cacheDir", ApplicationData.Current.LocalCacheFolder
+                    return GetSettings(nameof(cacheDir), ApplicationData.Current.LocalCacheFolder
                         .CreateFolderAsync("songCache", CreationCollisionOption.OpenIfExists).AsTask().GetAwaiter()
                         .GetResult().Path);
                 }
@@ -783,7 +856,7 @@ namespace HyPlayer
             }
             set
             {
-                ApplicationData.Current.LocalSettings.Values["cacheDir"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(cacheDir)] = value;
                 OnPropertyChanged();
             }
         }
@@ -810,40 +883,40 @@ namespace HyPlayer
 
         public bool notClearMode
         {
-            get => GetSettings("notClearMode", true);
+            get => GetSettings(nameof(notClearMode), true);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["notClearMode"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(notClearMode)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool useTaglibPicture
         {
-            get => GetSettings("useTaglibPicture", true);
+            get => GetSettings(nameof(useTaglibPicture), true);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["useTaglibPicture"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(useTaglibPicture)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool showComposerInLyric
         {
-            get => GetSettings("showComposerInLyric", true);
+            get => GetSettings(nameof(showComposerInLyric), true);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["showComposerInLyric"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(showComposerInLyric)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool advancedMusicHistoryStorage
         {
-            get => GetSettings("advancedMusicHistoryStorage", true);
+            get => GetSettings(nameof(advancedMusicHistoryStorage), true);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["advancedMusicHistoryStorage"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(advancedMusicHistoryStorage)] = value;
                 OnPropertyChanged();
             }
         }
@@ -854,7 +927,7 @@ namespace HyPlayer
             {
                 try
                 {
-                    return GetSettings<double>("fadeInOutTime", 3);
+                    return GetSettings<double>(nameof(fadeInOutTime), 3);
                 }
                 catch
                 {
@@ -862,7 +935,7 @@ namespace HyPlayer
                 }
             }
 
-            set => ApplicationData.Current.LocalSettings.Values["fadeInOutTime"] = value;
+            set => ApplicationData.Current.LocalSettings.Values[nameof(fadeInOutTime)] = value;
         }
 
         public double fadeInOutTimePause
@@ -871,7 +944,7 @@ namespace HyPlayer
             {
                 try
                 {
-                    return GetSettings<double>("fadeInOutTimePause", 3);
+                    return GetSettings<double>(nameof(fadeInOutTimePause), 3);
                 }
                 catch
                 {
@@ -879,102 +952,102 @@ namespace HyPlayer
                 }
             }
 
-            set => ApplicationData.Current.LocalSettings.Values["fadeInOutTimePause"] = value;
+            set => ApplicationData.Current.LocalSettings.Values[nameof(fadeInOutTimePause)] = value;
         }
 
         public bool playBarMargin
         {
-            get => GetSettings("playBarMargin", false);
+            get => GetSettings(nameof(playBarMargin), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["playBarMargin"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(playBarMargin)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool noUseHotLyric
         {
-            get => GetSettings("noUseHotLyric", false);
+            get => GetSettings(nameof(noUseHotLyric), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["noUseHotLyric"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(noUseHotLyric)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool toastLyric
         {
-            get => GetSettings("toastLyric", false);
+            get => GetSettings(nameof(toastLyric), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["toastLyric"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(toastLyric)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool expandAnimation
         {
-            get => GetSettings("expandAnimation", true);
+            get => GetSettings(nameof(expandAnimation), true);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["expandAnimation"] = value ? "true" : "false";
+                ApplicationData.Current.LocalSettings.Values[nameof(expandAnimation)] = value ? "true" : "false";
                 OnPropertyChanged();
             }
         }
 
         public bool uiSound
         {
-            get => GetSettings("uiSound", false);
+            get => GetSettings(nameof(uiSound), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["uiSound"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(uiSound)] = value;
                 OnPropertyChanged();
             }
         }
 
         public int songRollType
         {
-            get => GetSettings("songRollType", 0);
+            get => GetSettings(nameof(songRollType), 0);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["songRollType"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(songRollType)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool songUrlLazyGet
         {
-            get => GetSettings("songUrlLazyGet", true);
+            get => GetSettings(nameof(songUrlLazyGet), true);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["songUrlLazyGet"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(songUrlLazyGet)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool enableCache
         {
-            get => GetSettings("enableCache", false);
+            get => GetSettings(nameof(enableCache), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["enableCache"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(enableCache)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool highQualityCoverInSMTC
         {
-            get => GetSettings("highQualityCoverInSMTC", false);
+            get => GetSettings(nameof(highQualityCoverInSMTC), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["highQualityCoverInSMTC"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(highQualityCoverInSMTC)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool progressInSMTC
         {
-            get => GetSettings("progressInSMTC", true);
+            get => GetSettings(nameof(progressInSMTC), true);
             set
             {
                 if (value)
@@ -990,17 +1063,17 @@ namespace HyPlayer
                     HyPlayList.Player.PlaybackSession.PositionChanged -= HyPlayList.UpdateSmtcPosition;
                 }
 
-                ApplicationData.Current.LocalSettings.Values["progressInSMTC"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(progressInSMTC)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool expandedPlayerFullCover
         {
-            get => GetSettings("expandedPlayerFullCover", false);
+            get => GetSettings(nameof(expandedPlayerFullCover), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["expandedPlayerFullCover"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(expandedPlayerFullCover)] = value;
                 OnPropertyChanged();
             }
         }
@@ -1008,20 +1081,20 @@ namespace HyPlayer
         public int themeRequest
         {
             // 0 - 未设置   1 - 浅色  2 - 深色
-            get => GetSettings("themeRequest", 0);
+            get => GetSettings(nameof(themeRequest), 0);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["themeRequest"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(themeRequest)] = value;
                 OnPropertyChanged();
             }
         }
 
         public int expandedCoverShadowDepth
         {
-            get => GetSettings("expandedCoverShadowDepth", 4);
+            get => GetSettings(nameof(expandedCoverShadowDepth), 4);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["expandedCoverShadowDepth"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(expandedCoverShadowDepth)] = value;
                 OnPropertyChanged();
             }
         }
@@ -1039,26 +1112,26 @@ namespace HyPlayer
 
         public bool DisablePopUp
         {
-            get => GetSettings("DisablePopUp", false);
-            set => ApplicationData.Current.LocalSettings.Values["DisablePopUp"] = value;
+            get => GetSettings(nameof(DisablePopUp), false);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(DisablePopUp)] = value;
         }
 
         public int UpdateSource
         {
-            get => GetSettings("UpdateSource", 1);
+            get => GetSettings(nameof(UpdateSource), 1);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["UpdateSource"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(UpdateSource)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool enableTile
         {
-            get => GetSettings("enableTile", Environment.OSVersion.Version.Build < 22000);
+            get => GetSettings(nameof(enableTile), Environment.OSVersion.Version.Build < 22000);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["enableTile"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(enableTile)] = value;
                 if (!value)
                 {
                     tileBackgroundAvailability = false;
@@ -1071,30 +1144,30 @@ namespace HyPlayer
 
         public bool canaryChannelAvailability
         {
-            get => GetSettings("canaryChannelAvailability", false);
+            get => GetSettings(nameof(canaryChannelAvailability), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["canaryChannelAvailability"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(canaryChannelAvailability)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool tileBackgroundAvailability
         {
-            get => GetSettings("tileBackgroundAvailability", false);
+            get => GetSettings(nameof(tileBackgroundAvailability), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["tileBackgroundAvailability"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(tileBackgroundAvailability)] = value;
                 OnPropertyChanged();
             }
         }
 
         public bool saveTileBackgroundToLocalFolder
         {
-            get => GetSettings("saveTileBackgroundToLocalFolder", false);
+            get => GetSettings(nameof(saveTileBackgroundToLocalFolder), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["saveTileBackgroundToLocalFolder"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(saveTileBackgroundToLocalFolder)] = value;
                 OnPropertyChanged();
             }
         }
@@ -1105,7 +1178,7 @@ namespace HyPlayer
             set
             {
                 _abStartPoint = value;
-                OnPropertyChanged("ABStartPointFriendlyValue");
+                OnPropertyChanged(nameof(ABStartPointFriendlyValue));
             }
         }
 
@@ -1122,7 +1195,7 @@ namespace HyPlayer
             set
             {
                 _abEndPoint = value;
-                OnPropertyChanged("ABEndPointFriendlyValue");
+                OnPropertyChanged(nameof(ABEndPointFriendlyValue));
             }
         }
 
@@ -1149,15 +1222,15 @@ namespace HyPlayer
 
         public bool acrylicBackgroundStatus
         {
-            get => GetSettings("acrylicBackgroundStatus", false);
+            get => GetSettings(nameof(acrylicBackgroundStatus), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["acrylicBackgroundStatus"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(acrylicBackgroundStatus)] = value;
                 OnPropertyChanged();
-                OnPropertyChanged("playbarBackgroundAcrylic");
+                OnPropertyChanged(nameof(playbarBackgroundAcrylic));
             }
         }
-        
+
         public bool EnableTitleBarImmerse
         {
             get => GetSettings("enableTitleBarImmerse", true);
@@ -1167,7 +1240,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
         public bool UseLastFMScrobbler
         {
             get => GetSettings("useLastFMScrobbler", false);
@@ -1205,7 +1278,7 @@ namespace HyPlayer
             {
                 ApplicationData.Current.LocalSettings.Values["lastFMToken"] = value;
                 OnPropertyChanged();
-                OnPropertyChanged("LastFMLogined");
+                OnPropertyChanged(nameof(LastFMLogined));
             }
         }
 
@@ -1222,19 +1295,20 @@ namespace HyPlayer
         public RomajiSource LyricRomajiSource
         {
             //  0 - 不进行转换  1 - 自动选择  2 - 网易云优先  3 - Kawazu 转换优先
-            get => GetSettings("LyricRomajiSource", RomajiSource.None);
+            get => GetSettings(nameof(LyricRomajiSource), RomajiSource.None);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["LyricRomajiSource"] = (int)value;
+                ApplicationData.Current.LocalSettings.Values[nameof(LyricRomajiSource)] = (int)value;
                 OnPropertyChanged();
             }
         }
+
         public bool UseHttp
         {
-            get => GetSettings("UseHttp", false);
+            get => GetSettings(nameof(UseHttp), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["UseHttp"] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(UseHttp)] = value;
                 Common.ncapi.UseHttp = value;
                 OnPropertyChanged();
             }
@@ -1485,7 +1559,7 @@ namespace HyPlayer
         NeteaseOnly,
         KawazuOnly
     }
-    
+
     internal static class Extensions
     {
         public static byte[] ToByteArrayUtf8(this string value)
