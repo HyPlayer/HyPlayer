@@ -133,7 +133,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
             foreach (var playedBlock in playedBlocks.GetRange(0, playedBlocks.Count - 1))
             {
                 //playedBlock.Foreground = IdleBrush;
-                playedBlock.Foreground = AccentBrush;
+                playedBlock.Foreground = new SolidColorBrush(GetKaraokAccentBrush());
             }
 
             var playingBlock = playedBlocks.Last();
