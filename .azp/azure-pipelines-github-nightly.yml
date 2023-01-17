@@ -39,6 +39,17 @@ steps:
   inputs:
     restoreSolution: '$(solution)'
 
+- powershell: |
+        $MANIFEST = [xml](Get-Content **\Package.appxmanifest)
+        $MAINVERSION = $MANIFEST.Package.Identity.Version -replace ".{1}$"
+        $VERSION = $MAINVERSION + $(Build.BuildId)
+        Write-Host("##vso[task.setvariable variable=VERSION]$VERSION")
+        echo "Currently Building Version Is"
+        echo $VERSION
+        $MANIFEST.Package.Identity.Version = $VERSION
+        Set-Content -Path **\Package.appxmanifest -Value $MANIFEST.OuterXml
+  displayName: 'Set Version'
+
 - task: DownloadSecureFile@1
   name: certificate
   displayName: 'Download CA certificate'
