@@ -33,6 +33,11 @@ public enum HyPlayItemType
     Radio
 }
 
+public class KaraokLyricInfo : PureLyricInfo
+{
+    public string KaraokLyric;
+}
+
 public class PureLyricInfo
 {
     public string PureLyrics;
@@ -56,6 +61,7 @@ public class SongLyric
     public string Translation;
     public string Romaji;
 
+    public string KaraokLine;
     public bool HaveTranslation => !string.IsNullOrEmpty(Translation);
     public bool HaveRomaji => !string.IsNullOrEmpty(Romaji);
 }

@@ -1,6 +1,7 @@
 ﻿#region
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -119,19 +120,21 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         HyPlayList.OnTimerTicked -= HyPlayList_OnTimerTicked;
         if (Window.Current != null)
             Window.Current.SizeChanged -= Current_SizeChanged;
+        lastitem = null;
         _ = Common.Invoke(() =>
         {
             ImageAlbum.Source = null;
             ImageAlbum.PlaceholderSource = null;
             Background = null;
+            if (LyricBox.ItemsSource is IList lyricItems) lyricItems.Clear();
             LyricBox.ItemsSource = null;
             if (Common.Setting.albumRotate)
                 RotateAnimationSet.Stop();
             if (!Common.Setting.expandAlbumBreath) return;
             var ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
-            ImageAlbumAni.Pause();
+            ImageAlbumAni?.Pause();
         });
-        GC.SuppressFinalize(this);
+        
     }
 
     private void HyPlayList_OnPlay()
@@ -465,7 +468,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             try
             {
                 var ele = LyricBox.GetOrCreateElement(k) as FrameworkElement;    
-                if ((ele as LyricItemWrapper).SongLyric.PureLyric != "")
+                if ((ele as LyricItemWrapper).SongLyric.PureLyric != "" || (ele as LyricItemWrapper).SongLyric.KaraokLine != "")
                 {
                     ele?.UpdateLayout();
                     ele.StartBringIntoView(DefaultBringIntoViewOptions);

@@ -193,6 +193,13 @@
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.showComposerInLyric, Mode=TwoWay}" />
                                     </Grid>
+                                    <Grid>
+                                        <TextBlock VerticalAlignment="Center" Text="使用逐字歌词 (试验性功能)" />
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.karaokLyric, Mode=TwoWay}" />
+                                    </Grid>
                                 </StackPanel>
                             </controls:Expander>
                         </StackPanel>

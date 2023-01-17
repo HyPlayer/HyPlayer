@@ -72,7 +72,7 @@ public static class HyPlayList
     public static int ShufflingIndex = -1;
     public static List<SongLyric> Lyrics = new();
     public static TimeSpan LyricOffset = TimeSpan.Zero;
-    
+
     /********        API        ********/
     public static MediaPlayer Player;
     public static SystemMediaTransportControls MediaSystemControls;
@@ -325,7 +325,7 @@ public static class HyPlayList
                         }
                     };
                     hyitem.PlayItem.Artist = Info.artist.Select(t => new NCArtist
-                            { name = t[0].ToString(), id = t[1].ToString() })
+                    { name = t[0].ToString(), id = t[1].ToString() })
                         .ToList();
 
                     List.Add(hyitem);
@@ -646,11 +646,11 @@ public static class HyPlayList
                                         .GetFileAsync(targetItem.PlayItem.Id +
                                                       ".cache");
                                 if ((await sf.GetBasicPropertiesAsync()).Size.ToString() ==
-                                    targetItem.PlayItem.Size || targetItem.PlayItem.Size == null) 
+                                    targetItem.PlayItem.Size || targetItem.PlayItem.Size == null)
                                 {
                                     ms = MediaSource.CreateFromStorageFile(sf);
                                 }
-                                    
+
                                 else
                                     throw new Exception("File Size Not Match");
                             }
@@ -873,7 +873,15 @@ public static class HyPlayList
         }
 
         //先进行歌词转换以免被搞
-        Lyrics = Utils.ConvertPureLyric(pureLyricInfo.PureLyrics, unionTranslation);
+        if (pureLyricInfo is not KaraokLyricInfo || !Common.Setting.karaokLyric)
+        {
+            Lyrics = Utils.ConvertPureLyric(pureLyricInfo.PureLyrics, unionTranslation);
+        }
+        else
+        {
+            Lyrics = await Utils.ConvertKaraok(pureLyricInfo);
+        }
+
         if (Lyrics.Count == 0)
         {
             if (Common.Setting.showComposerInLyric)
@@ -915,47 +923,86 @@ public static class HyPlayList
             {
                 JObject json;
 
-                json = await Common.ncapi.RequestAsync(
-                    CloudMusicApiProviders.Lyric,
-                    new Dictionary<string, object> { { "id", ncp.PlayItem.Id } });
-                if (json["nolyric"]?.ToString().ToLower() == "true")
-                    return new PureLyricInfo
-                    {
-                        PureLyrics = "[00:00.000] 纯音乐 请欣赏",
-                        TrLyrics = null
-                    };
-                if (json["uncollected"]?.ToString().ToLower() == "true")
-                    /*
-                         * 此接口失效
-                        //Ask for Cloud Pan
-                        json = await Common.ncapi.RequestAsync(
-                            CloudMusicApiProviders.CloudLyric,
-                            new Dictionary<string, object>
-                                { { "id", ncp.PlayItem.Id }, { "userId", Common.LoginedUser?.id } });
-                        if (json["lrc"] != null)
-                            return new PureLyricInfo
-                            {
-                                PureLyrics = json["lrc"]?.ToString(),
-                                TrLyrics = null
-                            };
-                        */
-                    return new PureLyricInfo
-                    {
-                        PureLyrics = "[00:00.000] 无歌词 请欣赏",
-                        TrLyrics = null
-                    };
-                try
+                if (Common.Setting.karaokLyric)
                 {
-                    return new PureLyricInfo
+                    json = await Common.ncapi.RequestAsync(
+                        CloudMusicApiProviders.LyricNew,
+                        new Dictionary<string, object> { { "id", ncp.PlayItem.Id } });
+                    string lrc = null, romaji, karaoklrc = null, translrc;
+                    if (json["yrc"] is null)
                     {
-                        PureLyrics = json["lrc"]?["lyric"]?.ToString(),
-                        TrLyrics = json["tlyric"]?["lyric"]?.ToString(),
-                        NeteaseRomaji = json["romalrc"]?["lyric"]?.ToString()
-                    };
+                        lrc = string.Join('\n',
+                            (json["lrc"]?["lyric"]?.ToString() ?? string.Empty).Split("\n")
+                            .Where(t => !t.StartsWith("{")).ToArray());
+                        romaji = json["romalrc"]?["lyric"]?.ToString();
+                        translrc = json["tlyric"]?["lyric"]?.ToString();
+                        return new PureLyricInfo()
+                        {
+                            PureLyrics = lrc,
+                            TrLyrics = translrc,
+                            NeteaseRomaji = romaji,
+                        };
+                    }
+                    else
+                    {
+                        karaoklrc = string.Join('\n', (json["yrc"]?["lyric"]?.ToString() ?? string.Empty).Split("\n").Where(t => !t.StartsWith("{")).ToArray());
+                        romaji = json["yromalrc"]?["lyric"]?.ToString();
+                        translrc = json["ytlrc"]?["lyric"]?.ToString();
+                        return new KaraokLyricInfo()
+                        {
+                            PureLyrics = null,
+                            TrLyrics = translrc,
+                            NeteaseRomaji = romaji,
+                            KaraokLyric = karaoklrc
+                        };
+                    }
                 }
-                catch (Exception)
+                else
                 {
-                    //DEBUG
+
+
+                    json = await Common.ncapi.RequestAsync(
+                        CloudMusicApiProviders.Lyric,
+                        new Dictionary<string, object> { { "id", ncp.PlayItem.Id } });
+                    if (json["nolyric"]?.ToString().ToLower() == "true")
+                        return new PureLyricInfo
+                        {
+                            PureLyrics = "[00:00.000] 纯音乐 请欣赏",
+                            TrLyrics = null
+                        };
+                    if (json["uncollected"]?.ToString().ToLower() == "true")
+                        /*
+                             * 此接口失效
+                            //Ask for Cloud Pan
+                            json = await Common.ncapi.RequestAsync(
+                                CloudMusicApiProviders.CloudLyric,
+                                new Dictionary<string, object>
+                                    { { "id", ncp.PlayItem.Id }, { "userId", Common.LoginedUser?.id } });
+                            if (json["lrc"] != null)
+                                return new PureLyricInfo
+                                {
+                                    PureLyrics = json["lrc"]?.ToString(),
+                                    TrLyrics = null
+                                };
+                            */
+                        return new PureLyricInfo
+                        {
+                            PureLyrics = "[00:00.000] 无歌词 请欣赏",
+                            TrLyrics = null
+                        };
+                    try
+                    {
+                        return new PureLyricInfo
+                        {
+                            PureLyrics = json["lrc"]?["lyric"]?.ToString(),
+                            TrLyrics = json["tlyric"]?["lyric"]?.ToString(),
+                            NeteaseRomaji = json["romalrc"]?["lyric"]?.ToString()
+                        };
+                    }
+                    catch (Exception)
+                    {
+                        //DEBUG
+                    }
                 }
             }
             catch (Exception ex)
@@ -1411,7 +1458,7 @@ public static class HyPlayList
 
     public static async void UpdateLastFMNowPlayingAsync(HyPlayItem NowPlayingItem)
     {
-        if (NowPlayingItem.PlayItem != null && NowPlayingItem.ItemType == HyPlayItemType.Netease)
+        if (NowPlayingItem?.PlayItem != null && NowPlayingItem.ItemType == HyPlayItemType.Netease)
         {
             try
             {
@@ -1438,7 +1485,7 @@ public static class Utils
     {
         var parsedlyrics = Lyrics.Parse(lyricAllText);
         return parsedlyrics.Lyrics.Lines.Select(lyricsLine => new SongLyric
-                { LyricTime = lyricsLine.Timestamp.TimeOfDay, PureLyric = lyricsLine.Content, Translation = null })
+        { LyricTime = lyricsLine.Timestamp.TimeOfDay, PureLyric = lyricsLine.Content, Translation = null })
             .OrderBy(t => t.LyricTime)
             .ToList();
     }
@@ -1447,12 +1494,12 @@ public static class Utils
     {
         var parsedlyrics = Lyrics.Parse(lyricAllText);
         foreach (var lyricsLine in parsedlyrics.Lyrics.Lines)
-        foreach (var songLyric in lyrics.Where(songLyric =>
-                     songLyric.LyricTime.TotalMilliseconds == lyricsLine.Timestamp.TimeOfDay.TotalMilliseconds))
-        {
-            songLyric.Translation = lyricsLine.Content;
-            break;
-        }
+            foreach (var songLyric in lyrics.Where(songLyric =>
+                         songLyric.LyricTime.TotalMilliseconds == lyricsLine.Timestamp.TimeOfDay.TotalMilliseconds))
+            {
+                songLyric.Translation = lyricsLine.Content;
+                break;
+            }
     }
 
     public static void ConvertNeteaseRomaji(string lyricAllText, List<SongLyric> lyrics)
@@ -1460,12 +1507,12 @@ public static class Utils
         if (string.IsNullOrEmpty(lyricAllText)) return;
         var parsedlyrics = Lyrics.Parse(lyricAllText);
         foreach (var lyricsLine in parsedlyrics.Lyrics.Lines)
-        foreach (var songLyric in lyrics.Where(songLyric =>
-                     songLyric.LyricTime.TotalMilliseconds == lyricsLine.Timestamp.TimeOfDay.TotalMilliseconds))
-        {
-            songLyric.Romaji = lyricsLine.Content;
-            break;
-        }
+            foreach (var songLyric in lyrics.Where(songLyric =>
+                         songLyric.LyricTime.TotalMilliseconds == lyricsLine.Timestamp.TimeOfDay.TotalMilliseconds))
+            {
+                songLyric.Romaji = lyricsLine.Content;
+                break;
+            }
     }
 
     public static async Task ConvertKawazuRomaji(List<SongLyric> lyrics)
@@ -1501,6 +1548,31 @@ public static class Utils
                 await ConvertKawazuRomaji(lyrics);
                 break;
         }
+    }
+
+    public static async Task<List<SongLyric>> ConvertKaraok(PureLyricInfo pureLyricInfo)
+    {
+        var lyrics = new List<SongLyric>();
+        if (pureLyricInfo is KaraokLyricInfo karaokLyricInfo && !string.IsNullOrEmpty(karaokLyricInfo.KaraokLyric))
+        {
+            var lines = karaokLyricInfo.KaraokLyric.Split('\n');
+            foreach (var line in lines)
+            {
+                if (!line.StartsWith('[')) continue;
+                var firstTime = line.Substring(1, line.IndexOf(',', 1) - 1);
+                var time = Convert.ToDouble(firstTime);
+                lyrics.Add(new SongLyric
+                {
+                    LyricTime = TimeSpan.FromMilliseconds(time),
+                    PureLyric = string.Empty,
+                    Translation = null,
+                    Romaji = null,
+                    KaraokLine = line.Substring(line.IndexOf(']') + 1)
+                });
+            }
+        }
+
+        return lyrics;
     }
 }
 

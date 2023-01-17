@@ -13,27 +13,36 @@
     Loaded="LyricPanel_Loaded"
     mc:Ignorable="d">
 
-    <controls:DockPanel LastChildFill="True">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <controls:WrapPanel x:Name="WordLyricContainer" Grid.Row="0" />
         <TextBlock
             Name="TextBoxPureLyric"
+            Grid.Row="0"
             controls:DockPanel.Dock="Top"
-            TextAlignment="Center"
-            FontWeight="Bold"
             CharacterSpacing="0"
+            FontWeight="Bold"
+            TextAlignment="Center"
             TextWrapping="WrapWholeWords" />
         <TextBlock
             Name="TextBoxTranslation"
+            Grid.Row="1"
             controls:DockPanel.Dock="Top"
-            TextAlignment="Center"
-            FontWeight="Bold"
             CharacterSpacing="0"
+            FontWeight="Bold"
+            TextAlignment="Center"
             TextWrapping="WrapWholeWords" />
         <TextBlock
             Name="TextBoxSound"
+            Grid.Row="2"
             controls:DockPanel.Dock="Bottom"
             FontSize="15"
             TextAlignment="Center"
             TextWrapping="WrapWholeWords" />
-    </controls:DockPanel>
+    </Grid>
 
 </UserControl>

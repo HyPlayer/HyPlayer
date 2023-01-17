@@ -387,6 +387,16 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        
+        public bool karaokLyric
+        {
+            get => GetSettings("karaokLyric", false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["karaokLyric"] = value;
+                OnPropertyChanged();
+            }
+        }
 
         public bool downloadTranslation
         {
