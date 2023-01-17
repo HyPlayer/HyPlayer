@@ -112,7 +112,7 @@ steps:
       symbolsOption: UWP
       appxsymPath: '$(Agent.HomeDirectory)/$(Build.BuildId).SYMS.zip'
       releaseNotesOption: file
-      releaseNotesFile: CHANGELOG.md
+      releaseNotesFile: CHANGELOG_RELEASE.md
       distributionGroupId: '19bc0109-9e15-4776-b691-f007850cf08a;e5e83d7f-28ae-45a5-b084-5d8ecd76e0b0'
       isSilent: false
     condition: succeededOrFailed()

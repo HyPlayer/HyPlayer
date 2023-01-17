@@ -239,7 +239,12 @@ public class SimpleListItem
     public int Order = 0;
     public string ResourceId;
     public string Title;
-    public BitmapImage Cover => Common.Setting.noImage ? null : new BitmapImage(new Uri(CoverUri));
+    public BitmapImage Cover =>
+        Common.Setting.noImage
+            ? null
+            : new BitmapImage(new Uri((string.IsNullOrEmpty(CoverUri) ? "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg" : CoverUri) +
+                                      "?param=" +
+                                      StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM));
     public int DspOrder => Order + 1;
 }
 
@@ -295,6 +300,8 @@ public class NCPlayList
     public string plid;
     public bool subscribed;
     public long trackCount;
+    public DateTime createTime;
+    public DateTime updateTime;
 
     public static NCPlayList CreateFromJson(JToken json)
     {
@@ -321,8 +328,11 @@ public class NCPlayList
                 plid = json["id"].ToString(),
                 subscribed = !(json["subscribed"] == null || json["subscribed"].ToString() == "False"),
                 playCount = json[playcountpath].ToObject<long>(),
-                trackCount = json["trackCount"].ToObject<long>()
+                trackCount = json["trackCount"].ToObject<long>(),
             };
+            if (json["createTime"] != null) ncp.createTime = DateConverter.GetDateTimeFromTimeStamp(json["createTime"].ToObject<long>());
+            if (json["updateTime"] != null) ncp.updateTime = DateConverter.GetDateTimeFromTimeStamp(json["updateTime"].ToObject<long>());
+
             if (json[subcountpath] != null) ncp.bookCount = json[subcountpath].ToObject<long>();
 
             return ncp;

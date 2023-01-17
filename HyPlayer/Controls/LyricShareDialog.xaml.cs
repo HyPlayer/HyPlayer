@@ -162,12 +162,12 @@ public sealed partial class LyricShareDialog : ContentDialog
         {
             var lyricShareItem = ShareLyricItem[index];
             if (lyricShareItem.Type != LyricShareItemType.Original) continue;
-            if (Utilities.HasKana(lyricShareItem.Text))
+            if (lyricShareItem.OriginalLyric.HaveRomaji)
             {
                 ShareLyricItem.Insert(index + 1, new LyricShareItem
                 {
                     Type = LyricShareItemType.Romaji,
-                    Text = await Common.KawazuConv?.Convert(lyricShareItem.Text, To.Romaji, Mode.Separated)! ??
+                    Text = lyricShareItem.OriginalLyric.Romaji ??
                            string.Empty,
                     Time = lyricShareItem.Time,
                     OriginalLyric = lyricShareItem.OriginalLyric

@@ -20,7 +20,7 @@
         <TextBlock
             Grid.Row="0"
             Margin="24,24,24,0"
-            FontSize="36"
+            FontSize="40"
             FontWeight="Bold"
             Text="最近播放" />
         <NavigationView

@@ -111,6 +111,8 @@ public sealed partial class AlbumPage : Page, IDisposable
                 name = t["name"].ToString()
             }).ToList();
             TextBoxAuthor.Content = string.Join(" / ", artists.Select(t => t.name));
+            var converter = new DateConverter();
+            TextBlockPublishTime.Text = converter.Convert((long)json["album"]["publishTime"],null,null,null).ToString();
             TextBlockDesc.Text = (json["album"]["alias"].HasValues
                                      ? string.Join(" / ",
                                            json["album"]["alias"].ToArray().Select(t => t.ToString())) +

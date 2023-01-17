@@ -681,18 +681,11 @@ public sealed partial class PlayBar
     {
         if (HyPlayList.NowPlayingItem.PlayItem?.Name != null && HyPlayList.Player.Source == null)
             _ = HyPlayList.LoadPlayerSong(HyPlayList.List[HyPlayList.NowPlaying]);
-
         if (Common.Setting.fadeInOutPause && HyPlayList.Player.Source != null)
         {
-            if (isFadeInOutPausing == 0)
-                isFadeInOutPausing = HyPlayList.IsPlaying ? 2 : 1;
-            else
-                isFadeInOutPausing = isFadeInOutPausing == 1 ? 2 : 1;
-            FadeInOutStartTime = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
-            if (!HyPlayList.IsPlaying) HyPlayList.Player.Play();
+            OnFadeInOutRequested();
             return;
-        }
-
+        }       
         PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uEDB5" : "\uEDB4";
         if (HyPlayList.IsPlaying)
         {
@@ -705,6 +698,16 @@ public sealed partial class PlayBar
             if (Common.Setting.playbarBackgroundBreath)
                 PlayBarBackgroundAni.Begin();
         }
+    }
+    
+    public void OnFadeInOutRequested()
+    {
+        if (isFadeInOutPausing == 0)
+            isFadeInOutPausing = HyPlayList.IsPlaying ? 2 : 1;
+        else
+            isFadeInOutPausing = isFadeInOutPausing == 1 ? 2 : 1;
+        FadeInOutStartTime = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
+        if (!HyPlayList.IsPlaying) HyPlayList.Player.Play();
     }
 
     private void SliderAudioRate_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
@@ -1261,6 +1264,7 @@ public sealed partial class PlayBar
                 int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"].ToString(),
                     out HyPlayList.NowPlaying);
                 HyPlayList.SongAppendDone();
+                HyPlayList.NotifyPlayItemChanged(HyPlayList.NowPlayingItem);
             }
         }
         catch
@@ -1307,5 +1311,28 @@ public sealed partial class PlayBar
     private void SliderProgress_OnManipulationStarting(object sender, ManipulationStartingRoutedEventArgs e)
     {
         HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(SliderProgress.Value);
+    }
+
+    private void CopySongDetailFlyoutItem_Click(object sender, RoutedEventArgs e)
+    {
+        DataPackage package = new DataPackage();
+        switch ((sender as MenuFlyoutItem).Name)
+        {
+            case "CopySongNameFlyoutItem":
+                if (TbSongName.Text == null) return;
+                package.SetText(TbSongName.Text);
+                break;
+            case "CopySingerNameFlyoutItem":
+                if (TbSingerName.Content == null) return;
+                package.SetText(TbSingerName.Content.ToString());
+                break;
+            case "CopyAlbumNameFlyoutItem":
+                if (TbAlbumName.Content == null) return;
+                package.SetText(TbAlbumName.Content.ToString());
+                break;
+
+        }
+        package.RequestedOperation = DataPackageOperation.Copy;
+        Clipboard.SetContent(package);
     }
 }

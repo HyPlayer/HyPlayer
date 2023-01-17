@@ -99,13 +99,20 @@
                             TextWrapping="NoWrap" />
                         <StackPanel Margin="0,2,0,0" Orientation="Horizontal">
                             <TextBlock
-                                Padding="0,8,0,3"
+                                Padding="0,8,0,4"
                                 Text="创建者:" />
                             <HyperlinkButton
                                 Style="{StaticResource TextBlockButtonStyle}"
                                 x:Name="TextBoxAuthor"
                                 Click="TextBoxAuthor_Tapped"
                                 Content="歌单创建者"/>
+                            <TextBlock x:Name="TextBoxPlayCount" 
+                                Margin="12,0,0,0"
+                                Padding="0,8,0,4" />
+
+                            <TextBlock x:Name="TextBoxUpdateTime" 
+                                Margin="12,0,0,0"
+                                Padding="0,8,0,4"/>
                         </StackPanel>
                         <controls1:ExpandableTextBox
                             x:Name="DescriptionWrapper"

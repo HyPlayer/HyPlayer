@@ -1229,6 +1229,16 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        public bool UseHttp
+        {
+            get => GetSettings("UseHttp", false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["UseHttp"] = value;
+                Common.ncapi.UseHttp = value;
+                OnPropertyChanged();
+            }
+        }
 
         public bool LastFMLogined => LastFMManager.LastfmLogined;
 

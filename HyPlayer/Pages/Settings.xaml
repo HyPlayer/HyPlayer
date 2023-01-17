@@ -17,8 +17,9 @@
         <TextBlock
             Grid.Row="0"
             Margin="24,24,24,0"
-            FontSize="44"
+            FontSize="40"
             FontWeight="Bold"
+            CharacterSpacing="80"
             Text="设置" />
         <controls1:PivotView Grid.Row="1" FontFamily="Black">
             <controls1:PivotEx>
@@ -919,6 +920,11 @@
                                     Click="ButtonPROXYSave_OnClick"
                                     Content="设置" />
                             </StackPanel>
+                            <CheckBox
+                                x:Name="UseHttpCheckBox"
+                                Margin="0,12,0,0"
+                                Content="降级HTTPS为HTTP"
+                                IsChecked="{x:Bind hyplayer:Common.Setting.UseHttp, Mode=TwoWay}" />
 
                             <!--<CheckBox
                                 x:Name="LazySongUrlGetCheck"
@@ -926,7 +932,6 @@
                                 IsChecked="{x:Bind hyplayer:Common.Setting.songUrlLazyGet, Mode=TwoWay}" />-->
                             <CheckBox
                                 x:Name="XboxPointerSet"
-                                Margin="0,12,0,0"
                                 Content="Xbox上隐藏指针（不要开启!）"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.xboxHidePointer, Mode=TwoWay}" />
                             <CheckBox
@@ -1312,19 +1317,19 @@
                                                 <TextBlock
                                                     Margin="1,0,0,0"
                                                     Style="{StaticResource SubtitleTextBlockStyle}"
-                                                    Text="aaaaaaccd" />
+                                                    Text="Aesthed" />
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                                     <TextBlock Text="Design" />
                                                     <TextBlock
                                                         d:Text=""
                                                         Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
-                                                        Text="High" />
+                                                        Text="Reap what I sow" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
                                         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
                                             <HyperlinkButton Content="Github" NavigateUri="https://github.com/aaaaaaccd" />
-                                            <HyperlinkButton Content="酷安@一只老白" NavigateUri="https://www.coolapk.com/u/2409682" />
+                                            <HyperlinkButton Content="酷安@Aesthed" NavigateUri="https://www.coolapk.com/u/2409682" />
 
                                         </StackPanel>
                                     </Grid>

@@ -87,7 +87,7 @@ public sealed partial class Me : Page, IDisposable
                     likedPlayList.Add(
                         new SimpleListItem
                         {
-                            CoverUri = ncp.cover + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                            CoverUri = ncp.cover.ToString(),
                             LineOne = ncp.creater.name,
                             LineThree = null,
                             LineTwo = null,
@@ -101,7 +101,7 @@ public sealed partial class Me : Page, IDisposable
                     myPlayList.Add(
                         new SimpleListItem
                         {
-                            CoverUri = ncp.cover + "?param=" + StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM,
+                            CoverUri = ncp.cover.ToString(),
                             LineOne = ncp.creater.name,
                             LineThree = null,
                             LineTwo = null,

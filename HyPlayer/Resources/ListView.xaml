@@ -18,6 +18,7 @@
         <Setter Property="AllowDrop" Value="False" />
         <Setter Property="UseSystemFocusVisuals" Value="{StaticResource UseSystemFocusVisuals}" />
         <Setter Property="FocusVisualMargin" Value="0" />
+        <Setter Property="CornerRadius" Value="8"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ListViewItem">
@@ -435,7 +436,8 @@
                             </VisualStateGroup>
 
                         </VisualStateManager.VisualStateGroups>
-                        <Border IsHitTestVisible="False" Margin="0" Opacity="0" x:Name="BorderBackground"  CornerRadius="8"  Background="{ThemeResource SystemAccentColorDark1}" Control.IsTemplateFocusTarget="True"/>
+                        
+                        <Border IsHitTestVisible="False" Margin="0" Opacity="0" x:Name="BorderBackground"  CornerRadius="{TemplateBinding CornerRadius}"  Background="{ThemeResource SystemAccentColorDark1}" Control.IsTemplateFocusTarget="True"/>
                         <Border IsHitTestVisible="False" Margin="0,24" Width="3" HorizontalAlignment="Left" x:Name="BorderSelected"  CornerRadius="2"  Background="Transparent" Control.IsTemplateFocusTarget="True"/>
 
                         <Grid x:Name="ContentPresenterGrid" Background="Transparent" Margin="0,0,0,0">

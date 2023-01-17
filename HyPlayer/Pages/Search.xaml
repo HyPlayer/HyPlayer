@@ -20,8 +20,9 @@
         <TextBlock
             Grid.Row="0"
             Margin="0,-5,0,20"
-            FontSize="36"
-            FontWeight="Bold"
+            FontSize="40"
+            FontWeight="Medium"
+            CharacterSpacing="90"
             Text="搜索歌曲" />
         <StackPanel
             Grid.Row="1"
