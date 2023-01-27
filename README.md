@@ -17,7 +17,6 @@
 
 
 
-
 ## 反馈 & 交流
 
 用户交流 QQ 群: <a href="https://jq.qq.com/?_wv=1027&k=cQ73ZhqY">1145646224</a>
@@ -27,6 +26,16 @@
 Telegram 群组: https://t.me/joinchat/6tJqI3m-b402NDRl
 
 Telegram 频道: https://t.me/hyplayer
+
+## 声明
+
+本软件非盈利性软件,且遵循 [**GPL-v3**](LICENCE) 协议,请勿将此软件用于商业用途.
+
+本软件**不提供** VIP 音源破解等服务, 你需要在对应平台取得相应身份才能进行播放
+
+所有内容资源 (包括但不限于音源, 图片等) 版权归网易云音乐所有
+
+本软件仅学习交流使用. 如有侵权,请发 Issue 提出.
 
 ## 下载
 
@@ -57,10 +66,6 @@ Telegram 频道: https://t.me/hyplayer
 
 ### 软件性质
 
-本软件非盈利性软件,且遵循 [**GPL-v3**](LICENCE) 协议,请勿将此软件用于商业用途.
-
-本软件仅学习交流使用. 如有侵权,请发 Issue 提出.
-
 因为作者忙于学业,通常只会在周末处理相关事情
 
 请勿将此软件用于 UWP 入门学习, 由于作者没利用好 MVVM 导致项目混乱.
@@ -75,11 +80,11 @@ Telegram 频道: https://t.me/hyplayer
 
 HyPlayer 不内置解灰以及 VIP 歌曲解锁, 且不会在之后的版本中内置解灰
 
-你可以通过使用 [UnblockNeteaseMusic](https://github.com/nondanee/UnblockNeteaseMusic) 进行解灰.
+你可以通过使用 [UnblockNeteaseMusic](https://github.com/UnblockNeteaseMusic/server) 进行解灰.
 
 解灰教程已在[Wiki](https://github.com/HyPlayer/HyPlayer/wiki/%E5%85%B3%E4%BA%8E%E4%BD%BF%E7%94%A8-UnblockNeteaseMusic-%E7%9A%84%E6%96%B9%E6%B3%95)中列出
 
-将其设置为系统代理并在 `设置` - `实验室` 中填入任意内容以便降级 HTTPS
+将其设置为系统代理并在 `设置` - `实验室` 中勾选降级为 HTTP 并在代理服务器中填入你的代理
 
 在使用代理服务器前,你可能需要解除 UWP 网络环回限制
 
