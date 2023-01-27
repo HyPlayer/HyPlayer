@@ -105,7 +105,6 @@
                                 QuerySubmitted="AutoSuggestBox_QuerySubmitted" 
                                 QueryIcon="Find" 
                                 PlaceholderText="搜索..." 
-                                GotFocus="SearchAutoSuggestBox_GotFocus" 
                                 LostFocus="SearchAutoSuggestBox_LostFocus"
                                 TextChanged="SearchAutoSuggestBox_TextChanged"
                                 SuggestionChosen="SearchAutoSuggestBox_SuggestionChosen"/>

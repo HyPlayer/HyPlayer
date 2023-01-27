@@ -31,7 +31,6 @@
             <AutoSuggestBox
                 x:Name="SearchKeywordBox"
                 AutomationProperties.Name="Search"
-                GotFocus="SearchKeywordBox_GotFocus"
                 LostFocus="SearchKeywordBox_LostFocus"
                 PlaceholderText="搜索歌曲......"
                 QueryIcon="Find"

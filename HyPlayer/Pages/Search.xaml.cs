@@ -480,23 +480,6 @@ public sealed partial class Search : Page, IDisposable
         _ = LoadResult();
     }
 
-    private async void SearchKeywordBox_GotFocus(object sender, RoutedEventArgs e)
-    {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
-        if (string.IsNullOrWhiteSpace((sender as AutoSuggestBox)?.Text))
-            try
-            {
-                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchHot);
-
-                ((AutoSuggestBox)sender).ItemsSource =
-                    json["result"]["hots"].ToArray().ToList().Select(t => t["first"].ToString());
-            }
-            catch (Exception ex)
-            {
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-            }
-    }
-
     private void SearchKeywordBox_LostFocus(object sender, RoutedEventArgs e)
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
@@ -522,7 +505,6 @@ public sealed partial class Search : Page, IDisposable
         if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         if (string.IsNullOrEmpty(sender.Text))
         {
-            SearchKeywordBox_GotFocus(sender, null);
             return;
         }
 
