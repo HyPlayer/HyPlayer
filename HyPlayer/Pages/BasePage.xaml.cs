@@ -84,6 +84,7 @@ public sealed partial class BasePage : Page
         Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
         // Window.Current.CoreWindow.Dispatcher.AcceleratorKeyActivated += Dispatcher_AcceleratorKeyActivated;
     }
+
     /*
     private void Dispatcher_AcceleratorKeyActivated(CoreDispatcher sender, AcceleratorKeyEventArgs args)
     {
@@ -174,6 +175,7 @@ public sealed partial class BasePage : Page
             dialog.PrimaryButtonClick += (_, _) => _ = ApplicationView.GetForCurrentView().TryConsolidateAsync();
             _ = dialog.ShowAsync();
         }
+
         // 不要阻塞页面加载
         _ = UpdateManager.PopupVersionCheck(true);
         // Fire and Forget
@@ -265,6 +267,7 @@ public sealed partial class BasePage : Page
         {
             // ignored
         }
+
         try
         {
             LastFMManager.InitializeLastFMManager();
@@ -407,7 +410,8 @@ public sealed partial class BasePage : Page
 
         HyPlayList.LoginDoneCall();
         _ = ((App)Application.Current).InitializeJumpList();
-        NavMain.SelectedItem = NavItemLogin;
+        if (!Common.Setting.forceMemoryGarbage)
+            NavMain.SelectedItem = NavItemLogin;
         //Common.NavigatePage(typeof(Me));
         return true;
     }
@@ -614,16 +618,16 @@ public sealed partial class BasePage : Page
         switch (invokedItemTag)
         {
             case "SonglistCreate":
-                {
-                    await new CreateSonglistDialog().ShowAsync();
-                    _ = LoadSongList();
-                    break;
-                }
+            {
+                await new CreateSonglistDialog().ShowAsync();
+                _ = LoadSongList();
+                break;
+            }
             case "PersonalFM":
-                {
-                    PersonalFM.InitPersonalFM();
-                    break;
-                }
+            {
+                PersonalFM.InitPersonalFM();
+                break;
+            }
             case "HeartBeat":
                 _ = LoadHeartBeat();
                 break;
@@ -895,14 +899,14 @@ public sealed partial class BasePage : Page
         }
     }
 
-    private void SearchAutoSuggestBox_SuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+    private void SearchAutoSuggestBox_SuggestionChosen(AutoSuggestBox sender,
+        AutoSuggestBoxSuggestionChosenEventArgs args)
     {
         sender.Text = args.SelectedItem.ToString();
     }
 
     private Visibility SetVisiblePreview(int updateSource)
     {
-        return updateSource == 2 ? Visibility.Visible : Visibility.Collapsed;//Canary更新就设置预览显示
+        return updateSource == 2 ? Visibility.Visible : Visibility.Collapsed; //Canary更新就设置预览显示
     }
-
 }
