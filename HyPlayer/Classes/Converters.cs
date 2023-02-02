@@ -271,7 +271,7 @@ namespace HyPlayer.Classes
             }
             try
             {
-                var now = DateTime.Now.Ticks;
+                var now = DateTime.UtcNow.Ticks;
                 var tick = dateTime.Ticks;
                 var diff_ = now - tick;
                 var diffDt = new DateTime(diff_);
