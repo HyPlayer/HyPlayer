@@ -1,6 +1,14 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
+using HyPlayer.Pages;
+using Kawazu;
+using Microsoft.AppCenter;
+using Microsoft.AppCenter.Analytics;
+using Microsoft.AppCenter.Crashes;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
@@ -13,15 +21,7 @@ using Windows.UI.StartScreen;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.HyPlayControl;
-using HyPlayer.Pages;
-using Kawazu;
-using Microsoft.AppCenter;
-using Microsoft.AppCenter.Analytics;
-using Microsoft.AppCenter.Crashes;
 using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
-using HyPlayer.Classes;
-using System.Linq;
 #if !DEBUG
 using Microsoft.Services.Store.Engagement;
 #endif
@@ -143,7 +143,7 @@ sealed partial class App : Application
     protected override void OnActivated(IActivatedEventArgs args)
     {
         base.OnActivated(args);
-        if (args.Kind == ActivationKind.ToastNotification) 
+        if (args.Kind == ActivationKind.ToastNotification)
         {
             var rootFrame = Window.Current.Content as Frame;
             if (rootFrame == null)

@@ -1,4 +1,7 @@
-﻿using System;
+﻿using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
+using Microsoft.Toolkit.Uwp.UI.Media;
+using System;
 using System.IO;
 using Windows.Storage.FileProperties;
 using Windows.UI;
@@ -9,9 +12,6 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
-using Microsoft.Toolkit.Uwp.UI.Media;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 

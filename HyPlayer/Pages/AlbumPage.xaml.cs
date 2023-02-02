@@ -1,5 +1,10 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using HyPlayer.Controls;
+using HyPlayer.HyPlayControl;
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -10,11 +15,6 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using HyPlayer.HyPlayControl;
-using NeteaseCloudMusicApi;
-using Newtonsoft.Json.Linq;
 
 #endregion
 
@@ -112,7 +112,7 @@ public sealed partial class AlbumPage : Page, IDisposable
             }).ToList();
             TextBoxAuthor.Content = string.Join(" / ", artists.Select(t => t.name));
             var converter = new DateConverter();
-            TextBlockPublishTime.Text = converter.Convert((long)json["album"]["publishTime"],null,null,null).ToString();
+            TextBlockPublishTime.Text = converter.Convert((long)json["album"]["publishTime"], null, null, null).ToString();
             TextBlockDesc.Text = (json["album"]["alias"].HasValues
                                      ? string.Join(" / ",
                                            json["album"]["alias"].ToArray().Select(t => t.ToString())) +
@@ -130,25 +130,25 @@ public sealed partial class AlbumPage : Page, IDisposable
             }
             */
             AlbumSongsViewSource.Source = json["songs"].ToArray().Select(jsonSong => new NCAlbumSong
-                {
-                    Album = Album,
-                    alias = string.Join(" / ", jsonSong["alia"].ToArray().Select(t => t.ToString())),
-                    Artist = jsonSong["ar"].Select(NCArtist.CreateFromJson).ToList(),
-                    IsAvailable = jsonSong["privilege"]["st"].ToString() == "0",
-                    IsVip = jsonSong["fee"]?.ToString() == "1",
-                    LengthInMilliseconds = double.Parse(jsonSong["dt"].ToString()),
-                    mvid = jsonSong["mv"]?.ToObject<int>() ?? -1,
-                    Order = ++idx,
-                    sid = jsonSong["id"].ToString(),
-                    songname = jsonSong["name"].ToString(),
-                    transname = string.Join(" / ",
+            {
+                Album = Album,
+                alias = string.Join(" / ", jsonSong["alia"].ToArray().Select(t => t.ToString())),
+                Artist = jsonSong["ar"].Select(NCArtist.CreateFromJson).ToList(),
+                IsAvailable = jsonSong["privilege"]["st"].ToString() == "0",
+                IsVip = jsonSong["fee"]?.ToString() == "1",
+                LengthInMilliseconds = double.Parse(jsonSong["dt"].ToString()),
+                mvid = jsonSong["mv"]?.ToObject<int>() ?? -1,
+                Order = ++idx,
+                sid = jsonSong["id"].ToString(),
+                songname = jsonSong["name"].ToString(),
+                transname = string.Join(" / ",
                         jsonSong["tns"]?.ToArray().Select(t => t.ToString()) ?? Array.Empty<string>()),
-                    Type = HyPlayItemType.Netease,
-                    IsCloud = false,
-                    CDName = jsonSong["cd"].ToString(),
-                    DiscName = jsonSong["cd"].ToString(),
-                    TrackId = jsonSong["no"].ToObject<int>()
-                }).ToList().GroupBy(t => t.DiscName).OrderBy(t => t.Key)
+                Type = HyPlayItemType.Netease,
+                IsCloud = false,
+                CDName = jsonSong["cd"].ToString(),
+                DiscName = jsonSong["cd"].ToString(),
+                TrackId = jsonSong["no"].ToObject<int>()
+            }).ToList().GroupBy(t => t.DiscName).OrderBy(t => t.Key)
                 .Select(t => new DiscSongs(t) { Key = t.Key });
         }
         catch (Exception ex)

@@ -1,4 +1,9 @@
-﻿using System;
+﻿using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
+using Microsoft.AppCenter.Ingestion.Models;
+using Microsoft.AppCenter.Utils;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Windows.Security.ExchangeActiveSyncProvisioning;
@@ -6,11 +11,6 @@ using Windows.Storage;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
-using Microsoft.AppCenter.Ingestion.Models;
-using Microsoft.AppCenter.Utils;
-using Newtonsoft.Json;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 

@@ -1,5 +1,8 @@
 ﻿#region
 
+using HyPlayer.HyPlayControl;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,9 +11,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage;
-using HyPlayer.HyPlayControl;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using File = TagLib.File;
 
 #endregion

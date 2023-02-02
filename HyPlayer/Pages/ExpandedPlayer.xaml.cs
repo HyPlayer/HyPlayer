@@ -1,9 +1,12 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using HyPlayer.Controls;
+using HyPlayer.HyPlayControl;
+using Microsoft.Toolkit.Uwp.UI.Media;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -21,19 +24,13 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using HyPlayer.HyPlayControl;
-using Microsoft.Toolkit.Uwp.UI.Media;
 using Buffer = Windows.Storage.Streams.Buffer;
 using Color = System.Drawing.Color;
-using Point = Windows.Foundation.Point;
 
 #endregion
 
@@ -597,7 +594,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         ImageAlbum.Source = img;
                         if (Common.Setting.expandedPlayerBackgroundType == 0)
                             Background = new ImageBrush
-                                { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                            { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                     }
                     else
                     {
@@ -613,7 +610,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
                         if (Common.Setting.expandedPlayerBackgroundType == 0)
                             Background = new ImageBrush
-                                { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                            { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                     }
                 }
                 catch (Exception)
@@ -915,7 +912,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             lastSongForBrush = HyPlayList.NowPlayingItem.PlayItem;
             albumMainColor = Windows.UI.Color.FromArgb(255, bytes[2], bytes[1], bytes[0]);
             if (Common.Setting.expandedPlayerBackgroundType == 1)
-            {                
+            {
                 PageContainer.Background =
                     new SolidColorBrush(albumMainColor.Value);
             }
@@ -1060,37 +1057,37 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
                 break;
             case 0 when Math.Abs(e.Cumulative.Translation.Y) > Math.Abs(e.Cumulative.Translation.X):
-            {
-                // 竖直方向滑动
-                if (e.Cumulative.Translation.Y >= 0)
-                    Common.PageMain.ExpandedPlayerPositionOffset.Y = e.Cumulative.Translation.Y;
-                else
                 {
-                    ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;
-                }
+                    // 竖直方向滑动
+                    if (e.Cumulative.Translation.Y >= 0)
+                        Common.PageMain.ExpandedPlayerPositionOffset.Y = e.Cumulative.Translation.Y;
+                    else
+                    {
+                        ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;
+                    }
 
-                if (e.Cumulative.Translation.Y > 200)
-                {
-                    e.Complete();
-                    Common.BarPlayBar.CollapseExpandedPlayer();
-                }
+                    if (e.Cumulative.Translation.Y > 200)
+                    {
+                        e.Complete();
+                        Common.BarPlayBar.CollapseExpandedPlayer();
+                    }
 
-                break;
-            }
+                    break;
+                }
             case 0:
-            {
-                ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
-                if (e.Cumulative.Translation.X > 400)
                 {
-                    e.Complete();
-                }
-                else if (e.Cumulative.Translation.X < -400)
-                {
-                    e.Complete();
-                }
+                    ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
+                    if (e.Cumulative.Translation.X > 400)
+                    {
+                        e.Complete();
+                    }
+                    else if (e.Cumulative.Translation.X < -400)
+                    {
+                        e.Complete();
+                    }
 
-                break;
-            }
+                    break;
+                }
         }
     }
 

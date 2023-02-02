@@ -1,9 +1,9 @@
 ﻿#region
 
+using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using NeteaseCloudMusicApi;
 
 #endregion
 

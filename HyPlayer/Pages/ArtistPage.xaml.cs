@@ -1,5 +1,8 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
+using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,9 +12,6 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
-using NeteaseCloudMusicApi;
 
 #endregion
 
@@ -110,7 +110,7 @@ public sealed partial class ArtistPage : Page, IDisposable
             var idx = 0;
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
                 new Dictionary<string, object>
-                    { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) }, false);
+                { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) }, false);
             foreach (var jToken in json["songs"])
             {
                 var ncSong = NCSong.CreateFromJson(jToken);
@@ -139,7 +139,7 @@ public sealed partial class ArtistPage : Page, IDisposable
             {
                 var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
                     new Dictionary<string, object>
-                        { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) });
+                    { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) });
                 foreach (var jToken in json["songs"])
                 {
                     var ncSong = NCSong.CreateFromJson(jToken);
@@ -209,7 +209,7 @@ public sealed partial class ArtistPage : Page, IDisposable
                     LineThree = albumjson.Value<bool>("paid") ? "付费专辑" : "",
                     ResourceId = "al" + albumjson["id"],
                     CoverUri = albumjson["picUrl"].ToString(),
-                    Order = page*50 + i++,
+                    Order = page * 50 + i++,
                     CanPlay = true
                 });
             if (int.Parse(j1["artist"]["albumSize"].ToString()) >= (page + 1) * 50)

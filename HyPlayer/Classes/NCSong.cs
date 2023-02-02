@@ -1,12 +1,12 @@
 ﻿#region
 
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TagLib;
 using Windows.Storage;
 using Windows.UI.Xaml.Media.Imaging;
-using Newtonsoft.Json.Linq;
-using TagLib;
 
 #endregion
 

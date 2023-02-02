@@ -1,23 +1,19 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using Windows.Foundation;
+using Windows.System.Threading;
+using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using NeteaseCloudMusicApi;
-using System.Collections.ObjectModel;
-using Windows.UI.Xaml.Media;
-using Windows.System.Threading;
-using Windows.UI.Core;
 using Windows.UI.Xaml.Media.Animation;
-using System.Drawing;
+using Windows.UI.Xaml.Navigation;
 using Point = Windows.Foundation.Point;
 
 #endregion
@@ -189,7 +185,7 @@ public sealed partial class Comments : Page, IDisposable
                             "content", CommentEdit.Text
                         }
                     });
-                
+
                 CommentEdit.Text = string.Empty;
                 await Task.Delay(1000);
                 _ = LoadComments(3);

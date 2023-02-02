@@ -1,5 +1,8 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using Microsoft.Toolkit.Uwp.Helpers;
+using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -12,16 +15,13 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Timers;
+using TagLib;
 using Windows.Graphics.Imaging;
 using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
 using Windows.Storage.Streams;
-using HyPlayer.Classes;
-using Microsoft.Toolkit.Uwp.Helpers;
-using NeteaseCloudMusicApi;
-using TagLib;
-using File = TagLib.File;
 using Windows.Web.Http;
+using File = TagLib.File;
 
 #endregion
 

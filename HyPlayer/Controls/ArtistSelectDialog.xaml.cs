@@ -1,9 +1,9 @@
 ﻿#region
 
-using System.Collections.Generic;
-using Windows.UI.Xaml.Controls;
 using HyPlayer.Classes;
 using HyPlayer.Pages;
+using System.Collections.Generic;
+using Windows.UI.Xaml.Controls;
 
 #endregion
 

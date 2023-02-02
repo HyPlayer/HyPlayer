@@ -1,5 +1,9 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using HyPlayer.Controls;
+using Kawazu;
+using Microsoft.UI.Xaml.Controls;
 using System;
 using System.IO;
 using System.IO.Compression;
@@ -21,12 +25,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using Kawazu;
-using Microsoft.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
-using Windows.UI.Xaml.Data;
 
 #endregion
 
@@ -101,7 +100,7 @@ public sealed partial class Settings : Page, IDisposable
         get => (bool)GetValue(IsAdvancedLyricColorSettingsShowProperty);
         set => SetValue(IsAdvancedLyricColorSettingsShowProperty, value);
     }
-    
+
     public void Dispose()
     {
         if (IsDisposed) return;
@@ -468,7 +467,7 @@ public sealed partial class Settings : Page, IDisposable
     {
         Common.Setting.pureLyricIdleColor = PureLyricIdle.SelectedColor;
     }
-    
+
     private void ResetPureLyricFocusingColor(object sender, RoutedEventArgs e)
     {
         Common.Setting.pureLyricFocusingColor = null;
@@ -478,8 +477,8 @@ public sealed partial class Settings : Page, IDisposable
     {
         Common.Setting.pureLyricFocusingColor = PureLyricFocusing.SelectedColor;
     }
-    
-    
+
+
     private void ResetKaraokLyricIdleColor(object sender, RoutedEventArgs e)
     {
         Common.Setting.karaokLyricIdleColor = null;
@@ -489,7 +488,7 @@ public sealed partial class Settings : Page, IDisposable
     {
         Common.Setting.karaokLyricIdleColor = KaraokLyricIdle.SelectedColor;
     }
-    
+
     private void ResetKaraokLyricFocusingColor(object sender, RoutedEventArgs e)
     {
         Common.Setting.karaokLyricFocusingColor = null;

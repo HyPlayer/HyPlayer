@@ -1,13 +1,11 @@
 ﻿#region
 
+using HyPlayer.HyPlayControl;
 using System;
 using System.Linq;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Media.Imaging;
-using HyPlayer.HyPlayControl;
 
 #endregion
 

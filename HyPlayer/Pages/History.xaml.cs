@@ -1,5 +1,7 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -7,8 +9,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using NeteaseCloudMusicApi;
 
 #endregion
 
@@ -21,7 +21,7 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class History : Page, IDisposable
 {
-    private readonly ObservableCollection<NCSong> Songs = new ();
+    private readonly ObservableCollection<NCSong> Songs = new();
     public bool IsDisposed = false;
     public History()
     {

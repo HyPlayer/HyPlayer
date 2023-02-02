@@ -1,6 +1,8 @@
 ﻿#region
 
 #nullable enable
+using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,8 +13,6 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
-using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
 using Windows.UI.Xaml.Media.Animation;
 using ColorAnimation = Windows.UI.Xaml.Media.Animation.ColorAnimation;
 
@@ -62,10 +62,10 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
     private SolidColorBrush IdleBrush => GetIdleBrush();
 
-    private SolidColorBrush? _pureIdleBrushCache; 
-    private SolidColorBrush? _pureAccentBrushCache; 
-    private Color? _karaokIdleColorCache; 
-    private Color? _karaokAccentColorCache; 
+    private SolidColorBrush? _pureIdleBrushCache;
+    private SolidColorBrush? _pureAccentBrushCache;
+    private Color? _karaokIdleColorCache;
+    private Color? _karaokAccentColorCache;
 
     private Color GetKaraokAccentBrush()
     {
@@ -89,7 +89,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
             ? Common.PageExpandedPlayer.ForegroundIdleTextBrush.Color
             : (Application.Current.Resources["TextFillColorTertiaryBrush"] as SolidColorBrush)!.Color;
     }
-    
+
     private SolidColorBrush GetAccentBrush()
     {
         if (Common.Setting.pureLyricFocusingColor is not null)
@@ -112,7 +112,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
             ? Common.PageExpandedPlayer.ForegroundIdleTextBrush
             : Application.Current.Resources["TextFillColorTertiaryBrush"] as SolidColorBrush)!;
     }
-    
+
     public void RefreshFontSize()
     {
         WordLyricContainer.HorizontalAlignment = KaraokLyricPanelAlignment;
@@ -154,7 +154,9 @@ public sealed partial class LyricItem : UserControl, IDisposable
         if (isKaraok)
         {
             HyPlayList.OnPlayPositionChange += RefreshWordColor;
-            WordTextBlocks.ForEach(w => { w.FontSize = actualsize + Common.Setting.lyricScaleSize;
+            WordTextBlocks.ForEach(w =>
+            {
+                w.FontSize = actualsize + Common.Setting.lyricScaleSize;
                 w.Foreground = new SolidColorBrush(GetKaraokIdleBrush());
             });
         }

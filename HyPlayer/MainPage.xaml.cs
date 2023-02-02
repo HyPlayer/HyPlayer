@@ -1,16 +1,14 @@
 ﻿#region
 
-using System;
-using System.Net;
-using Windows.Storage;
-using Windows.UI.ViewManagement;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Navigation;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
+using System.Net;
+using Windows.Storage;
+using Windows.UI.ViewManagement;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Navigation;
 
 #endregion
 
@@ -29,7 +27,7 @@ public sealed partial class MainPage
         Common.ncapi.RealIP = Setting.GetSettings<string>("xRealIp", null);
         Common.ncapi.Proxy = new WebProxy(Setting.GetSettings<string>("neteaseProxy", null));
         Common.ncapi.UseProxy = !(ApplicationData.Current.LocalSettings.Values["neteaseProxy"] is null);
-        Common.ncapi.UseHttp = Setting.GetSettings<bool> ("UseHttp", false);
+        Common.ncapi.UseHttp = Setting.GetSettings<bool>("UseHttp", false);
         StaticSource.PICSIZE_AUDIO_PLAYER_COVER = Common.Setting.highQualityCoverInSMTC ? "1024y1024" : "100y100";
         if (Common.Setting.uiSound)
         {

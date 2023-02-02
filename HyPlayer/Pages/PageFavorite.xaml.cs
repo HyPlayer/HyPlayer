@@ -1,5 +1,7 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,8 +9,6 @@ using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using NeteaseCloudMusicApi;
 
 #endregion
 
@@ -24,7 +24,7 @@ public sealed partial class PageFavorite : Page, IDisposable
     private int i;
     private int page;
     public bool IsDisposed = false;
-    
+
     public PageFavorite()
     {
         InitializeComponent();

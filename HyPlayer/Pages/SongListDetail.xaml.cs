@@ -1,5 +1,9 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -12,10 +16,6 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
-using NeteaseCloudMusicApi;
-using Newtonsoft.Json.Linq;
 
 #endregion
 
@@ -59,7 +59,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         ImageRect.ImageSource = null;
         GC.SuppressFinalize(this);
     }
-    
+
     public void LoadSongListDetail()
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(SongListDetail));
@@ -77,9 +77,9 @@ public sealed partial class SongListDetail : Page, IDisposable
         DescriptionWrapper.Text = playList.desc;
         TextBoxAuthor.Content = playList.creater.name;
         ToggleButtonLike.IsChecked = playList.subscribed;
-        if(playList.trackCount != 0)
+        if (playList.trackCount != 0)
             TextBoxPlayCount.Text = $"{playList.trackCount}首歌曲";
-            
+
         if (playList.updateTime.Year != 0001)
             TextBoxUpdateTime.Text = $"{DateConverter.FriendFormat(playList.updateTime)}更新";
     }

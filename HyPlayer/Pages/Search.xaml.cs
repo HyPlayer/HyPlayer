@@ -1,5 +1,8 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,10 +12,6 @@ using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using NeteaseCloudMusicApi;
-using Newtonsoft.Json.Linq;
-using Microsoft.AppCenter.Crashes;
 
 #endregion
 
@@ -65,7 +64,7 @@ public sealed partial class Search : Page, IDisposable
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        if((string)e.Parameter != null)
+        if ((string)e.Parameter != null)
         {
             SearchKeywordBox.Text = (string)e.Parameter;
             SearchKeywordBox_QuerySubmitted(SearchKeywordBox, null);
@@ -531,7 +530,7 @@ public sealed partial class Search : Page, IDisposable
         if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         if ((sender as ComboBox) is not null)
         {
-            SearchKeywordBox.Text= (sender as ComboBox).SelectedItem as String;//将历史放上去
+            SearchKeywordBox.Text = (sender as ComboBox).SelectedItem as String;//将历史放上去
             await LoadResult();
         }
     }

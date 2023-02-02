@@ -1,15 +1,25 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
+using HyPlayer.Pages;
+using Microsoft.Toolkit.Uwp.Helpers;
+using Microsoft.Toolkit.Uwp.Notifications;
+using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.Graphics.Imaging;
 using Windows.Media;
 using Windows.Media.Playback;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
+using Windows.Storage.Streams;
 using Windows.System;
 using Windows.System.Profile;
 using Windows.UI;
@@ -18,21 +28,10 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
-using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
-using HyPlayer.Pages;
-using Microsoft.Toolkit.Uwp.Notifications;
-using NeteaseCloudMusicApi;
-using Windows.Graphics.Imaging;
-using Windows.Storage.Streams;
-using System.Threading.Tasks;
-using System.IO;
-using Microsoft.Toolkit.Uwp.Helpers;
 
 #endregion
 
@@ -383,8 +382,8 @@ public sealed partial class PlayBar
         });
         try
         {
-            if (Common.Setting.fadeInOut && isFadeInOutPausing == 0 && 
-                    HyPlayList.Player.PlaybackSession.NaturalDuration-HyPlayList.Player.PlaybackSession.Position > TimeSpan.Zero)
+            if (Common.Setting.fadeInOut && isFadeInOutPausing == 0 &&
+                    HyPlayList.Player.PlaybackSession.NaturalDuration - HyPlayList.Player.PlaybackSession.Position > TimeSpan.Zero)
             {
                 if (HyPlayList.Player.PlaybackSession.Position.TotalSeconds <= Common.Setting.fadeInOutTime)
                     HyPlayList.Player.Volume =
@@ -400,7 +399,7 @@ public sealed partial class PlayBar
                 else
                     HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume;
             }
-            else if (isFadeInOutPausing != 0 && 
+            else if (isFadeInOutPausing != 0 &&
                         HyPlayList.Player.PlaybackSession.NaturalDuration - HyPlayList.Player.PlaybackSession.Position > TimeSpan.Zero)
             {
                 var fadeRatio =
@@ -685,7 +684,7 @@ public sealed partial class PlayBar
         {
             OnFadeInOutRequested();
             return;
-        }       
+        }
         PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uEDB5" : "\uEDB4";
         if (HyPlayList.IsPlaying)
         {
@@ -699,7 +698,7 @@ public sealed partial class PlayBar
                 PlayBarBackgroundAni.Begin();
         }
     }
-    
+
     public void OnFadeInOutRequested()
     {
         if (isFadeInOutPausing == 0)
@@ -916,29 +915,29 @@ public sealed partial class PlayBar
         switch (HyPlayList.NowPlayingItem.ItemType)
         {
             case HyPlayItemType.Netease:
-            {
-                _ = Api.LikeSong(HyPlayList.NowPlayingItem.PlayItem.Id,
-                    !isLiked);
-                if (isLiked)
-                    Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.Id);
-                else
-                    Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.Id);
-                isLiked = !isLiked;
-                IconLiked.Foreground = isLiked
-                    ? new SolidColorBrush(Colors.Red)
-                    : IconPrevious.Foreground;
-                FlyoutLiked.Foreground = isLiked
-                    ? new SolidColorBrush(Colors.Red)
-                    : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-                IconLiked.Glyph = isLiked
-                    ? "\uE00B"
-                    : "\uE006";
-                FlyoutLiked.Glyph = isLiked
-                    ? "\uE00B"
-                    : "\uE006";
-                //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
-                break;
-            }
+                {
+                    _ = Api.LikeSong(HyPlayList.NowPlayingItem.PlayItem.Id,
+                        !isLiked);
+                    if (isLiked)
+                        Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.Id);
+                    else
+                        Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.Id);
+                    isLiked = !isLiked;
+                    IconLiked.Foreground = isLiked
+                        ? new SolidColorBrush(Colors.Red)
+                        : IconPrevious.Foreground;
+                    FlyoutLiked.Foreground = isLiked
+                        ? new SolidColorBrush(Colors.Red)
+                        : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+                    IconLiked.Glyph = isLiked
+                        ? "\uE00B"
+                        : "\uE006";
+                    FlyoutLiked.Glyph = isLiked
+                        ? "\uE00B"
+                        : "\uE006";
+                    //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
+                    break;
+                }
             case HyPlayItemType.Radio:
                 _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.ResourceLike,
                     new Dictionary<string, object>

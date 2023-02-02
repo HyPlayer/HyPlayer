@@ -1,12 +1,12 @@
-﻿using IF.Lastfm.Core.Api;
+﻿using HyPlayer.HyPlayControl;
+using IF.Lastfm.Core.Api;
 using IF.Lastfm.Core.Api.Enums;
 using IF.Lastfm.Core.Objects;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
-using HyPlayer.HyPlayControl;
 
 namespace HyPlayer.Classes
 {
@@ -26,7 +26,7 @@ namespace HyPlayer.Classes
         {
             OnLoginDone += LastFMManager_OnLoginDone;
             OnLogoffDone += LastFMManager_OnLogoffDone;
-            OnLoginError+=LastFMManager_OnLoginError;
+            OnLoginError += LastFMManager_OnLoginError;
             HyPlayList.OnPlayItemChange += HyPlayList.UpdateLastFMNowPlayingAsync;
             TryLoginLastfmAccountFromSession();
         }
@@ -57,7 +57,7 @@ namespace HyPlayer.Classes
         public static async Task TryLoginLastfmAccountFromInternet(string userName, string password)
         {
             if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password)) OnLoginError.Invoke(new Exception("用户名或密码不能为空"));
-            var response = await LastfmClient.Auth.GetSessionTokenAsync(userName,password);
+            var response = await LastfmClient.Auth.GetSessionTokenAsync(userName, password);
             if (response.Success) OnLoginDone.Invoke();
             else
             {
@@ -96,7 +96,7 @@ namespace HyPlayer.Classes
                     LastfmClient.Auth.LoadSession(session);
                     OnLoginDone.Invoke();
                 }
-                else if (responseData!=null)
+                else if (responseData != null)
                 {
                     string errorMessageStringData = await responseData.Content.ReadAsStringAsync();
                     JObject errorMessageJsonObject = JObject.Parse(errorMessageStringData);
@@ -112,7 +112,7 @@ namespace HyPlayer.Classes
         public static bool TryLogoffLastFM()
         {
             LastfmClient.Dispose();
-	        LastfmClient = new LastfmClient(LastFMAPIKey, LastFMAPISecret);
+            LastfmClient = new LastfmClient(LastFMAPIKey, LastFMAPISecret);
             OnLogoffDone.Invoke();
             return true;
         }
@@ -121,7 +121,7 @@ namespace HyPlayer.Classes
             if (scrobbleHyPlayItem.PlayItem is null) return false;
             if (!LastfmLogined || !Common.Setting.UseLastFMScrobbler) return false;
             var scrobbleItem = LastFMUtils.GetScrobble(scrobbleHyPlayItem);
-            var response= await LastfmClient.Scrobbler.ScrobbleAsync(scrobbleItem);
+            var response = await LastfmClient.Scrobbler.ScrobbleAsync(scrobbleItem);
             if (!response.Success)
             {
                 if (response.Status == LastResponseStatus.BadAuth) OnLoginError.Invoke(new Exception(response.Status.ToString()));

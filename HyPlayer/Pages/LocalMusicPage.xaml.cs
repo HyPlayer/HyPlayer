@@ -1,19 +1,19 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Search;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
-using System.Threading;
 
 #endregion
 
@@ -27,10 +27,10 @@ namespace HyPlayer.Pages;
 public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisposable
 {
     private static readonly string[] supportedFormats = { ".flac", ".mp3", ".ncm", ".ape", ".m4a", ".wav" };
-    private readonly ObservableCollection<HyPlayItem> localHyItems = new ();
+    private readonly ObservableCollection<HyPlayItem> localHyItems = new();
     private string _notificationText;
     private Task CurrentFileScanTask;
-    private CancellationTokenSource cancellationTokenSource = new ();
+    private CancellationTokenSource cancellationTokenSource = new();
     private int index;
     public bool IsDisposed = false;
 
@@ -98,7 +98,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
     private void Refresh_Click(object sender, RoutedEventArgs e)
     {
         index = 0;
-        if ( CurrentFileScanTask == null || CurrentFileScanTask.IsCompleted == true) CurrentFileScanTask = LoadLocalMusic();
+        if (CurrentFileScanTask == null || CurrentFileScanTask.IsCompleted == true) CurrentFileScanTask = LoadLocalMusic();
     }
 
     private async Task LoadLocalMusic()
@@ -131,7 +131,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
                     //ignore
                 }
             }
-                
+
         }
         else
         {

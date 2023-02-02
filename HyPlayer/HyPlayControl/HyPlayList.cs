@@ -1,5 +1,10 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using Kawazu;
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json.Linq;
+using Opportunity.LrcParser;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,11 +21,6 @@ using Windows.Storage.AccessCache;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
-using HyPlayer.Classes;
-using Kawazu;
-using NeteaseCloudMusicApi;
-using Newtonsoft.Json.Linq;
-using Opportunity.LrcParser;
 using File = TagLib.File;
 
 #endregion
@@ -1351,7 +1351,7 @@ public static class HyPlayList
             !The163KeyHelper.TryGetMusicInfo(tagFile.Tag, out var mi))
         {
             //TagLib.File afi = TagLib.File.Create(new UwpStorageFileAbstraction(sf), ReadStyle.Average);
-            var songPerformersList = tagFile.Tag.Performers.Select(t=> new NCArtist { name = t, Type = HyPlayItemType.Local }).ToList();
+            var songPerformersList = tagFile.Tag.Performers.Select(t => new NCArtist { name = t, Type = HyPlayItemType.Local }).ToList();
             if (songPerformersList.Count == 0)
             {
                 songPerformersList.Add(new NCArtist { name = "未知歌手", Type = HyPlayItemType.Local });

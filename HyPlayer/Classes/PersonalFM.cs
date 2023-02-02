@@ -1,9 +1,9 @@
 ﻿#region
 
-using System;
-using System.Threading.Tasks;
 using HyPlayer.HyPlayControl;
 using NeteaseCloudMusicApi;
+using System;
+using System.Threading.Tasks;
 
 #endregion
 

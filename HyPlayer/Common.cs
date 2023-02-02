@@ -1,6 +1,16 @@
 ﻿#region
 
 #nullable enable
+using HyPlayer.Classes;
+using HyPlayer.Controls;
+using HyPlayer.HyPlayControl;
+using HyPlayer.Pages;
+using Kawazu;
+using Microsoft.Toolkit.Uwp.UI;
+using Microsoft.UI.Xaml.Controls;
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -21,17 +31,6 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Animation;
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using HyPlayer.HyPlayControl;
-using HyPlayer.Pages;
-using Kawazu;
-using Microsoft.Toolkit.Uwp.UI;
-using Microsoft.UI.Xaml.Controls;
-using NeteaseCloudMusicApi;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using IF.Lastfm.Core.Api;
 #if !DEBUG
 using Microsoft.AppCenter.Crashes;
 #endif
@@ -670,7 +669,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
         public Color? karaokLyricIdleColor
         {
             get
@@ -686,8 +685,8 @@ namespace HyPlayer
                 else ApplicationData.Current.LocalSettings.Values[nameof(karaokLyricIdleColor)] = null;
                 OnPropertyChanged();
             }
-        } 
-        
+        }
+
         public Color? karaokLyricFocusingColor
         {
             get
@@ -704,7 +703,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
 
         public bool jumpVipSongPlaying
         {

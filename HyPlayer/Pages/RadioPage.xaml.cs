@@ -1,5 +1,8 @@
 #region
 
+using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
+using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,9 +12,6 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
-using NeteaseCloudMusicApi;
 
 #endregion
 

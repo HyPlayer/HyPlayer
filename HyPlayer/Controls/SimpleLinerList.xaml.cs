@@ -1,10 +1,10 @@
 #region
 
+using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
 using System.Collections.ObjectModel;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
 
 #endregion
 

@@ -1,7 +1,7 @@
-﻿using System.ComponentModel;
+﻿using HyPlayer.Classes;
+using System.ComponentModel;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using HyPlayer.Classes;
 
 namespace HyPlayer.Controls;
 

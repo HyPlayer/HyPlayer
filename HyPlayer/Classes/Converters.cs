@@ -1,5 +1,4 @@
-﻿using Opportunity.LrcParser;
-using System;
+﻿using System;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -76,12 +75,12 @@ namespace HyPlayer.Classes
             throw new NotImplementedException();
         }
     }
-    
+
     public class EnumToIntConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            
+
             if (value is Enum enumValue) return System.Convert.ToInt32(enumValue);
             return 0;
         }
@@ -91,7 +90,7 @@ namespace HyPlayer.Classes
             return value;
         }
     }
-    
+
     public class AlbumShadowConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
@@ -229,16 +228,16 @@ namespace HyPlayer.Classes
             return value;
         }
     }
-    
+
     public class DateConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value is long||value is int)//时间戳
+            if (value is long || value is int)//时间戳
             {
                 return FriendFormat(GetDateTimeFromTimeStamp((long)value));
             }
-            else if(value is DateTime)//时间
+            else if (value is DateTime)//时间
             {
                 return FriendFormat((DateTime)value);
             }
@@ -256,7 +255,7 @@ namespace HyPlayer.Classes
         /// <returns></returns>
         public static DateTime GetDateTimeFromTimeStamp(long timestamp)
         {
-            return new DateTime(1970,1,1).AddTicks(timestamp * 10000);
+            return new DateTime(1970, 1, 1).AddTicks(timestamp * 10000);
         }
         /// <summary>
         /// 将DateTime转换为类似于“x分钟前”的格式
@@ -318,8 +317,8 @@ namespace HyPlayer.Classes
                 return dateTime.ToString("yyyy/MM/dd");
             }
 
-       
-              
+
+
         }
     }
 }

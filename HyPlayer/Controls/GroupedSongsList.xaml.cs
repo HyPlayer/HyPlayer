@@ -1,5 +1,8 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using HyPlayer.HyPlayControl;
+using HyPlayer.Pages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,9 +13,6 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
-using HyPlayer.Classes;
-using HyPlayer.HyPlayControl;
-using HyPlayer.Pages;
 
 #endregion
 
@@ -124,7 +124,7 @@ public sealed partial class GroupedSongsList : IDisposable
             if (GroupedSongs.Source == null) return;
             foreach (var disc in GroupedSongs.Source as IEnumerable<DiscSongs>)
             {
-                
+
                 var nowPlayingItem = disc.Where(t => t.sid == playitem.PlayItem.Id).FirstOrDefault();
                 if (nowPlayingItem != null)
                 {
@@ -230,7 +230,7 @@ public sealed partial class GroupedSongsList : IDisposable
 
         SongContainer.ContextFlyout.ShowAt(element,
             new FlyoutShowOptions
-                { Position = e?.GetPosition(element) ?? new Point(element?.ActualWidth ?? 0, 80) });
+            { Position = e?.GetPosition(element) ?? new Point(element?.ActualWidth ?? 0, 80) });
     }
 
     private async void SongContainer_OnItemClick(object sender, ItemClickEventArgs e)

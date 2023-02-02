@@ -1,21 +1,21 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using HyPlayer.Pages;
+using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Core;
+using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
-using HyPlayer.Classes;
-using HyPlayer.Pages;
-using NeteaseCloudMusicApi;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using Windows.ApplicationModel.Core;
-using Windows.UI.Core;
 
 #endregion
 

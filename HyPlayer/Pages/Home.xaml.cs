@@ -1,5 +1,9 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using HyPlayer.Controls;
+using HyPlayer.HyPlayControl;
+using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,12 +11,8 @@ using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using HyPlayer.HyPlayControl;
-using NeteaseCloudMusicApi;
 using Windows.UI.Xaml.Media.Imaging;
+using Windows.UI.Xaml.Navigation;
 
 #endregion
 
@@ -49,7 +49,7 @@ public sealed partial class Home : Page, IDisposable
         IsDisposed = true;
         GC.SuppressFinalize(this);
     }
-    
+
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
@@ -252,6 +252,6 @@ public sealed partial class Home : Page, IDisposable
     private void UserTapped(object sender, TappedRoutedEventArgs e)
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(Home));
-        Common.NavigatePage(typeof(Me), null,null);
+        Common.NavigatePage(typeof(Me), null, null);
     }
 }

@@ -1,5 +1,13 @@
 ﻿#region
 
+using HyPlayer.Classes;
+using HyPlayer.Controls;
+using HyPlayer.HyPlayControl;
+using Microsoft.AppCenter.Crashes;
+using Microsoft.UI.Xaml.Controls;
+using NeteaseCloudMusicApi;
+using Newtonsoft.Json.Linq;
+using QRCoder;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,14 +29,6 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.Classes;
-using HyPlayer.Controls;
-using HyPlayer.HyPlayControl;
-using Microsoft.AppCenter.Crashes;
-using Microsoft.UI.Xaml.Controls;
-using NeteaseCloudMusicApi;
-using Newtonsoft.Json.Linq;
-using QRCoder;
 using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
 using NavigationViewBackButtonVisible = Microsoft.UI.Xaml.Controls.NavigationViewBackButtonVisible;
 using NavigationViewBackRequestedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewBackRequestedEventArgs;
@@ -38,7 +38,6 @@ using NavigationViewItem = Microsoft.UI.Xaml.Controls.NavigationViewItem;
 using NavigationViewItemInvokedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs;
 using NavigationViewPaneDisplayMode = Microsoft.UI.Xaml.Controls.NavigationViewPaneDisplayMode;
 using NavigationViewSelectionChangedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewSelectionChangedEventArgs;
-using Windows.UI.Xaml.Data;
 
 #endregion
 
@@ -618,16 +617,16 @@ public sealed partial class BasePage : Page
         switch (invokedItemTag)
         {
             case "SonglistCreate":
-            {
-                await new CreateSonglistDialog().ShowAsync();
-                _ = LoadSongList();
-                break;
-            }
+                {
+                    await new CreateSonglistDialog().ShowAsync();
+                    _ = LoadSongList();
+                    break;
+                }
             case "PersonalFM":
-            {
-                PersonalFM.InitPersonalFM();
-                break;
-            }
+                {
+                    PersonalFM.InitPersonalFM();
+                    break;
+                }
             case "HeartBeat":
                 _ = LoadHeartBeat();
                 break;
