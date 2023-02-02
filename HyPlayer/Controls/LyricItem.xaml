@@ -19,7 +19,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <controls:WrapPanel x:Name="WordLyricContainer" Grid.Row="0" />
+        <controls:WrapPanel x:Name="WordLyricContainer" Grid.Row="0" HorizontalAlignment="Center"/>
         <TextBlock
             Name="TextBoxPureLyric"
             Grid.Row="0"

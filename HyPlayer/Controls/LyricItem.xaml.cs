@@ -56,7 +56,8 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
     public TextAlignment LyricAlignment =>
         Common.Setting.lyricAlignment ? TextAlignment.Left : TextAlignment.Center;
-
+    public HorizontalAlignment KaraokLyricPanelAlignment =>
+            Common.Setting.lyricAlignment ? HorizontalAlignment.Left : HorizontalAlignment.Center;
     private SolidColorBrush AccentBrush => GetAccentBrush();
 
     private SolidColorBrush IdleBrush => GetIdleBrush();
@@ -114,6 +115,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
     
     public void RefreshFontSize()
     {
+        WordLyricContainer.HorizontalAlignment = KaraokLyricPanelAlignment;
         TextBoxPureLyric.TextAlignment = LyricAlignment;
         TextBoxTranslation.TextAlignment = LyricAlignment;
         TextBoxSound.TextAlignment = LyricAlignment;
