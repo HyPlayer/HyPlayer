@@ -382,11 +382,12 @@ public sealed partial class PlayBar
         });
         try
         {
-            var gainValue = Common.Setting.EnableAudioGain && HyPlayList.NowPlayingItem.PlayItem != null
-                ? HyPlayList.GetAudioGainValue(HyPlayList.NowPlayingItem) : 1;
+            
             if (Common.Setting.fadeInOut && isFadeInOutPausing == 0 &&
                     HyPlayList.Player.PlaybackSession.NaturalDuration - HyPlayList.Player.PlaybackSession.Position > TimeSpan.Zero)
             {
+                var gainValue = Common.Setting.EnableAudioGain && HyPlayList.NowPlayingItem.PlayItem != null
+                ? HyPlayList.GetAudioGainValue(HyPlayList.NowPlayingItem) : 1;
                 if (HyPlayList.Player.PlaybackSession.Position.TotalSeconds <= Common.Setting.fadeInOutTime)
                     HyPlayList.Player.Volume =
                         HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds /
@@ -404,6 +405,8 @@ public sealed partial class PlayBar
             else if (isFadeInOutPausing != 0 &&
                         HyPlayList.Player.PlaybackSession.NaturalDuration - HyPlayList.Player.PlaybackSession.Position > TimeSpan.Zero)
             {
+                var gainValue = Common.Setting.EnableAudioGain && HyPlayList.NowPlayingItem.PlayItem != null
+                ? HyPlayList.GetAudioGainValue(HyPlayList.NowPlayingItem) : 1;
                 var fadeRatio =
                     (HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds - FadeInOutStartTime) /
                     Common.Setting.fadeInOutTimePause / 100;
