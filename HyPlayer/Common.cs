@@ -1312,6 +1312,16 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        public bool EnableAudioGain
+        {
+            get => GetSettings(nameof(EnableAudioGain), false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(EnableAudioGain)] = value;
+                OnPropertyChanged();
+                HyPlayList.NotifyAudioGainModeChanged(HyPlayList.NowPlayingItem);
+            }
+        }
 
         public bool LastFMLogined => LastFMManager.LastfmLogined;
 

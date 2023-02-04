@@ -90,7 +90,11 @@ public static class HyPlayList
         set
         {
             _playerOutgoingVolume = value;
-            Player.Volume = _playerOutgoingVolume;
+            if (NowPlayingItem.PlayItem?.AudioGain != null)
+            {
+                NotifyAudioGainModeChanged(NowPlayingItem);
+            }
+            else Player.Volume = _playerOutgoingVolume;
             Common.Setting.Volume = (int)(value * 100);
             OnVolumeChange?.Invoke(_playerOutgoingVolume);
         }
@@ -598,6 +602,7 @@ public static class HyPlayList
                         _ => "在线"
                     };
                     targetItem.PlayItem.Tag = tag;
+                    targetItem.PlayItem.AudioGain = double.Parse(json["data"]?[0]?["gain"].ToString());
                     _ = Common.Invoke(() => { Common.BarPlayBar.TbSongTag.Text = tag; });
                 }
                 else
@@ -882,7 +887,7 @@ public static class HyPlayList
         }
         else
         {
-            Lyrics = await Utils.ConvertKaraok(pureLyricInfo);
+            Lyrics = Utils.ConvertKaraok(pureLyricInfo);
         }
 
         if (Lyrics.Count == 0)
@@ -1473,6 +1478,23 @@ public static class HyPlayList
             }
         }
     }
+    public static void NotifyAudioGainModeChanged(HyPlayItem targetItem)
+    {
+        if (Common.Setting.EnableAudioGain && targetItem.PlayItem != null)
+        {
+            var gainValue = GetAudioGainValue(targetItem);
+            Player.Volume = _playerOutgoingVolume * gainValue;
+        }
+        else
+        {
+            Player.Volume = _playerOutgoingVolume;
+        }
+    }
+    public static double GetAudioGainValue(HyPlayItem targetItem)
+    {
+        var gainValue = Math.Pow(10, (targetItem.PlayItem.AudioGain / 20));
+        return gainValue;
+    }
 }
 
 public enum PlayMode
@@ -1553,7 +1575,7 @@ public static class Utils
         }
     }
 
-    public static async Task<List<SongLyric>> ConvertKaraok(PureLyricInfo pureLyricInfo)
+    public static List<SongLyric> ConvertKaraok(PureLyricInfo pureLyricInfo)
     {
         var lyrics = new List<SongLyric>();
         if (pureLyricInfo is KaraokLyricInfo karaokLyricInfo && !string.IsNullOrEmpty(karaokLyricInfo.KaraokLyric))

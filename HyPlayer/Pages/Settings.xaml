@@ -473,6 +473,13 @@
                                             Content="恢复默认" />
 
                                     </Grid>
+                                    <Grid>
+                                        <TextBlock VerticalAlignment="Center" Text="启用音量平衡" />
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.EnableAudioGain, Mode=TwoWay}" />
+                                    </Grid>
                                 </StackPanel>
                             </controls:Expander>
                             <controls:Expander

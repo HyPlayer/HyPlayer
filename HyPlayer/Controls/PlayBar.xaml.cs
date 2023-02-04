@@ -382,22 +382,24 @@ public sealed partial class PlayBar
         });
         try
         {
+            var gainValue = Common.Setting.EnableAudioGain && HyPlayList.NowPlayingItem.PlayItem != null
+                ? HyPlayList.GetAudioGainValue(HyPlayList.NowPlayingItem) : 1;
             if (Common.Setting.fadeInOut && isFadeInOutPausing == 0 &&
                     HyPlayList.Player.PlaybackSession.NaturalDuration - HyPlayList.Player.PlaybackSession.Position > TimeSpan.Zero)
             {
                 if (HyPlayList.Player.PlaybackSession.Position.TotalSeconds <= Common.Setting.fadeInOutTime)
                     HyPlayList.Player.Volume =
                         HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds /
-                        Common.Setting.fadeInOutTime / 1000 * HyPlayList.PlayerOutgoingVolume;
+                        Common.Setting.fadeInOutTime / 1000 * HyPlayList.PlayerOutgoingVolume * gainValue;
                 else if (HyPlayList.Player.PlaybackSession.NaturalDuration.TotalSeconds -
                          HyPlayList.Player.PlaybackSession.Position.TotalSeconds <=
                          Common.Setting.fadeInOutTime)
                     HyPlayList.Player.Volume =
                         (HyPlayList.Player.PlaybackSession.NaturalDuration.TotalSeconds -
                          HyPlayList.Player.PlaybackSession.Position.TotalSeconds) / Common.Setting.fadeInOutTime *
-                        HyPlayList.PlayerOutgoingVolume;
+                        HyPlayList.PlayerOutgoingVolume * gainValue;
                 else
-                    HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume;
+                    HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume * gainValue;
             }
             else if (isFadeInOutPausing != 0 &&
                         HyPlayList.Player.PlaybackSession.NaturalDuration - HyPlayList.Player.PlaybackSession.Position > TimeSpan.Zero)
@@ -409,7 +411,7 @@ public sealed partial class PlayBar
                 {
                     if (isFadeInOutPausing == 1)
                     {
-                        HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume;
+                        HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume * gainValue;
                     }
                     else
                     {
@@ -423,10 +425,10 @@ public sealed partial class PlayBar
 
                 if (isFadeInOutPausing == 1)
                     // Fade In
-                    HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume * fadeRatio;
+                    HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume * fadeRatio * gainValue;
                 else
                     // Fade Out
-                    HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume * (1 - fadeRatio);
+                    HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume * (1 - fadeRatio) * gainValue;
             }
         }
         catch (Exception)
@@ -529,8 +531,11 @@ public sealed partial class PlayBar
 
             // 恢复播放音量
             if (!Common.Setting.fadeInOut)
-                HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume;
-
+            {
+                var gainValue = Common.Setting.EnableAudioGain && HyPlayList.NowPlayingItem.PlayItem != null
+                    ? HyPlayList.GetAudioGainValue(HyPlayList.NowPlayingItem) : 1;
+                HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume * gainValue;
+            }
             if (HyPlayList.NowPlayingItem.PlayItem == null)
             {
                 TbSingerName.Content = null;

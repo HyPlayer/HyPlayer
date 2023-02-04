@@ -266,6 +266,7 @@ public class PlayItem
     public int TrackId;
     public HyPlayItemType Type;
     public string Url;
+    public double AudioGain;
 
     public string ArtistString
     {
