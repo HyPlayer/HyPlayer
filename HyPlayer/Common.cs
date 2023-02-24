@@ -1319,7 +1319,8 @@ namespace HyPlayer
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(EnableAudioGain)] = value;
                 OnPropertyChanged();
-                HyPlayList.NotifyAudioGainModeChanged(HyPlayList.NowPlayingItem);
+                if (!value) HyPlayList.AudioEffectsProperties["AudioGain_Disabled"] = true;
+                else HyPlayList.AudioEffectsProperties.Remove("AudioGain_Disabled");
             }
         }
 

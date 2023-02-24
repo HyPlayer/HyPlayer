@@ -62,6 +62,7 @@ public sealed partial class BasePage : Page
         HyPlayList.OnTimerTicked += () => Common.RollTeachingTip();
         if (HyPlayList.Player == null)
             HyPlayList.InitializeHyPlaylist();
+
         if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Desktop" && Common.Setting.EnableTitleBarImmerse)
         {
             CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
@@ -173,6 +174,7 @@ public sealed partial class BasePage : Page
             dialog.IsPrimaryButtonEnabled = true;
             dialog.PrimaryButtonClick += (_, _) => _ = ApplicationView.GetForCurrentView().TryConsolidateAsync();
             _ = dialog.ShowAsync();
+
         }
 
         // 不要阻塞页面加载
