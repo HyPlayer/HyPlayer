@@ -1,5 +1,5 @@
 ﻿#region
-
+using AudioEffectComponent;
 using HyPlayer.Classes;
 using Kawazu;
 using NeteaseCloudMusicApi;
@@ -12,6 +12,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
 using Windows.Devices.Enumeration;
+using Windows.Foundation.Collections;
 using Windows.Media;
 using Windows.Media.Core;
 using Windows.Media.Playback;
@@ -22,7 +23,6 @@ using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
 using File = TagLib.File;
-
 #endregion
 
 namespace HyPlayer.HyPlayControl;
@@ -71,6 +71,7 @@ public static class HyPlayList
     public static int ShufflingIndex = -1;
     public static List<SongLyric> Lyrics = new();
     public static TimeSpan LyricOffset = TimeSpan.Zero;
+    public static PropertySet AudioEffectsProperties = new PropertySet();
 
     /********        API        ********/
     public static MediaPlayer Player;
@@ -90,11 +91,7 @@ public static class HyPlayList
         set
         {
             _playerOutgoingVolume = value;
-            if (NowPlayingItem.PlayItem?.AudioGain != null)
-            {
-                NotifyAudioGainModeChanged(NowPlayingItem);
-            }
-            else Player.Volume = _playerOutgoingVolume;
+            Player.Volume = _playerOutgoingVolume;
             Common.Setting.Volume = (int)(value * 100);
             OnVolumeChange?.Invoke(_playerOutgoingVolume);
         }
@@ -194,7 +191,7 @@ public static class HyPlayList
 
         Player.MediaFailed += (sender, reason) =>
         {
-            PlayerOnMediaFailed(sender, "播放核心：" + reason.ErrorMessage + " " + reason.Error);
+            PlayerOnMediaFailed(sender, "播放核心：" + reason.ErrorMessage + " " + reason.ExtendedErrorCode);
         };
         Player.BufferingStarted += Player_BufferingStarted;
         Player.BufferingEnded += Player_BufferingEnded;
@@ -202,6 +199,7 @@ public static class HyPlayList
         SecTimer.Elapsed += (sender, args) => _ = Common.Invoke(() => OnTimerTicked?.Invoke());
         SecTimer.Start();
         HistoryManagement.InitializeHistoryTrack();
+        Player.AddAudioEffect(typeof(AudioGainEffect).FullName, true, AudioEffectsProperties);
         Common.IsInFm = false;
     }
 
@@ -602,7 +600,7 @@ public static class HyPlayList
                         _ => "在线"
                     };
                     targetItem.PlayItem.Tag = tag;
-                    targetItem.PlayItem.AudioGain = double.Parse(json["data"]?[0]?["gain"].ToString());
+                    AudioEffectsProperties["AudioGain_GainValue"] = float.Parse(json["data"]?[0]?["gain"].ToString());
                     _ = Common.Invoke(() => { Common.BarPlayBar.TbSongTag.Text = tag; });
                 }
                 else
@@ -1477,23 +1475,6 @@ public static class HyPlayList
                 Common.AddToTeachingTipLists("同步Last.FM正在播放信息时发生错误", ex.Message);
             }
         }
-    }
-    public static void NotifyAudioGainModeChanged(HyPlayItem targetItem)
-    {
-        if (Common.Setting.EnableAudioGain && targetItem.PlayItem != null)
-        {
-            var gainValue = GetAudioGainValue(targetItem);
-            Player.Volume = _playerOutgoingVolume * gainValue;
-        }
-        else
-        {
-            Player.Volume = _playerOutgoingVolume;
-        }
-    }
-    public static double GetAudioGainValue(HyPlayItem targetItem)
-    {
-        var gainValue = Math.Pow(10, (targetItem.PlayItem.AudioGain / 20));
-        return gainValue;
     }
 }
 
