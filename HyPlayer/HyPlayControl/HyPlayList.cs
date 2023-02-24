@@ -199,7 +199,11 @@ public static class HyPlayList
         SecTimer.Elapsed += (sender, args) => _ = Common.Invoke(() => OnTimerTicked?.Invoke());
         SecTimer.Start();
         HistoryManagement.InitializeHistoryTrack();
+        if (!Common.Setting.EnableAudioGain) AudioEffectsProperties["AudioGain_Disabled"] = true;
+        if (!Common.Setting.fadeInOut) AudioEffectsProperties["AudioFade_Disabled"] = true;
+        AudioEffectsProperties["AudioFade_FadeDuration"] = Common.Setting.fadeInOutTime;
         Player.AddAudioEffect(typeof(AudioGainEffect).FullName, true, AudioEffectsProperties);
+        Player.AddAudioEffect(typeof(AudioFadeEffect).FullName, true, AudioEffectsProperties);
         Common.IsInFm = false;
     }
 
@@ -493,19 +497,9 @@ public static class HyPlayList
         switch (args.Button)
         {
             case SystemMediaTransportControlsButton.Play:
-                if (Common.Setting.fadeInOutPause && Player.Source != null)
-                {
-                    Common.BarPlayBar.OnFadeInOutRequested();
-                    return;
-                }
                 Player.Play();
                 break;
             case SystemMediaTransportControlsButton.Pause:
-                if (Common.Setting.fadeInOutPause && Player.Source != null)
-                {
-                    Common.BarPlayBar.OnFadeInOutRequested();
-                    return;
-                }
                 Player.Pause();
                 break;
             case SystemMediaTransportControlsButton.Previous:
@@ -625,6 +619,7 @@ public static class HyPlayList
         }
 
         MediaSource ms = null;
+        AudioEffectsProperties.Remove("AudioFade_TrackDuration");
         try
         {
             switch (targetItem.ItemType)
@@ -717,6 +712,7 @@ public static class HyPlayList
             ms.CustomProperties.Add("nowPlayingItem", targetItem);
             MediaSystemControls.IsEnabled = true;
             await ms.OpenAsync();
+            AudioEffectsProperties["AudioFade_TrackDuration"] = ms.Duration;
             Player.Source = ms;
         }
         catch (Exception e)

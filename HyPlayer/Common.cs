@@ -867,16 +867,8 @@ namespace HyPlayer
             {
                 ApplicationData.Current.LocalSettings.Values["FadeInOut"] = value;
                 OnPropertyChanged();
-            }
-        }
-
-        public bool fadeInOutPause
-        {
-            get => GetSettings("FadeInOutPause", false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values["FadeInOutPause"] = value;
-                OnPropertyChanged();
+                if (!value) HyPlayList.AudioEffectsProperties["AudioFade_Disabled"] = true;
+                else HyPlayList.AudioEffectsProperties.Remove("AudioFade_Disabled");
             }
         }
 
@@ -920,38 +912,25 @@ namespace HyPlayer
             }
         }
 
-        public double fadeInOutTime
+        public float fadeInOutTime
         {
             get
             {
                 try
                 {
-                    return GetSettings<double>(nameof(fadeInOutTime), 3);
+                    return GetSettings<float>(nameof(fadeInOutTime), 3f);
                 }
                 catch
                 {
-                    return 3;
+                    return 3f;
                 }
             }
 
-            set => ApplicationData.Current.LocalSettings.Values[nameof(fadeInOutTime)] = value;
-        }
-
-        public double fadeInOutTimePause
-        {
-            get
+            set
             {
-                try
-                {
-                    return GetSettings<double>(nameof(fadeInOutTimePause), 3);
-                }
-                catch
-                {
-                    return 3;
-                }
+                ApplicationData.Current.LocalSettings.Values[nameof(fadeInOutTime)] = value;
+                HyPlayList.AudioEffectsProperties["AudioFade_FadeDuration"] = value;
             }
-
-            set => ApplicationData.Current.LocalSettings.Values[nameof(fadeInOutTimePause)] = value;
         }
 
         public bool playBarMargin

@@ -395,26 +395,6 @@
                                             ToolTipService.ToolTip="{x:Bind FadeTime.Value}"
                                             Value="{x:Bind hyplayer:Common.Setting.fadeInOutTime, Mode=TwoWay}" />
                                     </Grid>
-                                    <Grid>
-                                        <TextBlock VerticalAlignment="Center" Text="播放暂停时" />
-                                        <ToggleSwitch
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            VerticalAlignment="Center"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=TwoWay}" />
-                                    </Grid>
-                                    <Grid Visibility="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=OneWay}">
-                                        <TextBlock VerticalAlignment="Center" Text="渐入渐出时间 单位: 0.1s" />
-                                        <Slider
-                                            x:Name="FadeTimePause"
-                                            Width="256"
-                                            HorizontalAlignment="Right"
-                                            IsEnabled="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=OneWay}"
-                                            Maximum="50"
-                                            Minimum="1"
-                                            ToolTipService.ToolTip="{x:Bind FadeTimePause.Value}"
-                                            Value="{x:Bind hyplayer:Common.Setting.fadeInOutTimePause, Mode=TwoWay}" />
-                                    </Grid>
                                 </StackPanel>
                             </controls:Expander>
 
