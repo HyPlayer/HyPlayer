@@ -376,44 +376,60 @@
                                 </controls:Expander.Transitions>
                                 <StackPanel Orientation="Vertical" Spacing="8">
                                     <Grid>
-                                        <TextBlock VerticalAlignment="Center" Text="切歌时" />
-                                        <ToggleSwitch
-                                            x:Name="FadeInOut"
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=TwoWay}" />
-                                    </Grid>
-                                    <Grid Visibility="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=OneWay}">
-                                        <TextBlock VerticalAlignment="Center" Text="切歌渐入渐出时间 单位: s" />
-                                        <Slider
-                                            x:Name="FadeTime"
-                                            Width="256"
-                                            HorizontalAlignment="Right"
-                                            IsEnabled="{x:Bind hyplayer:Common.Setting.fadeInOut, Mode=OneWay}"
-                                            Maximum="12"
-                                            Minimum="1"
-                                            ToolTipService.ToolTip="{x:Bind FadeTime.Value}"
-                                            Value="{x:Bind hyplayer:Common.Setting.fadeInOutTime, Mode=TwoWay}" />
-                                    </Grid>
-                                    <Grid>
                                         <TextBlock VerticalAlignment="Center" Text="播放暂停时" />
                                         <ToggleSwitch
+                                            x:Name="FadePause"
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            VerticalAlignment="Center"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:Common.Setting.fadePause, Mode=TwoWay}" />
                                     </Grid>
-                                    <Grid Visibility="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=OneWay}">
-                                        <TextBlock VerticalAlignment="Center" Text="渐入渐出时间 单位: 0.1s" />
+                                    <Grid Visibility="{x:Bind hyplayer:Common.Setting.fadePause, Mode=OneWay}">
+                                        <TextBlock VerticalAlignment="Center" Text="播放暂停渐入渐出时间 单位: s" />
                                         <Slider
-                                            x:Name="FadeTimePause"
+                                            x:Name="FadePauseTime"
                                             Width="256"
                                             HorizontalAlignment="Right"
-                                            IsEnabled="{x:Bind hyplayer:Common.Setting.fadeInOutPause, Mode=OneWay}"
-                                            Maximum="50"
-                                            Minimum="1"
-                                            ToolTipService.ToolTip="{x:Bind FadeTimePause.Value}"
-                                            Value="{x:Bind hyplayer:Common.Setting.fadeInOutTimePause, Mode=TwoWay}" />
+                                            IsEnabled="{x:Bind hyplayer:Common.Setting.fadePause, Mode=OneWay}"
+                                            Maximum="5"
+                                            Minimum="0"
+                                            
+                                            ToolTipService.ToolTip="{x:Bind FadePauseTime.Value}"
+                                            Value="{x:Bind hyplayer:Common.Setting.fadePauseTime, Mode=TwoWay}" StepFrequency="0.1" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock VerticalAlignment="Center" Text="切歌时" />
+                                        <ToggleSwitch
+                                            x:Name="FadeNext"
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.fadeNext, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid Visibility="{x:Bind hyplayer:Common.Setting.fadeNext, Mode=OneWay}">
+                                        <TextBlock VerticalAlignment="Center" Text="切歌渐入渐出时间 单位: s" />
+                                        <Slider
+                                            x:Name="FadeNextTime"
+                                            Width="256"
+                                            HorizontalAlignment="Right"
+                                            IsEnabled="{x:Bind hyplayer:Common.Setting.fadeNext, Mode=OneWay}"
+                                            Maximum="10"
+                                            Minimum="0"
+                                            ToolTipService.ToolTip="{x:Bind FadeNextTime.Value}"
+                                            Value="{x:Bind hyplayer:Common.Setting.fadeNextTime, Mode=TwoWay}" StepFrequency="0.1" />
+                                    </Grid>
+                                    <Grid Visibility="{x:Bind hyplayer:Common.Setting.fadeNext, Mode=OneWay}">
+                                        <TextBlock VerticalAlignment="Center" Text="使用基于播放进度切歌渐出方法" />
+                                        <ToggleSwitch
+                                            x:Name="AdvFade"
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.advFade, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid Visibility="{x:Bind hyplayer:Common.Setting.fadeNext, Mode=OneWay}">
+                                        <TextBlock VerticalAlignment="Center" Text="手动切歌时不进行淡出" />
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.disableFadeWhenChangingSongManually, Mode=TwoWay}" />
                                     </Grid>
                                 </StackPanel>
                             </controls:Expander>

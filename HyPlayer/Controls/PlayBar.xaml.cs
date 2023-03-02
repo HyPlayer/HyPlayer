@@ -43,20 +43,16 @@ public sealed partial class PlayBar
 {
     private SolidColorBrush BackgroundElayBrush = new(Colors.Transparent);
     private bool _isSliding = false;
-    private double FadeInOutStartTime;
-
-    private int isFadeInOutPausing; // 0 - Not      1 - FadeIn      2 - FadeOut
     public PlayMode NowPlayType = PlayMode.DefaultRoll;
     public ObservableCollection<HyPlayItem> PlayItems = new();
-
     private ManipulationStartedRoutedEventArgs? _slidingEventArgs = null;
-
     private bool realSelectSong;
+
     /*
-    private Storyboard TbSongNameScrollStoryBoard;
-    private double lastOffsetX;
-    DoubleAnimation verticalAnimation;
-    */
+private Storyboard TbSongNameScrollStoryBoard;
+private double lastOffsetX;
+DoubleAnimation verticalAnimation;
+*/
 
     public PlayBar()
     {
@@ -366,74 +362,27 @@ public sealed partial class PlayBar
                     TextBlockNowTime.Text =
                         HyPlayList.Player.PlaybackSession.Position.ToString(@"hh\:mm\:ss");
                 }
-
-                PlayStateIcon.Glyph =
+                if (HyPlayList.FadeProcessStatus && !HyPlayList.AutoFadeProcessing)
+                {
+                    PlayStateIcon.Glyph =
+                    HyPlayList.CurrentFadeInOutState == HyPlayList.FadeInOutState.FadeIn
+                        ? "\uEDB4"
+                        : "\uEDB5";
+                }
+                else
+                {
+                    PlayStateIcon.Glyph =
                     HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
                         ? "\uEDB4"
                         : "\uEDB5";
-
-
-                //SliderAudioRate.Value = mp.Volume;
+                }
             }
             catch
             {
                 //ignore
             }
         });
-        try
-        {
 
-            if (Common.Setting.fadeInOut && isFadeInOutPausing == 0 &&
-                    HyPlayList.Player.PlaybackSession.NaturalDuration - HyPlayList.Player.PlaybackSession.Position > TimeSpan.Zero)
-            {
-                if (HyPlayList.Player.PlaybackSession.Position.TotalSeconds <= Common.Setting.fadeInOutTime)
-                    HyPlayList.Player.Volume =
-                        HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds /
-                        Common.Setting.fadeInOutTime / 1000 * HyPlayList.PlayerOutgoingVolume;
-                else if (HyPlayList.Player.PlaybackSession.NaturalDuration.TotalSeconds -
-                         HyPlayList.Player.PlaybackSession.Position.TotalSeconds <=
-                         Common.Setting.fadeInOutTime)
-                    HyPlayList.Player.Volume =
-                        (HyPlayList.Player.PlaybackSession.NaturalDuration.TotalSeconds -
-                         HyPlayList.Player.PlaybackSession.Position.TotalSeconds) / Common.Setting.fadeInOutTime *
-                        HyPlayList.PlayerOutgoingVolume;
-                else
-                    HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume;
-            }
-            else if (isFadeInOutPausing != 0 &&
-                        HyPlayList.Player.PlaybackSession.NaturalDuration - HyPlayList.Player.PlaybackSession.Position > TimeSpan.Zero)
-            {
-                var fadeRatio =
-                    (HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds - FadeInOutStartTime) /
-                    Common.Setting.fadeInOutTimePause / 100;
-                if (fadeRatio >= 1)
-                {
-                    if (isFadeInOutPausing == 1)
-                    {
-                        HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume;
-                    }
-                    else
-                    {
-                        HyPlayList.Player.Volume = 0;
-                        HyPlayList.Player.Pause();
-                    }
-
-                    isFadeInOutPausing = 0;
-                    return;
-                }
-
-                if (isFadeInOutPausing == 1)
-                    // Fade In
-                    HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume * fadeRatio;
-                else
-                    // Fade Out
-                    HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume * (1 - fadeRatio);
-            }
-        }
-        catch (Exception)
-        {
-            //ignore
-        }
     }
 
     public void SetPlayBarIdleBackground(SolidColorBrush colorBrush)
@@ -529,10 +478,6 @@ public sealed partial class PlayBar
             }
 
             // 恢复播放音量
-            if (!Common.Setting.fadeInOut)
-            {
-                HyPlayList.Player.Volume = HyPlayList.PlayerOutgoingVolume;
-            }
             if (HyPlayList.NowPlayingItem.PlayItem == null)
             {
                 TbSingerName.Content = null;
@@ -682,34 +627,24 @@ public sealed partial class PlayBar
     {
         if (HyPlayList.NowPlayingItem.PlayItem?.Name != null && HyPlayList.Player.Source == null)
             _ = HyPlayList.LoadPlayerSong(HyPlayList.List[HyPlayList.NowPlaying]);
-        if (Common.Setting.fadeInOutPause && HyPlayList.Player.Source != null)
-        {
-            OnFadeInOutRequested();
-            return;
-        }
         PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uEDB5" : "\uEDB4";
         if (HyPlayList.IsPlaying)
         {
-            HyPlayList.Player.Pause();
+            HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.PauseFadeOut);
+
             PlayBarBackgroundAni.Stop();
         }
         else
         {
-            HyPlayList.Player.Play();
+            //HyPlayList.Player.Play();
+            HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.PlayFadeIn);
+
             if (Common.Setting.playbarBackgroundBreath)
                 PlayBarBackgroundAni.Begin();
         }
     }
 
-    public void OnFadeInOutRequested()
-    {
-        if (isFadeInOutPausing == 0)
-            isFadeInOutPausing = HyPlayList.IsPlaying ? 2 : 1;
-        else
-            isFadeInOutPausing = isFadeInOutPausing == 1 ? 2 : 1;
-        FadeInOutStartTime = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
-        if (!HyPlayList.IsPlaying) HyPlayList.Player.Play();
-    }
+
 
     private void SliderAudioRate_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
@@ -730,12 +665,12 @@ public sealed partial class PlayBar
         if (Common.IsInFm)
             PersonalFM.ExitFm();
         else
-            HyPlayList.SongMovePrevious();
+            HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.UserNextFadeOut, HyPlayList.SongChangeType.Previous);
     }
 
     private void BtnNextSong_OnClick(object sender, RoutedEventArgs e)
     {
-        HyPlayList.SongMoveNext();
+        HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.UserNextFadeOut, HyPlayList.SongChangeType.Next);
     }
 
     private void ListBoxPlayList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)

@@ -860,22 +860,43 @@ namespace HyPlayer
             }
         }
 
-        public bool fadeInOut
+        public bool fadePause
         {
-            get => GetSettings("FadeInOut", false);
+            get => GetSettings("FadePause", false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["FadeInOut"] = value;
+                ApplicationData.Current.LocalSettings.Values["FadePause"] = value;
+                OnPropertyChanged();
+                //if (!value) HyPlayList.AudioEffectsProperties["AudioFade_Disabled"] = true;
+                //else HyPlayList.AudioEffectsProperties.Remove("AudioFade_Disabled");
+            }
+        }
+
+        public bool fadeNext
+        {
+            get => GetSettings("FadeNext", false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["FadeNext"] = value;
                 OnPropertyChanged();
             }
         }
 
-        public bool fadeInOutPause
+        public bool advFade
         {
-            get => GetSettings("FadeInOutPause", false);
+            get => GetSettings("AdvFade", false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["FadeInOutPause"] = value;
+                ApplicationData.Current.LocalSettings.Values["AdvFade"] = value;
+                OnPropertyChanged();
+            }
+        }
+        public bool disableFadeWhenChangingSongManually
+        {
+            get => GetSettings("disableFadeWhenChangingSongManually", true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["disableFadeWhenChangingSongManually"] = value;
                 OnPropertyChanged();
             }
         }
@@ -920,38 +941,52 @@ namespace HyPlayer
             }
         }
 
-        public double fadeInOutTime
+        public double fadePauseTime
         {
             get
             {
                 try
                 {
-                    return GetSettings<double>(nameof(fadeInOutTime), 3);
+                    if (fadePause)
+                    {
+                        return GetSettings(nameof(fadePauseTime), 3d);
+                    }
+                    else
+                    {
+                        return 0;
+                    }
                 }
                 catch
                 {
-                    return 3;
+                    return 3d;
                 }
             }
 
-            set => ApplicationData.Current.LocalSettings.Values[nameof(fadeInOutTime)] = value;
+            set => ApplicationData.Current.LocalSettings.Values[nameof(fadePauseTime)] = value;
         }
 
-        public double fadeInOutTimePause
+        public double fadeNextTime
         {
             get
             {
                 try
                 {
-                    return GetSettings<double>(nameof(fadeInOutTimePause), 3);
+                    if (fadeNext)
+                    {
+                        return GetSettings<double>(nameof(fadeNextTime), 3d);
+                    }
+                    else
+                    {
+                        return 0d;
+                    }
                 }
                 catch
                 {
-                    return 3;
+                    return 3d;
                 }
             }
 
-            set => ApplicationData.Current.LocalSettings.Values[nameof(fadeInOutTimePause)] = value;
+            set => ApplicationData.Current.LocalSettings.Values[nameof(fadeNextTime)] = value;
         }
 
         public bool playBarMargin
