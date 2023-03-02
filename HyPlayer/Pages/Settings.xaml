@@ -416,13 +416,20 @@
                                             ToolTipService.ToolTip="{x:Bind FadeNextTime.Value}"
                                             Value="{x:Bind hyplayer:Common.Setting.fadeNextTime, Mode=TwoWay}" StepFrequency="0.1" />
                                     </Grid>
-                                    <Grid>
-                                        <TextBlock VerticalAlignment="Center" Text="启用替代切歌渐出方法" />
+                                    <Grid Visibility="{x:Bind hyplayer:Common.Setting.fadeNext, Mode=OneWay}">
+                                        <TextBlock VerticalAlignment="Center" Text="使用基于播放进度切歌渐出方法" />
                                         <ToggleSwitch
                                             x:Name="AdvFade"
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.advFade, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid Visibility="{x:Bind hyplayer:Common.Setting.fadeNext, Mode=OneWay}">
+                                        <TextBlock VerticalAlignment="Center" Text="手动切歌时不进行淡出" />
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.disableFadeWhenChangingSongManually, Mode=TwoWay}" />
                                     </Grid>
                                 </StackPanel>
                             </controls:Expander>

@@ -879,8 +879,6 @@ namespace HyPlayer
             {
                 ApplicationData.Current.LocalSettings.Values["FadeNext"] = value;
                 OnPropertyChanged();
-                //if (!value) HyPlayList.AudioEffectsProperties["AudioFade_Disabled"] = true;
-                //else HyPlayList.AudioEffectsProperties.Remove("AudioFade_Disabled");
             }
         }
 
@@ -891,8 +889,15 @@ namespace HyPlayer
             {
                 ApplicationData.Current.LocalSettings.Values["AdvFade"] = value;
                 OnPropertyChanged();
-                //if (!value) HyPlayList.AudioEffectsProperties["AudioFade_Disabled"] = true;
-                //else HyPlayList.AudioEffectsProperties.Remove("AudioFade_Disabled");
+            }
+        }
+        public bool disableFadeWhenChangingSongManually
+        {
+            get => GetSettings("disableFadeWhenChangingSongManually", true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values["disableFadeWhenChangingSongManually"] = value;
+                OnPropertyChanged();
             }
         }
 

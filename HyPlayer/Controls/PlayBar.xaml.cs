@@ -9,7 +9,6 @@ using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -342,7 +341,6 @@ DoubleAnimation verticalAnimation;
         {
             try
             {
-                var nextFadeTime = TimeSpan.FromSeconds(Common.Setting.fadeNextTime);
                 if (HyPlayList.NowPlayingItem?.PlayItem == null) return;
                 var showingTimespan = ts;
                 if (!_isSliding)
@@ -364,7 +362,7 @@ DoubleAnimation verticalAnimation;
                     TextBlockNowTime.Text =
                         HyPlayList.Player.PlaybackSession.Position.ToString(@"hh\:mm\:ss");
                 }
-                if (HyPlayList.isFadeProcessing && !HyPlayList.AutoFadeProcessing)
+                if (HyPlayList.FadeProcessStatus && !HyPlayList.AutoFadeProcessing)
                 {
                     PlayStateIcon.Glyph =
                     HyPlayList.CurrentFadeInOutState == HyPlayList.FadeInOutState.FadeIn
@@ -377,36 +375,6 @@ DoubleAnimation verticalAnimation;
                     HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
                         ? "\uEDB4"
                         : "\uEDB5";
-                }
-                if (!Common.Setting.advFade)
-                {
-                    HyPlayList.AdvFadeVolume = 1;
-                    if (HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds >= HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds - nextFadeTime.TotalMilliseconds)
-                    {
-                        HyPlayList.isUserMovingSong = false;
-                        HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.AutoNextFadeOut);
-                    }
-                    else if (HyPlayList.AutoFadeProcessing)
-                    {
-                        HyPlayList.AutoFadeProcessing = false;
-                        HyPlayList.FadeLocked = false;
-                        HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.PlayFadeIn);
-                        Debug.WriteLine("Unlocked");
-                    }
-                }
-                else
-                {
-                    if (HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds >= HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds - nextFadeTime.TotalMilliseconds)
-                    {
-                        HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.AdvFadeOut);
-                    }
-                    else if (HyPlayList.AutoFadeProcessing)
-                    {
-                        HyPlayList.AutoFadeProcessing = false;
-                        HyPlayList.AdvFadeVolume = 1;
-                        HyPlayList.isAdvFadeProcessing = false;
-                        HyPlayList.VolumeChangeProcess();
-                    }
                 }
             }
             catch
