@@ -1,4 +1,5 @@
 ﻿#region
+using AudioEffectComponent;
 using HyPlayer.Classes;
 using Kawazu;
 using NeteaseCloudMusicApi;
@@ -9,7 +10,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Windows.Devices.Enumeration;
 using Windows.Foundation.Collections;
@@ -71,7 +71,7 @@ public static class HyPlayList
     public static int ShufflingIndex = -1;
     public static List<SongLyric> Lyrics = new();
     public static TimeSpan LyricOffset = TimeSpan.Zero;
-    //public static PropertySet AudioEffectsProperties = new PropertySet();
+    public static PropertySet AudioEffectsProperties = new PropertySet();
 
     /********        API        ********/
     public static MediaPlayer Player;
@@ -86,7 +86,7 @@ public static class HyPlayList
     private static double _playerOutgoingVolume;
 
     //Fade
-    private static double FadeStartTime;
+    private static DateTime FadeStartTime;
     public static bool AutoFadeProcessing;
     private static double FadeLastVolume = 1;
     private static double FadeVolume = 1;
@@ -94,18 +94,27 @@ public static class HyPlayList
     public static bool isFadeProcessing = false;
     public static bool isAdvFadeProcessing = false;
     public static bool isUserMovingSong = false;
-    public static int FadeInOut;
+    public static FadeInOutState CurrentFadeInOutState;
     private static bool OnlyFadeOutVolume = false;
-    public enum FadeInOutState : int
+    public enum FadeInOutState
     {
         FadeIn = 0,
         FadeOut = 1
-    } ;
-    public enum FadePrevorNextState : int
+    };
+    public enum SongChangeType
     {
         Previous = 0,
         Next = 1,
-        None = 999
+        None = -1
+    }
+    public enum SongFadeEffectType
+    {
+        PauseFadeOut = 1,
+        PlayFadeIn = 2,
+        AutoNextFadeOut = 3,
+        UserNextFadeOut = 4,
+        NextFadeIn = 5,
+        AdvFadeOut = 6
     }
     private static bool FadeReveserd = false;
     public static bool FadeLocked = false;
@@ -228,11 +237,8 @@ public static class HyPlayList
         SecTimer.Elapsed += (sender, args) => _ = Common.Invoke(() => OnTimerTicked?.Invoke());
         SecTimer.Start();
         HistoryManagement.InitializeHistoryTrack();
-        //if (!Common.Setting.EnableAudioGain) AudioEffectsProperties["AudioGain_Disabled"] = true;
-        //if (!Common.Setting.fadeInOut) AudioEffectsProperties["AudioFade_Disabled"] = true;
-        //AudioEffectsProperties["AudioFade_FadeDuration"] = Common.Setting.fadeInOutTime;
-        //Player.AddAudioEffect(typeof(AudioGainEffect).FullName, true, AudioEffectsProperties);
-        //Player.AddAudioEffect(typeof(AudioFadeEffect).FullName, true, AudioEffectsProperties);
+        if (!Common.Setting.EnableAudioGain) AudioEffectsProperties["AudioGain_Disabled"] = true;
+        Player.AddAudioEffect(typeof(AudioGainEffect).FullName, true, AudioEffectsProperties);
         Common.IsInFm = false;
     }
 
@@ -527,19 +533,19 @@ public static class HyPlayList
         {
             case SystemMediaTransportControlsButton.Play:
                 //Player.Play();
-                SongFadeRequest(2);
+                SongFadeRequest(SongFadeEffectType.PlayFadeIn);
                 break;
             case SystemMediaTransportControlsButton.Pause:
                 //Player.Pause();
-                SongFadeRequest(1);
+                SongFadeRequest(SongFadeEffectType.PauseFadeOut);
                 break;
             case SystemMediaTransportControlsButton.Previous:
                 //SongMovePrevious();
-                SongFadeRequest(4,(int)FadePrevorNextState.Previous);
+                SongFadeRequest(SongFadeEffectType.UserNextFadeOut, SongChangeType.Previous);
                 break;
             case SystemMediaTransportControlsButton.Next:
                 //SongMoveNext();
-                SongFadeRequest(4,(int)FadePrevorNextState.Next);
+                SongFadeRequest(SongFadeEffectType.UserNextFadeOut, SongChangeType.Next);
                 break;
         }
     }
@@ -583,7 +589,6 @@ public static class HyPlayList
 
                 break;
         }
-        SongFadeRequest(5);
     }
 
     private static void Player_MediaEnded(MediaPlayer sender, object args)
@@ -598,48 +603,48 @@ public static class HyPlayList
 
     public static void advFadeProcess()
     {
+        /*var fadeNextTime = TimeSpan.FromSeconds(Common.Setting.fadeNextTime);
         while (isAdvFadeProcessing)
         {
-            AdvFadeVolume = 1 - TimeRangetoVolumeRange(OldValue: Player.PlaybackSession.Position.TotalMilliseconds, OldMin: NowPlayingItem.PlayItem.LengthInMilliseconds - (Common.Setting.fadeNextTime * 1000), OldMax: NowPlayingItem.PlayItem.LengthInMilliseconds, NewMin: 0, NewMax: 1);
-            if (AdvFadeVolume < 0.1)
+            AdvFadeVolume = 1 - TimeRangeToVolumeRangeConverter(currentTime: Player.PlaybackSession.Position, fadeStartTime: NowPlayingItem.PlayItem.LengthInMilliseconds - fadeNextTime.TotalMilliseconds, fadeEndTime: NowPlayingItem.PlayItem.LengthInMilliseconds, miniumVolume: 0, maxiumVolume: 1);
+            if (AdvFadeVolume < 0)
             {
                 AdvFadeVolume = 0;
                 isAdvFadeProcessing = false;
             }
-            if (AdvFadeVolume > 0.9)
+            if (AdvFadeVolume > 1)
             {
                 AdvFadeVolume = 1;
                 isAdvFadeProcessing = false;
             }
             VolumeChangeProcess();
-            Thread.Sleep(32);
         }
+        */
     }
 
-    private static void FadeProcess()
-    //FadeInOut false = In true = Out
+    private static async Task FadeProcess()
     {
-        FadeStartTime = DateTime.Now.Ticks;
+        FadeStartTime = DateTime.Now;
         isFadeProcessing = true;
-        if (FadeInOut == (int)FadeInOutState.FadeIn)
+        if (CurrentFadeInOutState == FadeInOutState.FadeIn)
         {
             Player.Play();
         }
 
         while (isFadeProcessing)
         {
-            if (FadeInOut == (int)FadeInOutState.FadeIn)
+            if (CurrentFadeInOutState == FadeInOutState.FadeIn)
             {
                 if (FadeReveserd)
                 {
-                    FadeVolume = TimeRangetoVolumeRange(OldValue: DateTime.Now.Ticks, OldMin: FadeStartTime, OldMax: FadeStartTime + FadeTime, NewMin: FadeLastVolume, NewMax: 1);
+                    FadeVolume = TimeRangeToVolumeRangeConverter(currentTime: DateTime.Now, fadeStartTime: FadeStartTime, fadeEndTime: FadeStartTime.AddMilliseconds(FadeTime), miniumVolume: FadeLastVolume, maxiumVolume: 1);
                 }
                 else
                 {
-                    FadeVolume = TimeRangetoVolumeRange(OldValue: DateTime.Now.Ticks, OldMin: FadeStartTime, OldMax: FadeStartTime + FadeTime, NewMin: 0, NewMax: 1);
+                    FadeVolume = TimeRangeToVolumeRangeConverter(currentTime: DateTime.Now, fadeStartTime: FadeStartTime, fadeEndTime: FadeStartTime.AddMilliseconds(FadeTime), miniumVolume: 0, maxiumVolume: 1);
                 }
 
-                if (FadeTime==0 || FadeVolume > 0.999)
+                if (FadeTime == 0 || FadeVolume > 1)
                 {
                     FadeVolume = 1;
                     isFadeProcessing = false;
@@ -652,13 +657,13 @@ public static class HyPlayList
             {
                 if (FadeReveserd)
                 {
-                    FadeVolume = 1 - TimeRangetoVolumeRange(OldValue: DateTime.Now.Ticks, OldMin: FadeStartTime, OldMax: FadeStartTime + FadeTime, NewMin: 1 - FadeLastVolume, NewMax: 1);
+                    FadeVolume = 1 - TimeRangeToVolumeRangeConverter(currentTime: DateTime.Now, fadeStartTime: FadeStartTime, fadeEndTime: FadeStartTime.AddMilliseconds(FadeTime), miniumVolume: 1 - FadeLastVolume, maxiumVolume: 1);
                 }
                 else
                 {
-                    FadeVolume = 1 - TimeRangetoVolumeRange(OldValue: DateTime.Now.Ticks, OldMin: FadeStartTime, OldMax: FadeStartTime + FadeTime, NewMin: 0, NewMax: 1);
+                    FadeVolume = 1 - TimeRangeToVolumeRangeConverter(currentTime: DateTime.Now,fadeStartTime: FadeStartTime, fadeEndTime: FadeStartTime.AddMilliseconds(FadeTime), miniumVolume: 0, maxiumVolume: 1);
                 }
-                if (FadeTime == 0 || FadeVolume < 0.001)
+                if (FadeTime == 0 || FadeVolume < 0)
                 {
                     FadeVolume = 0;
                     isFadeProcessing = false;
@@ -672,38 +677,36 @@ public static class HyPlayList
 
                 }
             }
-            Thread.Sleep(((int)FadeTime) / 1000000);
             VolumeChangeProcess();
-
-
+            await Task.Delay((int)FadeTime / 10);
         }
     }
 
     private static void FadeProcessingChanged()
     {
-            FadeStartTime = DateTime.Now.Ticks;
-            FadeLastVolume = FadeVolume;
-            if (FadeInOut == (int)FadeInOutState.FadeIn)
-            {
-                FadeInOut = (int)FadeInOutState.FadeOut;
-            }
-            else
-            {
-                FadeInOut = (int)FadeInOutState.FadeIn;
-            }
-            FadeReveserd = true;
+        FadeStartTime = DateTime.Now;
+        FadeLastVolume = FadeVolume;
+        if (CurrentFadeInOutState == FadeInOutState.FadeIn)
+        {
+            CurrentFadeInOutState = FadeInOutState.FadeOut;
+        }
+        else
+        {
+            CurrentFadeInOutState = FadeInOutState.FadeIn;
+        }
+        FadeReveserd = true;
     }
-    
 
-    private static void FindChancetoMoveSong(int PrevorNext)
+
+    private static void FindChancetoMoveSong(SongChangeType songChangeType)
     {
         while (isUserMovingSong)
         {
             Debug.WriteLine("FindStart");
-            FadeInOut = (int)FadeInOutState.FadeOut;
+            CurrentFadeInOutState = FadeInOutState.FadeOut;
             if (FadeVolume == 0 || Player.PlaybackSession.PlaybackState == MediaPlaybackState.Paused)
             {
-                if (PrevorNext == (int)FadePrevorNextState.Next)
+                if (songChangeType == SongChangeType.Next)
                 {
                     SongMoveNext();
                 }
@@ -714,51 +717,52 @@ public static class HyPlayList
                 Debug.WriteLine("FindEnd");
                 isUserMovingSong = false;
             }
-            if (FadeInOut == (int)FadeInOutState.FadeIn)
+            if (CurrentFadeInOutState == FadeInOutState.FadeIn)
             {
                 Debug.WriteLine("Break");
                 isUserMovingSong = false;
             }
-            Thread.Sleep(2);
         }
     }
 
-    private static double TimeRangetoVolumeRange(double OldValue, double OldMin, double OldMax, double NewMin, double NewMax)
+    private static double TimeRangeToVolumeRangeConverter(DateTime currentTime, DateTime fadeStartTime, DateTime fadeEndTime, double miniumVolume, double maxiumVolume)
     {
-        double NewValue;
-        double OldRange = OldMax - OldMin;
-        double NewRange = NewMax - NewMin;
-        if (OldRange <= 0)
+        double resultVolume;
+        var fadeTimeRange = fadeEndTime - fadeStartTime;
+        var volumeRange = maxiumVolume - miniumVolume;
+        if (fadeTimeRange <= TimeSpan.Zero)
         {
-            NewValue = NewMax;
+            resultVolume = maxiumVolume;
         }
         else
         {
-            NewValue = ((OldValue - OldMin) * NewRange / OldRange) + NewMin;
+            resultVolume = ((currentTime - fadeStartTime) * volumeRange / fadeTimeRange) + miniumVolume;
         }
-        return NewValue;
+        return resultVolume;
     }
 
     public static void VolumeChangeProcess()
     {
-        Player.Volume = FadeVolume * AdvFadeVolume * ((double)(Common.Setting.Volume) / 100);
+        Player.Volume = FadeVolume * AdvFadeVolume * ((double)Common.Setting.Volume / 100);
         Debug.WriteLine(FadeVolume);
-        Debug.WriteLine(AdvFadeVolume);
+        //Debug.WriteLine(AdvFadeVolume);
     }
 
-    public static async void SongFadeRequest(int RequestFadeType , int PrevorNext = 1) // 1=PauseFadeOut 2=PlayFadeIn 3=AutoNextFadeOut 4=UserNextFadeOut 5=NextFadeIn 6=AdvFadeOut
+    public static async void SongFadeRequest(SongFadeEffectType RequestFadeType, SongChangeType songChangeType = SongChangeType.Next)
     {
+        var fadePauseTime = TimeSpan.FromSeconds(Common.Setting.fadePauseTime);
+        var fadeNextTime = TimeSpan.FromSeconds(Common.Setting.fadeNextTime);
         if (!FadeLocked)
         {
             switch (RequestFadeType)
             {
-                case 1:
+                case SongFadeEffectType.PauseFadeOut:
                     OnlyFadeOutVolume = false;
-                    FadeTime = Common.Setting.fadePauseTime * 10000000;
+                    FadeTime = fadePauseTime.TotalMilliseconds;
                     if (!isFadeProcessing)
                     {
-                        FadeInOut = (int)FadeInOutState.FadeOut;
-                        await Task.Run(() => FadeProcess());
+                        CurrentFadeInOutState = FadeInOutState.FadeOut;
+                        await FadeProcess();
 
                     }
                     else
@@ -766,13 +770,13 @@ public static class HyPlayList
                         FadeProcessingChanged();
                     }
                     break;
-                case 2:
+                case SongFadeEffectType.PlayFadeIn:
                     OnlyFadeOutVolume = false;
-                    FadeTime = Common.Setting.fadePauseTime * 10000000;
+                    FadeTime = fadePauseTime.TotalMilliseconds;
                     if (!isFadeProcessing)
                     {
-                        FadeInOut = (int)FadeInOutState.FadeIn;
-                        await Task.Run(() => FadeProcess());
+                        CurrentFadeInOutState = FadeInOutState.FadeIn;
+                        await FadeProcess();
 
                     }
                     else
@@ -780,43 +784,43 @@ public static class HyPlayList
                         FadeProcessingChanged();
                     }
                     break;
-                case 3:
+                case SongFadeEffectType.AutoNextFadeOut:
                     OnlyFadeOutVolume = true;
                     AutoFadeProcessing = true;
                     FadeLocked = true;
-                    FadeTime = Common.Setting.fadeNextTime * 10000000;
+                    FadeTime = fadeNextTime.TotalMilliseconds;
                     if (Player.PlaybackSession.PlaybackState == MediaPlaybackState.Paused || !(Common.Setting.fadeNext))
                     {
                         FadeTime = 0;
                     }
                     if (!isFadeProcessing)
                     {
-                        FadeInOut = (int)FadeInOutState.FadeOut;
-                        await Task.Run(() => FadeProcess());
+                        CurrentFadeInOutState = FadeInOutState.FadeOut;
+                        await FadeProcess();
                     }
                     else
                     {
-                        FadeStartTime = DateTime.Now.Ticks;
+                        FadeStartTime = DateTime.Now;
                         FadeLastVolume = FadeVolume;
-                        FadeInOut = (int)FadeInOutState.FadeOut;
+                        CurrentFadeInOutState = FadeInOutState.FadeOut;
                         FadeReveserd = true;
                     }
                     break;
-                case 4:
+                case SongFadeEffectType.UserNextFadeOut:
                     OnlyFadeOutVolume = false;
                     FadeLocked = true;
-                    FadeTime = 0.3 * 10000000;
+                    FadeTime = fadeNextTime.TotalMilliseconds;
                     if (Player.PlaybackSession.PlaybackState == MediaPlaybackState.Paused || !(Common.Setting.fadeNext))
                     {
                         FadeTime = 0;
                     }
                     if (!isFadeProcessing)
                     {
-                        FadeInOut = (int)FadeInOutState.FadeOut;
-                        await Task.Run(() => FadeProcess());
+                        CurrentFadeInOutState = FadeInOutState.FadeOut;
+                        await FadeProcess();
                         if (FadeVolume == 0)
                         {
-                            if (PrevorNext == (int)FadePrevorNextState.Next)
+                            if (songChangeType == SongChangeType.Next)
                             {
                                 SongMoveNext();
                             }
@@ -833,7 +837,7 @@ public static class HyPlayList
                         if (!isUserMovingSong)
                         {
                             isUserMovingSong = true;
-                            await Task.Run(() => FindChancetoMoveSong(PrevorNext));
+                            FindChancetoMoveSong(songChangeType);
                         }
                         else
                         {
@@ -841,40 +845,38 @@ public static class HyPlayList
                         }
                     }
                     break;
+                case SongFadeEffectType.NextFadeIn:
+                    AutoFadeProcessing = false;
+                    OnlyFadeOutVolume = false;
+                    FadeVolume = 0;
+                    CurrentFadeInOutState = FadeInOutState.FadeIn;
+                    FadeStartTime = DateTime.Now;
+                    FadeReveserd = false;
+                    FadeTime = fadeNextTime.TotalMilliseconds;
+                    Player.Play();
+                    AutoFadeProcessing = false;
+                    AdvFadeVolume = 1;
+                    isAdvFadeProcessing = false;
+                    VolumeChangeProcess();
+                    FadeLocked = false;
+                    if (!isFadeProcessing)
+                    {
+                        CurrentFadeInOutState = FadeInOutState.FadeIn;
+                        await FadeProcess();
+                    }
+                    break;
+                case SongFadeEffectType.AdvFadeOut:
+                    AutoFadeProcessing = true;
+                    if (!isAdvFadeProcessing)
+                    {
+                        isAdvFadeProcessing = true;
+                        advFadeProcess();
+                    }
+                    break;
 
             }
+
         }
-            switch (RequestFadeType)
-            {
-            case 5:
-                AutoFadeProcessing = false;
-                OnlyFadeOutVolume = false;
-                FadeVolume = 0;
-                FadeInOut = (int)FadeInOutState.FadeIn;
-                FadeStartTime = DateTime.Now.Ticks;
-                FadeReveserd = false;
-                FadeTime = Common.Setting.fadeNextTime * 10000000;
-                Player.Play();
-                AutoFadeProcessing = false;
-                AdvFadeVolume = 1;
-                isAdvFadeProcessing = false;
-                VolumeChangeProcess();
-                FadeLocked= false;
-                if (!isFadeProcessing)
-                {
-                    FadeInOut = (int)FadeInOutState.FadeIn;
-                    await Task.Run(() => FadeProcess());
-                }
-                break;
-            case 6:
-                AutoFadeProcessing = true;
-                if (!isAdvFadeProcessing)
-                {
-                    isAdvFadeProcessing = true;
-                    await Task.Run(() => advFadeProcess());
-                }
-                break;
-            }
     }
 
 
@@ -911,7 +913,7 @@ public static class HyPlayList
                         _ => "在线"
                     };
                     targetItem.PlayItem.Tag = tag;
-                    //AudioEffectsProperties["AudioGain_GainValue"] = float.Parse(json["data"]?[0]?["gain"].ToString());
+                    AudioEffectsProperties["AudioGain_GainValue"] = float.Parse(json["data"]?[0]?["gain"].ToString());
                     _ = Common.Invoke(() => { Common.BarPlayBar.TbSongTag.Text = tag; });
                 }
                 else
@@ -936,7 +938,6 @@ public static class HyPlayList
         }
 
         MediaSource ms = null;
-        //AudioEffectsProperties.Remove("AudioFade_TrackDuration");
         try
         {
             switch (targetItem.ItemType)
@@ -1029,8 +1030,6 @@ public static class HyPlayList
             ms.CustomProperties.Add("nowPlayingItem", targetItem);
             MediaSystemControls.IsEnabled = true;
             await ms.OpenAsync();
-            SongFadeRequest(5);
-            //AudioEffectsProperties["AudioFade_TrackDuration"] = ms.Duration;
             Player.Source = ms;
         }
         catch (Exception e)
@@ -1043,6 +1042,7 @@ public static class HyPlayList
     public static async void Player_SourceChanged(MediaPlayer sender, object args)
     {
         if (List.Count <= NowPlaying) return;
+        SongFadeRequest(SongFadeEffectType.NextFadeIn);
         //当加载一个新的播放文件时,此时你应当加载歌词和 SystemMediaTransportControls
         //加载 SystemMediaTransportControls
         if (NowPlayingItem.PlayItem != null)

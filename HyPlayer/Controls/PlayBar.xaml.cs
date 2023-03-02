@@ -12,11 +12,9 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.DataTransfer;
-using Windows.Graphics.Display;
 using Windows.Graphics.Imaging;
 using Windows.Media;
 using Windows.Media.Playback;
@@ -344,6 +342,7 @@ DoubleAnimation verticalAnimation;
         {
             try
             {
+                var nextFadeTime = TimeSpan.FromSeconds(Common.Setting.fadeNextTime);
                 if (HyPlayList.NowPlayingItem?.PlayItem == null) return;
                 var showingTimespan = ts;
                 if (!_isSliding)
@@ -368,7 +367,7 @@ DoubleAnimation verticalAnimation;
                 if (HyPlayList.isFadeProcessing && !HyPlayList.AutoFadeProcessing)
                 {
                     PlayStateIcon.Glyph =
-                    HyPlayList.FadeInOut == (int)HyPlayList.FadeInOutState.FadeIn
+                    HyPlayList.CurrentFadeInOutState == HyPlayList.FadeInOutState.FadeIn
                         ? "\uEDB4"
                         : "\uEDB5";
                 }
@@ -382,24 +381,24 @@ DoubleAnimation verticalAnimation;
                 if (!Common.Setting.advFade)
                 {
                     HyPlayList.AdvFadeVolume = 1;
-                    if (HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds >= HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds - (Common.Setting.fadeNextTime * 1000))
+                    if (HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds >= HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds - nextFadeTime.TotalMilliseconds)
                     {
                         HyPlayList.isUserMovingSong = false;
-                        HyPlayList.SongFadeRequest(3);
+                        HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.AutoNextFadeOut);
                     }
                     else if (HyPlayList.AutoFadeProcessing)
                     {
                         HyPlayList.AutoFadeProcessing = false;
                         HyPlayList.FadeLocked = false;
-                        HyPlayList.SongFadeRequest(2);
+                        HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.PlayFadeIn);
                         Debug.WriteLine("Unlocked");
                     }
                 }
-                else 
+                else
                 {
-                    if (HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds >= HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds - (Common.Setting.fadeNextTime * 1000))
+                    if (HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds >= HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds - nextFadeTime.TotalMilliseconds)
                     {
-                            HyPlayList.SongFadeRequest(6);
+                        HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.AdvFadeOut);
                     }
                     else if (HyPlayList.AutoFadeProcessing)
                     {
@@ -415,7 +414,7 @@ DoubleAnimation verticalAnimation;
                 //ignore
             }
         });
-        
+
     }
 
     public void SetPlayBarIdleBackground(SolidColorBrush colorBrush)
@@ -656,29 +655,28 @@ DoubleAnimation verticalAnimation;
         }
     }
 
-    private async void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
+    private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
     {
         if (HyPlayList.NowPlayingItem.PlayItem?.Name != null && HyPlayList.Player.Source == null)
             _ = HyPlayList.LoadPlayerSong(HyPlayList.List[HyPlayList.NowPlaying]);
         PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uEDB5" : "\uEDB4";
         if (HyPlayList.IsPlaying)
         {
-            //HyPlayList.Player.Pause();
-            HyPlayList.SongFadeRequest(1);
+            HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.PauseFadeOut);
 
             PlayBarBackgroundAni.Stop();
         }
         else
         {
             //HyPlayList.Player.Play();
-            HyPlayList.SongFadeRequest(2);
+            HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.PlayFadeIn);
 
             if (Common.Setting.playbarBackgroundBreath)
                 PlayBarBackgroundAni.Begin();
         }
     }
-    
-    
+
+
 
     private void SliderAudioRate_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
@@ -699,12 +697,12 @@ DoubleAnimation verticalAnimation;
         if (Common.IsInFm)
             PersonalFM.ExitFm();
         else
-            HyPlayList.SongFadeRequest(4 , (int)HyPlayList.FadePrevorNextState.Previous);
+            HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.UserNextFadeOut, HyPlayList.SongChangeType.Previous);
     }
 
     private void BtnNextSong_OnClick(object sender, RoutedEventArgs e)
     {
-        HyPlayList.SongFadeRequest(4 , (int)HyPlayList.FadePrevorNextState.Next);
+        HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.UserNextFadeOut, HyPlayList.SongChangeType.Next);
     }
 
     private void ListBoxPlayList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
