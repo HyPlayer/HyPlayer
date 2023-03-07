@@ -126,12 +126,9 @@ public static class HyPlayList
         set
         {
             _playerOutgoingVolume = value;
-            Player.Volume = _playerOutgoingVolume;
             Common.Setting.Volume = (int)(value * 100);
             OnVolumeChange?.Invoke(_playerOutgoingVolume);
             VolumeChangeProcess();
-
-
         }
     }
 
@@ -765,7 +762,7 @@ public static class HyPlayList
 
     public static void VolumeChangeProcess()
     {
-        Player.Volume = FadeVolume * AdvFadeVolume * ((double)Common.Setting.Volume / 100);
+        Player.Volume = FadeVolume * AdvFadeVolume * _playerOutgoingVolume;
 #if DEBUG
         Debug.WriteLine(FadeVolume);
         Debug.WriteLine(AdvFadeVolume);
