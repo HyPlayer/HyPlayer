@@ -698,7 +698,7 @@
                                 </controls:Expander.Transitions>
                                 <StackPanel Orientation="Vertical" Spacing="16">
                                     <Grid>
-                                        <TextBlock VerticalAlignment="Center" Text="使用亚克力窗口背景 (不推荐, 否则为 Mica)" />
+                                        <TextBlock VerticalAlignment="Center" Text="使用亚克力窗口背景 (关闭此选项则为 Mica)" />
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
