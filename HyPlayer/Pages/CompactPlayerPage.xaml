@@ -5,6 +5,7 @@
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="using:Microsoft.Toolkit.Uwp.UI"
     d:Background="White"
     d:DesignHeight="350"
     d:DesignWidth="600"
@@ -65,6 +66,7 @@
             </DoubleAnimation>
 
         </Storyboard>
+        <ui:AttachedDropShadow x:Key="CommonShadow" Offset="4" CastTo="{x:Bind ShadowTarget}" Color="Black" BlurRadius="10" Opacity="15" IsMasked="True"/>
     </Page.Resources>
 
     <Grid
@@ -197,32 +199,19 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <controls:DropShadowPanel
+            <Border x:Name="ShadowTarget"/>
+            <TextBlock
+                Foreground="White"
+                Text="{x:Bind LyricText, Mode=OneWay}"
+                TextAlignment="Center"
                 Grid.Row="0"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                BlurRadius="10"
-                IsMasked="True"
-                ShadowOpacity="15"
-                Color="Black">
-                <TextBlock
-                    Foreground="White"
-                    Text="{x:Bind LyricText, Mode=OneWay}"
-                    TextAlignment="Center" />
-            </controls:DropShadowPanel>
-            <controls:DropShadowPanel
+                ui:Effects.Shadow="{StaticResource CommonShadow}"/>
+            <TextBlock
+                Foreground="White"
+                Text="{x:Bind LyricTranslation, Mode=OneWay}"
+                TextAlignment="Center" 
                 Grid.Row="1"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                BlurRadius="10"
-                IsMasked="True"
-                ShadowOpacity="15"
-                Color="Black">
-                <TextBlock
-                    Foreground="White"
-                    Text="{x:Bind LyricTranslation, Mode=OneWay}"
-                    TextAlignment="Center" />
-            </controls:DropShadowPanel>
+                ui:Effects.Shadow="{StaticResource CommonShadow}"/>
         </Grid>
         <ProgressBar
             Grid.Row="3"
