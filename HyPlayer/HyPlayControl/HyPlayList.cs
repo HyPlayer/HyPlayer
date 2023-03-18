@@ -1151,6 +1151,7 @@ public static class HyPlayList
     }
     public static void CheckMediaTimeRemaining()
     {
+        if (NowPlayingItem.PlayItem == null) return;
         var nextFadeTime = TimeSpan.FromSeconds(Common.Setting.fadeNextTime);
         if (!Common.Setting.advFade)
         {
