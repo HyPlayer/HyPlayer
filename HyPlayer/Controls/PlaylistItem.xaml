@@ -28,7 +28,6 @@
                     <DoubleAnimation
                         Storyboard.TargetName="Transform"
                         Storyboard.TargetProperty="Y"
-                        From="0"
                         To="-20">
                         <DoubleAnimation.EasingFunction>
                             <ExponentialEase EasingMode="EaseOut" Exponent="7" />
@@ -40,7 +39,6 @@
                     <DoubleAnimation
                         Storyboard.TargetName="Transform"
                         Storyboard.TargetProperty="Y"
-                        From="-20"
                         To="0">
                         <DoubleAnimation.EasingFunction>
                             <ExponentialEase EasingMode="EaseOut" Exponent="7" />
