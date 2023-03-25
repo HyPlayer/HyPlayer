@@ -3,6 +3,7 @@ using HyPlayer.HyPlayControl;
 using Microsoft.Toolkit.Uwp.UI.Media;
 using System;
 using System.IO;
+using Windows.ApplicationModel.Core;
 using Windows.Storage.FileProperties;
 using Windows.UI;
 using Windows.UI.ViewManagement;
@@ -20,7 +21,7 @@ namespace HyPlayer.Pages;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class CompactPlayerPage : Page
+public sealed partial class CompactPlayerPage : Page, IDisposable
 {
     public static readonly DependencyProperty NowProgressProperty = DependencyProperty.Register(
         "NowProgress", typeof(double), typeof(CompactPlayerPage), new PropertyMetadata(default(double)));
@@ -53,6 +54,7 @@ public sealed partial class CompactPlayerPage : Page
 
 
     private bool forceBlur = true;
+    private readonly SolidColorBrush TransparentBrush = new SolidColorBrush(Colors.Transparent);
 
     public CompactPlayerPage()
     {
@@ -128,6 +130,17 @@ public sealed partial class CompactPlayerPage : Page
         });
     }
 
+    public void Dispose()
+    {
+        HyPlayList.OnPlayPositionChange -=
+            position => _ = Common.Invoke(() => NowProgress = position.TotalMilliseconds);
+        HyPlayList.OnPlayItemChange -= OnChangePlayItem;
+        HyPlayList.OnPlay -= () => _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB4");
+        HyPlayList.OnPause -= () => _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB5");
+        HyPlayList.OnLyricChange -= OnLyricChanged;
+        CompactPlayerAni.Begin();
+    }
+
     private void OnChangePlayItem(HyPlayItem item)
     {
         _ = Common.Invoke(async () =>
@@ -188,6 +201,7 @@ public sealed partial class CompactPlayerPage : Page
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        Dispose();
         Common.BarPlayBar.Visibility = Visibility.Visible;
     }
 
@@ -205,13 +219,13 @@ public sealed partial class CompactPlayerPage : Page
 
     private void CompactPlayerPage_OnPointerExited(object sender, PointerRoutedEventArgs e)
     {
-        if (!forceBlur)
-            ControlHover = new SolidColorBrush(Colors.Transparent);
+        if (!Common.Setting.CompactPlayerPageBlurStatus)
+            ControlHover = TransparentBrush;
         GridBtns.Visibility = Visibility.Collapsed;
     }
 
     private void OnRightTapped(object sender, RightTappedRoutedEventArgs e)
     {
-        forceBlur = !forceBlur;
+        Common.Setting.CompactPlayerPageBlurStatus = !Common.Setting.CompactPlayerPageBlurStatus;
     }
 }

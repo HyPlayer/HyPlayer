@@ -1358,6 +1358,15 @@ namespace HyPlayer
                 else HyPlayList.AudioEffectsProperties.Remove("AudioGain_Disabled");
             }
         }
+        public bool CompactPlayerPageBlurStatus
+        {
+            get => GetSettings(nameof(CompactPlayerPageBlurStatus), false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(CompactPlayerPageBlurStatus)] = value;
+                OnPropertyChanged();
+            }
+        }
 
         public bool LastFMLogined => LastFMManager.LastfmLogined;
 
