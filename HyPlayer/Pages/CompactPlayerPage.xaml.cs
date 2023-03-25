@@ -20,7 +20,7 @@ namespace HyPlayer.Pages;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class CompactPlayerPage : Page
+public sealed partial class CompactPlayerPage : Page, IDisposable
 {
     public static readonly DependencyProperty NowProgressProperty = DependencyProperty.Register(
         "NowProgress", typeof(double), typeof(CompactPlayerPage), new PropertyMetadata(default(double)));
@@ -53,6 +53,7 @@ public sealed partial class CompactPlayerPage : Page
 
 
     private bool forceBlur = true;
+    private readonly SolidColorBrush TransparentBrush = new SolidColorBrush(Colors.Transparent);
 
     public CompactPlayerPage()
     {
@@ -63,7 +64,21 @@ public sealed partial class CompactPlayerPage : Page
         HyPlayList.OnPlay += () => _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB4");
         HyPlayList.OnPause += () => _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB5");
         HyPlayList.OnLyricChange += OnLyricChanged;
+        HyPlayList.OnSongLikeStatusChange += HyPlayList_OnSongLikeStatusChange;
         CompactPlayerAni.Begin();
+    }
+
+    private void HyPlayList_OnSongLikeStatusChange(bool isLiked)
+    {
+        _ = Common.Invoke(() =>
+        {
+            IconLiked.Foreground = isLiked
+                ? new SolidColorBrush(Colors.Red)
+                : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+            IconLiked.Glyph = isLiked
+                ? "\uE00B"
+                : "\uE006";
+        });
     }
 
     public double NowProgress
@@ -128,6 +143,18 @@ public sealed partial class CompactPlayerPage : Page
         });
     }
 
+    public void Dispose()
+    {
+        HyPlayList.OnPlayPositionChange -=
+            position => _ = Common.Invoke(() => NowProgress = position.TotalMilliseconds);
+        HyPlayList.OnPlayItemChange -= OnChangePlayItem;
+        HyPlayList.OnPlay -= () => _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB4");
+        HyPlayList.OnPause -= () => _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB5");
+        HyPlayList.OnLyricChange -= OnLyricChanged;
+        HyPlayList.OnSongLikeStatusChange -= HyPlayList_OnSongLikeStatusChange;
+        CompactPlayerAni.Begin();
+    }
+
     private void OnChangePlayItem(HyPlayItem item)
     {
         _ = Common.Invoke(async () =>
@@ -158,6 +185,19 @@ public sealed partial class CompactPlayerPage : Page
             TotalProgress = item?.PlayItem?.LengthInMilliseconds ?? 0;
             AlbumCover = new ImageBrush { ImageSource = img, Stretch = Stretch.UniformToFill };
         });
+        if (item.ItemType is not HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
+        {
+            var isLiked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
+            _ = Common.Invoke(() =>
+            {
+                IconLiked.Foreground = isLiked
+                    ? new SolidColorBrush(Colors.Red)
+                    : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+                IconLiked.Glyph = isLiked
+                    ? "\uE00B"
+                    : "\uE006";
+            });
+        }
     }
 
     private void MovePrevious(object sender, RoutedEventArgs e)
@@ -188,10 +228,11 @@ public sealed partial class CompactPlayerPage : Page
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        Dispose();
         Common.BarPlayBar.Visibility = Visibility.Visible;
     }
 
-    private void ExitCompactMode(object sender, DoubleTappedRoutedEventArgs e)
+    private void ExitCompactMode(object sender, RoutedEventArgs e)
     {
         _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
         Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer));
@@ -205,13 +246,18 @@ public sealed partial class CompactPlayerPage : Page
 
     private void CompactPlayerPage_OnPointerExited(object sender, PointerRoutedEventArgs e)
     {
-        if (!forceBlur)
-            ControlHover = new SolidColorBrush(Colors.Transparent);
+        if (!Common.Setting.CompactPlayerPageBlurStatus)
+            ControlHover = TransparentBrush;
         GridBtns.Visibility = Visibility.Collapsed;
     }
 
     private void OnRightTapped(object sender, RightTappedRoutedEventArgs e)
     {
-        forceBlur = !forceBlur;
+        Common.Setting.CompactPlayerPageBlurStatus = !Common.Setting.CompactPlayerPageBlurStatus;
+    }
+
+    private void LikeButton_Click(object sender, RoutedEventArgs e)
+    {
+        HyPlayList.LikeSong();
     }
 }

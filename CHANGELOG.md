@@ -1,5 +1,6 @@
 ## 功能优化
-* 修改音量平衡功能以支持AudioGain大于1的情况
-* 更新淡入淡出算法 (Created By RERASER)
-注意: 此功能仅为测试功能, 可能不稳定, 可能造成高占用, 请悉知
-如有问题可以反馈
+* 修复PlayListItem在部分情况下动画显示异常
+* 修复HyPlayList切歌时异常的Bug
+* 替换已过时的DropShadowPanel
+* 小窗优化
+* 修复在有逐字歌词情况下小窗/Toast无法获取到歌词原文的bug
