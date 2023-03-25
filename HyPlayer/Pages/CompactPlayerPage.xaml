@@ -72,7 +72,6 @@
     <Grid
         x:Name="MainGrid"
         Background="{x:Bind Mode=OneWay, Path=ControlHover}"
-        DoubleTapped="ExitCompactMode"
         IsTapEnabled="True">
         <Grid.RowDefinitions>
             <!--  Placeholder  -->
@@ -83,15 +82,21 @@
             <RowDefinition Height="4" />
         </Grid.RowDefinitions>
         <Grid
-            x:Name="SongNameContainer"
             Grid.Row="0"
             Background="{ThemeResource PlaybackAcrylicInAppLuminosity}"
-            CornerRadius="8">
+            CornerRadius="8"
+            VerticalAlignment="Top"
+            IsHitTestVisible="True">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <Rectangle
+            <Grid x:Name="SongNameContainer">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Rectangle
                 x:Name="TopAlbumCover"
                 Grid.RowSpan="2"
                 Grid.Column="0"
@@ -102,23 +107,24 @@
                 Fill="{x:Bind Mode=OneWay, Path=AlbumCover}"
                 RadiusX="8"
                 RadiusY="8">
-                <Rectangle.RenderTransform>
-                    <ScaleTransform x:Name="AlbumScale" CenterX="28" CenterY="28" />
-                </Rectangle.RenderTransform>
-            </Rectangle>
-            <Grid Grid.Column="1" Margin="8,0,0,0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <TextBlock
+                    <Rectangle.RenderTransform>
+                        <ScaleTransform x:Name="AlbumScale" CenterX="28" CenterY="28" />
+                    </Rectangle.RenderTransform>
+                </Rectangle>
+                <Grid Grid.Column="1" Margin="8,0,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock
                     x:Name="ArtistsName"
                     Grid.Row="1"
                     FontSize="12"
                     Foreground="White"
                     Text="{x:Bind NowPlayingArtists, Mode=OneWay}"
                     TextAlignment="Left" />
-                <TextBlock
+                    <TextBlock
                     x:Name="SongName"
                     Grid.Row="0"
                     Grid.ColumnSpan="2"
@@ -127,7 +133,36 @@
                     Foreground="White"
                     Text="{x:Bind NowPlayingName, Mode=OneWay}"
                     TextAlignment="Left" />
+                </Grid>
             </Grid>
+            <Grid Grid.Column="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Button 
+                    x:Name="LikeButton"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    Click="LikeButton_Click"
+                    Grid.Column="0">
+                        <FontIcon
+                            x:Name="IconLiked"
+                            FontSize="14"
+                            Glyph="&#xE00B;" />
+                </Button>
+                <Button 
+                    x:Name="LeaveCompactModeButton"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    Click="ExitCompactMode"
+                    Grid.Column="1">
+                        <FontIcon
+                           FontSize="14"
+                           Glyph="&#xE1D9;" />
+                </Button>
+            </Grid>
+            
         </Grid>
         <Grid x:Name="GridBtns" Grid.Row="1">
             <Grid.ColumnDefinitions>

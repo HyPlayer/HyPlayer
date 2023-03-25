@@ -3,7 +3,6 @@ using HyPlayer.HyPlayControl;
 using Microsoft.Toolkit.Uwp.UI.Media;
 using System;
 using System.IO;
-using Windows.ApplicationModel.Core;
 using Windows.Storage.FileProperties;
 using Windows.UI;
 using Windows.UI.ViewManagement;
@@ -65,7 +64,21 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         HyPlayList.OnPlay += () => _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB4");
         HyPlayList.OnPause += () => _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB5");
         HyPlayList.OnLyricChange += OnLyricChanged;
+        HyPlayList.OnSongLikeStatusChange += HyPlayList_OnSongLikeStatusChange;
         CompactPlayerAni.Begin();
+    }
+
+    private void HyPlayList_OnSongLikeStatusChange(bool isLiked)
+    {
+        _ = Common.Invoke(() =>
+        {
+            IconLiked.Foreground = isLiked
+                ? new SolidColorBrush(Colors.Red)
+                : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+            IconLiked.Glyph = isLiked
+                ? "\uE00B"
+                : "\uE006";
+        });
     }
 
     public double NowProgress
@@ -138,6 +151,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         HyPlayList.OnPlay -= () => _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB4");
         HyPlayList.OnPause -= () => _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB5");
         HyPlayList.OnLyricChange -= OnLyricChanged;
+        HyPlayList.OnSongLikeStatusChange -= HyPlayList_OnSongLikeStatusChange;
         CompactPlayerAni.Begin();
     }
 
@@ -171,6 +185,19 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
             TotalProgress = item?.PlayItem?.LengthInMilliseconds ?? 0;
             AlbumCover = new ImageBrush { ImageSource = img, Stretch = Stretch.UniformToFill };
         });
+        if (item.ItemType is not HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
+        {
+            var isLiked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
+            _ = Common.Invoke(() =>
+            {
+                IconLiked.Foreground = isLiked
+                    ? new SolidColorBrush(Colors.Red)
+                    : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+                IconLiked.Glyph = isLiked
+                    ? "\uE00B"
+                    : "\uE006";
+            });
+        }
     }
 
     private void MovePrevious(object sender, RoutedEventArgs e)
@@ -205,7 +232,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         Common.BarPlayBar.Visibility = Visibility.Visible;
     }
 
-    private void ExitCompactMode(object sender, DoubleTappedRoutedEventArgs e)
+    private void ExitCompactMode(object sender, RoutedEventArgs e)
     {
         _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
         Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer));
@@ -227,5 +254,10 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     private void OnRightTapped(object sender, RightTappedRoutedEventArgs e)
     {
         Common.Setting.CompactPlayerPageBlurStatus = !Common.Setting.CompactPlayerPageBlurStatus;
+    }
+
+    private void LikeButton_Click(object sender, RoutedEventArgs e)
+    {
+        HyPlayList.LikeSong();
     }
 }

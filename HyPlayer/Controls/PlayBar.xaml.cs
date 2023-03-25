@@ -12,6 +12,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using TagLib.Ape;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Graphics.Imaging;
@@ -542,7 +543,7 @@ DoubleAnimation verticalAnimation;
                 HyPlayList.NowPlayingItem.ItemType is not HyPlayItemType.Local or HyPlayItemType.LocalProgressive;
         });
         var isLiked = Common.LikedSongs.Contains(mpi.PlayItem.Id);
-        if (mpi.ItemType != HyPlayItemType.Local)
+        if (mpi.ItemType is not HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
         {
             _ = Common.Invoke(() =>
             {
@@ -848,54 +849,7 @@ DoubleAnimation verticalAnimation;
 
     private void BtnLike_OnClick(object sender, RoutedEventArgs e)
     {
-        var isLiked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
-        switch (HyPlayList.NowPlayingItem.ItemType)
-        {
-            case HyPlayItemType.Netease:
-                {
-                    _ = Api.LikeSong(HyPlayList.NowPlayingItem.PlayItem.Id,
-                        !isLiked);
-                    if (isLiked)
-                        Common.LikedSongs.Remove(HyPlayList.NowPlayingItem.PlayItem.Id);
-                    else
-                        Common.LikedSongs.Add(HyPlayList.NowPlayingItem.PlayItem.Id);
-                    isLiked = !isLiked;
-                    IconLiked.Foreground = isLiked
-                        ? new SolidColorBrush(Colors.Red)
-                        : IconPrevious.Foreground;
-                    FlyoutLiked.Foreground = isLiked
-                        ? new SolidColorBrush(Colors.Red)
-                        : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-                    IconLiked.Glyph = isLiked
-                        ? "\uE00B"
-                        : "\uE006";
-                    FlyoutLiked.Glyph = isLiked
-                        ? "\uE00B"
-                        : "\uE006";
-                    //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
-                    break;
-                }
-            case HyPlayItemType.Radio:
-                _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.ResourceLike,
-                    new Dictionary<string, object>
-                        { { "type", "4" }, { "t", "1" }, { "id", HyPlayList.NowPlayingItem.PlayItem.Id } });
-                break;
-            default:
-                IconLiked.Foreground = isLiked
-                    ? new SolidColorBrush(Colors.Red)
-                    : IconPrevious.Foreground;
-                FlyoutLiked.Foreground = isLiked
-                    ? new SolidColorBrush(Colors.Red)
-                    : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-                IconLiked.Glyph = isLiked
-                    ? "\uE00B"
-                    : "\uE006";
-                FlyoutLiked.Glyph = isLiked
-                    ? "\uE00B"
-                    : "\uE006";
-                //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
-                break;
-        }
+        HyPlayList.LikeSong();
     }
 
     private void ImageContainer_OnTapped(object sender, RoutedEventArgs tappedRoutedEventArgs)
@@ -1114,6 +1068,7 @@ DoubleAnimation verticalAnimation;
         HyPlayList.OnPlayListAddDone += RefreshSongList;
         HyPlayList.OnSongRemoveAll += HyPlayListOnOnSongRemoveAll;
         HyPlayList.OnLoginDone += HyPlayListOnOnLoginDone;
+        HyPlayList.OnSongLikeStatusChange += HyPlayList_OnSongLikeStatusChange;
         Common.OnEnterForegroundFromBackground += () => LoadPlayingFile(HyPlayList.NowPlayingItem);
         if (Common.Setting.playbarButtonsTransparent)
         {
@@ -1186,6 +1141,22 @@ DoubleAnimation verticalAnimation;
         Storyboard.SetTargetProperty(verticalAnimation, "Horizontalofset");
         TbSongNameScrollStoryBoard.Begin();
         */
+    }
+
+    private void HyPlayList_OnSongLikeStatusChange(bool isLiked)
+    {
+        IconLiked.Foreground = isLiked
+            ? new SolidColorBrush(Colors.Red)
+            : IconPrevious.Foreground;
+        FlyoutLiked.Foreground = isLiked
+            ? new SolidColorBrush(Colors.Red)
+            : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
+        IconLiked.Glyph = isLiked
+            ? "\uE00B"
+            : "\uE006";
+        FlyoutLiked.Glyph = isLiked
+            ? "\uE00B"
+            : "\uE006";
     }
 
     private async void HyPlayListOnOnLoginDone()

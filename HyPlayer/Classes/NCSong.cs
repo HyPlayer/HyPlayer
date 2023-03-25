@@ -64,6 +64,7 @@ public class SongLyric
     public string KaraokLine;
     public bool HaveTranslation => !string.IsNullOrEmpty(Translation);
     public bool HaveRomaji => !string.IsNullOrEmpty(Romaji);
+    public bool IsKaraok => !string.IsNullOrEmpty(KaraokLine);
 }
 
 public class NCRadio

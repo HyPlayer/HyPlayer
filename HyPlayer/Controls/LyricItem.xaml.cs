@@ -28,8 +28,6 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
     public bool showing = true;
 
-    private bool isKaraok = false;
-
     private List<WordInfo> Words;
 
     private List<TextBlock> WordTextBlocks;
@@ -151,10 +149,10 @@ public sealed partial class LyricItem : UserControl, IDisposable
             //RefreshFontSize();
             return;
         showing = true;
-        if (isKaraok)
+        if (Lrc.IsKaraok)
         {
             HyPlayList.OnPlayPositionChange += RefreshWordColor;
-            WordTextBlocks.ForEach(w =>
+            WordTextBlocks?.ForEach(w =>
             {
                 w.FontSize = actualsize + Common.Setting.lyricScaleSize;
                 w.Foreground = new SolidColorBrush(GetKaraokIdleBrush());
@@ -183,10 +181,10 @@ public sealed partial class LyricItem : UserControl, IDisposable
             //RefreshFontSize();
             return;
         showing = false;
-        if (isKaraok)
+        if (Lrc.IsKaraok)
         {
             HyPlayList.OnPlayPositionChange -= RefreshWordColor;
-            WordTextBlocks.ForEach(w =>
+            WordTextBlocks?.ForEach(w =>
             {
                 w.FontSize = actualsize;
                 w.Foreground = IdleBrush;
@@ -229,9 +227,8 @@ public sealed partial class LyricItem : UserControl, IDisposable
         else
             TextBoxSound.Visibility = Visibility.Collapsed;
 
-        if (!string.IsNullOrEmpty(Lrc.KaraokLine))
+        if (Lrc.IsKaraok)
         {
-            isKaraok = true;
             Words = new List<WordInfo>();
             WordTextBlocks = new List<TextBlock>();
             BlockToAnimation = new();

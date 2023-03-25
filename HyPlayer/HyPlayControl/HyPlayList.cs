@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.Devices.Enumeration;
 using Windows.Foundation.Collections;
@@ -63,6 +64,7 @@ public static class HyPlayList
 
     public delegate void VolumeChangeEvent(double newVolume);
 
+    public delegate void SongLikeStatusChanged(bool isLiked);
 
     public static int NowPlaying;
     private static readonly System.Timers.Timer SecTimer = new(1000); // 公用秒表
@@ -196,6 +198,8 @@ public static class HyPlayList
     public static event TimerTicked OnTimerTicked;
 
     public static event SongRemoveAllEvent OnSongRemoveAll;
+
+    public static event SongLikeStatusChanged OnSongLikeStatusChange;
 
     public static void InitializeHyPlaylist()
     {
@@ -520,7 +524,30 @@ public static class HyPlayList
         OnSongRemoveAll?.Invoke();
         SongAppendDone();
     }
-
+    public static void LikeSong()
+    {
+        var isLiked = Common.LikedSongs.Contains(NowPlayingItem.PlayItem.Id);
+        switch (NowPlayingItem.ItemType)
+        {
+            case HyPlayItemType.Netease:
+                {
+                    _ = Api.LikeSong(NowPlayingItem.PlayItem.Id,
+                        !isLiked);
+                    if (isLiked)
+                        Common.LikedSongs.Remove(NowPlayingItem.PlayItem.Id);
+                    else
+                        Common.LikedSongs.Add(NowPlayingItem.PlayItem.Id);
+                    OnSongLikeStatusChange?.Invoke(!isLiked);
+                    break;
+                }
+            case HyPlayItemType.Radio:
+                _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.ResourceLike,
+                    new Dictionary<string, object>
+                        { { "type", "4" }, { "t", "1" }, { "id", NowPlayingItem.PlayItem.Id } });
+                OnSongLikeStatusChange?.Invoke(!isLiked);
+                break;
+        }
+    }
     /********        相关事件处理        ********/
 
     private static void SystemControls_ButtonPressed(SystemMediaTransportControls sender,
@@ -1319,7 +1346,7 @@ public static class HyPlayList
                     json = await Common.ncapi.RequestAsync(
                         CloudMusicApiProviders.LyricNew,
                         new Dictionary<string, object> { { "id", ncp.PlayItem.Id } });
-                    string lrc = null, romaji, karaoklrc = null, translrc;
+                    string lrc, romaji, karaoklrc, translrc;
                     if (json["yrc"] is null)
                     {
                         lrc = string.Join('\n',
@@ -1336,12 +1363,15 @@ public static class HyPlayList
                     }
                     else
                     {
+                        lrc = string.Join('\n',
+                            (json["lrc"]?["lyric"]?.ToString() ?? string.Empty).Split("\n")
+                            .Where(t => !t.StartsWith("{")).ToArray());
                         karaoklrc = string.Join('\n', (json["yrc"]?["lyric"]?.ToString() ?? string.Empty).Split("\n").Where(t => !t.StartsWith("{")).ToArray());
                         romaji = json["yromalrc"]?["lyric"]?.ToString();
                         translrc = json["ytlrc"]?["lyric"]?.ToString();
                         return new KaraokLyricInfo()
                         {
-                            PureLyrics = null,
+                            PureLyrics = lrc,
                             TrLyrics = translrc,
                             NeteaseRomaji = romaji,
                             KaraokLyric = karaoklrc
@@ -1947,19 +1977,24 @@ public static class Utils
         if (pureLyricInfo is KaraokLyricInfo karaokLyricInfo && !string.IsNullOrEmpty(karaokLyricInfo.KaraokLyric))
         {
             var lines = karaokLyricInfo.KaraokLyric.Split('\n');
+            var parsedPureLyrics = Lyrics.Parse(pureLyricInfo.PureLyrics);
             foreach (var line in lines)
             {
                 if (!line.StartsWith('[')) continue;
                 var firstTime = line.Substring(1, line.IndexOf(',', 1) - 1);
                 var time = Convert.ToDouble(firstTime);
-                lyrics.Add(new SongLyric
+                var currentLyric = new SongLyric
                 {
                     LyricTime = TimeSpan.FromMilliseconds(time),
                     PureLyric = string.Empty,
                     Translation = null,
                     Romaji = null,
                     KaraokLine = line.Substring(line.IndexOf(']') + 1)
-                });
+                };
+                var pureLyric = string.Concat(Regex.Split(currentLyric.KaraokLine, "\\([0-9]*,[0-9]*,0\\)").ToList().Skip(1));
+                currentLyric.PureLyric = pureLyric;
+                lyrics.Add(currentLyric);
+
             }
         }
 
