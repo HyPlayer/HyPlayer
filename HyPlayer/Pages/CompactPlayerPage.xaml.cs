@@ -52,7 +52,6 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
             new PropertyMetadata(string.Empty));
 
 
-    private bool forceBlur = true;
     private readonly SolidColorBrush TransparentBrush = new SolidColorBrush(Colors.Transparent);
 
     public CompactPlayerPage()
@@ -135,6 +134,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
 
     private void OnLyricChanged()
     {
+        if (HyPlayList.LyricPos == -1) return;
         if (HyPlayList.Lyrics.Count <= HyPlayList.LyricPos) return;
         _ = Common.Invoke(() =>
         {
@@ -232,7 +232,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         Common.BarPlayBar.Visibility = Visibility.Visible;
     }
 
-    private void ExitCompactMode(object sender, RoutedEventArgs e)
+    private void ExitCompactMode(object sender, DoubleTappedRoutedEventArgs e)
     {
         _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
         Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer));

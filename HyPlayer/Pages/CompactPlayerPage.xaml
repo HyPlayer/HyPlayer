@@ -72,7 +72,8 @@
     <Grid
         x:Name="MainGrid"
         Background="{x:Bind Mode=OneWay, Path=ControlHover}"
-        IsTapEnabled="True">
+        IsTapEnabled="True"
+        DoubleTapped="ExitCompactMode">
         <Grid.RowDefinitions>
             <!--  Placeholder  -->
             <RowDefinition Height="72" />
@@ -88,8 +89,8 @@
             VerticalAlignment="Top"
             IsHitTestVisible="True">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="1*"/>
             </Grid.ColumnDefinitions>
             <Grid x:Name="SongNameContainer">
                 <Grid.ColumnDefinitions>
@@ -119,6 +120,7 @@
                     </Grid.RowDefinitions>
                     <TextBlock
                     x:Name="ArtistsName"
+                    TextTrimming="CharacterEllipsis"
                     Grid.Row="1"
                     FontSize="12"
                     Foreground="White"
@@ -126,6 +128,7 @@
                     TextAlignment="Left" />
                     <TextBlock
                     x:Name="SongName"
+                    TextTrimming="CharacterEllipsis"
                     Grid.Row="0"
                     Grid.ColumnSpan="2"
                     FontSize="23"
@@ -135,7 +138,8 @@
                     TextAlignment="Left" />
                 </Grid>
             </Grid>
-            <Grid Grid.Column="1">
+            <Grid 
+                Grid.Column="1">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
@@ -146,25 +150,17 @@
                     BorderBrush="Transparent"
                     Click="LikeButton_Click"
                     Grid.Column="0">
-                        <FontIcon
+                    <FontIcon
                             x:Name="IconLiked"
                             FontSize="14"
                             Glyph="&#xE00B;" />
                 </Button>
-                <Button 
-                    x:Name="LeaveCompactModeButton"
-                    Background="Transparent"
-                    BorderBrush="Transparent"
-                    Click="ExitCompactMode"
-                    Grid.Column="1">
-                        <FontIcon
-                           FontSize="14"
-                           Glyph="&#xE1D9;" />
-                </Button>
             </Grid>
             
         </Grid>
-        <Grid x:Name="GridBtns" Grid.Row="1">
+        <Grid 
+            x:Name="GridBtns" 
+            Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1* " />
                 <ColumnDefinition Width="4*" />
@@ -229,7 +225,9 @@
                 <FontIcon Foreground="White" Glyph="&#xE893;" />
             </Button>
         </Grid>
-        <Grid x:Name="GridLyrics" Grid.Row="2">
+        <Grid 
+            x:Name="GridLyrics" 
+            Grid.Row="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
