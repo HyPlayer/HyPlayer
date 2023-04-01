@@ -284,9 +284,9 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                     var lrctxt = string.Join("\r\n", lrc.Select(t =>
                     {
                         if (t.HaveTranslation && !string.IsNullOrWhiteSpace(t.Translation))
-                            return "[" + t.LyricTime.ToString(@"mm\:ss\.ff") + "]" + t.PureLyric + " 「" +
+                            return "[" + t.LyricLine.StartTime.ToString(@"mm\:ss\.ff") + "]" + t.LyricLine.CurrentLyric + " 「" +
                                    t.Translation + "」";
-                        return "[" + t.LyricTime.ToString(@"mm\:ss\.ff") + "]" + t.PureLyric;
+                        return "[" + t.LyricLine.StartTime.ToString(@"mm\:ss\.ff") + "]" + t.LyricLine.CurrentLyric;
                     }));
                     if (string.IsNullOrWhiteSpace(lrctxt)) return;
                     var sf = await (await StorageFolder.GetFolderFromPathAsync(Path.GetDirectoryName(FullPath)))

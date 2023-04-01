@@ -138,7 +138,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         if (HyPlayList.Lyrics.Count <= HyPlayList.LyricPos) return;
         _ = Common.Invoke(() =>
         {
-            LyricText = HyPlayList.Lyrics[HyPlayList.LyricPos].PureLyric;
+            LyricText = HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.CurrentLyric;
             LyricTranslation = HyPlayList.Lyrics[HyPlayList.LyricPos].Translation;
         });
     }

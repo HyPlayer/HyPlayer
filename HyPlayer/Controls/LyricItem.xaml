@@ -19,7 +19,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <controls:WrapPanel x:Name="WordLyricContainer" Grid.Row="0" HorizontalAlignment="Center" Visibility="{x:Bind Lrc.IsKaraok}"/>
+        <controls:WrapPanel x:Name="WordLyricContainer" Grid.Row="0" HorizontalAlignment="Center" Visibility="{x:Bind _lyricIsKaraokeLyric}"/>
         <TextBlock
             Name="TextBoxPureLyric"
             Grid.Row="0"
@@ -28,7 +28,7 @@
             FontWeight="Bold"
             TextAlignment="Center"
             TextWrapping="WrapWholeWords" 
-            Visibility="{x:Bind Lrc.IsKaraok, Converter={StaticResource ReversedBooleanToVisibilityConverter}}"/>
+            Visibility="{x:Bind _lyricIsKaraokeLyric, Converter={StaticResource ReversedBooleanToVisibilityConverter}}"/>
         <TextBlock
             Name="TextBoxTranslation"
             Grid.Row="1"

@@ -3,6 +3,7 @@
 #nullable enable
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
+using LrcParser.Classes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,24 +27,17 @@ public sealed partial class LyricItem : UserControl, IDisposable
 {
     public SongLyric Lrc;
 
-    public bool showing = true;
+    public bool _lyricIsOnShow = true;
 
-    private List<WordInfo> Words;
+    private List<TextBlock> WordTextBlocks = new ();
 
-    private List<TextBlock> WordTextBlocks;
+    private Dictionary<TextBlock, Storyboard> BlockToAnimation = new ();
 
-    private Dictionary<TextBlock, Storyboard> BlockToAnimation;
-
-    class WordInfo
-    {
-        public int StartTime { get; set; }
-        public int Duration { get; set; }
-        public string Word { get; set; }
-    }
-
+    public bool _lyricIsKaraokeLyric;
     public LyricItem(SongLyric lrc)
     {
         Lrc = lrc;
+        _lyricIsKaraokeLyric = typeof(KaraokeLyricsLine) == lrc.LyricLine.GetType();
         InitializeComponent();
     }
 
@@ -117,8 +111,8 @@ public sealed partial class LyricItem : UserControl, IDisposable
         TextBoxPureLyric.TextAlignment = LyricAlignment;
         TextBoxTranslation.TextAlignment = LyricAlignment;
         TextBoxSound.TextAlignment = LyricAlignment;
-        TextBoxPureLyric.FontSize = showing ? actualsize + Common.Setting.lyricScaleSize : actualsize;
-        TextBoxTranslation.FontSize = showing ? actualsize + Common.Setting.lyricScaleSize : actualsize;
+        TextBoxPureLyric.FontSize = _lyricIsOnShow ? actualsize + Common.Setting.lyricScaleSize : actualsize;
+        TextBoxTranslation.FontSize = _lyricIsOnShow ? actualsize + Common.Setting.lyricScaleSize : actualsize;
         TextBoxSound.FontSize = Common.Setting.romajiSize;
     }
 
@@ -126,9 +120,9 @@ public sealed partial class LyricItem : UserControl, IDisposable
     {
         _ = Common.Invoke(() =>
         {
-            var nowPlayingWordIndex =
-                Words.FindIndex(word => word.StartTime + word.Duration > position.TotalMilliseconds);
-            var playedBlocks = WordTextBlocks.GetRange(0, nowPlayingWordIndex + 1).ToList();
+            var playedWords =
+                ((KaraokeLyricsLine)Lrc.LyricLine).WordInfos.Where(word => word.StartTime <= position).ToList();
+            var playedBlocks = WordTextBlocks.GetRange(0, playedWords.Count).ToList();
             if (playedBlocks.Count <= 0) return;
             foreach (var playedBlock in playedBlocks.GetRange(0, playedBlocks.Count - 1))
             {
@@ -145,11 +139,11 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
     public void OnShow()
     {
-        if (showing)
+        if (_lyricIsOnShow)
             //RefreshFontSize();
             return;
-        showing = true;
-        if (Lrc.IsKaraok)
+        _lyricIsOnShow = true;
+        if (_lyricIsKaraokeLyric)
         {
             HyPlayList.OnPlayPositionChange += RefreshWordColor;
             WordTextBlocks?.ForEach(w =>
@@ -177,11 +171,11 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
     public void OnHind()
     {
-        if (!showing)
+        if (!_lyricIsOnShow)
             //RefreshFontSize();
             return;
-        showing = false;
-        if (Lrc.IsKaraok)
+        _lyricIsOnShow = false;
+        if (_lyricIsKaraokeLyric)
         {
             HyPlayList.OnPlayPositionChange -= RefreshWordColor;
             WordTextBlocks?.ForEach(w =>
@@ -207,7 +201,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
     private void LyricItem_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
-        HyPlayList.Player.PlaybackSession.Position = Lrc.LyricTime;
+        HyPlayList.Player.PlaybackSession.Position = Lrc.LyricLine.StartTime;
         Common.PageExpandedPlayer.jumpedLyrics = true;
     }
 
@@ -215,7 +209,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
     {
         TextBoxPureLyric.FontSize = actualsize;
         TextBoxTranslation.FontSize = actualsize;
-        TextBoxPureLyric.Text = Lrc.PureLyric ?? string.Empty;
+        TextBoxPureLyric.Text = Lrc.LyricLine.CurrentLyric ?? string.Empty;
         if (Lrc.HaveTranslation && Common.ShowLyricTrans && !string.IsNullOrWhiteSpace(Lrc.Translation))
             TextBoxTranslation.Text = Lrc.Translation;
         else
@@ -227,53 +221,35 @@ public sealed partial class LyricItem : UserControl, IDisposable
         else
             TextBoxSound.Visibility = Visibility.Collapsed;
 
-        if (Lrc.IsKaraok)
+        if (_lyricIsKaraokeLyric)
         {
-            Words = new List<WordInfo>();
-            WordTextBlocks = new List<TextBlock>();
-            BlockToAnimation = new();
-
-
-            var words = Regex.Split(Lrc.KaraokLine, "\\([0-9]*,[0-9]*,0\\)").ToList().Skip(1).ToList();
-            var wordInfos = Regex.Matches(Lrc.KaraokLine, "\\(([0-9]*),([0-9]*),0\\)").ToList();
-
-            for (var index = 0; index < wordInfos.Count; index++)
+            
+            foreach (var item in ((KaraokeLyricsLine)Lrc.LyricLine).WordInfos)
             {
-                var wordInfo = wordInfos[index];
-                var word = words[index];
-                if (wordInfo.Length <= 0) continue;
-                var startTime = Convert.ToInt32(wordInfo.Groups[1].Value);
-                var duration = Convert.ToInt32(wordInfo.Groups[2].Value);
-                Words.Add(new WordInfo
-                {
-                    StartTime = startTime,
-                    Duration = duration,
-                    Word = word
-                });
-                var textBlock = new TextBlock()
-                {
-                    Text = word,
-                    FontSize = actualsize,
-                    FontWeight = FontWeights.Bold,
-                    Foreground = IdleBrush
-                };
-                textBlock.Margin = new Thickness(word.StartsWith(' ') ? actualsize / 3 : 0, 0,
-                    word.EndsWith(' ') ? actualsize / 3 : 0, 0);
-                WordTextBlocks.Add(textBlock);
-                WordLyricContainer.Children.Add(textBlock);
-                var ani = new ColorAnimation
-                {
-                    From = GetKaraokIdleBrush(),
-                    To = GetKaraokAccentBrush(),
-                    Duration = TimeSpan.FromMilliseconds(duration)
-                };
-                var storyboard = new Storyboard();
-                Storyboard.SetTarget(ani, textBlock);
-                Storyboard.SetTargetProperty(ani, "(TextBlock.Foreground).(SolidColorBrush.Color)");
-                storyboard.Children.Add(ani);
-                BlockToAnimation[textBlock] = storyboard;
+                    var textBlock = new TextBlock()
+                    {
+                        Text = item.CurrentWords,
+                        FontSize = actualsize,
+                        FontWeight = FontWeights.Bold,
+                        Foreground = IdleBrush
+                    };
+                    textBlock.Margin = new Thickness(item.CurrentWords.StartsWith(' ') ? actualsize / 3 : 0, 0,
+                        item.CurrentWords.EndsWith(' ') ? actualsize / 3 : 0, 0);
+                    WordTextBlocks?.Add(textBlock);
+                    WordLyricContainer.Children.Add(textBlock);
+                    var ani = new ColorAnimation
+                    {
+                        From = GetKaraokIdleBrush(),
+                        To = GetKaraokAccentBrush(),
+                        Duration = item.Duration
+                    };
+                    var storyboard = new Storyboard();
+                    Storyboard.SetTarget(ani, textBlock);
+                    Storyboard.SetTargetProperty(ani, "(TextBlock.Foreground).(SolidColorBrush.Color)");
+                    storyboard.Children.Add(ani);
+                    BlockToAnimation[textBlock] = storyboard;
+                }
             }
-        }
 
         RefreshFontSize();
         OnHind();
@@ -281,9 +257,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
     public void Dispose()
     {
-        Words?.Clear();
-        WordTextBlocks?.Clear();
+        WordTextBlocks.Clear();
         BlockToAnimation.Clear();
-        Lrc = null;
     }
 }
