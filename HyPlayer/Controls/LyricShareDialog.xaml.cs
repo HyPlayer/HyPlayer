@@ -53,7 +53,7 @@ public sealed partial class LyricShareDialog : ContentDialog
             {
                 Type = LyricShareItemType.Original,
                 Text = songLyric.LyricLine.CurrentLyric,
-                Time = songLyric.LyricLine.StartTime,
+                Time = TimeSpan.FromMilliseconds(songLyric.LyricLine.StartTime),
                 OriginalLyric = songLyric
             });
             if (songLyric.HaveTranslation)
@@ -61,7 +61,7 @@ public sealed partial class LyricShareDialog : ContentDialog
                 {
                     Type = LyricShareItemType.Translation,
                     Text = songLyric.Translation,
-                    Time = songLyric.LyricLine.StartTime,
+                    Time = TimeSpan.FromMilliseconds(songLyric.LyricLine.StartTime),
                     OriginalLyric = songLyric
                 });
         }
@@ -154,7 +154,7 @@ public sealed partial class LyricShareDialog : ContentDialog
                 MainListView.SelectedItems.Add(lyricShareItem);
     }
 
-    private async void LoadRomaji(object sender, RoutedEventArgs e)
+    private void LoadRomaji(object sender, RoutedEventArgs e)
     {
         CheckBoxLoadRomaji.IsEnabled = false;
         for (var index = 0; index < ShareLyricItem.Count; index++)

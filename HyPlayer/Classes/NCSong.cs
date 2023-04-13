@@ -1,6 +1,6 @@
 ﻿#region
 
-using LrcParser.Classes;
+using LyricParser.Abstraction;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -49,13 +49,13 @@ public class PureLyricInfo
 public class SongLyric
 {
     public static SongLyric PureSong = new()
-    { LyricLine = new LrcLyricsLine("纯音乐 请欣赏", TimeSpan.Zero) };
+    { LyricLine = new LrcLyricsLine("纯音乐 请欣赏", 0) };
 
     public static SongLyric NoLyric = new()
-    { LyricLine = new LrcLyricsLine("无歌词 请欣赏", TimeSpan.Zero) };
+    { LyricLine = new LrcLyricsLine("无歌词 请欣赏", 0) };
 
     public static SongLyric LoadingLyric = new()
-    { LyricLine = new LrcLyricsLine("加载歌词中...", TimeSpan.Zero) };
+    { LyricLine = new LrcLyricsLine("加载歌词中...", 0) };
 
     public ILyricLine LyricLine;
     public string Translation;

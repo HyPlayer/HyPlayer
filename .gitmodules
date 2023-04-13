@@ -7,7 +7,7 @@
 [submodule "AudioEffectComponent"]
 	path = AudioEffectComponent
 	url = https://github.com/HyPlayer/AudioEffectComponent
-[submodule "LrcParser"]
-	path = LrcParser
-	url = https://github.com/HyPlayer/LrcParser
+[submodule "LyricParser"]
+	path = LyricParser
+	url = https://github.com/HyPlayer/LyricParser
 	branch = UWP

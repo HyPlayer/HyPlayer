@@ -2,8 +2,8 @@
 using AudioEffectComponent;
 using HyPlayer.Classes;
 using Kawazu;
-using LrcParser.Classes;
-using LrcParser.Implementation;
+using LyricParser.Abstraction;
+using LyricParser.Implementation;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
 using System;
@@ -1222,9 +1222,9 @@ public static class HyPlayList
         if (LyricPos >= Lyrics.Count || LyricPos < 0) LyricPos = 0;
         var changed = false;
         var realPos = Player.PlaybackSession.Position - LyricOffset;
-        if (Lyrics[LyricPos].LyricLine.StartTime > realPos) //当感知到进度回溯时执行
+        if (Lyrics[LyricPos].LyricLine.StartTime > realPos.TotalMilliseconds) //当感知到进度回溯时执行
         {
-            LyricPos = Lyrics.FindLastIndex(t => t.LyricLine.StartTime <= realPos) - 1;
+            LyricPos = Lyrics.FindLastIndex(t => t.LyricLine.StartTime <= realPos.TotalMilliseconds) - 1;
             if (LyricPos == -2) LyricPos = -1;
             changed = true;
         }
@@ -1233,7 +1233,7 @@ public static class HyPlayList
         {
             if (LyricPos == 0 && Lyrics.Count != 1) changed = false;
             while (Lyrics.Count > LyricPos + 1 &&
-                   Lyrics[LyricPos + 1].LyricLine.StartTime <= realPos) //正常的滚歌词
+                   Lyrics[LyricPos + 1].LyricLine.StartTime <= realPos.TotalMilliseconds) //正常的滚歌词
             {
                 LyricPos++;
                 changed = true;
@@ -1307,7 +1307,7 @@ public static class HyPlayList
             if (Common.Setting.showComposerInLyric)
                 Lyrics.Add(new SongLyric
                 {
-                    LyricLine = new LrcLyricsLine(pureLyricInfo.PureLyrics, TimeSpan.Zero)
+                    LyricLine = new LrcLyricsLine(pureLyricInfo.PureLyrics, 0)
                 });
         }
         else
@@ -1315,9 +1315,9 @@ public static class HyPlayList
             Utils.ConvertTranslation(pureLyricInfo.TrLyrics, Lyrics);
             await Utils.ConvertRomaji(pureLyricInfo, Lyrics);
 
-            if (Lyrics.Count != 0 && Lyrics[0].LyricLine.StartTime != TimeSpan.Zero)
+            if (Lyrics.Count != 0 && Lyrics[0].LyricLine.StartTime != 0)
                 Lyrics.Insert(0,
-                    new SongLyric { LyricLine = new LrcLyricsLine(string.Empty, TimeSpan.Zero) });
+                    new SongLyric { LyricLine = new LrcLyricsLine(string.Empty, 0) });
         }
 
         LyricPos = 0;
@@ -1905,42 +1905,36 @@ public static class Utils
 {
     public static List<SongLyric> ConvertPureLyric(string lyricAllText, bool hasTranslationsInLyricText = false)
     {
-        using (var parsedlyrics = LyricParser.ParseLrcLyrics(lyricAllText))
-        {
-            return parsedlyrics.LyricsLines.Select(lyricsLine => new SongLyric
-            { LyricLine = lyricsLine, Translation = null })
-                            .ToList();
-        } 
+        var parsedlyrics = LrcParser.ParseLrc(lyricAllText.AsSpan());
+        return parsedlyrics.Select(lyricsLine => new SongLyric
+        { LyricLine = lyricsLine, Translation = null })
+                        .ToList();
     }
 
     public static void ConvertTranslation(string lyricAllText, List<SongLyric> lyrics)
     {
-        using (var parsedlyrics = LyricParser.ParseLrcLyrics(lyricAllText))
-        {
-            foreach (var lyricsLine in parsedlyrics.LyricsLines)
-                foreach (var songLyric in lyrics.Where(songLyric =>
-                             songLyric.LyricLine.StartTime == lyricsLine.StartTime))
-                {
-                    songLyric.Translation = lyricsLine.CurrentLyric;
-                    break;
-                }
-        }
-        
+        var parsedlyrics = LrcParser.ParseLrc(lyricAllText.AsSpan());
+        foreach (var lyricsLine in parsedlyrics)
+            foreach (var songLyric in lyrics.Where(songLyric =>
+                         songLyric.LyricLine.StartTime == lyricsLine.StartTime))
+            {
+                songLyric.Translation = lyricsLine.CurrentLyric;
+                break;
+            }
+
     }
 
     public static void ConvertNeteaseRomaji(string lyricAllText, List<SongLyric> lyrics)
     {
         if (string.IsNullOrEmpty(lyricAllText)) return;
-        using (var parsedlyrics = LyricParser.ParseLrcLyrics(lyricAllText))
-        {
-            foreach (var lyricsLine in parsedlyrics.LyricsLines)
-                foreach (var songLyric in lyrics.Where(songLyric =>
-                             songLyric.LyricLine.StartTime == lyricsLine.StartTime))
-                {
-                    songLyric.Romaji = lyricsLine.CurrentLyric;
-                    break;
-                }
-        }
+        var parsedlyrics = LrcParser.ParseLrc(lyricAllText.AsSpan());
+        foreach (var lyricsLine in parsedlyrics)
+            foreach (var songLyric in lyrics.Where(songLyric =>
+                         songLyric.LyricLine.StartTime == lyricsLine.StartTime))
+            {
+                songLyric.Romaji = lyricsLine.CurrentLyric;
+                break;
+            }
     }
 
     public static async Task ConvertKawazuRomaji(List<SongLyric> lyrics)
@@ -1982,10 +1976,9 @@ public static class Utils
     {
         if (pureLyricInfo is KaraokLyricInfo karaokLyricInfo && !string.IsNullOrEmpty(karaokLyricInfo.KaraokLyric))
         {
-            using (var parsedLyrics = LyricParser.ParseKaraokeLyrics(((KaraokLyricInfo)pureLyricInfo).KaraokLyric))
-            {
-                return parsedLyrics.LyricsLines.Select(t=>new SongLyric() { LyricLine=t }).ToList();
-            }
+            var parsedLyrics = KaraokeParser.ParseKaraoke(((KaraokLyricInfo)pureLyricInfo).KaraokLyric.AsSpan());
+
+            return parsedLyrics.Select(t => new SongLyric() { LyricLine = t }).ToList();
         }
         throw new ArgumentException("LyricInfo is not KaraokeLyricInfo");
     }

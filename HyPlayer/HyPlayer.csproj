@@ -598,9 +598,9 @@
       <Project>{2dc18999-32f2-40d4-ad9b-c5a09514e087}</Project>
       <Name>Kawazu</Name>
     </ProjectReference>
-    <ProjectReference Include="..\LrcParser\LrcParser\LrcParser.csproj">
-      <Project>{E6986CBC-91F5-43BA-A0BA-3D642102305D}</Project>
-      <Name>LrcParser</Name>
+    <ProjectReference Include="..\LyricParser\LyricParser\LyricParser.csproj">
+      <Project>{8cb63bd0-1a5e-4ca0-aaad-4249d37e3a47}</Project>
+      <Name>LyricParser</Name>
     </ProjectReference>
     <ProjectReference Include="..\NeteaseCloudMusicApi\NeteaseCloudMusicApi\NeteaseCloudMusicApi.csproj">
       <Project>{c20d7ea5-6db8-42b3-855d-75470cbe667f}</Project>
