@@ -492,17 +492,10 @@ public sealed partial class Search : Page, IDisposable
         _ = LoadResult();
     }
 
-    private void SearchKeywordBox_SuggestionChosen(AutoSuggestBox sender,
-        AutoSuggestBoxSuggestionChosenEventArgs args)
-    {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
-        sender.Text = args.SelectedItem.ToString();
-    }
-
     private async void SearchKeywordBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
-        if (string.IsNullOrEmpty(sender.Text))
+        if (string.IsNullOrEmpty(sender.Text) || args.Reason != AutoSuggestionBoxTextChangeReason.UserInput)
         {
             return;
         }

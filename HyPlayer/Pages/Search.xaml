@@ -35,7 +35,6 @@
                 PlaceholderText="搜索歌曲......"
                 QueryIcon="Find"
                 QuerySubmitted="SearchKeywordBox_QuerySubmitted"
-                SuggestionChosen="SearchKeywordBox_SuggestionChosen"
                 Tag="PageSearch"
                 Text="{x:Bind searchText,Mode=TwoWay}"
                 TextChanged="SearchKeywordBox_TextChanged" />

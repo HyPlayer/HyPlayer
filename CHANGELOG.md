@@ -1,6 +1,4 @@
 ## 功能优化
-* 修复PlayListItem在部分情况下动画显示异常
-* 修复HyPlayList切歌时异常的Bug
-* 替换已过时的DropShadowPanel
-* 小窗优化
-* 修复在有逐字歌词情况下小窗/Toast无法获取到歌词原文的bug
+* 更新歌词处理API以提高性能
+* 修改BasePage和SearchPage的AutoSuggestBox行为，在选择候选词时不更新候选词
+* 注意：此版本需要更新基本包
