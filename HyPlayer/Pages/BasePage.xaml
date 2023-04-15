@@ -106,8 +106,7 @@
                                 QueryIcon="Find" 
                                 PlaceholderText="搜索..." 
                                 LostFocus="SearchAutoSuggestBox_LostFocus"
-                                TextChanged="SearchAutoSuggestBox_TextChanged"
-                                SuggestionChosen="SearchAutoSuggestBox_SuggestionChosen"/>
+                                TextChanged="SearchAutoSuggestBox_TextChanged"/>
             </muxc:NavigationView.AutoSuggestBox>
             <muxc:NavigationView.MenuItems>
                 <muxc:NavigationViewItemHeader Content="发现"/>
