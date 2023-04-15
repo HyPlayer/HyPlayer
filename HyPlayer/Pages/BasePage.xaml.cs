@@ -877,6 +877,7 @@ public sealed partial class BasePage : Page
 
     private async void SearchAutoSuggestBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
     {
+        if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput) return;
         if (string.IsNullOrEmpty(sender.Text))
         {
             sender.ItemsSource = null;
@@ -898,12 +899,6 @@ public sealed partial class BasePage : Page
         {
             Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
-    }
-
-    private void SearchAutoSuggestBox_SuggestionChosen(AutoSuggestBox sender,
-        AutoSuggestBoxSuggestionChosenEventArgs args)
-    {
-        sender.Text = args.SelectedItem.ToString();
     }
 
     private Visibility SetVisiblePreview(int updateSource)
