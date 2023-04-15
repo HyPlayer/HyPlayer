@@ -2,9 +2,10 @@
 using AudioEffectComponent;
 using HyPlayer.Classes;
 using Kawazu;
+using LyricParser.Abstraction;
+using LyricParser.Implementation;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
-using Opportunity.LrcParser;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Email.DataProvider;
 using Windows.Devices.Enumeration;
 using Windows.Foundation.Collections;
 using Windows.Media;
@@ -1220,9 +1222,9 @@ public static class HyPlayList
         if (LyricPos >= Lyrics.Count || LyricPos < 0) LyricPos = 0;
         var changed = false;
         var realPos = Player.PlaybackSession.Position - LyricOffset;
-        if (Lyrics[LyricPos].LyricTime > realPos) //当感知到进度回溯时执行
+        if (Lyrics[LyricPos].LyricLine.StartTime > realPos.TotalMilliseconds) //当感知到进度回溯时执行
         {
-            LyricPos = Lyrics.FindLastIndex(t => t.LyricTime <= realPos) - 1;
+            LyricPos = Lyrics.FindLastIndex(t => t.LyricLine.StartTime <= realPos.TotalMilliseconds) - 1;
             if (LyricPos == -2) LyricPos = -1;
             changed = true;
         }
@@ -1231,7 +1233,7 @@ public static class HyPlayList
         {
             if (LyricPos == 0 && Lyrics.Count != 1) changed = false;
             while (Lyrics.Count > LyricPos + 1 &&
-                   Lyrics[LyricPos + 1].LyricTime <= realPos) //正常的滚歌词
+                   Lyrics[LyricPos + 1].LyricLine.StartTime <= realPos.TotalMilliseconds) //正常的滚歌词
             {
                 LyricPos++;
                 changed = true;
@@ -1305,8 +1307,7 @@ public static class HyPlayList
             if (Common.Setting.showComposerInLyric)
                 Lyrics.Add(new SongLyric
                 {
-                    LyricTime = TimeSpan.Zero,
-                    PureLyric = pureLyricInfo.PureLyrics
+                    LyricLine = new LrcLyricsLine(pureLyricInfo.PureLyrics, 0)
                 });
         }
         else
@@ -1314,9 +1315,9 @@ public static class HyPlayList
             Utils.ConvertTranslation(pureLyricInfo.TrLyrics, Lyrics);
             await Utils.ConvertRomaji(pureLyricInfo, Lyrics);
 
-            if (Lyrics.Count != 0 && Lyrics[0].LyricTime != TimeSpan.Zero)
+            if (Lyrics.Count != 0 && Lyrics[0].LyricLine.StartTime != 0)
                 Lyrics.Insert(0,
-                    new SongLyric { LyricTime = TimeSpan.Zero, PureLyric = "" });
+                    new SongLyric { LyricLine = new LrcLyricsLine(string.Empty, 0) });
         }
 
         LyricPos = 0;
@@ -1904,34 +1905,34 @@ public static class Utils
 {
     public static List<SongLyric> ConvertPureLyric(string lyricAllText, bool hasTranslationsInLyricText = false)
     {
-        var parsedlyrics = Lyrics.Parse(lyricAllText);
-        return parsedlyrics.Lyrics.Lines.Select(lyricsLine => new SongLyric
-        { LyricTime = lyricsLine.Timestamp.TimeOfDay, PureLyric = lyricsLine.Content, Translation = null })
-            .OrderBy(t => t.LyricTime)
-            .ToList();
+        var parsedlyrics = LrcParser.ParseLrc(lyricAllText.AsSpan());
+        return parsedlyrics.Select(lyricsLine => new SongLyric
+        { LyricLine = lyricsLine, Translation = null })
+                        .ToList();
     }
 
     public static void ConvertTranslation(string lyricAllText, List<SongLyric> lyrics)
     {
-        var parsedlyrics = Lyrics.Parse(lyricAllText);
-        foreach (var lyricsLine in parsedlyrics.Lyrics.Lines)
+        var parsedlyrics = LrcParser.ParseLrc(lyricAllText.AsSpan());
+        foreach (var lyricsLine in parsedlyrics)
             foreach (var songLyric in lyrics.Where(songLyric =>
-                         songLyric.LyricTime.TotalMilliseconds == lyricsLine.Timestamp.TimeOfDay.TotalMilliseconds))
+                         songLyric.LyricLine.StartTime == lyricsLine.StartTime))
             {
-                songLyric.Translation = lyricsLine.Content;
+                songLyric.Translation = lyricsLine.CurrentLyric;
                 break;
             }
+
     }
 
     public static void ConvertNeteaseRomaji(string lyricAllText, List<SongLyric> lyrics)
     {
         if (string.IsNullOrEmpty(lyricAllText)) return;
-        var parsedlyrics = Lyrics.Parse(lyricAllText);
-        foreach (var lyricsLine in parsedlyrics.Lyrics.Lines)
+        var parsedlyrics = LrcParser.ParseLrc(lyricAllText.AsSpan());
+        foreach (var lyricsLine in parsedlyrics)
             foreach (var songLyric in lyrics.Where(songLyric =>
-                         songLyric.LyricTime.TotalMilliseconds == lyricsLine.Timestamp.TimeOfDay.TotalMilliseconds))
+                         songLyric.LyricLine.StartTime == lyricsLine.StartTime))
             {
-                songLyric.Romaji = lyricsLine.Content;
+                songLyric.Romaji = lyricsLine.CurrentLyric;
                 break;
             }
     }
@@ -1941,10 +1942,10 @@ public static class Utils
         if (Common.KawazuConv is null) return;
         foreach (var lyricItem in lyrics)
         {
-            if (!string.IsNullOrWhiteSpace(lyricItem.PureLyric))
+            if (!string.IsNullOrWhiteSpace(lyricItem.LyricLine.CurrentLyric))
             {
-                if (Utilities.HasKana(lyricItem.PureLyric))
-                    lyricItem.Romaji = await Common.KawazuConv.Convert(lyricItem.PureLyric, To.Romaji, Mode.Separated);
+                if (Utilities.HasKana(lyricItem.LyricLine.CurrentLyric))
+                    lyricItem.Romaji = await Common.KawazuConv.Convert(lyricItem.LyricLine.CurrentLyric, To.Romaji, Mode.Separated);
             }
         }
     }
@@ -1973,32 +1974,13 @@ public static class Utils
 
     public static List<SongLyric> ConvertKaraok(PureLyricInfo pureLyricInfo)
     {
-        var lyrics = new List<SongLyric>();
         if (pureLyricInfo is KaraokLyricInfo karaokLyricInfo && !string.IsNullOrEmpty(karaokLyricInfo.KaraokLyric))
         {
-            var lines = karaokLyricInfo.KaraokLyric.Split('\n');
-            var parsedPureLyrics = Lyrics.Parse(pureLyricInfo.PureLyrics);
-            foreach (var line in lines)
-            {
-                if (!line.StartsWith('[')) continue;
-                var firstTime = line.Substring(1, line.IndexOf(',', 1) - 1);
-                var time = Convert.ToDouble(firstTime);
-                var currentLyric = new SongLyric
-                {
-                    LyricTime = TimeSpan.FromMilliseconds(time),
-                    PureLyric = string.Empty,
-                    Translation = null,
-                    Romaji = null,
-                    KaraokLine = line.Substring(line.IndexOf(']') + 1)
-                };
-                var pureLyric = string.Concat(Regex.Split(currentLyric.KaraokLine, "\\([0-9]*,[0-9]*,0\\)").ToList().Skip(1));
-                currentLyric.PureLyric = pureLyric;
-                lyrics.Add(currentLyric);
+            var parsedLyrics = KaraokeParser.ParseKaraoke(((KaraokLyricInfo)pureLyricInfo).KaraokLyric.AsSpan());
 
-            }
+            return parsedLyrics.Select(t => new SongLyric() { LyricLine = t }).ToList();
         }
-
-        return lyrics;
+        throw new ArgumentException("LyricInfo is not KaraokeLyricInfo");
     }
 }
 

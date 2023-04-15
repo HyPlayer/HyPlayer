@@ -582,9 +582,6 @@
     <PackageReference Include="Microsoft.UI.Xaml">
       <Version>2.8.2</Version>
     </PackageReference>
-    <PackageReference Include="Opportunity.LrcParser">
-      <Version>1.0.4</Version>
-    </PackageReference>
     <PackageReference Include="QRCoder">
       <Version>1.4.3</Version>
     </PackageReference>
@@ -600,6 +597,10 @@
     <ProjectReference Include="..\Kawazu\Kawazu\Kawazu.csproj">
       <Project>{2dc18999-32f2-40d4-ad9b-c5a09514e087}</Project>
       <Name>Kawazu</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\LyricParser\LyricParser\LyricParser.csproj">
+      <Project>{8cb63bd0-1a5e-4ca0-aaad-4249d37e3a47}</Project>
+      <Name>LyricParser</Name>
     </ProjectReference>
     <ProjectReference Include="..\NeteaseCloudMusicApi\NeteaseCloudMusicApi\NeteaseCloudMusicApi.csproj">
       <Project>{c20d7ea5-6db8-42b3-855d-75470cbe667f}</Project>

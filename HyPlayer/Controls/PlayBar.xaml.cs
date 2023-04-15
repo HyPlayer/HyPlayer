@@ -318,11 +318,11 @@ DoubleAnimation verticalAnimation;
         };
         if (HyPlayList.NowPlayingItem.PlayItem == null) return;
         data.Values["Title"] = HyPlayList.NowPlayingItem.PlayItem.Name;
-        data.Values["PureLyric"] = HyPlayList.Lyrics[HyPlayList.LyricPos].PureLyric;
+        data.Values["PureLyric"] = HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.CurrentLyric;
         // TODO 此处有点冒险的报错,请注意测试
         data.Values["Translation"] = HyPlayList.Lyrics[HyPlayList.LyricPos].Translation is null
             ? HyPlayList.Lyrics.Count > HyPlayList.LyricPos + 1
-                ? HyPlayList.Lyrics[HyPlayList.LyricPos + 1].PureLyric
+                ? HyPlayList.Lyrics[HyPlayList.LyricPos + 1].LyricLine.CurrentLyric
                 : ""
             : HyPlayList.Lyrics[HyPlayList.LyricPos].Translation;
         data.Values["TotalValueString"] =
@@ -343,7 +343,7 @@ DoubleAnimation verticalAnimation;
             try
             {
                 if (HyPlayList.NowPlayingItem?.PlayItem == null) return;
-                var showingTimespan = ts;
+                var _lyricIsOnShowTimespan = ts;
                 if (!_isSliding)
                 {
                     SliderProgress.Value = HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;

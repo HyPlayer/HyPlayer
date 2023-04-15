@@ -52,8 +52,8 @@ public sealed partial class LyricShareDialog : ContentDialog
             ShareLyricItem.Add(new LyricShareItem
             {
                 Type = LyricShareItemType.Original,
-                Text = songLyric.PureLyric,
-                Time = songLyric.LyricTime,
+                Text = songLyric.LyricLine.CurrentLyric,
+                Time = TimeSpan.FromMilliseconds(songLyric.LyricLine.StartTime),
                 OriginalLyric = songLyric
             });
             if (songLyric.HaveTranslation)
@@ -61,7 +61,7 @@ public sealed partial class LyricShareDialog : ContentDialog
                 {
                     Type = LyricShareItemType.Translation,
                     Text = songLyric.Translation,
-                    Time = songLyric.LyricTime,
+                    Time = TimeSpan.FromMilliseconds(songLyric.LyricLine.StartTime),
                     OriginalLyric = songLyric
                 });
         }
@@ -86,7 +86,7 @@ public sealed partial class LyricShareDialog : ContentDialog
                 OutputLines[item.OriginalLyric] =
                     TextBoxOutputFormat.Text
                         .Replace("{$NEWLINE}", "\r\n")
-                        .Replace("{$TIME}", item.OriginalLyric.LyricTime.ToString(@"mm\:ss\.ff"));
+                        .Replace("{$TIME}", item.OriginalLyric.LyricLine.StartTime.ToString(@"mm\:ss\.ff"));
             OutputLines[item.OriginalLyric] = item.Type switch
             {
                 LyricShareItemType.Original => OutputLines[item.OriginalLyric]
@@ -110,7 +110,7 @@ public sealed partial class LyricShareDialog : ContentDialog
                     .Replace("{$ROMAJI}", string.Empty);
 
         // 再根据歌词拍下序
-        newOutputLines = newOutputLines.OrderBy(t => t.Key.LyricTime).ToDictionary(t => t.Key, t => t.Value);
+        newOutputLines = newOutputLines.OrderBy(t => t.Key.LyricLine.CurrentLyric).ToDictionary(t => t.Key, t => t.Value);
         return string.Join(string.Empty, newOutputLines.Values);
     }
 
@@ -154,7 +154,7 @@ public sealed partial class LyricShareDialog : ContentDialog
                 MainListView.SelectedItems.Add(lyricShareItem);
     }
 
-    private async void LoadRomaji(object sender, RoutedEventArgs e)
+    private void LoadRomaji(object sender, RoutedEventArgs e)
     {
         CheckBoxLoadRomaji.IsEnabled = false;
         for (var index = 0; index < ShareLyricItem.Count; index++)

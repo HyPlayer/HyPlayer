@@ -1,5 +1,6 @@
 ﻿#region
 
+using LyricParser.Abstraction;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -48,23 +49,21 @@ public class PureLyricInfo
 public class SongLyric
 {
     public static SongLyric PureSong = new()
-    { LyricTime = TimeSpan.Zero, PureLyric = "纯音乐 请欣赏" };
+    { LyricLine = new LrcLyricsLine("纯音乐 请欣赏", 0) };
 
     public static SongLyric NoLyric = new()
-    { LyricTime = TimeSpan.Zero, PureLyric = "无歌词 请欣赏" };
+    { LyricLine = new LrcLyricsLine("无歌词 请欣赏", 0) };
 
     public static SongLyric LoadingLyric = new()
-    { LyricTime = TimeSpan.Zero, PureLyric = "加载歌词中..." };
+    { LyricLine = new LrcLyricsLine("加载歌词中...", 0) };
 
-    public TimeSpan LyricTime;
-    public string PureLyric;
+    public ILyricLine LyricLine;
     public string Translation;
     public string Romaji;
 
-    public string KaraokLine;
     public bool HaveTranslation => !string.IsNullOrEmpty(Translation);
     public bool HaveRomaji => !string.IsNullOrEmpty(Romaji);
-    public bool IsKaraok => !string.IsNullOrEmpty(KaraokLine);
+    public Type LyricType => LyricLine.GetType();
 }
 
 public class NCRadio

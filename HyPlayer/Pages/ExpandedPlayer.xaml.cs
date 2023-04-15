@@ -466,8 +466,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             try
             {
                 var ele = LyricBox.GetOrCreateElement(k) as FrameworkElement;
-                if ((ele as LyricItemWrapper).SongLyric.PureLyric != "" ||
-                    (ele as LyricItemWrapper).SongLyric.KaraokLine != "")
+                if ((ele as LyricItemWrapper).SongLyric.LyricLine.CurrentLyric != "")
                 {
                     ele?.UpdateLayout();
                     ele.StartBringIntoView(DefaultBringIntoViewOptions);
