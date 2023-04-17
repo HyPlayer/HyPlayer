@@ -798,6 +798,10 @@ public sealed partial class BasePage : Page
     {
         Common.NavigatePage(typeof(Search), sender.Text, new EntranceNavigationTransitionInfo());
     }
+    private void SearchAutoSuggestBox_OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+    {
+        sender.Text = (string)args.SelectedItem;
+    }
 
 
     private void BtnScaleQrCode_Click(object sender, RoutedEventArgs e)

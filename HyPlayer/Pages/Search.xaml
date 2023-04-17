@@ -37,7 +37,8 @@
                 QuerySubmitted="SearchKeywordBox_QuerySubmitted"
                 Tag="PageSearch"
                 Text="{x:Bind searchText,Mode=TwoWay}"
-                TextChanged="SearchKeywordBox_TextChanged" />
+                TextChanged="SearchKeywordBox_TextChanged" 
+                SuggestionChosen="SearchKeywordBox_OnSuggestionChosen"/>
 
             <ComboBox
                     x:Name="HistoryComboBox"

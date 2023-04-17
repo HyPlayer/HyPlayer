@@ -527,4 +527,9 @@ public sealed partial class Search : Page, IDisposable
             await LoadResult();
         }
     }
+
+    private void SearchKeywordBox_OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+    {
+        sender.Text = (string)args.SelectedItem;
+    }
 }
