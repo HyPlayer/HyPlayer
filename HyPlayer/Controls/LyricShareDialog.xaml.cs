@@ -110,7 +110,7 @@ public sealed partial class LyricShareDialog : ContentDialog
                     .Replace("{$ROMAJI}", string.Empty);
 
         // 再根据歌词拍下序
-        newOutputLines = newOutputLines.OrderBy(t => t.Key.LyricLine.CurrentLyric).ToDictionary(t => t.Key, t => t.Value);
+        newOutputLines = newOutputLines.OrderBy(t => t.Key.LyricLine.StartTime).ToDictionary(t => t.Key, t => t.Value);
         return string.Join(string.Empty, newOutputLines.Values);
     }
 
