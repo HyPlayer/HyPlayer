@@ -121,6 +121,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
     public void RefreshWordColor(TimeSpan position)
     {
+        if (!_lyricIsKaraokeLyric) return;
         _ = Common.Invoke(() =>
         {
             var playedWords =
@@ -257,13 +258,13 @@ public sealed partial class LyricItem : UserControl, IDisposable
                     BlockToAnimation[textBlock] = storyboard;
                 }
             }
-
         RefreshFontSize();
         OnHind();
     }
 
     public void Dispose()
     {
+        if(_lyricIsKaraokeLyric) HyPlayList.OnPlayPositionChange -= RefreshWordColor;
         WordTextBlocks.Clear();
         BlockToAnimation.Clear();
     }
