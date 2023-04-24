@@ -19,7 +19,15 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <controls:WrapPanel x:Name="WordLyricContainer" Grid.Row="0" HorizontalAlignment="Center" Visibility="{x:Bind _lyricIsKaraokeLyric}"/>
+        <TextBlock
+            Name="WordLyricContainer"
+            Grid.Row="0"
+            controls:DockPanel.Dock="Top"
+            CharacterSpacing="0"
+            FontWeight="Bold"
+            TextAlignment="Center"
+            TextWrapping="WrapWholeWords" 
+            Visibility="{x:Bind _lyricIsKaraokeLyric}"/>
         <TextBlock
             Name="TextBoxPureLyric"
             Grid.Row="0"

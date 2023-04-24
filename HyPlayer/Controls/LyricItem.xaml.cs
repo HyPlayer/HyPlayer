@@ -12,6 +12,7 @@ using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
@@ -29,9 +30,9 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
     public bool _lyricIsOnShow = true;
 
-    private List<TextBlock> WordTextBlocks = new ();
+    private List<Run> WordTextBlocks = new ();
 
-    private Dictionary<TextBlock, Storyboard> BlockToAnimation = new ();
+    private Dictionary<Run, Storyboard> BlockToAnimation = new ();
 
     public bool _lyricIsKaraokeLyric;
     public LyricItem(SongLyric lrc)
@@ -48,8 +49,8 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
     public TextAlignment LyricAlignment =>
         Common.Setting.lyricAlignment ? TextAlignment.Left : TextAlignment.Center;
-    public HorizontalAlignment KaraokLyricPanelAlignment =>
-            Common.Setting.lyricAlignment ? HorizontalAlignment.Left : HorizontalAlignment.Center;
+    public TextAlignment KaraokLyricPanelAlignment =>
+            Common.Setting.lyricAlignment ? TextAlignment.Left : TextAlignment.Center;
     private SolidColorBrush AccentBrush => GetAccentBrush();
 
     private SolidColorBrush IdleBrush => GetIdleBrush();
@@ -107,11 +108,13 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
     public void RefreshFontSize()
     {
-        WordLyricContainer.HorizontalAlignment = KaraokLyricPanelAlignment;
+        WordLyricContainer.TextAlignment = KaraokLyricPanelAlignment;
         TextBoxPureLyric.TextAlignment = LyricAlignment;
+        WordLyricContainer.TextAlignment = LyricAlignment;
         TextBoxTranslation.TextAlignment = LyricAlignment;
         TextBoxSound.TextAlignment = LyricAlignment;
         TextBoxPureLyric.FontSize = _lyricIsOnShow ? actualsize + Common.Setting.lyricScaleSize : actualsize;
+        WordLyricContainer.FontSize = _lyricIsOnShow ? actualsize + Common.Setting.lyricScaleSize : actualsize;
         TextBoxTranslation.FontSize = _lyricIsOnShow ? actualsize + Common.Setting.lyricScaleSize : actualsize;
         TextBoxSound.FontSize = Common.Setting.romajiSize;
     }
@@ -186,14 +189,19 @@ public sealed partial class LyricItem : UserControl, IDisposable
         }
 
         TextBoxPureLyric.FontSize = actualsize;
+        WordLyricContainer.FontSize = actualsize;
         TextBoxTranslation.FontSize = actualsize;
         TextBoxPureLyric.Margin = new Thickness(0);
+        WordLyricContainer.Margin = new Thickness(0);
         TextBoxTranslation.Margin = new Thickness(0);
         TextBoxPureLyric.CharacterSpacing = 0;
+        WordLyricContainer.CharacterSpacing = 0;
         TextBoxTranslation.CharacterSpacing = 0;
         TextBoxPureLyric.FontWeight = FontWeights.SemiBold;
+        WordLyricContainer.FontWeight = FontWeights.SemiBold;
         TextBoxTranslation.FontWeight = FontWeights.SemiBold;
         TextBoxPureLyric.Foreground = IdleBrush;
+        WordLyricContainer.Foreground = IdleBrush;
         TextBoxTranslation.Foreground = IdleBrush;
         TextBoxSound.Foreground = IdleBrush;
         //shadowColor = Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 0, 0, 0);
@@ -226,26 +234,25 @@ public sealed partial class LyricItem : UserControl, IDisposable
             
             foreach (var item in ((KaraokeLyricsLine)Lrc.LyricLine).WordInfos)
             {
-                    var textBlock = new TextBlock()
+                    var textBlock = new Run()
                     {
                         Text = item.CurrentWords,
                         FontSize = actualsize,
                         FontWeight = FontWeights.Bold,
                         Foreground = IdleBrush
                     };
-                    textBlock.Margin = new Thickness(item.CurrentWords.StartsWith(' ') ? actualsize / 3 : 0, 0,
-                        item.CurrentWords.EndsWith(' ') ? actualsize / 3 : 0, 0);
                     WordTextBlocks?.Add(textBlock);
-                    WordLyricContainer.Children.Add(textBlock);
+                    WordLyricContainer.Inlines.Add(textBlock);
                     var ani = new ColorAnimation
                     {
                         From = GetKaraokIdleBrush(),
                         To = GetKaraokAccentBrush(),
-                        Duration = TimeSpan.FromMilliseconds(item.Duration)
+                        Duration = TimeSpan.FromMilliseconds(item.Duration),
+                        EnableDependentAnimation = true
                     };
-                    var storyboard = new Storyboard();
-                    Storyboard.SetTarget(ani, textBlock);
-                    Storyboard.SetTargetProperty(ani, "(TextBlock.Foreground).(SolidColorBrush.Color)");
+                var storyboard = new Storyboard();
+                Storyboard.SetTarget(ani, textBlock);
+                    Storyboard.SetTargetProperty(ani, "(Run.Foreground).(SolidColorBrush.Color)");
                     storyboard.Children.Add(ani);
                     BlockToAnimation[textBlock] = storyboard;
                 }
