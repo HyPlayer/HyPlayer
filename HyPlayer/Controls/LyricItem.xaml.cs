@@ -49,8 +49,6 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
     public TextAlignment LyricAlignment =>
         Common.Setting.lyricAlignment ? TextAlignment.Left : TextAlignment.Center;
-    public TextAlignment KaraokLyricPanelAlignment =>
-            Common.Setting.lyricAlignment ? TextAlignment.Left : TextAlignment.Center;
     private SolidColorBrush AccentBrush => GetAccentBrush();
 
     private SolidColorBrush IdleBrush => GetIdleBrush();
@@ -108,7 +106,6 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
     public void RefreshFontSize()
     {
-        WordLyricContainer.TextAlignment = KaraokLyricPanelAlignment;
         TextBoxPureLyric.TextAlignment = LyricAlignment;
         WordLyricContainer.TextAlignment = LyricAlignment;
         TextBoxTranslation.TextAlignment = LyricAlignment;
@@ -149,12 +146,11 @@ public sealed partial class LyricItem : UserControl, IDisposable
         _lyricIsOnShow = true;
         if (_lyricIsKaraokeLyric)
         {
-            HyPlayList.OnPlayPositionChange += RefreshWordColor;
             WordTextBlocks?.ForEach(w =>
             {
-                w.FontSize = actualsize + Common.Setting.lyricScaleSize;
                 w.Foreground = new SolidColorBrush(GetKaraokIdleBrush());
             });
+            HyPlayList.OnPlayPositionChange += RefreshWordColor;
         }
 
         TextBoxPureLyric.FontSize = actualsize + Common.Setting.lyricScaleSize;
@@ -184,7 +180,6 @@ public sealed partial class LyricItem : UserControl, IDisposable
             HyPlayList.OnPlayPositionChange -= RefreshWordColor;
             WordTextBlocks?.ForEach(w =>
             {
-                w.FontSize = actualsize;
                 w.Foreground = IdleBrush;
             });
         }
@@ -218,6 +213,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
     {
         TextBoxPureLyric.FontSize = actualsize;
         TextBoxTranslation.FontSize = actualsize;
+        WordLyricContainer.FontSize = actualsize;
         TextBoxPureLyric.Text = Lrc.LyricLine.CurrentLyric ?? string.Empty;
         if (Lrc.HaveTranslation && Common.ShowLyricTrans && !string.IsNullOrWhiteSpace(Lrc.Translation))
             TextBoxTranslation.Text = Lrc.Translation;
@@ -238,7 +234,6 @@ public sealed partial class LyricItem : UserControl, IDisposable
                     var textBlock = new Run()
                     {
                         Text = item.CurrentWords,
-                        FontSize = actualsize,
                         FontWeight = FontWeights.Bold,
                         Foreground = IdleBrush
                     };
