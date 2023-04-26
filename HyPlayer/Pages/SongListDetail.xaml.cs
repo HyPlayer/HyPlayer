@@ -40,14 +40,14 @@ public sealed partial class SongListDetail : Page, IDisposable
     private DataTransferManager _dataTransferManager = DataTransferManager.GetForCurrentView();
     private Task _songListLoaderTask;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-    private CancellationToken _token;
+    private CancellationToken _cancellationToken;
 
     public SongListDetail()
     {
         InitializeComponent();
         Songs = new ObservableCollection<NCSong>();
         _dataTransferManager.DataRequested += DataTransferManagerOnDataRequested;
-        _token = _cancellationTokenSource.Token;
+        _cancellationToken = _cancellationTokenSource.Token;
     }
 
     private void DataTransferManagerOnDataRequested(DataTransferManager sender, DataRequestedEventArgs args)
@@ -126,10 +126,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         SongsList.ListSource = "content";
         try
         {
-            if (_token.IsCancellationRequested)
-            {
-                throw new TaskCanceledException();
-            }
+            _cancellationToken.ThrowIfCancellationRequested();
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendSongs);
             if (json["data"]["dailySongs"][0]["alg"].ToString() == "birthDaySong")
             {
@@ -142,7 +139,7 @@ public sealed partial class SongListDetail : Page, IDisposable
             var idx = 0;
             foreach (var song in json["data"]["dailySongs"])
             {
-                if (_token.IsCancellationRequested)
+                if (_cancellationToken.IsCancellationRequested)
                 {
                     throw new TaskCanceledException();
                 }
@@ -164,10 +161,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         if (IsDisposed) throw new ObjectDisposedException(nameof(SongListDetail));
         try
         {
-            if (_token.IsCancellationRequested)
-            {
-                throw new TaskCanceledException();
-            }
+            _cancellationToken.ThrowIfCancellationRequested();
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
                 new Dictionary<string, object> { { "id", playList.plid } });
             if (!json["playlist"]["trackIds"].HasValues) return;
@@ -193,7 +187,7 @@ public sealed partial class SongListDetail : Page, IDisposable
                 var i = 0;
                 foreach (var jToken in json["songs"])
                 {
-                    if (_token.IsCancellationRequested)
+                    if (_cancellationToken.IsCancellationRequested)
                     {
                         throw new TaskCanceledException();
                     }

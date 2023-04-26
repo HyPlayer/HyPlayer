@@ -5,6 +5,7 @@ using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -24,16 +25,21 @@ public sealed partial class PageFavorite : Page, IDisposable
     private int i;
     private int page;
     public bool IsDisposed = false;
+    private Task _listLoaderTask;
+    private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+    private CancellationToken _cancellationToken;
 
     public PageFavorite()
     {
         InitializeComponent();
+        _cancellationToken = _cancellationTokenSource.Token;
     }
 
     public void Dispose()
     {
         if (IsDisposed) return;
         ItemContainer.ListItems.Clear();
+        _cancellationTokenSource.Dispose();
         IsDisposed = true;
         GC.SuppressFinalize(this);
     }
@@ -44,9 +50,22 @@ public sealed partial class PageFavorite : Page, IDisposable
         NavView.SelectedItem = NavView.MenuItems[0];
     }
 
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        if (_listLoaderTask != null && !_listLoaderTask.IsCompleted)
+        {
+            try
+            {
+                _cancellationTokenSource.Cancel();
+                await _listLoaderTask;
+            }
+            catch
+            {
+                Dispose();
+                return;
+            }
+        }
         Dispose();
     }
 
@@ -56,22 +75,23 @@ public sealed partial class PageFavorite : Page, IDisposable
         page = 0;
         i = 0;
         ItemContainer.ListItems.Clear();
-        RealLoad();
+        _listLoaderTask =  RealLoad();
     }
 
-    private void RealLoad()
+    private async Task RealLoad()
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(PageFavorite));
+        _cancellationToken.ThrowIfCancellationRequested();
         switch ((NavView.SelectedItem as NavigationViewItem)?.Tag.ToString())
         {
             case "Album":
-                _ = LoadAlbumResult();
+                await LoadAlbumResult();
                 break;
             case "Artist":
-                _ = LoadArtistResult();
+                await LoadArtistResult();
                 break;
             case "Radio":
-                _ = LoadRadioResult();
+                await LoadRadioResult();
                 break;
         }
     }
@@ -88,6 +108,8 @@ public sealed partial class PageFavorite : Page, IDisposable
                 });
             BtnLoadMore.Visibility = json["hasMore"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
             foreach (var pljs in json["djRadios"])
+            {
+                _cancellationToken.ThrowIfCancellationRequested();
                 ItemContainer.ListItems.Add(new SimpleListItem
                 {
                     Title = pljs["name"].ToString(),
@@ -99,6 +121,7 @@ public sealed partial class PageFavorite : Page, IDisposable
                     Order = i++,
                     CanPlay = true
                 });
+            }
         }
         catch (Exception ex)
         {
@@ -119,6 +142,8 @@ public sealed partial class PageFavorite : Page, IDisposable
 
             BtnLoadMore.Visibility = json["hasMore"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
             foreach (var singerjson in json["data"])
+            {
+                _cancellationToken.ThrowIfCancellationRequested();
                 ItemContainer.ListItems.Add(new SimpleListItem
                 {
                     Title = singerjson["name"].ToString(),
@@ -131,6 +156,7 @@ public sealed partial class PageFavorite : Page, IDisposable
                     Order = i++,
                     CanPlay = true
                 });
+            }
         }
         catch (Exception ex)
         {
@@ -150,6 +176,8 @@ public sealed partial class PageFavorite : Page, IDisposable
                 });
             BtnLoadMore.Visibility = json["hasMore"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
             foreach (var albumjson in json["data"])
+            {
+                _cancellationToken.ThrowIfCancellationRequested();
                 ItemContainer.ListItems.Add(new SimpleListItem
                 {
                     Title = albumjson["name"].ToString(),
@@ -163,6 +191,7 @@ public sealed partial class PageFavorite : Page, IDisposable
                     Order = i++,
                     CanPlay = true
                 });
+            }
         }
         catch (Exception ex)
         {
@@ -174,6 +203,6 @@ public sealed partial class PageFavorite : Page, IDisposable
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(PageFavorite));
         page++;
-        RealLoad();
+        _listLoaderTask = RealLoad();
     }
 }

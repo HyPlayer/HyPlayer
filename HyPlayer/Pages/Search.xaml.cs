@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.System;
 using Windows.UI.Xaml;
@@ -34,11 +35,15 @@ public sealed partial class Search : Page, IDisposable
     private int page;
     private string searchText = "";
     public bool IsDisposed = false;
+    private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+    private CancellationToken _cancellationToken;
+    private Task _loadResultTask;
 
     public Search()
     {
         InitializeComponent();
         NavigationViewSelector.SelectedItem = NavigationViewSelector.MenuItems[0];
+        _cancellationToken = _cancellationTokenSource.Token;
     }
 
     public bool HasNextPage
@@ -58,6 +63,7 @@ public sealed partial class Search : Page, IDisposable
         if (IsDisposed) return;
         SongResults.Clear();
         SearchResultContainer.ListItems.Clear();
+        _cancellationTokenSource.Dispose();
         IsDisposed = true;
         GC.SuppressFinalize(this);
     }
@@ -73,14 +79,28 @@ public sealed partial class Search : Page, IDisposable
         //if (searchText != string.Empty) _ = LoadResult();
     }
 
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        if (_loadResultTask != null && !_loadResultTask .IsCompleted)
+        {
+            try
+            {
+                _cancellationTokenSource.Cancel();
+                await _loadResultTask ;
+            }
+            catch
+            {
+                Dispose();
+                return;
+            }
+        }
         Dispose();
     }
 
     private async Task LoadResult()
     {
+        _cancellationToken.ThrowIfCancellationRequested();
         if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         if (string.IsNullOrEmpty(searchText)) return;
         if (Convert.ToBase64String(searchText.ToByteArrayUtf8()) == "6Ieq5p2A")
@@ -137,7 +157,8 @@ public sealed partial class Search : Page, IDisposable
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            if (ex.GetType() != typeof(TaskCanceledException))
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
 
@@ -187,6 +208,7 @@ public sealed partial class Search : Page, IDisposable
 
         foreach (var item in json["result"]["videos"])
         {
+            _cancellationToken.ThrowIfCancellationRequested();
             SearchResultContainer.ListItems.Add(
                 new SimpleListItem
                 {
@@ -220,6 +242,8 @@ public sealed partial class Search : Page, IDisposable
         }
 
         foreach (var songJs in json["result"]["songs"].ToArray())
+        {
+            _cancellationToken.ThrowIfCancellationRequested();
             SearchResultContainer.ListItems.Add(
                 new SimpleListItem
                 {
@@ -231,6 +255,7 @@ public sealed partial class Search : Page, IDisposable
                     CoverUri = songJs["al"]["picUrl"].ToString(),
                     Order = i++
                 });
+        }
         if (json["result"]["songCount"].ToObject<int>() >= (page + 1) * 30)
             HasNextPage = true;
         else
@@ -252,6 +277,8 @@ public sealed partial class Search : Page, IDisposable
         }
 
         foreach (var userJs in json["result"]["userprofiles"].ToArray())
+        {
+            _cancellationToken.ThrowIfCancellationRequested();
             SearchResultContainer.ListItems.Add(
                 new SimpleListItem
                 {
@@ -263,6 +290,8 @@ public sealed partial class Search : Page, IDisposable
                     CoverUri = userJs["avatarUrl"].ToString(),
                     Order = i++
                 });
+        }
+            
         if (json["result"]["userprofileCount"].ToObject<int>() >= (page + 1) * 30)
             HasNextPage = true;
         else
@@ -284,6 +313,8 @@ public sealed partial class Search : Page, IDisposable
         }
 
         foreach (var pljs in json["result"]["djRadios"].ToArray())
+        {
+            _cancellationToken.ThrowIfCancellationRequested();
             SearchResultContainer.ListItems.Add(
                 new SimpleListItem
                 {
@@ -295,7 +326,9 @@ public sealed partial class Search : Page, IDisposable
                     CoverUri = pljs["picUrl"].ToString(),
                     Order = i++,
                     CanPlay = true
-                });
+                });   
+        }
+            
         if (int.Parse(json["result"]["djRadiosCount"].ToString()) >= (page + 1) * 30)
             HasNextPage = true;
         else
@@ -310,7 +343,7 @@ public sealed partial class Search : Page, IDisposable
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         searchText = (sender as Button).Content.ToString();
-        _ = LoadResult();
+        _loadResultTask = LoadResult();
     }
 
     private void LoadPlaylistResult(JObject json)
@@ -324,6 +357,8 @@ public sealed partial class Search : Page, IDisposable
         }
 
         foreach (var pljs in json["result"]["playlists"].ToArray())
+        {
+            _cancellationToken.ThrowIfCancellationRequested();
             SearchResultContainer.ListItems.Add(new SimpleListItem
             {
                 Title = pljs["name"].ToString(),
@@ -335,6 +370,7 @@ public sealed partial class Search : Page, IDisposable
                 Order = i++,
                 CanPlay = true
             });
+        }
         if (int.Parse(json["result"]["playlistCount"].ToString()) >= (page + 1) * 30)
             HasNextPage = true;
         else
@@ -356,6 +392,8 @@ public sealed partial class Search : Page, IDisposable
         }
 
         foreach (var singerjson in json["result"]["artists"].ToArray())
+        {
+            _cancellationToken.ThrowIfCancellationRequested();
             SearchResultContainer.ListItems.Add(new SimpleListItem
             {
                 Title = singerjson["name"].ToString(),
@@ -367,6 +405,7 @@ public sealed partial class Search : Page, IDisposable
                 CoverUri = singerjson["img1v1Url"].ToString(),
                 Order = i++
             });
+        }
         if (int.Parse(json["result"]["artistCount"].ToString()) >= (page + 1) * 30)
             HasNextPage = true;
         else
@@ -388,6 +427,8 @@ public sealed partial class Search : Page, IDisposable
         }
 
         foreach (var albumjson in json["result"]["albums"].ToArray())
+        {
+            _cancellationToken.ThrowIfCancellationRequested();
             SearchResultContainer.ListItems.Add(new SimpleListItem
             {
                 Title = albumjson["name"].ToString(),
@@ -401,6 +442,7 @@ public sealed partial class Search : Page, IDisposable
                 Order = i++,
                 CanPlay = true
             });
+        }
         if (int.Parse(json["result"]["albumCount"].ToString()) >= (page + 1) * 30)
             HasNextPage = true;
         else
@@ -425,6 +467,7 @@ public sealed partial class Search : Page, IDisposable
         {
             foreach (var song in json["result"]["songs"].ToArray())
             {
+                _cancellationToken.ThrowIfCancellationRequested();
                 var ncSong = NCSong.CreateFromJson(song);
                 ncSong.Order = idx++;
                 SongResults.Add(ncSong);
@@ -439,9 +482,10 @@ public sealed partial class Search : Page, IDisposable
             else
                 HasPreviousPage = false;
         }
-        catch
+        catch (Exception ex)
         {
-            Common.AddToTeachingTipLists("出现错误", json["msg"].ToString());
+            if (ex.GetType() != typeof(TaskCanceledException))
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
 
@@ -450,14 +494,14 @@ public sealed partial class Search : Page, IDisposable
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         page--;
-        _ = LoadResult();
+        _loadResultTask = LoadResult();
     }
 
     private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         page++;
-        _ = LoadResult();
+        _loadResultTask = LoadResult();
     }
 
     private void NavigationView_OnSelectionChanged(NavigationView sender,
@@ -476,7 +520,7 @@ public sealed partial class Search : Page, IDisposable
             SearchResultContainer.Visibility = Visibility.Visible;
         }
 
-        _ = LoadResult();
+        _loadResultTask = LoadResult();
     }
 
     private void SearchKeywordBox_LostFocus(object sender, RoutedEventArgs e)
@@ -489,7 +533,7 @@ public sealed partial class Search : Page, IDisposable
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         searchText = sender.Text;
-        _ = LoadResult();
+        _loadResultTask = LoadResult();
     }
 
     private async void SearchKeywordBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
@@ -524,7 +568,7 @@ public sealed partial class Search : Page, IDisposable
         if ((sender as ComboBox) is not null)
         {
             SearchKeywordBox.Text = (sender as ComboBox).SelectedItem as String;//将历史放上去
-            await LoadResult();
+            _loadResultTask = LoadResult();
         }
     }
 

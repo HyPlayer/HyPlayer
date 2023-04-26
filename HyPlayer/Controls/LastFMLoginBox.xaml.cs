@@ -15,13 +15,18 @@ namespace HyPlayer.Controls
         public LastFMLoginPage()
         {
             InitializeComponent();
-            LastFMManager.OnLoginDone += Hide;
+            LastFMManager.OnLoginDone += OnLoginDone;
             LastFMManager.OnLoginError += OnLoginError;
         }
         private void OnLoginError(Exception ex)
         {
             InfoBarLoginHint.IsOpen = true;
             InfoBarLoginHint.Message = ex.Message;
+            return;
+        }private void OnLoginDone()
+        {
+            LastFMManager.OnLoginError -= OnLoginError;
+            LastFMManager.OnLoginDone -= OnLoginDone;
             return;
         }
         private void TextBoxAccount_OnKeyDown(object sender, KeyRoutedEventArgs e)
