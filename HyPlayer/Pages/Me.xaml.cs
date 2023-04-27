@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.UI.Xaml;
@@ -30,10 +31,15 @@ public sealed partial class Me : Page, IDisposable
     private readonly ObservableCollection<SimpleListItem> myPlayList = new();
     private string uid = "";
     public bool IsDisposed = false;
+    private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+    private CancellationToken _cancellationToken;
+    private Task _loadPlaylistTask;
+    private Task _loadInfoTask;
 
     public Me()
     {
         InitializeComponent();
+        _cancellationToken = _cancellationTokenSource.Token;
     }
 
     public void Dispose()
@@ -42,12 +48,28 @@ public sealed partial class Me : Page, IDisposable
         ImageRect.ImageSource = null;
         myPlayList.Clear();
         likedPlayList.Clear();
+        _cancellationTokenSource.Dispose();
         GC.SuppressFinalize(this);
     }
 
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        if ((_loadPlaylistTask != null && ! _loadPlaylistTask.IsCompleted) 
+            || (_loadInfoTask != null && ! _loadInfoTask.IsCompleted))
+        {
+            try
+            {
+                _cancellationTokenSource.Cancel();
+                await _loadPlaylistTask;
+                await _loadInfoTask;
+            }
+            catch
+            {
+                Dispose();
+                return;
+            }
+        }
         Dispose();
     }
 
@@ -64,13 +86,14 @@ public sealed partial class Me : Page, IDisposable
             uid = Common.LoginedUser.id;
         }
 
-        _ = LoadInfo();
-        _ = LoadPlayList();
+        _loadInfoTask = LoadInfo();
+        _loadPlaylistTask = LoadPlayList();
     }
 
     public async Task LoadPlayList()
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(Me));
+        _cancellationToken.ThrowIfCancellationRequested();
         try
         {
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
@@ -81,6 +104,7 @@ public sealed partial class Me : Page, IDisposable
             var subListIdx = 0;
             foreach (var PlaylistItemJson in json["playlist"].ToArray())
             {
+                _cancellationToken.ThrowIfCancellationRequested();
                 var ncp = NCPlayList.CreateFromJson(PlaylistItemJson);
                 if (ncp.creater.id != uid)
                     //GridContainerSub.Children.Add(new PlaylistItem(ncp));
@@ -115,13 +139,15 @@ public sealed partial class Me : Page, IDisposable
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            if(ex.GetType()!=typeof(TaskCanceledException))
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
 
     public async Task LoadInfo()
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(Me));
+        _cancellationToken.ThrowIfCancellationRequested();
         if (uid == Common.LoginedUser?.id)
         {
             TextBoxUserName.Text = Common.LoginedUser.name;
@@ -145,7 +171,8 @@ public sealed partial class Me : Page, IDisposable
             }
             catch (Exception ex)
             {
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                if(ex.GetType()!=typeof(TaskCanceledException))
+                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
         /*

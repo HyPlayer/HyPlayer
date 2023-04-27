@@ -31,12 +31,14 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
     private string _notificationText;
     private Task CurrentFileScanTask;
     private CancellationTokenSource cancellationTokenSource = new();
+    private CancellationToken _cancellationToken;
     private int index;
     public bool IsDisposed = false;
 
     public LocalMusicPage()
     {
         InitializeComponent();
+        _cancellationToken = cancellationTokenSource.Token;
     }
 
     public async void Dispose()
@@ -56,7 +58,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
             }
         }
         CurrentFileScanTask = null;
-        cancellationTokenSource = null;
+        cancellationTokenSource.Dispose();
         NotificationText = null;
         localHyItems.Clear();
         IsDisposed = true;
@@ -120,7 +122,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
         {
             foreach (var storageFile in files)
             {
-                if (cancellationTokenSource.IsCancellationRequested) throw new TaskCanceledException();
+                _cancellationToken.ThrowIfCancellationRequested();
                 try
                 {
                     var item = await HyPlayList.LoadStorageFile(storageFile);
@@ -150,7 +152,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
             };
             foreach (var storageFile in files)
             {
-                if (cancellationTokenSource.IsCancellationRequested) throw new TaskCanceledException();
+                _cancellationToken.ThrowIfCancellationRequested();
                 var item = new HyPlayItem
                 {
                     ItemType = HyPlayItemType.LocalProgressive,

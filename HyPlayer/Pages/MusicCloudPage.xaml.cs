@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
@@ -27,11 +28,15 @@ public sealed partial class MusicCloudPage : Page, IDisposable
     private readonly ObservableCollection<NCSong> Items = new();
     private int page;
     public bool IsDisposed = false;
+    private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+    private CancellationToken _cancellationToken;
+    private Task _loadResultTask;
 
     public MusicCloudPage()
     {
         InitializeComponent();
         SongContainer.ListSource = "content";
+        _cancellationToken = _cancellationTokenSource.Token;
     }
 
     public void Dispose()
@@ -39,6 +44,7 @@ public sealed partial class MusicCloudPage : Page, IDisposable
         if (IsDisposed) return;
         Items.Clear();
         SongContainer.Dispose();
+        _cancellationTokenSource.Dispose();
         IsDisposed = true;
         GC.SuppressFinalize(this);
     }
@@ -46,6 +52,7 @@ public sealed partial class MusicCloudPage : Page, IDisposable
     public async Task LoadMusicCloudItem()
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(MusicCloudPage));
+        _cancellationToken.ThrowIfCancellationRequested();
         try
         {
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserCloud,
@@ -56,6 +63,8 @@ public sealed partial class MusicCloudPage : Page, IDisposable
                 });
             var idx = page * 200;
             foreach (var jToken in json["data"])
+            {
+                _cancellationToken.ThrowIfCancellationRequested();
                 try
                 {
                     var ret = NCSong.CreateFromJson(jToken["simpleSong"]);
@@ -79,24 +88,39 @@ public sealed partial class MusicCloudPage : Page, IDisposable
                     //ignore
                 }
 
-            NextPage.Visibility = json["hasMore"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
+                NextPage.Visibility = json["hasMore"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
+            }
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            if(ex.GetType()!=typeof(TaskCanceledException))
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
 
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        if (_loadResultTask != null && !_loadResultTask.IsCompleted)
+        {
+            try
+            {
+                _cancellationTokenSource.Cancel();
+                await _loadResultTask;
+            }
+            catch
+            {
+                Dispose();
+                return;
+            }
+        }
         Dispose();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        _ = LoadMusicCloudItem();
+        _loadResultTask = LoadMusicCloudItem();
     }
 
 
@@ -104,7 +128,7 @@ public sealed partial class MusicCloudPage : Page, IDisposable
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(MusicCloudPage));
         page++;
-        _ = LoadMusicCloudItem();
+        _loadResultTask = LoadMusicCloudItem();
     }
 
     private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
