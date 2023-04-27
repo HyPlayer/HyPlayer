@@ -200,7 +200,8 @@
             </ListView.Resources>
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="classes:NCSong" ScrollViewer.CanContentRenderOutsideBounds="False">
-                    <Grid
+                    <Border>
+                        <Grid
                         Margin="-10,15,-10,15"
                         HorizontalAlignment="Stretch"
                         Background="Transparent"
@@ -339,6 +340,7 @@
                             </Button>
                         </StackPanel>
                     </Grid>
+                    </Border>
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>

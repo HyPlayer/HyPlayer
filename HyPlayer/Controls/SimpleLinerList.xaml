@@ -25,7 +25,8 @@
         </ListView.Footer>
         <ListView.ItemTemplate>
             <DataTemplate x:DataType="classes:SimpleListItem">
-                <Grid
+                <Border>
+                    <Grid
                     Margin="0,15,0,15"
                     Background="Transparent"
                     HorizontalAlignment="Stretch"
@@ -138,6 +139,7 @@
                             Glyph="&#xEDB5;" />
                     </Button>
                 </Grid>
+                </Border>
             </DataTemplate>
         </ListView.ItemTemplate>
     </ListView>
