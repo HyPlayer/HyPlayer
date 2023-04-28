@@ -1,15 +1,21 @@
 ﻿using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
+using LyricParser.Abstraction;
 using Microsoft.Toolkit.Uwp.UI.Media;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Windows.Storage.FileProperties;
 using Windows.UI;
+using Windows.UI.Text;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 
@@ -53,6 +59,61 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
 
 
     private readonly SolidColorBrush TransparentBrush = new SolidColorBrush(Colors.Transparent);
+    public bool _lyricIsKaraokeLyric;
+    public SongLyric Lrc;
+    private List<Run> WordTextBlocks = new();
+    private Dictionary<Run, Storyboard> BlockToAnimation = new();
+
+    private SolidColorBrush IdleBrush => GetIdleBrush();
+    private SolidColorBrush? _pureIdleBrushCache;
+    private SolidColorBrush? _pureAccentBrushCache;
+    private Color? _karaokIdleColorCache;
+    private Color? _karaokAccentColorCache;
+    private Color GetKaraokAccentBrush()
+    {
+        if (Common.Setting.karaokLyricFocusingColor is not null)
+        {
+            return _karaokAccentColorCache ??= Common.Setting.karaokLyricFocusingColor.Value;
+        }
+        return Common.PageExpandedPlayer != null
+            ? Common.PageExpandedPlayer.ForegroundAccentTextBrush.Color
+            : (Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush)!.Color;
+    }
+
+    private Color GetKaraokIdleBrush()
+    {
+        if (Common.Setting.karaokLyricIdleColor is not null)
+        {
+            return _karaokIdleColorCache ??= Common.Setting.karaokLyricIdleColor.Value;
+        }
+
+        return Common.PageExpandedPlayer != null
+            ? Common.PageExpandedPlayer.ForegroundIdleTextBrush.Color
+            : (Application.Current.Resources["TextFillColorTertiaryBrush"] as SolidColorBrush)!.Color;
+    }
+
+    private SolidColorBrush GetAccentBrush()
+    {
+        if (Common.Setting.pureLyricFocusingColor is not null)
+        {
+            return _pureAccentBrushCache ??= new SolidColorBrush(Common.Setting.pureLyricFocusingColor.Value);
+        }
+        return (Common.PageExpandedPlayer != null
+            ? Common.PageExpandedPlayer.ForegroundAccentTextBrush
+            : Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush)!;
+    }
+
+    private SolidColorBrush GetIdleBrush()
+    {
+        if (Common.Setting.pureLyricIdleColor is not null)
+        {
+            return _pureIdleBrushCache ??= new SolidColorBrush(Common.Setting.pureLyricIdleColor.Value);
+        }
+
+        return (Common.PageExpandedPlayer != null
+            ? Common.PageExpandedPlayer.ForegroundIdleTextBrush
+            : Application.Current.Resources["TextFillColorTertiaryBrush"] as SolidColorBrush)!;
+    }
 
     public CompactPlayerPage()
     {
@@ -136,13 +197,60 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     {
         if (HyPlayList.LyricPos == -1) return;
         if (HyPlayList.Lyrics.Count <= HyPlayList.LyricPos) return;
+
         _ = Common.Invoke(() =>
         {
+            WordTextBlocks.Clear();
+            BlockToAnimation.Clear();
+            WordLyricContainer.Text = "";
             LyricText = HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.CurrentLyric;
             LyricTranslation = HyPlayList.Lyrics[HyPlayList.LyricPos].Translation;
-            FadeIn.Begin();
+            _lyricIsKaraokeLyric = typeof(KaraokeLyricsLine) == HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.GetType();
+            Lrc = HyPlayList.Lyrics[HyPlayList.LyricPos];
+            EnterAnimation.Begin();
+            if (_lyricIsKaraokeLyric)
+            {
+                WordLyricContainer.Visibility = Visibility.Visible;
+                LyricTextBlock.Visibility = Visibility.Collapsed;
 
+                foreach (var item in ((KaraokeLyricsLine)Lrc.LyricLine).WordInfos)
+                {
+                    var textBlock = new Run()
+                    {
+                        Text = item.CurrentWords,
+                        FontWeight = FontWeights.Bold,
+                        Foreground = IdleBrush
+                    };
+                    WordTextBlocks?.Add(textBlock);
+                    WordLyricContainer.Inlines.Add(textBlock);
+                    var ani = new ColorAnimation
+                    {
+                        From = GetKaraokIdleBrush(),
+                        To = GetKaraokAccentBrush(),
+                        Duration = TimeSpan.FromMilliseconds(item.Duration),
+                        EnableDependentAnimation = true
+                    };
+                    var storyboard = new Storyboard();
+                    Storyboard.SetTarget(ani, textBlock);
+                    Storyboard.SetTargetProperty(ani, "(Run.Foreground).(SolidColorBrush.Color)");
+                    storyboard.Children.Add(ani);
+                    BlockToAnimation[textBlock] = storyboard;
+                }
+                WordTextBlocks?.ForEach(w =>
+                {
+                    w.Foreground = new SolidColorBrush(GetKaraokIdleBrush());
+                });
+                HyPlayList.OnPlayPositionChange += RefreshWordColor;
+
+            }
+            else
+            {
+                HyPlayList.OnPlayPositionChange -= RefreshWordColor;
+                WordLyricContainer.Visibility = Visibility.Collapsed;
+                LyricTextBlock.Visibility = Visibility.Visible;
+            }
         });
+
     }
 
     public void Dispose()
@@ -200,6 +308,27 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
                     : "\uE006";
             });
         }
+    }
+    public void RefreshWordColor(TimeSpan position)
+    {
+        if (!_lyricIsKaraokeLyric) return;
+        _ = Common.Invoke(() =>
+        {
+            var playedWords =
+                ((KaraokeLyricsLine)Lrc.LyricLine).WordInfos.Where(word => word.StartTime <= position.TotalMilliseconds).ToList();
+            var playedBlocks = WordTextBlocks.GetRange(0, playedWords.Count).ToList();
+            if (playedBlocks.Count <= 0) return;
+            foreach (var playedBlock in playedBlocks.GetRange(0, playedBlocks.Count - 1))
+            {
+                //playedBlock.Foreground = IdleBrush;
+                playedBlock.Foreground = new SolidColorBrush(GetKaraokAccentBrush());
+            }
+
+            var playingBlock = playedBlocks.Last();
+            var storyboard = BlockToAnimation[playingBlock];
+            if (storyboard.GetCurrentTime().Ticks == 0)
+                BlockToAnimation[playingBlock].Begin();
+        });
     }
 
     private void MovePrevious(object sender, RoutedEventArgs e)
