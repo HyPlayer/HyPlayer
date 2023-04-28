@@ -41,7 +41,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
 
     public static readonly DependencyProperty LyricTranslationProperty =
         DependencyProperty.Register("LyricTranslation", typeof(string), typeof(CompactPlayerPage),
-            new PropertyMetadata("将鼠标移到以查看更多功能"));
+            new PropertyMetadata("将鼠标移到窗口以查看更多功能"));
 
     public static readonly DependencyProperty NowPlayingNameProperty =
         DependencyProperty.Register("NowPlayingName", typeof(string), typeof(CompactPlayerPage),
@@ -140,6 +140,8 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         {
             LyricText = HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.CurrentLyric;
             LyricTranslation = HyPlayList.Lyrics[HyPlayList.LyricPos].Translation;
+            FadeIn.Begin();
+
         });
     }
 
@@ -242,7 +244,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     {
         ControlHover = new BackdropBlurBrush { Amount = 10.0 };
         PlayProgress.Visibility = Visibility.Visible;
-        
+
     }
 
     private void CompactPlayerPage_OnPointerExited(object sender, PointerRoutedEventArgs e)

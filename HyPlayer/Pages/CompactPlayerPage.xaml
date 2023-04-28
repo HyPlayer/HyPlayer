@@ -16,6 +16,29 @@
     PointerExited="CompactPlayerPage_OnPointerExited"
     RightTapped="OnRightTapped"
     mc:Ignorable="d">
+    <Page.Resources>
+        <Storyboard x:Name="FadeOut">
+            <DoubleAnimation Duration="00:00:00.8" Storyboard.TargetName="LyricTextBlock" To="-32" Storyboard.TargetProperty="(UIElement.RenderTransform).(CompositeTransform.TranslateX)">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <FadeOutThemeAnimation Duration="00:00:00.8"  Storyboard.TargetName="LyricTextBlock"/>
+        </Storyboard>
+        <Storyboard x:Name="FadeIn">
+            <DoubleAnimation Duration="00:00:00.5" Storyboard.TargetName="LyricTextBlock" From="24" To="0" Storyboard.TargetProperty="(UIElement.RenderTransform).(CompositeTransform.TranslateX)">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation Duration="00:00:00.6" Storyboard.TargetName="LyricTranslationBlock" From="32" To="0" Storyboard.TargetProperty="(UIElement.RenderTransform).(CompositeTransform.TranslateX)">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <FadeInThemeAnimation Duration="00:00:00.4" Storyboard.TargetName="LyricTextBlock"/>
+        </Storyboard>
+    </Page.Resources>
     <Grid Background="{StaticResource AcrylicInAppFillColorDefaultBrush}" DoubleTapped="ExitCompactMode">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
@@ -34,7 +57,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock
                     Grid.Column="1"
@@ -43,11 +66,12 @@
                     Text="{x:Bind NowPlayingName, Mode=OneWay}" />
                 <TextBlock
                     Grid.Column="2"
-                    Margin="4,0,0,0"
+                    Margin="4,0,64,0"
                     VerticalAlignment="Center"
+                    HorizontalAlignment="Left"
                     Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
                     Text="{x:Bind NowPlayingArtists, Mode=OneWay}"
-                    TextTrimming="CharacterEllipsis" />
+                    TextTrimming="CharacterEllipsis" MaxWidth="200"/>
             </Grid>
             <Grid
                 x:Name="LyricGrid"
@@ -62,20 +86,36 @@
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch" />
 
-                <StackPanel>
-                    <TextBlock
+                <Viewbox  Stretch="Uniform" MaxHeight="60" Margin="8,0">
+                    <StackPanel>
+                        <TextBlock
+                        x:Name="LyricTextBlock"
+                        d:Text="Some Text"
                         Margin="8,0"
                         HorizontalAlignment="Center"
-                        FontSize="24"
+                        FontSize="24" 
+                        TextAlignment="Center"
                         Style="{StaticResource TitleTextBlockStyle}"
                         Text="{x:Bind LyricText, Mode=OneWay}"
-                        TextWrapping="NoWrap" />
-                    <TextBlock
+                        TextWrapping="Wrap" RenderTransformOrigin="0.5,0.5" >
+                            <TextBlock.RenderTransform>
+                                <CompositeTransform/>
+                            </TextBlock.RenderTransform>
+                        </TextBlock>
+                        <TextBlock
+                        x:Name="LyricTranslationBlock"
                         Margin="20,0"
+                        TextAlignment="Center"
                         HorizontalAlignment="Center"
                         Text="{x:Bind LyricTranslation, Mode=OneWay}"
-                        TextWrapping="Wrap" />
-                </StackPanel>
+                        TextWrapping="Wrap" RenderTransformOrigin="0.5,0.5">
+                            <TextBlock.RenderTransform>
+                                <CompositeTransform/>
+                            </TextBlock.RenderTransform>
+                        </TextBlock>
+                    </StackPanel>
+
+                </Viewbox>
             </Grid>
 
         </Grid>
@@ -127,7 +167,7 @@
                 <FontIcon FontSize="14" Glyph="&#xE1D9;" />
             </Button>
         </Grid>
-        <ProgressBar
+        <muxc:ProgressBar
             x:Name="PlayProgress"
             Grid.Row="1"
             VerticalAlignment="Bottom"
