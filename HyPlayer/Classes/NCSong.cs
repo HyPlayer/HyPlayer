@@ -228,6 +228,10 @@ public class NCSong
         return string.IsNullOrEmpty(source) ? "" : "(" + source + ")";
     }
 }
+public class NCAlbumSong : NCSong
+{
+    public string DiscName { get; set; }
+}
 
 public class SimpleListItem
 {

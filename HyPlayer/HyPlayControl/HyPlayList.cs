@@ -11,9 +11,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.Email.DataProvider;
 using Windows.Devices.Enumeration;
 using Windows.Foundation.Collections;
 using Windows.Media;
@@ -1906,7 +1904,7 @@ public static class Utils
     public static List<SongLyric> ConvertPureLyric(string lyricAllText, bool hasTranslationsInLyricText = false)
     {
         var parsedlyrics = LrcParser.ParseLrc(lyricAllText.AsSpan());
-        return parsedlyrics.OrderBy(t=>t.StartTime).Select(lyricsLine => new SongLyric
+        return parsedlyrics.OrderBy(t => t.StartTime).Select(lyricsLine => new SongLyric
         { LyricLine = lyricsLine, Translation = null })
                         .ToList();
     }
@@ -1978,7 +1976,7 @@ public static class Utils
         {
             var parsedLyrics = KaraokeParser.ParseKaraoke(((KaraokLyricInfo)pureLyricInfo).KaraokLyric.AsSpan());
 
-            return parsedLyrics.OrderBy(t=>t.StartTime).Select(t => new SongLyric() { LyricLine = t }).ToList();
+            return parsedLyrics.OrderBy(t => t.StartTime).Select(t => new SongLyric() { LyricLine = t }).ToList();
         }
         throw new ArgumentException("LyricInfo is not KaraokeLyricInfo");
     }

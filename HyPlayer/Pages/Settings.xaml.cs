@@ -80,7 +80,7 @@ public sealed partial class Settings : Page, IDisposable
         {
             LyricLine = new LrcLyricsLine("歌词大小示例 AaBbCcDd 約束の言葉", 0),
             Translation = "翻译大小示例"
-        }) ;
+        });
         _lyricItem.Transitions.Add(new RepositionThemeTransition());
         _lyricItem.IsHitTestVisible = false;
         _lyricItem.OnShow();

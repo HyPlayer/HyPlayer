@@ -224,8 +224,3 @@ public class DiscSongs : List<NCAlbumSong>
 
     public object Key { get; set; }
 }
-
-public class NCAlbumSong : NCSong
-{
-    public string DiscName { get; set; }
-}

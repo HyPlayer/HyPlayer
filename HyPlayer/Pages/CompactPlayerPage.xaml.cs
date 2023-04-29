@@ -1,7 +1,6 @@
 ﻿using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using LyricParser.Abstraction;
-using Microsoft.Toolkit.Uwp.UI.Animations;
 using Microsoft.Toolkit.Uwp.UI.Media;
 using System;
 using System.Collections.Generic;
@@ -218,7 +217,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
                     {
                         Text = item.CurrentWords,
                         FontWeight = FontWeights.Bold,
-                        Foreground = new SolidColorBrush(GetKaraokAccentBrush()),                       
+                        Foreground = new SolidColorBrush(GetKaraokAccentBrush()),
                     };
                     textBlock.Foreground.Opacity = 0.4;
                     WordTextBlocks?.Add(textBlock);
@@ -231,7 +230,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
                         EnableDependentAnimation = true,
                     };
                     item.Duration = (item.Duration < 200) ? 200 : item.Duration;
-                    ani.EasingFunction = (item.Duration >= 300) ? new SineEase { EasingMode = EasingMode.EaseOut }  : new CircleEase { EasingMode = EasingMode.EaseInOut };
+                    ani.EasingFunction = (item.Duration >= 300) ? new SineEase { EasingMode = EasingMode.EaseOut } : new CircleEase { EasingMode = EasingMode.EaseInOut };
                     var storyboard = new Storyboard();
                     Storyboard.SetTarget(ani, textBlock);
                     Storyboard.SetTargetProperty(ani, "(Run.Foreground).(SolidColorBrush.Opacity)");
@@ -326,7 +325,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
                 BlockToAnimation[playingBlock].Begin();
             foreach (var playedBlock in playedBlocks.GetRange(0, playedBlocks.Count - 1))
             {
-                if(((SolidColorBrush)playedBlock.Foreground).Opacity <= 0.41)
+                if (((SolidColorBrush)playedBlock.Foreground).Opacity <= 0.41)
                     BlockToAnimation[playedBlock].Begin();
                 //((SolidColorBrush)playedBlock.Foreground).Opacity = 1;
             }

@@ -7,7 +7,6 @@ using LyricParser.Abstraction;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
@@ -30,9 +29,9 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
     public bool _lyricIsOnShow = true;
 
-    private List<Run> WordTextBlocks = new ();
+    private List<Run> WordTextBlocks = new();
 
-    private Dictionary<Run, Storyboard> BlockToAnimation = new ();
+    private Dictionary<Run, Storyboard> BlockToAnimation = new();
 
     public bool _lyricIsKaraokeLyric;
     public LyricItem(SongLyric lrc)
@@ -228,38 +227,38 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
         if (_lyricIsKaraokeLyric)
         {
-            
+
             foreach (var item in ((KaraokeLyricsLine)Lrc.LyricLine).WordInfos)
             {
-                    var textBlock = new Run()
-                    {
-                        Text = item.CurrentWords,
-                        FontWeight = FontWeights.Bold,
-                        Foreground = IdleBrush
-                    };
-                    WordTextBlocks?.Add(textBlock);
-                    WordLyricContainer.Inlines.Add(textBlock);
-                    var ani = new ColorAnimation
-                    {
-                        From = GetKaraokIdleBrush(),
-                        To = GetKaraokAccentBrush(),
-                        Duration = TimeSpan.FromMilliseconds(item.Duration),
-                        EnableDependentAnimation = true
-                    };
+                var textBlock = new Run()
+                {
+                    Text = item.CurrentWords,
+                    FontWeight = FontWeights.Bold,
+                    Foreground = IdleBrush
+                };
+                WordTextBlocks?.Add(textBlock);
+                WordLyricContainer.Inlines.Add(textBlock);
+                var ani = new ColorAnimation
+                {
+                    From = GetKaraokIdleBrush(),
+                    To = GetKaraokAccentBrush(),
+                    Duration = TimeSpan.FromMilliseconds(item.Duration),
+                    EnableDependentAnimation = true
+                };
                 var storyboard = new Storyboard();
                 Storyboard.SetTarget(ani, textBlock);
-                    Storyboard.SetTargetProperty(ani, "(Run.Foreground).(SolidColorBrush.Color)");
-                    storyboard.Children.Add(ani);
-                    BlockToAnimation[textBlock] = storyboard;
-                }
+                Storyboard.SetTargetProperty(ani, "(Run.Foreground).(SolidColorBrush.Color)");
+                storyboard.Children.Add(ani);
+                BlockToAnimation[textBlock] = storyboard;
             }
+        }
         RefreshFontSize();
         OnHind();
     }
 
     public void Dispose()
     {
-        if(_lyricIsKaraokeLyric) HyPlayList.OnPlayPositionChange -= RefreshWordColor;
+        if (_lyricIsKaraokeLyric) HyPlayList.OnPlayPositionChange -= RefreshWordColor;
         WordTextBlocks.Clear();
         BlockToAnimation.Clear();
     }
