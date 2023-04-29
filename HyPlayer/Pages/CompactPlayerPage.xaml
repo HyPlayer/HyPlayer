@@ -29,6 +29,16 @@
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
             <DoubleAnimation
+                Storyboard.TargetName="LyricGrid"
+                Storyboard.TargetProperty="Opacity"
+                From="0.5"
+                To="1"
+                Duration="00:00:00.5">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut" />
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
                 Storyboard.TargetName="LyricTextBlock"
                 Storyboard.TargetProperty="(UIElement.RenderTransform).(CompositeTransform.TranslateX)"
                 From="24"
@@ -39,11 +49,21 @@
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
             <DoubleAnimation
+                Storyboard.TargetName="LyricSoundBlock"
+                Storyboard.TargetProperty="(UIElement.RenderTransform).(CompositeTransform.TranslateX)"
+                From="24"
+                To="0"
+                Duration="00:00:00.55">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut" />
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
                 Storyboard.TargetName="LyricTranslationBlock"
                 Storyboard.TargetProperty="(UIElement.RenderTransform).(CompositeTransform.TranslateX)"
                 From="32"
                 To="0"
-                Duration="00:00:00.6">
+                Duration="00:00:00.55">
                 <DoubleAnimation.EasingFunction>
                     <CircleEase EasingMode="EaseOut" />
                 </DoubleAnimation.EasingFunction>
@@ -98,16 +118,27 @@
                     VerticalAlignment="Stretch" />
 
                 <Viewbox
-                    MaxHeight="60"
+                    x:Name="LyricViewBox"
+                    MaxHeight="72"
                     Margin="8,0"
                     Stretch="Uniform">
                     <StackPanel>
                         <TextBlock
-                            x:Name="WordLyricContainer"
-                            FontWeight="Bold"
-                            Margin="8,0"
+                            x:Name="LyricSoundBlock"
+                            Text="{x:Bind LyricSound, Mode=OneWay}"
+                            Grid.Row="2"
                             TextAlignment="Center"
+                            TextWrapping="WrapWholeWords" >
+                            <TextBlock.RenderTransform>
+                                <CompositeTransform />
+                            </TextBlock.RenderTransform>
+                        </TextBlock>
+                        <TextBlock
+                            x:Name="WordLyricContainer"
+                            Margin="8,0"
+                            FontWeight="Bold"
                             Style="{StaticResource TitleTextBlockStyle}"
+                            TextAlignment="Center"
                             TextWrapping="WrapWholeWords">
                             <TextBlock.RenderTransform>
                                 <CompositeTransform />
@@ -215,14 +246,24 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="AlbumImage.Visibility" Value="Collapsed" />
+
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState>
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowHeight="400" />
+                        <AdaptiveTrigger MinWindowHeight="410" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="AlbumImage.Visibility" Value="Visible" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowHeight="200" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="AlbumImage.Visibility" Value="Collapsed" />
+                        <Setter Target="LyricViewBox.MaxHeight" Value="80" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
