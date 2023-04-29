@@ -1,6 +1,7 @@
 ﻿using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using LyricParser.Abstraction;
+using Microsoft.Toolkit.Uwp.UI.Animations;
 using Microsoft.Toolkit.Uwp.UI.Media;
 using System;
 using System.Collections.Generic;
@@ -49,6 +50,10 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         DependencyProperty.Register("LyricTranslation", typeof(string), typeof(CompactPlayerPage),
             new PropertyMetadata("将鼠标移到窗口以查看更多功能"));
 
+    public static readonly DependencyProperty LyricSoundProperty =
+        DependencyProperty.Register("LyricSound", typeof(string), typeof(CompactPlayerPage),
+            new PropertyMetadata(""));
+
     public static readonly DependencyProperty NowPlayingNameProperty =
         DependencyProperty.Register("NowPlayingName", typeof(string), typeof(CompactPlayerPage),
             new PropertyMetadata(string.Empty));
@@ -80,17 +85,6 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
             : (Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush)!.Color;
     }
 
-    private Color GetKaraokIdleBrush()
-    {
-        if (Common.Setting.karaokLyricIdleColor is not null)
-        {
-            return _karaokIdleColorCache ??= Common.Setting.karaokLyricIdleColor.Value;
-        }
-
-        return Common.PageExpandedPlayer != null
-            ? Common.PageExpandedPlayer.ForegroundIdleTextBrush.Color
-            : (Application.Current.Resources["TextFillColorTertiaryBrush"] as SolidColorBrush)!.Color;
-    }
 
     private SolidColorBrush GetAccentBrush()
     {
@@ -178,7 +172,11 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         get => (string)GetValue(LyricTranslationProperty);
         set => SetValue(LyricTranslationProperty, value);
     }
-
+    public string LyricSound
+    {
+        get => (string)GetValue(LyricSoundProperty);
+        set => SetValue(LyricSoundProperty, value);
+    }
 
     public string NowPlayingName
     {
@@ -205,6 +203,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
             WordLyricContainer.Text = "";
             LyricText = HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.CurrentLyric;
             LyricTranslation = HyPlayList.Lyrics[HyPlayList.LyricPos].Translation;
+            LyricSound = HyPlayList.Lyrics[HyPlayList.LyricPos].Romaji;
             _lyricIsKaraokeLyric = typeof(KaraokeLyricsLine) == HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.GetType();
             Lrc = HyPlayList.Lyrics[HyPlayList.LyricPos];
             EnterAnimation.Begin();
@@ -219,26 +218,29 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
                     {
                         Text = item.CurrentWords,
                         FontWeight = FontWeights.Bold,
-                        Foreground = IdleBrush
+                        Foreground = new SolidColorBrush(GetKaraokAccentBrush()),                       
                     };
+                    textBlock.Foreground.Opacity = 0.4;
                     WordTextBlocks?.Add(textBlock);
                     WordLyricContainer.Inlines.Add(textBlock);
-                    var ani = new ColorAnimation
+                    var ani = new DoubleAnimation
                     {
-                        From = GetKaraokIdleBrush(),
-                        To = GetKaraokAccentBrush(),
+                        From = 0.4,
+                        To = 1,
                         Duration = TimeSpan.FromMilliseconds(item.Duration),
-                        EnableDependentAnimation = true
+                        EnableDependentAnimation = true,
                     };
+                    item.Duration = (item.Duration < 200) ? 200 : item.Duration;
+                    ani.EasingFunction = (item.Duration >= 300) ? new SineEase { EasingMode = EasingMode.EaseOut }  : new CircleEase { EasingMode = EasingMode.EaseInOut };
                     var storyboard = new Storyboard();
                     Storyboard.SetTarget(ani, textBlock);
-                    Storyboard.SetTargetProperty(ani, "(Run.Foreground).(SolidColorBrush.Color)");
+                    Storyboard.SetTargetProperty(ani, "(Run.Foreground).(SolidColorBrush.Opacity)");
                     storyboard.Children.Add(ani);
                     BlockToAnimation[textBlock] = storyboard;
                 }
                 WordTextBlocks?.ForEach(w =>
                 {
-                    w.Foreground = new SolidColorBrush(GetKaraokIdleBrush());
+                    w.Foreground.Opacity = 0.4;
                 });
                 HyPlayList.OnPlayPositionChange += RefreshWordColor;
 
@@ -318,16 +320,18 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
                 ((KaraokeLyricsLine)Lrc.LyricLine).WordInfos.Where(word => word.StartTime <= position.TotalMilliseconds).ToList();
             var playedBlocks = WordTextBlocks.GetRange(0, playedWords.Count).ToList();
             if (playedBlocks.Count <= 0) return;
-            foreach (var playedBlock in playedBlocks.GetRange(0, playedBlocks.Count - 1))
-            {
-                //playedBlock.Foreground = IdleBrush;
-                playedBlock.Foreground = new SolidColorBrush(GetKaraokAccentBrush());
-            }
-
             var playingBlock = playedBlocks.Last();
             var storyboard = BlockToAnimation[playingBlock];
             if (storyboard.GetCurrentTime().Ticks == 0)
                 BlockToAnimation[playingBlock].Begin();
+            foreach (var playedBlock in playedBlocks.GetRange(0, playedBlocks.Count - 1))
+            {
+                if(((SolidColorBrush)playedBlock.Foreground).Opacity <= 0.41)
+                    BlockToAnimation[playedBlock].Begin();
+                //((SolidColorBrush)playedBlock.Foreground).Opacity = 1;
+            }
+
+
         });
     }
 
