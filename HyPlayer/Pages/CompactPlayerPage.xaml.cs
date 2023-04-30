@@ -217,10 +217,6 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
                 LyricText = NowPlayingName;
                 LyricTranslation = NowPlayingArtists;
             }
-
-            LyricTranslationBlock.Visibility = (LyricTranslation != string.Empty && LyricTranslation != null && Common.ShowLyricTrans) ? Visibility.Visible : Visibility.Collapsed;
-            LyricSoundBlock.Visibility = (LyricSound != string.Empty && LyricSound != null && Common.ShowLyricSound) ? Visibility.Visible : Visibility.Collapsed;
-
             WordTextBlocks.Clear();
             BlockToAnimation.Clear();
             WordLyricContainer.Text = "";
@@ -229,6 +225,8 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
             LyricSound = HyPlayList.Lyrics[HyPlayList.LyricPos].Romaji;
             _lyricIsKaraokeLyric = typeof(KaraokeLyricsLine) == HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.GetType();
             Lrc = HyPlayList.Lyrics[HyPlayList.LyricPos];
+            LyricTranslationBlock.Visibility = (LyricTranslation != string.Empty && LyricTranslation != null && Common.ShowLyricTrans) ? Visibility.Visible : Visibility.Collapsed;
+            LyricSoundBlock.Visibility = (LyricSound != string.Empty && LyricSound != null && Common.ShowLyricSound) ? Visibility.Visible : Visibility.Collapsed;
             if (_lyricIsKaraokeLyric)
             {
                 WordLyricContainer.Visibility = Visibility.Visible;
