@@ -7,6 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:ui="using:Microsoft.Toolkit.Uwp.UI"
+    xmlns:hyplayer="using:HyPlayer"
     d:Background="White"
     d:DesignHeight="350"
     d:DesignWidth="600"
@@ -31,7 +32,7 @@
             <DoubleAnimation
                 Storyboard.TargetName="LyricGrid"
                 Storyboard.TargetProperty="Opacity"
-                From="0.5"
+                From="0"
                 To="1"
                 Duration="00:00:00.5">
                 <DoubleAnimation.EasingFunction>
@@ -69,11 +70,63 @@
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
         </Storyboard>
+        <Storyboard x:Name="LeaveAnimation" Duration="00:00:00.12">
+            <DoubleAnimation
+                Storyboard.TargetName="WordLyricContainer"
+                Storyboard.TargetProperty="(UIElement.RenderTransform).(CompositeTransform.TranslateX)"
+                From="0"
+                To="-12"
+                Duration="00:00:00.1">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut" />
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="LyricGrid"
+                Storyboard.TargetProperty="Opacity"
+                From="1"
+                To="0.01"
+                Duration="00:00:00.1">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut" />
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="LyricTextBlock"
+                Storyboard.TargetProperty="(UIElement.RenderTransform).(CompositeTransform.TranslateX)"
+                From="0"
+                To="-16"
+                Duration="00:00:00.1">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut" />
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="LyricSoundBlock"
+                Storyboard.TargetProperty="(UIElement.RenderTransform).(CompositeTransform.TranslateX)"
+                From="0"
+                To="-16"
+                Duration="00:00:00.1">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut" />
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="LyricTranslationBlock"
+                Storyboard.TargetProperty="(UIElement.RenderTransform).(CompositeTransform.TranslateX)"
+                From="0"
+                To="-16"
+                Duration="00:00:00.1">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut" />
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
     </Page.Resources>
     <Grid Background="{StaticResource AcrylicInAppFillColorDefaultBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
-            <RowDefinition Height="50" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
 
         </Grid.RowDefinitions>
@@ -119,7 +172,7 @@
 
                 <Viewbox
                     x:Name="LyricViewBox"
-                    MaxHeight="72"
+                    MaxHeight="71"
                     Margin="8,0"
                     Stretch="Uniform">
                     <StackPanel>
@@ -136,7 +189,6 @@
                         <TextBlock
                             x:Name="WordLyricContainer"
                             Margin="8,0"
-                            FontWeight="Bold"
                             Style="{StaticResource TitleTextBlockStyle}"
                             TextAlignment="Center"
                             TextWrapping="WrapWholeWords">
@@ -149,7 +201,6 @@
                             Margin="8,0"
                             HorizontalAlignment="Center"
                             d:Text="Some Text"
-                            FontSize="24"
                             RenderTransformOrigin="0.5,0.5"
                             Style="{StaticResource TitleTextBlockStyle}"
                             Text="{x:Bind LyricText, Mode=OneWay}"
@@ -180,6 +231,7 @@
         <Grid
             x:Name="PlayerGrid"
             Grid.Row="1"
+            Height="40"
             Margin="8,0">
             <Button
                 x:Name="LikeButton"
@@ -255,6 +307,7 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="AlbumImage.Visibility" Value="Visible" />
+                        <Setter Target="LyricViewBox.MaxHeight" Value="80" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState>
@@ -264,6 +317,15 @@
                     <VisualState.Setters>
                         <Setter Target="AlbumImage.Visibility" Value="Collapsed" />
                         <Setter Target="LyricViewBox.MaxHeight" Value="80" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowHeight="256" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="AlbumImage.Visibility" Value="Collapsed" />
+                        <Setter Target="LyricViewBox.MaxHeight" Value="90" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>
