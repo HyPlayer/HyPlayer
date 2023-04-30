@@ -298,16 +298,6 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="AlbumImage.Visibility" Value="Collapsed" />
-
-                    </VisualState.Setters>
-                </VisualState>
-                <VisualState>
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowHeight="410" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="AlbumImage.Visibility" Value="Visible" />
-                        <Setter Target="LyricViewBox.MaxHeight" Value="80" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState>
@@ -325,6 +315,24 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="AlbumImage.Visibility" Value="Collapsed" />
+                        <Setter Target="LyricViewBox.MaxHeight" Value="90" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowHeight="410" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="AlbumImage.Visibility" Value="Visible" />
+                        <Setter Target="LyricViewBox.MaxHeight" Value="80" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowHeight="480" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="AlbumImage.Visibility" Value="Visible" />
                         <Setter Target="LyricViewBox.MaxHeight" Value="90" />
                     </VisualState.Setters>
                 </VisualState>
