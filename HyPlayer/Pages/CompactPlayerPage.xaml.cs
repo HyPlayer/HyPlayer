@@ -44,7 +44,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
 
     public static readonly DependencyProperty LyricTextProperty =
         DependencyProperty.Register("LyricText", typeof(string), typeof(CompactPlayerPage),
-            new PropertyMetadata("双击此处回正常窗口"));
+            new PropertyMetadata("小窗模式"));
 
     public static readonly DependencyProperty LyricTranslationProperty =
         DependencyProperty.Register("LyricTranslation", typeof(string), typeof(CompactPlayerPage),
