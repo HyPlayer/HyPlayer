@@ -43,7 +43,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
 
     public static readonly DependencyProperty LyricTextProperty =
         DependencyProperty.Register("LyricText", typeof(string), typeof(CompactPlayerPage),
-            new PropertyMetadata("双击此处回正常窗口"));
+            new PropertyMetadata("小窗模式"));
 
     public static readonly DependencyProperty LyricTranslationProperty =
         DependencyProperty.Register("LyricTranslation", typeof(string), typeof(CompactPlayerPage),
@@ -118,7 +118,14 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         HyPlayList.OnPause += () => _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB5");
         HyPlayList.OnLyricChange += OnLyricChanged;
         HyPlayList.OnSongLikeStatusChange += HyPlayList_OnSongLikeStatusChange;
+        LeaveAnimation.Completed += LeaveAnimation_Completed;
         //CompactPlayerAni.Begin();
+    }
+
+    private void LeaveAnimation_Completed(object sender, object e)
+    {
+        ChangeLyric();
+        EnterAnimation.Begin();
     }
 
     private void HyPlayList_OnSongLikeStatusChange(bool isLiked)
@@ -197,6 +204,23 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
 
         _ = Common.Invoke(() =>
         {
+            LeaveAnimation.Begin();
+        });
+
+    }
+    private void ChangeLyric()
+    {
+        _ = Common.Invoke(() =>
+        {
+            if (HyPlayList.Lyrics.Count <= 2)
+            {
+                LyricText = NowPlayingName;
+                LyricTranslation = NowPlayingArtists;
+            }
+
+            LyricTranslationBlock.Visibility = (LyricTranslation != string.Empty && LyricTranslation != null && Common.ShowLyricTrans) ? Visibility.Visible : Visibility.Collapsed;
+            LyricSoundBlock.Visibility = (LyricSound != string.Empty && LyricSound != null && Common.ShowLyricSound) ? Visibility.Visible : Visibility.Collapsed;
+
             WordTextBlocks.Clear();
             BlockToAnimation.Clear();
             WordLyricContainer.Text = "";
@@ -205,7 +229,6 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
             LyricSound = HyPlayList.Lyrics[HyPlayList.LyricPos].Romaji;
             _lyricIsKaraokeLyric = typeof(KaraokeLyricsLine) == HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.GetType();
             Lrc = HyPlayList.Lyrics[HyPlayList.LyricPos];
-            EnterAnimation.Begin();
             if (_lyricIsKaraokeLyric)
             {
                 WordLyricContainer.Visibility = Visibility.Visible;
@@ -251,7 +274,6 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
                 LyricTextBlock.Visibility = Visibility.Visible;
             }
         });
-
     }
 
     public void Dispose()
@@ -292,7 +314,6 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
                     {
                         img = new BitmapImage(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover));
                     }
-
             TotalProgress = item?.PlayItem?.LengthInMilliseconds ?? 0;
             AlbumCover = new ImageBrush { ImageSource = img, Stretch = Stretch.UniformToFill };
         });
@@ -364,12 +385,6 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         base.OnNavigatedFrom(e);
         Dispose();
         Common.BarPlayBar.Visibility = Visibility.Visible;
-    }
-
-    private void ExitCompactMode(object sender, DoubleTappedRoutedEventArgs e)
-    {
-        _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
-        Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer));
     }
 
     private void CompactPlayerPage_OnPointerEntered(object sender, PointerRoutedEventArgs e)
