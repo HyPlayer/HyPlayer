@@ -367,12 +367,6 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         Common.BarPlayBar.Visibility = Visibility.Visible;
     }
 
-    private void ExitCompactMode(object sender, DoubleTappedRoutedEventArgs e)
-    {
-        _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
-        Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer));
-    }
-
     private void CompactPlayerPage_OnPointerEntered(object sender, PointerRoutedEventArgs e)
     {
         ControlHover = new BackdropBlurBrush { Amount = 10.0 };

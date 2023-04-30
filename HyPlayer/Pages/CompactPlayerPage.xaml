@@ -70,7 +70,7 @@
             </DoubleAnimation>
         </Storyboard>
     </Page.Resources>
-    <Grid Background="{StaticResource AcrylicInAppFillColorDefaultBrush}" DoubleTapped="ExitCompactMode">
+    <Grid Background="{StaticResource AcrylicInAppFillColorDefaultBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="50" />
