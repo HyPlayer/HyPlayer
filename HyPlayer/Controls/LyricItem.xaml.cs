@@ -180,7 +180,6 @@ public sealed partial class LyricItem : UserControl, IDisposable
             WordTextBlocks?.ForEach(w =>
             {
                 w.Foreground = IdleBrush;
-                BlockToAnimation[w].SkipToFill();
                 BlockToAnimation[w].Stop();
             });
         }
