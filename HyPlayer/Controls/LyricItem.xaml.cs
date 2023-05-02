@@ -121,7 +121,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
         _ = Common.Invoke(() =>
         {
             var playedWords =
-                ((KaraokeLyricsLine)Lrc.LyricLine).WordInfos.Where(word => word.StartTime <= position.TotalMilliseconds).ToList();
+                ((KaraokeLyricsLine)Lrc.LyricLine).WordInfos.Where(word => word.StartTime <= position).ToList();
             var playedBlocks = WordTextBlocks.GetRange(0, playedWords.Count).ToList();
             if (playedBlocks.Count <= 0) return;
             foreach (var playedBlock in playedBlocks.GetRange(0, playedBlocks.Count - 1))
@@ -204,7 +204,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
     private void LyricItem_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
-        HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(Lrc.LyricLine.StartTime);
+        HyPlayList.Player.PlaybackSession.Position = Lrc.LyricLine.StartTime;
         Common.PageExpandedPlayer.jumpedLyrics = true;
     }
 
@@ -242,7 +242,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
                 {
                     From = GetKaraokIdleBrush(),
                     To = GetKaraokAccentBrush(),
-                    Duration = TimeSpan.FromMilliseconds(item.Duration),
+                    Duration = item.Duration,
                     EnableDependentAnimation = true
                 };
                 var storyboard = new Storyboard();
