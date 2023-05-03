@@ -172,6 +172,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
         TextBoxPureLyric.FontSize = actualsize + Common.Setting.lyricScaleSize;
         TextBoxTranslation.FontSize = actualsize + Common.Setting.lyricScaleSize;
         TextBoxPureLyric.FontWeight = FontWeights.Bold;
+        WordLyricContainer.FontWeight = FontWeights.Bold;
         TextBoxTranslation.FontWeight = FontWeights.Bold;
         TextBoxPureLyric.Margin = new Thickness(0, 2, 0, 2);
         TextBoxTranslation.Margin = new Thickness(0, 2, 0, 2);
@@ -254,7 +255,6 @@ public sealed partial class LyricItem : UserControl, IDisposable
                 var textBlock = new Run()
                 {
                     Text = item.CurrentWords,
-                    FontWeight = FontWeights.Bold,
                     Foreground = IdleBrush
                 };
                 WordTextBlocks.Add(textBlock);
