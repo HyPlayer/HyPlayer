@@ -368,7 +368,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                 .Replace("{$SONGNAME}", ncsong.songname.EscapeForPath())
                 .Replace("{$ALBUM}", ncsong.Album.name.EscapeForPath())
                 .Replace("{$INDEX}",
-                    (ncsong.TrackId == -1 ? ncsong.Order + 1 : ncsong.TrackId).ToString().EscapeForPath())
+                    (ncsong.GetType() == typeof(NCAlbumSong) ? ncsong.Order : ncsong.Order + 1).ToString().EscapeForPath())
                 .Replace("{$CDNAME}", ncsong.CDName?.EscapeForPath());
             var folderName = Common.Setting.downloadDir;
             var nowFolder = await StorageFolder.GetFolderFromPathAsync(folderName);

@@ -7,7 +7,6 @@ using LyricParser.Abstraction;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
@@ -30,9 +29,11 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
     public bool _lyricIsOnShow = true;
 
-    private List<Run> WordTextBlocks = new ();
+    private List<Run> WordTextBlocks = new();
 
-    private Dictionary<Run, Storyboard> BlockToAnimation = new ();
+    private Dictionary<Run, KaraokeWordInfo> KaraokeDictionary = new();
+
+    private Dictionary<Run, Storyboard> StoryboardDictionary = new();
 
     public bool _lyricIsKaraokeLyric;
     public LyricItem(SongLyric lrc)
@@ -122,7 +123,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
         _ = Common.Invoke(() =>
         {
             var playedWords =
-                ((KaraokeLyricsLine)Lrc.LyricLine).WordInfos.Where(word => word.StartTime <= position.TotalMilliseconds).ToList();
+                ((KaraokeLyricsLine)Lrc.LyricLine).WordInfos.Where(word => word.StartTime <= position).ToList();
             var playedBlocks = WordTextBlocks.GetRange(0, playedWords.Count).ToList();
             if (playedBlocks.Count <= 0) return;
             foreach (var playedBlock in playedBlocks.GetRange(0, playedBlocks.Count - 1))
@@ -132,9 +133,9 @@ public sealed partial class LyricItem : UserControl, IDisposable
             }
 
             var playingBlock = playedBlocks.Last();
-            var storyboard = BlockToAnimation[playingBlock];
+            var storyboard = StoryboardDictionary[playingBlock];
             if (storyboard.GetCurrentTime().Ticks == 0)
-                BlockToAnimation[playingBlock].Begin();
+                storyboard.Begin();
         });
     }
 
@@ -146,10 +147,25 @@ public sealed partial class LyricItem : UserControl, IDisposable
         _lyricIsOnShow = true;
         if (_lyricIsKaraokeLyric)
         {
-            WordTextBlocks?.ForEach(w =>
+            WordTextBlocks.ForEach(w =>
             {
                 w.Foreground = new SolidColorBrush(GetKaraokIdleBrush());
             });
+            foreach (var item in WordTextBlocks)
+            {
+                var ani = new ColorAnimation
+                {
+                    From = GetKaraokIdleBrush(),
+                    To = GetKaraokAccentBrush(),
+                    Duration = KaraokeDictionary[item].Duration,
+                    EnableDependentAnimation = true
+                };
+                var storyboard = new Storyboard();
+                Storyboard.SetTarget(ani, item);
+                Storyboard.SetTargetProperty(ani, "(Run.Foreground).(SolidColorBrush.Color)");
+                storyboard.Children.Add(ani);
+                StoryboardDictionary.Add(item, storyboard);
+            }
             HyPlayList.OnPlayPositionChange += RefreshWordColor;
         }
 
@@ -178,10 +194,11 @@ public sealed partial class LyricItem : UserControl, IDisposable
         if (_lyricIsKaraokeLyric)
         {
             HyPlayList.OnPlayPositionChange -= RefreshWordColor;
-            WordTextBlocks?.ForEach(w =>
+            WordTextBlocks.ForEach(w =>
             {
                 w.Foreground = IdleBrush;
             });
+            StoryboardDictionary.Clear();
         }
 
         TextBoxPureLyric.FontSize = actualsize;
@@ -205,8 +222,11 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
     private void LyricItem_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
-        HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(Lrc.LyricLine.StartTime);
-        Common.PageExpandedPlayer.jumpedLyrics = true;
+        HyPlayList.Player.PlaybackSession.Position = Lrc.LyricLine.StartTime;
+        if (Common.PageExpandedPlayer != null)
+        {
+            Common.PageExpandedPlayer.jumpedLyrics = true;
+        }
     }
 
     private void LyricPanel_Loaded(object sender, RoutedEventArgs e)
@@ -228,39 +248,29 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
         if (_lyricIsKaraokeLyric)
         {
-            
+
             foreach (var item in ((KaraokeLyricsLine)Lrc.LyricLine).WordInfos)
             {
-                    var textBlock = new Run()
-                    {
-                        Text = item.CurrentWords,
-                        FontWeight = FontWeights.Bold,
-                        Foreground = IdleBrush
-                    };
-                    WordTextBlocks?.Add(textBlock);
-                    WordLyricContainer.Inlines.Add(textBlock);
-                    var ani = new ColorAnimation
-                    {
-                        From = GetKaraokIdleBrush(),
-                        To = GetKaraokAccentBrush(),
-                        Duration = TimeSpan.FromMilliseconds(item.Duration),
-                        EnableDependentAnimation = true
-                    };
-                var storyboard = new Storyboard();
-                Storyboard.SetTarget(ani, textBlock);
-                    Storyboard.SetTargetProperty(ani, "(Run.Foreground).(SolidColorBrush.Color)");
-                    storyboard.Children.Add(ani);
-                    BlockToAnimation[textBlock] = storyboard;
-                }
+                var textBlock = new Run()
+                {
+                    Text = item.CurrentWords,
+                    FontWeight = FontWeights.Bold,
+                    Foreground = IdleBrush
+                };
+                WordTextBlocks.Add(textBlock);
+                WordLyricContainer.Inlines.Add(textBlock);
+                KaraokeDictionary[textBlock] = item;
             }
+        }
         RefreshFontSize();
         OnHind();
     }
 
     public void Dispose()
     {
-        if(_lyricIsKaraokeLyric) HyPlayList.OnPlayPositionChange -= RefreshWordColor;
+        if (_lyricIsKaraokeLyric) HyPlayList.OnPlayPositionChange -= RefreshWordColor;
         WordTextBlocks.Clear();
-        BlockToAnimation.Clear();
+        KaraokeDictionary.Clear();
+        StoryboardDictionary.Clear();
     }
 }

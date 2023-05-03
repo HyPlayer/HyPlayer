@@ -53,7 +53,7 @@ public sealed partial class LyricShareDialog : ContentDialog
             {
                 Type = LyricShareItemType.Original,
                 Text = songLyric.LyricLine.CurrentLyric,
-                Time = TimeSpan.FromMilliseconds(songLyric.LyricLine.StartTime),
+                Time = songLyric.LyricLine.StartTime,
                 OriginalLyric = songLyric
             });
             if (songLyric.HaveTranslation)
@@ -61,7 +61,7 @@ public sealed partial class LyricShareDialog : ContentDialog
                 {
                     Type = LyricShareItemType.Translation,
                     Text = songLyric.Translation,
-                    Time = TimeSpan.FromMilliseconds(songLyric.LyricLine.StartTime),
+                    Time = songLyric.LyricLine.StartTime,
                     OriginalLyric = songLyric
                 });
         }

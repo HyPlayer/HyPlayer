@@ -49,13 +49,13 @@ public class PureLyricInfo
 public class SongLyric
 {
     public static SongLyric PureSong = new()
-    { LyricLine = new LrcLyricsLine("纯音乐 请欣赏", 0) };
+    { LyricLine = new LrcLyricsLine("纯音乐 请欣赏", TimeSpan.Zero) };
 
     public static SongLyric NoLyric = new()
-    { LyricLine = new LrcLyricsLine("无歌词 请欣赏", 0) };
+    { LyricLine = new LrcLyricsLine("无歌词 请欣赏", TimeSpan.Zero) };
 
     public static SongLyric LoadingLyric = new()
-    { LyricLine = new LrcLyricsLine("加载歌词中...", 0) };
+    { LyricLine = new LrcLyricsLine("加载歌词中...", TimeSpan.Zero) };
 
     public ILyricLine LyricLine;
     public string Translation;
@@ -227,6 +227,10 @@ public class NCSong
     {
         return string.IsNullOrEmpty(source) ? "" : "(" + source + ")";
     }
+}
+public class NCAlbumSong : NCSong
+{
+    public string DiscName { get; set; }
 }
 
 public class SimpleListItem
