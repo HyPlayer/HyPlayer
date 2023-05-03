@@ -31,7 +31,9 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
     private List<Run> WordTextBlocks = new();
 
-    private Dictionary<Run, Storyboard> BlockToAnimation = new();
+    private Dictionary<Run, KaraokeWordInfo> KaraokeDictionary = new();
+
+    private Dictionary<Run, Storyboard> StoryboardDictionary = new();
 
     public bool _lyricIsKaraokeLyric;
     public LyricItem(SongLyric lrc)
@@ -131,9 +133,9 @@ public sealed partial class LyricItem : UserControl, IDisposable
             }
 
             var playingBlock = playedBlocks.Last();
-            var storyboard = BlockToAnimation[playingBlock];
+            var storyboard = StoryboardDictionary[playingBlock];
             if (storyboard.GetCurrentTime().Ticks == 0)
-                BlockToAnimation[playingBlock].Begin();
+                storyboard.Begin();
         });
     }
 
@@ -145,10 +147,25 @@ public sealed partial class LyricItem : UserControl, IDisposable
         _lyricIsOnShow = true;
         if (_lyricIsKaraokeLyric)
         {
-            WordTextBlocks?.ForEach(w =>
+            WordTextBlocks.ForEach(w =>
             {
                 w.Foreground = new SolidColorBrush(GetKaraokIdleBrush());
             });
+            foreach (var item in WordTextBlocks)
+            {
+                var ani = new ColorAnimation
+                {
+                    From = GetKaraokIdleBrush(),
+                    To = GetKaraokAccentBrush(),
+                    Duration = KaraokeDictionary[item].Duration,
+                    EnableDependentAnimation = true
+                };
+                var storyboard = new Storyboard();
+                Storyboard.SetTarget(ani, item);
+                Storyboard.SetTargetProperty(ani, "(Run.Foreground).(SolidColorBrush.Color)");
+                storyboard.Children.Add(ani);
+                StoryboardDictionary.Add(item, storyboard);
+            }
             HyPlayList.OnPlayPositionChange += RefreshWordColor;
         }
 
@@ -177,11 +194,11 @@ public sealed partial class LyricItem : UserControl, IDisposable
         if (_lyricIsKaraokeLyric)
         {
             HyPlayList.OnPlayPositionChange -= RefreshWordColor;
-            WordTextBlocks?.ForEach(w =>
+            WordTextBlocks.ForEach(w =>
             {
                 w.Foreground = IdleBrush;
-                BlockToAnimation[w].Stop();
             });
+            StoryboardDictionary.Clear();
         }
 
         TextBoxPureLyric.FontSize = actualsize;
@@ -206,7 +223,10 @@ public sealed partial class LyricItem : UserControl, IDisposable
     private void LyricItem_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
         HyPlayList.Player.PlaybackSession.Position = Lrc.LyricLine.StartTime;
-        Common.PageExpandedPlayer.jumpedLyrics = true;
+        if (Common.PageExpandedPlayer != null)
+        {
+            Common.PageExpandedPlayer.jumpedLyrics = true;
+        }
     }
 
     private void LyricPanel_Loaded(object sender, RoutedEventArgs e)
@@ -237,20 +257,9 @@ public sealed partial class LyricItem : UserControl, IDisposable
                     FontWeight = FontWeights.Bold,
                     Foreground = IdleBrush
                 };
-                WordTextBlocks?.Add(textBlock);
+                WordTextBlocks.Add(textBlock);
                 WordLyricContainer.Inlines.Add(textBlock);
-                var ani = new ColorAnimation
-                {
-                    From = GetKaraokIdleBrush(),
-                    To = GetKaraokAccentBrush(),
-                    Duration = item.Duration,
-                    EnableDependentAnimation = true
-                };
-                var storyboard = new Storyboard();
-                Storyboard.SetTarget(ani, textBlock);
-                Storyboard.SetTargetProperty(ani, "(Run.Foreground).(SolidColorBrush.Color)");
-                storyboard.Children.Add(ani);
-                BlockToAnimation[textBlock] = storyboard;
+                KaraokeDictionary[textBlock] = item;
             }
         }
         RefreshFontSize();
@@ -261,6 +270,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
     {
         if (_lyricIsKaraokeLyric) HyPlayList.OnPlayPositionChange -= RefreshWordColor;
         WordTextBlocks.Clear();
-        BlockToAnimation.Clear();
+        KaraokeDictionary.Clear();
+        StoryboardDictionary.Clear();
     }
 }
