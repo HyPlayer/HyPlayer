@@ -41,22 +41,9 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
         _cancellationToken = cancellationTokenSource.Token;
     }
 
-    public async void Dispose()
+    public void Dispose()
     {
         if (IsDisposed) return;
-        if (CurrentFileScanTask != null && CurrentFileScanTask.IsCompleted == false)
-        {
-            try
-            {
-                NotificationText = "正在等待本地扫描进程结束...";
-                cancellationTokenSource.Cancel();
-                await CurrentFileScanTask;
-            }
-            catch
-            {
-                CurrentFileScanTask = null;
-            }
-        }
         CurrentFileScanTask = null;
         cancellationTokenSource.Dispose();
         NotificationText = null;
@@ -79,6 +66,19 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        if (CurrentFileScanTask != null && CurrentFileScanTask.IsCompleted == false)
+        {
+            try
+            {
+                NotificationText = "正在等待本地扫描进程结束...";
+                cancellationTokenSource.Cancel();
+                await CurrentFileScanTask;
+            }
+            catch
+            {
+                CurrentFileScanTask = null;
+            }
+        }
         Dispose();
     }
 

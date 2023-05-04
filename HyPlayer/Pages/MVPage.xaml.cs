@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media.Core;
 using Windows.UI.Xaml.Controls;
@@ -28,10 +29,16 @@ public sealed partial class MVPage : Page, IDisposable
     private string mvquality = "1080";
     private string songid;
     public bool IsDisposed = false;
+    private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+    private CancellationToken _cancellationToken;
+    private Task _relateiveLoaderTask;
+    private Task _videoLoaderTask;
+    private Task _videoInfoLoaderTask;
 
     public MVPage()
     {
         InitializeComponent();
+        _cancellationToken = _cancellationTokenSource.Token;
     }
 
     public void Dispose()
@@ -41,6 +48,7 @@ public sealed partial class MVPage : Page, IDisposable
         mvid = null;
         mvquality = null;
         songid = null;
+        _cancellationTokenSource.Dispose();
         IsDisposed = true;
         GC.SuppressFinalize(this);
     }
@@ -52,7 +60,7 @@ public sealed partial class MVPage : Page, IDisposable
         {
             mvid = input.mvid.ToString();
             songid = input.sid;
-            _ = LoadRelateive();
+            _relateiveLoaderTask = LoadRelateive();
         }
         else
         {
@@ -64,14 +72,15 @@ public sealed partial class MVPage : Page, IDisposable
     private void LoadThings()
     {
         HyPlayList.Player.Pause();
-        _ = LoadVideo();
-        _ = LoadVideoInfo();
+        _videoLoaderTask = LoadVideo();
+        _videoInfoLoaderTask = LoadVideoInfo();
         LoadComment();
     }
 
     private async Task LoadRelateive()
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(MVPage));
+        _cancellationToken.ThrowIfCancellationRequested();
         try
         {
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.MlogRcmdFeedList,
@@ -102,16 +111,50 @@ public sealed partial class MVPage : Page, IDisposable
             CommentFrame.Navigate(typeof(Comments), "mb" + mvid);
     }
 
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
         MediaPlayerElement.MediaPlayer?.Pause();
+        if (_relateiveLoaderTask != null && !_relateiveLoaderTask.IsCompleted)
+        {
+            try
+            {
+                _cancellationTokenSource.Cancel();
+                await _relateiveLoaderTask;
+            }
+            catch
+            {
+            }
+        }
+        if (_videoLoaderTask != null && !_videoLoaderTask.IsCompleted)
+        {
+            try
+            {
+                _cancellationTokenSource.Cancel();
+                await _videoLoaderTask;
+            }
+            catch
+            {
+            }
+        }
+        if (_videoInfoLoaderTask != null && !_videoInfoLoaderTask.IsCompleted)
+        {
+            try
+            {
+                _cancellationTokenSource.Cancel();
+                await _videoInfoLoaderTask;
+            }
+            catch
+            {
+            }
+        }
         Dispose();
     }
 
     private async Task LoadVideo()
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(MVPage));
+        _cancellationToken.ThrowIfCancellationRequested();
         if (Regex.IsMatch(mvid, "^[0-9]*$"))
             //纯MV
             try
@@ -153,6 +196,7 @@ public sealed partial class MVPage : Page, IDisposable
     private async Task LoadVideoInfo()
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(MVPage));
+        _cancellationToken.ThrowIfCancellationRequested();
         if (Regex.IsMatch(mvid, "^[0-9]*$"))
         {
             try
@@ -185,7 +229,7 @@ public sealed partial class MVPage : Page, IDisposable
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(MVPage));
         mvquality = VideoQualityBox.SelectedItem.ToString();
-        _ = LoadVideo();
+        _videoLoaderTask = LoadVideo();
     }
 
     private void RelativeList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)

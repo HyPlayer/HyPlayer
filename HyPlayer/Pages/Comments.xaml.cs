@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.System.Threading;
 using Windows.UI.Core;
@@ -36,11 +37,16 @@ public sealed partial class Comments : Page, IDisposable
     private ScrollViewer MainScroll, HotCommentsScroll;
     private ObservableCollection<Comment> hotComments = new ObservableCollection<Comment>();
     private ObservableCollection<Comment> normalComments = new ObservableCollection<Comment>();
+    private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+    private CancellationToken _cancellationToken;
+    private Task _commentLoaderTask;
+    private Task _hotCommentLoaderTask;
     public bool IsDisposed = false;
 
     public Comments()
     {
         InitializeComponent();
+        _cancellationToken = _cancellationTokenSource.Token;
     }
 
     public void Dispose()
@@ -48,6 +54,7 @@ public sealed partial class Comments : Page, IDisposable
         if (IsDisposed) return;
         hotComments.Clear();
         normalComments.Clear();
+        _cancellationTokenSource.Dispose();
         cursor = null;
         resourceid = null;
         IsDisposed = true;
@@ -84,19 +91,41 @@ public sealed partial class Comments : Page, IDisposable
         }
 
         LoadHotComments();
-        _ = LoadComments(sortType);
+        _commentLoaderTask = LoadComments(sortType);
     }
 
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        if (_commentLoaderTask != null && !_commentLoaderTask.IsCompleted)
+        {
+            try
+            {
+                _cancellationTokenSource.Cancel();
+                await _commentLoaderTask;
+            }
+            catch
+            {
+            }
+        }
+        if (_hotCommentLoaderTask != null && !_hotCommentLoaderTask.IsCompleted)
+        {
+            try
+            {
+                _cancellationTokenSource.Cancel();
+                await _hotCommentLoaderTask;
+            }
+            catch
+            {
+            }
+        }
         Dispose();
     }
 
 
     private void LoadHotComments()
     {
-        _ = LoadComments(2);
+        _hotCommentLoaderTask = LoadComments(2);
     }
 
     private async Task LoadComments(int type)
@@ -104,6 +133,7 @@ public sealed partial class Comments : Page, IDisposable
         // type 1:按推荐排序,2:按热度排序,3:按时间排序
         if (string.IsNullOrEmpty(resourceid)) return;
         if (IsShiftingPage) return;
+        _cancellationToken.ThrowIfCancellationRequested();
         var isHotCommentsPage = HotCommentsContainer.Visibility == Visibility.Visible;
         try
         {
@@ -122,6 +152,7 @@ public sealed partial class Comments : Page, IDisposable
             else normalComments.Clear();
             foreach (var comment in json["data"]["comments"].ToArray())
             {
+                _cancellationToken.ThrowIfCancellationRequested();
                 Comment LoadedComment = Comment.CreateFromJson(comment, resourceid, resourcetype);
                 if (type == 2 && isHotCommentsPage)
                     hotComments.Add(LoadedComment);
@@ -144,7 +175,8 @@ public sealed partial class Comments : Page, IDisposable
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            if (ex.GetType() != typeof(TaskCanceledException))
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
 
@@ -152,14 +184,14 @@ public sealed partial class Comments : Page, IDisposable
     private void NextPage_Click(object sender, RoutedEventArgs e)
     {
         page++;
-        _ = LoadComments(sortType);
+        _commentLoaderTask = LoadComments(sortType);
         ScrollTop();
     }
 
     private void PrevPage_Click(object sender, RoutedEventArgs e)
     {
         page--;
-        _ = LoadComments(sortType);
+        _commentLoaderTask = LoadComments(sortType);
         ScrollTop();
     }
 
@@ -188,7 +220,7 @@ public sealed partial class Comments : Page, IDisposable
 
                 CommentEdit.Text = string.Empty;
                 await Task.Delay(1000);
-                _ = LoadComments(3);
+                _commentLoaderTask = LoadComments(3);
                 Common.AddToTeachingTipLists("评论成功");
                 Common.RollTeachingTip();
             }
@@ -214,14 +246,14 @@ public sealed partial class Comments : Page, IDisposable
     private void ComboBoxSortType_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         sortType = ComboBoxSortType.SelectedIndex + 1;
-        _ = LoadComments(sortType);
+        _commentLoaderTask = LoadComments(sortType);
     }
 
     private void SkipPage_Click(object sender, RoutedEventArgs e)
     {
         if (int.TryParse(PageSelect.Text, out page))
         {
-            _ = LoadComments(sortType);
+            _commentLoaderTask = LoadComments(sortType);
             ScrollTop();
         }
     }
@@ -286,7 +318,7 @@ public sealed partial class Comments : Page, IDisposable
     {
         if (int.TryParse(PageSelect.Text, out page))
         {
-            _ = LoadComments(sortType);
+            _commentLoaderTask = LoadComments(sortType);
             ScrollTop();
         }
     }

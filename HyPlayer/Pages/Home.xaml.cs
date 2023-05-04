@@ -7,6 +7,7 @@ using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -30,12 +31,16 @@ public sealed partial class Home : Page, IDisposable
         "用音乐开启新的一天吧",
         "戴上耳机 享受新的一天吧"
     };
+    private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+    private CancellationToken _cancellationToken;
+    private Task _rankListLoaderTask;
 
     public bool IsDisposed = false;
 
     public Home()
     {
         InitializeComponent();
+        _cancellationToken = _cancellationTokenSource.Token;
     }
 
     public void Dispose()
@@ -46,6 +51,7 @@ public sealed partial class Home : Page, IDisposable
         UnLoginedContent.Children.Clear();
         RankList.Children.Clear();
         RankPlayList.Children.Clear();
+        _cancellationTokenSource.Dispose();
         IsDisposed = true;
         GC.SuppressFinalize(this);
     }
@@ -61,10 +67,10 @@ public sealed partial class Home : Page, IDisposable
 
     private void LoadUnLoginedContent()
     {
-        _ = LoadRanklist();
+        _rankListLoaderTask = LoadRanklist();
     }
 
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
         HyPlayList.OnLoginDone -= LoadLoginedContent;
@@ -73,6 +79,19 @@ public sealed partial class Home : Page, IDisposable
         RankPlayList.Children.Clear();
         //MySongHis.Children.Clear();
         RecommendSongListContainer.Children.Clear();
+        if(_rankListLoaderTask != null && !_rankListLoaderTask.IsCompleted)
+        {
+            try
+            {
+                _cancellationTokenSource.Cancel();
+                await _rankListLoaderTask;
+            }
+            catch
+            {
+                Dispose();
+                return;
+            }
+        }
         Dispose();
     }
 
@@ -81,6 +100,7 @@ public sealed partial class Home : Page, IDisposable
         if (IsDisposed) throw new ObjectDisposedException(nameof(Home));
         _ = Common.Invoke(() =>
         {
+            _cancellationToken.ThrowIfCancellationRequested();
             UnLoginedContent.Visibility = Visibility.Collapsed;
             LoginedContent.Visibility = Visibility.Visible;
             TbHelloUserName.Text = Common.LoginedUser?.name ?? string.Empty;
@@ -126,6 +146,7 @@ public sealed partial class Home : Page, IDisposable
             //榜单
             _ = Common.Invoke(() =>
             {
+                _cancellationToken.ThrowIfCancellationRequested();
                 RankPlayList.Children.Clear();
                 foreach (var bditem in ret["/api/toplist"]["list"])
                     RankPlayList.Children.Add(new PlaylistItem(NCPlayList.CreateFromJson(bditem)));
@@ -137,6 +158,7 @@ public sealed partial class Home : Page, IDisposable
                 var ret1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendResource);
                 _ = Common.Invoke(() =>
                 {
+                    _cancellationToken.ThrowIfCancellationRequested();
                     RecommendSongListContainer.Children.Clear();
                     foreach (var item in ret1["recommend"])
                         RecommendSongListContainer.Children.Add(new PlaylistItem(NCPlayList.CreateFromJson(item)));
@@ -144,31 +166,36 @@ public sealed partial class Home : Page, IDisposable
             }
             catch (Exception ex)
             {
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                if (ex.GetType() != typeof(TaskCanceledException))
+                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            if (ex.GetType() != typeof(TaskCanceledException))
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
 
     public async Task LoadRanklist()
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(Home));
+        _cancellationToken.ThrowIfCancellationRequested();
         try
         {
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Toplist);
 
             foreach (var PlaylistItemJson in json["list"].ToArray())
             {
+                _cancellationToken.ThrowIfCancellationRequested();
                 var ncp = NCPlayList.CreateFromJson(PlaylistItemJson);
                 RankList.Children.Add(new PlaylistItem(ncp));
             }
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            if (ex.GetType() != typeof(TaskCanceledException))
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
 

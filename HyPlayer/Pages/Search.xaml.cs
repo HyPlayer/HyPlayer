@@ -562,12 +562,12 @@ public sealed partial class Search : Page, IDisposable
     }
 
 
-    private async void HistoryComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void HistoryComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(Search));
         if ((sender as ComboBox) is not null)
         {
-            SearchKeywordBox.Text = (sender as ComboBox).SelectedItem as String;//将历史放上去
+            SearchKeywordBox.Text = (sender as ComboBox).SelectedItem as string;//将历史放上去
             _loadResultTask = LoadResult();
         }
     }
