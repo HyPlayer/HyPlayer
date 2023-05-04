@@ -23,7 +23,8 @@ namespace HyPlayer.Controls
             InfoBarLoginHint.IsOpen = true;
             InfoBarLoginHint.Message = ex.Message;
             return;
-        }private void OnLoginDone()
+        }
+        private void OnLoginDone()
         {
             LastFMManager.OnLoginError -= OnLoginError;
             LastFMManager.OnLoginDone -= OnLoginDone;
