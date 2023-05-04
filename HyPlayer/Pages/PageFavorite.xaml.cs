@@ -34,14 +34,22 @@ public sealed partial class PageFavorite : Page, IDisposable
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
     }
+    ~PageFavorite()
+    {
+        Dispose(true);
+    }
 
     public void Dispose()
+    {
+        Dispose(false);
+    }
+    private void Dispose(bool isFinalizer)
     {
         if (IsDisposed) return;
         ItemContainer.ListItems.Clear();
         _cancellationTokenSource.Dispose();
         IsDisposed = true;
-        GC.SuppressFinalize(this);
+        if(!isFinalizer) GC.SuppressFinalize(this);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

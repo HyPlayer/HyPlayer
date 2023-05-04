@@ -121,7 +121,10 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         LeaveAnimation.Completed += LeaveAnimation_Completed;
         //CompactPlayerAni.Begin();
     }
-
+    ~CompactPlayerPage() 
+    {
+        Dispose(true);
+    }
     private void LeaveAnimation_Completed(object sender, object e)
     {
         ChangeLyric();
@@ -276,6 +279,10 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
 
     public void Dispose()
     {
+        Dispose(false);
+    }
+    private void Dispose(bool isFinalizer)
+    {
         HyPlayList.OnPlayPositionChange -=
             position => _ = Common.Invoke(() => NowProgress = position.TotalMilliseconds);
         HyPlayList.OnPlayItemChange -= OnChangePlayItem;
@@ -284,6 +291,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         HyPlayList.OnLyricChange -= OnLyricChanged;
         HyPlayList.OnSongLikeStatusChange -= HyPlayList_OnSongLikeStatusChange;
         //CompactPlayerAni.Begin();
+        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
     private void OnChangePlayItem(HyPlayItem item)

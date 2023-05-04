@@ -44,7 +44,10 @@ public sealed partial class ArtistPage : Page, IDisposable
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
     }
-
+    ~ArtistPage()
+    {
+        Dispose(true);
+    }
     public bool SongHasMore
     {
         get => (bool)GetValue(SongHasMoreProperty);
@@ -128,6 +131,10 @@ public sealed partial class ArtistPage : Page, IDisposable
 
     public void Dispose()
     {
+        Dispose(false);
+    }
+    private void Dispose(bool isFinalizer)
+    {
         if (IsDisposed) return;
         allSongs.Clear();
         hotSongs.Clear();
@@ -136,7 +143,7 @@ public sealed partial class ArtistPage : Page, IDisposable
         _cancellationTokenSource.Dispose();
         artist = null;
         IsDisposed = true;
-        GC.SuppressFinalize(this);
+        if(!isFinalizer) GC.SuppressFinalize(this);
     }
 
     private async Task LoadHotSongs()

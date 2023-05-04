@@ -36,8 +36,15 @@ public sealed partial class RadioPage : Page, IDisposable
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
     }
-
+    ~RadioPage()
+    {
+        Dispose(true);
+    }
     public void Dispose()
+    {
+        Dispose(false);
+    }
+    private void Dispose(bool isFinalizer)
     {
         if (IsDisposed) return;
         ImageRect.ImageSource = null;
@@ -45,7 +52,7 @@ public sealed partial class RadioPage : Page, IDisposable
         Songs.Clear();
         _cancellationTokenSource.Dispose();
         IsDisposed = true;
-        GC.SuppressFinalize(this);
+        if(!isFinalizer) GC.SuppressFinalize(this);
     }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)

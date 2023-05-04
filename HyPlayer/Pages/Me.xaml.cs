@@ -41,15 +41,23 @@ public sealed partial class Me : Page, IDisposable
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
     }
+    ~Me()
+    {
+        Dispose(true);
+    }
 
     public void Dispose()
+    {
+        Dispose(false);
+    }
+    private void Dispose(bool isFinalizer)
     {
         if (IsDisposed) return;
         ImageRect.ImageSource = null;
         myPlayList.Clear();
         likedPlayList.Clear();
         _cancellationTokenSource.Dispose();
-        GC.SuppressFinalize(this);
+        if(!isFinalizer) GC.SuppressFinalize(this);
     }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)

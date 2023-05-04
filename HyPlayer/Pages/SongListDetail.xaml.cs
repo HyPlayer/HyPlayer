@@ -49,6 +49,10 @@ public sealed partial class SongListDetail : Page, IDisposable
         _dataTransferManager.DataRequested += DataTransferManagerOnDataRequested;
         _cancellationToken = _cancellationTokenSource.Token;
     }
+    ~SongListDetail()
+    {
+        Dispose(true);
+    }
 
     private void DataTransferManagerOnDataRequested(DataTransferManager sender, DataRequestedEventArgs args)
     {
@@ -68,6 +72,10 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     public void Dispose()
     {
+        Dispose(false);
+    }
+    private void Dispose(bool isFinalizer)
+    {
         if (IsDisposed) return;
         Songs.Clear();
         SongsList.Dispose();
@@ -76,7 +84,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         ImageRect.ImageSource = null;
         _dataTransferManager.DataRequested -= DataTransferManagerOnDataRequested;
         _cancellationTokenSource.Dispose();
-        GC.SuppressFinalize(this);
+        if(!isFinalizer) GC.SuppressFinalize(this);
     }
 
     public void LoadSongListDetail()

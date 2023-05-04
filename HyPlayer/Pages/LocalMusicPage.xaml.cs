@@ -40,8 +40,16 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
         InitializeComponent();
         _cancellationToken = cancellationTokenSource.Token;
     }
+    ~LocalMusicPage()
+    {
+        Dispose(true);
+    }
 
     public void Dispose()
+    {
+        Dispose(false);
+    }
+    private void Dispose(bool isFinalizer)
     {
         if (IsDisposed) return;
         CurrentFileScanTask = null;
@@ -49,7 +57,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
         NotificationText = null;
         localHyItems.Clear();
         IsDisposed = true;
-        GC.SuppressFinalize(this);
+        if(!isFinalizer) GC.SuppressFinalize(this);
     }
     public string NotificationText
     {

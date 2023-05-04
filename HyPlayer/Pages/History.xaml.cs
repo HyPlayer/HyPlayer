@@ -34,6 +34,10 @@ public sealed partial class History : Page, IDisposable
         HisModeNavView.SelectedItem = SongHis;
         _cancellationToken = _cancellationTokenSource.Token;
     }
+    ~History()
+    {
+        Dispose(true);
+    }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
@@ -65,11 +69,15 @@ public sealed partial class History : Page, IDisposable
 
     public void Dispose()
     {
+        Dispose(false);
+    }
+    private void Dispose(bool isFinalizer)
+    {
         if (IsDisposed) return;
         Songs.Clear();
         _cancellationTokenSource.Dispose();
         IsDisposed = true;
-        GC.SuppressFinalize(this);
+        if(!isFinalizer) GC.SuppressFinalize(this);
     }
     private async void NavigationView_SelectionChanged(NavigationView sender,
         NavigationViewSelectionChangedEventArgs args)

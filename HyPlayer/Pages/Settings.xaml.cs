@@ -92,7 +92,10 @@ public sealed partial class Settings : Page, IDisposable
         //ToggleButtonDaylight.IsChecked = Application.Current.RequestedTheme == ApplicationTheme.Dark;
         BtnXboxReserve.Visibility = true ? Visibility.Visible : Visibility.Collapsed;
     }
-
+    ~Settings()
+    {
+        Dispose(true);
+    }
     public static readonly DependencyProperty IsAdvancedLyricColorSettingsShowProperty = DependencyProperty.Register(
         "IsAdvancedLyricColorSettingsShow", typeof(bool), typeof(Settings), new PropertyMetadata(default(bool)));
 
@@ -104,10 +107,14 @@ public sealed partial class Settings : Page, IDisposable
 
     public void Dispose()
     {
+        Dispose(false);
+    }
+    private void Dispose(bool isFinalizer)
+    {
         if (IsDisposed) return;
         StackPanelLyricSet.Children.Clear();
         IsDisposed = true;
-        GC.SuppressFinalize(this);
+        if(!isFinalizer) GC.SuppressFinalize(this);
     }
 
     private async Task GetRomaji()

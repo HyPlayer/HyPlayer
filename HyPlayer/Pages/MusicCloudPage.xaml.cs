@@ -38,15 +38,22 @@ public sealed partial class MusicCloudPage : Page, IDisposable
         SongContainer.ListSource = "content";
         _cancellationToken = _cancellationTokenSource.Token;
     }
-
+    ~MusicCloudPage() 
+    {
+        Dispose(true);
+    }
     public void Dispose()
+    {
+        Dispose(false);
+    }
+    private void Dispose(bool isFinalizer)
     {
         if (IsDisposed) return;
         Items.Clear();
         SongContainer.Dispose();
         _cancellationTokenSource.Dispose();
         IsDisposed = true;
-        GC.SuppressFinalize(this);
+        if(!isFinalizer) GC.SuppressFinalize(this);
     }
 
     public async Task LoadMusicCloudItem()

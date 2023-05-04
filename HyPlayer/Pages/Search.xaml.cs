@@ -45,6 +45,10 @@ public sealed partial class Search : Page, IDisposable
         NavigationViewSelector.SelectedItem = NavigationViewSelector.MenuItems[0];
         _cancellationToken = _cancellationTokenSource.Token;
     }
+    ~Search()
+    {
+        Dispose(true);
+    }
 
     public bool HasNextPage
     {
@@ -60,12 +64,16 @@ public sealed partial class Search : Page, IDisposable
 
     public void Dispose()
     {
+        Dispose(false);
+    }
+    private void Dispose(bool isFinalizer)
+    {
         if (IsDisposed) return;
         SongResults.Clear();
         SearchResultContainer.ListItems.Clear();
         _cancellationTokenSource.Dispose();
         IsDisposed = true;
-        GC.SuppressFinalize(this);
+        if(!isFinalizer) GC.SuppressFinalize(this);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

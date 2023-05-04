@@ -42,8 +42,16 @@ public sealed partial class Home : Page, IDisposable
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
     }
+    ~Home()
+    {
+        Dispose(true);
+    }
 
     public void Dispose()
+    {
+        Dispose(false);
+    }
+    private void Dispose(bool isFinalizer)
     {
         if (IsDisposed) return;
         RecommendSongListContainer.Children.Clear();
@@ -53,7 +61,7 @@ public sealed partial class Home : Page, IDisposable
         RankPlayList.Children.Clear();
         _cancellationTokenSource.Dispose();
         IsDisposed = true;
-        GC.SuppressFinalize(this);
+        if(!isFinalizer) GC.SuppressFinalize(this);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

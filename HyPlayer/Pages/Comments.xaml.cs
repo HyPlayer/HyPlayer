@@ -48,8 +48,15 @@ public sealed partial class Comments : Page, IDisposable
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
     }
-
+    ~Comments()
+    {
+        Dispose(true);
+    }
     public void Dispose()
+    {
+        Dispose(false);
+    }
+    private void Dispose(bool isFinalizer)
     {
         if (IsDisposed) return;
         hotComments.Clear();
@@ -58,7 +65,7 @@ public sealed partial class Comments : Page, IDisposable
         cursor = null;
         resourceid = null;
         IsDisposed = true;
-        GC.SuppressFinalize(false);
+        if(!isFinalizer) GC.SuppressFinalize(this);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

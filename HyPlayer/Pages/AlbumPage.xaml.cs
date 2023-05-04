@@ -48,6 +48,10 @@ public sealed partial class AlbumPage : Page, IDisposable
 
     public void Dispose()
     {
+        Dispose(false);
+    }
+    private void Dispose(bool isFinalizer)
+    {
         if (IsDisposed) return;
         AlbumSongs.Clear();
         AlbumSongsViewSource.Source = null;
@@ -58,7 +62,7 @@ public sealed partial class AlbumPage : Page, IDisposable
         ImageRect.ImageSource = null;
         _cancellationTokenSource.Dispose();
         IsDisposed = true;
-        GC.SuppressFinalize(this);
+        if(!isFinalizer) GC.SuppressFinalize(this);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

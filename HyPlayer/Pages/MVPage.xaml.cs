@@ -40,8 +40,15 @@ public sealed partial class MVPage : Page, IDisposable
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
     }
-
+    ~MVPage() 
+    {
+        Dispose(true);
+    }
     public void Dispose()
+    {
+        Dispose(false);
+    }
+    private void Dispose(bool isFinalizer)
     {
         MediaPlayerElement.Source = null;
         sources.Clear();
@@ -50,7 +57,7 @@ public sealed partial class MVPage : Page, IDisposable
         songid = null;
         _cancellationTokenSource.Dispose();
         IsDisposed = true;
-        GC.SuppressFinalize(this);
+        if(!isFinalizer) GC.SuppressFinalize(this);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
