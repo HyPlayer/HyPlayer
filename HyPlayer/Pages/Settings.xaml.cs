@@ -114,7 +114,7 @@ public sealed partial class Settings : Page, IDisposable
         if (IsDisposed) return;
         StackPanelLyricSet.Children.Clear();
         IsDisposed = true;
-        if(!isFinalizer) GC.SuppressFinalize(this);
+        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
     private async Task GetRomaji()

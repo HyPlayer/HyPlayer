@@ -121,7 +121,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         LeaveAnimation.Completed += LeaveAnimation_Completed;
         //CompactPlayerAni.Begin();
     }
-    ~CompactPlayerPage() 
+    ~CompactPlayerPage()
     {
         Dispose(true);
     }

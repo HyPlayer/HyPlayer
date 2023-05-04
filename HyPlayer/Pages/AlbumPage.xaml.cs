@@ -66,7 +66,7 @@ public sealed partial class AlbumPage : Page, IDisposable
         ImageRect.ImageSource = null;
         _cancellationTokenSource.Dispose();
         IsDisposed = true;
-        if(!isFinalizer) GC.SuppressFinalize(this);
+        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

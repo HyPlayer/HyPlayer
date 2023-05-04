@@ -49,7 +49,7 @@ public sealed partial class PageFavorite : Page, IDisposable
         ItemContainer.ListItems.Clear();
         _cancellationTokenSource.Dispose();
         IsDisposed = true;
-        if(!isFinalizer) GC.SuppressFinalize(this);
+        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -83,7 +83,7 @@ public sealed partial class PageFavorite : Page, IDisposable
         page = 0;
         i = 0;
         ItemContainer.ListItems.Clear();
-        _listLoaderTask =  RealLoad();
+        _listLoaderTask = RealLoad();
     }
 
     private async Task RealLoad()

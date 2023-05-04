@@ -52,7 +52,7 @@ public sealed partial class RadioPage : Page, IDisposable
         Songs.Clear();
         _cancellationTokenSource.Dispose();
         IsDisposed = true;
-        if(!isFinalizer) GC.SuppressFinalize(this);
+        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
@@ -99,7 +99,7 @@ public sealed partial class RadioPage : Page, IDisposable
         }
         catch (Exception ex)
         {
-            if (ex.GetType() != typeof(TaskCanceledException))
+            if (ex.GetType() != typeof(TaskCanceledException) || ex.GetType() != typeof(OperationCanceledException))
                 Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }

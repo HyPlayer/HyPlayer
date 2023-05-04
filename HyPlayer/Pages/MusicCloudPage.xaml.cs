@@ -38,7 +38,7 @@ public sealed partial class MusicCloudPage : Page, IDisposable
         SongContainer.ListSource = "content";
         _cancellationToken = _cancellationTokenSource.Token;
     }
-    ~MusicCloudPage() 
+    ~MusicCloudPage()
     {
         Dispose(true);
     }
@@ -53,7 +53,7 @@ public sealed partial class MusicCloudPage : Page, IDisposable
         SongContainer.Dispose();
         _cancellationTokenSource.Dispose();
         IsDisposed = true;
-        if(!isFinalizer) GC.SuppressFinalize(this);
+        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
     public async Task LoadMusicCloudItem()
@@ -100,7 +100,7 @@ public sealed partial class MusicCloudPage : Page, IDisposable
         }
         catch (Exception ex)
         {
-            if(ex.GetType()!=typeof(TaskCanceledException))
+            if (ex.GetType() != typeof(TaskCanceledException) || ex.GetType() != typeof(OperationCanceledException))
                 Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }

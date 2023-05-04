@@ -57,14 +57,14 @@ public sealed partial class Me : Page, IDisposable
         myPlayList.Clear();
         likedPlayList.Clear();
         _cancellationTokenSource.Dispose();
-        if(!isFinalizer) GC.SuppressFinalize(this);
+        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
-        if ((_loadPlaylistTask != null && ! _loadPlaylistTask.IsCompleted) 
-            || (_loadInfoTask != null && ! _loadInfoTask.IsCompleted))
+        if ((_loadPlaylistTask != null && !_loadPlaylistTask.IsCompleted)
+            || (_loadInfoTask != null && !_loadInfoTask.IsCompleted))
         {
             try
             {
@@ -147,7 +147,7 @@ public sealed partial class Me : Page, IDisposable
         }
         catch (Exception ex)
         {
-            if(ex.GetType()!=typeof(TaskCanceledException))
+            if (ex.GetType() != typeof(TaskCanceledException) || ex.GetType() != typeof(OperationCanceledException))
                 Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
@@ -179,7 +179,7 @@ public sealed partial class Me : Page, IDisposable
             }
             catch (Exception ex)
             {
-                if(ex.GetType()!=typeof(TaskCanceledException))
+                if (ex.GetType() != typeof(TaskCanceledException) || ex.GetType() != typeof(OperationCanceledException))
                     Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }

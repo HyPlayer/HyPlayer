@@ -65,7 +65,7 @@ public sealed partial class Comments : Page, IDisposable
         cursor = null;
         resourceid = null;
         IsDisposed = true;
-        if(!isFinalizer) GC.SuppressFinalize(this);
+        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -182,7 +182,7 @@ public sealed partial class Comments : Page, IDisposable
         }
         catch (Exception ex)
         {
-            if (ex.GetType() != typeof(TaskCanceledException))
+            if (ex.GetType() != typeof(TaskCanceledException) || ex.GetType() != typeof(OperationCanceledException))
                 Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }

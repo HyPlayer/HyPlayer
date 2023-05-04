@@ -77,7 +77,7 @@ public sealed partial class History : Page, IDisposable
         Songs.Clear();
         _cancellationTokenSource.Dispose();
         IsDisposed = true;
-        if(!isFinalizer) GC.SuppressFinalize(this);
+        if (!isFinalizer) GC.SuppressFinalize(this);
     }
     private async void NavigationView_SelectionChanged(NavigationView sender,
         NavigationViewSelectionChangedEventArgs args)
@@ -128,7 +128,7 @@ public sealed partial class History : Page, IDisposable
         }
         catch (Exception ex)
         {
-            if (ex.GetType() != typeof(TaskCanceledException))
+            if (ex.GetType() != typeof(TaskCanceledException) || ex.GetType() != typeof(OperationCanceledException))
                 Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
@@ -155,7 +155,7 @@ public sealed partial class History : Page, IDisposable
         }
         catch (Exception ex)
         {
-            if (ex.GetType() != typeof(TaskCanceledException))
+            if (ex.GetType() != typeof(TaskCanceledException) || ex.GetType() != typeof(OperationCanceledException))
                 Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }

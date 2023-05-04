@@ -57,7 +57,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
         NotificationText = null;
         localHyItems.Clear();
         IsDisposed = true;
-        if(!isFinalizer) GC.SuppressFinalize(this);
+        if (!isFinalizer) GC.SuppressFinalize(this);
     }
     public string NotificationText
     {

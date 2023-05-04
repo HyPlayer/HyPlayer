@@ -40,7 +40,7 @@ public sealed partial class MVPage : Page, IDisposable
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
     }
-    ~MVPage() 
+    ~MVPage()
     {
         Dispose(true);
     }
@@ -57,7 +57,7 @@ public sealed partial class MVPage : Page, IDisposable
         songid = null;
         _cancellationTokenSource.Dispose();
         IsDisposed = true;
-        if(!isFinalizer) GC.SuppressFinalize(this);
+        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

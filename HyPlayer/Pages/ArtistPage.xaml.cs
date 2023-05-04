@@ -143,7 +143,7 @@ public sealed partial class ArtistPage : Page, IDisposable
         _cancellationTokenSource.Dispose();
         artist = null;
         IsDisposed = true;
-        if(!isFinalizer) GC.SuppressFinalize(this);
+        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
     private async Task LoadHotSongs()
@@ -173,7 +173,7 @@ public sealed partial class ArtistPage : Page, IDisposable
         }
         catch (Exception ex)
         {
-            if (ex.GetType() != typeof(TaskCanceledException))
+            if (ex.GetType() != typeof(TaskCanceledException) || ex.GetType() != typeof(OperationCanceledException))
                 Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
@@ -207,13 +207,13 @@ public sealed partial class ArtistPage : Page, IDisposable
             }
             catch (Exception ex)
             {
-                if (ex.GetType() != typeof(TaskCanceledException))
+                if (ex.GetType() != typeof(TaskCanceledException) || ex.GetType() != typeof(OperationCanceledException))
                     Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
         catch (Exception ex)
         {
-            if (ex.GetType() != typeof(TaskCanceledException))
+            if (ex.GetType() != typeof(TaskCanceledException) || ex.GetType() != typeof(OperationCanceledException))
                 Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
@@ -270,7 +270,7 @@ public sealed partial class ArtistPage : Page, IDisposable
                     Order = page * 50 + i++,
                     CanPlay = true
                 });
-            }  
+            }
             if (int.Parse(j1["artist"]["albumSize"].ToString()) >= (page + 1) * 50)
                 NextPage.Visibility = Visibility.Visible;
             else
@@ -282,7 +282,7 @@ public sealed partial class ArtistPage : Page, IDisposable
         }
         catch (Exception ex)
         {
-            if (ex.GetType() != typeof(TaskCanceledException))
+            if (ex.GetType() != typeof(TaskCanceledException) || ex.GetType() != typeof(OperationCanceledException))
                 Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }

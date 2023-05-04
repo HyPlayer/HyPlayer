@@ -84,7 +84,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         ImageRect.ImageSource = null;
         _dataTransferManager.DataRequested -= DataTransferManagerOnDataRequested;
         _cancellationTokenSource.Dispose();
-        if(!isFinalizer) GC.SuppressFinalize(this);
+        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
     public void LoadSongListDetail()
@@ -159,7 +159,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         }
         catch (Exception ex)
         {
-            if(ex.GetType()!=typeof(TaskCanceledException))
+            if (ex.GetType() != typeof(TaskCanceledException) || ex.GetType() != typeof(OperationCanceledException))
                 Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
@@ -211,13 +211,13 @@ public sealed partial class SongListDetail : Page, IDisposable
 
             catch (Exception ex)
             {
-                if (ex.GetType() != typeof(TaskCanceledException))
+                if (ex.GetType() != typeof(TaskCanceledException) || ex.GetType() != typeof(OperationCanceledException))
                     Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
         catch (Exception ex)
         {
-            if (ex.GetType() != typeof(TaskCanceledException))
+            if (ex.GetType() != typeof(TaskCanceledException) || ex.GetType() != typeof(OperationCanceledException))
                 Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
@@ -380,10 +380,10 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     private void BtnShare_Clicked(object sender, RoutedEventArgs e)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(SongListDetail)); 
+        if (IsDisposed) throw new ObjectDisposedException(nameof(SongListDetail));
         DataTransferManager.ShowShareUI();
     }
-    
+
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
     {

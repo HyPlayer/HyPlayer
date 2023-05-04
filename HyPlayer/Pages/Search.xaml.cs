@@ -73,7 +73,7 @@ public sealed partial class Search : Page, IDisposable
         SearchResultContainer.ListItems.Clear();
         _cancellationTokenSource.Dispose();
         IsDisposed = true;
-        if(!isFinalizer) GC.SuppressFinalize(this);
+        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -90,12 +90,12 @@ public sealed partial class Search : Page, IDisposable
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
-        if (_loadResultTask != null && !_loadResultTask .IsCompleted)
+        if (_loadResultTask != null && !_loadResultTask.IsCompleted)
         {
             try
             {
                 _cancellationTokenSource.Cancel();
-                await _loadResultTask ;
+                await _loadResultTask;
             }
             catch
             {
@@ -165,7 +165,7 @@ public sealed partial class Search : Page, IDisposable
         }
         catch (Exception ex)
         {
-            if (ex.GetType() != typeof(TaskCanceledException))
+            if (ex.GetType() != typeof(TaskCanceledException) || ex.GetType() != typeof(OperationCanceledException))
                 Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
@@ -299,7 +299,7 @@ public sealed partial class Search : Page, IDisposable
                     Order = i++
                 });
         }
-            
+
         if (json["result"]["userprofileCount"].ToObject<int>() >= (page + 1) * 30)
             HasNextPage = true;
         else
@@ -334,9 +334,9 @@ public sealed partial class Search : Page, IDisposable
                     CoverUri = pljs["picUrl"].ToString(),
                     Order = i++,
                     CanPlay = true
-                });   
+                });
         }
-            
+
         if (int.Parse(json["result"]["djRadiosCount"].ToString()) >= (page + 1) * 30)
             HasNextPage = true;
         else
@@ -492,7 +492,7 @@ public sealed partial class Search : Page, IDisposable
         }
         catch (Exception ex)
         {
-            if (ex.GetType() != typeof(TaskCanceledException))
+            if (ex.GetType() != typeof(TaskCanceledException) || ex.GetType() != typeof(OperationCanceledException))
                 Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
