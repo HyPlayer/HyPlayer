@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.UI;
@@ -36,11 +37,31 @@ public sealed partial class SongListDetail : Page, IDisposable
     private NCPlayList playList;
     public ObservableCollection<NCSong> Songs;
     public bool IsDisposed = false;
+    private DataTransferManager _dataTransferManager = DataTransferManager.GetForCurrentView();
+    private Task _songListLoaderTask;
+    private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+    private CancellationToken _cancellationToken;
 
     public SongListDetail()
     {
         InitializeComponent();
         Songs = new ObservableCollection<NCSong>();
+        _dataTransferManager.DataRequested += DataTransferManagerOnDataRequested;
+        _cancellationToken = _cancellationTokenSource.Token;
+    }
+    ~SongListDetail()
+    {
+        Dispose(true);
+    }
+
+    private void DataTransferManagerOnDataRequested(DataTransferManager sender, DataRequestedEventArgs args)
+    {
+        var dp = new DataPackage();
+        dp.Properties.Title = playList.name;
+        dp.SetWebLink(new Uri("https://music.163.com/#/playlist?id=" +
+                              playList.plid));
+        var request = args.Request;
+        request.Data = dp;
     }
 
     public bool IsLoading
@@ -51,13 +72,19 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     public void Dispose()
     {
+        Dispose(false);
+    }
+    private void Dispose(bool isFinalizer)
+    {
         if (IsDisposed) return;
         Songs.Clear();
         SongsList.Dispose();
         playList = null;
         IsDisposed = true;
         ImageRect.ImageSource = null;
-        GC.SuppressFinalize(this);
+        _dataTransferManager.DataRequested -= DataTransferManagerOnDataRequested;
+        _cancellationTokenSource.Dispose();
+        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
     public void LoadSongListDetail()
@@ -107,6 +134,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         SongsList.ListSource = "content";
         try
         {
+            _cancellationToken.ThrowIfCancellationRequested();
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendSongs);
             if (json["data"]["dailySongs"][0]["alg"].ToString() == "birthDaySong")
             {
@@ -119,6 +147,10 @@ public sealed partial class SongListDetail : Page, IDisposable
             var idx = 0;
             foreach (var song in json["data"]["dailySongs"])
             {
+                if (_cancellationToken.IsCancellationRequested)
+                {
+                    throw new TaskCanceledException();
+                }
                 var ncSong = NCSong.CreateFromJson(song);
                 ncSong.IsAvailable = true;
                 ncSong.Order = idx++;
@@ -127,7 +159,8 @@ public sealed partial class SongListDetail : Page, IDisposable
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            if (ex.GetType() != typeof(TaskCanceledException) && ex.GetType() != typeof(OperationCanceledException))
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
 
@@ -136,6 +169,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         if (IsDisposed) throw new ObjectDisposedException(nameof(SongListDetail));
         try
         {
+            _cancellationToken.ThrowIfCancellationRequested();
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
                 new Dictionary<string, object> { { "id", playList.plid } });
             if (!json["playlist"]["trackIds"].HasValues) return;
@@ -161,6 +195,10 @@ public sealed partial class SongListDetail : Page, IDisposable
                 var i = 0;
                 foreach (var jToken in json["songs"])
                 {
+                    if (_cancellationToken.IsCancellationRequested)
+                    {
+                        throw new TaskCanceledException();
+                    }
                     var song = (JObject)jToken;
 
                     var ncSong = NCSong.CreateFromJson(song);
@@ -173,18 +211,33 @@ public sealed partial class SongListDetail : Page, IDisposable
 
             catch (Exception ex)
             {
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                if (ex.GetType() != typeof(TaskCanceledException) && ex.GetType() != typeof(OperationCanceledException))
+                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            if (ex.GetType() != typeof(TaskCanceledException) && ex.GetType() != typeof(OperationCanceledException))
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
 
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        if (_songListLoaderTask != null && !_songListLoaderTask.IsCompleted)
+        {
+            try
+            {
+                _cancellationTokenSource.Cancel();
+                await _songListLoaderTask;
+            }
+            catch
+            {
+                Dispose();
+                return;
+            }
+        }
         Dispose();
     }
 
@@ -220,7 +273,7 @@ public sealed partial class SongListDetail : Page, IDisposable
 
         SongsList.ListSource = "pl" + playList?.plid;
         LoadSongListDetail();
-        _ = LoadSongListItem();
+        _songListLoaderTask = LoadSongListItem();
     }
 
 
@@ -252,7 +305,7 @@ public sealed partial class SongListDetail : Page, IDisposable
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(SongListDetail));
         page++;
-        _ = LoadSongListItem();
+        _songListLoaderTask = LoadSongListItem();
     }
 
     private void ButtonComment_OnClick(object sender, RoutedEventArgs e)
@@ -328,18 +381,9 @@ public sealed partial class SongListDetail : Page, IDisposable
     private void BtnShare_Clicked(object sender, RoutedEventArgs e)
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(SongListDetail));
-        var dataTransferManager = DataTransferManager.GetForCurrentView();
-        dataTransferManager.DataRequested += (s, args) =>
-        {
-            var dp = new DataPackage();
-            dp.Properties.Title = playList.name;
-            dp.SetWebLink(new Uri("https://music.163.com/#/playlist?id=" +
-                                  playList.plid));
-            var request = args.Request;
-            request.Data = dp;
-        };
         DataTransferManager.ShowShareUI();
     }
+
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
     {

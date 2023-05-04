@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -32,12 +33,21 @@ public sealed partial class ArtistPage : Page, IDisposable
     private NCArtist artist;
     private int page;
     public bool IsDisposed = false;
+    private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+    private CancellationToken _cancellationToken;
+    private Task _hotSongsLoaderTask;
+    private Task _albumLoaderTask;
+    private Task _songsLoaderTask;
 
     public ArtistPage()
     {
         InitializeComponent();
+        _cancellationToken = _cancellationTokenSource.Token;
     }
-
+    ~ArtistPage()
+    {
+        Dispose(true);
+    }
     public bool SongHasMore
     {
         get => (bool)GetValue(SongHasMoreProperty);
@@ -70,9 +80,9 @@ public sealed partial class ArtistPage : Page, IDisposable
                                  res["data"]["artist"]["mvSize"];
             HotSongContainer.ListSource = "sh" + artist.id;
             AllSongContainer.ListSource = "content";
-            _ = LoadHotSongs();
-            _ = LoadSongs();
-            _ = LoadAlbum();
+            _hotSongsLoaderTask = LoadHotSongs();
+            _songsLoaderTask = LoadSongs();
+            _albumLoaderTask = LoadAlbum();
         }
         catch (Exception ex)
         {
@@ -80,27 +90,66 @@ public sealed partial class ArtistPage : Page, IDisposable
         }
     }
 
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        if (_albumLoaderTask != null && !_albumLoaderTask.IsCompleted)
+        {
+            try
+            {
+                _cancellationTokenSource.Cancel();
+                await _albumLoaderTask;
+            }
+            catch
+            {
+            }
+        }
+        if (_songsLoaderTask != null && !_songsLoaderTask.IsCompleted)
+        {
+            try
+            {
+                _cancellationTokenSource.Cancel();
+                await _songsLoaderTask;
+            }
+            catch
+            {
+            }
+        }
+        if (_hotSongsLoaderTask != null && !_hotSongsLoaderTask.IsCompleted)
+        {
+            try
+            {
+                _cancellationTokenSource.Cancel();
+                await _hotSongsLoaderTask;
+            }
+            catch
+            {
+            }
+        }
         Dispose();
     }
 
     public void Dispose()
+    {
+        Dispose(false);
+    }
+    private void Dispose(bool isFinalizer)
     {
         if (IsDisposed) return;
         allSongs.Clear();
         hotSongs.Clear();
         AllSongContainer.Dispose();
         HotSongContainer.Dispose();
+        _cancellationTokenSource.Dispose();
         artist = null;
         IsDisposed = true;
-        GC.SuppressFinalize(this);
+        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
     private async Task LoadHotSongs()
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(ArtistPage));
+        _cancellationToken.ThrowIfCancellationRequested();
         try
         {
             var j1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistTopSong,
@@ -113,6 +162,7 @@ public sealed partial class ArtistPage : Page, IDisposable
                 { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) }, false);
             foreach (var jToken in json["songs"])
             {
+                _cancellationToken.ThrowIfCancellationRequested();
                 var ncSong = NCSong.CreateFromJson(jToken);
                 ncSong.IsAvailable =
                     json["privileges"][idx][
@@ -123,13 +173,15 @@ public sealed partial class ArtistPage : Page, IDisposable
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            if (ex.GetType() != typeof(TaskCanceledException) && ex.GetType() != typeof(OperationCanceledException))
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
 
     private async Task LoadSongs()
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(ArtistPage));
+        _cancellationToken.ThrowIfCancellationRequested();
         try
         {
             var j1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistSongs,
@@ -142,6 +194,7 @@ public sealed partial class ArtistPage : Page, IDisposable
                     { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) });
                 foreach (var jToken in json["songs"])
                 {
+                    _cancellationToken.ThrowIfCancellationRequested();
                     var ncSong = NCSong.CreateFromJson(jToken);
                     ncSong.IsAvailable =
                         json["privileges"][idx][
@@ -154,12 +207,14 @@ public sealed partial class ArtistPage : Page, IDisposable
             }
             catch (Exception ex)
             {
-                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+                if (ex.GetType() != typeof(TaskCanceledException) && ex.GetType() != typeof(OperationCanceledException))
+                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            if (ex.GetType() != typeof(TaskCanceledException) && ex.GetType() != typeof(OperationCanceledException))
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
 
@@ -183,14 +238,15 @@ public sealed partial class ArtistPage : Page, IDisposable
         if (IsDisposed) throw new ObjectDisposedException(nameof(ArtistPage));
         page++;
         if (mp.SelectedIndex == 1)
-            _ = LoadSongs();
+            _songsLoaderTask = LoadSongs();
         else if (mp.SelectedIndex == 2)
-            _ = LoadAlbum();
+            _albumLoaderTask = LoadAlbum();
     }
 
     private async Task LoadAlbum()
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(ArtistPage));
+        _cancellationToken.ThrowIfCancellationRequested();
         try
         {
             var j1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistAlbum,
@@ -199,6 +255,8 @@ public sealed partial class ArtistPage : Page, IDisposable
             AlbumContainer.ListItems.Clear();
             var i = 0;
             foreach (var albumjson in j1["hotAlbums"].ToArray())
+            {
+                _cancellationToken.ThrowIfCancellationRequested();
                 AlbumContainer.ListItems.Add(new SimpleListItem
                 {
                     Title = albumjson["name"].ToString(),
@@ -212,6 +270,7 @@ public sealed partial class ArtistPage : Page, IDisposable
                     Order = page * 50 + i++,
                     CanPlay = true
                 });
+            }
             if (int.Parse(j1["artist"]["albumSize"].ToString()) >= (page + 1) * 50)
                 NextPage.Visibility = Visibility.Visible;
             else
@@ -223,7 +282,8 @@ public sealed partial class ArtistPage : Page, IDisposable
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            if (ex.GetType() != typeof(TaskCanceledException) && ex.GetType() != typeof(OperationCanceledException))
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
 
@@ -233,9 +293,9 @@ public sealed partial class ArtistPage : Page, IDisposable
         if (IsDisposed) throw new ObjectDisposedException(nameof(ArtistPage));
         page--;
         if (mp.SelectedIndex == 1)
-            _ = LoadSongs();
+            _songsLoaderTask = LoadSongs();
         else if (mp.SelectedIndex == 2)
-            _ = LoadAlbum();
+            _albumLoaderTask = LoadAlbum();
     }
 
     private void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)

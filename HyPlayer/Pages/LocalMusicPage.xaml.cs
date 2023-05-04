@@ -31,36 +31,33 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
     private string _notificationText;
     private Task CurrentFileScanTask;
     private CancellationTokenSource cancellationTokenSource = new();
+    private CancellationToken _cancellationToken;
     private int index;
     public bool IsDisposed = false;
 
     public LocalMusicPage()
     {
         InitializeComponent();
+        _cancellationToken = cancellationTokenSource.Token;
+    }
+    ~LocalMusicPage()
+    {
+        Dispose(true);
     }
 
-    public async void Dispose()
+    public void Dispose()
+    {
+        Dispose(false);
+    }
+    private void Dispose(bool isFinalizer)
     {
         if (IsDisposed) return;
-        if (CurrentFileScanTask != null && CurrentFileScanTask.IsCompleted == false)
-        {
-            try
-            {
-                NotificationText = "正在等待本地扫描进程结束...";
-                cancellationTokenSource.Cancel();
-                await CurrentFileScanTask;
-            }
-            catch
-            {
-                CurrentFileScanTask = null;
-            }
-        }
         CurrentFileScanTask = null;
-        cancellationTokenSource = null;
+        cancellationTokenSource.Dispose();
         NotificationText = null;
         localHyItems.Clear();
         IsDisposed = true;
-        GC.SuppressFinalize(this);
+        if (!isFinalizer) GC.SuppressFinalize(this);
     }
     public string NotificationText
     {
@@ -77,6 +74,19 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        if (CurrentFileScanTask != null && CurrentFileScanTask.IsCompleted == false)
+        {
+            try
+            {
+                NotificationText = "正在等待本地扫描进程结束...";
+                cancellationTokenSource.Cancel();
+                await CurrentFileScanTask;
+            }
+            catch
+            {
+                CurrentFileScanTask = null;
+            }
+        }
         Dispose();
     }
 
@@ -120,7 +130,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
         {
             foreach (var storageFile in files)
             {
-                if (cancellationTokenSource.IsCancellationRequested) throw new TaskCanceledException();
+                _cancellationToken.ThrowIfCancellationRequested();
                 try
                 {
                     var item = await HyPlayList.LoadStorageFile(storageFile);
@@ -150,7 +160,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
             };
             foreach (var storageFile in files)
             {
-                if (cancellationTokenSource.IsCancellationRequested) throw new TaskCanceledException();
+                _cancellationToken.ThrowIfCancellationRequested();
                 var item = new HyPlayItem
                 {
                     ItemType = HyPlayItemType.LocalProgressive,

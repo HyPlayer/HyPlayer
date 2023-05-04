@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -34,13 +35,26 @@ public sealed partial class AlbumPage : Page, IDisposable
     private List<NCArtist> artists = new();
     private int page;
     public bool IsDisposed = false;
+    private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+    private CancellationToken _cancellationToken;
+    private Task _albumDynamicLoaderTask;
+    private Task _albumInfoLoaderTask;
 
     public AlbumPage()
     {
         InitializeComponent();
+        _cancellationToken = _cancellationTokenSource.Token;
+    }
+    ~AlbumPage()
+    {
+        Dispose(true);
     }
 
     public void Dispose()
+    {
+        Dispose(false);
+    }
+    private void Dispose(bool isFinalizer)
     {
         if (IsDisposed) return;
         AlbumSongs.Clear();
@@ -50,8 +64,9 @@ public sealed partial class AlbumPage : Page, IDisposable
         Album = null;
         artists = null;
         ImageRect.ImageSource = null;
+        _cancellationTokenSource.Dispose();
         IsDisposed = true;
-        GC.SuppressFinalize(this);
+        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -69,19 +84,42 @@ public sealed partial class AlbumPage : Page, IDisposable
                 break;
         }
 
-        _ = LoadAlbumInfo();
-        _ = LoadAlbumDynamic();
+        _albumInfoLoaderTask = LoadAlbumInfo();
+        _albumDynamicLoaderTask = LoadAlbumDynamic();
     }
 
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        if (_albumInfoLoaderTask != null && !_albumInfoLoaderTask.IsCompleted)
+        {
+            try
+            {
+                _cancellationTokenSource.Cancel();
+                await _albumInfoLoaderTask;
+            }
+            catch
+            {
+            }
+        }
+        if (_albumDynamicLoaderTask != null && !_albumDynamicLoaderTask.IsCompleted)
+        {
+            try
+            {
+                _cancellationTokenSource.Cancel();
+                await _albumDynamicLoaderTask;
+            }
+            catch
+            {
+            }
+        }
         Dispose();
     }
 
     private async Task LoadAlbumDynamic()
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(AlbumPage));
+        _cancellationToken.ThrowIfCancellationRequested();
         var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.AlbumDetailDynamic,
             new Dictionary<string, object> { { "id", albumid } });
         BtnSub.IsChecked = json["isSub"].ToObject<bool>();
@@ -90,6 +128,7 @@ public sealed partial class AlbumPage : Page, IDisposable
     private async Task LoadAlbumInfo()
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(AlbumPage));
+        _cancellationToken.ThrowIfCancellationRequested();
         JObject json;
         try
         {
