@@ -45,6 +45,10 @@ public sealed partial class AlbumPage : Page, IDisposable
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
     }
+    ~AlbumPage()
+    {
+        Dispose(true);
+    }
 
     public void Dispose()
     {

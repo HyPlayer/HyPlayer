@@ -190,11 +190,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         Dispose();
     }
 
-    ~ExpandedPlayer()
-    {
-        Dispose();
-    }
-
     private void HyPlayList_OnLyricLoaded()
     {
         _ = Common.Invoke(LoadLyricsBox);
