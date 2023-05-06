@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -24,33 +25,59 @@ public sealed partial class RadioPage : Page, IDisposable
     private int page;
     private NCRadio Radio;
     public bool IsDisposed = false;
+    private Task _programLoaderTask;
+    private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+    private CancellationToken _cancellationToken;
 
     public ObservableCollection<NCSong> Songs = new();
 
     public RadioPage()
     {
         InitializeComponent();
+        _cancellationToken = _cancellationTokenSource.Token;
     }
-
+    ~RadioPage()
+    {
+        Dispose(true);
+    }
     public void Dispose()
+    {
+        Dispose(false);
+    }
+    private void Dispose(bool isFinalizer)
     {
         if (IsDisposed) return;
         ImageRect.ImageSource = null;
         SongContainer.Dispose();
         Songs.Clear();
+        _cancellationTokenSource.Dispose();
         IsDisposed = true;
-        GC.SuppressFinalize(this);
+        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        if (_programLoaderTask != null && !_programLoaderTask.IsCompleted)
+        {
+            try
+            {
+                _cancellationTokenSource.Cancel();
+                await _programLoaderTask;
+            }
+            catch
+            {
+                Dispose();
+                return;
+            }
+        }
         Dispose();
     }
 
     private async Task LoadProgram()
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(RadioPage));
+        _cancellationToken.ThrowIfCancellationRequested();
         try
         {
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.DjProgram,
@@ -63,6 +90,7 @@ public sealed partial class RadioPage : Page, IDisposable
             NextPage.Visibility = json["more"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
             foreach (var jToken in json["programs"])
             {
+                _cancellationToken.ThrowIfCancellationRequested();
                 var song = NCFmItem.CreateFromJson(jToken);
                 song.Type = HyPlayItemType.Radio;
                 song.Order = i++;
@@ -71,7 +99,8 @@ public sealed partial class RadioPage : Page, IDisposable
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            if (ex.GetType() != typeof(TaskCanceledException) && ex.GetType() != typeof(OperationCanceledException))
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
 
@@ -101,14 +130,14 @@ public sealed partial class RadioPage : Page, IDisposable
                 : new BitmapImage(new Uri(Radio.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
         Songs.Clear();
         SongContainer.ListSource = "rd" + Radio.id;
-        _ = LoadProgram();
+        _programLoaderTask = LoadProgram();
     }
 
     private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(RadioPage));
         page++;
-        _ = LoadProgram();
+        _programLoaderTask = LoadProgram();
     }
 
     private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
@@ -140,7 +169,7 @@ public sealed partial class RadioPage : Page, IDisposable
         page = 0;
         i = 0;
         asc = !asc;
-        _ = LoadProgram();
+        _programLoaderTask = LoadProgram();
     }
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)

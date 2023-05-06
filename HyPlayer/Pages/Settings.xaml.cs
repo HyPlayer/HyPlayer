@@ -78,7 +78,7 @@ public sealed partial class Settings : Page, IDisposable
         DeviceInfo.Text = deviceInfo.Id.ToString();
         _lyricItem = new LyricItem(new SongLyric
         {
-            LyricLine = new LrcLyricsLine("歌词大小示例 AaBbCcDd 約束の言葉", 0),
+            LyricLine = new LrcLyricsLine("歌词大小示例 AaBbCcDd 約束の言葉", TimeSpan.Zero),
             Translation = "翻译大小示例"
         });
         _lyricItem.Transitions.Add(new RepositionThemeTransition());
@@ -92,7 +92,10 @@ public sealed partial class Settings : Page, IDisposable
         //ToggleButtonDaylight.IsChecked = Application.Current.RequestedTheme == ApplicationTheme.Dark;
         BtnXboxReserve.Visibility = true ? Visibility.Visible : Visibility.Collapsed;
     }
-
+    ~Settings()
+    {
+        Dispose(true);
+    }
     public static readonly DependencyProperty IsAdvancedLyricColorSettingsShowProperty = DependencyProperty.Register(
         "IsAdvancedLyricColorSettingsShow", typeof(bool), typeof(Settings), new PropertyMetadata(default(bool)));
 
@@ -104,10 +107,14 @@ public sealed partial class Settings : Page, IDisposable
 
     public void Dispose()
     {
+        Dispose(false);
+    }
+    private void Dispose(bool isFinalizer)
+    {
         if (IsDisposed) return;
         StackPanelLyricSet.Children.Clear();
         IsDisposed = true;
-        GC.SuppressFinalize(this);
+        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
     private async Task GetRomaji()

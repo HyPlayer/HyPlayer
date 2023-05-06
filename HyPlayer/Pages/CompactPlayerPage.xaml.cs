@@ -121,7 +121,10 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         LeaveAnimation.Completed += LeaveAnimation_Completed;
         //CompactPlayerAni.Begin();
     }
-
+    ~CompactPlayerPage()
+    {
+        Dispose(true);
+    }
     private void LeaveAnimation_Completed(object sender, object e)
     {
         ChangeLyric();
@@ -248,11 +251,11 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
                     {
                         From = 0.4,
                         To = 1,
-                        Duration = TimeSpan.FromMilliseconds(item.Duration),
+                        Duration = item.Duration,
                         EnableDependentAnimation = true,
                     };
-                    item.Duration = (item.Duration < 200) ? 200 : item.Duration;
-                    ani.EasingFunction = (item.Duration >= 300) ? new SineEase { EasingMode = EasingMode.EaseOut } : new CircleEase { EasingMode = EasingMode.EaseInOut };
+                    item.Duration = (item.Duration < TimeSpan.FromMilliseconds(200)) ? TimeSpan.FromMilliseconds(200) : item.Duration;
+                    ani.EasingFunction = (item.Duration >= TimeSpan.FromMilliseconds(300)) ? new SineEase { EasingMode = EasingMode.EaseOut } : new CircleEase { EasingMode = EasingMode.EaseInOut };
                     var storyboard = new Storyboard();
                     Storyboard.SetTarget(ani, textBlock);
                     Storyboard.SetTargetProperty(ani, "(Run.Foreground).(SolidColorBrush.Opacity)");
@@ -277,6 +280,10 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
 
     public void Dispose()
     {
+        Dispose(false);
+    }
+    private void Dispose(bool isFinalizer)
+    {
         HyPlayList.OnPlayPositionChange -=
             position => _ = Common.Invoke(() => NowProgress = position.TotalMilliseconds);
         HyPlayList.OnPlayItemChange -= OnChangePlayItem;
@@ -285,6 +292,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         HyPlayList.OnLyricChange -= OnLyricChanged;
         HyPlayList.OnSongLikeStatusChange -= HyPlayList_OnSongLikeStatusChange;
         //CompactPlayerAni.Begin();
+        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
     private void OnChangePlayItem(HyPlayItem item)
@@ -336,7 +344,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         _ = Common.Invoke(() =>
         {
             var playedWords =
-                ((KaraokeLyricsLine)Lrc.LyricLine).WordInfos.Where(word => word.StartTime <= position.TotalMilliseconds).ToList();
+                ((KaraokeLyricsLine)Lrc.LyricLine).WordInfos.Where(word => word.StartTime <= position).ToList();
             var playedBlocks = WordTextBlocks.GetRange(0, playedWords.Count).ToList();
             if (playedBlocks.Count <= 0) return;
             var playingBlock = playedBlocks.Last();

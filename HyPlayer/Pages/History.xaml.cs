@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -23,24 +24,60 @@ public sealed partial class History : Page, IDisposable
 {
     private readonly ObservableCollection<NCSong> Songs = new();
     public bool IsDisposed = false;
+    private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+    private CancellationToken _cancellationToken;
+    private Task _songRankWeekLoaderTask;
+    private Task _songRankAllLoaderTask;
     public History()
     {
         InitializeComponent();
         HisModeNavView.SelectedItem = SongHis;
+        _cancellationToken = _cancellationTokenSource.Token;
+    }
+    ~History()
+    {
+        Dispose(true);
     }
 
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
+        if (_songRankWeekLoaderTask != null && !_songRankWeekLoaderTask.IsCompleted)
+        {
+            try
+            {
+                _cancellationTokenSource.Cancel();
+                await _songRankWeekLoaderTask;
+            }
+            catch
+            {
+            }
+        }
+        if (_songRankAllLoaderTask != null && !_songRankAllLoaderTask.IsCompleted)
+        {
+            try
+            {
+                _cancellationTokenSource.Cancel();
+                await _songRankAllLoaderTask;
+            }
+            catch
+            {
+            }
+        }
         Dispose();
     }
 
     public void Dispose()
     {
+        Dispose(false);
+    }
+    private void Dispose(bool isFinalizer)
+    {
         if (IsDisposed) return;
         Songs.Clear();
+        _cancellationTokenSource.Dispose();
         IsDisposed = true;
-        GC.SuppressFinalize(this);
+        if (!isFinalizer) GC.SuppressFinalize(this);
     }
     private async void NavigationView_SelectionChanged(NavigationView sender,
         NavigationViewSelectionChangedEventArgs args)
@@ -61,11 +98,11 @@ public sealed partial class History : Page, IDisposable
                 break;
             case "SongRankWeek":
                 //听歌排行加载部分 - 优先级靠下
-                _ = LoadRankWeek();
+                _songRankWeekLoaderTask = LoadRankWeek();
                 break;
             case "SongRankAll":
                 //听歌排行加载部分 - 优先级靠下
-                _ = LoadRankAll();
+                _songRankAllLoaderTask = LoadRankAll();
                 break;
         }
     }
@@ -74,6 +111,7 @@ public sealed partial class History : Page, IDisposable
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(History));
         Songs.Clear();
+        _cancellationToken.ThrowIfCancellationRequested();
         try
         {
             var ret3 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserRecord,
@@ -82,6 +120,7 @@ public sealed partial class History : Page, IDisposable
             var weekData = ret3["allData"].ToArray();
             for (var i = 0; i < weekData.Length; i++)
             {
+                _cancellationToken.ThrowIfCancellationRequested();
                 var song = NCSong.CreateFromJson(weekData[i]["song"]);
                 song.Order = i;
                 Songs.Add(song);
@@ -89,7 +128,8 @@ public sealed partial class History : Page, IDisposable
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            if (ex.GetType() != typeof(TaskCanceledException) && ex.GetType() != typeof(OperationCanceledException))
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
 
@@ -97,6 +137,7 @@ public sealed partial class History : Page, IDisposable
     {
         if (IsDisposed) throw new ObjectDisposedException(nameof(History));
         Songs.Clear();
+        _cancellationToken.ThrowIfCancellationRequested();
         try
         {
             var ret2 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserRecord,
@@ -106,6 +147,7 @@ public sealed partial class History : Page, IDisposable
 
             for (var i = 0; i < weekData.Length; i++)
             {
+                _cancellationToken.ThrowIfCancellationRequested();
                 var song = NCSong.CreateFromJson(weekData[i]["song"]);
                 song.Order = i;
                 Songs.Add(song);
@@ -113,7 +155,8 @@ public sealed partial class History : Page, IDisposable
         }
         catch (Exception ex)
         {
-            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+            if (ex.GetType() != typeof(TaskCanceledException) && ex.GetType() != typeof(OperationCanceledException))
+                Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
     }
 }

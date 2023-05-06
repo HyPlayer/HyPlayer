@@ -101,6 +101,10 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         HyPlayList.OnTimerTicked += HyPlayList_OnTimerTicked;
         Common.OnEnterForegroundFromBackground += () => OnSongChange(HyPlayList.NowPlayingItem);
     }
+    ~ExpandedPlayer()
+    {
+        Dispose(true);
+    }
 
     public double showsize { get; set; }
     public double LyricWidth { get; set; }
@@ -112,6 +116,10 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     }
 
     public void Dispose()
+    {
+        Dispose(false);
+    }
+    private void Dispose(bool isFinalizer)
     {
         HyPlayList.OnLyricChange -= RefreshLyricTime;
         HyPlayList.OnPlayItemChange -= OnSongChange;
@@ -133,6 +141,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             var ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
             ImageAlbumAni?.Pause();
         });
+        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
     private void HyPlayList_OnPlay()
@@ -177,11 +186,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
 
     protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
-    {
-        Dispose();
-    }
-
-    ~ExpandedPlayer()
     {
         Dispose();
     }

@@ -1220,9 +1220,9 @@ public static class HyPlayList
         if (LyricPos >= Lyrics.Count || LyricPos < 0) LyricPos = 0;
         var changed = false;
         var realPos = Player.PlaybackSession.Position - LyricOffset;
-        if (Lyrics[LyricPos].LyricLine.StartTime > realPos.TotalMilliseconds) //当感知到进度回溯时执行
+        if (Lyrics[LyricPos].LyricLine.StartTime > realPos) //当感知到进度回溯时执行
         {
-            LyricPos = Lyrics.FindLastIndex(t => t.LyricLine.StartTime <= realPos.TotalMilliseconds) - 1;
+            LyricPos = Lyrics.FindLastIndex(t => t.LyricLine.StartTime <= realPos) - 1;
             if (LyricPos == -2) LyricPos = -1;
             changed = true;
         }
@@ -1231,7 +1231,7 @@ public static class HyPlayList
         {
             if (LyricPos == 0 && Lyrics.Count != 1) changed = false;
             while (Lyrics.Count > LyricPos + 1 &&
-                   Lyrics[LyricPos + 1].LyricLine.StartTime <= realPos.TotalMilliseconds) //正常的滚歌词
+                   Lyrics[LyricPos + 1].LyricLine.StartTime <= realPos) //正常的滚歌词
             {
                 LyricPos++;
                 changed = true;
@@ -1305,7 +1305,7 @@ public static class HyPlayList
             if (Common.Setting.showComposerInLyric)
                 Lyrics.Add(new SongLyric
                 {
-                    LyricLine = new LrcLyricsLine(pureLyricInfo.PureLyrics, 0)
+                    LyricLine = new LrcLyricsLine(pureLyricInfo.PureLyrics, TimeSpan.Zero)
                 });
         }
         else
@@ -1313,9 +1313,9 @@ public static class HyPlayList
             Utils.ConvertTranslation(pureLyricInfo.TrLyrics, Lyrics);
             await Utils.ConvertRomaji(pureLyricInfo, Lyrics);
 
-            if (Lyrics.Count != 0 && Lyrics[0].LyricLine.StartTime != 0)
+            if (Lyrics.Count != 0 && Lyrics[0].LyricLine.StartTime != TimeSpan.Zero)
                 Lyrics.Insert(0,
-                    new SongLyric { LyricLine = new LrcLyricsLine(string.Empty, 0) });
+                    new SongLyric { LyricLine = new LrcLyricsLine(string.Empty, TimeSpan.Zero) });
         }
 
         LyricPos = 0;
