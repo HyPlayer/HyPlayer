@@ -91,7 +91,7 @@
         <Grid
             x:Name="MainGrid"
             Grid.Row="1"
-            Margin="0,0,0,80"
+            Margin="0,0,-50,80"
             Visibility="Visible">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />
@@ -287,7 +287,7 @@
                         </MenuFlyout>
                     </ScrollViewer.ContextFlyout>
                     <ScrollViewer.Content>
-                        <Grid x:Name="LyricBoxHost">
+                        <Grid x:Name="LyricBoxHost" >
                             <StackPanel
                                 Orientation="Horizontal"
                                 Spacing="5"
@@ -299,7 +299,7 @@
                                 PointerWheelChanged="LyricBoxContainer_OnPointerWheelChanged"
                                 Tapped="LyricBox_Tapped">
                                 <muxc:ItemsRepeater.Layout>
-                                    <muxc:StackLayout Orientation="Vertical" Spacing="30" />
+                                    <muxc:StackLayout Orientation="Vertical" Spacing="35" />
                                 </muxc:ItemsRepeater.Layout>
                                 <muxc:ItemsRepeater.ItemTemplate>
                                     <DataTemplate x:DataType="controls1:LyricItemModel">
@@ -330,7 +330,7 @@
                 Grid.ColumnSpan="2"
                 Width="40"
                 Height="40"
-                Margin="0,0,27,50"
+                Margin="0,0,80,50"
                 Padding="-5"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"

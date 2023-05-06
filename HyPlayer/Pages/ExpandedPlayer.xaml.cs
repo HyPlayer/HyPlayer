@@ -521,7 +521,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             TextBlockSinger.Content = mpi?.PlayItem?.ArtistString;
             TextBlockSongTitle.Text = mpi?.PlayItem?.Name;
             TextBlockAlbum.Content = mpi?.PlayItem?.AlbumString;
-
             if (mpi?.PlayItem == null)
             {
                 //LyricList.Clear();
