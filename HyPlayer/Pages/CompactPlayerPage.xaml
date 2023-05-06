@@ -137,6 +137,7 @@
                 <RowDefinition Height="32" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
+            <Grid Background="Transparent" Grid.RowSpan="2" />
             <Grid x:Name="TitleGrid">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
