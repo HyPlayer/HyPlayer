@@ -169,6 +169,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
             {
                 w.Foreground = new SolidColorBrush(GetKaraokIdleBrush());
             });
+            Run ani=new Run();
             foreach (var item in WordTextBlocks)
             {
                 var colorani = new ColorAnimation
@@ -182,7 +183,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
                 {
                     From = actualsize,
                     To = actualsize + Common.Setting.lyricScaleSize,
-                    Duration = KaraokeDictionary[item].Duration * 1.5,
+                    Duration = KaraokeDictionary[item].Duration * 0.9,
                     EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
                     EnableDependentAnimation = true
                 };
@@ -280,6 +281,34 @@ public sealed partial class LyricItem : UserControl, IDisposable
                 w.Foreground = IdleBrush;
                 w.FontSize = actualsize;
             });
+            foreach (var item in WordTextBlocks)
+            {
+                var wordstoryboard = new Storyboard();
+                var wordscaleani = new DoubleAnimation
+                {
+                    To = actualsize,
+                    From = actualsize + Common.Setting.lyricScaleSize,
+                    Duration = new Duration(TimeSpan.FromSeconds(0.8)),
+                    EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+                    EnableDependentAnimation = true
+                };
+                var wordcolorani = new ColorAnimation
+                {
+                    To = GetKaraokIdleBrush(),
+                    From = GetKaraokAccentBrush(),
+                    Duration = new Duration(TimeSpan.FromSeconds(0.8)),
+                    EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+                    EnableDependentAnimation = true
+                };
+                Storyboard.SetTarget(wordscaleani, item);
+                Storyboard.SetTarget(wordcolorani, item);
+                Storyboard.SetTargetProperty(wordscaleani, "(item.FontSize)");
+                Storyboard.SetTargetProperty(wordcolorani, "(item.Foreground).(SolidColorBrush.Color)");
+                wordstoryboard.Children.Add(wordscaleani);
+                wordstoryboard.Children.Add(wordcolorani);
+                wordstoryboard.Begin();
+
+            }
             StoryboardDictionary.Clear();
         }
         double durationInSeconds = 0.8;
@@ -331,8 +360,8 @@ public sealed partial class LyricItem : UserControl, IDisposable
         transstoryboard.Children.Add(transscaleani);
         transstoryboard.Children.Add(colorani);
         transstoryboard.Begin();
-        TextBoxPureLyric.FontSize = actualsize;
-        WordLyricContainer.FontSize = actualsize;
+        //TextBoxPureLyric.FontSize = actualsize;
+        //WordLyricContainer.FontSize = actualsize;
         TextBoxPureLyric.Margin = new Thickness(0);
         WordLyricContainer.Margin = new Thickness(0);
         TextBoxTranslation.Margin = new Thickness(0);
