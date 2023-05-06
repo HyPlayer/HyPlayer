@@ -121,7 +121,302 @@
                     <CircleEase EasingMode="EaseOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="LyricTranslationBlock"
+                Storyboard.TargetProperty="Opacity"
+                From="0"
+                To="1"
+                Duration="00:00:00.1">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut" />
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
         </Storyboard>
+        <Storyboard x:Name="PointerInAni">
+            <DoubleAnimation
+                Storyboard.TargetName="LikeButton"
+                Storyboard.TargetProperty="(UIElement.RenderTransform).(CompositeTransform.TranslateY)"
+                From="10"
+                To="0"
+                Duration="00:00:00.40">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="LikeButton"
+                Storyboard.TargetProperty="Opacity"
+                From="0"
+                To="1"
+                Duration="00:00:00.40">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="ExitButton"
+                Storyboard.TargetProperty="(UIElement.RenderTransform).(CompositeTransform.TranslateY)"
+                From="10"
+                To="0"
+                Duration="00:00:00.40">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="ExitButton"
+                Storyboard.TargetProperty="Opacity"
+                From="0"
+                To="1"
+                Duration="00:00:00.40">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="preScale"
+                Storyboard.TargetProperty="ScaleX"
+                From="1"
+                To="1.2"
+                Duration="00:00:01.05">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="preScale"
+                Storyboard.TargetProperty="ScaleY"
+                From="1"
+                To="1.2"
+                Duration="00:00:01.05">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="stateScale"
+                Storyboard.TargetProperty="ScaleX"
+                From="1"
+                To="1.2"
+                Duration="00:00:01.05">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="stateScale"
+                Storyboard.TargetProperty="ScaleY"
+                From="1"
+                To="1.2"
+                Duration="00:00:01.05">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="nextScale"
+                Storyboard.TargetProperty="ScaleX"
+                From="1"
+                To="1.2"
+                Duration="00:00:01.05">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="nextScale"
+                Storyboard.TargetProperty="ScaleY"
+                From="1"
+                To="1.2"
+                Duration="00:00:01.05">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="preBtn"
+                Storyboard.TargetProperty="Opacity"
+                From="0.6"
+                To="1"
+                Duration="00:00:01.05">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="BtnPlayStateChange"
+                Storyboard.TargetProperty="Opacity"
+                From="0.6"
+                To="1"
+                Duration="00:00:01.05">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="nextBtn"
+                Storyboard.TargetProperty="Opacity"
+                From="0.6"
+                To="1"
+                Duration="00:00:01.05">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="PlayProgress"
+                Storyboard.TargetProperty="Opacity"
+                From="0"
+                To="1"
+                Duration="00:00:01.05">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+        <Storyboard x:Name="PointerOutAni">
+            <DoubleAnimation
+                Storyboard.TargetName="LikeButton"
+                Storyboard.TargetProperty="(UIElement.RenderTransform).(CompositeTransform.TranslateY)"
+                From="0"
+                To="10"
+                Duration="00:00:00.40">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="LikeButton"
+                Storyboard.TargetProperty="Opacity"
+                From="1"
+                To="0"
+                Duration="00:00:00.40">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="ExitButton"
+                Storyboard.TargetProperty="(UIElement.RenderTransform).(CompositeTransform.TranslateY)"
+                From="0"
+                To="10"
+                Duration="00:00:00.40">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="ExitButton"
+                Storyboard.TargetProperty="Opacity"
+                From="1"
+                To="0"
+                Duration="00:00:00.40">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="preScale"
+                Storyboard.TargetProperty="ScaleX"
+                From="1.2"
+                To="1"
+                Duration="00:00:01.05">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="preScale"
+                Storyboard.TargetProperty="ScaleY"
+                From="1.2"
+                To="1"
+                Duration="00:00:01.05">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="stateScale"
+                Storyboard.TargetProperty="ScaleX"
+                From="1.2"
+                To="1"
+                Duration="00:00:01.05">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="stateScale"
+                Storyboard.TargetProperty="ScaleY"
+                From="1.2"
+                To="1"
+                Duration="00:00:01.05">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="nextScale"
+                Storyboard.TargetProperty="ScaleX"
+                From="1.2"
+                To="1"
+                Duration="00:00:01.05">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="nextScale"
+                Storyboard.TargetProperty="ScaleY"
+                From="1.2"
+                To="1"
+                Duration="00:00:01.05">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="preBtn"
+                Storyboard.TargetProperty="Opacity"
+                From="1"
+                To="0.6"
+                Duration="00:00:01.05">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="BtnPlayStateChange"
+                Storyboard.TargetProperty="Opacity"
+                From="1"
+                To="0.6"
+                Duration="00:00:01.05">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="nextBtn"
+                Storyboard.TargetProperty="Opacity"
+                From="1"
+                To="0.6"
+                Duration="00:00:01.05">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="PlayProgress"
+                Storyboard.TargetProperty="Opacity"
+                From="1"
+                To="0"
+                Duration="00:00:01.05">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+
     </Page.Resources>
     <Grid Background="{StaticResource AcrylicInAppFillColorDefaultBrush}">
         <Grid.RowDefinitions>
@@ -130,8 +425,6 @@
             <RowDefinition Height="Auto" />
 
         </Grid.RowDefinitions>
-
-
         <Grid x:Name="MainGrid">
             <Grid.RowDefinitions>
                 <RowDefinition Height="32" />
@@ -226,7 +519,6 @@
 
                 </Viewbox>
             </Grid>
-
         </Grid>
         <Grid
             x:Name="PlayerGrid"
@@ -239,32 +531,49 @@
                 Background="Transparent"
                 BorderBrush="Transparent"
                 Click="LikeButton_Click"
-                Visibility="{x:Bind PlayProgress.Visibility, Mode=OneWay}">
+                Opacity="0">
                 <FontIcon
                     x:Name="IconLiked"
                     FontSize="14"
                     Glyph="&#xE00B;" />
+                <Button.RenderTransform>
+                    <CompositeTransform/>
+                </Button.RenderTransform>
             </Button>
             <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
                 <Button
+                    x:Name="preBtn"
                     Background="Transparent"
                     BorderBrush="Transparent"
-                    Click="MovePrevious">
+                    Click="MovePrevious"
+                    Opacity="0.6">
                     <FontIcon FontSize="14" Glyph="&#xF8AC;" />
+                    <Button.RenderTransform>
+                        <ScaleTransform x:Name="preScale" CenterX="7" CenterY="14"/>
+                    </Button.RenderTransform>
                 </Button>
                 <Button
                     x:Name="BtnPlayStateChange"
                     AutomationProperties.AcceleratorKey="Space"
                     Background="Transparent"
                     BorderBrush="Transparent"
-                    Click="ChangePlayState">
+                    Click="ChangePlayState"
+                    Opacity="0.6">
                     <FontIcon x:Name="PlayStateIcon" Glyph="&#xEDB5;" />
+                    <Button.RenderTransform>
+                        <ScaleTransform x:Name="stateScale" CenterX="7" CenterY="14"/>
+                    </Button.RenderTransform>
                 </Button>
                 <Button
+                    x:Name="nextBtn"
                     Background="Transparent"
                     BorderBrush="Transparent"
-                    Click="MoveNext">
+                    Click="MoveNext"
+                    Opacity="0.6">
                     <FontIcon FontSize="14" Glyph="&#xF8AD;" />
+                    <Button.RenderTransform>
+                        <ScaleTransform x:Name="nextScale" CenterX="7" CenterY="14"/>
+                    </Button.RenderTransform>
                 </Button>
             </StackPanel>
             <Button
@@ -275,11 +584,15 @@
                 Click="ExitButton_Click"
                 Visibility="{x:Bind PlayProgress.Visibility, Mode=OneWay}">
                 <FontIcon FontSize="14" Glyph="&#xE1D9;" />
+                <Button.RenderTransform>
+                    <CompositeTransform/>
+                </Button.RenderTransform>
             </Button>
         </Grid>
         <muxc:ProgressBar
             x:Name="PlayProgress"
             Grid.Row="1"
+            Opacity="0"
             VerticalAlignment="Bottom"
             Maximum="{x:Bind Mode=OneWay, Path=TotalProgress}"
             Value="{x:Bind NowProgress, Mode=OneWay}" />
