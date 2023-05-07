@@ -20,7 +20,7 @@
                         <AdaptiveTrigger MinWindowWidth="0" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
-                        <Setter Target="Toolbar.Margin" Value="0,-180,0,0"/>
+                        <Setter Target="Toolbar.Margin" Value="0,-110,0,0"/>
                         <Setter Target="FilterBox.Width" Value="80"/>
                         <Setter Target="SearchBoxColm.Width" Value="80"/>
                         <Setter Target="MultiSelectColm.Width" Value="0"/>
@@ -32,7 +32,7 @@
                         <AdaptiveTrigger MinWindowWidth="1300" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
-                        <Setter Target="Toolbar.Margin" Value="0,-100,10,0"/>
+                        <Setter Target="Toolbar.Margin" Value="0,-35,10,0"/>
                         <Setter Target="FilterBox.Width" Value="150"/>
                         <Setter Target="SearchBoxColm.Width" Value="150"/>
                         <Setter Target="MultiSelectColm.Width" Value="50"/>
@@ -56,7 +56,7 @@
             <ListView.Header>
                 <StackPanel x:Name="HeaderPanel" Orientation="Vertical">
                     <ContentControl
-                        Margin="0,-10,0,0"
+                        Margin="0,-10,0,-30"
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Stretch"
                         Content="{x:Bind ListHeader}" />
@@ -202,7 +202,7 @@
                 <DataTemplate x:DataType="classes:NCSong" ScrollViewer.CanContentRenderOutsideBounds="False">
                     <Border>
                         <Grid
-                        Margin="-10,15,-10,15"
+                        Margin="-10,14,-10,14"
                         HorizontalAlignment="Stretch"
                         Background="Transparent"
                         IsRightTapEnabled="True"
@@ -216,10 +216,10 @@
                         <controls:ImageEx
                             x:Name="RectangleImageBack"
                             Grid.ColumnSpan="2"
-                            Height="85"
-                            Margin="0,-5,0,-5"
+                            Height="62"
+                            Margin="1,-5,2,-5"
                             x:Phase="4"
-                            CornerRadius="7"
+                            CornerRadius="12"
                             EnableLazyLoading="True"
                             IsCacheEnabled="False"
                             Source="{x:Bind Cover}"
@@ -228,32 +228,32 @@
                         <Rectangle
                             x:Name="RectangleImageAcrylic"
                             Grid.ColumnSpan="2"
-                            Margin="-5,-10,0,-10"
-                            Fill="{ThemeResource SystemControlAcrylicElementBrush}"
+                            Margin="1,-7,1,-7"
+                            Fill="{ThemeResource SystemControlBaseLowAcrylicElementBrush}"
                             RadiusX="10"
                             RadiusY="10"
                             Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}" />
 
                         <StackPanel Grid.Column="0" Orientation="Horizontal">
-                            <controls:ImageEx
+                                <controls:ImageEx
                                 x:Name="ImageRect"
-                                Width="80"
-                                Height="80"
+                                Width="50"
+                                Height="50"
                                 x:Phase="4"
-                                Margin="12,0,0,0"
+                                Margin="9,0,0,0"
                                 CornerRadius="10"
                                 EnableLazyLoading="True"
                                 IsCacheEnabled="False"
                                 IsEnabled="{x:Bind IsAvailable}"
                                 Source="{x:Bind Cover}"
                                 Stretch="UniformToFill" />
-                            <TextBlock
+                                <TextBlock
                                 x:Name="OrderId"
                                 Width="48"
-                                Margin="-73,0,0,0"
+                                Margin="-45,0,0,0"
                                 HorizontalAlignment="Left"
                                 VerticalAlignment="Top"
-                                FontSize="24"
+                                FontSize="20"
                                 FontWeight="Bold"
                                 Text="{x:Bind DspOrder}" />
                             <Grid Padding="7,0,0,0">
@@ -274,7 +274,7 @@
                                         Name="TextBlockSongname"
                                         Margin="10,0,0,0"
                                         x:Phase="0"
-                                        FontSize="20"
+                                        FontSize="19"
                                         FontWeight="Bold"
                                         Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
                                         Text="{x:Bind songname}" />
@@ -290,10 +290,12 @@
                                         Visibility="{x:Bind IsCloud}" />
                                     <Image
                                         Height="20"
+                                        Margin="-5,-20,0,0"
                                         Source="/Assets/vip.png"
                                         Visibility="{x:Bind IsVip}" />
                                 </StackPanel>
-                                <TextBlock
+                                    <StackPanel Orientation="Horizontal" Margin="-8,27,0,0">
+                                        <TextBlock
                                     Name="TextBlockAlia"
                                     Grid.Row="1"
                                     Margin="10,2,0,-4"
@@ -302,20 +304,22 @@
                                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"
                                     Text="{x:Bind alias}"
                                     Visibility="Visible" />
-                                <TextBlock
+                                        <TextBlock
                                     Name="TextBlockArtist"
                                     Grid.Row="2"
                                     Margin="10,5,0,-4"
                                     FontSize="12"
                                     Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                                     Text="{x:Bind ArtistString}" />
-                                <TextBlock
+                                        <TextBlock
                                     Name="TextBlockAlbum"
                                     Grid.Row="3"
                                     Margin="10,5,0,0"
                                     FontSize="12"
                                     Foreground="Gray"
                                     Text="{x:Bind Album.name}" />
+                                    </StackPanel>
+
                             </Grid>
                         </StackPanel>
 

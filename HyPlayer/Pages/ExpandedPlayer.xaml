@@ -91,7 +91,7 @@
         <Grid
             x:Name="MainGrid"
             Grid.Row="1"
-            Margin="0,0,-50,80"
+            Margin="0,0,0,80"
             Visibility="Visible">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition />
@@ -330,7 +330,7 @@
                 Grid.ColumnSpan="2"
                 Width="40"
                 Height="40"
-                Margin="0,0,80,50"
+                Margin="0,0,30,50"
                 Padding="-5"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"
