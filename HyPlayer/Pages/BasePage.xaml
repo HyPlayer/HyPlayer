@@ -238,7 +238,19 @@
                         </StackPanel>
                     </Grid>
                 </muxc:NavigationViewItem>-->
-                <muxc:NavigationViewItem x:Name="NavItemBlank" x:FieldModifier="public" IsEnabled="False" Height="130" />
+                <muxc:NavigationViewItem x:Name="NavItemBlank" x:FieldModifier="public" IsEnabled="False" Height="130" >
+                    <Grid Margin="-5,0,-10,-5">
+                        <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="{x:Bind Mode=OneWay, Path=AlbumCover}"  RadiusX="12" RadiusY="12"/>
+                        <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="{ThemeResource SystemControlAcrylicElementBrush}"  RadiusX="10" RadiusY="10"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Rectangle  Fill="{x:Bind Mode=OneWay, Path=AlbumCover}" Height="85" Width="85" Margin="10,10,0,12" RadiusX="10" RadiusY="10" />
+                            <StackPanel Orientation="Vertical" Margin="10,0,0,10" VerticalAlignment="Bottom">
+                                <TextBlock Text="{x:Bind NowPlayingArtists, Mode=OneWay}" FontSize="12" Margin="0,0,15,0" TextTrimming="CharacterEllipsis" MaxWidth="180"/>  
+                                <TextBlock Text="{x:Bind NowPlayingName, Mode=OneWay}" FontSize="22" Margin="0,0,15,5" FontWeight="Bold" TextTrimming="CharacterEllipsis" MaxWidth="180" TextAlignment="Left"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </muxc:NavigationViewItem>
             </muxc:NavigationView.FooterMenuItems>
             <Grid>
                 <Frame x:Name="BaseFrame" Grid.Row="1" Margin="0,48,0,0"/>

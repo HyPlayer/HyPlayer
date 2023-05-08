@@ -35,7 +35,7 @@
                 <Grid>
                     <Rectangle
                         x:Name="RectangleImageBack"
-                        Height="250"
+                        Height="200"
                         Margin="15"
                         RadiusX="10"
                         RadiusY="10"
@@ -46,7 +46,7 @@
                     </Rectangle>
                     <Rectangle
                         x:Name="RectangleImageBackAcrylic"
-                        Height="250"
+                        Height="200"
                         Margin="15"
                         Fill="{ThemeResource ArtistPageAcrylicBrush}"
                         RadiusX="10"
@@ -58,8 +58,8 @@
                         LastChildFill="True">
                         <Rectangle
                             x:Name="RectangleImage"
-                            Width="200"
-                            Height="200"
+                            Width="150"
+                            Height="150"
                             Margin="40,0,0,0"
                             controls:DockPanel.Dock="Left"
                             RadiusX="10"
@@ -81,8 +81,8 @@
                                 x:Name="TextBoxArtistName"
                                 Margin="0,10,0,0"
                                 FontFamily="Bahnschrift SemiBold"
-                                FontSize="40"
-                                FontWeight="ExtraBold"
+                                FontSize="36"
+                                FontWeight="Bold"
                                 Text="歌手名"
                                 TextWrapping="Wrap" />
                             <controls1:SelectableTextBox
@@ -117,7 +117,7 @@
                 <PivotItem Header="热门50首">
                     <controls1:SongsList
                         x:Name="HotSongContainer"
-                        Margin="20,0,0,0"
+                        Margin="0,30,0,0"
                         Songs="{x:Bind hotSongs, Mode=OneWay}">
                         <controls1:SongsList.ListHeader>
                             <Rectangle Height="{x:Bind PivotView.HeaderHeight, Mode=OneWay}" Margin="0,-20,0,0" />

@@ -7,7 +7,7 @@
     xmlns:hyPlayerPage="using:HyPlayer.Pages"
     xmlns:hyplayer="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+    mc:Ignorable="d" PointerEntered="PointerIn" PointerExited="PointerOut">
     <Page.Resources>
         <Storyboard x:FieldModifier="public" x:Name="ImageResetPositionAni" x:Key="ImageResetPositionAni">
             <DoubleAnimation
@@ -21,6 +21,50 @@
                 Duration="0:0:0.25"
                 Storyboard.TargetName="ExpandedPlayerPositionOffset"
                 Storyboard.TargetProperty="Y">
+            </DoubleAnimation>
+        </Storyboard>
+        <Storyboard x:Name="PointerInAni">
+            <DoubleAnimation
+                To="1"
+                Duration="00:00:00.55"
+                Storyboard.TargetName="GridPlayBar"
+                Storyboard.TargetProperty="Opacity">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                To="0"
+               Duration="00:00:00.55"
+                Storyboard.TargetName="PlayBarTrans"
+                Storyboard.TargetProperty="Y">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>
+        <Storyboard x:Name="PointerOutAni">
+            <DoubleAnimation
+                BeginTime="00:00:03"
+                Duration="00:00:00.55"
+                From="1"
+                To="0"
+                Storyboard.TargetName="GridPlayBar"
+                Storyboard.TargetProperty="Opacity">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                BeginTime="00:00:03"
+                Duration="00:00:00.55"
+                From="0"
+                To="20"
+                Storyboard.TargetName="PlayBarTrans"
+                Storyboard.TargetProperty="Y">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
         </Storyboard>
     </Page.Resources>
@@ -71,8 +115,12 @@
             x:FieldModifier="public"
             Background="{x:Bind hyplayer:Common.Setting.playbarBackgroundAcrylic, Mode=OneWay, Converter={StaticResource BooleanToGridPlayBarBrushesConverter}}"
             CornerRadius="{x:Bind hyplayer:Common.Setting.playBarMargin, Mode = OneWay , Converter={StaticResource PlayBarCornerRadiusConverter} }"
-            Visibility="Visible">
+            Visibility="Visible"
+            Opacity="1">
             <controls2:PlayBar />
+            <Grid.RenderTransform>
+                <TranslateTransform x:Name="PlayBarTrans"/>
+            </Grid.RenderTransform>
         </Grid>
     </Grid>
 </Page>

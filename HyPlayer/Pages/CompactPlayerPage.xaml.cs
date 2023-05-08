@@ -397,7 +397,8 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     private void CompactPlayerPage_OnPointerEntered(object sender, PointerRoutedEventArgs e)
     {
         ControlHover = new BackdropBlurBrush { Amount = 10.0 };
-        PlayProgress.Visibility = Visibility.Visible;
+        //PlayProgress.Visibility = Visibility.Visible;
+        PointerInAni.Begin();
 
     }
 
@@ -405,7 +406,8 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     {
         if (!Common.Setting.CompactPlayerPageBlurStatus)
             ControlHover = TransparentBrush;
-        PlayProgress.Visibility = Visibility.Collapsed;
+        //PlayProgress.Visibility = Visibility.Collapsed;
+        PointerOutAni.Begin();
 
     }
 

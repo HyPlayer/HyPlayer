@@ -61,7 +61,6 @@
                         x:Name="RectangleImageAcrylic"
                         Grid.Column="0"
                         Grid.ColumnSpan="2"
-                        Margin="0,0,0,0"
                         Background="{ThemeResource SongListPageAcrylicBrush}"
                         CornerRadius="12"
                         Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}" />
@@ -217,9 +216,6 @@
                         <AdaptiveTrigger MinWindowWidth="0" />
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
-                        <Setter Target="RectangleImage.Width" Value="90" />
-                        <Setter Target="RectangleImage.Height" Value="90" />
-                        <Setter Target="StackPanelUserInfo.Margin" Value="126,20,40,20"/>
                         <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="1" />
                         <Setter Target="Btns.Margin" Value="0,20,5,10"/>
                         <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="10" />

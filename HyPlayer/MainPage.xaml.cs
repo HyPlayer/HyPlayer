@@ -4,10 +4,13 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
+using System;
 using System.Net;
+using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
 
 #endregion
@@ -16,11 +19,14 @@ using Windows.UI.Xaml.Navigation;
 
 namespace HyPlayer;
 
+
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
 public sealed partial class MainPage
 {
+    bool IsPlaybarOnShow=true;
+    public bool IsExpandedPlayerInitialized=false;
     public MainPage()
     {
         Common.PageMain = this;
@@ -69,6 +75,91 @@ public sealed partial class MainPage
             case "local":
                 Common.NavigatePage(typeof(LocalMusicPage));
                 break;
+        }
+    }
+
+    private void PointerIn(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        if (Common.Setting.AutoHidePlaybar)
+        {
+            Common.PageBase.NavItemBlank.IsEnabled = false;
+            if (IsPlaybarOnShow)
+            { }
+            else
+            {
+                if (IsExpandedPlayerInitialized)
+                {
+                    //var ExpandedPlayerLyricAni = new DoubleAnimation
+                    //{
+                    //    BeginTime = TimeSpan.FromSeconds(3.1),
+                    //    To = 0,
+                    //    EnableDependentAnimation = true,
+                    //    EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+                    //};
+                    //Storyboard.SetTarget(ExpandedPlayerLyricAni, Common.PageExpandedPlayer.LyricBoxContainer);
+                    //Storyboard.SetTargetProperty(ExpandedPlayerLyricAni, "(FrameworkElement.MarginProperty).Bottom");
+                    //var lyricstoryboard = new Storyboard();
+                    //lyricstoryboard.Children.Add(ExpandedPlayerLyricAni);
+                    //lyricstoryboard.Begin();
+                }
+                else
+                {
+                    PointerInAni.Begin();
+                    var BlankAni = new DoubleAnimation
+                    {
+                        To = 0,
+                        EnableDependentAnimation = true,
+                        EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+                    };
+                    var storyboard = new Storyboard();
+                    Storyboard.SetTarget(BlankAni, Common.PageBase.NavItemBlank);
+                    Storyboard.SetTargetProperty(BlankAni, "Opacity");
+                    storyboard.Children.Add(BlankAni);
+                    storyboard.Begin();
+                }
+            }
+        }
+    }
+
+    private void PointerOut(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        if (Common.Setting.AutoHidePlaybar)
+        {
+
+            IsPlaybarOnShow = false;
+            if (IsExpandedPlayerInitialized)
+            {
+                //var ExpandedPlayerLyricAni = new DoubleAnimation
+                //{
+                //    BeginTime = TimeSpan.FromSeconds(3.1),
+                //    To = -140,
+                //    EnableDependentAnimation = true,
+                //    EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+                //};
+                //var lyricstoryboard = new Storyboard();
+                //Storyboard.SetTarget(ExpandedPlayerLyricAni, Common.PageExpandedPlayer.LyricBoxContainer);
+                //Storyboard.SetTargetProperty(ExpandedPlayerLyricAni, "(FrameworkElement.MarginProperty).Bottom");
+                //lyricstoryboard.Children.Add(ExpandedPlayerLyricAni);
+                //lyricstoryboard.Begin();
+            }
+            else
+            {
+                PointerOutAni.Begin();
+                Common.PageBase.NavItemBlank.IsEnabled = true;
+                var BlankAni = new DoubleAnimation
+                {
+                    BeginTime = TimeSpan.FromSeconds(3.1),
+                    To = 1,
+                    EnableDependentAnimation = true,
+                    EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+                };
+
+                var storyboard = new Storyboard();
+                Storyboard.SetTarget(BlankAni, Common.PageBase.NavItemBlank);
+                Storyboard.SetTargetProperty(BlankAni, "Opacity");
+                storyboard.Children.Add(BlankAni);
+                storyboard.Begin();
+            }
         }
     }
 }

@@ -644,8 +644,6 @@ DoubleAnimation verticalAnimation;
         }
     }
 
-
-
     private void SliderAudioRate_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
         HyPlayList.PlayerOutgoingVolume = e.NewValue / 100;
@@ -666,6 +664,7 @@ DoubleAnimation verticalAnimation;
             PersonalFM.ExitFm();
         else
             HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.UserNextFadeOut, HyPlayList.SongChangeType.Previous);
+
     }
 
     private void BtnNextSong_OnClick(object sender, RoutedEventArgs e)
@@ -734,10 +733,12 @@ DoubleAnimation verticalAnimation;
     public void ButtonCollapse_OnClick(object sender, RoutedEventArgs e)
     {
         CollapseExpandedPlayer();
+
     }
 
     public void CollapseExpandedPlayer()
     {
+        Common.PageMain.IsExpandedPlayerInitialized = false;
         if (Common.PageExpandedPlayer == null) return;
         Common.PageExpandedPlayer.StartCollapseAnimation();
         GridSongAdvancedOperation.Visibility = Visibility.Collapsed;

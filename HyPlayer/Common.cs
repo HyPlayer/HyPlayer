@@ -911,6 +911,16 @@ namespace HyPlayer
             }
         }
 
+        public bool AutoHidePlaybar
+        {
+            get => GetSettings(nameof(AutoHidePlaybar), false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(AutoHidePlaybar)] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool useTaglibPicture
         {
             get => GetSettings(nameof(useTaglibPicture), true);
