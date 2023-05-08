@@ -231,6 +231,7 @@
                 <ScrollViewer
                     x:Name="LyricBoxContainer"
                     Grid.Row="0"
+                    Margin="0,0,0,0"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Top"
                     x:FieldModifier="public"
@@ -299,7 +300,7 @@
                                 PointerWheelChanged="LyricBoxContainer_OnPointerWheelChanged"
                                 Tapped="LyricBox_Tapped">
                                 <muxc:ItemsRepeater.Layout>
-                                    <muxc:StackLayout Orientation="Vertical" Spacing="35" />
+                                    <muxc:StackLayout Orientation="Vertical" Spacing="40" />
                                 </muxc:ItemsRepeater.Layout>
                                 <muxc:ItemsRepeater.ItemTemplate>
                                     <DataTemplate x:DataType="controls1:LyricItemModel">

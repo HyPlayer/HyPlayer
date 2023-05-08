@@ -251,8 +251,8 @@ public sealed partial class LyricItem : UserControl, IDisposable
         TextBoxPureLyric.FontWeight = FontWeights.Bold;
         WordLyricContainer.FontWeight = FontWeights.Bold;
         TextBoxTranslation.FontWeight = FontWeights.Bold;
-        TextBoxPureLyric.Margin = new Thickness(0, 10, 0, 2);
-        TextBoxTranslation.Margin = new Thickness(0, 3, 0, 10);
+        TextBoxPureLyric.Margin = new Thickness(0, 20, 0, 2);
+        TextBoxTranslation.Margin = new Thickness(0, 3,0, 20);
         TextBoxPureLyric.CharacterSpacing = 30;
         TextBoxTranslation.CharacterSpacing = 30;
         //TextBoxPureLyric.Foreground = AccentBrush;
@@ -286,7 +286,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
                 var wordstoryboard = new Storyboard();
                 var wordscaleani = new DoubleAnimation
                 {
-                    To = actualsize,
+                    To = actualsize-5,
                     From = actualsize + Common.Setting.lyricScaleSize,
                     Duration = new Duration(TimeSpan.FromSeconds(0.8)),
                     EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
@@ -339,7 +339,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
         var transstoryboard = new Storyboard();
         var transscaleani = new DoubleAnimation
         {
-            To = actualsize,
+            To = actualsize-5,
             From = actualsize + Common.Setting.lyricScaleSize,
             Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
             EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
@@ -362,9 +362,9 @@ public sealed partial class LyricItem : UserControl, IDisposable
         transstoryboard.Begin();
         //TextBoxPureLyric.FontSize = actualsize;
         //WordLyricContainer.FontSize = actualsize;
-        TextBoxPureLyric.Margin = new Thickness(0);
-        WordLyricContainer.Margin = new Thickness(0);
-        TextBoxTranslation.Margin = new Thickness(0);
+        TextBoxPureLyric.Margin = new Thickness(0,-5,0,0);
+        WordLyricContainer.Margin = new Thickness(0,-5,0,0);
+        TextBoxTranslation.Margin = new Thickness(0,0,0,-5);
         TextBoxPureLyric.CharacterSpacing = 0;
         WordLyricContainer.CharacterSpacing = 0;
         TextBoxTranslation.CharacterSpacing = 0;

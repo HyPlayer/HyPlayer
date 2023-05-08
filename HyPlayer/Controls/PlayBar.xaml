@@ -179,7 +179,6 @@
 
         </Storyboard>
 
-
     </UserControl.Resources>
     <Grid
         x:Name="GridThis"
@@ -199,7 +198,7 @@
             EnableLazyLoading="True"
             IsCacheEnabled="False"
             Source="{x:Bind AlbumImage.Source, Mode=OneWay}"
-            Stretch="Fill"
+            Stretch="UniformToFill"
             Visibility="{x:Bind hy:Common.Setting.playbarBackgroundAcrylic, Mode=OneWay}">
             <controls:ImageEx.RenderTransform>
                 <ScaleTransform x:Name="BackgroundAni" CenterX="200" CenterY="55" />
@@ -263,7 +262,7 @@
                     ToolTipService.ToolTip="下载音乐"
                     Visibility="{x:Bind Btn_Share.IsEnabled, Mode=OneWay}">
                     <FontIcon Glyph="&#xE118;" />
-                </Button>
+                </Button> 
                 <Button
                     x:Name="Btn_Comment"
                     Width="40"

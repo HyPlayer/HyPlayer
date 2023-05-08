@@ -112,13 +112,14 @@
                                     </StackPanel>
                                 </Grid>
                                 <Button x:Name="PlayBtn"
-                                    Margin="10,10,0,0"
+                                    Margin="9,5,0,0"
                                     HorizontalAlignment="Left"
-                                    Height="65"
-                                    Width="66"
+                                    Height="73"
+                                    Width="73"
                                     CornerRadius="8"
                                     VerticalAlignment="Top"
                                     Click="BtnPlayClick"
+                                        Background="{ThemeResource SystemAltLowColor}"
                                     Tag="{x:Bind ResourceId}"
                                     FocusVisualSecondaryBrush="AliceBlue"
                                     ToolTipService.ToolTip="播放"
