@@ -238,7 +238,7 @@
                         </StackPanel>
                     </Grid>
                 </muxc:NavigationViewItem>-->
-                <muxc:NavigationViewItem x:Name="NavItemBlank" x:FieldModifier="public" IsEnabled="False" Height="130" >
+                <muxc:NavigationViewItem x:Name="NavItemBlank" x:FieldModifier="public" IsEnabled="False" Height="130" Opacity="0">
                     <Grid Margin="-5,0,-10,-5">
                         <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="{x:Bind Mode=OneWay, Path=AlbumCover}"  RadiusX="12" RadiusY="12"/>
                         <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="{ThemeResource SystemControlAcrylicElementBrush}"  RadiusX="10" RadiusY="10"/>
