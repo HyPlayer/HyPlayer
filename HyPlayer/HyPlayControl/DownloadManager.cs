@@ -596,7 +596,7 @@ internal static class DownloadManager
 public class UwpStorageFileAbstraction : File.IFileAbstraction, IDisposable
 {
     private readonly IStorageFile file;
-
+    private bool disposedValue;
 
     public UwpStorageFileAbstraction(IStorageFile file)
     {
@@ -627,9 +627,26 @@ public class UwpStorageFileAbstraction : File.IFileAbstraction, IDisposable
     {
     }
 
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                ReadStream?.Dispose();
+                WriteStream?.Dispose();
+            }
+            disposedValue = true;
+        }
+    }
+    ~UwpStorageFileAbstraction()
+    {
+        Dispose(disposing: false);
+    }
+
     public void Dispose()
     {
-        ReadStream?.Dispose();
-        WriteStream?.Dispose();
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

@@ -41,31 +41,12 @@ public sealed partial class Comments : Page, IDisposable
     private CancellationToken _cancellationToken;
     private Task _commentLoaderTask;
     private Task _hotCommentLoaderTask;
-    public bool IsDisposed = false;
+    private bool disposedValue = false;
 
     public Comments()
     {
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
-    }
-    ~Comments()
-    {
-        Dispose(true);
-    }
-    public void Dispose()
-    {
-        Dispose(false);
-    }
-    private void Dispose(bool isFinalizer)
-    {
-        if (IsDisposed) return;
-        hotComments.Clear();
-        normalComments.Clear();
-        _cancellationTokenSource.Dispose();
-        cursor = null;
-        resourceid = null;
-        IsDisposed = true;
-        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -392,5 +373,31 @@ public sealed partial class Comments : Page, IDisposable
             BackToTop.Visibility = Visibility.Collapsed;
         }
         IsShiftingPage = false;
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                hotComments.Clear();
+                normalComments.Clear();
+                _cancellationTokenSource.Dispose();
+                cursor = null;
+                resourceid = null;
+            }
+            disposedValue = true;
+        }
+    }
+    ~Comments()
+    {
+         Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

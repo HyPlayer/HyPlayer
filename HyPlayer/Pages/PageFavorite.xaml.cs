@@ -24,7 +24,7 @@ public sealed partial class PageFavorite : Page, IDisposable
 {
     private int i;
     private int page;
-    public bool IsDisposed = false;
+    private bool disposedValue = false;
     private Task _listLoaderTask;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
@@ -33,23 +33,6 @@ public sealed partial class PageFavorite : Page, IDisposable
     {
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
-    }
-    ~PageFavorite()
-    {
-        Dispose(true);
-    }
-
-    public void Dispose()
-    {
-        Dispose(false);
-    }
-    private void Dispose(bool isFinalizer)
-    {
-        if (IsDisposed) return;
-        ItemContainer.ListItems.Clear();
-        _cancellationTokenSource.Dispose();
-        IsDisposed = true;
-        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -79,7 +62,7 @@ public sealed partial class PageFavorite : Page, IDisposable
 
     private void NavView_OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(PageFavorite));
+        if (disposedValue) throw new ObjectDisposedException(nameof(PageFavorite));
         page = 0;
         i = 0;
         ItemContainer.ListItems.Clear();
@@ -88,7 +71,7 @@ public sealed partial class PageFavorite : Page, IDisposable
 
     private async Task RealLoad()
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(PageFavorite));
+        if (disposedValue) throw new ObjectDisposedException(nameof(PageFavorite));
         _cancellationToken.ThrowIfCancellationRequested();
         switch ((NavView.SelectedItem as NavigationViewItem)?.Tag.ToString())
         {
@@ -106,7 +89,7 @@ public sealed partial class PageFavorite : Page, IDisposable
 
     private async Task LoadRadioResult()
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(PageFavorite));
+        if (disposedValue) throw new ObjectDisposedException(nameof(PageFavorite));
         try
         {
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.DjSublist,
@@ -139,7 +122,7 @@ public sealed partial class PageFavorite : Page, IDisposable
 
     private async Task LoadArtistResult()
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(PageFavorite));
+        if (disposedValue) throw new ObjectDisposedException(nameof(PageFavorite));
         try
         {
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistSublist,
@@ -174,7 +157,7 @@ public sealed partial class PageFavorite : Page, IDisposable
 
     private async Task LoadAlbumResult()
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(PageFavorite));
+        if (disposedValue) throw new ObjectDisposedException(nameof(PageFavorite));
         try
         {
             var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.AlbumSublist,
@@ -209,8 +192,32 @@ public sealed partial class PageFavorite : Page, IDisposable
 
     private void BtnLoadMore_OnClick(object sender, RoutedEventArgs e)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(PageFavorite));
+        if (disposedValue) throw new ObjectDisposedException(nameof(PageFavorite));
         page++;
         _listLoaderTask = RealLoad();
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                ItemContainer.ListItems.Clear();
+                _cancellationTokenSource.Dispose();
+            }
+            disposedValue = true;
+        }
+    }
+
+    ~PageFavorite()
+    {
+        Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

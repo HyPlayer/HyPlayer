@@ -30,7 +30,7 @@ public sealed partial class Me : Page, IDisposable
     private readonly ObservableCollection<SimpleListItem> likedPlayList = new();
     private readonly ObservableCollection<SimpleListItem> myPlayList = new();
     private string uid = "";
-    public bool IsDisposed = false;
+    private bool disposedValue = false;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
     private Task _loadPlaylistTask;
@@ -40,24 +40,6 @@ public sealed partial class Me : Page, IDisposable
     {
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
-    }
-    ~Me()
-    {
-        Dispose(true);
-    }
-
-    public void Dispose()
-    {
-        Dispose(false);
-    }
-    private void Dispose(bool isFinalizer)
-    {
-        if (IsDisposed) return;
-        ImageRect.ImageSource = null;
-        myPlayList.Clear();
-        likedPlayList.Clear();
-        _cancellationTokenSource.Dispose();
-        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
@@ -100,7 +82,7 @@ public sealed partial class Me : Page, IDisposable
 
     public async Task LoadPlayList()
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(Me));
+        if (disposedValue) throw new ObjectDisposedException(nameof(Me));
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
@@ -154,7 +136,7 @@ public sealed partial class Me : Page, IDisposable
 
     public async Task LoadInfo()
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(Me));
+        if (disposedValue) throw new ObjectDisposedException(nameof(Me));
         _cancellationToken.ThrowIfCancellationRequested();
         if (uid == Common.LoginedUser?.id)
         {
@@ -194,7 +176,7 @@ public sealed partial class Me : Page, IDisposable
 
     private async void Logout_OnClick(object sender, RoutedEventArgs e)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(Me));
+        if (disposedValue) throw new ObjectDisposedException(nameof(Me));
         try
         {
             await Common.ncapi.RequestAsync(CloudMusicApiProviders.Logout);
@@ -213,7 +195,7 @@ public sealed partial class Me : Page, IDisposable
 
     private async void BtnPlayClick(object sender, RoutedEventArgs e)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(Me));
+        if (disposedValue) throw new ObjectDisposedException(nameof(Me));
         HyPlayList.RemoveAllSong();
         await HyPlayList.AppendNcSource(((Button)sender).Tag.ToString());
         HyPlayList.SongAppendDone();
@@ -227,8 +209,34 @@ public sealed partial class Me : Page, IDisposable
 
     private void SongListItemClicked(object sender, TappedRoutedEventArgs e)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(Me));
+        if (disposedValue) throw new ObjectDisposedException(nameof(Me));
         _ = Common.NavigatePageResource(((Grid)sender).Tag.ToString());
     }
 
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                ImageRect.ImageSource = null;
+                myPlayList.Clear();
+                likedPlayList.Clear();
+                _cancellationTokenSource.Dispose();
+            }
+            disposedValue = true;
+        }
+    }
+
+    ~Me()
+    {
+        Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
 }

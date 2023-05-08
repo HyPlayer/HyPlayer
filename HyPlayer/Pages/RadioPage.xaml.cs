@@ -24,7 +24,7 @@ public sealed partial class RadioPage : Page, IDisposable
     private int i;
     private int page;
     private NCRadio Radio;
-    public bool IsDisposed = false;
+    private bool disposedValue = false;
     private Task _programLoaderTask;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
@@ -35,24 +35,6 @@ public sealed partial class RadioPage : Page, IDisposable
     {
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
-    }
-    ~RadioPage()
-    {
-        Dispose(true);
-    }
-    public void Dispose()
-    {
-        Dispose(false);
-    }
-    private void Dispose(bool isFinalizer)
-    {
-        if (IsDisposed) return;
-        ImageRect.ImageSource = null;
-        SongContainer.Dispose();
-        Songs.Clear();
-        _cancellationTokenSource.Dispose();
-        IsDisposed = true;
-        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
@@ -76,7 +58,7 @@ public sealed partial class RadioPage : Page, IDisposable
 
     private async Task LoadProgram()
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(RadioPage));
+        if (disposedValue) throw new ObjectDisposedException(nameof(RadioPage));
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
@@ -135,14 +117,14 @@ public sealed partial class RadioPage : Page, IDisposable
 
     private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(RadioPage));
+        if (disposedValue) throw new ObjectDisposedException(nameof(RadioPage));
         page++;
         _programLoaderTask = LoadProgram();
     }
 
     private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(RadioPage));
+        if (disposedValue) throw new ObjectDisposedException(nameof(RadioPage));
         try
         {
             await HyPlayList.AppendNcSource("rd" + Radio.id);
@@ -158,13 +140,13 @@ public sealed partial class RadioPage : Page, IDisposable
 
     private void TextBoxDJ_OnTapped(object sender, RoutedEventArgs routedEventArgs)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(RadioPage));
+        if (disposedValue) throw new ObjectDisposedException(nameof(RadioPage));
         Common.NavigatePage(typeof(Me), Radio.DJ.id);
     }
 
     private void Button_Click(object sender, RoutedEventArgs e)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(RadioPage));
+        if (disposedValue) throw new ObjectDisposedException(nameof(RadioPage));
         Songs.Clear();
         page = 0;
         i = 0;
@@ -174,14 +156,14 @@ public sealed partial class RadioPage : Page, IDisposable
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(RadioPage));
+        if (disposedValue) throw new ObjectDisposedException(nameof(RadioPage));
         await HyPlayList.AppendRadioList(Radio.id, asc);
         HyPlayList.SongAppendDone();
     }
 
     private async void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(RadioPage));
+        if (disposedValue) throw new ObjectDisposedException(nameof(RadioPage));
         var result = new List<NCSong>();
         try
         {
@@ -213,5 +195,33 @@ public sealed partial class RadioPage : Page, IDisposable
             Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
         DownloadManager.AddDownload(result);
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                ImageRect.ImageSource = null;
+                SongContainer.Dispose();
+                Songs.Clear();
+                _cancellationTokenSource.Dispose();
+            }
+
+            disposedValue = true;
+        }
+    }
+
+    ~RadioPage()
+    {
+        Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

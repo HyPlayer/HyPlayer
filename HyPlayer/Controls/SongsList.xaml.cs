@@ -146,13 +146,7 @@ public sealed partial class SongsList : UserControl, IDisposable
     }
 
     public bool IsAddingSongToPlaylist = false;
-
-    public void Dispose()
-    {
-        HyPlayList.OnPlayItemChange -= HyPlayListOnOnPlayItemChange;
-        VisibleSongs.Clear();
-        Songs.Clear();
-    }
+    private bool disposedValue;
 
     private async Task IndicateNowPlayingItem()
     {
@@ -456,5 +450,30 @@ public sealed partial class SongsList : UserControl, IDisposable
         var idx = VisibleSongs.ToList().FindIndex(t => t.sid == HyPlayList.NowPlayingItem.PlayItem?.Id);
         if (idx == -1) return;
         SongContainer.ScrollIntoView(VisibleSongs[idx], ScrollIntoViewAlignment.Leading);
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                VisibleSongs.Clear();
+                Songs.Clear();
+            }
+            HyPlayList.OnPlayItemChange -= HyPlayListOnOnPlayItemChange;
+            disposedValue = true;
+        }
+    }
+
+    ~SongsList()
+    {
+        Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

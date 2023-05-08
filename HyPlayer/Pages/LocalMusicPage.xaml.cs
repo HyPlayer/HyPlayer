@@ -33,31 +33,12 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
     private CancellationTokenSource cancellationTokenSource = new();
     private CancellationToken _cancellationToken;
     private int index;
-    public bool IsDisposed = false;
+    private bool disposedValue = false;
 
     public LocalMusicPage()
     {
         InitializeComponent();
         _cancellationToken = cancellationTokenSource.Token;
-    }
-    ~LocalMusicPage()
-    {
-        Dispose(true);
-    }
-
-    public void Dispose()
-    {
-        Dispose(false);
-    }
-    private void Dispose(bool isFinalizer)
-    {
-        if (IsDisposed) return;
-        CurrentFileScanTask = null;
-        cancellationTokenSource.Dispose();
-        NotificationText = null;
-        localHyItems.Clear();
-        IsDisposed = true;
-        if (!isFinalizer) GC.SuppressFinalize(this);
     }
     public string NotificationText
     {
@@ -98,7 +79,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
 
     private void Playall_Click(object sender, RoutedEventArgs e)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(LocalMusicPage));
+        if (disposedValue) throw new ObjectDisposedException(nameof(LocalMusicPage));
         HyPlayList.RemoveAllSong();
         HyPlayList.List.AddRange(localHyItems);
         HyPlayList.SongAppendDone();
@@ -215,5 +196,32 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
     private void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                CurrentFileScanTask = null;
+                cancellationTokenSource.Dispose();
+                NotificationText = null;
+                localHyItems.Clear();
+            }
+            ListBoxLocalMusicContainer.SelectionChanged -= ListBoxLocalMusicContainer_SelectionChanged;
+            disposedValue = true;
+        }
+    }
+
+    ~LocalMusicPage()
+    {
+        Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

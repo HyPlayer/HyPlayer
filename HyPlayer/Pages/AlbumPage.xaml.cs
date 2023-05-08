@@ -34,41 +34,17 @@ public sealed partial class AlbumPage : Page, IDisposable
     private readonly CollectionViewSource AlbumSongsViewSource = new() { IsSourceGrouped = true };
     private List<NCArtist> artists = new();
     private int page;
-    public bool IsDisposed = false;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
     private Task _albumDynamicLoaderTask;
     private Task _albumInfoLoaderTask;
+    private bool disposedValue = false;
 
     public AlbumPage()
     {
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
     }
-    ~AlbumPage()
-    {
-        Dispose(true);
-    }
-
-    public void Dispose()
-    {
-        Dispose(false);
-    }
-    private void Dispose(bool isFinalizer)
-    {
-        if (IsDisposed) return;
-        AlbumSongs.Clear();
-        AlbumSongsViewSource.Source = null;
-        SongContainer.Dispose();
-        albumid = null;
-        Album = null;
-        artists = null;
-        ImageRect.ImageSource = null;
-        _cancellationTokenSource.Dispose();
-        IsDisposed = true;
-        if (!isFinalizer) GC.SuppressFinalize(this);
-    }
-
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
@@ -118,7 +94,7 @@ public sealed partial class AlbumPage : Page, IDisposable
 
     private async Task LoadAlbumDynamic()
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(AlbumPage));
+        if (disposedValue) throw new ObjectDisposedException(nameof(AlbumPage));
         _cancellationToken.ThrowIfCancellationRequested();
         var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.AlbumDetailDynamic,
             new Dictionary<string, object> { { "id", albumid } });
@@ -127,7 +103,7 @@ public sealed partial class AlbumPage : Page, IDisposable
 
     private async Task LoadAlbumInfo()
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(AlbumPage));
+        if (disposedValue) throw new ObjectDisposedException(nameof(AlbumPage));
         _cancellationToken.ThrowIfCancellationRequested();
         JObject json;
         try
@@ -199,7 +175,7 @@ public sealed partial class AlbumPage : Page, IDisposable
 
     private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(AlbumPage));
+        if (disposedValue) throw new ObjectDisposedException(nameof(AlbumPage));
         try
         {
             HyPlayList.RemoveAllSong();
@@ -217,7 +193,7 @@ public sealed partial class AlbumPage : Page, IDisposable
 
     private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(AlbumPage));
+        if (disposedValue) throw new ObjectDisposedException(nameof(AlbumPage));
         var songs = new List<NCSong>();
         foreach (var discSongs in (IEnumerable<DiscSongs>)AlbumSongsViewSource.Source) songs.AddRange(discSongs);
 
@@ -226,13 +202,13 @@ public sealed partial class AlbumPage : Page, IDisposable
 
     private void ButtonComment_OnClick(object sender, RoutedEventArgs e)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(AlbumPage));
+        if (disposedValue) throw new ObjectDisposedException(nameof(AlbumPage));
         Common.NavigatePage(typeof(Comments), "al" + Album.id);
     }
 
     private async void TextBoxAuthor_OnTapped(object sender, RoutedEventArgs routedEventArgs)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(AlbumPage));
+        if (disposedValue) throw new ObjectDisposedException(nameof(AlbumPage));
         if (artists.Count > 1)
             await new ArtistSelectDialog(artists).ShowAsync();
         else
@@ -241,7 +217,7 @@ public sealed partial class AlbumPage : Page, IDisposable
 
     private void BtnSub_Click(object sender, RoutedEventArgs e)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(AlbumPage));
+        if (disposedValue) throw new ObjectDisposedException(nameof(AlbumPage));
         _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.AlbumSubscribe,
             new Dictionary<string, object>
                 { { "id", albumid }, { "t", BtnSub.IsChecked.GetValueOrDefault(false) ? "1" : "0" } });
@@ -249,9 +225,39 @@ public sealed partial class AlbumPage : Page, IDisposable
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(AlbumPage));
+        if (disposedValue) throw new ObjectDisposedException(nameof(AlbumPage));
         await HyPlayList.AppendNcSource("al" + Album.id);
         HyPlayList.SongAppendDone();
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                AlbumSongs.Clear();
+                AlbumSongsViewSource.Source = null;
+                SongContainer.Dispose();
+                albumid = null;
+                Album = null;
+                artists = null;
+                ImageRect.ImageSource = null;
+                _cancellationTokenSource.Dispose();
+            }
+            disposedValue = true;
+        }
+    }
+
+    ~AlbumPage()
+    {
+        Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }
 

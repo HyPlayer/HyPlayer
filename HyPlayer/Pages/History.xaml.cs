@@ -23,20 +23,17 @@ namespace HyPlayer.Pages;
 public sealed partial class History : Page, IDisposable
 {
     private readonly ObservableCollection<NCSong> Songs = new();
-    public bool IsDisposed = false;
+    private bool disposedValue = false;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
     private Task _songRankWeekLoaderTask;
     private Task _songRankAllLoaderTask;
+
     public History()
     {
         InitializeComponent();
         HisModeNavView.SelectedItem = SongHis;
         _cancellationToken = _cancellationTokenSource.Token;
-    }
-    ~History()
-    {
-        Dispose(true);
     }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
@@ -66,23 +63,10 @@ public sealed partial class History : Page, IDisposable
         }
         Dispose();
     }
-
-    public void Dispose()
-    {
-        Dispose(false);
-    }
-    private void Dispose(bool isFinalizer)
-    {
-        if (IsDisposed) return;
-        Songs.Clear();
-        _cancellationTokenSource.Dispose();
-        IsDisposed = true;
-        if (!isFinalizer) GC.SuppressFinalize(this);
-    }
     private async void NavigationView_SelectionChanged(NavigationView sender,
         NavigationViewSelectionChangedEventArgs args)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(History));
+        if (disposedValue) throw new ObjectDisposedException(nameof(History));
         switch ((sender.SelectedItem as NavigationViewItem).Name)
         {
             case "SongHis":
@@ -109,7 +93,7 @@ public sealed partial class History : Page, IDisposable
 
     private async Task LoadRankAll()
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(History));
+        if (disposedValue) throw new ObjectDisposedException(nameof(History));
         Songs.Clear();
         _cancellationToken.ThrowIfCancellationRequested();
         try
@@ -135,7 +119,7 @@ public sealed partial class History : Page, IDisposable
 
     private async Task LoadRankWeek()
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(History));
+        if (disposedValue) throw new ObjectDisposedException(nameof(History));
         Songs.Clear();
         _cancellationToken.ThrowIfCancellationRequested();
         try
@@ -158,5 +142,29 @@ public sealed partial class History : Page, IDisposable
             if (ex.GetType() != typeof(TaskCanceledException) && ex.GetType() != typeof(OperationCanceledException))
                 Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                Songs.Clear();
+                _cancellationTokenSource.Dispose();
+            }
+            disposedValue = true;
+        }
+    }
+
+    ~History()
+    {
+        Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

@@ -58,6 +58,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
     private SolidColorBrush? _pureAccentBrushCache;
     private Color? _karaokIdleColorCache;
     private Color? _karaokAccentColorCache;
+    private bool disposedValue;
 
     private Color GetKaraokAccentBrush()
     {
@@ -422,11 +423,29 @@ public sealed partial class LyricItem : UserControl, IDisposable
         OnHind(GetTextBoxTranslation());
     }
 
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                WordTextBlocks.Clear();
+                KaraokeDictionary.Clear();
+                StoryboardDictionary.Clear();
+            }
+            if (_lyricIsKaraokeLyric) HyPlayList.OnPlayPositionChange -= RefreshWordColor;
+            disposedValue = true;
+        }
+    }
+
+    ~LyricItem()
+    {
+       Dispose(disposing: false);
+    }
+
     public void Dispose()
     {
-        if (_lyricIsKaraokeLyric) HyPlayList.OnPlayPositionChange -= RefreshWordColor;
-        WordTextBlocks.Clear();
-        KaraokeDictionary.Clear();
-        StoryboardDictionary.Clear();
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

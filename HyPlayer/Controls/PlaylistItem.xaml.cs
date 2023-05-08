@@ -21,17 +21,12 @@ namespace HyPlayer.Controls;
 public sealed partial class PlaylistItem : UserControl, IDisposable
 {
     private NCPlayList playList;
+    private bool disposedValue;
 
     public PlaylistItem(NCPlayList playList)
     {
         this.playList = playList;
         InitializeComponent();
-    }
-
-    public void Dispose()
-    {
-        playList = null;
-        ImageContainer.Source = null;
     }
 
     private void UIElement_OnTapped(object sender, TappedRoutedEventArgs e)
@@ -116,5 +111,29 @@ public sealed partial class PlaylistItem : UserControl, IDisposable
         TextBlockPLName.Text = playList.name;
         TextBlockPLAuthor.Text = playList.creater.name;
         StoryboardIn.Begin();
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                playList = null;
+                ImageContainer.Source = null;
+            }
+
+            disposedValue = true;
+        }
+    }
+    ~PlaylistItem()
+    {
+        Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

@@ -86,6 +86,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     };
 
     public Windows.UI.Color? albumMainColor;
+    private bool disposedValue;
 
     public ExpandedPlayer()
     {
@@ -101,10 +102,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         HyPlayList.OnTimerTicked += HyPlayList_OnTimerTicked;
         Common.OnEnterForegroundFromBackground += () => OnSongChange(HyPlayList.NowPlayingItem);
     }
-    ~ExpandedPlayer()
-    {
-        Dispose(true);
-    }
 
     public double showsize { get; set; }
     public double LyricWidth { get; set; }
@@ -113,35 +110,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     {
         get => (string)GetValue(NowPlaybackSpeedProperty);
         set => SetValue(NowPlaybackSpeedProperty, value);
-    }
-
-    public void Dispose()
-    {
-        Dispose(false);
-    }
-    private void Dispose(bool isFinalizer)
-    {
-        HyPlayList.OnLyricChange -= RefreshLyricTime;
-        HyPlayList.OnPlayItemChange -= OnSongChange;
-        HyPlayList.OnLyricLoaded -= HyPlayList_OnLyricLoaded;
-        HyPlayList.OnTimerTicked -= HyPlayList_OnTimerTicked;
-        if (Window.Current != null)
-            Window.Current.SizeChanged -= Current_SizeChanged;
-        lastitem = null;
-        _ = Common.Invoke(() =>
-        {
-            ImageAlbum.Source = null;
-            ImageAlbum.PlaceholderSource = null;
-            Background = null;
-            if (LyricBox.ItemsSource is IList lyricItems) lyricItems.Clear();
-            LyricBox.ItemsSource = null;
-            if (Common.Setting.albumRotate)
-                RotateAnimationSet.Stop();
-            if (!Common.Setting.expandAlbumBreath) return;
-            var ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
-            ImageAlbumAni?.Pause();
-        });
-        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
     private void HyPlayList_OnPlay()
@@ -1113,6 +1081,47 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 }
             }
         }
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                lastitem = null;
+                _ = Common.Invoke(() =>
+                {
+                    ImageAlbum.Source = null;
+                    ImageAlbum.PlaceholderSource = null;
+                    Background = null;
+                    if (LyricBox.ItemsSource is IList lyricItems) lyricItems.Clear();
+                    LyricBox.ItemsSource = null;
+                });
+            }
+            HyPlayList.OnLyricChange -= RefreshLyricTime;
+            HyPlayList.OnPlayItemChange -= OnSongChange;
+            HyPlayList.OnLyricLoaded -= HyPlayList_OnLyricLoaded;
+            HyPlayList.OnTimerTicked -= HyPlayList_OnTimerTicked;
+            if (Window.Current != null)
+                Window.Current.SizeChanged -= Current_SizeChanged;
+            if (Common.Setting.albumRotate)
+                RotateAnimationSet.Stop();
+            if (!Common.Setting.expandAlbumBreath) return;
+            var ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
+            ImageAlbumAni?.Pause();
+            disposedValue = true;
+        }
+    }
+    ~ExpandedPlayer()
+    {
+        Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }
 

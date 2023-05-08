@@ -73,6 +73,8 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     private SolidColorBrush? _pureAccentBrushCache;
     private Color? _karaokIdleColorCache;
     private Color? _karaokAccentColorCache;
+    private bool disposedValue;
+
     private Color GetKaraokAccentBrush()
     {
         if (Common.Setting.karaokLyricFocusingColor is not null)
@@ -120,10 +122,6 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         HyPlayList.OnSongLikeStatusChange += HyPlayList_OnSongLikeStatusChange;
         LeaveAnimation.Completed += LeaveAnimation_Completed;
         //CompactPlayerAni.Begin();
-    }
-    ~CompactPlayerPage()
-    {
-        Dispose(true);
     }
     private void LeaveAnimation_Completed(object sender, object e)
     {
@@ -278,23 +276,6 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         });
     }
 
-    public void Dispose()
-    {
-        Dispose(false);
-    }
-    private void Dispose(bool isFinalizer)
-    {
-        HyPlayList.OnPlayPositionChange -=
-            position => _ = Common.Invoke(() => NowProgress = position.TotalMilliseconds);
-        HyPlayList.OnPlayItemChange -= OnChangePlayItem;
-        HyPlayList.OnPlay -= () => _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB4");
-        HyPlayList.OnPause -= () => _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB5");
-        HyPlayList.OnLyricChange -= OnLyricChanged;
-        HyPlayList.OnSongLikeStatusChange -= HyPlayList_OnSongLikeStatusChange;
-        //CompactPlayerAni.Begin();
-        if (!isFinalizer) GC.SuppressFinalize(this);
-    }
-
     private void OnChangePlayItem(HyPlayItem item)
     {
         _ = Common.Invoke(async () =>
@@ -425,5 +406,34 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     {
         _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
         Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer));
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+            }
+            HyPlayList.OnPlayPositionChange -=
+            position => _ = Common.Invoke(() => NowProgress = position.TotalMilliseconds);
+            HyPlayList.OnPlayItemChange -= OnChangePlayItem;
+            HyPlayList.OnPlay -= () => _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB4");
+            HyPlayList.OnPause -= () => _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB5");
+            HyPlayList.OnLyricChange -= OnLyricChanged;
+            HyPlayList.OnSongLikeStatusChange -= HyPlayList_OnSongLikeStatusChange;
+            disposedValue = true;
+        }
+    }
+
+    ~CompactPlayerPage()
+    {
+        Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

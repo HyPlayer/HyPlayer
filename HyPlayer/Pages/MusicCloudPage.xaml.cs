@@ -27,7 +27,7 @@ public sealed partial class MusicCloudPage : Page, IDisposable
 {
     private readonly ObservableCollection<NCSong> Items = new();
     private int page;
-    public bool IsDisposed = false;
+    private bool disposedValue = false;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
     private Task _loadResultTask;
@@ -38,27 +38,10 @@ public sealed partial class MusicCloudPage : Page, IDisposable
         SongContainer.ListSource = "content";
         _cancellationToken = _cancellationTokenSource.Token;
     }
-    ~MusicCloudPage()
-    {
-        Dispose(true);
-    }
-    public void Dispose()
-    {
-        Dispose(false);
-    }
-    private void Dispose(bool isFinalizer)
-    {
-        if (IsDisposed) return;
-        Items.Clear();
-        SongContainer.Dispose();
-        _cancellationTokenSource.Dispose();
-        IsDisposed = true;
-        if (!isFinalizer) GC.SuppressFinalize(this);
-    }
 
     public async Task LoadMusicCloudItem()
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(MusicCloudPage));
+        if (disposedValue) throw new ObjectDisposedException(nameof(MusicCloudPage));
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
@@ -133,20 +116,20 @@ public sealed partial class MusicCloudPage : Page, IDisposable
 
     private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(MusicCloudPage));
+        if (disposedValue) throw new ObjectDisposedException(nameof(MusicCloudPage));
         page++;
         _loadResultTask = LoadMusicCloudItem();
     }
 
     private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(MusicCloudPage));
+        if (disposedValue) throw new ObjectDisposedException(nameof(MusicCloudPage));
         DownloadManager.AddDownload(Items.ToList());
     }
 
     private async void BtnUpload_Click(object sender, RoutedEventArgs e)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(MusicCloudPage));
+        if (disposedValue) throw new ObjectDisposedException(nameof(MusicCloudPage));
         var fop = new FileOpenPicker();
         fop.FileTypeFilter.Add(".flac");
         fop.FileTypeFilter.Add(".mp3");
@@ -167,5 +150,30 @@ public sealed partial class MusicCloudPage : Page, IDisposable
         }
 
         Common.AddToTeachingTipLists("上传完成", "请重新加载云盘页面");
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                Items.Clear();
+                SongContainer.Dispose();
+                _cancellationTokenSource.Dispose();
+            }
+            disposedValue = true;
+        }
+    }
+
+    ~MusicCloudPage()
+    {
+        Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

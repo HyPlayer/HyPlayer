@@ -45,6 +45,7 @@ public sealed partial class GroupedSongsList : IDisposable
 
     public static readonly DependencyProperty FooterProperty = DependencyProperty.Register(
         "Footer", typeof(UIElement), typeof(GroupedSongsList), new PropertyMetadata(default(UIElement)));
+    private bool disposedValue;
 
     public GroupedSongsList()
     {
@@ -90,11 +91,6 @@ public sealed partial class GroupedSongsList : IDisposable
     {
         get => (string)GetValue(ListSourceProperty);
         set => SetValue(ListSourceProperty, value);
-    }
-
-    public void Dispose()
-    {
-        HyPlayList.OnPlayItemChange -= HyPlayListOnOnPlayItemChange;
     }
 
     private async Task IndicateNowPlayingItem()
@@ -267,5 +263,31 @@ public sealed partial class GroupedSongsList : IDisposable
         //    HyPlayList.SongAppendDone();
         //    HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.id == ncsong.sid));
         //}
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+
+            }
+
+            HyPlayList.OnPlayItemChange -= HyPlayListOnOnPlayItemChange;
+            disposedValue = true;
+        }
+    }
+
+    ~GroupedSongsList()
+    {
+        Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

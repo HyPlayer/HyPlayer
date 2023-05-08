@@ -35,33 +35,12 @@ public sealed partial class Home : Page, IDisposable
     private CancellationToken _cancellationToken;
     private Task _rankListLoaderTask;
 
-    public bool IsDisposed = false;
+    private bool disposedValue = false;
 
     public Home()
     {
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
-    }
-    ~Home()
-    {
-        Dispose(true);
-    }
-
-    public void Dispose()
-    {
-        Dispose(false);
-    }
-    private void Dispose(bool isFinalizer)
-    {
-        if (IsDisposed) return;
-        RecommendSongListContainer.Children.Clear();
-        MainContainer.Children.Clear();
-        UnLoginedContent.Children.Clear();
-        RankList.Children.Clear();
-        RankPlayList.Children.Clear();
-        _cancellationTokenSource.Dispose();
-        IsDisposed = true;
-        if (!isFinalizer) GC.SuppressFinalize(this);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -105,7 +84,7 @@ public sealed partial class Home : Page, IDisposable
 
     private async void LoadLoginedContent()
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(Home));
+        if (disposedValue) throw new ObjectDisposedException(nameof(Home));
         _ = Common.Invoke(() =>
         {
             _cancellationToken.ThrowIfCancellationRequested();
@@ -187,7 +166,7 @@ public sealed partial class Home : Page, IDisposable
 
     public async Task LoadRanklist()
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(Home));
+        if (disposedValue) throw new ObjectDisposedException(nameof(Home));
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
@@ -214,7 +193,7 @@ public sealed partial class Home : Page, IDisposable
 
     private void dailyRcmTapped(object sender, TappedRoutedEventArgs e)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(Home));
+        if (disposedValue) throw new ObjectDisposedException(nameof(Home));
         Common.NavigatePage(typeof(SongListDetail), new NCPlayList
         {
             cover = "ms-appx:/Assets/icon.png",
@@ -234,19 +213,19 @@ public sealed partial class Home : Page, IDisposable
 
     private void FMTapped(object sender, TappedRoutedEventArgs e)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(Home));
+        if (disposedValue) throw new ObjectDisposedException(nameof(Home));
         PersonalFM.InitPersonalFM();
     }
 
     private void LikedSongListTapped(object sender, TappedRoutedEventArgs e)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(Home));
+        if (disposedValue) throw new ObjectDisposedException(nameof(Home));
         Common.NavigatePage(typeof(SongListDetail), Common.MySongLists[0].plid);
     }
 
     private async void HeartBeatTapped(object sender, TappedRoutedEventArgs e)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(Home));
+        if (disposedValue) throw new ObjectDisposedException(nameof(Home));
         HyPlayList.RemoveAllSong();
         try
         {
@@ -286,7 +265,35 @@ public sealed partial class Home : Page, IDisposable
 
     private void UserTapped(object sender, TappedRoutedEventArgs e)
     {
-        if (IsDisposed) throw new ObjectDisposedException(nameof(Home));
+        if (disposedValue) throw new ObjectDisposedException(nameof(Home));
         Common.NavigatePage(typeof(Me), null, null);
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                RecommendSongListContainer.Children.Clear();
+                MainContainer.Children.Clear();
+                UnLoginedContent.Children.Clear();
+                RankList.Children.Clear();
+                RankPlayList.Children.Clear();
+                _cancellationTokenSource.Dispose();
+            }
+            disposedValue = true;
+        }
+    }
+
+    ~Home()
+    {
+        Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }
