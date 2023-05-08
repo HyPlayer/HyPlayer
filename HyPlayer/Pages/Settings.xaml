@@ -740,6 +740,13 @@
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.notClearMode, Mode=TwoWay}" />
                                     </Grid>
+                                    <Grid>
+                                        <TextBlock VerticalAlignment="Center" Text="自动隐藏PlayBar" />
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.AutoHidePlaybar, Mode=TwoWay}" />
+                                    </Grid>
                                 </StackPanel>
                             </controls:Expander>
 

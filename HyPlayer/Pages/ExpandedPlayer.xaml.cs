@@ -1002,6 +1002,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void Page_Loaded(object sender, RoutedEventArgs e)
     {
+        Common.PageMain.IsExpandedPlayerInitialized = true;
         ToggleButtonSound.IsChecked = Common.ShowLyricSound;
         ToggleButtonTranslation.IsChecked = Common.ShowLyricTrans;
         if (Common.Setting.albumRound) ImageAlbum.CornerRadius = new CornerRadius(300);

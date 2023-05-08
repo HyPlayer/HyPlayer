@@ -10,12 +10,14 @@ using Newtonsoft.Json.Linq;
 using QRCoder;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.Storage;
+using Windows.Storage.FileProperties;
 using Windows.Storage.Streams;
 using Windows.System;
 using Windows.System.Profile;
@@ -53,6 +55,35 @@ public sealed partial class BasePage : Page
 {
     private string nowplid;
     private string nowqrkey;
+    public static readonly DependencyProperty NowPlayingNameProperty =
+    DependencyProperty.Register("NowPlayingName", typeof(string), typeof(BasePage),
+        new PropertyMetadata(string.Empty));
+
+    public static readonly DependencyProperty NowPlayingArtistsProperty =
+    DependencyProperty.Register("NowPlayingArtists", typeof(string), typeof(BasePage),
+        new PropertyMetadata(string.Empty));
+
+    public static readonly DependencyProperty AlbumCoverProperty = DependencyProperty.Register(
+        "AlbumCover", typeof(Brush), typeof(BasePage), new PropertyMetadata(default(Brush)));
+
+    public string NowPlayingName
+    {
+        get => (string)GetValue(NowPlayingNameProperty);
+        set => SetValue(NowPlayingNameProperty, value);
+    }
+
+    public string NowPlayingArtists
+    {
+        get => (string)GetValue(NowPlayingArtistsProperty);
+        set => SetValue(NowPlayingArtistsProperty, value);
+    }
+
+    public Brush AlbumCover
+    {
+        get => (Brush)GetValue(AlbumCoverProperty);
+        set => SetValue(AlbumCoverProperty, value);
+    }
+
 
     public BasePage()
     {
@@ -62,7 +93,7 @@ public sealed partial class BasePage : Page
         HyPlayList.OnTimerTicked += () => Common.RollTeachingTip();
         if (HyPlayList.Player == null)
             HyPlayList.InitializeHyPlaylist();
-
+        HyPlayList.OnPlayItemChange += OnChangePlayItem;
         if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Desktop" && Common.Setting.EnableTitleBarImmerse)
         {
             CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
@@ -909,4 +940,35 @@ public sealed partial class BasePage : Page
     {
         return updateSource == 2 ? Visibility.Visible : Visibility.Collapsed; //Canary更新就设置预览显示
     }
+
+    private void OnChangePlayItem(HyPlayItem item)
+    {
+        _ = Common.Invoke(async () =>
+        {
+            NowPlayingName = item?.PlayItem?.Name;
+            NowPlayingArtists = item?.PlayItem?.ArtistString;
+            BitmapImage img = null;
+            if (item != null)
+                if (!Common.Setting.noImage)
+                    if (item.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
+                    {
+                        img = new BitmapImage();
+                        if (!Common.Setting.useTaglibPicture || item.PlayItem?.LocalFileTag is null || item.PlayItem.LocalFileTag.Pictures.Length == 0)
+                        {
+                            await img.SetSourceAsync(
+                                await HyPlayList.NowPlayingStorageFile?.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
+                        }
+                        else
+                        {
+                            await img.SetSourceAsync(new MemoryStream(item.PlayItem.LocalFileTag.Pictures[0].Data.Data).AsRandomAccessStream());
+                        }
+                    }
+                    else
+                    {
+                        img = new BitmapImage(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover));
+                    }
+            AlbumCover = new ImageBrush { ImageSource = img, Stretch = Stretch.UniformToFill };
+        });
+    }
+
 }
