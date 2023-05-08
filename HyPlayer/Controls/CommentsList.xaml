@@ -22,9 +22,11 @@
                 <DataTemplate
                     ScrollViewer.CanContentRenderOutsideBounds="False"
                     x:DataType="classes:Comment">
-                    <local:SingleComment MainComment="{x:Bind thisComment}">
-                        
-                    </local:SingleComment>
+                    <Border>
+                        <local:SingleComment MainComment="{x:Bind thisComment}">
+
+                        </local:SingleComment>
+                    </Border>
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>

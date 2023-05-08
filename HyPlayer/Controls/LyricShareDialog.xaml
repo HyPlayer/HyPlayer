@@ -22,7 +22,9 @@
             SelectionMode="Multiple">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="local:LyricShareItem">
-                    <TextBlock Text="{x:Bind Text}" />
+                    <Border>
+                        <TextBlock Text="{x:Bind Text}" />
+                    </Border>
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>

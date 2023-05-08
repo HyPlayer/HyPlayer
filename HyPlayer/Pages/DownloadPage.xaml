@@ -46,46 +46,48 @@
             </ListView.Footer>
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="hyPlayControl:DownloadObject">
-                    <Grid Height="90" Padding="10" ColumnSpacing="13">
-                        <Grid.ColumnDefinitions>
-                            <!-- Cover -->
-                            <ColumnDefinition Width="70" />
-
-                            <!-- Song Info -->
-                            <ColumnDefinition Width="*" />
-
-                            <!-- Progress -->
-                            <ColumnDefinition Width="*" />
-
-                            <!-- Action Button -->
-                            <ColumnDefinition Width="160" />
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition />
-                            <RowDefinition />
-                            <RowDefinition />
-                        </Grid.RowDefinitions>
-                        <controls:ImageEx CornerRadius="4" BorderBrush="Gray" BorderThickness="1" EnableLazyLoading="True" x:Phase="3" Grid.Column="0" Grid.Row="0" Grid.RowSpan="3"
-                                          Source="{x:Bind ncsong.Album.cover, Converter={StaticResource ImageUrlToImageSourceConverter}}" />
-                        <TextBlock Grid.ColumnSpan="2" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0" Text="{x:Bind ncsong.songname}"
-                                 FontSize="18" FontWeight="Bold" />
-                        <TextBlock VerticalAlignment="Center" Grid.Column="1" Grid.Row="1" Text="{x:Bind ncsong.ArtistString}"
-                                 Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                                 FontSize="13" />
-                        <TextBlock VerticalAlignment="Center" Grid.Column="1" Grid.Row="2" Text="{x:Bind ncsong.Album.name}"
-                                 Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                                 FontSize="13" />
-                        <muxc:ProgressBar Grid.Column="2" Grid.Row="1" ShowPaused="{x:Bind HasPaused, Mode=OneWay}" ShowError="{x:Bind HasError, Mode=OneWay}" Value="{x:Bind Progress, Mode=OneWay}" />
-                        <TextBlock Grid.Column="2" Grid.Row="2" Text="{x:Bind Message, Mode=OneWay}" />
-                        <Grid Grid.Column="3" Grid.Row="0" Grid.RowSpan="3">
+                    <Border>
+                        <Grid Height="90" Padding="10" ColumnSpacing="13">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition />
-                                <ColumnDefinition />
+                                <!-- Cover -->
+                                <ColumnDefinition Width="70" />
+
+                                <!-- Song Info -->
+                                <ColumnDefinition Width="*" />
+
+                                <!-- Progress -->
+                                <ColumnDefinition Width="*" />
+
+                                <!-- Action Button -->
+                                <ColumnDefinition Width="160" />
                             </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" Click="PauseBtn_Click" Content="{x:Bind HasPaused , Mode=OneWay, Converter={StaticResource PausedToStringConverter}}" />
-                            <Button Grid.Column="1" Click="RemoveBtn_Click" Content="删除" Foreground="OrangeRed" />
+                            <Grid.RowDefinitions>
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+                            <controls:ImageEx CornerRadius="4" BorderBrush="Gray" BorderThickness="1" EnableLazyLoading="True" x:Phase="3" Grid.Column="0" Grid.Row="0" Grid.RowSpan="3"
+                                          Source="{x:Bind ncsong.Album.cover, Converter={StaticResource ImageUrlToImageSourceConverter}}" />
+                            <TextBlock Grid.ColumnSpan="2" VerticalAlignment="Center" Grid.Column="1" Grid.Row="0" Text="{x:Bind ncsong.songname}"
+                                 FontSize="18" FontWeight="Bold" />
+                            <TextBlock VerticalAlignment="Center" Grid.Column="1" Grid.Row="1" Text="{x:Bind ncsong.ArtistString}"
+                                 Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                 FontSize="13" />
+                            <TextBlock VerticalAlignment="Center" Grid.Column="1" Grid.Row="2" Text="{x:Bind ncsong.Album.name}"
+                                 Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                 FontSize="13" />
+                            <muxc:ProgressBar Grid.Column="2" Grid.Row="1" ShowPaused="{x:Bind HasPaused, Mode=OneWay}" ShowError="{x:Bind HasError, Mode=OneWay}" Value="{x:Bind Progress, Mode=OneWay}" />
+                            <TextBlock Grid.Column="2" Grid.Row="2" Text="{x:Bind Message, Mode=OneWay}" />
+                            <Grid Grid.Column="3" Grid.Row="0" Grid.RowSpan="3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <Button Grid.Column="0" Click="PauseBtn_Click" Content="{x:Bind HasPaused , Mode=OneWay, Converter={StaticResource PausedToStringConverter}}" />
+                                <Button Grid.Column="1" Click="RemoveBtn_Click" Content="删除" Foreground="OrangeRed" />
+                            </Grid>
                         </Grid>
-                    </Grid>
+                    </Border>
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>

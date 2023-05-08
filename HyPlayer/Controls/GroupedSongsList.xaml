@@ -135,24 +135,25 @@
             </ListView.Resources>
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="classes:NCSong">
-                    <Grid
+                    <Border>
+                        <Grid
                         HorizontalAlignment="Stretch"
                         Background="Transparent"
                         IsRightTapEnabled="True"
                         RightTapped="Grid_RightTapped"
                         Tag="{x:Bind Order}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="60" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0" Orientation="Horizontal">
-                            <TextBlock
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="60" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                <TextBlock
                                 x:Name="OrderId"
                                 Width="30"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
                                 Text="{x:Bind Order}" />
-                            <controls:ImageEx
+                                <controls:ImageEx
                                 x:Name="ImageRect"
                                 Width="75"
                                 Height="75"
@@ -163,42 +164,42 @@
                                 IsEnabled="{x:Bind IsAvailable}"
                                 Source="{x:Bind Cover}"
                                 Stretch="UniformToFill" />
-                            <Grid Padding="7,0,0,0">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition />
-                                    <RowDefinition />
-                                    <RowDefinition />
-                                    <RowDefinition />
-                                </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <StackPanel
+                                <Grid Padding="7,0,0,0">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition />
+                                        <RowDefinition />
+                                        <RowDefinition />
+                                        <RowDefinition />
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel
                                     Grid.Row="0"
                                     Orientation="Horizontal"
                                     Spacing="5">
-                                    <TextBlock
+                                        <TextBlock
                                         Name="TextBlockSongname"
                                         x:Phase="0"
                                         FontSize="20"
                                         Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
                                         Text="{x:Bind songname}" />
-                                    <TextBlock
+                                        <TextBlock
                                         Name="TextBlockTransName"
                                         x:Phase="0"
                                         FontSize="20"
                                         Foreground="Gray"
                                         Text="{x:Bind ConvertTranslate(transname)}" />
-                                    <Image
+                                        <Image
                                         Height="20"
                                         Source="/Assets/cloud.png"
                                         Visibility="{x:Bind IsCloud}" />
-                                    <Image
+                                        <Image
                                         Height="20"
                                         Source="/Assets/vip.png"
                                         Visibility="{x:Bind IsVip}" />
-                                </StackPanel>
-                                <TextBlock
+                                    </StackPanel>
+                                    <TextBlock
                                     Name="TextBlockAlia"
                                     Grid.Row="1"
                                     Margin="0,2,0,-6"
@@ -207,29 +208,29 @@
                                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"
                                     Text="{x:Bind alias}"
                                     Visibility="Visible" />
-                                <TextBlock
+                                    <TextBlock
                                     Name="TextBlockArtist"
                                     Grid.Row="2"
                                     Margin="0,7,0,-6"
                                     FontSize="12"
                                     Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                                     Text="{x:Bind ArtistString}" />
-                                <TextBlock
+                                    <TextBlock
                                     Name="TextBlockAlbum"
                                     Grid.Row="3"
                                     Margin="0,7,0,0"
                                     FontSize="13"
                                     Foreground="Gray"
                                     Text="{x:Bind Album.name}" />
-                            </Grid>
-                        </StackPanel>
+                                </Grid>
+                            </StackPanel>
 
-                        <StackPanel
+                            <StackPanel
                             Grid.Column="1"
                             HorizontalAlignment="Right"
                             Orientation="Horizontal"
                             Spacing="8">
-                            <Button
+                                <Button
                                 x:Name="More"
                                 x:Phase="3"
                                 Background="Transparent"
@@ -237,10 +238,11 @@
                                 Style="{StaticResource ButtonRevealStyle}"
                                 Tag="{x:Bind Order}"
                                 ToolTipService.ToolTip="更多">
-                                <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE10C;" />
-                            </Button>
-                        </StackPanel>
-                    </Grid>
+                                    <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE10C;" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>

@@ -56,27 +56,29 @@
                             ItemsSource="{x:Bind localHyItems}">
                             <ListView.ItemTemplate>
                                 <DataTemplate x:DataType="classes:HyPlayItem">
-                                    <Grid>
-                                        <StackPanel
+                                    <Border>
+                                        <Grid>
+                                            <StackPanel
                                             Width="340"
                                             HorizontalAlignment="Left"
                                             Orientation="Vertical">
-                                            <TextBlock Text="{x:Bind PlayItem.Name, Mode=OneWay}" />
-                                            <TextBlock Foreground="Gray"
+                                                <TextBlock Text="{x:Bind PlayItem.Name, Mode=OneWay}" />
+                                                <TextBlock Foreground="Gray"
                                                        Text="{x:Bind PlayItem.ArtistString, Mode=OneWay}" />
-                                        </StackPanel>
-                                        <Button
+                                            </StackPanel>
+                                            <Button
                                             x:Name="UploadCloud"
                                             HorizontalAlignment="Right"
                                             Click="UploadCloud_Click"
                                             Style="{StaticResource ButtonRevealStyle}"
                                             Tag="{x:Bind PlayItem.Url}"
                                             ToolTipService.ToolTip="上传到云盘">
-                                            <Button.Content>
-                                                <SymbolIcon Symbol="Upload" />
-                                            </Button.Content>
-                                        </Button>
-                                    </Grid>
+                                                <Button.Content>
+                                                    <SymbolIcon Symbol="Upload" />
+                                                </Button.Content>
+                                            </Button>
+                                        </Grid>
+                                    </Border>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
                         </ListView>

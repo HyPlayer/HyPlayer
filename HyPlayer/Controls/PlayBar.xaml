@@ -640,12 +640,13 @@
                                 SelectionMode="Single">
                                 <ListView.ItemTemplate>
                                     <DataTemplate x:DataType="classes:HyPlayItem">
-                                        <StackPanel Margin="0,5,0,5" Orientation="Horizontal">
-                                            <StackPanel Width="345" Orientation="Vertical">
-                                                <TextBlock FontWeight="Bold" Text="{x:Bind Path=PlayItem.Name}" />
-                                                <TextBlock Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" Text="{x:Bind Path=PlayItem.ArtistString}" />
-                                            </StackPanel>
-                                            <Button
+                                        <Border>
+                                            <StackPanel Margin="0,5,0,5" Orientation="Horizontal">
+                                                <StackPanel Width="345" Orientation="Vertical">
+                                                    <TextBlock FontWeight="Bold" Text="{x:Bind Path=PlayItem.Name}" />
+                                                    <TextBlock Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" Text="{x:Bind Path=PlayItem.ArtistString}" />
+                                                </StackPanel>
+                                                <Button
                                                 Width="24"
                                                 Height="24"
                                                 Padding="-5"
@@ -653,12 +654,13 @@
                                                 BorderBrush="Transparent"
                                                 Click="PlayListRemove_OnClick"
                                                 Tag="{x:Bind Path=PlayItem}">
-                                                <FontIcon
+                                                    <FontIcon
                                                     HorizontalAlignment="Left"
                                                     FontSize="16"
                                                     Glyph="&#xE10A;" />
-                                            </Button>
-                                        </StackPanel>
+                                                </Button>
+                                            </StackPanel>
+                                        </Border>
                                     </DataTemplate>
                                 </ListView.ItemTemplate>
                             </ListView>
