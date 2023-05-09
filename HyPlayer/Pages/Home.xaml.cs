@@ -282,6 +282,7 @@ public sealed partial class Home : Page, IDisposable
                 RankPlayList.Children.Clear();
                 _cancellationTokenSource.Dispose();
             }
+            HyPlayList.OnLoginDone -= LoadLoginedContent;
             disposedValue = true;
         }
     }

@@ -126,10 +126,7 @@ public sealed partial class SongListDetail : Page, IDisposable
             var idx = 0;
             foreach (var song in json["data"]["dailySongs"])
             {
-                if (_cancellationToken.IsCancellationRequested)
-                {
-                    throw new TaskCanceledException();
-                }
+                _cancellationToken.ThrowIfCancellationRequested();
                 var ncSong = NCSong.CreateFromJson(song);
                 ncSong.IsAvailable = true;
                 ncSong.Order = idx++;
@@ -174,10 +171,7 @@ public sealed partial class SongListDetail : Page, IDisposable
                 var i = 0;
                 foreach (var jToken in json["songs"])
                 {
-                    if (_cancellationToken.IsCancellationRequested)
-                    {
-                        throw new TaskCanceledException();
-                    }
+                    _cancellationToken.ThrowIfCancellationRequested();
                     var song = (JObject)jToken;
 
                     var ncSong = NCSong.CreateFromJson(song);

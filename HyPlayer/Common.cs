@@ -73,7 +73,7 @@ namespace HyPlayer
 
         private static bool _isExpanded = false;
         public static TeachingTip GlobalTip;
-        public static readonly Stack<KeyValuePair<string, string?>> TeachingTipList = new();
+        public static readonly Queue<KeyValuePair<string, string?>> TeachingTipList = new();
         private static object previousNavigationItem;
         public static List<string> ErrorMessageList = new();
         public static EnterForegroundFromBackgroundEvent OnEnterForegroundFromBackground;
@@ -121,7 +121,7 @@ namespace HyPlayer
 
         public static void AddToTeachingTipLists(string title, string subtitle = "")
         {
-            TeachingTipList.Push(new KeyValuePair<string, string?>(title, subtitle));
+            TeachingTipList.Enqueue(new KeyValuePair<string, string?>(title, subtitle));
             _ = Invoke(() =>
             {
                 if (!GlobalTip.IsOpen)
@@ -142,7 +142,7 @@ namespace HyPlayer
             _ = Invoke(() =>
             {
                 if (TeachingTipList.Count == 0) return;
-                var (title, subtitle) = TeachingTipList.Pop(); // deconstruction
+                var (title, subtitle) = TeachingTipList.Dequeue(); // deconstruction
                 GlobalTip.Title = title;
                 GlobalTip.Subtitle = subtitle ?? "";
                 if (!GlobalTip.IsOpen)

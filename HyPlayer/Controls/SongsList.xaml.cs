@@ -462,6 +462,7 @@ public sealed partial class SongsList : UserControl, IDisposable
                 Songs.Clear();
             }
             HyPlayList.OnPlayItemChange -= HyPlayListOnOnPlayItemChange;
+            Songs.CollectionChanged -= Songs_CollectionChanged;
             disposedValue = true;
         }
     }

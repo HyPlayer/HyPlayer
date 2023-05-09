@@ -286,7 +286,6 @@ public sealed partial class GroupedSongsList : IDisposable
 
     public void Dispose()
     {
-        // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }

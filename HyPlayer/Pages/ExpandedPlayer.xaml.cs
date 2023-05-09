@@ -1099,10 +1099,13 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     LyricBox.ItemsSource = null;
                 });
             }
+            HyPlayList.OnPause -= HyPlayList_OnPause;
+            HyPlayList.OnPlay -= HyPlayList_OnPlay;
             HyPlayList.OnLyricChange -= RefreshLyricTime;
             HyPlayList.OnPlayItemChange -= OnSongChange;
             HyPlayList.OnLyricLoaded -= HyPlayList_OnLyricLoaded;
             HyPlayList.OnTimerTicked -= HyPlayList_OnTimerTicked;
+            Common.OnEnterForegroundFromBackground -= () => OnSongChange(HyPlayList.NowPlayingItem);
             if (Window.Current != null)
                 Window.Current.SizeChanged -= Current_SizeChanged;
             if (Common.Setting.albumRotate)
