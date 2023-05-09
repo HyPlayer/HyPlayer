@@ -1535,10 +1535,10 @@
                                                 <TextBlock
                                                     Margin="1,0,0,0"
                                                     Style="{StaticResource SubtitleTextBlockStyle}"
-                                                    Text="FUNNYTW" />
+                                                    Text="DYNAMIC-CHIN" />
                                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                                     <TextBlock Text="新版图标提供 + 新版 UI 设计" />
-                                                    <TextBlock Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" Text="Forever Funny" />
+                                                    <TextBlock Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" Text="Being Dynamic！" />
                                                 </StackPanel>
                                             </StackPanel>
                                         </StackPanel>
