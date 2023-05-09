@@ -10,7 +10,7 @@
     xmlns:ui="using:Microsoft.Toolkit.Uwp.UI"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
     Loaded="Page_Loaded"
-    NavigationCacheMode="Disabled">
+    NavigationCacheMode="Disabled" PointerEntered="PointerIn" PointerExited="PointerOut">
     <Page.Resources>
         <!-- ReSharper disable once Xaml.RedundantResource -->
         <Storyboard x:Key="ImageAlbumAni">
@@ -326,6 +326,7 @@
                 </ScrollViewer>
             </Grid>
             <Button
+                x:Name="MoreBtn"
                 Grid.Row="1"
                 Grid.Column="0"
                 Grid.ColumnSpan="2"

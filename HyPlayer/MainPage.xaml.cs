@@ -87,8 +87,7 @@ public sealed partial class MainPage
             { }
             else
             {
-                if (IsExpandedPlayerInitialized)
-                {
+
                     //var ExpandedPlayerLyricAni = new DoubleAnimation
                     //{
                     //    BeginTime = TimeSpan.FromSeconds(3.1),
@@ -101,9 +100,7 @@ public sealed partial class MainPage
                     //var lyricstoryboard = new Storyboard();
                     //lyricstoryboard.Children.Add(ExpandedPlayerLyricAni);
                     //lyricstoryboard.Begin();
-                }
-                else
-                {
+
                     PointerInAni.Begin();
                     var BlankAni = new DoubleAnimation
                     {
@@ -116,7 +113,7 @@ public sealed partial class MainPage
                     Storyboard.SetTargetProperty(BlankAni, "Opacity");
                     storyboard.Children.Add(BlankAni);
                     storyboard.Begin();
-                }
+                
             }
         }
     }
@@ -127,8 +124,7 @@ public sealed partial class MainPage
         {
 
             IsPlaybarOnShow = false;
-            if (IsExpandedPlayerInitialized)
-            {
+
                 //var ExpandedPlayerLyricAni = new DoubleAnimation
                 //{
                 //    BeginTime = TimeSpan.FromSeconds(3.1),
@@ -141,9 +137,7 @@ public sealed partial class MainPage
                 //Storyboard.SetTargetProperty(ExpandedPlayerLyricAni, "(FrameworkElement.MarginProperty).Bottom");
                 //lyricstoryboard.Children.Add(ExpandedPlayerLyricAni);
                 //lyricstoryboard.Begin();
-            }
-            else
-            {
+
                 PointerOutAni.Begin();
                 Common.PageBase.NavItemBlank.IsEnabled = true;
                 var BlankAni = new DoubleAnimation
@@ -159,7 +153,7 @@ public sealed partial class MainPage
                 Storyboard.SetTargetProperty(BlankAni, "Opacity");
                 storyboard.Children.Add(BlankAni);
                 storyboard.Begin();
-            }
+            
         }
     }
 }

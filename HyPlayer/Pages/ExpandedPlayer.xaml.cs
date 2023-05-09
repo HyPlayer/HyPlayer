@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Devices.Input;
@@ -87,6 +88,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     public Windows.UI.Color? albumMainColor;
     private bool disposedValue;
+    public System.Diagnostics.Stopwatch time = new System.Diagnostics.Stopwatch();
+
 
     public ExpandedPlayer()
     {
@@ -1126,6 +1129,56 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
+    public void PointerIn(object sender, PointerRoutedEventArgs e)
+    {
+        if (Common.Setting.AutoHidePlaybar)
+        {
+            time.Reset();
+            LyricBoxContainer.Margin = new Thickness(0, 0, 0, 0);
+            var BtnAni = new DoubleAnimation
+            {
+                To = 1,
+                EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+                EnableDependentAnimation = true
+            };
+            var storyboard = new Storyboard();
+            Storyboard.SetTarget(BtnAni, MoreBtn);
+            Storyboard.SetTargetProperty(BtnAni, "Opacity");
+            storyboard.Children.Add(BtnAni);
+            storyboard.Begin();
+        }
+    }
+    public async void PointerOut(object sender, PointerRoutedEventArgs e)
+    {
+        if (Common.Setting.AutoHidePlaybar)
+        {
+            time = System.Diagnostics.Stopwatch.StartNew();
+            await Task.Run(() =>
+            {
+                while (time.ElapsedMilliseconds < 3000)
+                {
+                    Thread.Sleep(10);
+                }
+                _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    LyricBoxContainer.Margin = new Thickness(0, -30, 0, -140);
+                    var BtnAni = new DoubleAnimation
+                    {
+                        To = 0,
+                        EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+                        EnableDependentAnimation = true
+                    };
+                    var storyboard = new Storyboard();
+                    Storyboard.SetTarget(BtnAni, MoreBtn);
+                    Storyboard.SetTargetProperty(BtnAni, "Opacity");
+                    storyboard.Children.Add(BtnAni);
+                    storyboard.Begin();
+                });
+            });
+
+        }
+    }
+
 }
 
 internal enum ExpandedWindowMode
