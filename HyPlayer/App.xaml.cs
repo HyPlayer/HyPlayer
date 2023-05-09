@@ -22,10 +22,6 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
-#if !DEBUG
-using Microsoft.Services.Store.Engagement;
-#endif
-
 #endregion
 
 namespace HyPlayer;
@@ -67,18 +63,7 @@ sealed partial class App : Application
         if (Common.Setting.themeRequest != 0)
             RequestedTheme = Common.Setting.themeRequest == 1 ? ApplicationTheme.Light : ApplicationTheme.Dark;
         _ = InitializeThings();
-#if !DEBUG
-        LoadMicrosoftStoreSDK();
-#endif
     }
-#if !DEBUG
-    private async Task LoadMicrosoftStoreSDK()
-    {
-
-        StoreServicesEngagementManager engagementManager = StoreServicesEngagementManager.GetDefault();
-        await engagementManager.RegisterNotificationChannelAsync();
-    }
-#endif
 
     private void MemoryManagerOnAppMemoryUsageLimitChanging(object sender, AppMemoryUsageLimitChangingEventArgs e)
     {
