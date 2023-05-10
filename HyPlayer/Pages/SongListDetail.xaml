@@ -154,10 +154,12 @@
                                 <FontIcon                           
                                     x:Name="IconPlay"
                                     FontSize="16"
+                                    Foreground="White"
                                     Glyph="&#xEDB5;"/>
                                 <TextBlock
                                     Margin="4,0,0,0"
                                     Text="播放"
+                                    Foreground="White"
                                     ToolTipService.ToolTip="播放全部"/>
                             </StackPanel>
                         </Button>

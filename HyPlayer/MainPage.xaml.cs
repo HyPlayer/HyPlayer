@@ -78,88 +78,144 @@ public sealed partial class MainPage
         }
     }
 
+    private void ShowBar()
+    {
+        Common.PageBase.NavItemBlank.IsEnabled = false;
+        if (IsPlaybarOnShow)
+        { }
+        else
+        {
+
+            //var ExpandedPlayerLyricAni = new DoubleAnimation
+            //{
+            //    BeginTime = TimeSpan.FromSeconds(3.1),
+            //    To = 0,
+            //    EnableDependentAnimation = true,
+            //    EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+            //};
+            //Storyboard.SetTarget(ExpandedPlayerLyricAni, Common.PageExpandedPlayer.LyricBoxContainer);
+            //Storyboard.SetTargetProperty(ExpandedPlayerLyricAni, "(FrameworkElement.MarginProperty).Bottom");
+            //var lyricstoryboard = new Storyboard();
+            //lyricstoryboard.Children.Add(ExpandedPlayerLyricAni);
+            //lyricstoryboard.Begin();
+
+            PointerInAni.Begin();
+            var BlankAni = new DoubleAnimation
+            {
+                To = 0,
+                EnableDependentAnimation = true,
+                EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+            };
+            var storyboard = new Storyboard();
+            Storyboard.SetTarget(BlankAni, Common.PageBase.NavItemBlank);
+            Storyboard.SetTargetProperty(BlankAni, "Opacity");
+            storyboard.Children.Add(BlankAni);
+            storyboard.Begin();
+
+        }
+
+    }
+
+    private void CollapseBar(double time)
+    {
+        IsPlaybarOnShow = false;
+
+        //var ExpandedPlayerLyricAni = new DoubleAnimation
+        //{
+        //    BeginTime = TimeSpan.FromSeconds(3.1),
+        //    To = -140,
+        //    EnableDependentAnimation = true,
+        //    EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+        //};
+        //var lyricstoryboard = new Storyboard();
+        //Storyboard.SetTarget(ExpandedPlayerLyricAni, Common.PageExpandedPlayer.LyricBoxContainer);
+        //Storyboard.SetTargetProperty(ExpandedPlayerLyricAni, "(FrameworkElement.MarginProperty).Bottom");
+        //lyricstoryboard.Children.Add(ExpandedPlayerLyricAni);
+        //lyricstoryboard.Begin();
+        var PlayBarAni = new DoubleAnimation
+        {
+            BeginTime = TimeSpan.FromSeconds(time),
+            To = 0,
+            EnableDependentAnimation = true,
+            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+        };
+        var PlayBarTransAni = new DoubleAnimation
+        {
+            BeginTime = TimeSpan.FromSeconds(time),
+            To = 20,
+            EnableDependentAnimation = true,
+            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+        };
+        var PointerOutAni = new Storyboard();
+        Storyboard.SetTarget(PlayBarAni, GridPlayBar);
+        Storyboard.SetTarget(PlayBarTransAni, PlayBarTrans);
+        Storyboard.SetTargetProperty(PlayBarAni, "Opacity");
+        Storyboard.SetTargetProperty(PlayBarTransAni, "Y");
+        PointerOutAni.Children.Add(PlayBarAni);
+        PointerOutAni.Children.Add(PlayBarTransAni);
+        PointerOutAni.Begin();
+        Common.PageBase.NavItemBlank.IsEnabled = true;
+        var BlankAni = new DoubleAnimation
+        {
+            BeginTime = TimeSpan.FromSeconds(time),
+            To = 1,
+            EnableDependentAnimation = true,
+            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+        };
+        var storyboard = new Storyboard();
+        Storyboard.SetTarget(BlankAni, Common.PageBase.NavItemBlank);
+        Storyboard.SetTargetProperty(BlankAni, "Opacity");
+        storyboard.Children.Add(BlankAni);
+        storyboard.Begin();
+
+
+    }
+
     private void PointerIn(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
     {
-        if (Common.Setting.AutoHidePlaybar)
+        if (Common.Setting.AutoHidePlaybar==2)
         {
-            Common.PageBase.NavItemBlank.IsEnabled = false;
-            if (IsPlaybarOnShow)
-            { }
-            else
+            ShowBar();
+        }
+    }
+
+    public void PointerOut(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        if (Common.Setting.AutoHidePlaybar==2)
+        {
+            CollapseBar(3.1);
+        }
+    }
+
+    public void FocusOn(object sender, RoutedEventArgs e)
+    {
+        if (Common.Setting.AutoHidePlaybar == 1)
+        {
+            if (Common.isExpanded != true)
             {
-                if (IsExpandedPlayerInitialized)
-                {
-                    //var ExpandedPlayerLyricAni = new DoubleAnimation
-                    //{
-                    //    BeginTime = TimeSpan.FromSeconds(3.1),
-                    //    To = 0,
-                    //    EnableDependentAnimation = true,
-                    //    EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
-                    //};
-                    //Storyboard.SetTarget(ExpandedPlayerLyricAni, Common.PageExpandedPlayer.LyricBoxContainer);
-                    //Storyboard.SetTargetProperty(ExpandedPlayerLyricAni, "(FrameworkElement.MarginProperty).Bottom");
-                    //var lyricstoryboard = new Storyboard();
-                    //lyricstoryboard.Children.Add(ExpandedPlayerLyricAni);
-                    //lyricstoryboard.Begin();
-                }
-                else
-                {
-                    PointerInAni.Begin();
-                    var BlankAni = new DoubleAnimation
-                    {
-                        To = 0,
-                        EnableDependentAnimation = true,
-                        EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
-                    };
-                    var storyboard = new Storyboard();
-                    Storyboard.SetTarget(BlankAni, Common.PageBase.NavItemBlank);
-                    Storyboard.SetTargetProperty(BlankAni, "Opacity");
-                    storyboard.Children.Add(BlankAni);
-                    storyboard.Begin();
-                }
+                ShowBar();
             }
         }
     }
 
-    private void PointerOut(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+    private void FocusOut(object sender, RoutedEventArgs e)
     {
-        if (Common.Setting.AutoHidePlaybar)
+        if (Common.Setting.AutoHidePlaybar == 1)
         {
-
-            IsPlaybarOnShow = false;
-            if (IsExpandedPlayerInitialized)
+            if (Common.isExpanded != true)
             {
-                //var ExpandedPlayerLyricAni = new DoubleAnimation
-                //{
-                //    BeginTime = TimeSpan.FromSeconds(3.1),
-                //    To = -140,
-                //    EnableDependentAnimation = true,
-                //    EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
-                //};
-                //var lyricstoryboard = new Storyboard();
-                //Storyboard.SetTarget(ExpandedPlayerLyricAni, Common.PageExpandedPlayer.LyricBoxContainer);
-                //Storyboard.SetTargetProperty(ExpandedPlayerLyricAni, "(FrameworkElement.MarginProperty).Bottom");
-                //lyricstoryboard.Children.Add(ExpandedPlayerLyricAni);
-                //lyricstoryboard.Begin();
-            }
-            else
-            {
-                PointerOutAni.Begin();
-                Common.PageBase.NavItemBlank.IsEnabled = true;
-                var BlankAni = new DoubleAnimation
-                {
-                    BeginTime = TimeSpan.FromSeconds(3.1),
-                    To = 1,
-                    EnableDependentAnimation = true,
-                    EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
-                };
-
-                var storyboard = new Storyboard();
-                Storyboard.SetTarget(BlankAni, Common.PageBase.NavItemBlank);
-                Storyboard.SetTargetProperty(BlankAni, "Opacity");
-                storyboard.Children.Add(BlankAni);
-                storyboard.Begin();
+                CollapseBar(0);
             }
         }
+    }
+
+    private void IsTapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+    {
+        CollapseBar(0);
+    }
+
+    private void ShowBarBtnPointerIn(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        ShowBar();
     }
 }

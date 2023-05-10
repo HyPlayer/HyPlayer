@@ -217,7 +217,7 @@
                             x:Name="RectangleImageBack"
                             Grid.ColumnSpan="2"
                             Height="62"
-                            Margin="1,-5,2,-5"
+                            Margin="2,-5,2,-5"
                             x:Phase="4"
                             CornerRadius="12"
                             EnableLazyLoading="True"

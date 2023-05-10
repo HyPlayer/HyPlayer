@@ -911,9 +911,9 @@ namespace HyPlayer
             }
         }
 
-        public bool AutoHidePlaybar
+        public int AutoHidePlaybar
         {
-            get => GetSettings(nameof(AutoHidePlaybar), false);
+            get => GetSettings(nameof(AutoHidePlaybar), 0);
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(AutoHidePlaybar)] = value;

@@ -379,7 +379,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     {
         ControlHover = new BackdropBlurBrush { Amount = 10.0 };
         //PlayProgress.Visibility = Visibility.Visible;
-        PointerInAni.Begin();
+            PointerInAni.Begin();
 
     }
 
@@ -388,7 +388,9 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         if (!Common.Setting.CompactPlayerPageBlurStatus)
             ControlHover = TransparentBrush;
         //PlayProgress.Visibility = Visibility.Collapsed;
-        PointerOutAni.Begin();
+        if (e.Pointer.PointerDeviceType == Windows.Devices.Input.PointerDeviceType.Touch) { }
+        else
+            PointerOutAni.Begin();
 
     }
 
@@ -435,5 +437,15 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     {
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
+    }
+
+    private void CompactPlayer_OnFocus(object sender, RoutedEventArgs e)
+    {
+        PointerInAni.Begin();
+    }
+
+    private void CompactPlayer_LostFocus(object sender, RoutedEventArgs e)
+    {
+        PointerOutAni.Begin();
     }
 }

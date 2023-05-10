@@ -16,7 +16,7 @@
     PointerEntered="CompactPlayerPage_OnPointerEntered"
     PointerExited="CompactPlayerPage_OnPointerExited"
     RightTapped="OnRightTapped"
-    mc:Ignorable="d">
+    mc:Ignorable="d" GotFocus="CompactPlayer_OnFocus" LostFocus="CompactPlayer_LostFocus" >
     <Page.Resources>
         <Storyboard x:Name="EnterAnimation">
             <DoubleAnimation
@@ -136,7 +136,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="LikeButton"
                 Storyboard.TargetProperty="(UIElement.RenderTransform).(CompositeTransform.TranslateY)"
-                From="10"
                 To="0"
                 Duration="00:00:00.40">
                 <DoubleAnimation.EasingFunction>
@@ -146,7 +145,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="LikeButton"
                 Storyboard.TargetProperty="Opacity"
-                From="0"
                 To="1"
                 Duration="00:00:00.40">
                 <DoubleAnimation.EasingFunction>
@@ -156,7 +154,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="ExitButton"
                 Storyboard.TargetProperty="(UIElement.RenderTransform).(CompositeTransform.TranslateY)"
-                From="10"
                 To="0"
                 Duration="00:00:00.40">
                 <DoubleAnimation.EasingFunction>
@@ -166,7 +163,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="ExitButton"
                 Storyboard.TargetProperty="Opacity"
-                From="0"
                 To="1"
                 Duration="00:00:00.40">
                 <DoubleAnimation.EasingFunction>
@@ -176,7 +172,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="preScale"
                 Storyboard.TargetProperty="ScaleX"
-                From="1"
                 To="1.2"
                 Duration="00:00:01.05">
                 <DoubleAnimation.EasingFunction>
@@ -186,7 +181,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="preScale"
                 Storyboard.TargetProperty="ScaleY"
-                From="1"
                 To="1.2"
                 Duration="00:00:01.05">
                 <DoubleAnimation.EasingFunction>
@@ -196,7 +190,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="stateScale"
                 Storyboard.TargetProperty="ScaleX"
-                From="1"
                 To="1.2"
                 Duration="00:00:01.05">
                 <DoubleAnimation.EasingFunction>
@@ -206,7 +199,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="stateScale"
                 Storyboard.TargetProperty="ScaleY"
-                From="1"
                 To="1.2"
                 Duration="00:00:01.05">
                 <DoubleAnimation.EasingFunction>
@@ -216,7 +208,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="nextScale"
                 Storyboard.TargetProperty="ScaleX"
-                From="1"
                 To="1.2"
                 Duration="00:00:01.05">
                 <DoubleAnimation.EasingFunction>
@@ -226,7 +217,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="nextScale"
                 Storyboard.TargetProperty="ScaleY"
-                From="1"
                 To="1.2"
                 Duration="00:00:01.05">
                 <DoubleAnimation.EasingFunction>
@@ -236,7 +226,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="preBtn"
                 Storyboard.TargetProperty="Opacity"
-                From="0.6"
                 To="1"
                 Duration="00:00:01.05">
                 <DoubleAnimation.EasingFunction>
@@ -246,7 +235,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="BtnPlayStateChange"
                 Storyboard.TargetProperty="Opacity"
-                From="0.6"
                 To="1"
                 Duration="00:00:01.05">
                 <DoubleAnimation.EasingFunction>
@@ -256,7 +244,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="nextBtn"
                 Storyboard.TargetProperty="Opacity"
-                From="0.6"
                 To="1"
                 Duration="00:00:01.05">
                 <DoubleAnimation.EasingFunction>
@@ -266,7 +253,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="PlayProgress"
                 Storyboard.TargetProperty="Opacity"
-                From="0"
                 To="1"
                 Duration="00:00:01.05">
                 <DoubleAnimation.EasingFunction>
@@ -278,7 +264,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="LikeButton"
                 Storyboard.TargetProperty="(UIElement.RenderTransform).(CompositeTransform.TranslateY)"
-                From="0"
                 To="10"
                 Duration="00:00:00.40">
                 <DoubleAnimation.EasingFunction>
@@ -288,7 +273,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="LikeButton"
                 Storyboard.TargetProperty="Opacity"
-                From="1"
                 To="0"
                 Duration="00:00:00.40">
                 <DoubleAnimation.EasingFunction>
@@ -298,7 +282,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="ExitButton"
                 Storyboard.TargetProperty="(UIElement.RenderTransform).(CompositeTransform.TranslateY)"
-                From="0"
                 To="10"
                 Duration="00:00:00.40">
                 <DoubleAnimation.EasingFunction>
@@ -308,7 +291,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="ExitButton"
                 Storyboard.TargetProperty="Opacity"
-                From="1"
                 To="0"
                 Duration="00:00:00.40">
                 <DoubleAnimation.EasingFunction>
@@ -318,7 +300,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="preScale"
                 Storyboard.TargetProperty="ScaleX"
-                From="1.2"
                 To="1"
                 Duration="00:00:01.05">
                 <DoubleAnimation.EasingFunction>
@@ -328,7 +309,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="preScale"
                 Storyboard.TargetProperty="ScaleY"
-                From="1.2"
                 To="1"
                 Duration="00:00:01.05">
                 <DoubleAnimation.EasingFunction>
@@ -338,7 +318,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="stateScale"
                 Storyboard.TargetProperty="ScaleX"
-                From="1.2"
                 To="1"
                 Duration="00:00:01.05">
                 <DoubleAnimation.EasingFunction>
@@ -348,7 +327,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="stateScale"
                 Storyboard.TargetProperty="ScaleY"
-                From="1.2"
                 To="1"
                 Duration="00:00:01.05">
                 <DoubleAnimation.EasingFunction>
@@ -358,7 +336,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="nextScale"
                 Storyboard.TargetProperty="ScaleX"
-                From="1.2"
                 To="1"
                 Duration="00:00:01.05">
                 <DoubleAnimation.EasingFunction>
@@ -368,7 +345,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="nextScale"
                 Storyboard.TargetProperty="ScaleY"
-                From="1.2"
                 To="1"
                 Duration="00:00:01.05">
                 <DoubleAnimation.EasingFunction>
@@ -378,7 +354,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="preBtn"
                 Storyboard.TargetProperty="Opacity"
-                From="1"
                 To="0.6"
                 Duration="00:00:01.05">
                 <DoubleAnimation.EasingFunction>
@@ -388,7 +363,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="BtnPlayStateChange"
                 Storyboard.TargetProperty="Opacity"
-                From="1"
                 To="0.6"
                 Duration="00:00:01.05">
                 <DoubleAnimation.EasingFunction>
@@ -398,7 +372,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="nextBtn"
                 Storyboard.TargetProperty="Opacity"
-                From="1"
                 To="0.6"
                 Duration="00:00:01.05">
                 <DoubleAnimation.EasingFunction>
@@ -408,7 +381,6 @@
             <DoubleAnimation
                 Storyboard.TargetName="PlayProgress"
                 Storyboard.TargetProperty="Opacity"
-                From="1"
                 To="0"
                 Duration="00:00:01.05">
                 <DoubleAnimation.EasingFunction>

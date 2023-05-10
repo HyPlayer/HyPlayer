@@ -6,8 +6,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hyPlayerPage="using:HyPlayer.Pages"
     xmlns:hyplayer="using:HyPlayer"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d" PointerEntered="PointerIn" PointerExited="PointerOut">
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    mc:Ignorable="d" PointerEntered="PointerIn" PointerExited="PointerOut" GotFocus="FocusOn" LostFocus="FocusOut">
     <Page.Resources>
         <Storyboard x:FieldModifier="public" x:Name="ImageResetPositionAni" x:Key="ImageResetPositionAni">
             <DoubleAnimation
@@ -42,8 +42,9 @@
                     <CircleEase EasingMode="EaseOut"/>
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
+
         </Storyboard>
-        <Storyboard x:Name="PointerOutAni">
+        <!--<Storyboard x:Name="PointerOutAni2">
             <DoubleAnimation
                 BeginTime="00:00:03"
                 Duration="00:00:00.55"
@@ -66,7 +67,29 @@
                     <CircleEase EasingMode="EaseOut"/>
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
-        </Storyboard>
+            <DoubleAnimation
+                BeginTime="00:00:03"
+                Duration="00:00:00.55"
+                From="1"
+                To="0"
+                Storyboard.TargetName="HidePlayBar"
+                Storyboard.TargetProperty="Opacity">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                BeginTime="00:00:03"
+                Duration="00:00:00.55"
+                From="0"
+                To="20"
+                Storyboard.TargetName="HideBtnTrans"
+                Storyboard.TargetProperty="Y">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+        </Storyboard>-->
     </Page.Resources>
     <Grid>
         <VisualStateManager.VisualStateGroups>
@@ -107,6 +130,7 @@
                 <TranslateTransform x:FieldModifier="public" x:Name="ExpandedPlayerPositionOffset" />
             </Frame.RenderTransform>
         </Frame>
+
         <Grid
             Name="GridPlayBar"
             Height="110"
