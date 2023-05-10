@@ -16,7 +16,7 @@
     PointerEntered="CompactPlayerPage_OnPointerEntered"
     PointerExited="CompactPlayerPage_OnPointerExited"
     RightTapped="OnRightTapped"
-    mc:Ignorable="d" GotFocus="CompactPlayer_OnFocus" LostFocus="CompactPlayer_LostFocus" >
+    mc:Ignorable="d">
     <Page.Resources>
         <Storyboard x:Name="EnterAnimation">
             <DoubleAnimation

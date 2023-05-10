@@ -65,6 +65,7 @@ sealed partial class App : Application
         _ = InitializeThings();
     }
 
+
     private void MemoryManagerOnAppMemoryUsageLimitChanging(object sender, AppMemoryUsageLimitChangingEventArgs e)
     {
         if (!Common.Setting.forceMemoryGarbage) return;
@@ -108,7 +109,7 @@ sealed partial class App : Application
         if (Common.IsInBackground)
         {
             Common.IsInBackground = false;
-            Common.OnEnterForegroundFromBackground.Invoke();
+            Common.OnEnterForegroundFromBackground?.Invoke();
         }
 
         Common.IsInBackground = false;

@@ -202,8 +202,6 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                 //file.Save();
 
                 Picture pic;
-                if (/*!DownloadManager.AlbumPicturesCache.ContainsKey(ncsong.Album.id)*/ true)
-                {
                     using HttpClient httpClient = new HttpClient();
                     var responseMessage = await httpClient.GetAsync(new Uri(ncsong.Album.cover + "?param=" +
                                                                             StaticSource.PICSIZE_DOWNLOAD_ALBUMCOVER));
@@ -226,11 +224,6 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                     await encoder.FlushAsync();
                     pic = new Picture(ByteVector.FromStream(outputStream.AsStreamForRead()));
                     DownloadManager.AlbumPicturesCache[ncsong.Album.id] = pic;
-                }
-                else
-                {
-                    pic = DownloadManager.AlbumPicturesCache[ncsong.Album.id];
-                }
 
                 file.Tag.Pictures = new IPicture[]
                 {

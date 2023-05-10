@@ -25,8 +25,10 @@ public static class UpdateManager
     {
         public UpdateSource UpdateSource { get; set; }
         public bool IsMandatory { get; set; }
+#nullable enable
         public Version? Version { get; set; }
         public string? UpdateLog { get; set; }
+#nullable restore
         public string DownloadLink { get; set; }
     }
 

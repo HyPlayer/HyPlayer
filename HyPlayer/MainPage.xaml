@@ -7,7 +7,7 @@
     xmlns:hyPlayerPage="using:HyPlayer.Pages"
     xmlns:hyplayer="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
-    mc:Ignorable="d" PointerEntered="PointerIn" PointerExited="PointerOut" GotFocus="FocusOn" LostFocus="FocusOut">
+    mc:Ignorable="d">
     <Page.Resources>
         <Storyboard x:FieldModifier="public" x:Name="ImageResetPositionAni" x:Key="ImageResetPositionAni">
             <DoubleAnimation

@@ -45,7 +45,9 @@ public sealed partial class PlayBar
     private bool _isSliding = false;
     public PlayMode NowPlayType = PlayMode.DefaultRoll;
     public ObservableCollection<HyPlayItem> PlayItems = new();
+#nullable enable
     private ManipulationStartedRoutedEventArgs? _slidingEventArgs = null;
+#nullable restore
     private bool realSelectSong;
 
     /*

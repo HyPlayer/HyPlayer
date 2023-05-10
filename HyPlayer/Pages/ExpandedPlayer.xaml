@@ -10,7 +10,7 @@
     xmlns:ui="using:Microsoft.Toolkit.Uwp.UI"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
     Loaded="Page_Loaded"
-    NavigationCacheMode="Disabled" PointerEntered="PointerIn" PointerExited="PointerOut" GotFocus="FocusOn" LostFocus="FocusOut">
+    NavigationCacheMode="Disabled">
     <Page.Resources>
         <!-- ReSharper disable once Xaml.RedundantResource -->
         <Storyboard x:Key="ImageAlbumAni">

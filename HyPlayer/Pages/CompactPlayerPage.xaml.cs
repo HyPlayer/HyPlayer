@@ -69,10 +69,12 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     private Dictionary<Run, Storyboard> BlockToAnimation = new();
 
     private SolidColorBrush IdleBrush => GetIdleBrush();
+#nullable enable
     private SolidColorBrush? _pureIdleBrushCache;
     private SolidColorBrush? _pureAccentBrushCache;
     private Color? _karaokIdleColorCache;
     private Color? _karaokAccentColorCache;
+#nullable restore
     private bool disposedValue;
 
     private Color GetKaraokAccentBrush()
@@ -121,12 +123,27 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         HyPlayList.OnLyricChange += OnLyricChanged;
         HyPlayList.OnSongLikeStatusChange += HyPlayList_OnSongLikeStatusChange;
         LeaveAnimation.Completed += LeaveAnimation_Completed;
+        Common.OnCurrentWindowActivated += OnWindowActivated;
         //CompactPlayerAni.Begin();
     }
     private void LeaveAnimation_Completed(object sender, object e)
     {
         ChangeLyric();
         EnterAnimation.Begin();
+    }
+    private void OnWindowActivated(bool isActivated)
+    {
+        if (isActivated)
+        {
+            PointerOutAni.SkipToFill();
+            PointerInAni.Begin();
+        }
+        else
+        {
+            PointerInAni.SkipToFill();
+            PointerOutAni.Begin();
+        }
+
     }
 
     private void HyPlayList_OnSongLikeStatusChange(bool isLiked)
@@ -424,6 +441,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
             HyPlayList.OnPause -= () => _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB5");
             HyPlayList.OnLyricChange -= OnLyricChanged;
             HyPlayList.OnSongLikeStatusChange -= HyPlayList_OnSongLikeStatusChange;
+            Common.OnCurrentWindowActivated -= OnWindowActivated;
             disposedValue = true;
         }
     }
@@ -437,15 +455,5 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     {
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
-    }
-
-    private void CompactPlayer_OnFocus(object sender, RoutedEventArgs e)
-    {
-        PointerInAni.Begin();
-    }
-
-    private void CompactPlayer_LostFocus(object sender, RoutedEventArgs e)
-    {
-        PointerOutAni.Begin();
     }
 }

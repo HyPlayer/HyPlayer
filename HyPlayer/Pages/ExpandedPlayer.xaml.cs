@@ -104,6 +104,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         Window.Current.SizeChanged += Current_SizeChanged;
         HyPlayList.OnTimerTicked += HyPlayList_OnTimerTicked;
         Common.OnEnterForegroundFromBackground += () => OnSongChange(HyPlayList.NowPlayingItem);
+        Common.OnCurrentWindowActivated += OnWindowActivated;
     }
 
     public double showsize { get; set; }
@@ -1109,6 +1110,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             HyPlayList.OnLyricLoaded -= HyPlayList_OnLyricLoaded;
             HyPlayList.OnTimerTicked -= HyPlayList_OnTimerTicked;
             Common.OnEnterForegroundFromBackground -= () => OnSongChange(HyPlayList.NowPlayingItem);
+            Common.OnCurrentWindowActivated -= OnWindowActivated;
             if (Window.Current != null)
                 Window.Current.SizeChanged -= Current_SizeChanged;
             if (Common.Setting.albumRotate)
@@ -1173,35 +1175,22 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         });
 
     }
-    public void PointerIn(object sender, PointerRoutedEventArgs e)
+    private void OnWindowActivated(bool isActivated)
     {
-        if (Common.Setting.AutoHidePlaybar==2)
+        if (Common.Setting.AutoHidePlaybar == true)
         {
-            Show();
+            if (Common.isExpanded != true)
+            {
+                if (isActivated)
+                {
+                    Show();
+                }
+                else
+                {
+                    Collapse();
+                }
+            }
         }
-    }
-    public void PointerOut(object sender, PointerRoutedEventArgs e)
-    {
-        if (Common.Setting.AutoHidePlaybar == 2)
-        {
-            Collapse();
-        }
-    }
-
-    private void FocusOn(object sender, RoutedEventArgs e)
-    {
-        //if (Common.Setting.AutoHidePlaybar == 1)
-        //{
-        //    Show();
-        //}
-    }
-
-    private void FocusOut(object sender, RoutedEventArgs e)
-    {
-        //if (Common.Setting.AutoHidePlaybar == 1)
-        //{
-        //    Collapse();
-        //}
     }
 }
 

@@ -42,22 +42,25 @@ namespace HyPlayer
     internal static class Common
     {
         public delegate void EnterForegroundFromBackgroundEvent();
+        public delegate void CurrentWindowActivatedEvent(bool isActivated);
 
         public static CloudMusicApi ncapi = new();
         public static bool Logined = false;
         public static bool IsInFm = false;
-        public static NCUser? LoginedUser;
         public static bool IsInBackground = false;
+#nullable enable
+        public static NCUser? LoginedUser;
         public static ExpandedPlayer? PageExpandedPlayer;
-        public static MainPage PageMain;
-        public static PlayBar BarPlayBar;
-        public static Frame BaseFrame;
-        public static BasePage PageBase;
+        public static MainPage? PageMain;
+        public static PlayBar? BarPlayBar;
+        public static Frame? BaseFrame;
+        public static BasePage? PageBase;
+        public static KawazuConverter? KawazuConv;
+#nullable restore
         public static Setting Setting = new();
         public static bool ShowLyricSound = true;
         public static bool ShowLyricTrans = true;
         public static List<string> LikedSongs = new();
-        public static KawazuConverter? KawazuConv;
         public static List<NCPlayList> MySongLists = new();
         public static readonly Stack<NavigationHistoryItem> NavigationHistory = new();
 
@@ -72,11 +75,14 @@ namespace HyPlayer
         }
 
         private static bool _isExpanded = false;
-        public static TeachingTip GlobalTip;
+#nullable enable
+        public static TeachingTip? GlobalTip;
+        private static object? previousNavigationItem;
+        public static EnterForegroundFromBackgroundEvent? OnEnterForegroundFromBackground;
+        public static CurrentWindowActivatedEvent? OnCurrentWindowActivated;
         public static readonly Queue<KeyValuePair<string, string?>> TeachingTipList = new();
-        private static object previousNavigationItem;
+#nullable restore
         public static List<string> ErrorMessageList = new();
-        public static EnterForegroundFromBackgroundEvent OnEnterForegroundFromBackground;
         public static ObservableCollection<string> Logs = new();
         public static bool NavigatingBack;
         private static int _teachingTipSecondCounter = 3;
@@ -118,16 +124,20 @@ namespace HyPlayer
             return null;
         }
 
-
+#nullable enable
         public static void AddToTeachingTipLists(string title, string subtitle = "")
         {
             TeachingTipList.Enqueue(new KeyValuePair<string, string?>(title, subtitle));
             _ = Invoke(() =>
             {
-                if (!GlobalTip.IsOpen)
-                    RollTeachingTip(false);
+                if (GlobalTip != null)
+                {
+                    if (!GlobalTip.IsOpen)
+                        RollTeachingTip(false);
+                }
             });
         }
+#nullable restore
 
         public static void RollTeachingTip(bool passiveRoll = true)
         {
@@ -635,7 +645,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-
+#nullable enable
         public Color? pureLyricIdleColor
         {
             get
@@ -670,6 +680,7 @@ namespace HyPlayer
             }
         }
 
+
         public Color? karaokLyricIdleColor
         {
             get
@@ -703,6 +714,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+#nullable restore
 
 
         public bool jumpVipSongPlaying
@@ -911,9 +923,9 @@ namespace HyPlayer
             }
         }
 
-        public int AutoHidePlaybar
+        public bool AutoHidePlaybar
         {
-            get => GetSettings(nameof(AutoHidePlaybar), 0);
+            get => GetSettings(nameof(AutoHidePlaybar), false);
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(AutoHidePlaybar)] = value;
@@ -1379,9 +1391,9 @@ namespace HyPlayer
         }
 
         public bool LastFMLogined => LastFMManager.LastfmLogined;
-
+#nullable enable
         public event PropertyChangedEventHandler? PropertyChanged;
-
+#nullable restore
         public async void OnPropertyChanged([CallerMemberName] string propertyName = "")
         {
             await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
@@ -1651,9 +1663,9 @@ namespace HyPlayer
         {
             return Convert.ToBase64String(value);
         }
-
+#nullable enable
         private static MD5? _md5;
-
+#nullable restore
         public static byte[] ComputeMd5(this byte[] value)
         {
             _md5 ??= MD5.Create();

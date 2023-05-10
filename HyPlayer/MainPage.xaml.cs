@@ -45,6 +45,13 @@ public sealed partial class MainPage
         InitializeComponent();
         _ = HyPlayList.OnAudioRenderDeviceChangedOrInitialized();
         ActualThemeChanged += MainPage_ActualThemeChanged;
+        Window.Current.Activated += CurrentWindow_Activated;
+        Common.OnCurrentWindowActivated += OnWindowActivated;
+    }
+
+    private void CurrentWindow_Activated(object sender, Windows.UI.Core.WindowActivatedEventArgs e)
+    {
+        Common.OnCurrentWindowActivated?.Invoke(e.WindowActivationState != Windows.UI.Core.CoreWindowActivationState.Deactivated);
     }
 
     private void MainPage_ActualThemeChanged(FrameworkElement sender, object args)
@@ -75,6 +82,23 @@ public sealed partial class MainPage
             case "local":
                 Common.NavigatePage(typeof(LocalMusicPage));
                 break;
+        }
+    }
+    private void OnWindowActivated(bool isActivated)
+    {
+        if (Common.Setting.AutoHidePlaybar == true)
+        {
+            if (Common.isExpanded != true)
+            {
+                if (isActivated)
+                {
+                    ShowBar();
+                }
+                else
+                {
+                    CollapseBar(3);
+                }
+            }
         }
     }
 
@@ -169,53 +193,5 @@ public sealed partial class MainPage
         storyboard.Begin();
 
 
-    }
-
-    private void PointerIn(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
-    {
-        if (Common.Setting.AutoHidePlaybar==2)
-        {
-            ShowBar();
-        }
-    }
-
-    public void PointerOut(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
-    {
-        if (Common.Setting.AutoHidePlaybar==2)
-        {
-            CollapseBar(3.1);
-        }
-    }
-
-    public void FocusOn(object sender, RoutedEventArgs e)
-    {
-        if (Common.Setting.AutoHidePlaybar == 1)
-        {
-            if (Common.isExpanded != true)
-            {
-                ShowBar();
-            }
-        }
-    }
-
-    private void FocusOut(object sender, RoutedEventArgs e)
-    {
-        if (Common.Setting.AutoHidePlaybar == 1)
-        {
-            if (Common.isExpanded != true)
-            {
-                CollapseBar(0);
-            }
-        }
-    }
-
-    private void IsTapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
-    {
-        CollapseBar(0);
-    }
-
-    private void ShowBarBtnPointerIn(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
-    {
-        ShowBar();
     }
 }
