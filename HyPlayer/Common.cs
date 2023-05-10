@@ -42,7 +42,7 @@ namespace HyPlayer
     internal static class Common
     {
         public delegate void EnterForegroundFromBackgroundEvent();
-        public delegate void CurrentWindowActivatedEvent(bool isActivated);
+        public delegate void PlaybarVisibilityChangedEvent(bool isActivated);
 
         public static CloudMusicApi ncapi = new();
         public static bool Logined = false;
@@ -79,13 +79,16 @@ namespace HyPlayer
         public static TeachingTip? GlobalTip;
         private static object? previousNavigationItem;
         public static EnterForegroundFromBackgroundEvent? OnEnterForegroundFromBackground;
-        public static CurrentWindowActivatedEvent? OnCurrentWindowActivated;
+        public static PlaybarVisibilityChangedEvent? OnPlaybarVisibilityChanged;
         public static readonly Queue<KeyValuePair<string, string?>> TeachingTipList = new();
 #nullable restore
         public static List<string> ErrorMessageList = new();
         public static ObservableCollection<string> Logs = new();
         public static bool NavigatingBack;
         private static int _teachingTipSecondCounter = 3;
+        public static int PlaybarSecondCounter = 0;
+        public static int PlaybarSecondSetting = Setting.AutoHidePlaybarTime;
+        public static bool PlaybarIsVisible = true;
 
         public static IAsyncAction Invoke(Action action,
             CoreDispatcherPriority Priority = CoreDispatcherPriority.Normal)
@@ -165,6 +168,27 @@ namespace HyPlayer
                     GlobalTip.IsOpen = true;
                 }
             });
+        }
+
+        public static void ChangePlaybarVisibillity()
+        {
+            if (!Setting.AutoHidePlaybar) return;
+            if (++PlaybarSecondCounter >= PlaybarSecondSetting)
+            {
+                if (PlaybarIsVisible)
+                {
+                    OnPlaybarVisibilityChanged?.Invoke(false);
+                    PlaybarIsVisible = false;
+                }
+            }
+            else
+            {
+                if (!PlaybarIsVisible)
+                {
+                    OnPlaybarVisibilityChanged?.Invoke(true);
+                    PlaybarIsVisible = true;
+                }
+            }
         }
 
         public static void NavigatePage(Type SourcePageType, object paratmer = null, object ignore = null)
@@ -929,6 +953,19 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(AutoHidePlaybar)] = value;
+                OnPropertyChanged();
+            }
+        }
+        public int AutoHidePlaybarTime
+        {
+            get => GetSettings(nameof(AutoHidePlaybarTime), 3);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(AutoHidePlaybarTime)] = value;
+                Common.PlaybarSecondSetting = value;
+                Common.PlaybarSecondCounter = 0;
+                Common.OnPlaybarVisibilityChanged?.Invoke(true);
+                Common.PlaybarIsVisible = true;
                 OnPropertyChanged();
             }
         }

@@ -104,7 +104,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         Window.Current.SizeChanged += Current_SizeChanged;
         HyPlayList.OnTimerTicked += HyPlayList_OnTimerTicked;
         Common.OnEnterForegroundFromBackground += () => OnSongChange(HyPlayList.NowPlayingItem);
-        Common.OnCurrentWindowActivated += OnWindowActivated;
+        Common.OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;
     }
 
     public double showsize { get; set; }
@@ -1110,7 +1110,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             HyPlayList.OnLyricLoaded -= HyPlayList_OnLyricLoaded;
             HyPlayList.OnTimerTicked -= HyPlayList_OnTimerTicked;
             Common.OnEnterForegroundFromBackground -= () => OnSongChange(HyPlayList.NowPlayingItem);
-            Common.OnCurrentWindowActivated -= OnWindowActivated;
+            Common.OnPlaybarVisibilityChanged -= OnPlaybarVisibilityChanged;
             if (Window.Current != null)
                 Window.Current.SizeChanged -= Current_SizeChanged;
             if (Common.Setting.albumRotate)
@@ -1175,22 +1175,17 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         });
 
     }
-    private void OnWindowActivated(bool isActivated)
+    private void OnPlaybarVisibilityChanged(bool isActivated)
     {
-        if (Common.Setting.AutoHidePlaybar == true)
+        if (isActivated)
         {
-            if (Common.isExpanded != true)
-            {
-                if (isActivated)
-                {
-                    Show();
-                }
-                else
-                {
-                    Collapse();
-                }
-            }
+            Show();
         }
+        else
+        {
+            Collapse();
+        }
+
     }
 }
 

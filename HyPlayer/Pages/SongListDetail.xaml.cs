@@ -378,7 +378,7 @@ public sealed partial class SongListDetail : Page, IDisposable
                 SongsList.Dispose();
                 playList = null;
                 ImageRect.ImageSource = null;
-                
+
                 _cancellationTokenSource.Dispose();
             }
             _dataTransferManager.DataRequested -= DataTransferManagerOnDataRequested;

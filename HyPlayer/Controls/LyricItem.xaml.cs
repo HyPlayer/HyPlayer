@@ -147,14 +147,14 @@ public sealed partial class LyricItem : UserControl, IDisposable
             {
                 //playedBlock.Foreground = IdleBrush;
                 playedBlock.Foreground = new SolidColorBrush(GetKaraokAccentBrush());
-                playedBlock.FontSize = actualsize+Common.Setting.lyricScaleSize;
+                playedBlock.FontSize = actualsize + Common.Setting.lyricScaleSize;
             }
 
             var playingBlock = playedBlocks.Last();
-            var storyboard =StoryboardDictionary[playingBlock];
+            var storyboard = StoryboardDictionary[playingBlock];
             if (storyboard.GetCurrentTime().Ticks == 0)
                 storyboard.Begin();
-    });
+        });
 
     }
 
@@ -170,7 +170,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
             {
                 w.Foreground = new SolidColorBrush(GetKaraokIdleBrush());
             });
-            Run ani=new Run();
+            Run ani = new Run();
             foreach (var item in WordTextBlocks)
             {
                 var colorani = new ColorAnimation
@@ -201,11 +201,11 @@ public sealed partial class LyricItem : UserControl, IDisposable
         }
 
         double durationInSeconds = 0.3;
-        var transstoryboard = new Storyboard();       
+        var transstoryboard = new Storyboard();
         var transscaleani = new DoubleAnimation
         {
             From = actualsize,
-            To = actualsize + Common.Setting.lyricScaleSize-3,
+            To = actualsize + Common.Setting.lyricScaleSize - 3,
             Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
             EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
             EnableDependentAnimation = true
@@ -253,7 +253,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
         WordLyricContainer.FontWeight = FontWeights.Bold;
         TextBoxTranslation.FontWeight = FontWeights.Bold;
         TextBoxPureLyric.Margin = new Thickness(0, 20, 0, 2);
-        TextBoxTranslation.Margin = new Thickness(0, 3,0, 20);
+        TextBoxTranslation.Margin = new Thickness(0, 3, 0, 20);
         TextBoxPureLyric.CharacterSpacing = 30;
         TextBoxTranslation.CharacterSpacing = 30;
         //TextBoxPureLyric.Foreground = AccentBrush;
@@ -287,7 +287,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
                 var wordstoryboard = new Storyboard();
                 var wordscaleani = new DoubleAnimation
                 {
-                    To = actualsize-5,
+                    To = actualsize - 5,
                     From = actualsize + Common.Setting.lyricScaleSize,
                     Duration = new Duration(TimeSpan.FromSeconds(0.8)),
                     EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
@@ -340,7 +340,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
         var transstoryboard = new Storyboard();
         var transscaleani = new DoubleAnimation
         {
-            To = actualsize-5,
+            To = actualsize - 5,
             From = actualsize + Common.Setting.lyricScaleSize,
             Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
             EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
@@ -363,9 +363,9 @@ public sealed partial class LyricItem : UserControl, IDisposable
         transstoryboard.Begin();
         //TextBoxPureLyric.FontSize = actualsize;
         //WordLyricContainer.FontSize = actualsize;
-        TextBoxPureLyric.Margin = new Thickness(0,-5,0,0);
-        WordLyricContainer.Margin = new Thickness(0,-5,0,0);
-        TextBoxTranslation.Margin = new Thickness(0,0,0,-5);
+        TextBoxPureLyric.Margin = new Thickness(0, -5, 0, 0);
+        WordLyricContainer.Margin = new Thickness(0, -5, 0, 0);
+        TextBoxTranslation.Margin = new Thickness(0, 0, 0, -5);
         TextBoxPureLyric.CharacterSpacing = 0;
         WordLyricContainer.CharacterSpacing = 0;
         TextBoxTranslation.CharacterSpacing = 0;
@@ -440,7 +440,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
     ~LyricItem()
     {
-       Dispose(disposing: false);
+        Dispose(disposing: false);
     }
 
     public void Dispose()

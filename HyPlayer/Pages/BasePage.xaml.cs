@@ -91,6 +91,7 @@ public sealed partial class BasePage : Page
         Common.PageBase = this;
         Common.GlobalTip = TheTeachingTip;
         HyPlayList.OnTimerTicked += () => Common.RollTeachingTip();
+        HyPlayList.OnTimerTicked += Common.ChangePlaybarVisibillity;
         if (HyPlayList.Player == null)
             HyPlayList.InitializeHyPlaylist();
         HyPlayList.OnPlayItemChange += OnChangePlayItem;

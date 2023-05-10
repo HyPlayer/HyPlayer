@@ -202,28 +202,28 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                 //file.Save();
 
                 Picture pic;
-                    using HttpClient httpClient = new HttpClient();
-                    var responseMessage = await httpClient.GetAsync(new Uri(ncsong.Album.cover + "?param=" +
-                                                                            StaticSource.PICSIZE_DOWNLOAD_ALBUMCOVER));
-                    using IRandomAccessStream outputStream = new InMemoryRandomAccessStream();
-                    using IRandomAccessStream inputStream = new InMemoryRandomAccessStream();
-                    await responseMessage.Content.WriteToStreamAsync(inputStream);
-                    SoftwareBitmap softwareBitmap;
-                    const uint FILE_HEADER_CAPACITY = 10;
-                    var buffer = new Windows.Storage.Streams.Buffer(FILE_HEADER_CAPACITY);
-                    inputStream.Seek(0);
-                    await inputStream.ReadAsync(buffer, FILE_HEADER_CAPACITY, InputStreamOptions.None);
+                using HttpClient httpClient = new HttpClient();
+                var responseMessage = await httpClient.GetAsync(new Uri(ncsong.Album.cover + "?param=" +
+                                                                        StaticSource.PICSIZE_DOWNLOAD_ALBUMCOVER));
+                using IRandomAccessStream outputStream = new InMemoryRandomAccessStream();
+                using IRandomAccessStream inputStream = new InMemoryRandomAccessStream();
+                await responseMessage.Content.WriteToStreamAsync(inputStream);
+                SoftwareBitmap softwareBitmap;
+                const uint FILE_HEADER_CAPACITY = 10;
+                var buffer = new Windows.Storage.Streams.Buffer(FILE_HEADER_CAPACITY);
+                inputStream.Seek(0);
+                await inputStream.ReadAsync(buffer, FILE_HEADER_CAPACITY, InputStreamOptions.None);
 
-                    string pictureMime = DownloadManager.GetMIMEFromFileHeader(buffer);
-                    inputStream.Seek(0);
-                    BitmapDecoder decoder = await BitmapDecoder.CreateAsync(CodecIds[pictureMime], inputStream);
-                    softwareBitmap = await decoder.GetSoftwareBitmapAsync();
-                    BitmapEncoder encoder =
-                        await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
-                    encoder.SetSoftwareBitmap(softwareBitmap);
-                    await encoder.FlushAsync();
-                    pic = new Picture(ByteVector.FromStream(outputStream.AsStreamForRead()));
-                    DownloadManager.AlbumPicturesCache[ncsong.Album.id] = pic;
+                string pictureMime = DownloadManager.GetMIMEFromFileHeader(buffer);
+                inputStream.Seek(0);
+                BitmapDecoder decoder = await BitmapDecoder.CreateAsync(CodecIds[pictureMime], inputStream);
+                softwareBitmap = await decoder.GetSoftwareBitmapAsync();
+                BitmapEncoder encoder =
+                    await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
+                encoder.SetSoftwareBitmap(softwareBitmap);
+                await encoder.FlushAsync();
+                pic = new Picture(ByteVector.FromStream(outputStream.AsStreamForRead()));
+                DownloadManager.AlbumPicturesCache[ncsong.Album.id] = pic;
 
                 file.Tag.Pictures = new IPicture[]
                 {

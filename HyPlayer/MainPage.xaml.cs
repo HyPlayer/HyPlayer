@@ -6,7 +6,6 @@ using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
 using System;
 using System.Net;
-using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
@@ -25,8 +24,8 @@ namespace HyPlayer;
 /// </summary>
 public sealed partial class MainPage
 {
-    bool IsPlaybarOnShow=true;
-    public bool IsExpandedPlayerInitialized=false;
+    bool IsPlaybarOnShow = true;
+    public bool IsExpandedPlayerInitialized = false;
     public MainPage()
     {
         Common.PageMain = this;
@@ -45,14 +44,14 @@ public sealed partial class MainPage
         InitializeComponent();
         _ = HyPlayList.OnAudioRenderDeviceChangedOrInitialized();
         ActualThemeChanged += MainPage_ActualThemeChanged;
-        Window.Current.Activated += CurrentWindow_Activated;
-        Common.OnCurrentWindowActivated += OnWindowActivated;
+        Common.OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;
     }
 
-    private void CurrentWindow_Activated(object sender, Windows.UI.Core.WindowActivatedEventArgs e)
+    private void MainPage_PointerMoved(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
     {
-        Common.OnCurrentWindowActivated?.Invoke(e.WindowActivationState != Windows.UI.Core.CoreWindowActivationState.Deactivated);
+        Common.PlaybarSecondCounter = 0;
     }
+
 
     private void MainPage_ActualThemeChanged(FrameworkElement sender, object args)
     {
@@ -84,20 +83,17 @@ public sealed partial class MainPage
                 break;
         }
     }
-    private void OnWindowActivated(bool isActivated)
+    private void OnPlaybarVisibilityChanged(bool isActivated)
     {
-        if (Common.Setting.AutoHidePlaybar == true)
+        if (Common.isExpanded != true)
         {
-            if (Common.isExpanded != true)
+            if (isActivated)
             {
-                if (isActivated)
-                {
-                    ShowBar();
-                }
-                else
-                {
-                    CollapseBar(3);
-                }
+                ShowBar();
+            }
+            else
+            {
+                CollapseBar(3);
             }
         }
     }

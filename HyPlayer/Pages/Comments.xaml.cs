@@ -392,7 +392,7 @@ public sealed partial class Comments : Page, IDisposable
     }
     ~Comments()
     {
-         Dispose(disposing: false);
+        Dispose(disposing: false);
     }
 
     public void Dispose()

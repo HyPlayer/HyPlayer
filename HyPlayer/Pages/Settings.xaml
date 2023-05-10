@@ -747,6 +747,17 @@
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.AutoHidePlaybar, Mode=TwoWay}" />
                                     </Grid>
+                                    <Grid Visibility="{x:Bind hyplayer:Common.Setting.AutoHidePlaybar, Mode=OneWay}">
+                                        <TextBlock VerticalAlignment="Center" Text="自动隐藏PlayBar时间" />
+                                        <Slider
+                                            x:Name="AutoHidePlayBarTime"
+                                            Width="256"
+                                            HorizontalAlignment="Right"
+                                            Maximum="10"
+                                            Minimum="1"
+                                            ToolTipService.ToolTip="{x:Bind AutoHidePlayBarTime.Value}"
+                                            Value="{x:Bind hyplayer:Common.Setting.AutoHidePlaybarTime, Mode=TwoWay}"/>
+                                    </Grid>
                                 </StackPanel>
                             </controls:Expander>
 

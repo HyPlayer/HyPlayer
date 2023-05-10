@@ -123,7 +123,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         HyPlayList.OnLyricChange += OnLyricChanged;
         HyPlayList.OnSongLikeStatusChange += HyPlayList_OnSongLikeStatusChange;
         LeaveAnimation.Completed += LeaveAnimation_Completed;
-        Common.OnCurrentWindowActivated += OnWindowActivated;
+        Common.OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;
         //CompactPlayerAni.Begin();
     }
     private void LeaveAnimation_Completed(object sender, object e)
@@ -131,7 +131,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         ChangeLyric();
         EnterAnimation.Begin();
     }
-    private void OnWindowActivated(bool isActivated)
+    private void OnPlaybarVisibilityChanged(bool isActivated)
     {
         if (isActivated)
         {
@@ -396,7 +396,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     {
         ControlHover = new BackdropBlurBrush { Amount = 10.0 };
         //PlayProgress.Visibility = Visibility.Visible;
-            PointerInAni.Begin();
+        PointerInAni.Begin();
 
     }
 
@@ -441,7 +441,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
             HyPlayList.OnPause -= () => _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB5");
             HyPlayList.OnLyricChange -= OnLyricChanged;
             HyPlayList.OnSongLikeStatusChange -= HyPlayList_OnSongLikeStatusChange;
-            Common.OnCurrentWindowActivated -= OnWindowActivated;
+            Common.OnPlaybarVisibilityChanged -= OnPlaybarVisibilityChanged;
             disposedValue = true;
         }
     }
