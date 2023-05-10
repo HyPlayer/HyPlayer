@@ -742,10 +742,11 @@
                                     </Grid>
                                     <Grid>
                                         <TextBlock VerticalAlignment="Center" Text="自动隐藏PlayBar" />
-                                        <ToggleSwitch
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.AutoHidePlaybar, Mode=TwoWay}" />
+                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.AutoHidePlaybar, Mode=TwoWay}">
+                                            <ComboBoxItem Content="不自动隐藏" />
+                                            <ComboBoxItem Content="失去焦点后隐藏(触摸屏用户请选择此项)" />
+                                            <ComboBoxItem Content="鼠标移出后自动隐藏" />
+                                        </ComboBox>
                                     </Grid>
                                 </StackPanel>
                             </controls:Expander>
