@@ -1177,6 +1177,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     }
     private void OnPlaybarVisibilityChanged(bool isActivated)
     {
+        if (!Common.Setting.AutoHidePlaybar) return;
         if (isActivated)
         {
             Show();

@@ -13,8 +13,6 @@
     d:DesignWidth="600"
     Background="{x:Bind Mode=OneWay, Path=AlbumCover}"
     IsRightTapEnabled="True"
-    PointerEntered="CompactPlayerPage_OnPointerEntered"
-    PointerExited="CompactPlayerPage_OnPointerExited"
     RightTapped="OnRightTapped"
     mc:Ignorable="d">
     <Page.Resources>

@@ -89,6 +89,7 @@ namespace HyPlayer
         public static int PlaybarSecondCounter = 0;
         public static int PlaybarSecondSetting = Setting.AutoHidePlaybarTime;
         public static bool PlaybarIsVisible = true;
+        public static bool PointerIsInMainPage = false;
 
         public static IAsyncAction Invoke(Action action,
             CoreDispatcherPriority Priority = CoreDispatcherPriority.Normal)
@@ -172,21 +173,17 @@ namespace HyPlayer
 
         public static void ChangePlaybarVisibillity()
         {
-            if (!Setting.AutoHidePlaybar) return;
+            if (PointerIsInMainPage) 
+            {
+                PlaybarSecondCounter = 0;
+                return;
+            }
             if (++PlaybarSecondCounter >= PlaybarSecondSetting)
             {
                 if (PlaybarIsVisible)
                 {
                     OnPlaybarVisibilityChanged?.Invoke(false);
                     PlaybarIsVisible = false;
-                }
-            }
-            else
-            {
-                if (!PlaybarIsVisible)
-                {
-                    OnPlaybarVisibilityChanged?.Invoke(true);
-                    PlaybarIsVisible = true;
                 }
             }
         }
@@ -964,8 +961,6 @@ namespace HyPlayer
                 ApplicationData.Current.LocalSettings.Values[nameof(AutoHidePlaybarTime)] = value;
                 Common.PlaybarSecondSetting = value;
                 Common.PlaybarSecondCounter = 0;
-                Common.OnPlaybarVisibilityChanged?.Invoke(true);
-                Common.PlaybarIsVisible = true;
                 OnPropertyChanged();
             }
         }

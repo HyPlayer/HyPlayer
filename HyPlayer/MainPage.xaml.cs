@@ -47,12 +47,6 @@ public sealed partial class MainPage
         Common.OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;
     }
 
-    private void MainPage_PointerMoved(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
-    {
-        Common.PlaybarSecondCounter = 0;
-    }
-
-
     private void MainPage_ActualThemeChanged(FrameworkElement sender, object args)
     {
         Common.Setting.OnPropertyChanged("acrylicBackgroundStatus");
@@ -85,16 +79,14 @@ public sealed partial class MainPage
     }
     private void OnPlaybarVisibilityChanged(bool isActivated)
     {
-        if (Common.isExpanded != true)
+        if (!Common.Setting.AutoHidePlaybar) return;
+        if (isActivated)
         {
-            if (isActivated)
-            {
-                ShowBar();
-            }
-            else
-            {
-                CollapseBar(3);
-            }
+            ShowBar();
+        }
+        else
+        {
+            CollapseBar(3);
         }
     }
 
@@ -189,5 +181,19 @@ public sealed partial class MainPage
         storyboard.Begin();
 
 
+    }
+    private void Page_PointerEntered(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        Common.PointerIsInMainPage = true;
+        Common.PlaybarSecondCounter = 0;
+        if (!Common.PlaybarIsVisible)
+        {
+            Common.OnPlaybarVisibilityChanged?.Invoke(true);
+            Common.PlaybarIsVisible = true;
+        }
+    }
+    private void Page_PointerExited(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+    {
+        Common.PointerIsInMainPage = false;
     }
 }

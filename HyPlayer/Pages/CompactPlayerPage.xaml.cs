@@ -135,12 +135,15 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     {
         if (isActivated)
         {
-            PointerOutAni.SkipToFill();
+            PointerOutAni.SkipToFill(); 
+            ControlHover = new BackdropBlurBrush { Amount = 10.0 };
             PointerInAni.Begin();
         }
         else
         {
             PointerInAni.SkipToFill();
+            if (!Common.Setting.CompactPlayerPageBlurStatus)
+                ControlHover = TransparentBrush;
             PointerOutAni.Begin();
         }
 
@@ -390,25 +393,6 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         base.OnNavigatedFrom(e);
         Dispose();
         Common.BarPlayBar.Visibility = Visibility.Visible;
-    }
-
-    private void CompactPlayerPage_OnPointerEntered(object sender, PointerRoutedEventArgs e)
-    {
-        ControlHover = new BackdropBlurBrush { Amount = 10.0 };
-        //PlayProgress.Visibility = Visibility.Visible;
-        PointerInAni.Begin();
-
-    }
-
-    private void CompactPlayerPage_OnPointerExited(object sender, PointerRoutedEventArgs e)
-    {
-        if (!Common.Setting.CompactPlayerPageBlurStatus)
-            ControlHover = TransparentBrush;
-        //PlayProgress.Visibility = Visibility.Collapsed;
-        if (e.Pointer.PointerDeviceType == Windows.Devices.Input.PointerDeviceType.Touch) { }
-        else
-            PointerOutAni.Begin();
-
     }
 
     private void OnRightTapped(object sender, RightTappedRoutedEventArgs e)
