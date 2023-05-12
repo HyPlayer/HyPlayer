@@ -152,7 +152,6 @@ public sealed partial class LyricItem : UserControl, IDisposable
             {
                 w.Foreground = new SolidColorBrush(GetKaraokIdleBrush());
             });
-            Run ani = new Run();
             foreach (var item in WordTextBlocks)
             {
                 var ani = new ColorAnimation
@@ -201,34 +200,6 @@ public sealed partial class LyricItem : UserControl, IDisposable
             {
                 w.Foreground = IdleBrush;
             });
-            foreach (var item in WordTextBlocks)
-            {
-                var wordstoryboard = new Storyboard();
-                var wordscaleani = new DoubleAnimation
-                {
-                    To = actualsize - 5,
-                    From = actualsize + Common.Setting.lyricScaleSize,
-                    Duration = new Duration(TimeSpan.FromSeconds(0.8)),
-                    EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
-                    EnableDependentAnimation = true
-                };
-                var wordcolorani = new ColorAnimation
-                {
-                    To = GetKaraokIdleBrush(),
-                    From = GetKaraokAccentBrush(),
-                    Duration = new Duration(TimeSpan.FromSeconds(0.8)),
-                    EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
-                    EnableDependentAnimation = true
-                };
-                Storyboard.SetTarget(wordscaleani, item);
-                Storyboard.SetTarget(wordcolorani, item);
-                Storyboard.SetTargetProperty(wordscaleani, "(item.FontSize)");
-                Storyboard.SetTargetProperty(wordcolorani, "(item.Foreground).(SolidColorBrush.Color)");
-                wordstoryboard.Children.Add(wordscaleani);
-                wordstoryboard.Children.Add(wordcolorani);
-                wordstoryboard.Begin();
-
-            }
             StoryboardDictionary.Clear();
         }
 
