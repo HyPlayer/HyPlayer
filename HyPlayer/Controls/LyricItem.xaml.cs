@@ -131,10 +131,6 @@ public sealed partial class LyricItem : UserControl, IDisposable
             {
                 //playedBlock.Foreground = IdleBrush;
                 playedBlock.Foreground = new SolidColorBrush(GetKaraokAccentBrush());
-<<<<<<< HEAD
-                playedBlock.FontSize = actualsize + Common.Setting.lyricScaleSize;
-=======
->>>>>>> parent of ae0e82b (歌词增加缩放动画)
             }
 
             var playingBlock = playedBlocks.Last();
@@ -142,10 +138,6 @@ public sealed partial class LyricItem : UserControl, IDisposable
             if (storyboard.GetCurrentTime().Ticks == 0)
                 storyboard.Begin();
         });
-<<<<<<< HEAD
-
-=======
->>>>>>> parent of ae0e82b (歌词增加缩放动画)
     }
 
     public void OnShow()
@@ -170,17 +162,6 @@ public sealed partial class LyricItem : UserControl, IDisposable
                     Duration = KaraokeDictionary[item].Duration,
                     EnableDependentAnimation = true
                 };
-<<<<<<< HEAD
-                var scaleani = new DoubleAnimation
-                {
-                    From = actualsize,
-                    To = actualsize + Common.Setting.lyricScaleSize,
-                    Duration = KaraokeDictionary[item].Duration * 0.9,
-                    EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
-                    EnableDependentAnimation = true
-                };
-=======
->>>>>>> parent of ae0e82b (歌词增加缩放动画)
                 var storyboard = new Storyboard();
                 Storyboard.SetTarget(ani, item);
                 Storyboard.SetTargetProperty(ani, "(Run.Foreground).(SolidColorBrush.Color)");
@@ -190,62 +171,6 @@ public sealed partial class LyricItem : UserControl, IDisposable
             HyPlayList.OnPlayPositionChange += RefreshWordColor;
         }
 
-<<<<<<< HEAD
-        double durationInSeconds = 0.3;
-        var transstoryboard = new Storyboard();
-        var transscaleani = new DoubleAnimation
-        {
-            From = actualsize,
-            To = actualsize + Common.Setting.lyricScaleSize - 3,
-            Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
-            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
-            EnableDependentAnimation = true
-        };
-        var transcolorani = new ColorAnimation
-        {
-            From = GetKaraokIdleBrush(),
-            To = GetKaraokAccentBrush(),
-            Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
-            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
-            EnableDependentAnimation = true
-        };
-        Storyboard.SetTarget(transscaleani, TextBoxTranslation);
-        Storyboard.SetTarget(transcolorani, TextBoxTranslation);
-        Storyboard.SetTargetProperty(transscaleani, "(TextBox.FontSize)");
-        Storyboard.SetTargetProperty(transcolorani, "(TextBox.Foreground).(SolidColorBrush.Color)");
-        transstoryboard.Children.Add(transscaleani);
-        transstoryboard.Children.Add(transcolorani);
-        transstoryboard.Begin();
-        var purestoryboard = new Storyboard();
-        var purescaleani = new DoubleAnimation
-        {
-            From = actualsize,
-            To = actualsize + Common.Setting.lyricScaleSize,
-            Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
-            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
-            EnableDependentAnimation = true
-        };
-        var purecolorani = new ColorAnimation
-        {
-            From = GetKaraokIdleBrush(),
-            To = GetKaraokAccentBrush(),
-            Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
-            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
-            EnableDependentAnimation = true
-        };
-        Storyboard.SetTarget(purescaleani, TextBoxPureLyric);
-        Storyboard.SetTarget(purecolorani, TextBoxPureLyric);
-        Storyboard.SetTargetProperty(purescaleani, "(TextBox.FontSize)");
-        Storyboard.SetTargetProperty(purecolorani, "(TextBox.Foreground).(SolidColorBrush.Color)");
-        purestoryboard.Children.Add(purescaleani);
-        purestoryboard.Children.Add(purecolorani);
-        purestoryboard.Begin();
-        TextBoxPureLyric.FontWeight = FontWeights.Bold;
-        WordLyricContainer.FontWeight = FontWeights.Bold;
-        TextBoxTranslation.FontWeight = FontWeights.Bold;
-        TextBoxPureLyric.Margin = new Thickness(0, 20, 0, 2);
-        TextBoxTranslation.Margin = new Thickness(0, 3, 0, 20);
-=======
         TextBoxPureLyric.FontSize = actualsize + Common.Setting.lyricScaleSize;
         TextBoxTranslation.FontSize = actualsize + Common.Setting.lyricScaleSize;
         TextBoxPureLyric.FontWeight = FontWeights.Bold;
@@ -253,7 +178,6 @@ public sealed partial class LyricItem : UserControl, IDisposable
         TextBoxTranslation.FontWeight = FontWeights.Bold;
         TextBoxPureLyric.Margin = new Thickness(0, 2, 0, 2);
         TextBoxTranslation.Margin = new Thickness(0, 2, 0, 2);
->>>>>>> parent of ae0e82b (歌词增加缩放动画)
         TextBoxPureLyric.CharacterSpacing = 30;
         TextBoxTranslation.CharacterSpacing = 30;
         TextBoxPureLyric.Foreground = AccentBrush;
@@ -307,62 +231,6 @@ public sealed partial class LyricItem : UserControl, IDisposable
             }
             StoryboardDictionary.Clear();
         }
-<<<<<<< HEAD
-        double durationInSeconds = 0.8;
-        var purestoryboard = new Storyboard();
-        var purescaleani = new DoubleAnimation
-        {
-            To = actualsize,
-            From = actualsize + Common.Setting.lyricScaleSize,
-            Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
-            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
-            EnableDependentAnimation = true
-        };
-        var purecolorani = new ColorAnimation
-        {
-            To = GetKaraokIdleBrush(),
-            From = GetKaraokAccentBrush(),
-            Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
-            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
-            EnableDependentAnimation = true
-        };
-        Storyboard.SetTarget(purescaleani, TextBoxPureLyric);
-        Storyboard.SetTarget(purecolorani, TextBoxPureLyric);
-        Storyboard.SetTargetProperty(purescaleani, "(TextBox.FontSize)");
-        Storyboard.SetTargetProperty(purecolorani, "(TextBox.Foreground).(SolidColorBrush.Color)");
-        purestoryboard.Children.Add(purescaleani);
-        purestoryboard.Children.Add(purecolorani);
-        purestoryboard.Begin();
-        var transstoryboard = new Storyboard();
-        var transscaleani = new DoubleAnimation
-        {
-            To = actualsize - 5,
-            From = actualsize + Common.Setting.lyricScaleSize,
-            Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
-            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
-            EnableDependentAnimation = true
-        };
-        var colorani = new ColorAnimation
-        {
-            To = GetKaraokIdleBrush(),
-            From = GetKaraokAccentBrush(),
-            Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
-            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
-            EnableDependentAnimation = true
-        };
-        Storyboard.SetTarget(transscaleani, TextBoxTranslation);
-        Storyboard.SetTarget(colorani, TextBoxTranslation);
-        Storyboard.SetTargetProperty(transscaleani, "(TextBoxtranslation.FontSize)");
-        Storyboard.SetTargetProperty(colorani, "(TextBoxtranslation.Foreground).(SolidColorBrush.Color)");
-        transstoryboard.Children.Add(transscaleani);
-        transstoryboard.Children.Add(colorani);
-        transstoryboard.Begin();
-        //TextBoxPureLyric.FontSize = actualsize;
-        //WordLyricContainer.FontSize = actualsize;
-        TextBoxPureLyric.Margin = new Thickness(0, -5, 0, 0);
-        WordLyricContainer.Margin = new Thickness(0, -5, 0, 0);
-        TextBoxTranslation.Margin = new Thickness(0, 0, 0, -5);
-=======
 
         TextBoxPureLyric.FontSize = actualsize;
         WordLyricContainer.FontSize = actualsize;
@@ -370,7 +238,6 @@ public sealed partial class LyricItem : UserControl, IDisposable
         TextBoxPureLyric.Margin = new Thickness(0);
         WordLyricContainer.Margin = new Thickness(0);
         TextBoxTranslation.Margin = new Thickness(0);
->>>>>>> parent of ae0e82b (歌词增加缩放动画)
         TextBoxPureLyric.CharacterSpacing = 0;
         WordLyricContainer.CharacterSpacing = 0;
         TextBoxTranslation.CharacterSpacing = 0;
