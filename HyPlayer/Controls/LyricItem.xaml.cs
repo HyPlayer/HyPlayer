@@ -112,25 +112,9 @@ public sealed partial class LyricItem : UserControl, IDisposable
         WordLyricContainer.TextAlignment = LyricAlignment;
         TextBoxTranslation.TextAlignment = LyricAlignment;
         TextBoxSound.TextAlignment = LyricAlignment;
-        if (_lyricIsOnShow)
-        {
-            if (_lyricIsKaraokeLyric)
-            {
-                TextBoxPureLyric.FontSize = actualsize;
-                WordLyricContainer.FontSize = actualsize;
-            }
-            else
-            {
-                TextBoxPureLyric.FontSize = actualsize + Common.Setting.lyricScaleSize;
-                WordLyricContainer.FontSize = actualsize + Common.Setting.lyricScaleSize;
-            }
-        }
-        else
-        {
-            TextBoxPureLyric.FontSize = actualsize;
-            WordLyricContainer.FontSize = actualsize;
-        }
-        //TextBoxTranslation.FontSize = _lyricIsOnShow ? actualsize + Common.Setting.lyricScaleSize : actualsize;
+        TextBoxPureLyric.FontSize = _lyricIsOnShow ? actualsize + Common.Setting.lyricScaleSize : actualsize;
+        WordLyricContainer.FontSize = _lyricIsOnShow ? actualsize + Common.Setting.lyricScaleSize : actualsize;
+        TextBoxTranslation.FontSize = _lyricIsOnShow ? actualsize + Common.Setting.lyricScaleSize : actualsize;
         TextBoxSound.FontSize = Common.Setting.romajiSize;
     }
 
@@ -147,7 +131,10 @@ public sealed partial class LyricItem : UserControl, IDisposable
             {
                 //playedBlock.Foreground = IdleBrush;
                 playedBlock.Foreground = new SolidColorBrush(GetKaraokAccentBrush());
+<<<<<<< HEAD
                 playedBlock.FontSize = actualsize + Common.Setting.lyricScaleSize;
+=======
+>>>>>>> parent of ae0e82b (歌词增加缩放动画)
             }
 
             var playingBlock = playedBlocks.Last();
@@ -155,7 +142,10 @@ public sealed partial class LyricItem : UserControl, IDisposable
             if (storyboard.GetCurrentTime().Ticks == 0)
                 storyboard.Begin();
         });
+<<<<<<< HEAD
 
+=======
+>>>>>>> parent of ae0e82b (歌词增加缩放动画)
     }
 
     public void OnShow()
@@ -173,13 +163,14 @@ public sealed partial class LyricItem : UserControl, IDisposable
             Run ani = new Run();
             foreach (var item in WordTextBlocks)
             {
-                var colorani = new ColorAnimation
+                var ani = new ColorAnimation
                 {
                     From = GetKaraokIdleBrush(),
                     To = GetKaraokAccentBrush(),
                     Duration = KaraokeDictionary[item].Duration,
                     EnableDependentAnimation = true
                 };
+<<<<<<< HEAD
                 var scaleani = new DoubleAnimation
                 {
                     From = actualsize,
@@ -188,18 +179,18 @@ public sealed partial class LyricItem : UserControl, IDisposable
                     EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
                     EnableDependentAnimation = true
                 };
+=======
+>>>>>>> parent of ae0e82b (歌词增加缩放动画)
                 var storyboard = new Storyboard();
-                Storyboard.SetTarget(colorani, item);
-                Storyboard.SetTarget(scaleani, item);
-                Storyboard.SetTargetProperty(colorani, "(Run.Foreground).(SolidColorBrush.Color)");
-                Storyboard.SetTargetProperty(scaleani, "(Run.FontSize)");
-                storyboard.Children.Add(colorani);
-                storyboard.Children.Add(scaleani);
+                Storyboard.SetTarget(ani, item);
+                Storyboard.SetTargetProperty(ani, "(Run.Foreground).(SolidColorBrush.Color)");
+                storyboard.Children.Add(ani);
                 StoryboardDictionary.Add(item, storyboard);
             }
             HyPlayList.OnPlayPositionChange += RefreshWordColor;
         }
 
+<<<<<<< HEAD
         double durationInSeconds = 0.3;
         var transstoryboard = new Storyboard();
         var transscaleani = new DoubleAnimation
@@ -254,21 +245,26 @@ public sealed partial class LyricItem : UserControl, IDisposable
         TextBoxTranslation.FontWeight = FontWeights.Bold;
         TextBoxPureLyric.Margin = new Thickness(0, 20, 0, 2);
         TextBoxTranslation.Margin = new Thickness(0, 3, 0, 20);
+=======
+        TextBoxPureLyric.FontSize = actualsize + Common.Setting.lyricScaleSize;
+        TextBoxTranslation.FontSize = actualsize + Common.Setting.lyricScaleSize;
+        TextBoxPureLyric.FontWeight = FontWeights.Bold;
+        WordLyricContainer.FontWeight = FontWeights.Bold;
+        TextBoxTranslation.FontWeight = FontWeights.Bold;
+        TextBoxPureLyric.Margin = new Thickness(0, 2, 0, 2);
+        TextBoxTranslation.Margin = new Thickness(0, 2, 0, 2);
+>>>>>>> parent of ae0e82b (歌词增加缩放动画)
         TextBoxPureLyric.CharacterSpacing = 30;
         TextBoxTranslation.CharacterSpacing = 30;
-        //TextBoxPureLyric.Foreground = AccentBrush;
+        TextBoxPureLyric.Foreground = AccentBrush;
         TextBoxSound.Foreground = AccentBrush;
+        TextBoxTranslation.Foreground = AccentBrush;
         // shadowColor = AccentBrush.Color == Color.FromArgb(255, 0, 0, 0)
         //     ? Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 255, 255, 255)
         //     : Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 0, 0, 0);
     }
 
-    public TextBlock GetTextBoxTranslation()
-    {
-        return TextBoxTranslation;
-    }
-
-    public void OnHind(TextBlock textBoxTranslation)
+    public void OnHind()
     {
         if (!_lyricIsOnShow)
             //RefreshFontSize();
@@ -280,7 +276,6 @@ public sealed partial class LyricItem : UserControl, IDisposable
             WordTextBlocks.ForEach(w =>
             {
                 w.Foreground = IdleBrush;
-                w.FontSize = actualsize;
             });
             foreach (var item in WordTextBlocks)
             {
@@ -312,6 +307,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
             }
             StoryboardDictionary.Clear();
         }
+<<<<<<< HEAD
         double durationInSeconds = 0.8;
         var purestoryboard = new Storyboard();
         var purescaleani = new DoubleAnimation
@@ -366,14 +362,24 @@ public sealed partial class LyricItem : UserControl, IDisposable
         TextBoxPureLyric.Margin = new Thickness(0, -5, 0, 0);
         WordLyricContainer.Margin = new Thickness(0, -5, 0, 0);
         TextBoxTranslation.Margin = new Thickness(0, 0, 0, -5);
+=======
+
+        TextBoxPureLyric.FontSize = actualsize;
+        WordLyricContainer.FontSize = actualsize;
+        TextBoxTranslation.FontSize = actualsize;
+        TextBoxPureLyric.Margin = new Thickness(0);
+        WordLyricContainer.Margin = new Thickness(0);
+        TextBoxTranslation.Margin = new Thickness(0);
+>>>>>>> parent of ae0e82b (歌词增加缩放动画)
         TextBoxPureLyric.CharacterSpacing = 0;
         WordLyricContainer.CharacterSpacing = 0;
         TextBoxTranslation.CharacterSpacing = 0;
         TextBoxPureLyric.FontWeight = FontWeights.SemiBold;
         WordLyricContainer.FontWeight = FontWeights.SemiBold;
-        TextBoxTranslation.FontWeight = FontWeights.Light;
+        TextBoxTranslation.FontWeight = FontWeights.SemiBold;
         TextBoxPureLyric.Foreground = IdleBrush;
         WordLyricContainer.Foreground = IdleBrush;
+        TextBoxTranslation.Foreground = IdleBrush;
         TextBoxSound.Foreground = IdleBrush;
         //shadowColor = Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 0, 0, 0);
     }
@@ -420,7 +426,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
             }
         }
         RefreshFontSize();
-        OnHind(GetTextBoxTranslation());
+        OnHind();
     }
 
     private void Dispose(bool disposing)
