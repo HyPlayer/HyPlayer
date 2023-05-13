@@ -304,10 +304,12 @@
                                 </muxc:ItemsRepeater.Layout>
                                 <muxc:ItemsRepeater.ItemTemplate>
                                     <DataTemplate x:DataType="controls1:LyricItemModel">
-                                        <controls1:LyricItemWrapper
+                                        <Border>
+                                            <controls1:LyricItemWrapper
                                             HorizontalAlignment="Stretch"
                                             IsShow="{x:Bind IsShow, Mode=OneWay}"
                                             SongLyric="{x:Bind SongLyric}" />
+                                        </Border>
                                     </DataTemplate>
                                 </muxc:ItemsRepeater.ItemTemplate>
                             </muxc:ItemsRepeater>

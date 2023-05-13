@@ -1459,6 +1459,10 @@ public static class HyPlayList
     public static HyPlayItem AppendNcSong(NCSong ncSong, int position = -1)
     {
         var hpi = LoadNcSong(ncSong);
+        if(List.Contains(hpi))
+        {
+            return hpi;
+        }
         if (position < 0)
             position = List.Count;
         if (hpi != null)
@@ -1471,7 +1475,7 @@ public static class HyPlayList
     {
         if (position < 0)
             position = List.Count;
-        var insertList = ncSongs.Select(LoadNcSong).ToList();
+        var insertList = ncSongs.Select(LoadNcSong).Where(t=>!List.Contains(t)).ToList();
         List.InsertRange(position, insertList);
         SongAppendDone();
         return insertList;
