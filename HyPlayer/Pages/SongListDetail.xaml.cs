@@ -256,9 +256,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         if (playList.plid != "-666")
         {
             HyPlayList.RemoveAllSong();
-            HyPlayList.SongAppendDone();
             await HyPlayList.AppendPlayList(playList.plid);
-            HyPlayList.SongAppendDone();
             HyPlayList.PlaySourceId = playList.plid;
             HyPlayList.NowPlaying = -1;
             HyPlayList.SongMoveNext();
@@ -266,7 +264,6 @@ public sealed partial class SongListDetail : Page, IDisposable
         else
         {
             HyPlayList.AppendNcSongs(Songs.ToList());
-            HyPlayList.SongAppendDone();
             HyPlayList.PlaySourceId = playList.plid;
             HyPlayList.NowPlaying = -1;
             HyPlayList.SongMoveNext();
@@ -316,7 +313,6 @@ public sealed partial class SongListDetail : Page, IDisposable
             try
             {
                 HyPlayList.AppendNcSongs(IntSongs);
-                HyPlayList.SongAppendDone();
                 HyPlayList.PlaySourceId = playList.plid;
                 HyPlayList.SongMoveTo(0);
             }

@@ -53,9 +53,7 @@ public sealed partial class PlaylistItem : UserControl, IDisposable
     {
         //播放全部歌曲
         HyPlayList.RemoveAllSong();
-        HyPlayList.SongAppendDone();
         await HyPlayList.AppendPlayList(playList.plid);
-        HyPlayList.SongAppendDone();
         HyPlayList.PlaySourceId = playList.plid;
         HyPlayList.NowPlaying = -1;
         HyPlayList.SongMoveNext();

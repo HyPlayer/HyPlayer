@@ -1175,7 +1175,6 @@ DoubleAnimation verticalAnimation;
             {
                 int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"].ToString(),
                     out HyPlayList.NowPlaying);
-                HyPlayList.SongAppendDone();
                 HyPlayList.NotifyPlayItemChanged(HyPlayList.NowPlayingItem);
             }
         }

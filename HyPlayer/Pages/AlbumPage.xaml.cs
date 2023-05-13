@@ -180,7 +180,6 @@ public sealed partial class AlbumPage : Page, IDisposable
         {
             HyPlayList.RemoveAllSong();
             await HyPlayList.AppendNcSource("al" + Album.id);
-            HyPlayList.SongAppendDone();
             HyPlayList.PlaySourceId = "al" + Album.id;
             HyPlayList.SongMoveTo(0);
         }
@@ -227,7 +226,6 @@ public sealed partial class AlbumPage : Page, IDisposable
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(AlbumPage));
         await HyPlayList.AppendNcSource("al" + Album.id);
-        HyPlayList.SongAppendDone();
     }
 
     private void Dispose(bool disposing)

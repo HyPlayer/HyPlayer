@@ -692,7 +692,6 @@ public sealed partial class BasePage : Page
             try
             {
                 HyPlayList.AppendNcSongs(Songs);
-                HyPlayList.SongAppendDone();
                 HyPlayList.SongMoveTo(0);
             }
             catch (Exception ex)
@@ -964,7 +963,7 @@ public sealed partial class BasePage : Page
                             await img.SetSourceAsync(new MemoryStream(item.PlayItem.LocalFileTag.Pictures[0].Data.Data).AsRandomAccessStream());
                         }
                     }
-                    else
+                    else if (HyPlayList.NowPlayingItem.PlayItem != null)
                     {
                         img = new BitmapImage(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover));
                     }

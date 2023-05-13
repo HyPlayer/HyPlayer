@@ -57,7 +57,6 @@ public partial class SimpleLinerList : UserControl
     {
         HyPlayList.RemoveAllSong();
         await HyPlayList.AppendNcSource(((Button)sender).Tag.ToString());
-        HyPlayList.SongAppendDone();
         if (((Button)sender).Tag.ToString().Substring(0, 2) == "pl" ||
             ((Button)sender).Tag.ToString().Substring(0, 2) == "al")
             HyPlayList.PlaySourceId = ((Button)sender).Tag.ToString().Substring(2);
