@@ -441,7 +441,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         if (k >= 0)
             try
             {
-                var ele = LyricBox.TryGetElement(k) as FrameworkElement;
+                var ele = LyricBox.GetOrCreateElement(k) as FrameworkElement;
                 var lyricItem = (ele as Border)?.FindName("LyricWrapper") as LyricItemWrapper;
                 if (ele != null && lyricItem != null && !string.IsNullOrEmpty(lyricItem.SongLyric.LyricLine.CurrentLyric))
                 {
