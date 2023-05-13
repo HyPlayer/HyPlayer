@@ -16,10 +16,15 @@
     Loaded="UserControl_Loaded"
     mc:Ignorable="d">
     <UserControl.Resources>
-        <LinearGradientBrush x:Key="AccentPlayButtonColor" StartPoint="0,0" EndPoint="1,1">
-            <GradientStop x:Name="PlayBtnGradient" Offset="0.2" Color="{ThemeResource SystemAccentColorLight2}" />
-            <GradientStop Offset="0.8" Color="{ThemeResource SystemAccentColorDark1}" />
+        <LinearGradientBrush x:Key="SolidPlayButtonColor" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop x:Name="PlayBtnGradient" Offset="0.2" Color="#fefefe" />
+            <GradientStop Offset="0.8" Color="#f1f1f1" />
         </LinearGradientBrush>
+        <LinearGradientBrush x:Key="SolidPlayButtonIconColor" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop x:Name="PlayBtnIconGradient" Offset="0.2" Color="{ThemeResource SystemAccentColorLight2}" />
+            <GradientStop Offset="0.8" Color="{ThemeResource SystemAccentColor}" />
+        </LinearGradientBrush>
+
         <Flyout x:Key="VolumeFlyout">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -207,6 +212,7 @@
         <Rectangle
             x:Name="PlayBarAcrylic"
             Grid.Column="0"
+            Opacity="1"
             Grid.ColumnSpan="4"
             Fill="{ThemeResource SystemControlAltMediumLowAcrylicElementMediumBrush}"
             Visibility="{x:Bind hy:Common.Setting.playbarBackgroundAcrylic, Mode=OneWay}" />
@@ -469,13 +475,13 @@
                     <FontIcon
                         x:Name="IconPrevious"
                         FontSize="13"
-                        Glyph="&#xE892;" />
+                        Glyph="&#xF8AC;" />
                 </Button>
                 <Button
                     x:Name="BtnPlayStateChange"
                     Grid.Column="4"
-                    Width="52"
-                    Height="52"
+                    Width="50"
+                    Height="50"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     AutomationProperties.AcceleratorKey="Space"
@@ -487,8 +493,7 @@
                     Opacity="0.9">
                     <FontIcon
                         x:Name="PlayStateIcon"
-                        FontFamily="{StaticResource SymbolThemeFontFamily}"
-                        FontSize="20"
+                        FontSize="18"
                         Glyph="&#xEDB5;" />
                     <!--  EDB4  -->
                 </Button>
@@ -503,7 +508,7 @@
                     BorderThickness="0"
                     Click="BtnNextSong_OnClick"
                     CornerRadius="30">
-                    <FontIcon FontSize="13" Glyph="&#xE101;" />
+                    <FontIcon FontSize="13" Glyph="&#xF8AD;" />
                 </Button>
                 <Button
                     x:Name="BtnLike"
