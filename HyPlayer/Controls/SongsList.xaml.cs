@@ -211,7 +211,6 @@ public sealed partial class SongsList : UserControl, IDisposable
     {
         var ncsong = VisibleSongs[int.Parse((sender as Button).Tag.ToString())];
         _ = HyPlayList.AppendNcSong(ncsong);
-        HyPlayList.SongAppendDone();
         HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.Id == ncsong.sid));
         if (ListSource.Substring(0, 2) == "pl" ||
             ListSource.Substring(0, 2) == "al")
@@ -225,6 +224,7 @@ public sealed partial class SongsList : UserControl, IDisposable
 
     private void FlyoutItemPlay_Click(object sender, RoutedEventArgs e)
     {
+        if (SongContainer.SelectedItems.Count == 0) return;
         if (!(SongContainer.SelectedItem as NCSong).IsAvailable)
         {
             Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).songname} 当前不可用");
@@ -232,7 +232,6 @@ public sealed partial class SongsList : UserControl, IDisposable
         }
         foreach (NCSong ncsong in SongContainer.SelectedItems)
             _ = HyPlayList.AppendNcSong(ncsong);
-        HyPlayList.SongAppendDone();
         if (SongContainer.SelectedItem != null)
         {
             var targetPlayItemIndex = HyPlayList.List.FindIndex(t => t.PlayItem.Id == (SongContainer.SelectedItem as NCSong).sid);
@@ -242,25 +241,43 @@ public sealed partial class SongsList : UserControl, IDisposable
 
     private void FlyoutItemAddToPlaylist_Click(object sender, RoutedEventArgs e)
     {
-
+        if (SongContainer.SelectedItems.Count == 0) return;
         if (!(SongContainer.SelectedItem as NCSong).IsAvailable)
         {
             Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).songname} 当前不可用");
             return;
         }
-        _ = HyPlayList.AppendNcSongRange(SongContainer.SelectedItems.Cast<NCSong>().ToList(),
-
-            HyPlayList.NowPlaying + 1);
-        if (SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable).FirstOrDefault() != null)
+        var playItems = HyPlayList.AppendNcSongRange(SongContainer.SelectedItems.Cast<NCSong>().ToList(), HyPlayList.NowPlaying + 1);
+        if (HyPlayList.NowPlayType == PlayMode.Shuffled)
+        {
+            List<int> playItemIndexes = new List<int>();
+            foreach (var item in playItems)
+            {
+                var index = HyPlayList.List.IndexOf(item);
+                playItemIndexes.Add(index);
+            }
+            for (int i = 0; i < playItemIndexes.Count; i++)
+            {
+                var item = playItemIndexes[i];
+                var currentIndex = HyPlayList.ShuffleList.IndexOf(HyPlayList.NowPlaying);
+                if (currentIndex + playItemIndexes.Count >= HyPlayList.ShuffleList.Count) break; // 如果调不了顺序（歌单剩余空位不足）就算了
+                var nextIndex = currentIndex + i + 1;
+                var targetIndex = HyPlayList.ShuffleList.IndexOf(item);
+                var t = HyPlayList.ShuffleList[nextIndex];
+                HyPlayList.ShuffleList[targetIndex] = t;
+                HyPlayList.ShuffleList[nextIndex] = item;
+            }
+        }
+        if (SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable).Count() > 0)
         {
             var unAvailableSongNames = SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable).Select(t => t.songname).ToArray();
             Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {string.Join("/", unAvailableSongNames)} 当前不可用\r已从播放列表中移除");
         }
-        HyPlayList.SongAppendDone();
     }
 
     private async void FlyoutItemSinger_Click(object sender, RoutedEventArgs e)
     {
+        if (SongContainer.SelectedItems.Count == 0) return;
         if ((SongContainer.SelectedItem as NCSong).Artist.FirstOrDefault().Type == HyPlayItemType.Radio)
         {
             Common.NavigatePage(typeof(Me), (SongContainer.SelectedItem as NCSong).Artist.FirstOrDefault().id);
@@ -276,6 +293,7 @@ public sealed partial class SongsList : UserControl, IDisposable
 
     private void FlyoutItemAlbum_Click(object sender, RoutedEventArgs e)
     {
+        if (SongContainer.SelectedItems.Count == 0) return;
         if ((SongContainer.SelectedItem as NCSong).Album.id == "0")
         {
             Common.AddToTeachingTipLists("此歌曲无专辑页面");
@@ -288,6 +306,7 @@ public sealed partial class SongsList : UserControl, IDisposable
 
     private void FlyoutItemComments_Click(object sender, RoutedEventArgs e)
     {
+        if (SongContainer.SelectedItems.Count == 0) return;
         Common.NavigatePage(typeof(Comments), "sg" + (SongContainer.SelectedItem as NCSong).sid);
     }
 
@@ -299,17 +318,19 @@ public sealed partial class SongsList : UserControl, IDisposable
 
     private void BtnMV_Click(object sender, RoutedEventArgs e)
     {
+        if (SongContainer.SelectedItems.Count == 0) return;
         Common.NavigatePage(typeof(MVPage), (SongContainer.SelectedItem as NCSong));
     }
 
     private async void FlyoutCollection_Click(object sender, RoutedEventArgs e)
     {
+        if (SongContainer.SelectedItems.Count == 0) return;
         await new SongListSelect((SongContainer.SelectedItem as NCSong).sid).ShowAsync();
     }
 
     private async void Btn_Del_Click(object sender, RoutedEventArgs e)
     {
-        if (SongContainer.SelectedItem is null) return;
+        if (SongContainer.SelectedItems.Count == 0) return;
         if (!(SongContainer.SelectedItem as NCSong).IsCloud)
             await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistTracks,
             new Dictionary<string, object>
@@ -409,7 +430,6 @@ public sealed partial class SongsList : UserControl, IDisposable
                 // Change Music Source
                 HyPlayList.RemoveAllSong(!shiftSong);
                 await HyPlayList.AppendNcSource(ListSource);
-                HyPlayList.SongAppendDone();
             }
 
             if (ListSource.Substring(0, 2) == "pl" ||
@@ -431,7 +451,6 @@ public sealed partial class SongsList : UserControl, IDisposable
         else
         {
             HyPlayList.AppendNcSongs(VisibleSongs);
-            HyPlayList.SongAppendDone();
             if (ListSource?.Substring(0, 2) == "pl" ||
                 ListSource?.Substring(0, 2) == "al")
                 HyPlayList.PlaySourceId = ListSource.Substring(2);

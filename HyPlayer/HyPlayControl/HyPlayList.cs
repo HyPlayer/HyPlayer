@@ -441,7 +441,9 @@ public static class HyPlayList
         Common.IsInFm = false;
         PlaySourceId = null;
         if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
+        {
             CreateShufflePlayLists();
+        }
         else
             _ = Common.Invoke(() => OnPlayListAddDone?.Invoke());
     }
@@ -477,7 +479,7 @@ public static class HyPlayList
         if (List.Count <= index) return;
         NowPlaying = index;
         if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
-            ShufflingIndex = ShuffleList.FindIndex(t => t == index);
+            ShufflingIndex = ShuffleList.IndexOf(index);
 
         _ = LoadPlayerSong(List[NowPlaying]);
     }
@@ -507,6 +509,7 @@ public static class HyPlayList
         if (index > NowPlaying)
             List.RemoveAt(index);
         //假如移除后面的我就不管了
+        SongAppendDone();
     }
 
     public static void ManualRemoveAllSong()
@@ -1460,6 +1463,7 @@ public static class HyPlayList
             position = List.Count;
         if (hpi != null)
             List.Insert(position, hpi);
+        SongAppendDone();
         return hpi;
     }
 
@@ -1469,6 +1473,7 @@ public static class HyPlayList
             position = List.Count;
         var insertList = ncSongs.Select(LoadNcSong).ToList();
         List.InsertRange(position, insertList);
+        SongAppendDone();
         return insertList;
     }
 
@@ -1547,6 +1552,7 @@ public static class HyPlayList
                 };
                 AppendNcPlayItem(ncp);
             }
+            SongAppendDone();
         }
         catch (Exception ex)
         {
@@ -1743,7 +1749,7 @@ public static class HyPlayList
                         (ex.InnerException ?? new Exception()).Message);
                 }
             }
-
+            SongAppendDone();
             return true;
         }
         catch (Exception ex)

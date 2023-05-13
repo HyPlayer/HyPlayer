@@ -135,7 +135,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     {
         if (isActivated)
         {
-            PointerOutAni.SkipToFill(); 
+            PointerOutAni.SkipToFill();
             ControlHover = new BackdropBlurBrush { Amount = 10.0 };
             PointerInAni.Begin();
         }

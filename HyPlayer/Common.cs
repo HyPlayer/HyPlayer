@@ -173,7 +173,7 @@ namespace HyPlayer
 
         public static void ChangePlaybarVisibillity()
         {
-            if (PointerIsInMainPage) 
+            if (PointerIsInMainPage)
             {
                 PlaybarSecondCounter = 0;
                 return;
@@ -243,7 +243,6 @@ namespace HyPlayer
                     break;
                 case "ns":
                     await HyPlayList.AppendNcSource(resourceId);
-                    HyPlayList.SongAppendDone();
                     HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => "ns" + t.PlayItem.Id == resourceId));
                     break;
                 case "ml":

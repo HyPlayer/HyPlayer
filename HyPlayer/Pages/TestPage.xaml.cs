@@ -52,7 +52,6 @@ public sealed partial class TestPage : Page
     private async void PlayResourceId(object sender, RoutedEventArgs e)
     {
         await HyPlayList.AppendNcSource(ResourceId);
-        HyPlayList.SongAppendDone();
     }
 
     private async void DumpDebugInfo_Click(object sender, RoutedEventArgs e)
