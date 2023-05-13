@@ -513,7 +513,7 @@ namespace HyPlayer
 
         public int lyricScaleSize
         {
-            get => GetSettings(nameof(lyricScaleSize), 0);
+            get => GetSettings(nameof(lyricScaleSize), 3);
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(lyricScaleSize)] = value;
