@@ -306,6 +306,7 @@
                                     <DataTemplate x:DataType="controls1:LyricItemModel">
                                         <Border>
                                             <controls1:LyricItemWrapper
+                                            x:Name="LyricWrapper"
                                             HorizontalAlignment="Stretch"
                                             IsShow="{x:Bind IsShow, Mode=OneWay}"
                                             SongLyric="{x:Bind SongLyric}" />

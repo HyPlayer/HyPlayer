@@ -442,10 +442,11 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             try
             {
                 var ele = LyricBox.TryGetElement(k) as FrameworkElement;
-                if (ele != null && !string.IsNullOrEmpty((ele as LyricItemWrapper)?.SongLyric.LyricLine.CurrentLyric))
+                var lyricItem = (ele as Border)?.FindName("LyricWrapper") as LyricItemWrapper;
+                if (ele != null && lyricItem != null && !string.IsNullOrEmpty(lyricItem.SongLyric.LyricLine.CurrentLyric))
                 {
-                    ele?.UpdateLayout();
-                    ele?.StartBringIntoView(DefaultBringIntoViewOptions);
+                    ele.UpdateLayout();
+                    ele.StartBringIntoView(DefaultBringIntoViewOptions);
                 }
             }
             catch (Exception e)
