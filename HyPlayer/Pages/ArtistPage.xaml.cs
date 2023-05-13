@@ -202,7 +202,6 @@ public sealed partial class ArtistPage : Page, IDisposable
         try
         {
             HyPlayList.AppendNcSongs(hotSongs);
-            HyPlayList.SongAppendDone();
             HyPlayList.SongMoveTo(0);
         }
         catch (Exception ex)

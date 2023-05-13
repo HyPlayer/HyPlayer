@@ -82,7 +82,6 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
         if (disposedValue) throw new ObjectDisposedException(nameof(LocalMusicPage));
         HyPlayList.RemoveAllSong();
         HyPlayList.List.AddRange(localHyItems);
-        HyPlayList.SongAppendDone();
         HyPlayList.SongMoveTo(0);
     }
 
@@ -178,7 +177,6 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
         if (ListBoxLocalMusicContainer.SelectedIndex == -1) return;
         HyPlayList.RemoveAllSong();
         HyPlayList.List.AddRange(localHyItems);
-        HyPlayList.SongAppendDone();
         HyPlayList.SongMoveTo(ListBoxLocalMusicContainer.SelectedIndex);
     }
 

@@ -129,7 +129,6 @@ public sealed partial class RadioPage : Page, IDisposable
         {
             await HyPlayList.AppendNcSource("rd" + Radio.id);
             if (asc) HyPlayList.List.Reverse();
-            HyPlayList.SongAppendDone();
             HyPlayList.SongMoveTo(0);
         }
         catch (Exception ex)
@@ -158,7 +157,6 @@ public sealed partial class RadioPage : Page, IDisposable
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(RadioPage));
         await HyPlayList.AppendRadioList(Radio.id, asc);
-        HyPlayList.SongAppendDone();
     }
 
     private async void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)

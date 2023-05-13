@@ -142,6 +142,7 @@ public sealed partial class GroupedSongsList : IDisposable
 
     private void FlyoutItemPlay_Click(object sender, RoutedEventArgs e)
     {
+        if (SongContainer.SelectedItems.Count == 0) return;
         if (!(SongContainer.SelectedItem as NCSong).IsAvailable)
         {
             Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).songname} 当前不可用");
@@ -149,7 +150,6 @@ public sealed partial class GroupedSongsList : IDisposable
         }
         foreach (NCSong ncsong in SongContainer.SelectedItems)
             _ = HyPlayList.AppendNcSong(ncsong);
-        HyPlayList.SongAppendDone();
         if (SongContainer.SelectedItem != null)
         {
             var targetPlayItemIndex = HyPlayList.List.FindIndex(t => t.PlayItem.Id == (SongContainer.SelectedItem as NCSong).sid);
@@ -159,24 +159,43 @@ public sealed partial class GroupedSongsList : IDisposable
 
     private void FlyoutItemAddToPlayList_Click(object sender, RoutedEventArgs e)
     {
+        if (SongContainer.SelectedItems.Count == 0) return;
         if (!(SongContainer.SelectedItem as NCSong).IsAvailable)
         {
             Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {(SongContainer.SelectedItem as NCSong).songname} 当前不可用");
             return;
         }
-        _ = HyPlayList.AppendNcSongRange(SongContainer.SelectedItems.Cast<NCSong>().ToList(),
-
-            HyPlayList.NowPlaying + 1);
-        if (SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable).FirstOrDefault() != null)
+        var playItems = HyPlayList.AppendNcSongRange(SongContainer.SelectedItems.Cast<NCSong>().ToList(), HyPlayList.NowPlaying + 1);
+        if (HyPlayList.NowPlayType == PlayMode.Shuffled)
+        {
+            List<int> playItemIndexes = new List<int>();
+            foreach (var item in playItems)
+            {
+                var index = HyPlayList.List.IndexOf(item);
+                playItemIndexes.Add(index);
+            }
+            for (int i = 0; i < playItemIndexes.Count; i++)
+            {
+                var item = playItemIndexes[i];
+                var currentIndex = HyPlayList.ShuffleList.IndexOf(HyPlayList.NowPlaying);
+                if (currentIndex + playItemIndexes.Count >= HyPlayList.ShuffleList.Count) break; // 如果调不了顺序（歌单剩余空位不足）就算了
+                var nextIndex = currentIndex + i + 1;
+                var targetIndex = HyPlayList.ShuffleList.IndexOf(item);
+                var t = HyPlayList.ShuffleList[nextIndex];
+                HyPlayList.ShuffleList[targetIndex] = t;
+                HyPlayList.ShuffleList[nextIndex] = item;
+            }
+        }
+        if (SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable).Count() > 0)
         {
             var unAvailableSongNames = SongContainer.SelectedItems.Cast<NCSong>().Where(t => !t.IsAvailable).Select(t => t.songname).ToArray();
             Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {string.Join("/", unAvailableSongNames)} 当前不可用\r已从播放列表中移除");
         }
-        HyPlayList.SongAppendDone();
     }
 
     private async void FlyoutItemSinger_Click(object sender, RoutedEventArgs e)
     {
+        if (SongContainer.SelectedItems.Count == 0) return;
         if ((SongContainer.SelectedItem as NCSong)?.Artist[0].Type == HyPlayItemType.Radio)
         {
             Common.NavigatePage(typeof(Me), (SongContainer.SelectedItem as NCSong)?.Artist[0].id ?? "");
@@ -192,11 +211,13 @@ public sealed partial class GroupedSongsList : IDisposable
 
     private void FlyoutItemAlbum_Click(object sender, RoutedEventArgs e)
     {
+        if (SongContainer.SelectedItems.Count == 0) return;
         Common.NavigatePage(typeof(AlbumPage), (SongContainer.SelectedItem as NCSong)?.Album.id ?? "");
     }
 
     private void FlyoutItemComments_Click(object sender, RoutedEventArgs e)
     {
+        if (SongContainer.SelectedItems.Count == 0) return;
         Common.NavigatePage(typeof(Comments), "sg" + (SongContainer.SelectedItem as NCSong)?.sid);
     }
 
@@ -208,11 +229,13 @@ public sealed partial class GroupedSongsList : IDisposable
 
     private void BtnMV_Click(object sender, RoutedEventArgs e)
     {
+        if (SongContainer.SelectedItems.Count == 0) return;
         Common.NavigatePage(typeof(MVPage), SongContainer.SelectedItem as NCSong ?? new NCSong());
     }
 
     private async void FlyoutCollection_Click(object sender, RoutedEventArgs e)
     {
+        if (SongContainer.SelectedItems.Count == 0) return;
         await new SongListSelect((SongContainer.SelectedItem as NCSong)?.sid).ShowAsync();
     }
 

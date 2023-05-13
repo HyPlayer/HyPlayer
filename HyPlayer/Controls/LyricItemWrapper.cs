@@ -24,7 +24,7 @@ public class LyricItemWrapper : ContentPresenter
                         if (sender.IsShow)
                             item.OnShow();
                         else
-                            item.OnHind(item.GetTextBoxTranslation());
+                            item.OnHind();
                     }
                     else
                     {
@@ -44,7 +44,7 @@ public class LyricItemWrapper : ContentPresenter
                         if ((bool)a.NewValue)
                             item.OnShow();
                         else
-                            item.OnHind(item.GetTextBoxTranslation());
+                            item.OnHind();
                     }
             }));
 
