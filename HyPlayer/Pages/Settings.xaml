@@ -595,7 +595,7 @@
                                         </ComboBox>
                                     </Grid>
                                     <Grid>
-                                        <TextBlock VerticalAlignment="Center" Text="播放按钮着强调色" />
+                                        <TextBlock VerticalAlignment="Center" Text="圆形播放按钮" />
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
