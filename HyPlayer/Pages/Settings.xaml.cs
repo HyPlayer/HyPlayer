@@ -471,17 +471,6 @@ public sealed partial class Settings : Page, IDisposable
         Common.Setting.pureLyricFocusingColor = PureLyricFocusing.SelectedColor;
     }
 
-
-    private void ResetKaraokLyricIdleColor(object sender, RoutedEventArgs e)
-    {
-        Common.Setting.karaokLyricIdleColor = null;
-    }
-
-    private void ConfirmKaraokLyricIdleColor(object sender, RoutedEventArgs e)
-    {
-        Common.Setting.karaokLyricIdleColor = KaraokLyricIdle.SelectedColor;
-    }
-
     private void ResetKaraokLyricFocusingColor(object sender, RoutedEventArgs e)
     {
         Common.Setting.karaokLyricFocusingColor = null;

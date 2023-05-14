@@ -237,31 +237,6 @@
 
                                     </Grid>
                                     <Grid Visibility="{x:Bind IsAdvancedLyricColorSettingsShow, Mode=OneWay}">
-                                        <TextBlock VerticalAlignment="Center" Text="非焦点歌词颜色 (逐字歌词)" />
-                                        <Grid MinWidth="10" HorizontalAlignment="Right">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <controls2:ColorPickerButton
-                                                x:Name="KaraokLyricIdle"
-                                                Grid.Column="0"
-                                                SelectedColor="{x:Bind hyplayer:Common.Setting.karaokLyricIdleColor, Mode=OneWay, Converter={StaticResource NullableColorToColorConverter}}">
-                                                <controls2:ColorPickerButton.ColorPickerStyle>
-                                                    <Style TargetType="controls:ColorPicker">
-                                                        <Setter Property="ColorSpectrumShape" Value="Box" />
-                                                        <Setter Property="IsAlphaEnabled" Value="True" />
-                                                        <Setter Property="IsHexInputVisible" Value="False" />
-                                                    </Style>
-                                                </controls2:ColorPickerButton.ColorPickerStyle>
-                                            </controls2:ColorPickerButton>
-                                            <Button Grid.Column="1" Click="ConfirmKaraokLyricIdleColor">确认</Button>
-                                            <Button Grid.Column="2" Click="ResetKaraokLyricIdleColor">重置</Button>
-                                        </Grid>
-
-                                    </Grid>
-                                    <Grid Visibility="{x:Bind IsAdvancedLyricColorSettingsShow, Mode=OneWay}">
                                         <TextBlock VerticalAlignment="Center" Text="焦点歌词颜色 (逐字歌词)" />
                                         <Grid MinWidth="10" HorizontalAlignment="Right">
                                             <Grid.ColumnDefinitions>
@@ -284,7 +259,6 @@
                                             <Button Grid.Column="1" Click="ConfirmKaraokLyricFocusingColor">确认</Button>
                                             <Button Grid.Column="2" Click="ResetKaraokLyricFocusingColor">重置</Button>
                                         </Grid>
-
                                     </Grid>
 
                                     <Grid>

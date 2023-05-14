@@ -73,18 +73,6 @@ public sealed partial class LyricItem : UserControl, IDisposable
             : (Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush)!.Color;
     }
 
-    private Color GetKaraokIdleBrush()
-    {
-        if (Common.Setting.karaokLyricIdleColor is not null)
-        {
-            return _karaokIdleColorCache ??= Common.Setting.karaokLyricIdleColor.Value;
-        }
-
-        return Common.PageExpandedPlayer != null
-            ? Common.PageExpandedPlayer.ForegroundIdleTextBrush.Color
-            : (Application.Current.Resources["TextFillColorTertiaryBrush"] as SolidColorBrush)!.Color;
-    }
-
     private SolidColorBrush GetAccentBrush()
     {
         if (Common.Setting.pureLyricFocusingColor is not null)
@@ -134,13 +122,13 @@ public sealed partial class LyricItem : UserControl, IDisposable
             {
                 //playedBlock.Foreground = IdleBrush;
                 if (((SolidColorBrush)playedBlock.Foreground).Opacity <= 0.41)
-                    StoryboardDictionary[playedBlock].Begin();
+                    StoryboardDictionary[playedBlock]?.Begin();
             }
 
             var playingBlock = playedBlocks.Last();
             var storyboard = StoryboardDictionary[playingBlock];
             if (storyboard.GetCurrentTime().Ticks == 0)
-                storyboard.Begin();
+                storyboard?.Begin();
         });
     }
 
@@ -221,7 +209,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
                     Storyboard.SetTarget(wordScaleAni, w);
                     Storyboard.SetTargetProperty(wordScaleAni, "(TextBox.FontSize)");
                     wordStoryboard.Children.Add(wordScaleAni);
-                    wordStoryboard.Begin();
+                    wordStoryboard?.Begin();
                 });
             }
             else
@@ -248,7 +236,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
             Storyboard.SetTarget(wordScaleAni, TextBoxPureLyric);
             Storyboard.SetTargetProperty(wordScaleAni, "(TextBlock.FontSize)");
             wordStoryboard.Children.Add(wordScaleAni);
-            wordStoryboard.Begin();
+            wordStoryboard?.Begin();
         }
         if(Common.Setting.PerformanceMode==2)
         {
@@ -263,7 +251,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
             Storyboard.SetTarget(wordScaleAni, TextBoxPureLyric);
             Storyboard.SetTargetProperty(wordScaleAni, "(TextBlock.FontSize)");
             wordStoryboard.Children.Add(wordScaleAni);
-            wordStoryboard.Begin();
+            wordStoryboard?.Begin();
             var transstoryboard = new Storyboard();
             var transscaleani = new DoubleAnimation
             {
@@ -287,7 +275,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
             Storyboard.SetTargetProperty(transcolorani, "(TextBox.Foreground).(SolidColorBrush.Opacity)");
             transstoryboard.Children.Add(transscaleani);
             transstoryboard.Children.Add(transcolorani);
-            transstoryboard.Begin();
+            transstoryboard?.Begin();
 
         }
 
@@ -314,7 +302,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
                     Storyboard.SetTarget(wordScaleAni, w);
                     Storyboard.SetTargetProperty(wordScaleAni, "(TextBox.FontSize)");
                     wordStoryboard.Children.Add(wordScaleAni);
-                    wordStoryboard.Begin();
+                    wordStoryboard?.Begin();
                 }
                 );
             }
@@ -341,7 +329,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
             Storyboard.SetTarget(wordScaleAni, TextBoxPureLyric);
             Storyboard.SetTargetProperty(wordScaleAni, "(TextBlock.FontSize)");
             wordStoryboard.Children.Add(wordScaleAni);
-            wordStoryboard.Begin();
+            wordStoryboard?.Begin();
         }
         if(Common.Setting.PerformanceMode==2)
         {
@@ -356,7 +344,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
             Storyboard.SetTarget(wordScaleAni, TextBoxPureLyric);
             Storyboard.SetTargetProperty(wordScaleAni, "(TextBlock.FontSize)");
             wordStoryboard.Children.Add(wordScaleAni);
-            wordStoryboard.Begin();
+            wordStoryboard?.Begin();
             var transstoryboard = new Storyboard();
             var transscaleani = new DoubleAnimation
             {
@@ -380,7 +368,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
             Storyboard.SetTargetProperty(colorani, "(TextBoxtranslation.Foreground).(SolidColorBrush.Opacity)");
             transstoryboard.Children.Add(transscaleani);
             transstoryboard.Children.Add(colorani);
-            transstoryboard.Begin();
+            transstoryboard?.Begin();
         }
 
 
@@ -430,7 +418,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
                         storyboard.Stop();
                     w.Foreground.Opacity = 0.4;
                 });
-
+                StoryboardDictionary.Clear();
             });
 
     }
@@ -521,7 +509,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
         Storyboard.SetTarget(OpacityAni, OnHoverRectangle);
         Storyboard.SetTargetProperty(OpacityAni, "Opacity");
         Instoryboard.Children.Add(OpacityAni);
-        Instoryboard.Begin();
+        Instoryboard?.Begin();
     }
 
     private void PointerOut(object sender, PointerRoutedEventArgs e)
@@ -537,7 +525,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
         Storyboard.SetTarget(OpacityAni, OnHoverRectangle);
         Storyboard.SetTargetProperty(OpacityAni, "Opacity");
         Outstoryboard.Children.Add(OpacityAni);
-        Outstoryboard.Begin();
+        Outstoryboard?.Begin();
     }
 
 }

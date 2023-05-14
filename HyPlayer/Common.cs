@@ -706,24 +706,6 @@ namespace HyPlayer
             }
         }
 
-
-        public Color? karaokLyricIdleColor
-        {
-            get
-            {
-                var bytes = GetSettings<byte[]?>(nameof(karaokLyricIdleColor), null);
-                return bytes == null ? null : Color.FromArgb(bytes[0], bytes[1], bytes[2], bytes[3]);
-            }
-            set
-            {
-                if (value.HasValue)
-                    ApplicationData.Current.LocalSettings.Values[nameof(karaokLyricIdleColor)] = new[]
-                        { value.Value.A, value.Value.R, value.Value.G, value.Value.B };
-                else ApplicationData.Current.LocalSettings.Values[nameof(karaokLyricIdleColor)] = null;
-                OnPropertyChanged();
-            }
-        }
-
         public Color? karaokLyricFocusingColor
         {
             get

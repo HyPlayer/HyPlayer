@@ -60,6 +60,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     public bool jumpedLyrics;
     public double lastChangedLyricWidth;
     private int lastheight;
+    private bool _lyricHasBeenLoaded = false;
 
     private LyricItemModel lastitem;
     private int lastlrcid;
@@ -98,7 +99,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         Common.PageExpandedPlayer = this;
         HyPlayList.OnPause += HyPlayList_OnPause;
         HyPlayList.OnPlay += HyPlayList_OnPlay;
-        HyPlayList.OnLyricChange += RefreshLyricTime;
+        HyPlayList.OnLyricChange += () => RefreshLyricTime(false);
         HyPlayList.OnPlayItemChange += OnSongChange;
         HyPlayList.OnLyricLoaded += HyPlayList_OnLyricLoaded;
         Window.Current.SizeChanged += Current_SizeChanged;
@@ -410,8 +411,10 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         NowPlaybackSpeed = "x" + HyPlayList.Player.PlaybackSession.PlaybackRate;
     }
 
-    private void RefreshLyricTime()
+    private void RefreshLyricTime(bool isInitLyricTime)
     {
+        if (isInitLyricTime) _lyricHasBeenLoaded = true;
+        if (!_lyricHasBeenLoaded) return;
         _ = Common.Invoke(() => UpdateFocusingLyric());
     }
 
@@ -483,7 +486,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private async Task InitLyricTime()
     {
         await Task.Delay(1000);
-        RefreshLyricTime();
+        RefreshLyricTime(true);
     }
 
 
@@ -1106,7 +1109,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             }
             HyPlayList.OnPause -= HyPlayList_OnPause;
             HyPlayList.OnPlay -= HyPlayList_OnPlay;
-            HyPlayList.OnLyricChange -= RefreshLyricTime;
+            HyPlayList.OnLyricChange -= () => RefreshLyricTime(false);
             HyPlayList.OnPlayItemChange -= OnSongChange;
             HyPlayList.OnLyricLoaded -= HyPlayList_OnLyricLoaded;
             HyPlayList.OnTimerTicked -= HyPlayList_OnTimerTicked;
