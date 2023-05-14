@@ -31,7 +31,7 @@
                                 <controls:ImageEx
                                     x:Name="RectangleImageBack"
                                     Height="82"
-                                    Margin="0,-10,0,-10"
+                                    Margin="0"
                                     CornerRadius="12"
                                     EnableLazyLoading="True"
                                     IsCacheEnabled="False"
@@ -41,7 +41,7 @@
                                 <Rectangle
                                     x:Name="RectangleImageAcrylic"
                                     Fill="{ThemeResource SystemControlAcrylicElementBrush}"
-                                    Margin="0"
+                                    Margin="0,-1,0,-1"
                                     RadiusX="10"
                                     RadiusY="10"
                                     Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}" />
@@ -112,13 +112,14 @@
                                     </StackPanel>
                                 </Grid>
                                 <Button x:Name="PlayBtn"
-                                    Margin="9,5,0,0"
+                                    Margin="8,3,0,0"
                                     HorizontalAlignment="Left"
-                                    Height="73"
-                                    Width="73"
-                                    CornerRadius="8"
+                                    Height="74"
+                                    Width="74"
+                                    CornerRadius="9"
                                     VerticalAlignment="Top"
                                     Click="BtnPlayClick"
+                                        BorderBrush="Transparent"
                                         Background="{ThemeResource SystemAltLowColor}"
                                     Tag="{x:Bind ResourceId}"
                                     FocusVisualSecondaryBrush="AliceBlue"
