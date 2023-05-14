@@ -11,7 +11,7 @@
     d:DesignWidth="500"
     DoubleTapped="LyricItem_OnDoubleTapped"
     Loaded="LyricPanel_Loaded"
-    mc:Ignorable="d">
+    mc:Ignorable="d" PointerEntered="PointerIn" PointerExited="PointerOut">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -19,6 +19,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
+        <Rectangle x:Name="OnHoverRectangle" Grid.Row="0" Grid.RowSpan="2"  VerticalAlignment="Stretch" Fill="{ThemeResource SystemControlBackgroundBaseLowBrush}" RadiusX=" 8" RadiusY="8" Opacity="0"/>
         <TextBlock
             Name="WordLyricContainer"
             Grid.Row="0"

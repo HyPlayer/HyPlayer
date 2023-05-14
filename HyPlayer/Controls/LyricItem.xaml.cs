@@ -178,8 +178,8 @@ public sealed partial class LyricItem : UserControl, IDisposable
         TextBoxPureLyric.FontWeight = FontWeights.Bold;
         WordLyricContainer.FontWeight = FontWeights.Bold;
         TextBoxTranslation.FontWeight = FontWeights.Bold;
-        TextBoxPureLyric.Margin = new Thickness(0, 2, 0, 2);
-        TextBoxTranslation.Margin = new Thickness(0, 2, 0, 2);
+        TextBoxPureLyric.Margin = new Thickness(5, 5, 5, 7);
+        TextBoxTranslation.Margin = new Thickness(5, 7, 5, 7);
         TextBoxPureLyric.CharacterSpacing = 30;
         TextBoxTranslation.CharacterSpacing = 30;
         TextBoxPureLyric.Foreground = AccentBrush;
@@ -224,12 +224,37 @@ public sealed partial class LyricItem : UserControl, IDisposable
         Storyboard.SetTargetProperty(wordScaleAni, "(TextBlock.FontSize)");
         wordStoryboard.Children.Add(wordScaleAni);
         wordStoryboard.Begin();
+        var transstoryboard = new Storyboard();
+        var transscaleani = new DoubleAnimation
+        {
+            From = actualsize,
+            To = actualsize + Common.Setting.lyricScaleSize - 3,
+            Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
+            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+            EnableDependentAnimation = true
+        };
+        var transcolorani = new DoubleAnimation
+        {
+            From = 0.6,
+            To = 1,
+            Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
+            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+            EnableDependentAnimation = true
+        };
+        Storyboard.SetTarget(transscaleani, TextBoxTranslation);
+        Storyboard.SetTarget(transcolorani, TextBoxTranslation);
+        Storyboard.SetTargetProperty(transscaleani, "(TextBox.FontSize)");
+        Storyboard.SetTargetProperty(transcolorani, "(TextBox.Foreground).(SolidColorBrush.Opacity)");
+        transstoryboard.Children.Add(transscaleani);
+        transstoryboard.Children.Add(transcolorani);
+        transstoryboard.Begin();
+
 
 
     }
     public void PlayLeaveAni()
     {
-        double durationInSeconds = 0.4;
+        double durationInSeconds = 0.8;
         if(_lyricIsKaraokeLyric)
         {
             WordTextBlocks.ForEach(w =>
@@ -261,6 +286,30 @@ public sealed partial class LyricItem : UserControl, IDisposable
         Storyboard.SetTargetProperty(wordScaleAni, "(TextBlock.FontSize)");
         wordStoryboard.Children.Add(wordScaleAni);
         wordStoryboard.Begin();
+        var transstoryboard = new Storyboard();
+        var transscaleani = new DoubleAnimation
+        {
+            To = actualsize - 3,
+            From = actualsize + Common.Setting.lyricScaleSize,
+            Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
+            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+            EnableDependentAnimation = true
+        };
+        var colorani = new DoubleAnimation
+        {
+            To = 0.6,
+            From = 1,
+            Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
+            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+            EnableDependentAnimation = true
+        };
+        Storyboard.SetTarget(transscaleani, TextBoxTranslation);
+        Storyboard.SetTarget(colorani, TextBoxTranslation);
+        Storyboard.SetTargetProperty(transscaleani, "(TextBoxtranslation.FontSize)");
+        Storyboard.SetTargetProperty(colorani, "(TextBoxtranslation.Foreground).(SolidColorBrush.Opacity)");
+        transstoryboard.Children.Add(transscaleani);
+        transstoryboard.Children.Add(colorani);
+        transstoryboard.Begin();
 
 
     }
@@ -280,16 +329,16 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
                 //TextBoxPureLyric.FontSize = actualsize;
                 //WordLyricContainer.FontSize = actualsize;
-                TextBoxTranslation.FontSize = actualsize;
-                TextBoxPureLyric.Margin = new Thickness(0);
-                WordLyricContainer.Margin = new Thickness(0);
-                TextBoxTranslation.Margin = new Thickness(0);
+                //TextBoxTranslation.FontSize = actualsize;
+                TextBoxPureLyric.Margin = new Thickness(4);
+                WordLyricContainer.Margin = new Thickness(4);
+                TextBoxTranslation.Margin = new Thickness(5);
                 TextBoxPureLyric.CharacterSpacing = 0;
                 WordLyricContainer.CharacterSpacing = 0;
                 TextBoxTranslation.CharacterSpacing = 0;
                 TextBoxPureLyric.FontWeight = FontWeights.SemiBold;
                 WordLyricContainer.FontWeight = FontWeights.SemiBold;
-                TextBoxTranslation.FontWeight = FontWeights.SemiBold;
+                TextBoxTranslation.FontWeight = FontWeights.Thin;
                 TextBoxPureLyric.Foreground = IdleBrush;
                 TextBoxTranslation.Foreground = IdleBrush;
                 TextBoxSound.Foreground = IdleBrush;
@@ -378,4 +427,37 @@ public sealed partial class LyricItem : UserControl, IDisposable
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
+        private void PointerIn(object sender, PointerRoutedEventArgs e)
+    {
+        var Instoryboard=new Storyboard();
+        var OpacityAni = new DoubleAnimation
+        {
+            To = 0.7,
+            Duration = new Duration(TimeSpan.FromSeconds(0.5)),
+            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+            EnableDependentAnimation = true
+        };
+
+        Storyboard.SetTarget(OpacityAni, OnHoverRectangle);
+        Storyboard.SetTargetProperty(OpacityAni, "Opacity");
+        Instoryboard.Children.Add(OpacityAni);
+        Instoryboard.Begin();
+    }
+
+    private void PointerOut(object sender, PointerRoutedEventArgs e)
+    {
+        var Outstoryboard = new Storyboard();
+        var OpacityAni = new DoubleAnimation
+        {
+            To = 0,
+            Duration = new Duration(TimeSpan.FromSeconds(0.5)),
+            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+            EnableDependentAnimation = true
+        };
+        Storyboard.SetTarget(OpacityAni, OnHoverRectangle);
+        Storyboard.SetTargetProperty(OpacityAni, "Opacity");
+        Outstoryboard.Children.Add(OpacityAni);
+        Outstoryboard.Begin();
+    }
+
 }
