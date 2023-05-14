@@ -368,15 +368,15 @@ DoubleAnimation verticalAnimation;
                 {
                     PlayStateIcon.Glyph =
                     HyPlayList.CurrentFadeInOutState == HyPlayList.FadeInOutState.FadeIn
-                        ? "\uEDB4"
-                        : "\uEDB5";
+                        ? "\uF8AE"
+                        : "\uF5B0";
                 }
                 else
                 {
                     PlayStateIcon.Glyph =
                     HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
-                        ? "\uEDB4"
-                        : "\uEDB5";
+                        ? "\uF8AE"
+                        : "\uF5B0";
                 }
             }
             catch
@@ -458,7 +458,7 @@ DoubleAnimation verticalAnimation;
             }
             else
             {
-                IconPrevious.Glyph = "\uE892";
+                IconPrevious.Glyph = "\uF8AC";
                 switch (HyPlayList.NowPlayType)
                 {
                     case PlayMode.Shuffled:
@@ -521,8 +521,8 @@ DoubleAnimation verticalAnimation;
                 HyPlayList.Player.PlaybackSession.Position.ToString(@"m\:ss");
             PlayStateIcon.Glyph =
                 HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
-                    ? "\uEDB4"
-                    : "\uEDB5";
+                    ? "\uF8AE" : 
+                    "\uF5B0";
 
             TbSingerName.Content = HyPlayList.NowPlayingItem.PlayItem.ArtistString;
             TbSongName.Text = HyPlayList.NowPlayingItem.PlayItem.Name;
@@ -629,7 +629,7 @@ DoubleAnimation verticalAnimation;
     {
         if (HyPlayList.NowPlayingItem.PlayItem?.Name != null && HyPlayList.Player.Source == null)
             _ = HyPlayList.LoadPlayerSong(HyPlayList.List[HyPlayList.NowPlaying]);
-        PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uEDB5" : "\uEDB4";
+        PlayStateIcon.Glyph = HyPlayList.IsPlaying ?"\uF8AE" : "\uF5B0"; ;
         if (HyPlayList.IsPlaying)
         {
             HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.PauseFadeOut);
@@ -1082,7 +1082,10 @@ DoubleAnimation verticalAnimation;
         }
 
         if (Common.Setting.playButtonAccentColor)
-            BtnPlayStateChange.Background = Resources["AccentPlayButtonColor"] as Brush;
+        { 
+            BtnPlayStateChange.Background = Resources["SolidPlayButtonColor"] as Brush;
+            PlayStateIcon.Foreground = Resources["SolidPlayButtonIconColor"] as Brush;
+        }
         else
             PlayBarBackgroundAni.Children.RemoveAt(2);
 

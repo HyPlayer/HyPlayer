@@ -155,6 +155,15 @@
 
                                 <StackPanel Spacing="8">
                                     <Grid>
+                                        <TextBlock VerticalAlignment="Center" Text="歌词特效等级" />
+                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.PerformanceMode, Mode=TwoWay}">
+                                            <ComboBoxItem Content="全部关闭" />
+                                            <ComboBoxItem Content="部分开启" />
+                                            <ComboBoxItem Content="特效全开" />
+                                        </ComboBox>
+                                    </Grid>
+
+                                    <Grid>
                                         <TextBlock VerticalAlignment="Center" Text="使用 逐字歌词 (试验性功能)" />
                                         <ToggleSwitch
                                             MinWidth="10"
@@ -595,7 +604,7 @@
                                         </ComboBox>
                                     </Grid>
                                     <Grid>
-                                        <TextBlock VerticalAlignment="Center" Text="播放按钮着强调色" />
+                                        <TextBlock VerticalAlignment="Center" Text="圆形播放按钮" />
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"

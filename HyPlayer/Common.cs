@@ -420,6 +420,12 @@ namespace HyPlayer
             }
         }
 
+        public int PerformanceMode
+        {
+            get => GetSettings(nameof(PerformanceMode), 1);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(PerformanceMode)] = value;
+        }
+
         public bool karaokLyric
         {
             get => GetSettings(nameof(karaokLyric), false);
@@ -513,7 +519,7 @@ namespace HyPlayer
 
         public int lyricScaleSize
         {
-            get => GetSettings(nameof(lyricScaleSize), 0);
+            get => GetSettings(nameof(lyricScaleSize), 3);
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(lyricScaleSize)] = value;

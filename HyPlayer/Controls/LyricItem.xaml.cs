@@ -130,7 +130,8 @@ public sealed partial class LyricItem : UserControl, IDisposable
             foreach (var playedBlock in playedBlocks.GetRange(0, playedBlocks.Count - 1))
             {
                 //playedBlock.Foreground = IdleBrush;
-                playedBlock.Foreground = new SolidColorBrush(GetKaraokAccentBrush());
+                if (((SolidColorBrush)playedBlock.Foreground).Opacity <= 0.41)
+                    StoryboardDictionary[playedBlock].Begin();
             }
 
             var playingBlock = playedBlocks.Last();
@@ -148,78 +149,287 @@ public sealed partial class LyricItem : UserControl, IDisposable
         _lyricIsOnShow = true;
         if (_lyricIsKaraokeLyric)
         {
-            WordTextBlocks.ForEach(w =>
+            /*WordTextBlocks.ForEach(w =>
             {
                 w.Foreground = new SolidColorBrush(GetKaraokIdleBrush());
-            });
+            });*/
             foreach (var item in WordTextBlocks)
             {
-                var ani = new ColorAnimation
+                var ani = new DoubleAnimation
                 {
-                    From = GetKaraokIdleBrush(),
-                    To = GetKaraokAccentBrush(),
+                    From = 0.4,
+                    To = 1,
                     Duration = KaraokeDictionary[item].Duration,
-                    EnableDependentAnimation = true
+                    EnableDependentAnimation = true,
                 };
+                ani.Duration = (ani.Duration < TimeSpan.FromMilliseconds(200)) ? TimeSpan.FromMilliseconds(200) : ani.Duration;
+                ani.EasingFunction = (ani.Duration >= TimeSpan.FromMilliseconds(300)) ? new SineEase { EasingMode = EasingMode.EaseOut } : new CircleEase { EasingMode = EasingMode.EaseInOut };
                 var storyboard = new Storyboard();
                 Storyboard.SetTarget(ani, item);
-                Storyboard.SetTargetProperty(ani, "(Run.Foreground).(SolidColorBrush.Color)");
+                Storyboard.SetTargetProperty(ani, "(Run.Foreground).(SolidColorBrush.Opacity)");
+
                 storyboard.Children.Add(ani);
                 StoryboardDictionary.Add(item, storyboard);
             }
             HyPlayList.OnPlayPositionChange += RefreshWordColor;
         }
-
-        TextBoxPureLyric.FontSize = actualsize + Common.Setting.lyricScaleSize;
-        TextBoxTranslation.FontSize = actualsize + Common.Setting.lyricScaleSize;
+        //TextBoxPureLyric.FontSize = actualsize + Common.Setting.lyricScaleSize;
+        if (Common.Setting.PerformanceMode == 0)
+        {
+            TextBoxTranslation.FontSize = actualsize + Common.Setting.lyricScaleSize;
+            WordLyricContainer.FontSize = actualsize + Common.Setting.lyricScaleSize;
+        }
+        if(Common.Setting.PerformanceMode==1)
+        {
+            TextBoxTranslation.FontSize = actualsize + Common.Setting.lyricScaleSize;
+        }
         TextBoxPureLyric.FontWeight = FontWeights.Bold;
         WordLyricContainer.FontWeight = FontWeights.Bold;
         TextBoxTranslation.FontWeight = FontWeights.Bold;
-        TextBoxPureLyric.Margin = new Thickness(0, 2, 0, 2);
-        TextBoxTranslation.Margin = new Thickness(0, 2, 0, 2);
+        TextBoxPureLyric.Margin = new Thickness(5, 5, 5, 7);
+        TextBoxTranslation.Margin = new Thickness(5, 7, 5, 7);
         TextBoxPureLyric.CharacterSpacing = 30;
         TextBoxTranslation.CharacterSpacing = 30;
         TextBoxPureLyric.Foreground = AccentBrush;
         TextBoxSound.Foreground = AccentBrush;
         TextBoxTranslation.Foreground = AccentBrush;
+        PlayEnterAni();
         // shadowColor = AccentBrush.Color == Color.FromArgb(255, 0, 0, 0)
         //     ? Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 255, 255, 255)
         //     : Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 0, 0, 0);
     }
-
-    public void OnHind()
+    public void PlayEnterAni()
     {
-        if (!_lyricIsOnShow)
-            //RefreshFontSize();
-            return;
-        _lyricIsOnShow = false;
-        if (_lyricIsKaraokeLyric)
+        double durationInSeconds = 0.6;
+        if(_lyricIsKaraokeLyric)
         {
-            HyPlayList.OnPlayPositionChange -= RefreshWordColor;
-            WordTextBlocks.ForEach(w =>
+            if (Common.Setting.PerformanceMode != 0)
             {
-                w.Foreground = IdleBrush;
-            });
-            StoryboardDictionary.Clear();
+                WordTextBlocks.ForEach(w =>
+                {
+                    var wordStoryboard = new Storyboard();
+                    var wordScaleAni = new DoubleAnimation
+                    {
+                        To = actualsize + Common.Setting.lyricScaleSize,
+                        Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
+                        EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+                        EnableDependentAnimation = true
+                    };
+                    Storyboard.SetTarget(wordScaleAni, w);
+                    Storyboard.SetTargetProperty(wordScaleAni, "(TextBox.FontSize)");
+                    wordStoryboard.Children.Add(wordScaleAni);
+                    wordStoryboard.Begin();
+                });
+            }
+            else
+            {
+                WordTextBlocks.ForEach(w =>
+                w.FontSize = actualsize + Common.Setting.lyricScaleSize
+                ); ;
+            }
         }
 
-        TextBoxPureLyric.FontSize = actualsize;
-        WordLyricContainer.FontSize = actualsize;
-        TextBoxTranslation.FontSize = actualsize;
-        TextBoxPureLyric.Margin = new Thickness(0);
-        WordLyricContainer.Margin = new Thickness(0);
-        TextBoxTranslation.Margin = new Thickness(0);
-        TextBoxPureLyric.CharacterSpacing = 0;
-        WordLyricContainer.CharacterSpacing = 0;
-        TextBoxTranslation.CharacterSpacing = 0;
-        TextBoxPureLyric.FontWeight = FontWeights.SemiBold;
-        WordLyricContainer.FontWeight = FontWeights.SemiBold;
-        TextBoxTranslation.FontWeight = FontWeights.SemiBold;
-        TextBoxPureLyric.Foreground = IdleBrush;
-        WordLyricContainer.Foreground = IdleBrush;
-        TextBoxTranslation.Foreground = IdleBrush;
-        TextBoxSound.Foreground = IdleBrush;
-        //shadowColor = Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 0, 0, 0);
+
+        if (Common.Setting.PerformanceMode == 0)
+        { }
+        if(Common.Setting.PerformanceMode==1)
+        {
+            var wordStoryboard = new Storyboard();
+            var wordScaleAni = new DoubleAnimation
+            {
+                To = actualsize + Common.Setting.lyricScaleSize,
+                Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
+                EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+                EnableDependentAnimation = true
+            };
+            Storyboard.SetTarget(wordScaleAni, TextBoxPureLyric);
+            Storyboard.SetTargetProperty(wordScaleAni, "(TextBlock.FontSize)");
+            wordStoryboard.Children.Add(wordScaleAni);
+            wordStoryboard.Begin();
+        }
+        if(Common.Setting.PerformanceMode==2)
+        {
+            var wordStoryboard = new Storyboard();
+            var wordScaleAni = new DoubleAnimation
+            {
+                To = actualsize + Common.Setting.lyricScaleSize,
+                Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
+                EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+                EnableDependentAnimation = true
+            };
+            Storyboard.SetTarget(wordScaleAni, TextBoxPureLyric);
+            Storyboard.SetTargetProperty(wordScaleAni, "(TextBlock.FontSize)");
+            wordStoryboard.Children.Add(wordScaleAni);
+            wordStoryboard.Begin();
+            var transstoryboard = new Storyboard();
+            var transscaleani = new DoubleAnimation
+            {
+                From = actualsize,
+                To = actualsize + Common.Setting.lyricScaleSize - 3,
+                Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
+                EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+                EnableDependentAnimation = true
+            };
+            var transcolorani = new DoubleAnimation
+            {
+                From = 0.6,
+                To = 1,
+                Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
+                EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+                EnableDependentAnimation = true
+            };
+            Storyboard.SetTarget(transscaleani, TextBoxTranslation);
+            Storyboard.SetTarget(transcolorani, TextBoxTranslation);
+            Storyboard.SetTargetProperty(transscaleani, "(TextBox.FontSize)");
+            Storyboard.SetTargetProperty(transcolorani, "(TextBox.Foreground).(SolidColorBrush.Opacity)");
+            transstoryboard.Children.Add(transscaleani);
+            transstoryboard.Children.Add(transcolorani);
+            transstoryboard.Begin();
+
+        }
+
+
+
+    }
+    public void PlayLeaveAni()
+    {
+        double durationInSeconds = 0.8;
+        if(_lyricIsKaraokeLyric)
+        {
+            if (Common.Setting.PerformanceMode !=0)
+            {
+                WordTextBlocks.ForEach(w =>
+                {
+                    var wordStoryboard = new Storyboard();
+                    var wordScaleAni = new DoubleAnimation
+                    {
+                        To = actualsize,
+                        Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
+                        EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+                        EnableDependentAnimation = true
+                    };
+                    Storyboard.SetTarget(wordScaleAni, w);
+                    Storyboard.SetTargetProperty(wordScaleAni, "(TextBox.FontSize)");
+                    wordStoryboard.Children.Add(wordScaleAni);
+                    wordStoryboard.Begin();
+                }
+                );
+            }
+            else 
+            {
+                WordTextBlocks.ForEach(w =>
+                w.FontSize = actualsize
+                ); ; 
+            }
+        }
+
+
+        if (Common.Setting.PerformanceMode==0) { }
+        if(Common.Setting.PerformanceMode==1)
+        {
+            var wordStoryboard = new Storyboard();
+            var wordScaleAni = new DoubleAnimation
+            {
+                To = actualsize,
+                Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
+                EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+                EnableDependentAnimation = true
+            };
+            Storyboard.SetTarget(wordScaleAni, TextBoxPureLyric);
+            Storyboard.SetTargetProperty(wordScaleAni, "(TextBlock.FontSize)");
+            wordStoryboard.Children.Add(wordScaleAni);
+            wordStoryboard.Begin();
+        }
+        if(Common.Setting.PerformanceMode==2)
+        {
+            var wordStoryboard = new Storyboard();
+            var wordScaleAni = new DoubleAnimation
+            {
+                To = actualsize,
+                Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
+                EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+                EnableDependentAnimation = true
+            };
+            Storyboard.SetTarget(wordScaleAni, TextBoxPureLyric);
+            Storyboard.SetTargetProperty(wordScaleAni, "(TextBlock.FontSize)");
+            wordStoryboard.Children.Add(wordScaleAni);
+            wordStoryboard.Begin();
+            var transstoryboard = new Storyboard();
+            var transscaleani = new DoubleAnimation
+            {
+                To = actualsize - 3,
+                From = actualsize + Common.Setting.lyricScaleSize,
+                Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
+                EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+                EnableDependentAnimation = true
+            };
+            var colorani = new DoubleAnimation
+            {
+                To = 0.8,
+                From = 1,
+                Duration = new Duration(TimeSpan.FromSeconds(durationInSeconds)),
+                EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+                EnableDependentAnimation = true
+            };
+            Storyboard.SetTarget(transscaleani, TextBoxTranslation);
+            Storyboard.SetTarget(colorani, TextBoxTranslation);
+            Storyboard.SetTargetProperty(transscaleani, "(TextBoxtranslation.FontSize)");
+            Storyboard.SetTargetProperty(colorani, "(TextBoxtranslation.Foreground).(SolidColorBrush.Opacity)");
+            transstoryboard.Children.Add(transscaleani);
+            transstoryboard.Children.Add(colorani);
+            transstoryboard.Begin();
+        }
+
+
+    }
+    public void OnHind()
+    {
+        _ = Common.Invoke(() =>
+            {
+                if (!_lyricIsOnShow)
+                    //RefreshFontSize();
+                    return;
+                _lyricIsOnShow = false;
+
+                if (_lyricIsKaraokeLyric)
+                {
+                    HyPlayList.OnPlayPositionChange -= RefreshWordColor;
+                }
+
+                //TextBoxPureLyric.FontSize = actualsize;
+                if (Common.Setting.PerformanceMode == 0)
+                {
+                    TextBoxTranslation.FontSize = actualsize;
+                    WordLyricContainer.FontSize = actualsize;
+                }
+                if(Common.Setting.PerformanceMode==1)
+                {
+                    TextBoxTranslation.FontSize = actualsize;
+                }
+                TextBoxPureLyric.Margin = new Thickness(4);
+                WordLyricContainer.Margin = new Thickness(4);
+                TextBoxTranslation.Margin = new Thickness(5);
+                TextBoxPureLyric.CharacterSpacing = 0;
+                WordLyricContainer.CharacterSpacing = 0;
+                TextBoxTranslation.CharacterSpacing = 0;
+                TextBoxPureLyric.FontWeight = FontWeights.SemiBold;
+                WordLyricContainer.FontWeight = FontWeights.SemiBold;
+                TextBoxTranslation.FontWeight = FontWeights.Thin;
+                TextBoxPureLyric.Foreground = IdleBrush;
+                TextBoxTranslation.Foreground = IdleBrush;
+                TextBoxSound.Foreground = IdleBrush;
+                PlayLeaveAni();
+                //shadowColor = Color.FromArgb((byte)(Common.Setting.lyricDropshadow ? 255 : 0), 0, 0, 0);
+                WordTextBlocks.ForEach(w =>
+                {
+                    var storyboard = new Storyboard();
+                    if(StoryboardDictionary.TryGetValue(w,out storyboard))
+                        storyboard.Stop();
+                    w.Foreground.Opacity = 0.4;
+                });
+
+            });
+
     }
 
     private void LyricItem_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
@@ -256,8 +466,9 @@ public sealed partial class LyricItem : UserControl, IDisposable
                 var textBlock = new Run()
                 {
                     Text = item.CurrentWords,
-                    Foreground = IdleBrush
+                    Foreground = new SolidColorBrush(GetKaraokAccentBrush()),
                 };
+                textBlock.Foreground.Opacity = 0.4;
                 WordTextBlocks.Add(textBlock);
                 WordLyricContainer.Inlines.Add(textBlock);
                 KaraokeDictionary[textBlock] = item;
@@ -292,4 +503,37 @@ public sealed partial class LyricItem : UserControl, IDisposable
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
+        private void PointerIn(object sender, PointerRoutedEventArgs e)
+    {
+        var Instoryboard=new Storyboard();
+        var OpacityAni = new DoubleAnimation
+        {
+            To = 0.7,
+            Duration = new Duration(TimeSpan.FromSeconds(0.5)),
+            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+            EnableDependentAnimation = true
+        };
+
+        Storyboard.SetTarget(OpacityAni, OnHoverRectangle);
+        Storyboard.SetTargetProperty(OpacityAni, "Opacity");
+        Instoryboard.Children.Add(OpacityAni);
+        Instoryboard.Begin();
+    }
+
+    private void PointerOut(object sender, PointerRoutedEventArgs e)
+    {
+        var Outstoryboard = new Storyboard();
+        var OpacityAni = new DoubleAnimation
+        {
+            To = 0,
+            Duration = new Duration(TimeSpan.FromSeconds(0.5)),
+            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+            EnableDependentAnimation = true
+        };
+        Storyboard.SetTarget(OpacityAni, OnHoverRectangle);
+        Storyboard.SetTargetProperty(OpacityAni, "Opacity");
+        Outstoryboard.Children.Add(OpacityAni);
+        Outstoryboard.Begin();
+    }
+
 }

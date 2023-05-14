@@ -228,7 +228,19 @@ namespace HyPlayer.Classes
             return value;
         }
     }
+    public class EmptyStringToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
 
+            return value is "" ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            return value;
+        }
+    }
     public class DateConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)

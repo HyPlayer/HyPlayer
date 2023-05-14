@@ -68,7 +68,8 @@ public class LyricItemWrapper : ContentPresenter
 
     private void LyricItemWrapper_SizeChanged(object sender, SizeChangedEventArgs e)
     {
-        if (Content is LyricItem item) item.RefreshFontSize();
+        if(e.NewSize.Width != e.PreviousSize.Width||(e.NewSize.Height - e.PreviousSize.Height >= 5))
+            if (Content is LyricItem item) item.RefreshFontSize();
     }
 }
 

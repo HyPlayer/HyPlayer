@@ -13,43 +13,15 @@
     Loaded="SongListRoot_Loaded"
     mc:Ignorable="d">
     <Grid>
-        <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup>
-                <VisualState>
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="0" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="Toolbar.Margin" Value="0,-110,0,0"/>
-                        <Setter Target="FilterBox.Width" Value="80"/>
-                        <Setter Target="SearchBoxColm.Width" Value="80"/>
-                        <Setter Target="MultiSelectColm.Width" Value="0"/>
-                        <Setter Target="MultiSelectBtn.Visibility" Value="Collapsed"/>
-                    </VisualState.Setters>
-                </VisualState>
-                <VisualState>
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="1300" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="Toolbar.Margin" Value="0,-35,10,0"/>
-                        <Setter Target="FilterBox.Width" Value="150"/>
-                        <Setter Target="SearchBoxColm.Width" Value="150"/>
-                        <Setter Target="MultiSelectColm.Width" Value="50"/>
-                        <Setter Target="MultiSelectBtn.Visibility" Value="Visible"/>
-                    </VisualState.Setters>
-                </VisualState>
-
-            </VisualStateGroup>
-        </VisualStateManager.VisualStateGroups>
         <ListView
             Name="SongContainer"
             Padding="0"
-            ItemsSource="{x:Bind VisibleSongs}"
             IsItemClickEnabled="True"
             ItemClick="SongContainer_ItemClick"
+            ItemContainerStyle="{ThemeResource ListViewItemStyle}"
+            ItemsSource="{x:Bind VisibleSongs}"
             SelectionMode="{x:Bind MultiSelect, Converter={StaticResource SelectModeConverter}, Mode=OneWay}"
-            ShowsScrollingPlaceholders="True" ItemContainerStyle="{ThemeResource ListViewItemStyle}">
+            ShowsScrollingPlaceholders="True">
             <ListView.Footer>
                 <ContentControl Margin="0,0,0,130" Content="{x:Bind Footer}" />
             </ListView.Footer>
@@ -67,18 +39,18 @@
                         Visibility="{x:Bind IsSearchEnabled}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="150" x:Name="SearchBoxColm"/>
+                            <ColumnDefinition x:Name="SearchBoxColm" Width="150" />
                             <ColumnDefinition Width="50" />
                             <ColumnDefinition Width="50" />
-                            <ColumnDefinition Width="50" x:Name="MultiSelectColm"/>
+                            <ColumnDefinition x:Name="MultiSelectColm" Width="50" />
                         </Grid.ColumnDefinitions>
                         <TextBox
                             x:Name="FilterBox"
                             Grid.Column="1"
-                            PlaceholderText="搜索..."
                             Width="150"
                             VerticalAlignment="Center"
-                            controls:DockPanel.Dock="Right" />
+                            controls:DockPanel.Dock="Right"
+                            PlaceholderText="搜索..." />
                         <Button
                             x:Name="SearchToggle"
                             Grid.Column="2"
@@ -87,10 +59,10 @@
                             <FontIcon Glyph="&#xE721;" />
                         </Button>
                         <Button
-                            ToolTipService.ToolTip="跳转到当前播放"
                             x:Name="FocusingCurrent"
                             Grid.Column="3"
-                            Click="FocusingCurrent_OnClick">
+                            Click="FocusingCurrent_OnClick"
+                            ToolTipService.ToolTip="跳转到当前播放">
                             <FontIcon Glyph="&#xE819;" />
                         </Button>
                         <ToggleButton
@@ -202,151 +174,176 @@
                 <DataTemplate x:DataType="classes:NCSong" ScrollViewer.CanContentRenderOutsideBounds="False">
                     <Border>
                         <Grid
-                        Margin="-10,14,-10,14"
-                        HorizontalAlignment="Stretch"
-                        Background="Transparent"
-                        IsRightTapEnabled="True"
-                        RightTapped="Grid_RightTapped"
-                        ScrollViewer.CanContentRenderOutsideBounds="False"
-                        Tag="{x:Bind Order}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="80" />
-                        </Grid.ColumnDefinitions>
-                        <controls:ImageEx
-                            x:Name="RectangleImageBack"
-                            Grid.ColumnSpan="2"
-                            Height="62"
-                            Margin="2,-5,2,-5"
-                            x:Phase="4"
-                            CornerRadius="12"
-                            EnableLazyLoading="True"
-                            IsCacheEnabled="False"
-                            Source="{x:Bind Cover}"
-                            Stretch="Fill"
-                            Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}" />
-                        <Rectangle
-                            x:Name="RectangleImageAcrylic"
-                            Grid.ColumnSpan="2"
-                            Margin="1,-7,1,-7"
-                            Fill="{ThemeResource SystemControlBaseLowAcrylicElementBrush}"
-                            RadiusX="10"
-                            RadiusY="10"
-                            Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}" />
-
-                        <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                <controls:ImageEx
-                                x:Name="ImageRect"
-                                Width="50"
-                                Height="50"
+                            Margin="-10,14,-10,14"
+                            HorizontalAlignment="Stretch"
+                            Background="Transparent"
+                            IsRightTapEnabled="True"
+                            RightTapped="Grid_RightTapped"
+                            ScrollViewer.CanContentRenderOutsideBounds="False"
+                            Tag="{x:Bind Order}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="80" />
+                            </Grid.ColumnDefinitions>
+                            <controls:ImageEx
+                                x:Name="RectangleImageBack"
+                                Grid.ColumnSpan="2"
+                                Height="62"
+                                Margin="2,-5,2,-5"
                                 x:Phase="4"
-                                Margin="9,0,0,0"
-                                CornerRadius="10"
+                                CornerRadius="12"
                                 EnableLazyLoading="True"
                                 IsCacheEnabled="False"
-                                IsEnabled="{x:Bind IsAvailable}"
                                 Source="{x:Bind Cover}"
-                                Stretch="UniformToFill" />
+                                Stretch="Fill"
+                                Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}" />
+                            <Rectangle
+                                x:Name="RectangleImageAcrylic"
+                                Grid.ColumnSpan="2"
+                                Margin="1,-7,1,-7"
+                                Fill="{ThemeResource SystemControlBaseLowAcrylicElementBrush}"
+                                RadiusX="10"
+                                RadiusY="10"
+                                Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}" />
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                <controls:ImageEx
+                                    x:Name="ImageRect"
+                                    Width="50"
+                                    Height="50"
+                                    Margin="9,0,0,0"
+                                    x:Phase="4"
+                                    CornerRadius="10"
+                                    EnableLazyLoading="True"
+                                    IsCacheEnabled="False"
+                                    IsEnabled="{x:Bind IsAvailable}"
+                                    Source="{x:Bind Cover}"
+                                    Stretch="UniformToFill" />
                                 <TextBlock
-                                x:Name="OrderId"
-                                Width="48"
-                                Margin="-45,0,0,0"
-                                HorizontalAlignment="Left"
-                                VerticalAlignment="Top"
-                                FontSize="20"
-                                FontWeight="Bold"
-                                Text="{x:Bind DspOrder}" />
-                            <Grid Padding="7,0,0,0">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition />
-                                    <RowDefinition />
-                                    <RowDefinition />
-                                    <RowDefinition />
-                                </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <StackPanel
-                                    Grid.Row="0"
-                                    Orientation="Horizontal"
-                                    Spacing="5">
+                                    x:Name="OrderId"
+                                    Width="48"
+                                    Margin="-45,0,0,0"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Top"
+                                    FontSize="20"
+                                    FontWeight="Bold"
+                                    Text="{x:Bind DspOrder}" />
+                                <Grid Margin="12,0,0,0">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition />
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition />
+                                        <RowDefinition />
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel
+                                        Grid.Row="0"
+                                        Orientation="Horizontal"
+                                        Spacing="4">
+                                        <TextBlock
+                                            Name="TextBlockSongname"
+                                            x:Phase="0"
+                                            Style="{ThemeResource SubtitleTextBlockStyle}"
+                                            Text="{x:Bind songname}" />
+                                        <TextBlock
+                                            Name="TextBlockTransName"
+                                            x:Phase="0"
+                                            FontSize="20"
+                                            Foreground="Gray"
+                                            Text="{x:Bind ConvertTranslate(transname)}" />
+                                        <Image
+                                            Height="20"
+                                            Source="/Assets/cloud.png"
+                                            Visibility="{x:Bind IsCloud}" />
+                                        <Image
+                                            Height="20"
+                                            Margin="-5,0,0,0"
+                                            Source="/Assets/vip.png"
+                                            Visibility="{x:Bind IsVip}" />
+                                    </StackPanel>
                                     <TextBlock
-                                        Name="TextBlockSongname"
-                                        Margin="10,0,0,0"
-                                        x:Phase="0"
-                                        FontSize="19"
-                                        FontWeight="Bold"
-                                        Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
-                                        Text="{x:Bind songname}" />
-                                    <TextBlock
-                                        Name="TextBlockTransName"
-                                        x:Phase="0"
-                                        FontSize="20"
-                                        Foreground="Gray"
-                                        Text="{x:Bind ConvertTranslate(transname)}" />
-                                    <Image
-                                        Height="20"
-                                        Source="/Assets/cloud.png"
-                                        Visibility="{x:Bind IsCloud}" />
-                                    <Image
-                                        Height="20"
-                                        Margin="-5,-20,0,0"
-                                        Source="/Assets/vip.png"
-                                        Visibility="{x:Bind IsVip}" />
-                                </StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="-8,27,0,0">
+                                            Name="TextBlockAlia"
+                                            Grid.Row="1"
+                                            x:Phase="2"
+                                            FontSize="12"
+                                            Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
+                                            Text="{x:Bind alias}"
+                                            Visibility="{x:Bind alias, Converter={StaticResource EmptyStringToVisibilityConverter}}" />
+                                    <StackPanel Grid.Row="2" Orientation="Horizontal">
+
                                         <TextBlock
-                                    Name="TextBlockAlia"
-                                    Grid.Row="1"
-                                    Margin="10,2,0,-4"
-                                    x:Phase="2"
-                                    FontSize="12"
-                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                                    Text="{x:Bind alias}"
-                                    Visibility="Visible" />
+                                            Name="TextBlockArtist"
+                                            Grid.Row="2"
+                                            Margin="0,0,8,0"
+                                            FontSize="12"
+                                            Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
+                                            Text="{x:Bind ArtistString}" />
                                         <TextBlock
-                                    Name="TextBlockArtist"
-                                    Grid.Row="2"
-                                    Margin="10,5,0,-4"
-                                    FontSize="12"
-                                    Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
-                                    Text="{x:Bind ArtistString}" />
-                                        <TextBlock
-                                    Name="TextBlockAlbum"
-                                    Grid.Row="3"
-                                    Margin="10,5,0,0"
-                                    FontSize="12"
-                                    Foreground="Gray"
-                                    Text="{x:Bind Album.name}" />
+                                            Name="TextBlockAlbum"
+                                            Grid.Row="3"
+                                            FontSize="12"
+                                            Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
+                                            Text="{x:Bind Album.name}" />
                                     </StackPanel>
 
-                            </Grid>
-                        </StackPanel>
+                                </Grid>
+                            </StackPanel>
 
-                        <StackPanel
-                            Grid.Column="1"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Top"
-                            Orientation="Horizontal"
-                            Margin="0,0,8,0"
-                            Spacing="8">
-                            <Button
-                                x:Name="More"
-                                Width="45"
-                                Height="35"
-                                x:Phase="3"
-                                Click="More_Click"
-                                Background="Transparent"
-                                Tag="{x:Bind Order}"
-                                BorderBrush="Transparent"
-                                ToolTipService.ToolTip="更多">
-                                <FontIcon Glyph="&#xE10C;" />
-                            </Button>
-                        </StackPanel>
-                    </Grid>
+                            <StackPanel
+                                Grid.Column="1"
+                                Margin="0,0,8,0"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top"
+                                Orientation="Horizontal"
+                                Spacing="8">
+                                <Button
+                                    x:Name="More"
+                                    Width="45"
+                                    Height="35"
+                                    x:Phase="3"
+                                    Background="Transparent"
+                                    BorderBrush="Transparent"
+                                    Click="More_Click"
+                                    Tag="{x:Bind Order}"
+                                    ToolTipService.ToolTip="更多">
+                                    <FontIcon Glyph="&#xE10C;" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
                     </Border>
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="Toolbar.Margin" Value="0,-110,0,0" />
+                        <Setter Target="FilterBox.Width" Value="80" />
+                        <Setter Target="SearchBoxColm.Width" Value="80" />
+                        <Setter Target="MultiSelectColm.Width" Value="0" />
+                        <Setter Target="MultiSelectBtn.Visibility" Value="Collapsed" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1300" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="Toolbar.Margin" Value="0,-35,10,0" />
+                        <Setter Target="FilterBox.Width" Value="150" />
+                        <Setter Target="SearchBoxColm.Width" Value="150" />
+                        <Setter Target="MultiSelectColm.Width" Value="50" />
+                        <Setter Target="MultiSelectBtn.Visibility" Value="Visible" />
+                    </VisualState.Setters>
+                </VisualState>
+
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
     </Grid>
 </UserControl>
