@@ -50,6 +50,8 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
     public TextAlignment LyricAlignment =>
         Common.Setting.lyricAlignment ? TextAlignment.Left : TextAlignment.Center;
+    public HorizontalAlignment GridAlignment =>
+        Common.Setting.lyricAlignment ? HorizontalAlignment.Left : HorizontalAlignment.Center;
     private SolidColorBrush AccentBrush => GetAccentBrush();
 
     private SolidColorBrush IdleBrush => GetIdleBrush();
@@ -112,6 +114,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
         WordLyricContainer.TextAlignment = LyricAlignment;
         TextBoxTranslation.TextAlignment = LyricAlignment;
         TextBoxSound.TextAlignment = LyricAlignment;
+        MainGrid.HorizontalAlignment = GridAlignment;
         TextBoxPureLyric.FontSize = _lyricIsOnShow ? actualsize + Common.Setting.lyricScaleSize : actualsize;
         WordLyricContainer.FontSize = _lyricIsOnShow ? actualsize + Common.Setting.lyricScaleSize : actualsize;
         TextBoxTranslation.FontSize = _lyricIsOnShow ? actualsize + Common.Setting.lyricScaleSize : actualsize;
@@ -378,7 +381,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
                 TextBoxTranslation.CharacterSpacing = 0;
                 TextBoxPureLyric.FontWeight = FontWeights.SemiBold;
                 WordLyricContainer.FontWeight = FontWeights.SemiBold;
-                TextBoxTranslation.FontWeight = FontWeights.Thin;
+                TextBoxTranslation.FontWeight = FontWeights.Normal;
                 TextBoxPureLyric.Foreground = IdleBrush;
                 TextBoxTranslation.Foreground = IdleBrush;
                 TextBoxSound.Foreground = IdleBrush;
@@ -411,6 +414,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
         TextBoxTranslation.FontSize = actualsize;
         WordLyricContainer.FontSize = actualsize;
         TextBoxPureLyric.Text = Lrc.LyricLine.CurrentLyric ?? string.Empty;
+        MainGrid.HorizontalAlignment = GridAlignment;
         if (Lrc.HaveTranslation && Common.ShowLyricTrans && !string.IsNullOrWhiteSpace(Lrc.Translation))
             TextBoxTranslation.Text = Lrc.Translation;
         else

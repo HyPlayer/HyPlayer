@@ -13,16 +13,20 @@
     Loaded="LyricPanel_Loaded"
     mc:Ignorable="d" PointerEntered="PointerIn" PointerExited="PointerOut">
 
-    <Grid>
+    <Grid x:Name="MainGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <Rectangle x:Name="OnHoverRectangle" Grid.Row="0" Grid.RowSpan="2"  VerticalAlignment="Stretch" Fill="{ThemeResource SystemControlBackgroundBaseLowBrush}" RadiusX=" 8" RadiusY="8" Opacity="0"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <Rectangle x:Name="OnHoverRectangle" Grid.Row="0" Grid.Column="0" Grid.RowSpan="3"  VerticalAlignment="Stretch" Fill="{ThemeResource SystemControlBackgroundBaseLowBrush}" RadiusX=" 8" RadiusY="8" Opacity="0"/>
         <TextBlock
             Name="WordLyricContainer"
             Grid.Row="0"
+            Grid.Column="0"
             controls:DockPanel.Dock="Top"
             CharacterSpacing="0"
             FontWeight="Bold"
@@ -32,6 +36,7 @@
         <TextBlock
             Name="TextBoxPureLyric"
             Grid.Row="0"
+            Grid.Column="0"
             controls:DockPanel.Dock="Top"
             CharacterSpacing="0"
             FontWeight="Bold"
@@ -41,6 +46,7 @@
         <TextBlock
             Name="TextBoxTranslation"
             Grid.Row="1"
+            Grid.Column="0"
             controls:DockPanel.Dock="Top"
             CharacterSpacing="0"
             FontWeight="Bold"
@@ -49,6 +55,7 @@
         <TextBlock
             Name="TextBoxSound"
             Grid.Row="2"
+            Grid.Column="0"
             controls:DockPanel.Dock="Bottom"
             FontSize="15"
             TextAlignment="Center"

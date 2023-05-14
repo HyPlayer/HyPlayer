@@ -17,18 +17,12 @@ public sealed partial class ExpandableTextBox : UserControl
     public static readonly DependencyProperty TextProperty = DependencyProperty.Register(
         "Text", typeof(string), typeof(SelectableTextBox), new PropertyMetadata(default(string)));
 
-    public static readonly DependencyProperty FontSizeProperty = DependencyProperty.Register(
-        "FontSize", typeof(double), typeof(SelectableTextBox), new PropertyMetadata(13.0));
-
     public static readonly DependencyProperty MaxLinesProperty = DependencyProperty.Register(
         "MaxLines", typeof(int), typeof(SelectableTextBox), new PropertyMetadata(3));
 
     public static readonly DependencyProperty TextWrappingProperty = DependencyProperty.Register(
         "TextWrapping", typeof(TextWrapping), typeof(SelectableTextBox),
         new PropertyMetadata(default(TextWrapping)));
-
-    public static readonly DependencyProperty FontWeightProperty = DependencyProperty.Register(
-        "FontWeight", typeof(FontWeight), typeof(SelectableTextBox), new PropertyMetadata(default(FontWeight)));
 
     private static readonly DependencyProperty ActualMaxLineProperty = DependencyProperty.Register(
         "ActualMaxLine", typeof(int), typeof(ExpandableTextBox), new PropertyMetadata(7));
@@ -59,11 +53,6 @@ public sealed partial class ExpandableTextBox : UserControl
         set => SetValue(TextProperty, value);
     }
 
-    public double FontSize
-    {
-        get => (double)GetValue(FontSizeProperty);
-        set => SetValue(FontSizeProperty, value);
-    }
 
     public int MaxLines
     {
@@ -75,12 +64,6 @@ public sealed partial class ExpandableTextBox : UserControl
     {
         get => (TextWrapping)GetValue(TextWrappingProperty);
         set => SetValue(TextWrappingProperty, value);
-    }
-
-    public FontWeight FontWeight
-    {
-        get => (FontWeight)GetValue(FontWeightProperty);
-        set => SetValue(FontWeightProperty, value);
     }
 
     private int ActualMaxLine
