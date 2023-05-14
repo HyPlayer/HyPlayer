@@ -155,11 +155,12 @@
 
                                 <StackPanel Spacing="8">
                                     <Grid>
-                                        <TextBlock VerticalAlignment="Center" Text="低性能模式" />
-                                        <ToggleSwitch
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.LowPerformanceMode, Mode=TwoWay}" />
+                                        <TextBlock VerticalAlignment="Center" Text="歌词特效等级" />
+                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.PerformanceMode, Mode=TwoWay}">
+                                            <ComboBoxItem Content="全部关闭" />
+                                            <ComboBoxItem Content="部分开启" />
+                                            <ComboBoxItem Content="特效全开" />
+                                        </ComboBox>
                                     </Grid>
 
                                     <Grid>

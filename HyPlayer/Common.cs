@@ -420,14 +420,10 @@ namespace HyPlayer
             }
         }
 
-        public bool LowPerformanceMode
+        public int PerformanceMode
         {
-            get => GetSettings(nameof(LowPerformanceMode), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(LowPerformanceMode)] = value;
-                OnPropertyChanged();
-            }
+            get => GetSettings(nameof(PerformanceMode), 1);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(PerformanceMode)] = value;
         }
 
         public bool karaokLyric
