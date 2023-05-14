@@ -17,5 +17,6 @@
     <classes:BooleanToGridPlayBarBrushesConverter x:Key="BooleanToGridPlayBarBrushesConverter" />
     <classes:DateConverter x:Key="DateConverter" />
     <classes:NullableColorToColorConverter x:Key="NullableColorToColorConverter" />
+    <classes:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisibilityConverter" />
 
 </ResourceDictionary>
