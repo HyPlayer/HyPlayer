@@ -155,6 +155,14 @@
 
                                 <StackPanel Spacing="8">
                                     <Grid>
+                                        <TextBlock VerticalAlignment="Center" Text="低性能模式" />
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.LowPerformanceMode, Mode=TwoWay}" />
+                                    </Grid>
+
+                                    <Grid>
                                         <TextBlock VerticalAlignment="Center" Text="使用 逐字歌词 (试验性功能)" />
                                         <ToggleSwitch
                                             MinWidth="10"

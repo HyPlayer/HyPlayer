@@ -420,6 +420,16 @@ namespace HyPlayer
             }
         }
 
+        public bool LowPerformanceMode
+        {
+            get => GetSettings(nameof(LowPerformanceMode), false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(LowPerformanceMode)] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool karaokLyric
         {
             get => GetSettings(nameof(karaokLyric), false);
