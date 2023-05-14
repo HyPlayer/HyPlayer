@@ -259,7 +259,7 @@
                                             Visibility="{x:Bind IsCloud}" />
                                         <Image
                                             Height="20"
-                                            Margin="-5,-20,0,0"
+                                            Margin="-5,0,0,0"
                                             Source="/Assets/vip.png"
                                             Visibility="{x:Bind IsVip}" />
                                     </StackPanel>
