@@ -494,7 +494,7 @@
                     <FontIcon
                         x:Name="PlayStateIcon"
                         FontSize="18"
-                        Glyph="&#xEDB5;" />
+                        Glyph="&#xF5B0;" />
                     <!--  EDB4  -->
                 </Button>
                 <Button
