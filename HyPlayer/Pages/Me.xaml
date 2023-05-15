@@ -54,7 +54,7 @@
                                     <StackPanel Orientation="Horizontal">
                                         <controls:ImageEx
                                             x:Name="ImageRect"
-                                            Margin="10,0,0,0"
+                                            Margin="8,0,0,0"
                                             Width="70"
                                             Height="70"
                                             CornerRadius="8"
@@ -112,7 +112,7 @@
                                     </StackPanel>
                                 </Grid>
                                 <Button x:Name="PlayBtn"
-                                    Margin="8,3,0,0"
+                                    Margin="6,3,0,0"
                                     HorizontalAlignment="Left"
                                     Height="74"
                                     Width="74"
@@ -127,7 +127,7 @@
                                         >
                                     <FontIcon
                                         Name="PlayStateIcon"
-                                        Glyph="&#xEDB5;" 
+                                        Glyph="&#xF5B0;" 
                                         FontSize="14"/>
                                 </Button>
                             </Grid>
@@ -251,8 +251,12 @@
                              Background="OrangeRed"
                              x:Name="ButtonLogout"
                              Foreground="White"
-                             Click="Logout_OnClick"
-                             Content="退出登录"/>
+                             Click="Logout_OnClick">
+                        <StackPanel Orientation="Horizontal">
+                            <FontIcon Glyph="&#xF3B1;" Margin="0,0,5,0"/>
+                            <TextBlock Text="退出登录"/>
+                        </StackPanel>
+                    </Button>
                 </Grid>
                 <Grid
                     x:Name="MainGrid"

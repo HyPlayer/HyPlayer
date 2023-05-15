@@ -107,20 +107,21 @@
                                 PlaceholderText="搜索..." 
                                 LostFocus="SearchAutoSuggestBox_LostFocus"
                                 TextChanged="SearchAutoSuggestBox_TextChanged"
-                                SuggestionChosen="SearchAutoSuggestBox_OnSuggestionChosen"/>
+                                SuggestionChosen="SearchAutoSuggestBox_OnSuggestionChosen"
+                                Margin="-3,0,0,0"/>
             </muxc:NavigationView.AutoSuggestBox>
             <muxc:NavigationView.MenuItems>
-                <muxc:NavigationViewItemHeader Content="发现"/>
+                <muxc:NavigationViewItemHeader Content="发现" Margin="0,3,3,3"/>
                 <muxc:NavigationViewItem
                     Content="主页" 
                     Tag="PageHome">
                     <muxc:NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE10F;" />
+                        <FontIcon Glyph="&#xEA8A;" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
                 <muxc:NavigationViewItem Content="每日推荐" Tag="DailyRcmd">
                     <muxc:NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE163;" />
+                        <FontIcon Glyph="&#xEA89;" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
                 <muxc:NavigationViewItem
@@ -128,7 +129,7 @@
                             SelectsOnInvoked="False"
                             Tag="PersonalFM">
                     <muxc:NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xEFA9;" />
+                        <FontIcon Glyph="&#xF8B2;" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
                 <muxc:NavigationViewItem
@@ -136,7 +137,7 @@
                             SelectsOnInvoked="False"
                             Tag="HeartBeat">
                     <muxc:NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE95E;" />
+                        <FontIcon Glyph="&#xEB4F;"/>
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
                 <muxc:NavigationViewItem Visibility="Collapsed"
@@ -145,30 +146,33 @@
                         <FontIcon Glyph="&#xE12B;" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
-                <muxc:NavigationViewItemHeader Content="音乐"/>
+                <muxc:NavigationViewItemHeader Content="音乐" Margin="0,3,3,3"/>
 
                 <muxc:NavigationViewItem Content="离线音乐" Tag="PageLocal">
                     <muxc:NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE8B7;" />
+                        <FontIcon Glyph="&#xE188;" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
                 <muxc:NavigationViewItem
                     x:Name="PageHistory"
                     Content="播放历史"
-                    Icon="Clock"
-                    Tag="PageHistory" />
+                    Tag="PageHistory" >
+                    <muxc:NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xEB49;"/>
+                    </muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
 
                 <muxc:NavigationViewItem Content="我的收藏" Tag="PageFavorite">
                     <muxc:NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE734;" />
+                        <FontIcon Glyph="&#xE00A;" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
                 <muxc:NavigationViewItem Content="我的云盘" Tag="MusicCloud">
                     <muxc:NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE753;" />
+                        <FontIcon Glyph="&#xEB4E;" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
-                <muxc:NavigationViewItemHeader Content="歌单"/>
+                <muxc:NavigationViewItemHeader Content="歌单" Margin="0,3,3,3"/>
                 <muxc:NavigationViewItem
                     x:Name="NavItemsAddPlaylist"
                     Content="创建歌单"
@@ -209,9 +213,12 @@
                     Tapped="NavigationViewItem_Tapped" />
                 <muxc:NavigationViewItem
                     Content="设置"
-                    Icon="Setting"
                     Tag="PageSettings" 
-                    Tapped="NavigationViewItem_Tapped" />
+                    Tapped="NavigationViewItem_Tapped" >
+                    <muxc:NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xF8B0;"/>
+                    </muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
                 <!--抱歉，这部分先暂时删了-->
                 <!--
                 <muxc:NavigationViewItem Height="50" IsTapEnabled="False" SelectsOnInvoked="False" Visibility="Collapsed">
