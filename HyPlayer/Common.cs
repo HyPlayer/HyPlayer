@@ -90,6 +90,7 @@ namespace HyPlayer
         public static int PlaybarSecondSetting = Setting.AutoHidePlaybarTime;
         public static bool PlaybarIsVisible = true;
         public static bool PointerIsInMainPage = false;
+        public static bool IsInImmerssiveMode=  false;
 
         public static IAsyncAction Invoke(Action action,
             CoreDispatcherPriority Priority = CoreDispatcherPriority.Normal)

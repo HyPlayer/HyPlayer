@@ -3,10 +3,12 @@
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
+using Microsoft.Toolkit.Uwp.UI;
 using Microsoft.Toolkit.Uwp.UI.Media;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -121,13 +123,17 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     {
         _ = Common.Invoke(() =>
         {
-            if (Common.Setting.albumRotate)
-                //网易云音乐圆形唱片
-                RotateAnimationSet.StartAsync();
-            if (Common.Setting.expandAlbumBreath)
+            if(!Common.IsInImmerssiveMode)
             {
-                var ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
-                ImageAlbumAni.Begin();
+                if (Common.Setting.albumRotate)
+                    //网易云音乐圆形唱片
+                    RotateAnimationSet.StartAsync();
+                if (Common.Setting.expandAlbumBreath)
+                {
+                    var ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
+                    ImageAlbumAni.Begin();
+                }
+
             }
         });
     }
@@ -405,7 +411,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             PageContainer.Background = new BackdropBlurBrush { Amount = 50.0 };
         if (Common.Setting.expandedPlayerBackgroundType == 5)
             PageContainer.Background =
-                (Brush)new BooleanToWindowBrushesConverter().Convert(Common.Setting.acrylicBackgroundStatus, null, null,
+                (Windows.UI.Xaml.Media.Brush)new BooleanToWindowBrushesConverter().Convert(Common.Setting.acrylicBackgroundStatus, null, null,
                     null);
 
         NowPlaybackSpeed = "x" + HyPlayList.Player.PlaybackSession.PlaybackRate;
@@ -518,11 +524,13 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     {
                         ForegroundAccentTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0, 0, 0));
                         ForegroundIdleTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(114, 0, 0, 0));
+                        ImmersiveCover.Color = Windows.UI.Color.FromArgb(255, 220, 220, 220);
                     }
                     else
                     {
                         ForegroundAccentTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
                         ForegroundIdleTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(66, 255, 255, 255));
+                        ImmersiveCover.Color = Windows.UI.Color.FromArgb(255, 20, 20, 20);
                     }
                 }
                 else
@@ -999,14 +1007,18 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 break;
         }
 
-        if (Common.Setting.albumRotate)
-            //网易云音乐圆形唱片
-            if (HyPlayList.IsPlaying)
-                RotateAnimationSet.StartAsync();
-        if (Common.Setting.expandAlbumBreath)
+        if(!Common.IsInImmerssiveMode)
         {
-            var ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
-            ImageAlbumAni.Begin();
+            if (Common.Setting.albumRotate)
+                //网易云音乐圆形唱片
+                if (HyPlayList.IsPlaying)
+                    RotateAnimationSet.StartAsync();
+            if (Common.Setting.expandAlbumBreath)
+            {
+                var ImageAlbumAni = Resources["ImageAlbumAni"] as Storyboard;
+                ImageAlbumAni.Begin();
+            }
+
         }
     }
 
@@ -1139,7 +1151,13 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     public void Show()
     {
         time.Reset();
-        LyricBoxContainer.Margin = new Thickness(0, 0, 0, 0);
+        LyricBoxContainer.Margin = new Thickness(0);
+        if (Common.IsInImmerssiveMode)
+        {
+            LeftPanel.Margin = new Thickness(0, -30, 0, 80);
+            DefaultRow.Height = new GridLength(1.1, GridUnitType.Star);
+            LyricBoxContainer.Margin = new Thickness(0,0,0,80);
+        }
         var BtnAni = new DoubleAnimation
         {
             To = 1,
@@ -1164,6 +1182,12 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 LyricBoxContainer.Margin = new Thickness(0, -30, 0, -140);
+                if (Common.IsInImmerssiveMode)
+                {
+                    LeftPanel.Margin = new Thickness(0);
+                    DefaultRow.Height = new GridLength(1.35, GridUnitType.Star);
+                    LyricBoxContainer.Margin = new Thickness(0,0,0,-30);
+                }
                 var BtnAni = new DoubleAnimation
                 {
                     To = 0,
@@ -1191,6 +1215,45 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             Collapse();
         }
 
+    }
+
+    private void BtnToggleImmersiveMode_OnClicked(object sender, RoutedEventArgs e)
+    {
+        if(BtnToggleImmersiveMode.IsChecked)
+        {
+            ImmersiveModeIn();
+        }
+        else
+        {
+            ImmersiveModeExit();
+        }
+    }
+
+    private void ImmersiveModeIn()
+    {
+        if (Common.Setting.AutoHidePlaybar)
+        LyricBoxContainer.Margin = new Thickness(0, 0, 0, 80);
+        LeftPanel.Margin = new Thickness(0, 0, 0, 80);
+        DefaultRow.Height = new GridLength(1.1, GridUnitType.Star);
+        MoreBtn.Margin = new Thickness(0,0,30,130);
+        Grid.SetRow(LyricBoxContainer, 1);
+        MainGrid.Margin = new Thickness(0);
+        ImageAlbumAni.Pause();
+        ImmersiveModeInAni.Begin();
+        LeftPanel.VerticalAlignment = VerticalAlignment.Bottom;
+        Common.IsInImmerssiveMode = true;
+    }
+    private void ImmersiveModeExit()
+    {
+        MoreBtn.Margin = new Thickness(0, 0, 30, 50);
+        MainGrid.Margin = new Thickness(0, 0, 0, 80);
+        LyricBoxContainer.Margin = new Thickness(0);
+        DefaultRow.Height = new GridLength(25, GridUnitType.Star);
+        Grid.SetRow(LyricBoxContainer, 0);
+        ImageAlbumAni.Begin();
+        ImmersiveModeOutAni.Begin();
+        LeftPanel.VerticalAlignment = VerticalAlignment.Top;
+        Common.IsInImmerssiveMode = false;
     }
 }
 
