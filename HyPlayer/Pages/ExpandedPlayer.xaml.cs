@@ -89,7 +89,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         AnimationDesired = true,
     };
 
-    public Windows.UI.Color? albumMainColor;
+    public Windows.UI.Color?albumMainColor;
     private bool disposedValue;
     public System.Diagnostics.Stopwatch time = new System.Diagnostics.Stopwatch();
 
@@ -523,28 +523,24 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 var isBright = await IsBrightAsync();
                 if (Common.Setting.lyricColor != 3 || albumMainColor == null)
                 {
+                    if (Common.Setting.expandedPlayerBackgroundType == 0)
+                    {
+                        var CoverColor = albumMainColor.Value;
+                        ImmersiveCover.Color = CoverColor;
+                    }
                     if (isBright)
                     {
                         ForegroundAccentTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0, 0, 0));
                         ForegroundIdleTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(114, 0, 0, 0));
                         //ImmersiveCover.Color = Windows.UI.Color.FromArgb(255, 210,210, 210);
-                        var CoverColor = albumMainColor.Value;
-                        CoverColor.R += 20;
-                        CoverColor.G += 20;
-                        CoverColor.B += 20;
-                        ImmersiveCover.Color = CoverColor;
+
                     }
                     else
                     {
                         ForegroundAccentTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
                         ForegroundIdleTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(66, 255, 255, 255));
                         //ImmersiveCover.Color = Windows.UI.Color.FromArgb(255, 35, 35, 35);
-                        var CoverColor = albumMainColor.Value;
-                        CoverColor.R -= 20;
-                        CoverColor.G -= 20;
-                        CoverColor.B -= 20;
-                        ImmersiveCover.Color = CoverColor;
-                    }
+                     }
                 }
                 else
                 {
@@ -555,11 +551,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     idleColor.G -= 10;
                     idleColor.B -= 10;
                     ForegroundIdleTextBrush = new SolidColorBrush(idleColor);
-                    var ImmersiveCoverColor = albumMainColor.Value;
-                    ImmersiveCoverColor.R -= 25;
-                    ImmersiveCoverColor.G -= 25;
-                    ImmersiveCoverColor.B -= 25;
-                    ImmersiveCover.Color = ImmersiveCoverColor;
                 }
 
 
@@ -1236,13 +1227,26 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void BtnToggleImmersiveMode_OnClicked(object sender, RoutedEventArgs e)
     {
-        if(BtnToggleImmersiveMode.IsChecked)
+        if (Common.Setting.expandedPlayerBackgroundType == 0)
         {
-            ImmersiveModeIn();
+            if (BtnToggleImmersiveMode.IsChecked)
+            {
+                ImmersiveModeIn();
+            }
+            else
+            {
+                ImmersiveModeExit();
+            }
         }
         else
         {
-            ImmersiveModeExit();
+            BtnToggleImmersiveMode.IsChecked = false;
+            var dialog = new ContentDialog();
+            dialog.Title = "请调整背景样式";
+            dialog.Content = "沉浸模式只推荐在展开页背景样式为\"专辑背景模糊\"时才能展现最好效果，否则将无法开启沉浸模式\n请将背景样式更改为\"专辑背景模糊\"后再开启沉浸模式";
+            dialog.CloseButtonText = "好";
+            dialog.IsPrimaryButtonEnabled = true;
+            _ = dialog.ShowAsync();
         }
     }
 

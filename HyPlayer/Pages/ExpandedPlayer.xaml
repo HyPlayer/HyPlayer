@@ -141,11 +141,11 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="30" />
         </Grid.RowDefinitions>
-        <Rectangle x:Name="AcrylicCover"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="{ThemeResource ExpandedPlayerMask}" Grid.Row="0" Grid.RowSpan="3"/>
+        <Rectangle x:Name="AcrylicCover"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="{ThemeResource ExpandedPlayerMask}" Grid.Row="0" Grid.RowSpan="3" />
         <Rectangle x:Name="BlackCover" Opacity="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  Grid.Row="0" Grid.RowSpan="3">
             <Rectangle.Fill>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                    <GradientStop Offset="0.2" Color="{ThemeResource SystemAltLowColor}"/>
+                    <GradientStop Offset="0.25" Color="{ThemeResource SystemAltLowColor}"/>
                     <GradientStop x:Name="ImmersiveCover" Offset="0.95"/>
                 </LinearGradientBrush>
             </Rectangle.Fill>
