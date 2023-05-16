@@ -174,7 +174,7 @@
                 <DataTemplate x:DataType="classes:NCSong" ScrollViewer.CanContentRenderOutsideBounds="False">
                     <Border>
                         <Grid
-                            Margin="-10,14,-10,14"
+                            Margin="-10,5,-10,5"
                             HorizontalAlignment="Stretch"
                             Background="Transparent"
                             IsRightTapEnabled="True"
@@ -183,15 +183,18 @@
                             Tag="{x:Bind Order}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="80" />
                             </Grid.ColumnDefinitions>
                             <controls:ImageEx
                                 x:Name="RectangleImageBack"
-                                Grid.ColumnSpan="2"
-                                Height="62"
-                                Margin="2,-5,2,-5"
+                                Grid.ColumnSpan="4"
+                                Height="54"
+                                Margin="2,0,2,0"
                                 x:Phase="4"
                                 CornerRadius="12"
+                                Opacity="0.6"
                                 EnableLazyLoading="True"
                                 IsCacheEnabled="False"
                                 Source="{x:Bind Cover}"
@@ -199,8 +202,8 @@
                                 Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}" />
                             <Rectangle
                                 x:Name="RectangleImageAcrylic"
-                                Grid.ColumnSpan="2"
-                                Margin="1,-7,1,-7"
+                                Grid.ColumnSpan="4"
+                                Margin="1,0,1,0"
                                 Fill="{ThemeResource SystemControlBaseLowAcrylicElementBrush}"
                                 RadiusX="10"
                                 RadiusY="10"
@@ -209,11 +212,11 @@
                             <StackPanel Grid.Column="0" Orientation="Horizontal">
                                 <controls:ImageEx
                                     x:Name="ImageRect"
-                                    Width="50"
-                                    Height="50"
-                                    Margin="9,0,0,0"
+                                    Width="44"
+                                    Height="44"
+                                    Margin="6,0,0,0"
                                     x:Phase="4"
-                                    CornerRadius="10"
+                                    CornerRadius="9"
                                     EnableLazyLoading="True"
                                     IsCacheEnabled="False"
                                     IsEnabled="{x:Bind IsAvailable}"
@@ -222,80 +225,79 @@
                                 <TextBlock
                                     x:Name="OrderId"
                                     Width="48"
-                                    Margin="-45,0,0,0"
+                                    Margin="-36,0,0,0"
                                     HorizontalAlignment="Left"
                                     VerticalAlignment="Top"
-                                    FontSize="20"
+                                    FontSize="16"
                                     FontWeight="Bold"
                                     Text="{x:Bind DspOrder}" />
-                                <Grid Margin="12,0,0,0">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition />
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition />
-                                        <RowDefinition />
-                                    </Grid.RowDefinitions>
+                                <Grid HorizontalAlignment="Stretch">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="0"/>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel
-                                        Grid.Row="0"
+                                        Grid.Column="0"
                                         Orientation="Horizontal"
-                                        Spacing="4">
+                                        Spacing="4"
+                                        VerticalAlignment="Center"
+                                        Margin="0,-2,0,0">
                                         <TextBlock
                                             Name="TextBlockSongname"
                                             x:Phase="0"
                                             Style="{ThemeResource SubtitleTextBlockStyle}"
-                                            Text="{x:Bind songname}" />
+                                            Text="{x:Bind songname}" 
+                                            FontSize="18"
+                                            FontWeight="Bold"/>
                                         <TextBlock
                                             Name="TextBlockTransName"
                                             x:Phase="0"
-                                            FontSize="20"
+                                            FontSize="16"
                                             Foreground="Gray"
                                             Text="{x:Bind ConvertTranslate(transname)}" />
                                         <Image
-                                            Height="20"
+                                            Height="24"
                                             Source="/Assets/cloud.png"
                                             Visibility="{x:Bind IsCloud}" />
                                         <Image
-                                            Height="20"
-                                            Margin="-5,0,0,0"
+                                            Height="24"
+                                            Margin="-5,3,0,0"
                                             Source="/Assets/vip.png"
                                             Visibility="{x:Bind IsVip}" />
                                     </StackPanel>
-                                    <TextBlock
+                                </Grid>
+                            </StackPanel>
+                            <TextBlock
                                             Name="TextBlockAlia"
-                                            Grid.Row="1"
+                                            Grid.Column="1"
                                             x:Phase="2"
-                                            FontSize="12"
+                                            FontSize="11"
                                             Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                                             Text="{x:Bind alias}"
                                             Visibility="{x:Bind alias, Converter={StaticResource EmptyStringToVisibilityConverter}}" />
-                                    <StackPanel Grid.Row="2" Orientation="Horizontal">
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
 
-                                        <TextBlock
+                                <TextBlock
                                             Name="TextBlockArtist"
                                             Grid.Row="2"
-                                            Margin="0,0,8,0"
+                                            Margin="0,0,12,0"
                                             FontSize="12"
                                             Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                                             Text="{x:Bind ArtistString}" />
-                                        <TextBlock
+                                <TextBlock
                                             Name="TextBlockAlbum"
                                             Grid.Row="3"
                                             FontSize="12"
                                             Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                                             Text="{x:Bind Album.name}" />
-                                    </StackPanel>
-
-                                </Grid>
                             </StackPanel>
-
                             <StackPanel
-                                Grid.Column="1"
-                                Margin="0,0,8,0"
+                                Grid.Column="3"
+                                Margin="0,0,14,0"
                                 HorizontalAlignment="Right"
-                                VerticalAlignment="Top"
+                                VerticalAlignment="Center"
                                 Orientation="Horizontal"
                                 Spacing="8">
                                 <Button

@@ -466,6 +466,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
                 KaraokeDictionary[textBlock] = item;
             }
         }
+        OnHoverRectangle.Fill = GetAccentBrush();
         RefreshFontSize();
         OnHind();
     }
@@ -500,7 +501,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
         var Instoryboard=new Storyboard();
         var OpacityAni = new DoubleAnimation
         {
-            To = 0.7,
+            To = 0.15,
             Duration = new Duration(TimeSpan.FromSeconds(0.5)),
             EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
             EnableDependentAnimation = true

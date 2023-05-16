@@ -138,12 +138,12 @@
                             <StackPanel Orientation="Horizontal">
                                 <FontIcon
                                     x:Name="IconLiked"
-                                    FontSize="16"
+                                    FontSize="14"
                                     Foreground="White"
                                     Glyph="&#xE00B;" />
                                 <TextBlock
                                     Foreground="White"
-                                    Margin="4,0,0,0"
+                                    Margin="6,0,0,0"
                                     Text="心动模式" />
                             </StackPanel>
                         </Button>
@@ -153,11 +153,11 @@
                             <StackPanel Orientation="Horizontal">
                                 <FontIcon                           
                                     x:Name="IconPlay"
-                                    FontSize="16"
+                                    FontSize="14"
                                     Foreground="White"
-                                    Glyph="&#xEDB5;"/>
+                                    Glyph="&#xF5B0;"/>
                                 <TextBlock
-                                    Margin="4,0,0,0"
+                                    Margin="6,0,0,0"
                                     Text="播放"
                                     Foreground="White"
                                     ToolTipService.ToolTip="播放全部"/>

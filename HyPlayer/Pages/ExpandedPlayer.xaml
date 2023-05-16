@@ -13,7 +13,7 @@
     NavigationCacheMode="Disabled">
     <Page.Resources>
         <!-- ReSharper disable once Xaml.RedundantResource -->
-        <Storyboard x:Key="ImageAlbumAni">
+        <Storyboard x:Key="ImageAlbumAni" x:Name="ImageAlbumAni">
             <DoubleAnimation
                 AutoReverse="True"
                 RepeatBehavior="Forever"
@@ -66,6 +66,64 @@
                 Storyboard.TargetProperty="Y">
             </DoubleAnimation>
         </Storyboard>
+        <Storyboard x:Name="ShowAni"></Storyboard>
+        <Storyboard x:Name="CollapseAni"></Storyboard>
+        <Storyboard x:Name="ImmersiveModeInAni" >
+            <DoubleAnimation
+                Storyboard.TargetName="BlackCover"
+                Storyboard.TargetProperty="Opacity"
+                To="1">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="AcrylicCover"
+                Storyboard.TargetProperty="Opacity"
+                To="0">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="ImageAlbum"
+                Storyboard.TargetProperty="Opacity"
+                To="0">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseInOut" />
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+
+        </Storyboard>
+        <Storyboard x:Name="ImmersiveModeOutAni">
+            <DoubleAnimation
+                Storyboard.TargetName="BlackCover"
+                Storyboard.TargetProperty="Opacity"
+                To="0">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="AcrylicCover"
+                Storyboard.TargetProperty="Opacity"
+                To="1">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseInOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                Storyboard.TargetName="ImageAlbum"
+                Storyboard.TargetProperty="Opacity"
+                To="1">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseInOut" />
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+
+        </Storyboard>
+
+
         <ui:AttachedDropShadow
             x:Key="AlbumDropShadow"
             BlurRadius="20"
@@ -76,13 +134,22 @@
             Color="Black" />
     </Page.Resources>
     <!--  Grid Beam~  -->
-    <Grid x:Name="PageContainer" Background="{ThemeResource ExpandedPlayerMask}">
+    <Grid x:Name="PageContainer">
         <Grid.RowDefinitions>
             <RowDefinition Height="30" />
             <!--  Title Bar  -->
             <RowDefinition Height="*" />
             <RowDefinition Height="30" />
         </Grid.RowDefinitions>
+        <Rectangle x:Name="AcrylicCover"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="{ThemeResource ExpandedPlayerMask}" Grid.Row="0" Grid.RowSpan="3" />
+        <Rectangle x:Name="BlackCover" Opacity="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  Grid.Row="0" Grid.RowSpan="3">
+            <Rectangle.Fill>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Offset="0.25" Color="{ThemeResource SystemAltLowColor}"/>
+                    <GradientStop x:Name="ImmersiveCover" Offset="0.95"/>
+                </LinearGradientBrush>
+            </Rectangle.Fill>
+        </Rectangle>
         <Grid
             x:Name="AppTitleBar"
             Grid.Row="0"
@@ -225,8 +292,8 @@
                 Grid.Column="1"
                 HorizontalAlignment="Left">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="25*" />
-                    <RowDefinition Height="1*" />
+                    <RowDefinition x:Name="DefaultRow" Height="25*" />
+                    <RowDefinition x:Name="ImmersiveRow" Height="1*" />
                 </Grid.RowDefinitions>
                 <ScrollViewer
                     x:Name="LyricBoxContainer"
@@ -383,6 +450,15 @@
                             Text="小窗模式">
                             <ToggleMenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xE2B3;" />
+                            </ToggleMenuFlyoutItem.Icon>
+                        </ToggleMenuFlyoutItem>
+                        <ToggleMenuFlyoutItem
+                            x:Name="BtnToggleImmersiveMode"
+                            HorizontalContentAlignment="Left"
+                            Background="Transparent"
+                            Text="沉浸模式" Click="BtnToggleImmersiveMode_OnClicked">
+                            <ToggleMenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xE93C;" />
                             </ToggleMenuFlyoutItem.Icon>
                         </ToggleMenuFlyoutItem>
                         <MenuFlyoutSeparator />

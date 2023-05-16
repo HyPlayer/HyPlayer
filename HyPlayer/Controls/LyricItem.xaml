@@ -22,7 +22,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <Rectangle x:Name="OnHoverRectangle" Grid.Row="0" Grid.Column="0" Grid.RowSpan="3"  VerticalAlignment="Stretch" Fill="{ThemeResource SystemControlBackgroundBaseLowBrush}" RadiusX=" 8" RadiusY="8" Opacity="0"/>
+        <Rectangle x:Name="OnHoverRectangle" Grid.Row="0" Grid.Column="0" Grid.RowSpan="3"  VerticalAlignment="Stretch" RadiusX=" 8" RadiusY="8" Opacity="0"/>
         <TextBlock
             Name="WordLyricContainer"
             Grid.Row="0"
