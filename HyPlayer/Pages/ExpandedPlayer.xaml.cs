@@ -526,13 +526,23 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     {
                         ForegroundAccentTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0, 0, 0));
                         ForegroundIdleTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(114, 0, 0, 0));
-                        ImmersiveCover.Color = Windows.UI.Color.FromArgb(255, 210,210, 210);
+                        //ImmersiveCover.Color = Windows.UI.Color.FromArgb(255, 210,210, 210);
+                        var CoverColor = albumMainColor.Value;
+                        CoverColor.R += 20;
+                        CoverColor.G += 20;
+                        CoverColor.B += 20;
+                        ImmersiveCover.Color = CoverColor;
                     }
                     else
                     {
                         ForegroundAccentTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
                         ForegroundIdleTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(66, 255, 255, 255));
-                        ImmersiveCover.Color = Windows.UI.Color.FromArgb(255, 35, 35, 35);
+                        //ImmersiveCover.Color = Windows.UI.Color.FromArgb(255, 35, 35, 35);
+                        var CoverColor = albumMainColor.Value;
+                        CoverColor.R -= 20;
+                        CoverColor.G -= 20;
+                        CoverColor.B -= 20;
+                        ImmersiveCover.Color = CoverColor;
                     }
                 }
                 else
@@ -544,6 +554,11 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     idleColor.G -= 10;
                     idleColor.B -= 10;
                     ForegroundIdleTextBrush = new SolidColorBrush(idleColor);
+                    var ImmersiveCoverColor = albumMainColor.Value;
+                    ImmersiveCoverColor.R -= 25;
+                    ImmersiveCoverColor.G -= 25;
+                    ImmersiveCoverColor.B -= 25;
+                    ImmersiveCover.Color = ImmersiveCoverColor;
                 }
 
 
