@@ -1913,16 +1913,16 @@ public static class Utils
 {
     public static List<SongLyric> ConvertPureLyric(string lyricAllText, bool hasTranslationsInLyricText = false)
     {
-        var parsedlyrics = LrcParser.ParseLrc(lyricAllText.AsSpan());
-        return parsedlyrics.OrderBy(t => t.StartTime).Select(lyricsLine => new SongLyric
+        using var parsedlyrics = LrcParser.ParseLrc(lyricAllText.AsSpan());
+        return parsedlyrics.Lines.OrderBy(t => t.StartTime).Select(lyricsLine => new SongLyric
         { LyricLine = lyricsLine, Translation = null })
                         .ToList();
     }
 
     public static void ConvertTranslation(string lyricAllText, List<SongLyric> lyrics)
     {
-        var parsedlyrics = LrcParser.ParseLrc(lyricAllText.AsSpan());
-        foreach (var lyricsLine in parsedlyrics)
+        using var parsedlyrics = LrcParser.ParseLrc(lyricAllText.AsSpan());
+        foreach (var lyricsLine in parsedlyrics.Lines)
             foreach (var songLyric in lyrics.Where(songLyric =>
                          songLyric.LyricLine.StartTime == lyricsLine.StartTime))
             {
@@ -1935,8 +1935,8 @@ public static class Utils
     public static void ConvertNeteaseRomaji(string lyricAllText, List<SongLyric> lyrics)
     {
         if (string.IsNullOrEmpty(lyricAllText)) return;
-        var parsedlyrics = LrcParser.ParseLrc(lyricAllText.AsSpan());
-        foreach (var lyricsLine in parsedlyrics)
+        using var parsedlyrics = LrcParser.ParseLrc(lyricAllText.AsSpan());
+        foreach (var lyricsLine in parsedlyrics.Lines)
             foreach (var songLyric in lyrics.Where(songLyric =>
                          songLyric.LyricLine.StartTime == lyricsLine.StartTime))
             {
@@ -1984,9 +1984,9 @@ public static class Utils
     {
         if (pureLyricInfo is KaraokLyricInfo karaokLyricInfo && !string.IsNullOrEmpty(karaokLyricInfo.KaraokLyric))
         {
-            var parsedLyrics = KaraokeParser.ParseKaraoke(((KaraokLyricInfo)pureLyricInfo).KaraokLyric.AsSpan());
+            using var parsedLyrics = KaraokeParser.ParseKaraoke(((KaraokLyricInfo)pureLyricInfo).KaraokLyric.AsSpan());
 
-            return parsedLyrics.OrderBy(t => t.StartTime).Select(t => new SongLyric() { LyricLine = t }).ToList();
+            return parsedLyrics.Lines.OrderBy(t => t.StartTime).Select(t => new SongLyric() { LyricLine = t }).ToList();
         }
         throw new ArgumentException("LyricInfo is not KaraokeLyricInfo");
     }
