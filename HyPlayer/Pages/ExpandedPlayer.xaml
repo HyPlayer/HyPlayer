@@ -145,8 +145,8 @@
         <Rectangle x:Name="BlackCover" Opacity="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  Grid.Row="0" Grid.RowSpan="3">
             <Rectangle.Fill>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                    <GradientStop Offset="0.4" Color="{ThemeResource SystemAltLowColor}"/>
-                    <GradientStop x:Name="ImmersiveCover" Offset="0.9"/>
+                    <GradientStop Offset="0.2" Color="{ThemeResource SystemAltLowColor}"/>
+                    <GradientStop x:Name="ImmersiveCover" Offset="0.95"/>
                 </LinearGradientBrush>
             </Rectangle.Fill>
         </Rectangle>

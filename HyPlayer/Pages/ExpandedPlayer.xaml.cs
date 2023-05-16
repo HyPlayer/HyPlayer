@@ -386,6 +386,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         base.OnNavigatedTo(e);
         Common.IsInBackground = false;
         Common.PageExpandedPlayer = this;
+        Common.IsInImmerssiveMode = false;
         Window.Current.SetTitleBar(AppTitleBar);
         if (Common.Setting.lyricAlignment)
         {
