@@ -174,7 +174,7 @@
                 <DataTemplate x:DataType="classes:NCSong" ScrollViewer.CanContentRenderOutsideBounds="False">
                     <Border>
                         <Grid
-                            Margin="-10,12,-10,12"
+                            Margin="-10,5,-10,5"
                             HorizontalAlignment="Stretch"
                             Background="Transparent"
                             IsRightTapEnabled="True"
@@ -190,8 +190,8 @@
                             <controls:ImageEx
                                 x:Name="RectangleImageBack"
                                 Grid.ColumnSpan="4"
-                                Height="50"
-                                Margin="2,-8,2,-8"
+                                Height="54"
+                                Margin="2,0,2,0"
                                 x:Phase="4"
                                 CornerRadius="12"
                                 Opacity="0.6"
@@ -203,7 +203,7 @@
                             <Rectangle
                                 x:Name="RectangleImageAcrylic"
                                 Grid.ColumnSpan="4"
-                                Margin="1,-7,1,-7"
+                                Margin="1,0,1,0"
                                 Fill="{ThemeResource SystemControlBaseLowAcrylicElementBrush}"
                                 RadiusX="10"
                                 RadiusY="10"
@@ -214,7 +214,7 @@
                                     x:Name="ImageRect"
                                     Width="44"
                                     Height="44"
-                                    Margin="6,-2,0,-2"
+                                    Margin="6,0,0,0"
                                     x:Phase="4"
                                     CornerRadius="9"
                                     EnableLazyLoading="True"
