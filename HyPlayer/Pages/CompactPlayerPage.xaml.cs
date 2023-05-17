@@ -303,6 +303,8 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
             NowPlayingName = item?.PlayItem?.Name;
             NowPlayingArtists = item?.PlayItem?.ArtistString;
             BitmapImage img = null;
+            var brush = new ImageBrush { Stretch = Stretch.UniformToFill };
+            AlbumCover = brush;
             if (item != null)
                 if (!Common.Setting.noImage)
                     if (item.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
@@ -320,10 +322,11 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
                     }
                     else
                     {
-                        img = new BitmapImage(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover));
+                        img = new BitmapImage();
+                        img.UriSource = new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=" + StaticSource.PICSIZE_EXPANDEDPLAYER_COVER);
                     }
             TotalProgress = item?.PlayItem?.LengthInMilliseconds ?? 0;
-            AlbumCover = new ImageBrush { ImageSource = img, Stretch = Stretch.UniformToFill };
+            brush.ImageSource = img;
         });
         if (item.ItemType is not HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
         {

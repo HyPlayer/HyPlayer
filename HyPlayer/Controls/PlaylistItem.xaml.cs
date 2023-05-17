@@ -102,10 +102,13 @@ public sealed partial class PlaylistItem : UserControl, IDisposable
 
     private void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
-        ImageContainer.Source =
-            Common.Setting.noImage
-                ? null
-                : new BitmapImage(new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_PLAYLIST_ITEM_COVER));
+        if (Common.Setting.noImage) ImageContainer.Source = null;
+        else
+        {
+            BitmapImage image = new BitmapImage();
+            ImageContainer.Source = image;
+            image.UriSource = new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_PLAYLIST_ITEM_COVER);
+        }
         TextBlockPLName.Text = playList.name;
         TextBlockPLAuthor.Text = playList.creater.name;
         StoryboardIn.Begin();

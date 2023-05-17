@@ -410,6 +410,7 @@ DoubleAnimation verticalAnimation;
                     _ = Common.Invoke(async () =>
                     {
                         var img = new BitmapImage();
+                        AlbumImage.Source = img;
                         if (!Common.Setting.useTaglibPicture || mpi.PlayItem.LocalFileTag is null ||
                             mpi.PlayItem.LocalFileTag.Pictures.Length == 0)
                         {
@@ -421,8 +422,6 @@ DoubleAnimation verticalAnimation;
                             await img.SetSourceAsync(new MemoryStream(mpi.PlayItem.LocalFileTag.Pictures[0].Data.Data)
                                 .AsRandomAccessStream());
                         }
-
-                        AlbumImage.Source = img;
                     });
                 }
                 else
@@ -432,9 +431,10 @@ DoubleAnimation verticalAnimation;
 
                     _ = Common.Invoke(() =>
                     {
-                        AlbumImage.Source =
-                            new BitmapImage(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=" +
-                                                    StaticSource.PICSIZE_PLAYBAR_ALBUMCOVER));
+                        var image = new BitmapImage();
+                        AlbumImage.Source = image;
+                        image.UriSource = new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=" +
+                                                    StaticSource.PICSIZE_PLAYBAR_ALBUMCOVER);
                     });
                 }
 
@@ -1088,8 +1088,9 @@ DoubleAnimation verticalAnimation;
         }
         else
             PlayBarBackgroundAni.Children.RemoveAt(2);
-
-        AlbumImage.Source = new BitmapImage(new Uri("ms-appx:Assets/icon.png"));
+        var image = new BitmapImage();
+        AlbumImage.Source = image;
+        image.UriSource = new Uri("ms-appx:Assets/icon.png");
         if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
             ButtonDesktopLyrics.Visibility = Visibility.Collapsed;
         InitializeDesktopLyric();

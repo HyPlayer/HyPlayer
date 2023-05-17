@@ -155,9 +155,17 @@ public sealed partial class Me : Page, IDisposable
 
                 TextBoxUserName.Text = json["profile"]["nickname"].ToString();
                 TextBoxSignature.Text = json["profile"]["signature"].ToString();
-                ImageRect.ImageSource = Common.Setting.noImage
-                    ? null
-                    : new BitmapImage(new Uri(json["profile"]["avatarUrl"].ToString()));
+                if (Common.Setting.noImage)
+                {
+                    ImageRect.ImageSource = null;
+                }
+                else
+                {
+                    var img = new BitmapImage();
+                    ImageRect.ImageSource = img;
+                    img.UriSource = new Uri(json["profile"]["avatarUrl"].ToString());
+                }
+                
             }
             catch (Exception ex)
             {

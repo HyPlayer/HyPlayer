@@ -70,16 +70,32 @@ public sealed partial class SongListDetail : Page, IDisposable
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
         if (playList.cover.StartsWith("http"))
-            ImageRect.ImageSource =
-                Common.Setting.noImage
-                    ? null
-                    : new BitmapImage(new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
+            if (Common.Setting.noImage)
+            {
+                ImageRect.ImageSource = null;
+
+            }
+            else
+            {
+                var img = new BitmapImage();
+                ImageRect.ImageSource = img;
+                img.UriSource = new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER);
+            }
         else
-            ImageRect.ImageSource =
-                Common.Setting.noImage ? null : new BitmapImage(new Uri(playList.cover));
+            if (Common.Setting.noImage)
+        {
+            ImageRect.ImageSource = null;
+
+        }
+        else
+        {
+            var img = new BitmapImage();
+            ImageRect.ImageSource = img;
+            img.UriSource = new Uri(playList.cover);
+        }
 
 
-        TextBoxPLName.Text = playList.name;
+            TextBoxPLName.Text = playList.name;
         DescriptionWrapper.Text = playList.desc;
         TextBoxAuthor.Content = playList.creater.name;
         ToggleButtonLike.IsChecked = playList.subscribed;

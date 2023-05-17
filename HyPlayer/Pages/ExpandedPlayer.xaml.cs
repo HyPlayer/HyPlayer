@@ -557,6 +557,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         if (mpi.PlayItem.DontSetLocalStorageFile != null)
                             storageFile = mpi.PlayItem.DontSetLocalStorageFile;
                         var img = new BitmapImage();
+                        ImageAlbum.Source = img;
                         if (!Common.Setting.useTaglibPicture || mpi.PlayItem.LocalFileTag is null ||
                             mpi.PlayItem.LocalFileTag.Pictures.Length == 0)
                         {
@@ -568,23 +569,25 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                             await img.SetSourceAsync(new MemoryStream(mpi.PlayItem.LocalFileTag.Pictures[0].Data.Data)
                                 .AsRandomAccessStream());
                         }
-
-                        ImageAlbum.Source = img;
                         if (Common.Setting.expandedPlayerBackgroundType == 0)
                             Background = new ImageBrush
                             { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
                     }
                     else
                     {
-                        ImageAlbum.PlaceholderSource = new BitmapImage(new Uri(mpi.PlayItem.Album.cover + "?param=" +
+                        var placeHolder = new BitmapImage();
+                        ImageAlbum.PlaceholderSource = placeHolder;
+                        placeHolder.UriSource = new Uri(mpi.PlayItem.Album.cover + "?param=" +
                                                                                StaticSource
-                                                                                   .PICSIZE_EXPANDEDPLAYER_PREVIEWALBUMCOVER));
+                                                                                   .PICSIZE_EXPANDEDPLAYER_PREVIEWALBUMCOVER);
+                        var img = new BitmapImage();
+                        ImageAlbum.Source = img;
                         if (Common.Setting.expandedPlayerFullCover)
-                            ImageAlbum.Source = new BitmapImage(new Uri(mpi.PlayItem.Album.cover));
+                            img.UriSource = new Uri(mpi.PlayItem.Album.cover);
                         else
-                            ImageAlbum.Source = new BitmapImage(new Uri(mpi.PlayItem.Album.cover + "?param=" +
+                            img.UriSource = new Uri(mpi.PlayItem.Album.cover + "?param=" +
                                                                         StaticSource
-                                                                            .PICSIZE_EXPANDEDPLAYER_COVER));
+                                                                            .PICSIZE_EXPANDEDPLAYER_COVER);
 
                         if (Common.Setting.expandedPlayerBackgroundType == 0)
                             Background = new ImageBrush

@@ -111,11 +111,13 @@ public sealed partial class AlbumPage : Page, IDisposable
             json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Album,
                 new Dictionary<string, object> { { "id", albumid } });
             Album = NCAlbum.CreateFromJson(json["album"]);
-            ImageRect.ImageSource =
-                Common.Setting.noImage
-                    ? null
-                    : new BitmapImage(
-                        new Uri(Album.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
+            if (Common.Setting.noImage) ImageRect.ImageSource = null;
+            else
+            {
+                BitmapImage image = new BitmapImage();
+                ImageRect.ImageSource = image;
+                image.UriSource = new Uri(Album.cover + "?param=" + StaticSource.PICSIZE_PLAYLIST_ITEM_COVER);
+            }
             TextBoxAlbumName.Text = Album.name;
 
             TextBoxAlbumName.Text = json["album"]["name"].ToString();
