@@ -73,7 +73,8 @@
                 Style="{StaticResource AccentButtonStyle}"
                 ToolTipService.ToolTip="播放全部">
                 <Button.Content>
-                    <FontIcon Glyph="&#xE102;" />
+                    <FontIcon Glyph="&#xF5B0;" 
+                              Foreground="White"/>
                 </Button.Content>
             </Button>
             <Grid

@@ -63,14 +63,14 @@
                         <StackPanel>
                             <FontIcon
                             x:Name="IconLiked"
-                            FontSize="36"
-                            Glyph="&#xE006;" />
+                            FontSize="28"
+                            Glyph="&#xE00B;" />
                             <TextBlock
                             HorizontalAlignment="Center"
                             VerticalAlignment="Top"
                             Text="喜欢音乐"
                             FontWeight="Bold"
-                            Margin="0,4,0,0"
+                            Margin="0,8,0,0"
                             FontSize="12" />
 
                         </StackPanel>
@@ -87,14 +87,14 @@
                         <StackPanel>
                             <FontIcon
                             x:Name="IconDailyRcm"
-                            FontSize="36"
-                            Glyph="&#xE163;" />
+                            FontSize="28"
+                            Glyph="&#xEA89;" />
                             <TextBlock
                             HorizontalAlignment="Center"
                             VerticalAlignment="Top"
                             Text="每日推荐"
                             FontWeight="Bold"
-                            Margin="0,0,0,0"
+                            Margin="0,8,0,0"
                             FontSize="12" />
 
                         </StackPanel>
@@ -111,14 +111,14 @@
                         <StackPanel>
                             <FontIcon
                             x:Name="IconFM"
-                            FontSize="36"
-                            Glyph="&#xEFA9;" />
+                            FontSize="28"
+                            Glyph="&#xF8B2;" />
                             <TextBlock
                             HorizontalAlignment="Center"
                             VerticalAlignment="Top"
                             Text="私人FM"
                             FontWeight="Bold"
-                            Margin="0,4,0,0"
+                            Margin="0,8,0,0"
                             FontSize="12" />
 
                         </StackPanel>
@@ -135,14 +135,14 @@
                         <StackPanel>
                             <FontIcon
                             x:Name="IconHeartBeat"
-                            FontSize="36"
-                            Glyph="&#xE95E;" />
+                            FontSize="28"
+                            Glyph="&#xEB4F;" />
                             <TextBlock
                             HorizontalAlignment="Center"
                             VerticalAlignment="Top"
                             Text="心动模式"
                             FontWeight="Bold"
-                            Margin="0,0,0,0"
+                            Margin="0,8,0,0"
                             FontSize="12" />
 
                         </StackPanel>

@@ -22,7 +22,7 @@
         </LinearGradientBrush>
         <LinearGradientBrush x:Key="SolidPlayButtonIconColor" StartPoint="0,0" EndPoint="1,1">
             <GradientStop x:Name="PlayBtnIconGradient" Offset="0.2" Color="{ThemeResource SystemAccentColorLight2}" />
-            <GradientStop Offset="0.8" Color="{ThemeResource SystemAccentColor}" />
+            <GradientStop Offset="0.8" Color="{ThemeResource SystemAccentColorLight1}" />
         </LinearGradientBrush>
 
         <Flyout x:Key="VolumeFlyout">
@@ -494,7 +494,7 @@
                     <FontIcon
                         x:Name="PlayStateIcon"
                         FontSize="18"
-                        Glyph="&#xEDB5;" />
+                        Glyph="&#xF5B0;" />
                     <!--  EDB4  -->
                 </Button>
                 <Button
