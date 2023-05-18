@@ -248,7 +248,7 @@ public sealed partial class ArtistPage : Page, IDisposable
                         : "",
                     LineThree = albumjson.Value<bool>("paid") ? "付费专辑" : "",
                     ResourceId = "al" + albumjson["id"],
-                    CoverUri = albumjson["picUrl"].ToString(),
+                    CoverLink = albumjson["picUrl"].ToString(),
                     Order = page * 50 + i++,
                     CanPlay = true
                 });

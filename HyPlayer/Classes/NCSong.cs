@@ -169,13 +169,13 @@ public class NCSong
     public HyPlayItemType Type;
     public int DspOrder => Order + 1;
 
-    public BitmapImage Cover =>
+    public Uri Cover =>
         Common.Setting.noImage
             ? null
-            : new BitmapImage(new Uri((Album.cover ??
-                                       "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg") +
-                                      "?param=" +
-                                      StaticSource.PICSIZE_SINGLENCSONG_COVER));
+            : new Uri((Album.cover ?? 
+                "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg") +
+                "?param=" +
+                StaticSource.PICSIZE_SINGLENCSONG_COVER);
 
     public string ArtistString
     {
@@ -236,19 +236,19 @@ public class NCAlbumSong : NCSong
 public class SimpleListItem
 {
     public bool CanPlay;
-    public string CoverUri;
+    public string CoverLink;
     public string LineOne;
     public string LineThree;
     public string LineTwo;
     public int Order = 0;
     public string ResourceId;
     public string Title;
-    public BitmapImage Cover =>
+    public Uri CoverUri =>
         Common.Setting.noImage
             ? null
-            : new BitmapImage(new Uri((string.IsNullOrEmpty(CoverUri) ? "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg" : CoverUri) +
+            : new Uri((string.IsNullOrEmpty(CoverLink) ? "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg" : CoverLink) +
                                       "?param=" +
-                                      StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM));
+                                      StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM);
     public int DspOrder => Order + 1;
 }
 

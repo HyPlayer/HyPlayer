@@ -612,7 +612,7 @@ DoubleAnimation verticalAnimation;
 
             realSelectSong = false;
             PlayItems.Clear();
-            targetingList.ForEach(t => PlayItems.Add(t));
+            targetingList.ForEach(PlayItems.Add);
             realSelectSong = true;
 
             if (targetingIndex == -1 || targetingIndex >= PlayItems.Count) return;
@@ -803,7 +803,9 @@ DoubleAnimation verticalAnimation;
         {
             if (sender is Button btn)
             {
-                HyPlayList.RemoveSong(HyPlayList.List.FindIndex(t => t.PlayItem == btn.Tag));
+                var item = btn.DataContext as HyPlayItem;
+                var index = HyPlayList.List.IndexOf(item);
+                HyPlayList.RemoveSong(index);
                 RefreshSongList();
             }
         }

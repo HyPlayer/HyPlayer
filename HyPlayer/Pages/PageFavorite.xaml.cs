@@ -108,7 +108,7 @@ public sealed partial class PageFavorite : Page, IDisposable
                     LineTwo = pljs["desc"].ToString(),
                     LineThree = "最后一个节目: " + pljs["lastProgramName"],
                     ResourceId = "rd" + pljs["id"],
-                    CoverUri = pljs["picUrl"].ToString(),
+                    CoverLink = pljs["picUrl"].ToString(),
                     Order = i++,
                     CanPlay = true
                 });
@@ -143,7 +143,7 @@ public sealed partial class PageFavorite : Page, IDisposable
                         singerjson["alia"]?.Select(t => t.ToString()) ?? new List<string>()),
                     LineThree = $"专辑数 {singerjson["albumSize"]} | MV 数 {singerjson["mvSize"]}",
                     ResourceId = "ar" + singerjson["id"],
-                    CoverUri = singerjson["img1v1Url"].ToString(),
+                    CoverLink = singerjson["img1v1Url"].ToString(),
                     Order = i++,
                     CanPlay = true
                 });
@@ -178,7 +178,7 @@ public sealed partial class PageFavorite : Page, IDisposable
                         : "",
                     LineThree = albumjson.Value<bool>("paid") ? "付费专辑" : "",
                     ResourceId = "al" + albumjson["id"],
-                    CoverUri = albumjson["picUrl"].ToString(),
+                    CoverLink = albumjson["picUrl"].ToString(),
                     Order = i++,
                     CanPlay = true
                 });

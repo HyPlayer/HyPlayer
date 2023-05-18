@@ -45,9 +45,12 @@
                         CornerRadius="10"
                         EnableLazyLoading="True"
                         IsCacheEnabled="False"
-                        Source="{x:Bind Cover}"
-                        Stretch="UniformToFill" />
-                    <Rectangle
+                        Stretch="UniformToFill" >
+                            <controls:ImageEx.Source>
+                                <BitmapImage UriSource="{x:Bind CoverUri,Mode=OneTime}"/>
+                            </controls:ImageEx.Source>
+                        </controls:ImageEx>
+                      <Rectangle
                         x:Name="RectangleImageAcrylic"
                         Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}"
                         Grid.ColumnSpan="2"
@@ -65,16 +68,18 @@
                             FontSize="24"
                             FontWeight="Bold"
                             Text="{x:Bind DspOrder}" />
-                        <controls:ImageEx
+                            <controls:ImageEx
                             x:Name="ImageRect"
                             Width="75"
                             Height="75"
-                            x:Phase="4"
                             CornerRadius="10"
                             EnableLazyLoading="True"
                             IsCacheEnabled="False"
-                            Source="{x:Bind Cover}"
-                            Stretch="UniformToFill" />
+                            Stretch="UniformToFill" >
+                                <controls:ImageEx.Source>
+                                    <BitmapImage UriSource="{x:Bind CoverUri, Mode=OneTime}"/>
+                                </controls:ImageEx.Source>
+                            </controls:ImageEx>
                         <Grid Padding="7,0,0,0">
                             <Grid.RowDefinitions>
                                 <RowDefinition />

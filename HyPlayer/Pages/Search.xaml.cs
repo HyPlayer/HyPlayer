@@ -172,7 +172,7 @@ public sealed partial class Search : Page, IDisposable
                     LineTwo = item["briefDesc"]?.ToString(),
                     LineThree = item["transNames"]?.ToString(),
                     ResourceId = "ml" + item["id"],
-                    CoverUri = item["cover"].ToString(),
+                    CoverLink = item["cover"].ToString(),
                     Order = i++
                 });
             if (json["result"]["mvCount"].ToObject<int>() >= (page + 1) * 30)
@@ -207,7 +207,7 @@ public sealed partial class Search : Page, IDisposable
                     LineTwo = item["transName"]?.ToString(),
                     LineThree = item["creator"]?.First?["userName"]?.ToString(),
                     ResourceId = "ml" + item["vid"],
-                    CoverUri = item["coverUrl"].ToString(),
+                    CoverLink = item["coverUrl"].ToString(),
                     Order = i++
                 });
             if (json["result"]["videoCount"].ToObject<int>() >= (page + 1) * 30)
@@ -242,7 +242,7 @@ public sealed partial class Search : Page, IDisposable
                     LineTwo = songJs["lyrics"].ToList().First(t => t.ToString().Contains("</b>")).ToString(),
                     LineThree = string.Join("\r\n", songJs["lyrics"].ToList()),
                     ResourceId = "ns" + songJs["id"],
-                    CoverUri = songJs["al"]["picUrl"].ToString(),
+                    CoverLink = songJs["al"]["picUrl"].ToString(),
                     Order = i++
                 });
         }
@@ -277,7 +277,7 @@ public sealed partial class Search : Page, IDisposable
                     LineTwo = "",
                     LineThree = "",
                     ResourceId = "us" + userJs["userId"],
-                    CoverUri = userJs["avatarUrl"].ToString(),
+                    CoverLink = userJs["avatarUrl"].ToString(),
                     Order = i++
                 });
         }
@@ -313,7 +313,7 @@ public sealed partial class Search : Page, IDisposable
                     LineTwo = pljs["desc"].ToString(),
                     LineThree = pljs["rcmdText"].ToString(),
                     ResourceId = "rd" + pljs["id"],
-                    CoverUri = pljs["picUrl"].ToString(),
+                    CoverLink = pljs["picUrl"].ToString(),
                     Order = i++,
                     CanPlay = true
                 });
@@ -356,7 +356,7 @@ public sealed partial class Search : Page, IDisposable
                 LineTwo = pljs["description"].ToString(),
                 LineThree = $"{pljs["trackCount"]}首 | 播放{pljs["playCount"]}次 | 收藏 {pljs["bookCount"]}次",
                 ResourceId = "pl" + pljs["id"],
-                CoverUri = pljs["coverImgUrl"].ToString(),
+                CoverLink = pljs["coverImgUrl"].ToString(),
                 Order = i++,
                 CanPlay = true
             });
@@ -392,7 +392,7 @@ public sealed partial class Search : Page, IDisposable
                     (singerjson["alia"]?.ToList() ?? new List<JToken>()).Select(t => t.ToString())),
                 LineThree = $"专辑数 {singerjson["albumSize"]} | MV 数 {singerjson["mvSize"]}",
                 ResourceId = "ar" + singerjson["id"],
-                CoverUri = singerjson["img1v1Url"].ToString(),
+                CoverLink = singerjson["img1v1Url"].ToString(),
                 Order = i++
             });
         }
@@ -428,7 +428,7 @@ public sealed partial class Search : Page, IDisposable
                     : "",
                 LineThree = albumjson.Value<bool>("paid") ? "付费专辑" : "",
                 ResourceId = "al" + albumjson["id"],
-                CoverUri = albumjson["picUrl"].ToString(),
+                CoverLink = albumjson["picUrl"].ToString(),
                 Order = i++,
                 CanPlay = true
             });

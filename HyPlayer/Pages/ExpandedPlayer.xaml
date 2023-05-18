@@ -365,7 +365,8 @@
                             <muxc:ItemsRepeater
                                 x:Name="LyricBox"
                                 PointerWheelChanged="LyricBoxContainer_OnPointerWheelChanged"
-                                Tapped="LyricBox_Tapped">
+                                Tapped="LyricBox_Tapped"
+                                ItemsSource="{x:Bind LyricList, Mode=OneWay}">
                                 <muxc:ItemsRepeater.Layout>
                                     <muxc:StackLayout Orientation="Vertical" Spacing="40" />
                                 </muxc:ItemsRepeater.Layout>

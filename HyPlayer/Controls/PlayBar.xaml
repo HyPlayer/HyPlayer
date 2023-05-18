@@ -642,7 +642,8 @@
                                 Width="400"
                                 Height="500"
                                 SelectionChanged="ListBoxPlayList_OnSelectionChanged" ItemContainerStyle="{ThemeResource ListViewItemStyle}"
-                                SelectionMode="Single">
+                                SelectionMode="Single"
+                                ItemsSource="{x:Bind PlayItems, Mode=OneWay}">
                                 <ListView.ItemTemplate>
                                     <DataTemplate x:DataType="classes:HyPlayItem">
                                         <Border>
@@ -657,8 +658,7 @@
                                                 Padding="-5"
                                                 Background="Transparent"
                                                 BorderBrush="Transparent"
-                                                Click="PlayListRemove_OnClick"
-                                                Tag="{x:Bind Path=PlayItem}">
+                                                Click="PlayListRemove_OnClick">
                                                     <FontIcon
                                                     HorizontalAlignment="Left"
                                                     FontSize="16"

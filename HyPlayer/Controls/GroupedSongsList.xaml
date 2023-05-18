@@ -162,8 +162,11 @@
                                 EnableLazyLoading="True"
                                 IsCacheEnabled="False"
                                 IsEnabled="{x:Bind IsAvailable}"
-                                Source="{x:Bind Cover}"
-                                Stretch="UniformToFill" />
+                                Stretch="UniformToFill" >
+                                    <controls:ImageEx.Source>
+                                        <BitmapImage UriSource="{x:Bind Cover, Mode=OneTime}"/>
+                                    </controls:ImageEx.Source>
+                                </controls:ImageEx>
                                 <Grid Padding="7,0,0,0">
                                     <Grid.RowDefinitions>
                                         <RowDefinition />

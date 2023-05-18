@@ -8,6 +8,7 @@ using Microsoft.Toolkit.Uwp.UI.Media;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -71,7 +72,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private int lastwidth;
 
-    //private List<LyricItem> LyricList = new();
+    public ObservableCollection<LyricItemModel> LyricList = new();
     private bool ManualChangeMode;
     private int needRedesign = 1;
     private int nowheight;
@@ -429,8 +430,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void UpdateFocusingLyric(bool recursionLock = false)
     {
-        if (LyricBox.ItemsSource is not List<LyricItemModel> list ||
-            HyPlayList.LyricPos < 0 || HyPlayList.LyricPos >= list.Count) return;
+        if (LyricList.Count == 0 || 
+            HyPlayList.LyricPos < 0 || HyPlayList.LyricPos >= LyricList.Count) return;
         if (HyPlayList.LyricPos == -1)
         {
             if (lastitem != null) lastitem.IsShow = false;
@@ -438,7 +439,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             LyricBoxContainer.ChangeView(null, 0, null, false);
         }
 
-        var item = list[HyPlayList.LyricPos];
+        var item = LyricList[HyPlayList.LyricPos];
         if (item == null) return;
 
         if (lastitem != null) lastitem.IsShow = false;
@@ -470,23 +471,15 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     public void LoadLyricsBox()
     {
         if (HyPlayList.NowPlayingItem == null) return;
-        LyricBox.ItemsSource = null;
         var blanksize = LyricBoxContainer.ViewportHeight / 2;
         if (double.IsNaN(blanksize) || blanksize == 0) blanksize = Window.Current.Bounds.Height / 3;
 
         LyricBoxHost.Margin = new Thickness(0, blanksize, 0, blanksize);
-
-        List<LyricItemModel> source = null;
-
+        LyricList.Clear();
         if (HyPlayList.Lyrics.Count == 0)
-            source = new List<LyricItemModel>
-            {
-                new(SongLyric.PureSong)
-            };
+            LyricList.Add(new(SongLyric.PureSong));
         else
-            source = new List<LyricItemModel>(HyPlayList.Lyrics.Select(c => new LyricItemModel(c)));
-
-        LyricBox.ItemsSource = source;
+            HyPlayList.Lyrics.ForEach(t => LyricList.Add(new (t)));
         LyricBox.Width = LyricWidth;
         lastlrcid = HyPlayList.NowPlayingItem.GetHashCode();
         _ = InitLyricTime();
@@ -508,9 +501,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             TextBlockAlbum.Content = mpi?.PlayItem?.AlbumString;
             if (mpi?.PlayItem == null)
             {
-                //LyricList.Clear();
+                LyricList.Clear();
                 //LyricBox.Children.Clear();
-                LyricBox.ItemsSource = null;
 
                 //LyricBox.Children.Add(new TextBlock() { Text = "当前暂无歌曲播放" });
                 ImageAlbum.Source = null;
@@ -624,10 +616,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
 
                 LyricBoxHost.Margin = new Thickness(0, blanksize, 0, blanksize);
-                LyricBox.ItemsSource = new List<LyricItemModel>
-                {
-                    new(SongLyric.LoadingLyric)
-                };
+                LyricList.Clear();
+                LyricList.Add(new LyricItemModel(SongLyric.LoadingLyric));
                 LyricBox.Width = LyricWidth;
             }
 
@@ -1127,9 +1117,9 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     ImageAlbum.Source = null;
                     ImageAlbum.PlaceholderSource = null;
                     Background = null;
-                    if (LyricBox.ItemsSource is IList lyricItems) lyricItems.Clear();
                     LyricBox.ItemsSource = null;
                 });
+                LyricList.Clear();
             }
             HyPlayList.OnPause -= HyPlayList_OnPause;
             HyPlayList.OnPlay -= HyPlayList_OnPlay;

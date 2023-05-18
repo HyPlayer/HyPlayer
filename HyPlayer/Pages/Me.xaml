@@ -35,9 +35,12 @@
                                     CornerRadius="12"
                                     EnableLazyLoading="True"
                                     IsCacheEnabled="False"
-                                    Source="{x:Bind Cover}"
                                     Stretch="UniformToFill"
-                                    Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}" />
+                                    Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}" >
+                                    <controls:ImageEx.Source>
+                                        <BitmapImage UriSource="{x:Bind CoverUri, Mode=OneTime}"/>
+                                    </controls:ImageEx.Source>
+                                </controls:ImageEx>
                                 <Rectangle
                                     x:Name="RectangleImageAcrylic"
                                     Fill="{ThemeResource SystemControlAcrylicElementBrush}"
@@ -60,8 +63,10 @@
                                             CornerRadius="8"
                                             EnableLazyLoading="True"
                                             IsCacheEnabled="False"
-                                            Source="{x:Bind Cover}"
                                             Stretch="UniformToFill" >
+                                            <controls:ImageEx.Source>
+                                                <BitmapImage UriSource="{x:Bind CoverUri, Mode=OneTime}"/>
+                                            </controls:ImageEx.Source>
                                         </controls:ImageEx>
                                         <Grid Padding="7,0,0,0">
                                             <Grid.RowDefinitions>
