@@ -284,14 +284,20 @@
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                         CornerRadius="8"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
-                        <TextBlock
+                        <StackPanel                            
                             Grid.Column="0"
                             Margin="25,20,0,60"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Top"
-                            FontSize="22"
+                            Orientation="Horizontal">
+                            <FontIcon Glyph="&#xEA8C;" Margin="0,0,10,0"/>
+                            <TextBlock
+                            FontSize="20"
+                            Margin="0,-2,0,0"
                             FontWeight="Bold"
                             Text="我的歌单" />
+
+                        </StackPanel>
                         <muxc:ItemsRepeater
                             x:Name="MySongListBox"
                             Margin="0,60,0,0"
@@ -312,13 +318,18 @@
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         CornerRadius="8">
-                        <TextBlock
+                        <StackPanel                            
                             Margin="30,20,0,0"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Top"
-                            FontSize="22"
+                            Orientation="Horizontal">
+                            <FontIcon Glyph="&#xE1CF;" Margin="0,0,10,0"/>
+                            <TextBlock
+                            FontSize="20"
+                            Margin="0"
                             FontWeight="Bold"
                             Text="收藏歌单" />
+                        </StackPanel>
                         <muxc:ItemsRepeater
                             x:Name="LikedSongList"
                             Margin="0,60,0,0"

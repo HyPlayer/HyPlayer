@@ -148,7 +148,7 @@
                             </StackPanel>
                         </Button>
                         <Button
-                            Style="{StaticResource AccentButtonStyle}"
+                            Background="{ThemeResource SystemAccentColorLight1}"
                             Click="ButtonPlayAll_OnClick">
                             <StackPanel Orientation="Horizontal">
                                 <FontIcon                           
