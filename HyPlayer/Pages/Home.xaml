@@ -219,7 +219,7 @@
                         CornerRadius="8"
                         Orientation="Vertical">
                         <StackPanel Orientation="Horizontal" Margin="20,20,0,0" Spacing="12">
-                            <FontIcon Glyph="&#xE006;"/>
+                            <FontIcon Glyph="&#xEB52;"/>
                             <TextBlock 
                                 Text="推荐歌单"
                                 Style="{StaticResource SubtitleTextBlockStyle}" />  

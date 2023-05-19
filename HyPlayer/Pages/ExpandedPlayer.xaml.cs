@@ -1164,6 +1164,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     {
         time.Reset();
         MainGrid.Margin = new Thickness(0,0,0,80);
+        LyricBoxContainer.Margin = new Thickness(0);
         if (Common.IsInImmerssiveMode)
         {
             DefaultRow.Height = new GridLength(1.1, GridUnitType.Star);
@@ -1246,7 +1247,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             BtnToggleImmersiveMode.IsChecked = false;
             var dialog = new ContentDialog();
             dialog.Title = "请调整背景样式";
-            dialog.Content = "沉浸模式只推荐在展开页背景样式为\"专辑背景模糊\"时才能展现最好效果，否则将无法开启沉浸模式\n请将背景样式更改为\"专辑背景模糊\"后再开启沉浸模式";
+            dialog.Content = "沉浸模式只推荐在展开页背景样式为\"专辑背景模糊\"时才能展现最好效果，否则将无法开启沉浸模式\n请在设置中将背景显示设置更改为\"专辑背景模糊\"后再开启沉浸模式";
             dialog.CloseButtonText = "好";
             dialog.IsPrimaryButtonEnabled = true;
             _ = dialog.ShowAsync();

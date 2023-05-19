@@ -183,7 +183,7 @@
                             Tag="{x:Bind Order}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="20"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="80" />
                             </Grid.ColumnDefinitions>
@@ -225,7 +225,7 @@
                                 <TextBlock
                                     x:Name="OrderId"
                                     Width="48"
-                                    Margin="-36,0,0,0"
+                                    Margin="-38,7,0,0"
                                     HorizontalAlignment="Left"
                                     VerticalAlignment="Top"
                                     FontSize="16"
@@ -243,7 +243,7 @@
                                         Orientation="Horizontal"
                                         Spacing="4"
                                         VerticalAlignment="Center"
-                                        Margin="0,-2,0,0">
+                                        Margin="0,0,0,4">
                                         <TextBlock
                                             Name="TextBlockSongname"
                                             x:Phase="0"
@@ -254,44 +254,47 @@
                                         <TextBlock
                                             Name="TextBlockTransName"
                                             x:Phase="0"
-                                            FontSize="16"
+                                            Margin="0,2,0,0"
+                                            FontSize="14"
                                             Foreground="Gray"
                                             Text="{x:Bind ConvertTranslate(transname)}" />
                                         <Image
-                                            Height="24"
+                                            Height="20"
                                             Source="/Assets/cloud.png"
                                             Visibility="{x:Bind IsCloud}" />
                                         <Image
-                                            Height="24"
-                                            Margin="-5,3,0,0"
+                                            Height="20"
+                                            Margin="0,2,0,0"
                                             Source="/Assets/vip.png"
                                             Visibility="{x:Bind IsVip}" />
                                     </StackPanel>
                                 </Grid>
                             </StackPanel>
-                            <TextBlock
+                            <StackPanel Grid.Column="2" Orientation="Vertical" VerticalAlignment="Center" >
+                                <TextBlock
                                             Name="TextBlockAlia"
-                                            Grid.Column="1"
+                                            Grid.Column="0"
                                             x:Phase="2"
-                                            FontSize="11"
+                                            VerticalAlignment="Center"
+                                            FontSize="12"
+                                            Margin="0,0,0,2"
                                             Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                                             Text="{x:Bind alias}"
                                             Visibility="{x:Bind alias, Converter={StaticResource EmptyStringToVisibilityConverter}}" />
-                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-
-                                <TextBlock
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,1,0,0">
+                                    <TextBlock
                                             Name="TextBlockArtist"
-                                            Grid.Row="2"
-                                            Margin="0,0,12,0"
+                                            Margin="0,0,20,0"
                                             FontSize="12"
                                             Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                                             Text="{x:Bind ArtistString}" />
-                                <TextBlock
+                                    <TextBlock
                                             Name="TextBlockAlbum"
-                                            Grid.Row="3"
-                                            FontSize="12"
+                                            FontSize="11"
                                             Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                                             Text="{x:Bind Album.name}" />
+                                </StackPanel>
+
                             </StackPanel>
                             <StackPanel
                                 Grid.Column="3"
