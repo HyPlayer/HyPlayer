@@ -91,4 +91,9 @@ public sealed partial class TestPage : Page
         public bool IsLowCache { get; set; }
         public List<string> ErrorMessageList { get; set; }
     }
+
+    private void ForceGC_Click(object sender, RoutedEventArgs e)
+    {
+        GC.Collect();
+    }
 }

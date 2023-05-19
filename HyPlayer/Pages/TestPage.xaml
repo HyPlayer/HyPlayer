@@ -20,6 +20,7 @@
             <Button Click="NavigateResourceId" Content="Navigate" />
             <Button Click="PlayResourceId" Content="Play" />
             <Button x:Name="DisablePopUp" Content="停用警告弹窗" Click="DisablePopUpButton_Click" />
+            <Button x:Name="ForceGC" Content="强制执行GC" Click="ForceGC_Click"/>
         </StackPanel>
         <ListView ItemsSource="{x:Bind hyplayer:Common.Logs}" />
     </StackPanel>

@@ -317,7 +317,8 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
                         }
                         else
                         {
-                            await img.SetSourceAsync(new MemoryStream(item.PlayItem.LocalFileTag.Pictures[0].Data.Data).AsRandomAccessStream());
+                            using var stream = new MemoryStream(item.PlayItem.LocalFileTag.Pictures[0].Data.Data).AsRandomAccessStream();
+                            await img.SetSourceAsync(stream);
                         }
                     }
                     else

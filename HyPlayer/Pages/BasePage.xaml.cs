@@ -962,7 +962,8 @@ public sealed partial class BasePage : Page
                         }
                         else
                         {
-                            await img.SetSourceAsync(new MemoryStream(item.PlayItem.LocalFileTag.Pictures[0].Data.Data).AsRandomAccessStream());
+                            using var stream = new MemoryStream(item.PlayItem.LocalFileTag.Pictures[0].Data.Data).AsRandomAccessStream();
+                            await img.SetSourceAsync(stream);
                         }
                     }
                     else if (HyPlayList.NowPlayingItem.PlayItem != null)

@@ -120,10 +120,8 @@ DoubleAnimation verticalAnimation;
                     await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
                 encoder.SetSoftwareBitmap(softwareBitmap);
                 await encoder.FlushAsync();
-                var fileStream = (await storageFile.OpenAsync(FileAccessMode.ReadWrite)).AsStream();
+                using var fileStream = (await storageFile.OpenAsync(FileAccessMode.ReadWrite)).AsStream();
                 await outputStream.AsStream().CopyToAsync(fileStream);
-                fileStream.Close();
-                outputStream.Dispose();
             }
         }
 
@@ -419,8 +417,9 @@ DoubleAnimation verticalAnimation;
                         }
                         else
                         {
-                            await img.SetSourceAsync(new MemoryStream(mpi.PlayItem.LocalFileTag.Pictures[0].Data.Data)
-                                .AsRandomAccessStream());
+                            using var stream = new MemoryStream(mpi.PlayItem.LocalFileTag.Pictures[0].Data.Data)
+                                .AsRandomAccessStream();
+                            await img.SetSourceAsync(stream);
                         }
                     });
                 }

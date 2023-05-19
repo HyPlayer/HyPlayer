@@ -560,23 +560,27 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             {
                 try
                 {
+                    ImageAlbum.Source = null;
                     if (mpi.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
                     {
                         var storageFile = HyPlayList.NowPlayingStorageFile;
                         if (mpi.PlayItem.DontSetLocalStorageFile != null)
                             storageFile = mpi.PlayItem.DontSetLocalStorageFile;
-                        var img = new BitmapImage();
-                        ImageAlbum.Source = img;
                         if (!Common.Setting.useTaglibPicture || mpi.PlayItem.LocalFileTag is null ||
                             mpi.PlayItem.LocalFileTag.Pictures.Length == 0)
                         {
+                            var img = new BitmapImage();
+                            ImageAlbum.Source = img;
                             await img.SetSourceAsync(
                                 await storageFile?.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
                         }
                         else
                         {
-                            await img.SetSourceAsync(new MemoryStream(mpi.PlayItem.LocalFileTag.Pictures[0].Data.Data)
-                                .AsRandomAccessStream());
+
+                            using var stream = new MemoryStream(mpi.PlayItem.LocalFileTag.Pictures[0].Data.Data).AsRandomAccessStream();
+                            var img = new BitmapImage();
+                            ImageAlbum.Source = img;
+                            await img.SetSourceAsync(stream);
                         }
                         if (Common.Setting.expandedPlayerBackgroundType == 0)
                             Background = new ImageBrush
@@ -773,7 +777,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         filepicker.SuggestedFileName = HyPlayList.NowPlayingItem.PlayItem.Name + "-cover.jpg";
         filepicker.FileTypeChoices.Add("图片文件", new List<string> { ".png", ".jpg" });
         var file = await filepicker.PickSaveFileAsync();
-        var stream = await (HyPlayList.NowPlayingItem.ItemType != HyPlayItemType.Local
+        using var stream = await (HyPlayList.NowPlayingItem.ItemType != HyPlayItemType.Local
                 ? RandomAccessStreamReference.CreateFromUri(
                     new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover))
                 : RandomAccessStreamReference.CreateFromStream(
@@ -886,14 +890,20 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         try
         {
             BitmapDecoder decoder;
+            PixelDataProvider data;
             if (HyPlayList.NowPlayingItem.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
+            {
                 decoder = await BitmapDecoder.CreateAsync(
                     await HyPlayList.NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.MusicView, 1));
+                data = await decoder.GetPixelDataAsync();
+            }
             else
-                decoder = await BitmapDecoder.CreateAsync(await RandomAccessStreamReference
-                    .CreateFromUri(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=1y1"))
-                    .OpenReadAsync());
-            var data = await decoder.GetPixelDataAsync();
+            {
+                var pictureReference = RandomAccessStreamReference.CreateFromUri(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=1y1"));
+                using IRandomAccessStreamWithContentType stream = await pictureReference.OpenReadAsync();
+                decoder = await BitmapDecoder.CreateAsync(stream);
+                data = await decoder.GetPixelDataAsync();
+            }
             var bytes = data.DetachPixelData();
             //var c = GetPixel(bytes, 0, 0, decoder.PixelWidth, decoder.PixelHeight);
             var Y = 0.299 * bytes[2] + 0.587 * bytes[1] + 0.114 * bytes[0];
@@ -1173,12 +1183,12 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     }
     public async void Collapse()
     {
-        time = System.Diagnostics.Stopwatch.StartNew();
-        await Task.Run(() =>
+        time.Start();
+        await Task.Run(async () =>
         {
             while (time.ElapsedMilliseconds < 3000)
             {
-                Thread.Sleep(10);
+                await Task.Delay(10);
             }
             _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
@@ -1202,7 +1212,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 storyboard.Begin();
             });
         });
-
+        time.Stop();
     }
     private void OnPlaybarVisibilityChanged(bool isActivated)
     {
