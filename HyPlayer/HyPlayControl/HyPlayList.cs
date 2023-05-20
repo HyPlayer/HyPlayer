@@ -414,6 +414,7 @@ public static class HyPlayList
                             var info = NCMFile.GetNCMMusicInfo(stream);
                             using var coverStream = NCMFile.GetCoverStream(stream);
                             _coverStream.Size = 0;
+                            _coverStream.Seek(0);
                             using var targetCoverStream = _coverStream.AsStream();
                             coverStream.CopyTo(targetCoverStream);
                             using var encStream = NCMFile.GetEncryptedStream(stream);
@@ -1168,6 +1169,7 @@ public static class HyPlayList
                             if (NowPlayingStorageFile != null)
                             {
                                 _coverStream.Size = 0;
+                                _coverStream.Seek(0);
                                 using var thumbnail = await NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.MusicView, 3000);
                                 var inputStream = thumbnail.AsStreamForRead();
                                 var coverStream = _coverStream.AsStream();
@@ -1176,6 +1178,7 @@ public static class HyPlayList
                             else
                             {
                                 _coverStream.Size = 0;
+                                _coverStream.Seek(0);
                                 var file = await StorageFile.GetFileFromPathAsync("/Assets/icon.png");
                                 using var stream = await file.OpenStreamForReadAsync();
                                 var coverStream = _coverStream.AsStream();
@@ -1186,6 +1189,7 @@ public static class HyPlayList
                         else
                         {
                             _coverStream.Size = 0;
+                            _coverStream.Seek(0);
                             using var stream = new MemoryStream(NowPlayingItem.PlayItem.LocalFileTag.Pictures[0].Data.Data);
                             var coverStream = _coverStream.AsStream();
                             await stream.CopyToAsync(coverStream);
@@ -1199,6 +1203,7 @@ public static class HyPlayList
                 else
                 {
                     _coverStream.Size = 0;
+                    _coverStream.Seek(0);
                     using var httpClient = new HttpClient();
                     using var result = await httpClient.GetAsync(new Uri(NowPlayingItem.PlayItem.Album.cover +"?param=" + StaticSource.PICSIZE_AUDIO_PLAYER_COVER));
                     if (!result.IsSuccessStatusCode)
