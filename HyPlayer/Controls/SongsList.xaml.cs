@@ -478,7 +478,6 @@ public sealed partial class SongsList : UserControl, IDisposable
             if (disposing)
             {
                 VisibleSongs.Clear();
-                Songs.Clear();
             }
             HyPlayList.OnPlayItemChange -= HyPlayListOnOnPlayItemChange;
             Songs.CollectionChanged -= Songs_CollectionChanged;

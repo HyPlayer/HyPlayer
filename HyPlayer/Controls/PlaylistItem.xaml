@@ -59,6 +59,9 @@
                 <controls:ImageEx.RenderTransform>
                     <TranslateTransform x:Name="Transform" />
                 </controls:ImageEx.RenderTransform>
+                <controls:ImageEx.Source>
+                    <BitmapImage x:Name="ImageContainerSource"/>
+                </controls:ImageEx.Source>
             </controls:ImageEx>
             <Button
                 x:Name="PlayAllBtn"

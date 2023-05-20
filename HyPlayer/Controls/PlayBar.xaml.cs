@@ -395,9 +395,15 @@ DoubleAnimation verticalAnimation;
     public void LoadPlayingFile(HyPlayItem mpi)
     {
         if (HyPlayList.NowPlayingItem.PlayItem == null) return;
-
-        try
+        _ = Common.Invoke(() =>
         {
+            if(AlbumImageSource.UriSource!=null)
+            {
+                AlbumImageSource.UriSource = null;
+            }
+        });
+            try
+            {
             if (!Common.Setting.noImage && !Common.IsInBackground)
                 if (mpi.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
                 {
@@ -407,19 +413,16 @@ DoubleAnimation verticalAnimation;
                         storageFile = mpi.PlayItem.DontSetLocalStorageFile;
                     _ = Common.Invoke(async () =>
                     {
-                        var img = new BitmapImage();
-                        AlbumImage.Source = img;
                         if (!Common.Setting.useTaglibPicture || mpi.PlayItem.LocalFileTag is null ||
                             mpi.PlayItem.LocalFileTag.Pictures.Length == 0)
                         {
-                            await img.SetSourceAsync(
-                                await storageFile?.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
+                            using var thumbnail = await storageFile?.GetThumbnailAsync(ThumbnailMode.MusicView, 9999);
+                            await AlbumImageSource.SetSourceAsync(thumbnail);
                         }
                         else
                         {
-                            using var stream = new MemoryStream(mpi.PlayItem.LocalFileTag.Pictures[0].Data.Data)
-                                .AsRandomAccessStream();
-                            await img.SetSourceAsync(stream);
+                            using var ras = new MemoryStream(mpi.PlayItem.LocalFileTag.Pictures[0].Data.Data).AsRandomAccessStream();
+                            await AlbumImageSource.SetSourceAsync(ras);
                         }
                     });
                 }
@@ -430,9 +433,7 @@ DoubleAnimation verticalAnimation;
 
                     _ = Common.Invoke(() =>
                     {
-                        var image = new BitmapImage();
-                        AlbumImage.Source = image;
-                        image.UriSource = new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=" +
+                        AlbumImageSource.UriSource = new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=" +
                                                     StaticSource.PICSIZE_PLAYBAR_ALBUMCOVER);
                     });
                 }
@@ -1089,9 +1090,6 @@ DoubleAnimation verticalAnimation;
         }
         else
             PlayBarBackgroundAni.Children.RemoveAt(2);
-        var image = new BitmapImage();
-        AlbumImage.Source = image;
-        image.UriSource = new Uri("ms-appx:Assets/icon.png");
         if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
             ButtonDesktopLyrics.Visibility = Visibility.Collapsed;
         InitializeDesktopLyric();
@@ -1172,11 +1170,11 @@ DoubleAnimation verticalAnimation;
         try
         {
             var list = await HistoryManagement.GetcurPlayingListHistory();
-            HyPlayList.AppendNcSongs(list);
             if (list.Count > 0)
             {
                 int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"].ToString(),
                     out HyPlayList.NowPlaying);
+                HyPlayList.AppendNcSongs(list);
                 HyPlayList.NotifyPlayItemChanged(HyPlayList.NowPlayingItem);
             }
         }

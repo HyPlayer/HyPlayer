@@ -69,33 +69,16 @@ public sealed partial class SongListDetail : Page, IDisposable
     public void LoadSongListDetail()
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
-        if (playList.cover.StartsWith("http"))
-            if (Common.Setting.noImage)
-            {
-                ImageRect.ImageSource = null;
-
-            }
-            else
-            {
-                var img = new BitmapImage();
-                ImageRect.ImageSource = img;
-                img.UriSource = new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER);
-            }
-        else
-            if (Common.Setting.noImage)
+        if (Common.Setting.noImage)
         {
-            ImageRect.ImageSource = null;
-
+            ImageSource = null;
         }
         else
         {
-            var img = new BitmapImage();
-            ImageRect.ImageSource = img;
-            img.UriSource = new Uri(playList.cover);
+            ImageSource.UriSource = new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER);
         }
 
-
-            TextBoxPLName.Text = playList.name;
+        TextBoxPLName.Text = playList.name;
         DescriptionWrapper.Text = playList.desc;
         TextBoxAuthor.Content = playList.creater.name;
         ToggleButtonLike.IsChecked = playList.subscribed;
@@ -387,12 +370,11 @@ public sealed partial class SongListDetail : Page, IDisposable
             if (disposing)
             {
                 Songs.Clear();
-                SongsList.Dispose();
                 playList = null;
-                ImageRect.ImageSource = null;
-
+                ImageSource = null;
                 _cancellationTokenSource.Dispose();
             }
+            SongsList.Dispose();
             _dataTransferManager.DataRequested -= DataTransferManagerOnDataRequested;
             disposedValue = true;
         }

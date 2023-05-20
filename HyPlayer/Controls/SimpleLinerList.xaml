@@ -47,7 +47,7 @@
                         IsCacheEnabled="False"
                         Stretch="UniformToFill" >
                             <controls:ImageEx.Source>
-                                <BitmapImage UriSource="{x:Bind CoverUri,Mode=OneTime}"/>
+                                <BitmapImage UriSource="{x:Bind CoverUri}"/>
                             </controls:ImageEx.Source>
                         </controls:ImageEx>
                       <Rectangle
@@ -77,7 +77,7 @@
                             IsCacheEnabled="False"
                             Stretch="UniformToFill" >
                                 <controls:ImageEx.Source>
-                                    <BitmapImage UriSource="{x:Bind CoverUri, Mode=OneTime}"/>
+                                    <BitmapImage UriSource="{x:Bind CoverUri}"/>
                                 </controls:ImageEx.Source>
                             </controls:ImageEx>
                         <Grid Padding="7,0,0,0">
