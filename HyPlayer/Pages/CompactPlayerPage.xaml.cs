@@ -118,14 +118,25 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         HyPlayList.OnPlayPositionChange +=
             position => _ = Common.Invoke(() => NowProgress = position.TotalMilliseconds);
         HyPlayList.OnPlayItemChange += OnChangePlayItem;
-        HyPlayList.OnPlay += () => _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB4");
-        HyPlayList.OnPause += () => _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB5");
+        HyPlayList.OnPlay += HyPlayList_OnPlay;
+        HyPlayList.OnPause += HyPlayList_OnPause;
         HyPlayList.OnLyricChange += OnLyricChanged;
         HyPlayList.OnSongLikeStatusChange += HyPlayList_OnSongLikeStatusChange;
         LeaveAnimation.Completed += LeaveAnimation_Completed;
         Common.OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;
         //CompactPlayerAni.Begin();
     }
+
+    private void HyPlayList_OnPlay()
+    {
+        _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB5");
+    }
+
+    private void HyPlayList_OnPause()
+    {
+        _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB5");
+    }
+
     private void LeaveAnimation_Completed(object sender, object e)
     {
         ChangeLyric();
@@ -425,8 +436,8 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
             HyPlayList.OnPlayPositionChange -=
             position => _ = Common.Invoke(() => NowProgress = position.TotalMilliseconds);
             HyPlayList.OnPlayItemChange -= OnChangePlayItem;
-            HyPlayList.OnPlay -= () => _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB4");
-            HyPlayList.OnPause -= () => _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB5");
+            HyPlayList.OnPlay -= HyPlayList_OnPlay;
+            HyPlayList.OnPause -= HyPlayList_OnPause;
             HyPlayList.OnLyricChange -= OnLyricChanged;
             HyPlayList.OnSongLikeStatusChange -= HyPlayList_OnSongLikeStatusChange;
             Common.OnPlaybarVisibilityChanged -= OnPlaybarVisibilityChanged;

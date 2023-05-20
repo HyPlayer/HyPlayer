@@ -329,7 +329,15 @@
                         x:Name="AlbumImage"
                         EnableLazyLoading="True"
                         IsCacheEnabled="False"
-                        Stretch="UniformToFill" />
+                        Stretch="UniformToFill" 
+                        PlaceholderStretch="Uniform">
+                        <controls:ImageEx.Source>
+                            <BitmapImage x:Name="AlbumImageSource"/>
+                        </controls:ImageEx.Source>
+                        <controls:ImageEx.PlaceholderSource>
+                            <BitmapImage UriSource="/Assets/icon.png"/>
+                        </controls:ImageEx.PlaceholderSource>
+                    </controls:ImageEx>
                 </Grid>
                 <Grid Grid.Column="1" VerticalAlignment="Center" RowSpacing="2">
                     <Grid.RowDefinitions>

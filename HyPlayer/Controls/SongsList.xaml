@@ -197,9 +197,12 @@
                                 Opacity="0.6"
                                 EnableLazyLoading="True"
                                 IsCacheEnabled="False"
-                                Source="{x:Bind Cover}"
                                 Stretch="Fill"
-                                Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}" />
+                                Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}">
+                                <controls:ImageEx.Source>
+                                    <BitmapImage UriSource="{x:Bind Cover}"/>
+                                </controls:ImageEx.Source>
+                            </controls:ImageEx>
                             <Rectangle
                                 x:Name="RectangleImageAcrylic"
                                 Grid.ColumnSpan="4"
@@ -220,8 +223,11 @@
                                     EnableLazyLoading="True"
                                     IsCacheEnabled="False"
                                     IsEnabled="{x:Bind IsAvailable}"
-                                    Source="{x:Bind Cover}"
-                                    Stretch="UniformToFill" />
+                                    Stretch="UniformToFill" >
+                                    <controls:ImageEx.Source>
+                                        <BitmapImage UriSource="{x:Bind Cover}"/>
+                                    </controls:ImageEx.Source>
+                                </controls:ImageEx>
                                 <TextBlock
                                     x:Name="OrderId"
                                     Width="48"

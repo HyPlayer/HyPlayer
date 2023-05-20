@@ -55,35 +55,6 @@ public sealed partial class BasePage : Page
 {
     private string nowplid;
     private string nowqrkey;
-    public static readonly DependencyProperty NowPlayingNameProperty =
-    DependencyProperty.Register("NowPlayingName", typeof(string), typeof(BasePage),
-        new PropertyMetadata(string.Empty));
-
-    public static readonly DependencyProperty NowPlayingArtistsProperty =
-    DependencyProperty.Register("NowPlayingArtists", typeof(string), typeof(BasePage),
-        new PropertyMetadata(string.Empty));
-
-    public static readonly DependencyProperty AlbumCoverProperty = DependencyProperty.Register(
-        "AlbumCover", typeof(Brush), typeof(BasePage), new PropertyMetadata(default(Brush)));
-
-    public string NowPlayingName
-    {
-        get => (string)GetValue(NowPlayingNameProperty);
-        set => SetValue(NowPlayingNameProperty, value);
-    }
-
-    public string NowPlayingArtists
-    {
-        get => (string)GetValue(NowPlayingArtistsProperty);
-        set => SetValue(NowPlayingArtistsProperty, value);
-    }
-
-    public Brush AlbumCover
-    {
-        get => (Brush)GetValue(AlbumCoverProperty);
-        set => SetValue(AlbumCoverProperty, value);
-    }
-
 
     public BasePage()
     {
@@ -945,33 +916,30 @@ public sealed partial class BasePage : Page
     {
         _ = Common.Invoke(async () =>
         {
-            NowPlayingName = item?.PlayItem?.Name;
-            NowPlayingArtists = item?.PlayItem?.ArtistString;
-            BitmapImage img = null;
-            var brush = new ImageBrush { Stretch = Stretch.UniformToFill };
-            AlbumCover = brush;
-            if (item != null)
+            if (item.PlayItem != null)
+            {
+                NavItemSongName.Text = item.PlayItem.Name;
+                NavItemArtist.Text = item.PlayItem.ArtistString;
+                if (NavItemImageSource.UriSource != null)  NavItemImageSource.UriSource = null;
                 if (!Common.Setting.noImage)
                     if (item.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
                     {
-                        img = new BitmapImage();
                         if (!Common.Setting.useTaglibPicture || item.PlayItem?.LocalFileTag is null || item.PlayItem.LocalFileTag.Pictures.Length == 0)
                         {
-                            await img.SetSourceAsync(
-                                await HyPlayList.NowPlayingStorageFile?.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
+                            using var thumbnail = await HyPlayList.NowPlayingStorageFile?.GetThumbnailAsync(ThumbnailMode.MusicView, 9999);
+                            await NavItemImageSource.SetSourceAsync(thumbnail);
                         }
                         else
                         {
                             using var stream = new MemoryStream(item.PlayItem.LocalFileTag.Pictures[0].Data.Data).AsRandomAccessStream();
-                            await img.SetSourceAsync(stream);
+                            await NavItemImageSource.SetSourceAsync(stream);
                         }
                     }
                     else if (HyPlayList.NowPlayingItem.PlayItem != null)
                     {
-                        img = new BitmapImage();
-                        img.UriSource = new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=" + StaticSource.PICSIZE_PLAYBAR_ALBUMCOVER);
+                        NavItemImageSource.UriSource = new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=" + StaticSource.PICSIZE_PLAYBAR_ALBUMCOVER);
                     }
-            brush.ImageSource = img;
+            }
         });
     }
 

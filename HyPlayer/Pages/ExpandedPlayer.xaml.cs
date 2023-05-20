@@ -33,6 +33,7 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using Windows.Web.Http;
 using Buffer = Windows.Storage.Streams.Buffer;
 using Color = System.Drawing.Color;
 
@@ -102,12 +103,12 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         Common.PageExpandedPlayer = this;
         HyPlayList.OnPause += HyPlayList_OnPause;
         HyPlayList.OnPlay += HyPlayList_OnPlay;
-        HyPlayList.OnLyricChange += () => RefreshLyricTime(false);
+        HyPlayList.OnLyricChange += RefreshLyricTime;
         HyPlayList.OnPlayItemChange += OnSongChange;
         HyPlayList.OnLyricLoaded += HyPlayList_OnLyricLoaded;
         Window.Current.SizeChanged += Current_SizeChanged;
         HyPlayList.OnTimerTicked += HyPlayList_OnTimerTicked;
-        Common.OnEnterForegroundFromBackground += () => OnSongChange(HyPlayList.NowPlayingItem);
+        Common.OnEnterForegroundFromBackground += OnEnteringForeground;
         Common.OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;
     }
 
@@ -420,7 +421,10 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
         NowPlaybackSpeed = "x" + HyPlayList.Player.PlaybackSession.PlaybackRate;
     }
-
+    private void RefreshLyricTime()
+    {
+        RefreshLyricTime(false);
+    }
     private void RefreshLyricTime(bool isInitLyricTime)
     {
         if (isInitLyricTime) _lyricHasBeenLoaded = true;
@@ -490,7 +494,10 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         await Task.Delay(1000);
         RefreshLyricTime(true);
     }
-
+    public void OnEnteringForeground()
+    {
+        OnSongChange(HyPlayList.NowPlayingItem);
+    }
 
     public void OnSongChange(HyPlayItem mpi)
     {
@@ -560,7 +567,10 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             {
                 try
                 {
-                    ImageAlbum.Source = null;
+                    if (ImageAlbumSource.UriSource != null)
+                    {
+                        ImageAlbumSource.UriSource = null;
+                    }
                     if (mpi.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
                     {
                         var storageFile = HyPlayList.NowPlayingStorageFile;
@@ -569,42 +579,40 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         if (!Common.Setting.useTaglibPicture || mpi.PlayItem.LocalFileTag is null ||
                             mpi.PlayItem.LocalFileTag.Pictures.Length == 0)
                         {
-                            var img = new BitmapImage();
-                            ImageAlbum.Source = img;
-                            await img.SetSourceAsync(
-                                await storageFile?.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
+                            using var thumbnail = await storageFile?.GetThumbnailAsync(ThumbnailMode.MusicView, 9999);
+                            await ImageAlbumSource.SetSourceAsync(thumbnail);
                         }
                         else
                         {
 
-                            using var stream = new MemoryStream(mpi.PlayItem.LocalFileTag.Pictures[0].Data.Data).AsRandomAccessStream();
-                            var img = new BitmapImage();
-                            ImageAlbum.Source = img;
-                            await img.SetSourceAsync(stream);
+                            using var ras = new MemoryStream(mpi.PlayItem.LocalFileTag.Pictures[0].Data.Data).AsRandomAccessStream();
+                            await ImageAlbumSource.SetSourceAsync(ras);
                         }
-                        if (Common.Setting.expandedPlayerBackgroundType == 0)
-                            Background = new ImageBrush
-                            { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                        if (Common.Setting.expandedPlayerBackgroundType == 0 && Background?.GetType() != typeof(ImageBrush))
+                        {
+                            var brush = new ImageBrush
+                            { Stretch = Stretch.UniformToFill };
+                            Background = brush;
+                            brush.ImageSource = (ImageSource)ImageAlbum.Source;
+                        }
                     }
                     else
                     {
-                        var placeHolder = new BitmapImage();
-                        ImageAlbum.PlaceholderSource = placeHolder;
-                        placeHolder.UriSource = new Uri(mpi.PlayItem.Album.cover + "?param=" +
-                                                                               StaticSource
-                                                                                   .PICSIZE_EXPANDEDPLAYER_PREVIEWALBUMCOVER);
-                        var img = new BitmapImage();
-                        ImageAlbum.Source = img;
                         if (Common.Setting.expandedPlayerFullCover)
-                            img.UriSource = new Uri(mpi.PlayItem.Album.cover);
+                            ImageAlbumSource.UriSource = new Uri(mpi.PlayItem.Album.cover);
                         else
-                            img.UriSource = new Uri(mpi.PlayItem.Album.cover + "?param=" +
+                            ImageAlbumSource.UriSource = new Uri(mpi.PlayItem.Album.cover + "?param=" +
                                                                         StaticSource
                                                                             .PICSIZE_EXPANDEDPLAYER_COVER);
 
-                        if (Common.Setting.expandedPlayerBackgroundType == 0)
-                            Background = new ImageBrush
-                            { ImageSource = (ImageSource)ImageAlbum.Source, Stretch = Stretch.UniformToFill };
+                        if (Common.Setting.expandedPlayerBackgroundType == 0 && Background?.GetType() != typeof(ImageBrush))
+                        {
+                            var brush = new ImageBrush
+                            { Stretch = Stretch.UniformToFill };
+                            Background = brush;
+                            brush.ImageSource = (ImageSource)ImageAlbum.Source;
+                        }
+                            
                     }
                 }
                 catch (Exception)
@@ -899,8 +907,14 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             }
             else
             {
-                var pictureReference = RandomAccessStreamReference.CreateFromUri(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=1y1"));
-                using IRandomAccessStreamWithContentType stream = await pictureReference.OpenReadAsync();
+                using var httpClient = new HttpClient();
+                using var result = await httpClient.GetAsync(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=1y1"));
+                if (!result.IsSuccessStatusCode)
+                {
+                    throw new Exception("专辑封面颜色图片获取失败");
+                }
+                using var stream = new InMemoryRandomAccessStream();
+                await result.Content.WriteToStreamAsync(stream);
                 decoder = await BitmapDecoder.CreateAsync(stream);
                 data = await decoder.GetPixelDataAsync();
             }
@@ -1133,7 +1147,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             }
             HyPlayList.OnPause -= HyPlayList_OnPause;
             HyPlayList.OnPlay -= HyPlayList_OnPlay;
-            HyPlayList.OnLyricChange -= () => RefreshLyricTime(false);
+            HyPlayList.OnLyricChange -= RefreshLyricTime;
             HyPlayList.OnPlayItemChange -= OnSongChange;
             HyPlayList.OnLyricLoaded -= HyPlayList_OnLyricLoaded;
             HyPlayList.OnTimerTicked -= HyPlayList_OnTimerTicked;

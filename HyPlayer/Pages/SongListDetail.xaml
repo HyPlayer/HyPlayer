@@ -6,6 +6,7 @@
     xmlns:controls2="using:Microsoft.UI.Xaml.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hyplayer="using:HyPlayer"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="using:HyPlayer.Pages"
     x:Name="Page"
@@ -54,9 +55,11 @@
                         Grid.Column="0"
                         Grid.ColumnSpan="2"
                         Margin="30,0,30,0"
-                        Background="{x:Bind RectangleImage.Background, Mode=OneWay}"
-
-                        Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}" />
+                        Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}" >
+                        <Border.Background>
+                            <ImageBrush ImageSource="{x:Bind ImageSource}"/>
+                        </Border.Background>
+                    </Border>
                     <Border
                         x:Name="RectangleImageAcrylic"
                         Grid.Column="0"
@@ -64,7 +67,7 @@
                         Background="{ThemeResource SongListPageAcrylicBrush}"
                         CornerRadius="12"
                         Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}" />
-                    <Border
+                    <controls:ImageEx
                         x:Name="RectangleImage"
                         Grid.Column="2"
                         Width="130"
@@ -72,15 +75,12 @@
                         Margin="20,20,0,20"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Top"
-                        CornerRadius="16">
-                        <Border.Background>
-                            <ImageBrush x:Name="ImageRect" Stretch="UniformToFill">
-                                <ImageBrush.ImageSource>
-                                    <BitmapImage UriSource="/Assets/icon.png" />
-                                </ImageBrush.ImageSource>
-                            </ImageBrush>
-                        </Border.Background>
-                    </Border>
+                        CornerRadius="16"
+                        IsCacheEnabled="False">
+                        <controls:ImageEx.Source>
+                            <BitmapImage x:Name="ImageSource"/>
+                        </controls:ImageEx.Source>
+                    </controls:ImageEx>
                     <StackPanel
                         Name="StackPanelUserInfo"
                         Grid.Column="1"

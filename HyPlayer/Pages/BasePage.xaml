@@ -6,6 +6,7 @@
     xmlns:local="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="{x:Bind local:Common.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource ReversedBooleanConverter}}"
     Background="{x:Bind local:Common.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource BooleanToWindowBrushesConverter}}"
     NavigationCacheMode="Disabled"
@@ -247,13 +248,21 @@
                 </muxc:NavigationViewItem>-->
                 <muxc:NavigationViewItem x:Name="NavItemBlank" x:FieldModifier="public" IsEnabled="False" Height="130" Opacity="0">
                     <Grid Margin="-5,0,-10,-5">
-                        <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="{x:Bind Mode=OneWay, Path=AlbumCover}"  RadiusX="12" RadiusY="12"/>
-                        <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="{ThemeResource SystemControlAcrylicElementBrush}"  RadiusX="10" RadiusY="10"/>
+                        <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" RadiusX="12" RadiusY="12" Stretch="UniformToFill">
+                            <Rectangle.Fill>
+                                <ImageBrush ImageSource="{x:Bind NavItemImageSource}"/>
+                            </Rectangle.Fill>
+                        </Rectangle>
+                        <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="{ThemeResource SystemControlAcrylicElementBrush}"  RadiusX="10" RadiusY="10" Stretch="UniformToFill"/>
                         <StackPanel Orientation="Horizontal">
-                            <Rectangle  Fill="{x:Bind Mode=OneWay, Path=AlbumCover}" Height="85" Width="85" Margin="10,10,0,12" RadiusX="10" RadiusY="10" />
+                            <controls:ImageEx x:Name="NavItemImage" Height="85" Width="85" Margin="10,10,0,12" CornerRadius="10" Stretch="UniformToFill" IsCacheEnabled="False">
+                                <controls:ImageEx.Source>
+                                    <BitmapImage x:Name="NavItemImageSource"/>
+                                </controls:ImageEx.Source>
+                            </controls:ImageEx>
                             <StackPanel Orientation="Vertical" Margin="10,0,0,10" VerticalAlignment="Bottom">
-                                <TextBlock Text="{x:Bind NowPlayingArtists, Mode=OneWay}" FontSize="12" Margin="0,0,15,0" TextTrimming="CharacterEllipsis" MaxWidth="180"/>  
-                                <TextBlock Text="{x:Bind NowPlayingName, Mode=OneWay}" FontSize="22" Margin="0,0,15,5" FontWeight="Bold" TextTrimming="CharacterEllipsis" MaxWidth="180" TextAlignment="Left"/>
+                                <TextBlock x:Name="NavItemSongName" FontSize="12" Margin="0,0,15,0" TextTrimming="CharacterEllipsis" MaxWidth="180"/>
+                                <TextBlock x:Name="NavItemArtist" FontSize="22" Margin="0,0,15,5" FontWeight="Bold" TextTrimming="CharacterEllipsis" MaxWidth="180" TextAlignment="Left"/>
                             </StackPanel>
                         </StackPanel>
                     </Grid>

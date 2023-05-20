@@ -60,7 +60,6 @@ public sealed partial class MainPage
         {
             ApplicationView.GetForCurrentView().ExitFullScreenMode();
         }
-        (GridPlayBar.Children[0] as PlayBar).RefreshSongList();
         switch (e.Parameter)
         {
             case "search":

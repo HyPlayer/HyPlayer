@@ -200,7 +200,6 @@
                         IsCacheEnabled="False"
                         PlaceholderStretch="Uniform"
                         RightTapped="{x:Bind hyplayer:Common.UIElement_RightTapped}"
-                        Source="/Assets/icon.png"
                         Stretch="Uniform"
                         Tapped="ImageAlbum_Tapped">
                         <ani:Explicit.Animations>
@@ -236,6 +235,12 @@
                                     Text="复制歌名" />
                             </MenuFlyout>
                         </controls:ImageEx.ContextFlyout>
+                        <controls:ImageEx.Source>
+                            <BitmapImage x:Name="ImageAlbumSource"/>
+                        </controls:ImageEx.Source>
+                        <controls:ImageEx.PlaceholderSource>
+                            <BitmapImage UriSource="/Assets/icon.png"/>
+                        </controls:ImageEx.PlaceholderSource>
                     </controls:ImageEx>
                     <StackPanel
                         x:Name="SongInfo"
