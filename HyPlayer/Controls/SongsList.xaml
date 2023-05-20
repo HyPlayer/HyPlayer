@@ -21,7 +21,7 @@
             ItemContainerStyle="{ThemeResource ListViewItemStyle}"
             ItemsSource="{x:Bind VisibleSongs}"
             SelectionMode="{x:Bind MultiSelect, Converter={StaticResource SelectModeConverter}, Mode=OneWay}"
-            ShowsScrollingPlaceholders="True">
+            ShowsScrollingPlaceholders="True" >
             <ListView.Footer>
                 <ContentControl Margin="0,0,0,130" Content="{x:Bind Footer}" />
             </ListView.Footer>
@@ -190,7 +190,7 @@
                             <controls:ImageEx
                                 x:Name="RectangleImageBack"
                                 Grid.ColumnSpan="4"
-                                Height="54"
+                                Height="64"
                                 Margin="2,0,2,0"
                                 x:Phase="4"
                                 CornerRadius="12"
@@ -212,8 +212,8 @@
                             <StackPanel Grid.Column="0" Orientation="Horizontal">
                                 <controls:ImageEx
                                     x:Name="ImageRect"
-                                    Width="44"
-                                    Height="44"
+                                    Width="50"
+                                    Height="50"
                                     Margin="6,0,0,0"
                                     x:Phase="4"
                                     CornerRadius="9"
@@ -225,7 +225,7 @@
                                 <TextBlock
                                     x:Name="OrderId"
                                     Width="48"
-                                    Margin="-38,7,0,0"
+                                    Margin="-46,6,6,0"
                                     HorizontalAlignment="Left"
                                     VerticalAlignment="Top"
                                     FontSize="16"
@@ -249,7 +249,7 @@
                                             x:Phase="0"
                                             Style="{ThemeResource SubtitleTextBlockStyle}"
                                             Text="{x:Bind songname}" 
-                                            FontSize="18"
+                                            FontSize="19"
                                             FontWeight="Bold"/>
                                         <TextBlock
                                             Name="TextBlockTransName"
@@ -285,12 +285,12 @@
                                     <TextBlock
                                             Name="TextBlockArtist"
                                             Margin="0,0,20,0"
-                                            FontSize="12"
+                                            FontSize="13"
                                             Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                                             Text="{x:Bind ArtistString}" />
                                     <TextBlock
                                             Name="TextBlockAlbum"
-                                            FontSize="11"
+                                            FontSize="13"
                                             Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                                             Text="{x:Bind Album.name}" />
                                 </StackPanel>
