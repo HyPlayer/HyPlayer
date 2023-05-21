@@ -43,11 +43,11 @@
         <controls1:SongsList
             x:Name="SongsList"
             Grid.RowSpan="2"
-            Margin="0,0,0,0"
+            Margin="15,0,15,0"
             IsSearchEnabled="True"
             Songs="{x:Bind Songs}">
             <controls1:SongsList.ListHeader>
-                <Grid>
+                <Grid CornerRadius="10" Margin="5,20,5,0">
                     <Border
                         x:Name="RectangleImageBack"
                         Grid.Column="0"
@@ -58,7 +58,6 @@
                         </Border.Background>
                     </Border>
                     <Grid
-                        Padding="32"
                         Background="{ThemeResource SystemControlAcrylicElementBrush}"
                         ColumnSpacing="24">
                         <Grid.ColumnDefinitions>
@@ -71,8 +70,9 @@
                         </Grid.RowDefinitions>
                         <controls:ImageEx
                             x:Name="RectangleImage"
-                            Width="120"
-                            Height="120"
+                            Width="130"
+                            Height="130"
+                            Margin="20,20,0,20"
                             HorizontalAlignment="Left"
                             CornerRadius="8">
                             <controls:ImageEx.Source>
@@ -81,59 +81,46 @@
                         </controls:ImageEx>
                         <StackPanel
                             Grid.Column="1"
-                            Margin="0,0,0,12"
-                            VerticalAlignment="Center">
+                            Margin="0,16,0,0"
+                            VerticalAlignment="Top">
                             <TextBlock
                                 x:Name="TextBoxPLName"
+                                Margin="0,0,60,0"
+                                MaxLines="1"
                                 Style="{ThemeResource TitleTextBlockStyle}"
+                                FontWeight="Bold"
                                 Text="歌单名" />
                             <StackPanel
-                                Margin="0,4,0,0"
+                                Margin="0,2,8,0"
                                 Orientation="Horizontal"
-                                Spacing="4">
+                                Spacing="6">
                                 <HyperlinkButton
                                     x:Name="TextBoxAuthor"
                                     Padding="0"
                                     Click="TextBoxAuthor_Tapped"
                                     Content="歌单创建者"
-                                    FontSize="16"
+                                    FontSize="14"
                                     Style="{StaticResource TextBlockButtonStyle}" />
                                 <TextBlock
                                     x:Name="TextBoxUpdateTime"
-                                    Margin="0,2,0,0"
-                                    FontSize="16"
+                                    Margin="0,5,0,0"
+                                    FontSize="14"
+                                    Foreground="LightGray"
                                     Text="更新日期" />
+                                <StackPanel Orientation="Horizontal" Margin="4,5,0,0">
+                                  <TextBlock
+                                    x:Name="TextBoxSongCount"
+                                    Text="{x:Bind Songs.Count, Mode=OneWay}" Foreground="LightGray" />
+                                    <TextBlock Text="首歌曲" Foreground="LightGray"/>
+                                </StackPanel>
 
                             </StackPanel>
+                            <TextBlock x:Name="DescriptionTextBlock" Text="歌单简介" FontSize="14" Foreground="Gray" Margin="0,8,30,0" TextTrimming="WordEllipsis" MaxLines="1" ToolTipService.ToolTip="查看完整简介" Tapped="Description_Tapped"/>
                             <StackPanel
-                                Margin="0,4,0,0"
+                                x:Name="BtnsPanel"
+                                Margin="-8,10,0,-12"
                                 Orientation="Horizontal"
-                                Spacing="4">
-                                <Button
-                                    x:Name="ButtonLike"
-                                    Margin="0,6,0,0"
-                                    Click="LikeBtnClick">
-                                    <StackPanel Orientation="Horizontal">
-                                        <FontIcon
-                                            x:Name="LikedIcon"
-                                            Margin="0,0,8,0"
-                                            FontSize="12"
-                                            Glyph="&#xE10B;" />
-                                        <TextBlock x:Name="LikeBtnText" Text="已收藏" />
-                                    </StackPanel>
-                                </Button>
-                                <Button Margin="0,6,0,0" Click="ButtonPlayAll_OnClick">
-                                    <StackPanel Orientation="Horizontal">
-                                        <FontIcon
-                                            x:Name="IconPlay"
-                                            FontSize="12"
-                                            Glyph="&#xF5B0;" />
-                                        <TextBlock
-                                            Margin="8,0,0,0"
-                                            Text="播放"
-                                            ToolTipService.ToolTip="播放全部" />
-                                    </StackPanel>
-                                </Button>
+                                Spacing="8">
                                 <Button
                                     x:Name="ButtonIntel"
                                     Margin="0,6,0,0"
@@ -151,6 +138,32 @@
                                             Text="心动模式" />
                                     </StackPanel>
                                 </Button>
+
+                                <Button Margin="0,6,0,0" Click="ButtonPlayAll_OnClick">
+                                    <StackPanel Orientation="Horizontal">
+                                        <FontIcon
+                                            x:Name="IconPlay"
+                                            FontSize="12"
+                                            Glyph="&#xF5B0;" />
+                                        <TextBlock
+                                            Margin="8,0,0,0"
+                                            Text="播放"
+                                            ToolTipService.ToolTip="播放全部" />
+                                    </StackPanel>
+                                </Button>
+                                <Button
+                                    x:Name="ButtonLike"
+                                    Margin="0,6,0,0"
+                                    Click="LikeBtnClick">
+                                    <StackPanel Orientation="Horizontal">
+                                        <FontIcon
+                                            x:Name="LikedIcon"
+                                            Margin="0,0,8,0"
+                                            FontSize="12"
+                                            Glyph="&#xE10B;" />
+                                        <TextBlock x:Name="LikeBtnText" Text="已收藏" />
+                                    </StackPanel>
+                                </Button>
                             </StackPanel>
 
                         </StackPanel>
@@ -163,9 +176,15 @@
                                 x:Name="ButtonMore"
                                 Background="Transparent"
                                 BorderBrush="Transparent"
-                                ToolTipService.ToolTip="更多选项">
+                                ToolTipService.ToolTip="更多选项"
+                                Margin="20">
                                 <Button.Flyout>
                                     <MenuFlyout Placement="BottomEdgeAlignedRight">
+                                        <MenuFlyoutItem 
+                                            Click="BtnComment_OnClick"
+                                            Icon="Comment"
+                                            Text="评论"
+                                            />
                                         <MenuFlyoutItem
                                             Click="BtnAddAll_Clicked"
                                             Icon="Add"
@@ -185,16 +204,16 @@
                             </Button>
 
                         </StackPanel>
-                        <controls1:ExpandableTextBox
+                        <!--<controls1:ExpandableTextBox
                             x:Name="DescriptionWrapper"
                             Grid.Row="1"
                             Grid.ColumnSpan="2"
-                            Margin="0,12,0,0"
+                            Margin="-0,12,0,-14"
                             FontSize="16"
                             Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                             MaxLines="4"
                             Text="简介"
-                            TextWrapping="Wrap" />
+                            TextWrapping="Wrap" />-->
                     </Grid>
                     <ui:Effects.Shadow>
                         <media:AttachedCardShadow 

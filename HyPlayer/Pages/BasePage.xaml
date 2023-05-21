@@ -247,15 +247,15 @@
                     </Grid>
                 </muxc:NavigationViewItem>-->
                 <muxc:NavigationViewItem x:Name="NavItemBlank" x:FieldModifier="public" IsEnabled="False" Height="130" Opacity="0">
-                    <Grid Margin="-5,0,-10,-5">
-                        <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" RadiusX="12" RadiusY="12" Stretch="UniformToFill">
+                    <Grid Margin="-5,5,-15,0">
+                        <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" RadiusX="12" RadiusY="12" >
                             <Rectangle.Fill>
                                 <ImageBrush ImageSource="{x:Bind NavItemImageSource}"/>
                             </Rectangle.Fill>
                         </Rectangle>
-                        <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="{ThemeResource SystemControlAcrylicElementBrush}"  RadiusX="10" RadiusY="10" Stretch="UniformToFill"/>
+                        <Rectangle HorizontalAlignment="Stretch"  Fill="{ThemeResource SystemControlAcrylicElementBrush}"  RadiusX="10" RadiusY="10"/>
                         <StackPanel Orientation="Horizontal">
-                            <controls:ImageEx x:Name="NavItemImage" Height="85" Width="85" Margin="10,10,0,12" CornerRadius="10" Stretch="UniformToFill" IsCacheEnabled="False">
+                            <controls:ImageEx x:Name="NavItemImage" Height="85" Width="85" Margin="10,10,0,10" CornerRadius="10" Stretch="UniformToFill" IsCacheEnabled="False">
                                 <controls:ImageEx.Source>
                                     <BitmapImage x:Name="NavItemImageSource"/>
                                 </controls:ImageEx.Source>

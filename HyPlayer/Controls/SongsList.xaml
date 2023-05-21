@@ -29,19 +29,37 @@
             <ListView.Header>
                 <StackPanel x:Name="HeaderPanel">
                     <ContentControl
-                        Margin="0,-10,0,0"
+                        Margin="0,0,0,-10"
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Stretch"
                         Content="{x:Bind ListHeader}" />
                     <Grid
                         x:Name="Toolbar"
-                        Margin="0,0,0,0"
+                        Margin="0,0,20,-10"
                         ColumnSpacing="12"
                         Visibility="{x:Bind IsSearchEnabled}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <muxc:NavigationView
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,-40,0,20">
+                            <AutoSuggestBox
+                                    x:Name="FilterBox"
+                                    BorderThickness="0"
+                                    PlaceholderText="在歌单中搜索..."
+                                    QueryIcon="Find"
+                                    QuerySubmitted="FilterBox_QuerySubmitted" />
+                            <ToggleButton IsChecked="{x:Bind MultiSelect, Mode=TwoWay}"  Height="33" Width="46"
+                                                         ToolTipService.ToolTip="多选"  BorderBrush="Transparent">
+                                <FontIcon Glyph="&#xE762;" FontSize="16"/>
+                            </ToggleButton>
+                            <Button
+                                x:Name="FocusingCurrent"
+                                    ToolTipService.ToolTip="跳转到当前播放" Click="FocusingCurrent_OnClicked">
+                                <Button.Content>
+                                    <FontIcon Glyph="&#xE819;" />
+                                </Button.Content>
+                            </Button>
+
+                        </StackPanel>
+
+                        <!--<muxc:NavigationView
                             x:Name="ToolbarNavigationView"
                             IsBackButtonVisible="Collapsed"
                             IsSettingsVisible="False"
@@ -91,7 +109,7 @@
                                     QueryIcon="Find"
                                     QuerySubmitted="FilterBox_QuerySubmitted" />
                             </muxc:NavigationView.AutoSuggestBox>
-                        </muxc:NavigationView>
+                        </muxc:NavigationView>-->
                     </Grid>
                 </StackPanel>
             </ListView.Header>
@@ -199,6 +217,7 @@
                             HorizontalAlignment="Stretch"
                             Background="Transparent"
                             IsRightTapEnabled="True"
+                            Height="64"
                             RightTapped="Grid_RightTapped"
                             ScrollViewer.CanContentRenderOutsideBounds="False"
                             Tag="{x:Bind Order}">
@@ -236,9 +255,9 @@
                             <StackPanel Grid.Column="0" Orientation="Horizontal">
                                 <controls:ImageEx
                                     x:Name="ImageRect"
-                                    Width="50"
-                                    Height="50"
-                                    Margin="6,0,0,0"
+                                    Width="48"
+                                    Height="48"
+                                    Margin="8,0,0,0"
                                     x:Phase="4"
                                     CornerRadius="9"
                                     EnableLazyLoading="True"
@@ -252,7 +271,7 @@
                                 <TextBlock
                                     x:Name="OrderId"
                                     Width="48"
-                                    Margin="-46,6,6,0"
+                                    Margin="-44,6,6,0"
                                     HorizontalAlignment="Left"
                                     VerticalAlignment="Top"
                                     FontSize="16"
@@ -274,7 +293,7 @@
                                         <TextBlock
                                             Name="TextBlockSongname"
                                             x:Phase="0"
-                                            FontSize="19"
+                                            FontSize="18"
                                             FontWeight="Bold"
                                             Style="{ThemeResource SubtitleTextBlockStyle}"
                                             Text="{x:Bind songname}" />
