@@ -104,7 +104,7 @@ public static class UpdateManager
             DownloadUrl = versionData["html_url"].ToString(),
             UpdateLog = versionData["body"].ToString(),
         };
-        return new RemoteVersionResult
+        var result = new RemoteVersionResult
         {
             UpdateSource = UpdateSource.GitHub,
             IsMandatory = versionResp?.Mandatory ?? false,
@@ -112,6 +112,8 @@ public static class UpdateManager
             DownloadLink = versionResp?.DownloadUrl,
             UpdateLog = versionResp?.UpdateLog ?? ""
         };
+        versionData.RemoveAll();
+        return result;
     }
 
     public static async Task<RemoteVersionResult> GetRemoteVersion(UpdateSource updateSource)

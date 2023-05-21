@@ -293,6 +293,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                     else
                         await FileIO.WriteTextAsync(sf, lrctxt);
                 }
+                json.RemoveAll();
             }
             catch (Exception ex)
             {
@@ -463,6 +464,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
             //DownloadStartToast(FileName);
             await _downloadOperation.StartAsync().AsTask(process);
             Wc_DownloadFileCompleted();
+            json.RemoveAll();
         }
         catch (Exception ex)
         {

@@ -4,6 +4,7 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using NeteaseCloudMusicApi;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -48,7 +49,6 @@ public sealed partial class AlbumPage : Page, IDisposable
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        JObject json;
         switch (e.Parameter)
         {
             case NCAlbum album:
@@ -59,7 +59,6 @@ public sealed partial class AlbumPage : Page, IDisposable
                 albumid = e.Parameter.ToString();
                 break;
         }
-
         _albumInfoLoaderTask = LoadAlbumInfo();
         _albumDynamicLoaderTask = LoadAlbumDynamic();
     }
@@ -99,6 +98,7 @@ public sealed partial class AlbumPage : Page, IDisposable
         var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.AlbumDetailDynamic,
             new Dictionary<string, object> { { "id", albumid } });
         BtnSub.IsChecked = json["isSub"].ToObject<bool>();
+        json.RemoveAll();
     }
 
     private async Task LoadAlbumInfo()
@@ -167,6 +167,7 @@ public sealed partial class AlbumPage : Page, IDisposable
                 TrackId = jsonSong["no"].ToObject<int>()
             }).ToList().GroupBy(t => t.DiscName).OrderBy(t => t.Key)
                 .Select(t => new DiscSongs(t) { Key = t.Key });
+            json.RemoveAll();
         }
         catch (Exception ex)
         {

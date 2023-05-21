@@ -94,6 +94,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
             if (json["data"]["hasMore"].ToString() == "True")
                 LoadMore.Visibility = Visibility.Visible;
             else LoadMore.Visibility = Visibility.Collapsed;
+            json.RemoveAll();
         }
         catch (Exception ex)
         {
@@ -146,6 +147,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
                 ReplyText.Text = string.Empty;
                 await Task.Delay(1000);
                 _ = LoadFloorComments(false);
+                json.RemoveAll();
             }
             catch (Exception ex)
             {
@@ -185,7 +187,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
 
     private void FloorCommentsExpander_Expanding(Microsoft.UI.Xaml.Controls.Expander sender, Microsoft.UI.Xaml.Controls.ExpanderExpandingEventArgs args)
     {
-        LoadFloorComments(false);
+        _ = LoadFloorComments(false);
     }
 
     private void FloorCommentsExpander_Collapsed(Microsoft.UI.Xaml.Controls.Expander sender, Microsoft.UI.Xaml.Controls.ExpanderCollapsedEventArgs args)

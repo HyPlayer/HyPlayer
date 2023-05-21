@@ -78,11 +78,10 @@ namespace HyPlayer.Classes
         public static async Task TryLoginLastfmAccountFromBrowser(string token)
         {
             var signature = LastFMUtils.GetLastFMAPISignature(token);
-            HttpResponseMessage responseData = new();
-            HttpClient httpClient = new HttpClient();
+            using HttpClient httpClient = new HttpClient();
             try
             {
-                responseData = await httpClient.GetAsync($"https://ws.audioscrobbler.com/2.0/?method=auth.getSession&format=json&token={token}&api_key={LastFMAPIKey}&api_sig={signature}");
+                using var responseData = await httpClient.GetAsync($"https://ws.audioscrobbler.com/2.0/?method=auth.getSession&format=json&token={token}&api_key={LastFMAPIKey}&api_sig={signature}");
                 if (responseData != null && responseData.IsSuccessStatusCode)
                 {
                     string sessionStringData = await responseData.Content.ReadAsStringAsync();
@@ -95,19 +94,20 @@ namespace HyPlayer.Classes
                     };
                     LastfmClient.Auth.LoadSession(session);
                     OnLoginDone.Invoke();
+                    sessionJsonObject.RemoveAll();
                 }
                 else if (responseData != null)
                 {
                     string errorMessageStringData = await responseData.Content.ReadAsStringAsync();
                     JObject errorMessageJsonObject = JObject.Parse(errorMessageStringData);
                     OnLoginError.Invoke(new Exception(errorMessageJsonObject["message"].ToString()));
+                    errorMessageJsonObject.RemoveAll();
                 }
             }
             catch (Exception ex)
             {
                 OnLoginError.Invoke(ex);
             }
-            httpClient.Dispose();
         }
         public static bool TryLogoffLastFM()
         {

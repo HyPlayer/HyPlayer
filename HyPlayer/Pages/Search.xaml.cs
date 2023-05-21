@@ -144,6 +144,7 @@ public sealed partial class Search : Page, IDisposable
                     LoadMlogResult(json);
                     break;
             }
+            json.RemoveAll();
         }
         catch (Exception ex)
         {
@@ -544,6 +545,7 @@ public sealed partial class Search : Page, IDisposable
                 sender.ItemsSource = json["result"]["allMatch"].ToArray().ToList()
                     .Select(t => t["keyword"].ToString())
                     .ToList();
+            json.RemoveAll();
         }
         catch (Exception ex)
         {

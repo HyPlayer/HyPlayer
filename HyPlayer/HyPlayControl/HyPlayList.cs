@@ -1007,6 +1007,7 @@ public static class HyPlayList
                     targetItem.PlayItem.Tag = tag;
                     AudioEffectsProperties["AudioGain_GainValue"] = float.Parse(json["data"]?[0]?["gain"].ToString());
                     _ = Common.Invoke(() => { Common.BarPlayBar.TbSongTag.Text = tag; });
+                    json.RemoveAll();
                 }
                 else
                 {
@@ -1017,7 +1018,6 @@ public static class HyPlayList
             {
                 throw new Exception("下载链接获取失败"); //传一个播放失败
             }
-
         return playUrl;
     }
 
@@ -1479,6 +1479,7 @@ public static class HyPlayList
                         //DEBUG
                     }
                 }
+                json.RemoveAll();
             }
             catch (Exception ex)
             {
@@ -1639,6 +1640,7 @@ public static class HyPlayList
                         new Dictionary<string, object>
                             { { "ids", sourceId.Substring(2, sourceId.Length - 2) } });
                     _ = AppendNcSong(NCSong.CreateFromJson(json["songs"]?[0]));
+                    json.RemoveAll();
                     return true;
                 case "al":
                     await AppendAlbum(sourceId.Substring(2, sourceId.Length - 2));
@@ -1691,6 +1693,8 @@ public static class HyPlayList
 
             list.RemoveAll(t => t == null);
             AppendNcSongs(list, false);
+            list.Clear();
+            json.RemoveAll();
             return true;
         }
         catch (Exception ex)
@@ -1717,8 +1721,8 @@ public static class HyPlayList
 
             list.RemoveAll(t => t == null);
             AppendNcSongs(list, false);
-
-
+            list.Clear();
+            json.RemoveAll();
             return true;
         }
         catch (Exception ex)
@@ -1751,6 +1755,7 @@ public static class HyPlayList
                         AppendNcSongs(
                             json["programs"].Select(t => (NCSong)NCFmItem.CreateFromJson(t)).ToList(),
                             false);
+                    json.RemoveAll();
                 }
                 catch (Exception ex)
                 {
@@ -1806,6 +1811,7 @@ public static class HyPlayList
                 }
             }
             SongAppendDone();
+            json.RemoveAll();
             return true;
         }
         catch (Exception ex)

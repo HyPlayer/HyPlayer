@@ -113,6 +113,7 @@ public sealed partial class PageFavorite : Page, IDisposable
                     CanPlay = true
                 });
             }
+            json.RemoveAll();
         }
         catch (Exception ex)
         {
@@ -148,6 +149,7 @@ public sealed partial class PageFavorite : Page, IDisposable
                     CanPlay = true
                 });
             }
+            json.RemoveAll();
         }
         catch (Exception ex)
         {
@@ -183,6 +185,7 @@ public sealed partial class PageFavorite : Page, IDisposable
                     CanPlay = true
                 });
             }
+            json.RemoveAll();
         }
         catch (Exception ex)
         {

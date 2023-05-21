@@ -126,6 +126,7 @@ public sealed partial class Me : Page, IDisposable
                         }
                     );
             }
+            json.RemoveAll();
         }
         catch (Exception ex)
         {
@@ -165,7 +166,7 @@ public sealed partial class Me : Page, IDisposable
                     ImageRect.ImageSource = img;
                     img.UriSource = new Uri(json["profile"]["avatarUrl"].ToString());
                 }
-                
+                json.RemoveAll();
             }
             catch (Exception ex)
             {

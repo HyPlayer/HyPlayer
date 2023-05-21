@@ -78,7 +78,7 @@ public sealed partial class History : Page, IDisposable
                     song.Order = songorder++;
                     Songs.Add(song);
                 }
-
+                Songsl.Clear();
                 break;
             case "SongRankWeek":
                 //听歌排行加载部分 - 优先级靠下

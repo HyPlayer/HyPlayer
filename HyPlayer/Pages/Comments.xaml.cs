@@ -160,6 +160,7 @@ public sealed partial class Comments : Page, IDisposable
 
             PageIndicator.Text =
                 $"第 {page} 页 / 共 {Math.Ceiling((decimal)json["data"]["totalCount"].ToObject<long>() / 20).ToString()} 页";
+            json.RemoveAll();
         }
         catch (Exception ex)
         {

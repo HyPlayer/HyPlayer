@@ -53,8 +53,8 @@ internal static class PersonalFM
                     var item2 = HyPlayList.AppendNcSong(NCSong.CreateFromJson(song2));
                     item1.ItemType = HyPlayItemType.Netease;
                     item2.ItemType = HyPlayItemType.Netease;
+                    json.RemoveAll();
                 }
-
                 HyPlayList.SongMoveTo(0);
                 Common.IsInFm = true;
             }

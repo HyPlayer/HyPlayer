@@ -81,6 +81,7 @@ public sealed partial class MVPage : Page, IDisposable
                 sources.Add(NCMlog.CreateFromJson(jToken["resource"]["mlogBaseData"]));
 
             RelativeList.ItemsSource = sources;
+            json.RemoveAll();
         }
         catch (Exception ex)
         {
@@ -154,6 +155,7 @@ public sealed partial class MVPage : Page, IDisposable
                 var mediaPlayer = MediaPlayerElement.MediaPlayer;
                 mediaPlayer.Play();
                 LoadingControl.IsLoading = false;
+                json.RemoveAll();
             }
             catch (Exception ex)
             {
@@ -174,6 +176,7 @@ public sealed partial class MVPage : Page, IDisposable
                 var mediaPlayer = MediaPlayerElement.MediaPlayer;
                 mediaPlayer.Play();
                 LoadingControl.IsLoading = false;
+                json.RemoveAll();
             }
             catch (Exception ex)
             {
@@ -197,6 +200,7 @@ public sealed partial class MVPage : Page, IDisposable
                 TextBoxOtherInfo.Text =
                     $"发布时间: {json["data"]["publishTime"]}    播放量: {json["data"]["playCount"]}次    收藏量: {json["data"]["subCount"]}次";
                 foreach (var br in json["data"]["brs"].ToArray()) VideoQualityBox.Items.Add(br["br"].ToString());
+                json.RemoveAll();
             }
             catch (Exception ex)
             {

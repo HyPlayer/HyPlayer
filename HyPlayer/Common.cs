@@ -1553,7 +1553,9 @@ namespace HyPlayer
                             JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
                                 .Values["songHistory"].ToString()))
                     });
-                return json["songs"].ToArray().Select(t => NCSong.CreateFromJson(t)).ToList();
+                var history = json["songs"].ToArray().Select(NCSong.CreateFromJson).ToList();
+                json.RemoveAll();
+                return history;
             }
             catch (Exception e)
             {
@@ -1585,6 +1587,7 @@ namespace HyPlayer
                 for (var k = 0; k < json.Count - 1; k++)
                     ret.Add(NCPlayList.CreateFromJson(
                         json["/api/v6/playlist/detail" + new string('/', k)]["playlist"]));
+                json.RemoveAll();
             }
             catch (Exception e)
             {
@@ -1636,6 +1639,7 @@ namespace HyPlayer
                     }).ToList();
                     ncSongs.RemoveAll(t => t == null);
                     retsongs.AddRange(ncSongs);
+                    json.RemoveAll();
                 }
                 catch (Exception ex)
                 {

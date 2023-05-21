@@ -326,6 +326,7 @@ public sealed partial class BasePage : Page
                 await LoginDone();
                 Common.NavigatePage(typeof(Home));
             }
+            json.RemoveAll();
         }
         catch (Exception ex)
         {
@@ -431,7 +432,7 @@ public sealed partial class BasePage : Page
             { "sourceId", HyPlayList.PlaySourceId ?? "-1" },
             { "time", TimeSpan.FromMilliseconds(item.PlayItem.LengthInMilliseconds).TotalSeconds.ToString("f0") }
         });
-
+        json.RemoveAll();
         try
         {
             await LastFMManager.ScrobbleAsync(item);
@@ -533,6 +534,7 @@ public sealed partial class BasePage : Page
                     };
                     NavItemsMyList.MenuItems.Add(item);
                 }
+            json.RemoveAll();
         }
         catch (Exception ex)
         {
@@ -669,6 +671,9 @@ public sealed partial class BasePage : Page
             {
                 Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
+            jsoon.RemoveAll();
+            jsona.RemoveAll();
+            Songs.Clear();
         }
         catch (Exception ex)
         {
@@ -780,7 +785,6 @@ public sealed partial class BasePage : Page
             await img.SetSourceAsync(stream);
             QrContainer.Source = img;
         }
-
         InfoBarLoginHint.Title = "请扫描上方二维码登录";
     }
 
@@ -900,6 +904,7 @@ public sealed partial class BasePage : Page
                 sender.ItemsSource = json["result"]["allMatch"].ToArray().ToList()
                     .Select(t => t["keyword"].ToString())
                     .ToList();
+            json.RemoveAll();
         }
         catch (Exception ex)
         {

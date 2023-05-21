@@ -70,8 +70,9 @@ internal static class The163KeyHelper
             {
                 byt163Key = cryptoTransform.TransformFinalBlock(byt163Key, 0, byt163Key.Length);
             }
-
-            trackId = (int)JObject.Parse(Encoding.UTF8.GetString(byt163Key).Substring(6))["musicId"];
+            var jObject = JObject.Parse(Encoding.UTF8.GetString(byt163Key).Substring(6));
+            trackId = (int)jObject["musicId"];
+            jObject.RemoveAll();
         }
         catch
         {

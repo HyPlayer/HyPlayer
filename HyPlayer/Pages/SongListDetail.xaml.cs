@@ -146,6 +146,7 @@ public sealed partial class SongListDetail : Page, IDisposable
                 ncSong.Order = idx++;
                 Songs.Add(ncSong);
             }
+            json.RemoveAll();
         }
         catch (Exception ex)
         {
@@ -195,6 +196,7 @@ public sealed partial class SongListDetail : Page, IDisposable
                     ncSong.Order = idx++;
                     Songs.Add(ncSong);
                 }
+                json.RemoveAll();
             }
 
             catch (Exception ex)
@@ -251,6 +253,7 @@ public sealed partial class SongListDetail : Page, IDisposable
                     if (json["code"].ToString() != "200")
                         throw new Exception(json["message"]?.ToString());
                     playList = NCPlayList.CreateFromJson(json["playlist"]);
+                    json.RemoveAll();
                 }
                 catch (Exception ex)
                 {
@@ -309,8 +312,10 @@ public sealed partial class SongListDetail : Page, IDisposable
                 CloudMusicApiProviders.PlaymodeIntelligenceList,
                 new Dictionary<string, object>
                     { { "pid", playList.plid }, { "id", Songs[0].sid } /*, { "sid", Songs[0].sid }*/ });
-            var IntSongs = new List<NCSong>();
-            IntSongs.Add(Songs[new Random().Next(0, Songs.Count)]);
+            var IntSongs = new List<NCSong>
+            {
+                Songs[new Random().Next(0, Songs.Count)]
+            };
             foreach (var token in jsona["data"])
                 try
                 {
@@ -335,6 +340,8 @@ public sealed partial class SongListDetail : Page, IDisposable
             {
                 Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
+            jsona.RemoveAll();
+            IntSongs.Clear();
         }
         catch (Exception ex)
         {
@@ -429,6 +436,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         dialog.Content = description;
         dialog.CloseButtonText = "关闭";
         dialog.IsPrimaryButtonEnabled = false;
+        json.RemoveAll();
         _ = dialog.ShowAsync();
     }
 }

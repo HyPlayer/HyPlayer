@@ -162,6 +162,7 @@ internal static class NCMFile
                     format = obj["format"].ToString(),
                     artist = obj["artist"].ToObject<List<List<object>>>()
                 };
+                obj.RemoveAll();
             }
         }
 

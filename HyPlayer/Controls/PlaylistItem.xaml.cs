@@ -68,6 +68,7 @@ public sealed partial class PlaylistItem : UserControl, IDisposable
                 {
                     { "id", playList.plid }
                 });
+            json.RemoveAll();
         }
         catch (Exception ex)
         {

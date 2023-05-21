@@ -153,6 +153,7 @@ public sealed partial class ArtistPage : Page, IDisposable
                 ncSong.Order = idx++;
                 hotSongs.Add(ncSong);
             }
+            json.RemoveAll();
         }
         catch (Exception ex)
         {
@@ -185,8 +186,8 @@ public sealed partial class ArtistPage : Page, IDisposable
                     ncSong.Order = page * 50 + idx++;
                     allSongs.Add(ncSong);
                 }
-
                 SongHasMore = int.Parse(j1["total"].ToString()) >= (page + 1) * 50;
+                json.RemoveAll();
             }
             catch (Exception ex)
             {

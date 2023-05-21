@@ -78,6 +78,7 @@ public sealed partial class RadioPage : Page, IDisposable
                 song.Order = i++;
                 Songs.Add(song);
             }
+            json.RemoveAll();
         }
         catch (Exception ex)
         {
@@ -95,6 +96,7 @@ public sealed partial class RadioPage : Page, IDisposable
                 var json1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.DjDetail,
                     new Dictionary<string, object> { { "rid", rid } });
                 Radio = NCRadio.CreateFromJson(json1["djRadio"]);
+                json1.RemoveAll();
             }
             catch (Exception ex)
             {
@@ -187,6 +189,7 @@ public sealed partial class RadioPage : Page, IDisposable
                     hasMore = json["more"]?.ToObject<bool>();
                     if (json["programs"] is not null)
                         result.AddRange(json["programs"].Select(t => (NCSong)NCFmItem.CreateFromJson(t)).ToList());
+                    json.RemoveAll();
                 }
                 catch (Exception ex)
                 {

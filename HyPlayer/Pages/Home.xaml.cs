@@ -178,6 +178,7 @@ public sealed partial class Home : Page, IDisposable
                 var ncp = NCPlayList.CreateFromJson(PlaylistItemJson);
                 RankList.Children.Add(new PlaylistItem(ncp));
             }
+            json.RemoveAll();
         }
         catch (Exception ex)
         {
@@ -255,6 +256,9 @@ public sealed partial class Home : Page, IDisposable
             {
                 Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
+            Songs.Clear();
+            jsoon.RemoveAll();
+            jsona.RemoveAll();
         }
         catch (Exception ex)
         {

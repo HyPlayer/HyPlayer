@@ -1177,6 +1177,7 @@ DoubleAnimation verticalAnimation;
                 HyPlayList.AppendNcSongs(list);
                 HyPlayList.NotifyPlayItemChanged(HyPlayList.NowPlayingItem);
             }
+            list.Clear();
         }
         catch
         {
