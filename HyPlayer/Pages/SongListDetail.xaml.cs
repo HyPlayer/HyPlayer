@@ -114,7 +114,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         else
         {
             ButtonIntel.Visibility = Visibility.Collapsed;
-            BtnsPanel.Margin = new Thickness(-4, 4, 0, 0);
+            BtnsPanel.Margin = new Thickness(-8, 20, 0, -16);
             await LoadDailyRcmdItems();
         }
 
@@ -174,7 +174,7 @@ public sealed partial class SongListDetail : Page, IDisposable
                 json["playlist"]["userId"].ToString() == Common.LoginedUser?.id)
             {
                 ButtonIntel.Visibility = Visibility.Visible;
-                BtnsPanel.Margin=new Thickness(0,4,0,0);
+                BtnsPanel.Margin=new Thickness(0,20,0,-16);
                 SongsList.IsMySongList = true;
             }
 
@@ -408,5 +408,11 @@ public sealed partial class SongListDetail : Page, IDisposable
         // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
+    }
+
+    private void BtnComment_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
+        Common.NavigatePage(typeof(Comments), "pl" + playList.plid) ;
     }
 }

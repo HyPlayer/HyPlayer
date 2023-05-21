@@ -514,11 +514,19 @@ public sealed partial class SongsList : UserControl, IDisposable
                 break;
             case "Comments":
                 if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
-                var page = (SongListDetail)((Grid)Parent).Parent;    
-                Common.NavigatePage(typeof(Comments), "pl" + page.playList.plid) ;
+                var page = (SongListDetail)((Grid)Parent).Parent;
+                Common.NavigatePage(typeof(Comments), "pl" + page.playList.plid);
                 break;
             default:
                 break;
         }
+    }
+
+    private void FocusingCurrent_OnClicked(object sender, RoutedEventArgs e)
+    {
+        if (HyPlayList.NowPlayingItem?.PlayItem is null) return;
+        var idx = VisibleSongs.ToList().FindIndex(t => t.sid == HyPlayList.NowPlayingItem.PlayItem?.Id);
+        if (idx == -1) return;
+        SongContainer.ScrollIntoView(VisibleSongs[idx], ScrollIntoViewAlignment.Leading);
     }
 }

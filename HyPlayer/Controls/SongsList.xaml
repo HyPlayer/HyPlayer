@@ -29,19 +29,38 @@
             <ListView.Header>
                 <StackPanel x:Name="HeaderPanel">
                     <ContentControl
-                        Margin="0,-10,0,0"
+                        Margin="0,0,0,-10"
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Stretch"
                         Content="{x:Bind ListHeader}" />
                     <Grid
                         x:Name="Toolbar"
-                        Margin="0,0,0,-20"
+                        Margin="0,0,20,-10"
                         ColumnSpacing="12"
                         Visibility="{x:Bind IsSearchEnabled}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <muxc:NavigationView
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,-45,0,20">
+                            <AutoSuggestBox
+                                    x:Name="FilterBox"
+                                    BorderThickness="0"
+                                    PlaceholderText="在歌单中搜索..."
+                                    QueryIcon="Find"
+                                    QuerySubmitted="FilterBox_QuerySubmitted" 
+                                Width="250"/>
+                            <ToggleButton IsChecked="{x:Bind MultiSelect, Mode=TwoWay}"
+                                                         ToolTipService.ToolTip="多选" Background="Transparent" BorderBrush="Transparent">
+                                <FontIcon Glyph="&#xE762;" FontSize="16"/>
+                            </ToggleButton>
+                            <Button
+                                x:Name="FocusingCurrent"
+                                    ToolTipService.ToolTip="跳转到当前播放" Click="FocusingCurrent_OnClicked">
+                                <Button.Content>
+                                    <FontIcon Glyph="&#xE819;" />
+                                </Button.Content>
+                            </Button>
+
+                        </StackPanel>
+
+                        <!--<muxc:NavigationView
                             x:Name="ToolbarNavigationView"
                             IsBackButtonVisible="Collapsed"
                             IsSettingsVisible="False"
@@ -91,7 +110,7 @@
                                     QueryIcon="Find"
                                     QuerySubmitted="FilterBox_QuerySubmitted" />
                             </muxc:NavigationView.AutoSuggestBox>
-                        </muxc:NavigationView>
+                        </muxc:NavigationView>-->
                     </Grid>
                 </StackPanel>
             </ListView.Header>

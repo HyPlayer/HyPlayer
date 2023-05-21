@@ -85,12 +85,13 @@
                             VerticalAlignment="Center">
                             <TextBlock
                                 x:Name="TextBoxPLName"
+                                Margin="0,-6,0,6"
                                 Style="{ThemeResource TitleTextBlockStyle}"
                                 Text="歌单名" />
                             <StackPanel
-                                Margin="0,4,0,0"
+                                Margin="0,2,0,0"
                                 Orientation="Horizontal"
-                                Spacing="4">
+                                Spacing="6">
                                 <HyperlinkButton
                                     x:Name="TextBoxAuthor"
                                     Padding="0"
@@ -103,13 +104,19 @@
                                     Margin="0,2,0,0"
                                     FontSize="16"
                                     Text="更新日期" />
+                                <StackPanel Orientation="Horizontal">
+                                  <TextBlock
+                                    x:Name="TextBoxSongCount"
+                                    Text="{x:Bind Songs.Count, Mode=OneWay}" />
+                                    <TextBlock Text="首歌曲"/>
+                                </StackPanel>
 
                             </StackPanel>
                             <StackPanel
                                 x:Name="BtnsPanel"
-                                Margin="0,4,0,0"
+                                Margin="-8,20,0,-16"
                                 Orientation="Horizontal"
-                                Spacing="4">
+                                Spacing="8">
                                 <Button
                                     x:Name="ButtonIntel"
                                     Margin="0,6,0,0"
@@ -168,6 +175,11 @@
                                 ToolTipService.ToolTip="更多选项">
                                 <Button.Flyout>
                                     <MenuFlyout Placement="BottomEdgeAlignedRight">
+                                        <MenuFlyoutItem 
+                                            Click="BtnComment_OnClick"
+                                            Icon="Comment"
+                                            Text="评论"
+                                            />
                                         <MenuFlyoutItem
                                             Click="BtnAddAll_Clicked"
                                             Icon="Add"
@@ -191,7 +203,7 @@
                             x:Name="DescriptionWrapper"
                             Grid.Row="1"
                             Grid.ColumnSpan="2"
-                            Margin="0,12,0,-16"
+                            Margin="-0,12,0,-14"
                             FontSize="16"
                             Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                             MaxLines="4"
