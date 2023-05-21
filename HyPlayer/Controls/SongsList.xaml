@@ -35,7 +35,7 @@
                         Content="{x:Bind ListHeader}" />
                     <Grid
                         x:Name="Toolbar"
-                        Margin="0,0,0,0"
+                        Margin="0,0,0,-20"
                         ColumnSpacing="12"
                         Visibility="{x:Bind IsSearchEnabled}">
                         <Grid.ColumnDefinitions>
@@ -236,9 +236,9 @@
                             <StackPanel Grid.Column="0" Orientation="Horizontal">
                                 <controls:ImageEx
                                     x:Name="ImageRect"
-                                    Width="50"
-                                    Height="50"
-                                    Margin="6,0,0,0"
+                                    Width="48"
+                                    Height="48"
+                                    Margin="8,0,0,0"
                                     x:Phase="4"
                                     CornerRadius="9"
                                     EnableLazyLoading="True"
@@ -252,7 +252,7 @@
                                 <TextBlock
                                     x:Name="OrderId"
                                     Width="48"
-                                    Margin="-46,6,6,0"
+                                    Margin="-44,6,6,0"
                                     HorizontalAlignment="Left"
                                     VerticalAlignment="Top"
                                     FontSize="16"
@@ -274,7 +274,7 @@
                                         <TextBlock
                                             Name="TextBlockSongname"
                                             x:Phase="0"
-                                            FontSize="19"
+                                            FontSize="18"
                                             FontWeight="Bold"
                                             Style="{ThemeResource SubtitleTextBlockStyle}"
                                             Text="{x:Bind songname}" />

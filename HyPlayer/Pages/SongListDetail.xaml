@@ -47,7 +47,7 @@
             IsSearchEnabled="True"
             Songs="{x:Bind Songs}">
             <controls1:SongsList.ListHeader>
-                <Grid>
+                <Grid CornerRadius="10">
                     <Border
                         x:Name="RectangleImageBack"
                         Grid.Column="0"
@@ -106,34 +106,10 @@
 
                             </StackPanel>
                             <StackPanel
+                                x:Name="BtnsPanel"
                                 Margin="0,4,0,0"
                                 Orientation="Horizontal"
                                 Spacing="4">
-                                <Button
-                                    x:Name="ButtonLike"
-                                    Margin="0,6,0,0"
-                                    Click="LikeBtnClick">
-                                    <StackPanel Orientation="Horizontal">
-                                        <FontIcon
-                                            x:Name="LikedIcon"
-                                            Margin="0,0,8,0"
-                                            FontSize="12"
-                                            Glyph="&#xE10B;" />
-                                        <TextBlock x:Name="LikeBtnText" Text="已收藏" />
-                                    </StackPanel>
-                                </Button>
-                                <Button Margin="0,6,0,0" Click="ButtonPlayAll_OnClick">
-                                    <StackPanel Orientation="Horizontal">
-                                        <FontIcon
-                                            x:Name="IconPlay"
-                                            FontSize="12"
-                                            Glyph="&#xF5B0;" />
-                                        <TextBlock
-                                            Margin="8,0,0,0"
-                                            Text="播放"
-                                            ToolTipService.ToolTip="播放全部" />
-                                    </StackPanel>
-                                </Button>
                                 <Button
                                     x:Name="ButtonIntel"
                                     Margin="0,6,0,0"
@@ -149,6 +125,32 @@
                                             Margin="8,0,0,0"
                                             Foreground="White"
                                             Text="心动模式" />
+                                    </StackPanel>
+                                </Button>
+
+                                <Button Margin="0,6,0,0" Click="ButtonPlayAll_OnClick">
+                                    <StackPanel Orientation="Horizontal">
+                                        <FontIcon
+                                            x:Name="IconPlay"
+                                            FontSize="12"
+                                            Glyph="&#xF5B0;" />
+                                        <TextBlock
+                                            Margin="8,0,0,0"
+                                            Text="播放"
+                                            ToolTipService.ToolTip="播放全部" />
+                                    </StackPanel>
+                                </Button>
+                                <Button
+                                    x:Name="ButtonLike"
+                                    Margin="0,6,0,0"
+                                    Click="LikeBtnClick">
+                                    <StackPanel Orientation="Horizontal">
+                                        <FontIcon
+                                            x:Name="LikedIcon"
+                                            Margin="0,0,8,0"
+                                            FontSize="12"
+                                            Glyph="&#xE10B;" />
+                                        <TextBlock x:Name="LikeBtnText" Text="已收藏" />
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
@@ -189,7 +191,7 @@
                             x:Name="DescriptionWrapper"
                             Grid.Row="1"
                             Grid.ColumnSpan="2"
-                            Margin="0,12,0,0"
+                            Margin="0,12,0,-16"
                             FontSize="16"
                             Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                             MaxLines="4"

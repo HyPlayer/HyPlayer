@@ -91,12 +91,12 @@ public sealed partial class SongListDetail : Page, IDisposable
     {
         if((bool)ButtonLike.Tag == true)
         {
-            LikedIcon.Visibility = Visibility.Visible;
+            LikedIcon.Glyph= "\uE10B";
             LikeBtnText.Text = "已收藏";
         }
         else
         {
-            LikedIcon.Visibility = Visibility.Collapsed;
+            LikedIcon.Glyph = "\uE0B4";
             LikeBtnText.Text = "收藏";
         }
 
@@ -114,6 +114,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         else
         {
             ButtonIntel.Visibility = Visibility.Collapsed;
+            BtnsPanel.Margin = new Thickness(-4, 4, 0, 0);
             await LoadDailyRcmdItems();
         }
 
@@ -173,6 +174,7 @@ public sealed partial class SongListDetail : Page, IDisposable
                 json["playlist"]["userId"].ToString() == Common.LoginedUser?.id)
             {
                 ButtonIntel.Visibility = Visibility.Visible;
+                BtnsPanel.Margin=new Thickness(0,4,0,0);
                 SongsList.IsMySongList = true;
             }
 
