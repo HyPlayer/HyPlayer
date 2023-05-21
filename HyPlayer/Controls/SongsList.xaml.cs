@@ -3,6 +3,7 @@
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
+using Microsoft.Toolkit.Uwp.UI;
 using Microsoft.UI.Xaml.Controls;
 using NeteaseCloudMusicApi;
 using System;
@@ -510,6 +511,11 @@ public sealed partial class SongsList : UserControl, IDisposable
                 var idx = VisibleSongs.ToList().FindIndex(t => t.sid == HyPlayList.NowPlayingItem.PlayItem?.Id);
                 if (idx == -1) return;
                 SongContainer.ScrollIntoView(VisibleSongs[idx], ScrollIntoViewAlignment.Leading);
+                break;
+            case "Comments":
+                if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
+                var page = (SongListDetail)((Grid)Parent).Parent;    
+                Common.NavigatePage(typeof(Comments), "pl" + page.playList.plid) ;
                 break;
             default:
                 break;

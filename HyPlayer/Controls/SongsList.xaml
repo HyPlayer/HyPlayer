@@ -46,7 +46,7 @@
                             IsBackButtonVisible="Collapsed"
                             IsSettingsVisible="False"
                             ItemInvoked="ToolbarNavigationView_ItemInvoked"
-                            PaneDisplayMode="Top">
+                            PaneDisplayMode="Top" Margin="0,4,0,0">
                             <muxc:NavigationView.MenuItems>
                                 <muxc:NavigationViewItem Content="歌曲" IsSelected="True">
                                     <muxc:NavigationViewItem.Icon>
@@ -57,27 +57,30 @@
                                             Margin="4,14,0,0"
                                             Background="Transparent"
                                             Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
-                                            Value="{x:Bind Songs.Count}" />
+                                            Value="{x:Bind Songs.Count, Mode=OneWay}" />
                                     </muxc:NavigationViewItem.InfoBadge>
+                                </muxc:NavigationViewItem>
+                                <muxc:NavigationViewItem Tag="Comments" Content="评论" SelectsOnInvoked="False">
+                                    <muxc:NavigationViewItem.Icon>
+                                        <FontIcon Glyph="&#xE8F2;" />
+                                    </muxc:NavigationViewItem.Icon>
                                 </muxc:NavigationViewItem>
                             </muxc:NavigationView.MenuItems>
                             <muxc:NavigationView.FooterMenuItems>
                                 <muxc:NavigationViewItem
-                                    IsSelected="{x:Bind MultiSelect, Mode=TwoWay}"
+                                    x:Name="FocusingCurrent"
                                     SelectsOnInvoked="False"
-                                    ToolTipService.ToolTip="多选">
+                                    Tag="FocusingCurrent"
+                                    ToolTipService.ToolTip="跳转到当前播放">
                                     <muxc:NavigationViewItem.Icon>
                                         <FontIcon Glyph="&#xE819;" />
                                     </muxc:NavigationViewItem.Icon>
                                 </muxc:NavigationViewItem>
-                                <muxc:NavigationViewItem
-                                    x:Name="FocusingCurrent"
-                                    Tag="FocusingCurrent"
-                                    SelectsOnInvoked="False"
-                                    ToolTipService.ToolTip="跳转到当前播放">
-                                    <muxc:NavigationViewItem.Icon>
-                                        <FontIcon Glyph="&#xE762;" />
-                                    </muxc:NavigationViewItem.Icon>
+                                <muxc:NavigationViewItem SelectsOnInvoked="False">
+                                    <ToggleButton IsChecked="{x:Bind MultiSelect, Mode=TwoWay}"
+                                                         ToolTipService.ToolTip="多选" Background="Transparent" BorderBrush="Transparent">
+                                        <FontIcon Glyph="&#xE762;" FontSize="16"/>
+                                    </ToggleButton>
                                 </muxc:NavigationViewItem>
                             </muxc:NavigationView.FooterMenuItems>
                             <muxc:NavigationView.AutoSuggestBox>
@@ -324,7 +327,6 @@
                                         Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
                                         Text="{x:Bind Album.name}" />
                                 </StackPanel>
-
                             </StackPanel>
                             <StackPanel
                                 Grid.Column="3"
@@ -351,22 +353,5 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
-        <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup>
-                <VisualState>
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="0" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters />
-                </VisualState>
-                <VisualState>
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="1300" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters />
-                </VisualState>
-
-            </VisualStateGroup>
-        </VisualStateManager.VisualStateGroups>
     </Grid>
 </UserControl>

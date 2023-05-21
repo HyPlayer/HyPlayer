@@ -2,11 +2,11 @@
     x:Class="HyPlayer.Pages.SongListDetail"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:controls1="using:HyPlayer.Controls"
     xmlns:controls2="using:Microsoft.UI.Xaml.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hyplayer="using:HyPlayer"
-    xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:pages="using:HyPlayer.Pages"
     x:Name="Page"
@@ -41,11 +41,150 @@
         <controls1:SongsList
             x:Name="SongsList"
             Grid.RowSpan="2"
-            Margin="20"
+            Margin="0,0,0,0"
             IsSearchEnabled="True"
-            Songs="{x:Bind Songs}" >
+            Songs="{x:Bind Songs}">
             <controls1:SongsList.ListHeader>
-                <Grid x:Name="GridPersonalInformation" Margin="0,15,0,12">
+                <Grid>
+                    <Border
+                        x:Name="RectangleImageBack"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}" >
+                        <Border.Background>
+                            <ImageBrush ImageSource="{x:Bind ImageSource}"/>
+                        </Border.Background>
+                    </Border>
+                    
+                    <Grid
+                        Padding="32"
+                        Background="{ThemeResource SystemControlAcrylicElementBrush}"
+                        ColumnSpacing="24">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <controls:ImageEx
+                            x:Name="RectangleImage"
+                            Width="100"
+                            Height="100"
+                            HorizontalAlignment="Left"
+                            CornerRadius="8">
+                            <controls:ImageEx.Source>
+                                <BitmapImage x:Name="ImageSource" />
+                            </controls:ImageEx.Source>
+                        </controls:ImageEx>
+                        <StackPanel
+                            Grid.Column="1"
+                            Margin="0,0,0,12"
+                            VerticalAlignment="Center">
+                            <TextBlock
+                                x:Name="TextBoxPLName"
+                                FontSize="30"
+                                Style="{ThemeResource TitleTextBlockStyle}"
+                                Text="歌单名" />
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <HyperlinkButton
+                                    x:Name="TextBoxAuthor"
+                                    Padding="0"
+                                    Click="TextBoxAuthor_Tapped"
+                                    Content="歌单创建者"
+                                    FontSize="16"
+                                    Style="{StaticResource TextBlockButtonStyle}" />
+                                <TextBlock
+                                    x:Name="TextBoxUpdateTime"
+                                    Margin="0,2,0,0"
+                                    FontSize="16"
+                                    Text="更新日期" />
+
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <Button x:Name="ButtonLike" Margin="0,6,0,0" Click="LikeBtnClick">
+                                    <StackPanel Orientation="Horizontal">
+                                        <FontIcon x:Name="LikedIcon" FontSize="12" Glyph="&#xE10B;" Margin="0,0,8,0" />
+                                        <TextBlock  x:Name="LikeBtnText" Text="已收藏" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Click="ButtonPlayAll_OnClick" Margin="0,6,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <FontIcon
+                                        x:Name="IconPlay"
+                                            FontSize="12"
+                                        Foreground="White"
+                                        Glyph="&#xF5B0;" />
+                                        <TextBlock
+                                        Margin="8,0,0,0"
+                                        Foreground="White"
+                                        Text="播放"
+                                        ToolTipService.ToolTip="播放全部" />
+                                    </StackPanel>
+                                </Button>
+                                <Button
+                                x:Name="ButtonIntel"
+                                Click="ButtonHeartBeat_OnClick"  Margin="0,6,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <FontIcon
+                                        x:Name="IconLiked"
+                                        FontSize="14"
+                                        Foreground="White"
+                                        Glyph="&#xE00B;" />
+                                        <TextBlock
+                                        Margin="8,0,0,0"
+                                        Foreground="White"
+                                        Text="心动模式" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+
+                        </StackPanel>
+                        <StackPanel
+                            Grid.Column="1"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            Orientation="Horizontal">
+                            <Button
+                                x:Name="ButtonMore"
+                                Background="Transparent"
+                                BorderBrush="Transparent" ToolTipService.ToolTip="更多选项">
+                                <Button.Flyout>
+                                    <MenuFlyout Placement="BottomEdgeAlignedRight">
+                                        <MenuFlyoutItem Icon="Add" Text="添加" Click="BtnAddAll_Clicked"/>
+                                        <MenuFlyoutItem Icon="Download" Click="ButtonDownloadAll_OnClick" Text="下载"/>
+                                        <MenuFlyoutItem Icon="Share" Click="BtnShare_Clicked"  Text="分享"/>
+
+                                    </MenuFlyout>
+                                </Button.Flyout>
+                                <FontIcon Glyph="&#xE10C;" />
+                            </Button>
+
+                            <Button
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                Click="ButtonComment_OnClick"
+                                ToolTipService.ToolTip="评论"
+                                Visibility="{x:Bind hyplayer:Common.Setting.notClearMode, Mode=OneWay}">
+                                <FontIcon Glyph="&#xE134;" />
+                            </Button>
+
+                        </StackPanel>
+                        <controls1:ExpandableTextBox
+                            x:Name="DescriptionWrapper"
+                            Grid.Row="1"
+                            Grid.ColumnSpan="2"
+                            Margin="0,4,0,0"
+                            FontSize="16"
+                            Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                            MaxLines="4"
+                            Text="简介"
+                            TextWrapping="Wrap" />
+                    </Grid>
+
+                </Grid>
+                <!--<Grid x:Name="GridPersonalInformation" Margin="0,15,0,12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
@@ -105,11 +244,11 @@
                                 x:Name="TextBoxAuthor"
                                 Click="TextBoxAuthor_Tapped"
                                 Content="歌单创建者"/>
-                            <TextBlock x:Name="TextBoxPlayCount" 
+                            <TextBlock x:Name="TextBoxPlayCount"
                                 Margin="12,0,0,0"
                                 Padding="0,8,0,4" />
 
-                            <TextBlock x:Name="TextBoxUpdateTime" 
+                            <TextBlock x:Name="TextBoxUpdateTime"
                                 Margin="12,0,0,0"
                                 Padding="0,8,0,4"/>
                         </StackPanel>
@@ -151,7 +290,7 @@
                             Background="{ThemeResource SystemAccentColorLight1}"
                             Click="ButtonPlayAll_OnClick">
                             <StackPanel Orientation="Horizontal">
-                                <FontIcon                           
+                                <FontIcon
                                     x:Name="IconPlay"
                                     FontSize="14"
                                     Foreground="White"
@@ -197,7 +336,7 @@
                         </Button>
                     </StackPanel>
 
-                </Grid>
+                </Grid>-->
             </controls1:SongsList.ListHeader>
             <controls1:SongsList.Footer>
                 <Button
@@ -219,10 +358,10 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="1" />
-                        <Setter Target="Btns.Margin" Value="0,20,5,10"/>
+                        <Setter Target="Btns.Margin" Value="0,20,5,10" />
                         <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="10" />
-                        <Setter Target="Btns.VerticalAlignment" Value="Bottom"/>
-                        <Setter Target="Btns.Spacing" Value="5"/>
+                        <Setter Target="Btns.VerticalAlignment" Value="Bottom" />
+                        <Setter Target="Btns.Spacing" Value="5" />
                     </VisualState.Setters>
                 </VisualState>
                 <VisualState>
@@ -233,9 +372,9 @@
                         <Setter Target="RectangleImage.Visibility" Value="Visible" />
                         <Setter Target="StackPanelUserInfo.(Grid.Column)" Value="5" />
                         <Setter Target="StackPanelUserInfo.(Grid.ColumnSpan)" Value="6" />
-                        <Setter Target="Btns.VerticalAlignment" Value="Top"/>
-                        <Setter Target="Btns.Margin" Value="0,20,10,10"/>
-                        <Setter Target="Btns.Spacing" Value="10"/>
+                        <Setter Target="Btns.VerticalAlignment" Value="Top" />
+                        <Setter Target="Btns.Margin" Value="0,20,10,10" />
+                        <Setter Target="Btns.Spacing" Value="10" />
                     </VisualState.Setters>
                 </VisualState>
             </VisualStateGroup>

@@ -34,7 +34,7 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     private bool isDescExpanded = false;
     private int page;
-    private NCPlayList playList;
+    public NCPlayList playList;
     public ObservableCollection<NCSong> Songs;
     private bool disposedValue = false;
     private DataTransferManager _dataTransferManager = DataTransferManager.GetForCurrentView();
@@ -81,13 +81,27 @@ public sealed partial class SongListDetail : Page, IDisposable
         TextBoxPLName.Text = playList.name;
         DescriptionWrapper.Text = playList.desc;
         TextBoxAuthor.Content = playList.creater.name;
-        ToggleButtonLike.IsChecked = playList.subscribed;
-        if (playList.trackCount != 0)
-            TextBoxPlayCount.Text = $"{playList.trackCount}首歌曲";
+        ButtonLike.Tag = playList.subscribed;
+        UpdateLikeBtnStyle();
 
         if (playList.updateTime.Year != 0001)
             TextBoxUpdateTime.Text = $"{DateConverter.FriendFormat(playList.updateTime)}更新";
     }
+    public void UpdateLikeBtnStyle()
+    {
+        if((bool)ButtonLike.Tag == true)
+        {
+            LikedIcon.Visibility = Visibility.Visible;
+            LikeBtnText.Text = "已收藏";
+        }
+        else
+        {
+            LikedIcon.Visibility = Visibility.Collapsed;
+            LikeBtnText.Text = "收藏";
+        }
+
+    }
+
 
     public async Task LoadSongListItem()
     {
@@ -338,6 +352,8 @@ public sealed partial class SongListDetail : Page, IDisposable
         _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistSubscribe,
             new Dictionary<string, object> { { "id", playList.plid }, { "t", playList.subscribed ? "0" : "1" } });
         playList.subscribed = !playList.subscribed;
+        ButtonLike.Tag = playList.subscribed;
+        UpdateLikeBtnStyle();
     }
 
     private void TextBoxAuthor_Tapped(object sender, RoutedEventArgs routedEventArgs)
