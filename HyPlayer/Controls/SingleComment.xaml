@@ -47,31 +47,6 @@
                             FontSize="16"
                             Text="{x:Bind MainComment.content,Mode=OneWay}"
                             TextWrapping="Wrap" IsTextSelectionEnabled="True"/>
-                        <StackPanel
-                            HorizontalAlignment="Right"
-                            Orientation="Horizontal"
-                            Spacing="4">
-                            <ToggleButton
-                                x:Name="Like"
-                                Height="35"
-                                Click="Like_Click"
-                                IsChecked="{x:Bind MainComment.HasLiked,Mode=OneWay}"
-                                ToolTipService.ToolTip="点赞"  Background="Transparent" BorderBrush="Transparent">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <FontIcon Glyph="&#xE19F;" FontSize="15" />
-                                    <TextBlock x:Name="LikeCountTB" Text="{x:Bind MainComment.likedCount}" />
-                                </StackPanel>
-                            </ToggleButton>
-                            <Button
-                                x:Name="Delete"
-                                Height="35"
-                                Click="Delete_Click"
-                                ToolTipService.ToolTip="删除"
-                                Visibility="{x:Bind MainComment.IsByMyself,Mode=OneWay}" Background="Transparent" BorderBrush="Transparent">
-                                <FontIcon Glyph="&#xE107;" FontSize="15" />
-                            </Button>
-
-                        </StackPanel>
                     </StackPanel>
                 </Grid>
             </Border>
@@ -89,16 +64,41 @@
             Margin="12,-12,12,0"
             CornerRadius="0,0,8,8">
             <muxc:Expander.Header>
-                <ToggleButton
+                <StackPanel
+                            HorizontalAlignment="Right"
+                            Orientation="Horizontal"
+                            Spacing="6">
+                    <ToggleButton
+                                x:Name="Like"
+                                Height="35"
+                                Click="Like_Click"
+                                IsChecked="{x:Bind MainComment.HasLiked,Mode=OneWay}"
+                                ToolTipService.ToolTip="点赞"  Background="Transparent" BorderBrush="Transparent">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE19F;" FontSize="15" />
+                            <TextBlock x:Name="LikeCountTB" Text="{x:Bind MainComment.likedCount}" />
+                        </StackPanel>
+                    </ToggleButton>
+                    <Button
+                                x:Name="Delete"
+                                Height="35"
+                                Click="Delete_Click"
+                                ToolTipService.ToolTip="删除"
+                                Visibility="{x:Bind MainComment.IsByMyself,Mode=OneWay}" Background="Transparent" BorderBrush="Transparent">
+                        <FontIcon Glyph="&#xE107;" FontSize="15" />
+                    </Button>
+                    <ToggleButton
                     x:Name="ReplyBtn"
                     Height="35"
                     IsChecked="{x:Bind FloorCommentsExpander.IsExpanded,Mode=TwoWay}"
                     ToolTipService.ToolTip="回复" Background="Transparent" BorderBrush="Transparent">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <FontIcon Glyph="&#xE134;" FontSize="15" />
-                        <TextBlock x:Name="ReplyCountIndicator"  Text="{x:Bind MainComment.ReplyCount}" />
-                    </StackPanel>
-                </ToggleButton>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE134;" FontSize="15" />
+                            <TextBlock x:Name="ReplyCountIndicator"  Text="{x:Bind MainComment.ReplyCount}" />
+                        </StackPanel>
+                    </ToggleButton>
+
+                </StackPanel>
             </muxc:Expander.Header>
             <StackPanel Orientation="Vertical">
                 <Grid Margin="0,12,0,12">
