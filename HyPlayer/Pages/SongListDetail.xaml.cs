@@ -114,7 +114,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         else
         {
             ButtonIntel.Visibility = Visibility.Collapsed;
-            BtnsPanel.Margin = new Thickness(-8, 20, 0, -16);
+            BtnsPanel.Margin = new Thickness(-8, 12, 0, -12);
             await LoadDailyRcmdItems();
         }
 
@@ -174,7 +174,7 @@ public sealed partial class SongListDetail : Page, IDisposable
                 json["playlist"]["userId"].ToString() == Common.LoginedUser?.id)
             {
                 ButtonIntel.Visibility = Visibility.Visible;
-                BtnsPanel.Margin=new Thickness(0,20,0,-16);
+                BtnsPanel.Margin=new Thickness(0,12,0,-12);
                 SongsList.IsMySongList = true;
             }
 
