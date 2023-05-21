@@ -3,6 +3,7 @@
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
+using Microsoft.UI.Xaml.Controls;
 using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
+using Windows.Devices.Midi;
 using Windows.Foundation;
 using Windows.UI;
 using Windows.UI.Xaml;
@@ -371,21 +373,7 @@ public sealed partial class SongsList : UserControl, IDisposable
 
     private void FilterBox_OnTextChanged(object sender, RoutedEventArgs e)
     {
-        var vpos = -1;
-        for (var b = 0; b < VisibleSongs.Count; b++)
-            if (!Songs.Contains(VisibleSongs[b]))
-                VisibleSongs.RemoveAt(b);
 
-        for (var i = 0; i < Songs.Count; i++)
-            if (string.IsNullOrWhiteSpace(FilterBox.Text) || Filter(Songs[i]))
-            {
-                vpos++;
-                if (!VisibleSongs.Contains(Songs[i])) VisibleSongs.Insert(vpos, Songs[i]);
-            }
-            else
-            {
-                VisibleSongs.Remove(Songs[i]);
-            }
     }
 
     private bool Filter(NCSong ncsong)
@@ -465,10 +453,7 @@ public sealed partial class SongsList : UserControl, IDisposable
 
     private void FocusingCurrent_OnClick(object sender, RoutedEventArgs e)
     {
-        if (HyPlayList.NowPlayingItem?.PlayItem is null) return;
-        var idx = VisibleSongs.ToList().FindIndex(t => t.sid == HyPlayList.NowPlayingItem.PlayItem?.Id);
-        if (idx == -1) return;
-        SongContainer.ScrollIntoView(VisibleSongs[idx], ScrollIntoViewAlignment.Leading);
+
     }
 
     private void Dispose(bool disposing)
@@ -494,5 +479,40 @@ public sealed partial class SongsList : UserControl, IDisposable
     {
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
+    }
+
+    private void FilterBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
+    {
+        var vpos = -1;
+        for (var b = 0; b < VisibleSongs.Count; b++)
+            if (!Songs.Contains(VisibleSongs[b]))
+                VisibleSongs.RemoveAt(b);
+
+        for (var i = 0; i < Songs.Count; i++)
+            if (string.IsNullOrWhiteSpace(FilterBox.Text) || Filter(Songs[i]))
+            {
+                vpos++;
+                if (!VisibleSongs.Contains(Songs[i])) VisibleSongs.Insert(vpos, Songs[i]);
+            }
+            else
+            {
+                VisibleSongs.Remove(Songs[i]);
+            }
+    }
+
+    private void ToolbarNavigationView_ItemInvoked(Microsoft.UI.Xaml.Controls.NavigationView sender, Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs args)
+    {
+        var item = args.InvokedItemContainer;
+        switch (item.Tag)
+        {
+            case "FocusingCurrent":
+                if (HyPlayList.NowPlayingItem?.PlayItem is null) return;
+                var idx = VisibleSongs.ToList().FindIndex(t => t.sid == HyPlayList.NowPlayingItem.PlayItem?.Id);
+                if (idx == -1) return;
+                SongContainer.ScrollIntoView(VisibleSongs[idx], ScrollIntoViewAlignment.Leading);
+                break;
+            default:
+                break;
+        }
     }
 }

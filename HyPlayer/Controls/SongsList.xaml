@@ -8,6 +8,7 @@
     xmlns:hycontrols="using:HyPlayer.Controls"
     xmlns:local="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     x:Name="SongListRoot"
     d:DesignHeight="300"
     Loaded="SongListRoot_Loaded"
@@ -21,56 +22,73 @@
             ItemContainerStyle="{ThemeResource ListViewItemStyle}"
             ItemsSource="{x:Bind VisibleSongs}"
             SelectionMode="{x:Bind MultiSelect, Converter={StaticResource SelectModeConverter}, Mode=OneWay}"
-            ShowsScrollingPlaceholders="True" >
+            ShowsScrollingPlaceholders="True">
             <ListView.Footer>
                 <ContentControl Margin="0,0,0,130" Content="{x:Bind Footer}" />
             </ListView.Footer>
             <ListView.Header>
-                <StackPanel x:Name="HeaderPanel" Orientation="Vertical">
+                <StackPanel x:Name="HeaderPanel">
                     <ContentControl
-                        Margin="0,-10,0,-30"
+                        Margin="0,-10,0,0"
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Stretch"
                         Content="{x:Bind ListHeader}" />
                     <Grid
                         x:Name="Toolbar"
-                        Margin="0,-100,10,0"
+                        Margin="0,0,0,0"
                         ColumnSpacing="12"
                         Visibility="{x:Bind IsSearchEnabled}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition x:Name="SearchBoxColm" Width="150" />
-                            <ColumnDefinition Width="50" />
-                            <ColumnDefinition Width="50" />
-                            <ColumnDefinition x:Name="MultiSelectColm" Width="50" />
                         </Grid.ColumnDefinitions>
-                        <TextBox
-                            x:Name="FilterBox"
-                            Grid.Column="1"
-                            Width="150"
-                            VerticalAlignment="Center"
-                            controls:DockPanel.Dock="Right"
-                            PlaceholderText="搜索..." />
-                        <Button
-                            x:Name="SearchToggle"
-                            Grid.Column="2"
-                            controls:DockPanel.Dock="Right"
-                            Click="FilterBox_OnTextChanged">
-                            <FontIcon Glyph="&#xE721;" />
-                        </Button>
-                        <Button
-                            x:Name="FocusingCurrent"
-                            Grid.Column="3"
-                            Click="FocusingCurrent_OnClick"
-                            ToolTipService.ToolTip="跳转到当前播放">
-                            <FontIcon Glyph="&#xE819;" />
-                        </Button>
-                        <ToggleButton
-                            x:Name="MultiSelectBtn"
-                            Grid.Column="4"
-                            IsChecked="{x:Bind MultiSelect, Mode=TwoWay}">
-                            <FontIcon Glyph="&#xE762;" />
-                        </ToggleButton>
+                        <muxc:NavigationView
+                            x:Name="ToolbarNavigationView"
+                            IsBackButtonVisible="Collapsed"
+                            IsSettingsVisible="False"
+                            ItemInvoked="ToolbarNavigationView_ItemInvoked"
+                            PaneDisplayMode="Top">
+                            <muxc:NavigationView.MenuItems>
+                                <muxc:NavigationViewItem Content="歌曲" IsSelected="True">
+                                    <muxc:NavigationViewItem.Icon>
+                                        <FontIcon Glyph="&#xE142;" />
+                                    </muxc:NavigationViewItem.Icon>
+                                    <muxc:NavigationViewItem.InfoBadge>
+                                        <muxc:InfoBadge
+                                            Margin="4,14,0,0"
+                                            Background="Transparent"
+                                            Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                            Value="{x:Bind Songs.Count}" />
+                                    </muxc:NavigationViewItem.InfoBadge>
+                                </muxc:NavigationViewItem>
+                            </muxc:NavigationView.MenuItems>
+                            <muxc:NavigationView.FooterMenuItems>
+                                <muxc:NavigationViewItem
+                                    IsSelected="{x:Bind MultiSelect, Mode=TwoWay}"
+                                    SelectsOnInvoked="False"
+                                    ToolTipService.ToolTip="多选">
+                                    <muxc:NavigationViewItem.Icon>
+                                        <FontIcon Glyph="&#xE819;" />
+                                    </muxc:NavigationViewItem.Icon>
+                                </muxc:NavigationViewItem>
+                                <muxc:NavigationViewItem
+                                    x:Name="FocusingCurrent"
+                                    Tag="FocusingCurrent"
+                                    SelectsOnInvoked="False"
+                                    ToolTipService.ToolTip="跳转到当前播放">
+                                    <muxc:NavigationViewItem.Icon>
+                                        <FontIcon Glyph="&#xE762;" />
+                                    </muxc:NavigationViewItem.Icon>
+                                </muxc:NavigationViewItem>
+                            </muxc:NavigationView.FooterMenuItems>
+                            <muxc:NavigationView.AutoSuggestBox>
+                                <AutoSuggestBox
+                                    x:Name="FilterBox"
+                                    BorderThickness="0"
+                                    PlaceholderText="在歌单中搜索..."
+                                    QueryIcon="Find"
+                                    QuerySubmitted="FilterBox_QuerySubmitted" />
+                            </muxc:NavigationView.AutoSuggestBox>
+                        </muxc:NavigationView>
                     </Grid>
                 </StackPanel>
             </ListView.Header>
@@ -183,8 +201,8 @@
                             Tag="{x:Bind Order}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="20"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="20" />
+                                <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="80" />
                             </Grid.ColumnDefinitions>
                             <controls:ImageEx
@@ -194,13 +212,13 @@
                                 Margin="2,0,2,0"
                                 x:Phase="4"
                                 CornerRadius="12"
-                                Opacity="0.6"
                                 EnableLazyLoading="True"
                                 IsCacheEnabled="False"
+                                Opacity="0.6"
                                 Stretch="Fill"
                                 Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}">
                                 <controls:ImageEx.Source>
-                                    <BitmapImage UriSource="{x:Bind Cover}"/>
+                                    <BitmapImage UriSource="{x:Bind Cover}" />
                                 </controls:ImageEx.Source>
                             </controls:ImageEx>
                             <Rectangle
@@ -223,9 +241,9 @@
                                     EnableLazyLoading="True"
                                     IsCacheEnabled="False"
                                     IsEnabled="{x:Bind IsAvailable}"
-                                    Stretch="UniformToFill" >
+                                    Stretch="UniformToFill">
                                     <controls:ImageEx.Source>
-                                        <BitmapImage UriSource="{x:Bind Cover}"/>
+                                        <BitmapImage UriSource="{x:Bind Cover}" />
                                     </controls:ImageEx.Source>
                                 </controls:ImageEx>
                                 <TextBlock
@@ -239,28 +257,28 @@
                                     Text="{x:Bind DspOrder}" />
                                 <Grid HorizontalAlignment="Stretch">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="0"/>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="0" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel
                                         Grid.Column="0"
-                                        Orientation="Horizontal"
-                                        Spacing="4"
+                                        Margin="0,0,0,4"
                                         VerticalAlignment="Center"
-                                        Margin="0,0,0,4">
+                                        Orientation="Horizontal"
+                                        Spacing="4">
                                         <TextBlock
                                             Name="TextBlockSongname"
                                             x:Phase="0"
-                                            Style="{ThemeResource SubtitleTextBlockStyle}"
-                                            Text="{x:Bind songname}" 
                                             FontSize="19"
-                                            FontWeight="Bold"/>
+                                            FontWeight="Bold"
+                                            Style="{ThemeResource SubtitleTextBlockStyle}"
+                                            Text="{x:Bind songname}" />
                                         <TextBlock
                                             Name="TextBlockTransName"
-                                            x:Phase="0"
                                             Margin="0,2,0,0"
+                                            x:Phase="0"
                                             FontSize="14"
                                             Foreground="Gray"
                                             Text="{x:Bind ConvertTranslate(transname)}" />
@@ -276,29 +294,35 @@
                                     </StackPanel>
                                 </Grid>
                             </StackPanel>
-                            <StackPanel Grid.Column="2" Orientation="Vertical" VerticalAlignment="Center" >
+                            <StackPanel
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                Orientation="Vertical">
                                 <TextBlock
-                                            Name="TextBlockAlia"
-                                            Grid.Column="0"
-                                            x:Phase="2"
-                                            VerticalAlignment="Center"
-                                            FontSize="12"
-                                            Margin="0,0,0,2"
-                                            Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
-                                            Text="{x:Bind alias}"
-                                            Visibility="{x:Bind alias, Converter={StaticResource EmptyStringToVisibilityConverter}}" />
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,1,0,0">
+                                    Name="TextBlockAlia"
+                                    Grid.Column="0"
+                                    Margin="0,0,0,2"
+                                    VerticalAlignment="Center"
+                                    x:Phase="2"
+                                    FontSize="12"
+                                    Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
+                                    Text="{x:Bind alias}"
+                                    Visibility="{x:Bind alias, Converter={StaticResource EmptyStringToVisibilityConverter}}" />
+                                <StackPanel
+                                    Margin="0,1,0,0"
+                                    VerticalAlignment="Center"
+                                    Orientation="Horizontal">
                                     <TextBlock
-                                            Name="TextBlockArtist"
-                                            Margin="0,0,20,0"
-                                            FontSize="13"
-                                            Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
-                                            Text="{x:Bind ArtistString}" />
+                                        Name="TextBlockArtist"
+                                        Margin="0,0,20,0"
+                                        FontSize="13"
+                                        Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
+                                        Text="{x:Bind ArtistString}" />
                                     <TextBlock
-                                            Name="TextBlockAlbum"
-                                            FontSize="13"
-                                            Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
-                                            Text="{x:Bind Album.name}" />
+                                        Name="TextBlockAlbum"
+                                        FontSize="13"
+                                        Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
+                                        Text="{x:Bind Album.name}" />
                                 </StackPanel>
 
                             </StackPanel>
@@ -333,25 +357,13 @@
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger MinWindowWidth="0" />
                     </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="Toolbar.Margin" Value="0,-110,0,0" />
-                        <Setter Target="FilterBox.Width" Value="80" />
-                        <Setter Target="SearchBoxColm.Width" Value="80" />
-                        <Setter Target="MultiSelectColm.Width" Value="0" />
-                        <Setter Target="MultiSelectBtn.Visibility" Value="Collapsed" />
-                    </VisualState.Setters>
+                    <VisualState.Setters />
                 </VisualState>
                 <VisualState>
                     <VisualState.StateTriggers>
                         <AdaptiveTrigger MinWindowWidth="1300" />
                     </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="Toolbar.Margin" Value="0,-35,10,0" />
-                        <Setter Target="FilterBox.Width" Value="150" />
-                        <Setter Target="SearchBoxColm.Width" Value="150" />
-                        <Setter Target="MultiSelectColm.Width" Value="50" />
-                        <Setter Target="MultiSelectBtn.Visibility" Value="Visible" />
-                    </VisualState.Setters>
+                    <VisualState.Setters />
                 </VisualState>
 
             </VisualStateGroup>
