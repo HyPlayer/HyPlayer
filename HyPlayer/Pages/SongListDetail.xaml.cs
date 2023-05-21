@@ -79,7 +79,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         }
 
         TextBoxPLName.Text = playList.name;
-        DescriptionWrapper.Text = playList.desc;
+        DescriptionTextBlock.Text = playList.desc;
         TextBoxAuthor.Content = playList.creater.name;
         ButtonLike.Tag = playList.subscribed;
         UpdateLikeBtnStyle();
@@ -132,9 +132,9 @@ public sealed partial class SongListDetail : Page, IDisposable
             if (json["data"]["dailySongs"][0]["alg"].ToString() == "birthDaySong")
             {
                 // 诶呀,没想到还过生了,吼吼
-                DescriptionWrapper.Text = "生日快乐~ 今天也要开心哦!";
-                DescriptionWrapper.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 0, 0));
-                DescriptionWrapper.FontSize = 25;
+                DescriptionTextBlock.Text = "生日快乐~ 今天也要开心哦!";
+                DescriptionTextBlock.Foreground = new SolidColorBrush(Color.FromArgb(255, 255, 0, 0));
+                DescriptionTextBlock.FontSize = 25;
             }
 
             var idx = 0;
@@ -414,5 +414,21 @@ public sealed partial class SongListDetail : Page, IDisposable
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
         Common.NavigatePage(typeof(Comments), "pl" + playList.plid) ;
+    }
+
+    private async void Description_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+    {
+        var description = playList.desc;
+        var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendSongs);
+        if (json["data"]["dailySongs"][0]["alg"].ToString() == "birthDaySong")
+        {
+            description = "生日快乐~ 今天也要开心哦!";
+        }
+        var dialog = new ContentDialog();
+        dialog.Title = playList.name + "的简介";
+        dialog.Content = description;
+        dialog.CloseButtonText = "关闭";
+        dialog.IsPrimaryButtonEnabled = false;
+        _ = dialog.ShowAsync();
     }
 }

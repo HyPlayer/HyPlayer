@@ -38,16 +38,15 @@
                         Margin="0,0,20,-10"
                         ColumnSpacing="12"
                         Visibility="{x:Bind IsSearchEnabled}">
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,-45,0,20">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,-40,0,20">
                             <AutoSuggestBox
                                     x:Name="FilterBox"
                                     BorderThickness="0"
                                     PlaceholderText="在歌单中搜索..."
                                     QueryIcon="Find"
-                                    QuerySubmitted="FilterBox_QuerySubmitted" 
-                                Width="250"/>
-                            <ToggleButton IsChecked="{x:Bind MultiSelect, Mode=TwoWay}"
-                                                         ToolTipService.ToolTip="多选" Background="Transparent" BorderBrush="Transparent">
+                                    QuerySubmitted="FilterBox_QuerySubmitted" />
+                            <ToggleButton IsChecked="{x:Bind MultiSelect, Mode=TwoWay}"  Height="33" Width="46"
+                                                         ToolTipService.ToolTip="多选"  BorderBrush="Transparent">
                                 <FontIcon Glyph="&#xE762;" FontSize="16"/>
                             </ToggleButton>
                             <Button
@@ -218,6 +217,7 @@
                             HorizontalAlignment="Stretch"
                             Background="Transparent"
                             IsRightTapEnabled="True"
+                            Height="64"
                             RightTapped="Grid_RightTapped"
                             ScrollViewer.CanContentRenderOutsideBounds="False"
                             Tag="{x:Bind Order}">
