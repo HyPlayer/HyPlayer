@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Devices.Input;
 using Windows.Graphics.Imaging;
+using Windows.Networking.NetworkOperators;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
@@ -781,20 +782,41 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private async void SaveAlbumImage_Click(object sender, RoutedEventArgs e)
     {
-        var filepicker = new FileSavePicker();
-        filepicker.SuggestedFileName = HyPlayList.NowPlayingItem.PlayItem.Name + "-cover.jpg";
-        filepicker.FileTypeChoices.Add("图片文件", new List<string> { ".png", ".jpg" });
-        var file = await filepicker.PickSaveFileAsync();
-        using var stream = await (HyPlayList.NowPlayingItem.ItemType != HyPlayItemType.Local
-                ? RandomAccessStreamReference.CreateFromUri(
-                    new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover))
-                : RandomAccessStreamReference.CreateFromStream(
-                    await HyPlayList.NowPlayingStorageFile.GetThumbnailAsync(
-                        ThumbnailMode.SingleItem, 9999)))
-            .OpenReadAsync();
-        var buffer = new Buffer((uint)stream.Size);
-        await stream.ReadAsync(buffer, (uint)stream.Size, InputStreamOptions.None);
-        await FileIO.WriteBufferAsync(file, buffer);
+        try
+        {
+            var filepicker = new FileSavePicker();
+            filepicker.SuggestedFileName = HyPlayList.NowPlayingItem.PlayItem.Name + "-cover.jpg";
+            filepicker.FileTypeChoices.Add("图片文件", new List<string> { ".png", ".jpg" });
+            var file = await filepicker.PickSaveFileAsync();
+            if (file == null) return;
+            if (HyPlayList.NowPlayingItem.ItemType != HyPlayItemType.Local || HyPlayList.NowPlayingItem.ItemType != HyPlayItemType.LocalProgressive)
+            {
+                using var httpClient = new HttpClient();
+                using var coverResult = await httpClient.GetAsync(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover));
+                if (coverResult.IsSuccessStatusCode)
+                {
+                    var cover = await coverResult.Content.ReadAsBufferAsync();
+                    await FileIO.WriteBufferAsync(file, cover);
+                }
+                else
+                {
+                    Common.AddToTeachingTipLists("专辑封面保存失败", "专辑封面下载失败");
+                }
+            }
+            else
+            {
+                using var thumbnail = await HyPlayList.NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.SingleItem, 9999);
+                var buffer = new Buffer((uint)thumbnail.Size);
+                await thumbnail.ReadAsync(buffer, (uint)thumbnail.Size, InputStreamOptions.None);
+                await FileIO.WriteBufferAsync(file, buffer);
+                buffer.Length = 0;
+            }
+        }
+        catch(Exception ex)
+        {
+            Common.AddToTeachingTipLists("专辑封面保存失败", ex.Message);
+        }
+        
     }
 
     private void BtnToggleWindowsMode_Checked(object sender, RoutedEventArgs e)

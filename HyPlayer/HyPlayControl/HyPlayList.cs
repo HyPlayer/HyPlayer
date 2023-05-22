@@ -81,8 +81,8 @@ public static class HyPlayList
     public static SystemMediaTransportControls MediaSystemControls;
     private static SystemMediaTransportControlsDisplayUpdater _controlsDisplayUpdater;
     private static readonly BackgroundDownloader Downloader = new();
-    private static InMemoryRandomAccessStream _coverStream = new InMemoryRandomAccessStream();
-    private static RandomAccessStreamReference _coverStreamRefrence = RandomAccessStreamReference.CreateFromStream(_coverStream);
+    public static InMemoryRandomAccessStream _coverStream = new InMemoryRandomAccessStream();
+    public static RandomAccessStreamReference _coverStreamRefrence = RandomAccessStreamReference.CreateFromStream(_coverStream);
     private static InMemoryRandomAccessStream _ncmPlayableStream;
     private static StreamedFileDataRequestedHandler _streamedFileDataRequestedHandler;
     private static MediaSource _mediaSource;
