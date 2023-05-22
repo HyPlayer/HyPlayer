@@ -1139,10 +1139,10 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 _ = Common.Invoke(() =>
                 {
                     ImageAlbum.Source = null;
-                    ImageAlbum.PlaceholderSource = null;
                     Background = null;
                     LyricBox.ItemsSource = null;
                 });
+                ImageAlbumSource = null;
                 LyricList.Clear();
             }
             HyPlayList.OnPause -= HyPlayList_OnPause;

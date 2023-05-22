@@ -332,11 +332,8 @@
                         Stretch="UniformToFill" 
                         PlaceholderStretch="Uniform">
                         <controls:ImageEx.Source>
-                            <BitmapImage x:Name="AlbumImageSource"/>
+                            <BitmapImage x:Name="AlbumImageSource" UriSource="/Assets/icon.png"/>
                         </controls:ImageEx.Source>
-                        <controls:ImageEx.PlaceholderSource>
-                            <BitmapImage UriSource="/Assets/icon.png"/>
-                        </controls:ImageEx.PlaceholderSource>
                     </controls:ImageEx>
                 </Grid>
                 <Grid Grid.Column="1" VerticalAlignment="Center" RowSpacing="2">

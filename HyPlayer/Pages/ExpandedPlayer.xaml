@@ -236,11 +236,8 @@
                             </MenuFlyout>
                         </controls:ImageEx.ContextFlyout>
                         <controls:ImageEx.Source>
-                            <BitmapImage x:Name="ImageAlbumSource"/>
+                            <BitmapImage x:Name="ImageAlbumSource" UriSource="/Assets/icon.png"/>
                         </controls:ImageEx.Source>
-                        <controls:ImageEx.PlaceholderSource>
-                            <BitmapImage UriSource="/Assets/icon.png"/>
-                        </controls:ImageEx.PlaceholderSource>
                     </controls:ImageEx>
                     <StackPanel
                         x:Name="SongInfo"
