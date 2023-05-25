@@ -217,4 +217,9 @@ internal static class NCMFile
 
         return BitConverter.ToUInt32(raw, 0);
     }
+    public static Dictionary<string, string> NCMFileMIMEType = new Dictionary<string, string>()
+    {
+        {"mp3","audio/mpeg" },
+        {"flac","audio/x-flac" }
+    };
 }

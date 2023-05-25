@@ -66,6 +66,7 @@ public sealed partial class BasePage : Page
         if (HyPlayList.Player == null)
             HyPlayList.InitializeHyPlaylist();
         HyPlayList.OnPlayItemChange += OnChangePlayItem;
+        HyPlayList.OnSongCoverChanged += HyPlayList_OnSongCoverChanged;
         if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Desktop" && Common.Setting.EnableTitleBarImmerse)
         {
             CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
@@ -86,6 +87,11 @@ public sealed partial class BasePage : Page
         Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
         Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
         // Window.Current.CoreWindow.Dispatcher.AcceleratorKeyActivated += Dispatcher_AcceleratorKeyActivated;
+    }
+
+    private void HyPlayList_OnSongCoverChanged()
+    {
+        RefreshNavItemCover();
     }
 
     /*
@@ -919,31 +925,30 @@ public sealed partial class BasePage : Page
 
     private void OnChangePlayItem(HyPlayItem item)
     {
-        _ = Common.Invoke(async () =>
+        _ = Common.Invoke(() =>
         {
             if (item.PlayItem != null)
             {
                 NavItemSongName.Text = item.PlayItem.Name;
                 NavItemArtist.Text = item.PlayItem.ArtistString;
-                if (NavItemImageSource.UriSource != null)  NavItemImageSource.UriSource = null;
-                if (!Common.Setting.noImage)
-                    if (item.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
-                    {
-                        if (!Common.Setting.useTaglibPicture || item.PlayItem?.LocalFileTag is null || item.PlayItem.LocalFileTag.Pictures.Length == 0)
-                        {
-                            using var thumbnail = await HyPlayList.NowPlayingStorageFile?.GetThumbnailAsync(ThumbnailMode.MusicView, 9999);
-                            await NavItemImageSource.SetSourceAsync(thumbnail);
-                        }
-                        else
-                        {
-                            using var stream = new MemoryStream(item.PlayItem.LocalFileTag.Pictures[0].Data.Data).AsRandomAccessStream();
-                            await NavItemImageSource.SetSourceAsync(stream);
-                        }
-                    }
-                    else if (HyPlayList.NowPlayingItem.PlayItem != null)
-                    {
-                        NavItemImageSource.UriSource = new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=" + StaticSource.PICSIZE_PLAYBAR_ALBUMCOVER);
-                    }
+            }
+        });
+    }
+    public void RefreshNavItemCover()
+    {
+        _ = Common.Invoke(async () =>
+        {
+            if (NavItemBlank.Opacity != 0 && !Common.isExpanded)
+            {
+                try
+                {
+                    using var coverStream = HyPlayList.CoverStream.CloneStream();
+                    await NavItemImageSource.SetSourceAsync(coverStream);
+                }
+                catch
+                {
+
+                }
             }
         });
     }

@@ -67,6 +67,8 @@ public static class HyPlayList
 
     public delegate void SongLikeStatusChanged(bool isLiked);
 
+    public delegate void SongCoverChanged();
+
     public static int NowPlaying;
     private static readonly System.Timers.Timer SecTimer = new(1000); // 公用秒表
     public static readonly List<HyPlayItem> List = new();
@@ -81,10 +83,10 @@ public static class HyPlayList
     public static SystemMediaTransportControls MediaSystemControls;
     private static SystemMediaTransportControlsDisplayUpdater _controlsDisplayUpdater;
     private static readonly BackgroundDownloader Downloader = new();
-    public static InMemoryRandomAccessStream _coverStream = new InMemoryRandomAccessStream();
-    public static RandomAccessStreamReference _coverStreamRefrence = RandomAccessStreamReference.CreateFromStream(_coverStream);
+    public static InMemoryRandomAccessStream CoverStream = new InMemoryRandomAccessStream();
+    public static RandomAccessStreamReference CoverStreamRefrence = RandomAccessStreamReference.CreateFromStream(CoverStream);
     private static InMemoryRandomAccessStream _ncmPlayableStream;
-    private static StreamedFileDataRequestedHandler _streamedFileDataRequestedHandler;
+    private static string _ncmPlayableStreamMIMEType = string.Empty;
     private static MediaSource _mediaSource;
 
     public static int LyricPos;
@@ -207,6 +209,8 @@ public static class HyPlayList
 
     public static event SongLikeStatusChanged OnSongLikeStatusChange;
 
+    public static event SongCoverChanged OnSongCoverChanged;
+
     public static void InitializeHyPlaylist()
     {
         Player = new MediaPlayer
@@ -216,7 +220,7 @@ public static class HyPlayList
         };
         MediaSystemControls = SystemMediaTransportControls.GetForCurrentView();
         _controlsDisplayUpdater = MediaSystemControls.DisplayUpdater;
-        _controlsDisplayUpdater.Thumbnail = _coverStreamRefrence;
+        _controlsDisplayUpdater.Thumbnail = CoverStreamRefrence;
         Player.CommandManager.IsEnabled = Common.Setting.ancientSMTC;
         MediaSystemControls.IsPlayEnabled = true;
         MediaSystemControls.IsPauseEnabled = true;
@@ -394,72 +398,48 @@ public static class HyPlayList
     private static async Task LoadLocalFile(HyPlayItem targetItem)
     {
         // 此处可以改进
-        if ( /*_lastStorageUrl != targetItem.PlayItem.url*/ true)
+        if (targetItem.PlayItem.DontSetLocalStorageFile.FileType != ".ncm") throw new ArgumentException();
+        if (targetItem.PlayItem.DontSetLocalStorageFile != null)
         {
-            if (targetItem.PlayItem.DontSetLocalStorageFile != null)
+            if (targetItem.ItemType != HyPlayItemType.LocalProgressive)
             {
-                if (targetItem.PlayItem.DontSetLocalStorageFile.FileType != ".ncm" &&
-                    targetItem.ItemType != HyPlayItemType.LocalProgressive)
-                {
-                    NowPlayingStorageFile = targetItem.PlayItem.DontSetLocalStorageFile;
-                }
-                else
-                {
-                    if (targetItem.PlayItem.DontSetLocalStorageFile.FileType == ".ncm")
-                    {
-                        // 脑残Music解析
-                        using var stream = await targetItem.PlayItem.DontSetLocalStorageFile.OpenStreamForReadAsync();
-                        if (NCMFile.IsCorrectNCMFile(stream))
-                        {
-                            var info = NCMFile.GetNCMMusicInfo(stream);
-                            using var coverStream = NCMFile.GetCoverStream(stream);
-                            _coverStream.Size = 0;
-                            _coverStream.Seek(0);
-                            using var targetCoverStream = _coverStream.AsStream();
-                            coverStream.CopyTo(targetCoverStream);
-                            using var encStream = NCMFile.GetEncryptedStream(stream);
-                            var songDataStream = new InMemoryRandomAccessStream();
-                            var targetSongDataStream = songDataStream.AsStream();
-                            encStream.CopyTo(targetSongDataStream);
-                            _ncmPlayableStream = songDataStream;
-                            NowPlayingStorageFile = await StorageFile.CreateStreamedFileAsync(
-                                Path.ChangeExtension(targetItem.PlayItem.DontSetLocalStorageFile.Name,
-                                    info.format), OnNCMStreamOpened, _coverStreamRefrence);
-                        }
-                    }
-                    else
-                    {
-                        NowPlayingStorageFile = targetItem.PlayItem.DontSetLocalStorageFile;
-                        var item = await LoadStorageFile(targetItem.PlayItem.DontSetLocalStorageFile);
-                        targetItem.ItemType = HyPlayItemType.Local;
-                        targetItem.PlayItem = item.PlayItem;
-                        targetItem.PlayItem.DontSetLocalStorageFile = NowPlayingStorageFile;
-                    }
-                }
+                NowPlayingStorageFile = targetItem.PlayItem.DontSetLocalStorageFile;
             }
             else
             {
-                NowPlayingStorageFile = await StorageFile.GetFileFromPathAsync(targetItem.PlayItem.Url);
+                NowPlayingStorageFile = targetItem.PlayItem.DontSetLocalStorageFile;
+                var item = await LoadStorageFile(targetItem.PlayItem.DontSetLocalStorageFile);
+                targetItem.ItemType = HyPlayItemType.Local;
+                targetItem.PlayItem = item.PlayItem;
+                targetItem.PlayItem.DontSetLocalStorageFile = NowPlayingStorageFile;
             }
         }
+        else
+        {
+            NowPlayingStorageFile = await StorageFile.GetFileFromPathAsync(targetItem.PlayItem.Url);
+        }
+
 
         //Player_SourceChanged(null, null);
     }
-    public static void OnNCMStreamOpened(StreamedFileDataRequest request)
+    public async static Task LoadNCMFile(HyPlayItem targetItem)
     {
-        try
+        // 脑残Music解析
+        using var stream = await targetItem.PlayItem.DontSetLocalStorageFile.OpenStreamForReadAsync();
+        if (NCMFile.IsCorrectNCMFile(stream))
         {
-            using var stream = request.AsStreamForWrite();
-            var playableStream = _ncmPlayableStream.AsStreamForRead();
-            playableStream.CopyTo(stream);
-            _ncmPlayableStream.Dispose();
-            _ncmPlayableStream = null;
-            request.Dispose();
-        }
-        catch(Exception ex)
-        {
-            Common.AddToTeachingTipLists("打开NCM时发生错误", ex.Message);
-            request.FailAndClose(StreamedFileFailureMode.Incomplete);
+            var info = NCMFile.GetNCMMusicInfo(stream);
+            using var coverStream = NCMFile.GetCoverStream(stream);
+            var targetCoverStream = CoverStream.AsStream();
+            coverStream.CopyTo(targetCoverStream);
+            using var encStream = NCMFile.GetEncryptedStream(stream);
+            encStream.Seek(0, SeekOrigin.Begin);
+            var songDataStream = new InMemoryRandomAccessStream();
+            var targetSongDataStream = songDataStream.AsStream();
+            encStream.CopyTo(targetSongDataStream);
+            _ncmPlayableStream = songDataStream;
+            NowPlayingStorageFile = targetItem.PlayItem.DontSetLocalStorageFile;
+            _ncmPlayableStreamMIMEType = NCMFile.NCMFileMIMEType[info.format];
         }
     }
 
@@ -1028,7 +1008,20 @@ public static class HyPlayList
             MoveSongPointer();
             return;
         }
-
+        if (CoverStream.Size != 0)
+        {
+            CoverStream.Size = 0;
+            CoverStream.Seek(0);
+        }
+        if (_ncmPlayableStream != null && _ncmPlayableStream.Size != 0)
+        {
+            _ncmPlayableStream.Dispose();
+            _ncmPlayableStream = null;
+        }
+        if (_ncmPlayableStreamMIMEType != string.Empty)
+        {
+            _ncmPlayableStreamMIMEType = string.Empty;
+        }
         try
         {
             Player.Source = null;
@@ -1042,8 +1035,16 @@ public static class HyPlayList
                     //cnm的NCM,我试试其他方式
                     if (targetItem.PlayItem.IsLocalFile)
                     {
-                        await LoadLocalFile(targetItem);
-                        _mediaSource = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
+                        if (targetItem.PlayItem.DontSetLocalStorageFile.FileType == ".ncm")
+                        {
+                            await LoadNCMFile(targetItem);
+                            _mediaSource = MediaSource.CreateFromStream(_ncmPlayableStream, _ncmPlayableStreamMIMEType);
+                        }
+                        else
+                        {
+                            await LoadLocalFile(targetItem);
+                            _mediaSource = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
+                        }
                     }
                     else
                     {
@@ -1105,14 +1106,22 @@ public static class HyPlayList
                     break;
                 case HyPlayItemType.Local:
                 case HyPlayItemType.LocalProgressive:
-                    try
+                    if (targetItem.PlayItem.DontSetLocalStorageFile.FileType == ".ncm")
                     {
-                        await LoadLocalFile(targetItem);
-                        _mediaSource = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
+                        await LoadNCMFile(targetItem);
+                        _mediaSource = MediaSource.CreateFromStream(_ncmPlayableStream, _ncmPlayableStreamMIMEType);
                     }
-                    catch
+                    else
                     {
-                        _mediaSource = MediaSource.CreateFromUri(new Uri(targetItem.PlayItem.Url));
+                        try
+                        {
+                            await LoadLocalFile(targetItem);
+                            _mediaSource = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
+                        }
+                        catch
+                        {
+                            _mediaSource = MediaSource.CreateFromUri(new Uri(targetItem.PlayItem.Url));
+                        }
                     }
 
                     break;
@@ -1157,67 +1166,61 @@ public static class HyPlayList
             NotifyPlayItemChanged(NowPlayingItem);
             //加载歌词
             _ = LoadLyrics(NowPlayingItem);
-            try
+            if (CoverStream.Size == 0)
             {
-                if (NowPlayingItem.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
+                try
                 {
-                    if(NowPlayingItem.PlayItem.DontSetLocalStorageFile.FileType != ".ncm")
+                    if (NowPlayingItem.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
                     {
-                        if (!Common.Setting.useTaglibPicture || NowPlayingItem.PlayItem.LocalFileTag is null ||
-                        NowPlayingItem.PlayItem.LocalFileTag.Pictures.Length == 0)
+                        if (NowPlayingStorageFile != null)
                         {
-                            if (NowPlayingStorageFile != null)
+                            if (!Common.Setting.useTaglibPicture || NowPlayingItem.PlayItem.LocalFileTag is null ||
+                            NowPlayingItem.PlayItem.LocalFileTag.Pictures.Length == 0)
                             {
-                                _coverStream.Size = 0;
-                                _coverStream.Seek(0);
-                                using var thumbnail = await NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.MusicView, 3000);
-                                var inputStream = thumbnail.AsStreamForRead();
-                                var coverStream = _coverStream.AsStream();
-                                await inputStream.CopyToAsync(coverStream);
+                                if (NowPlayingStorageFile != null)
+                                {
+                                    using var thumbnail = await NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.MusicView, 3000);
+                                    using var inputStream = thumbnail.AsStreamForRead();
+                                    var coverStream = CoverStream.AsStream();
+                                    await inputStream.CopyToAsync(coverStream);
+                                }
+                                else
+                                {
+                                    var file = await StorageFile.GetFileFromPathAsync("/Assets/icon.png");
+                                    using var stream = await file.OpenStreamForReadAsync();
+                                    var coverStream = CoverStream.AsStream();
+                                    await stream.CopyToAsync(coverStream);
+                                }
+
                             }
                             else
                             {
-                                _coverStream.Size = 0;
-                                _coverStream.Seek(0);
-                                var file = await StorageFile.GetFileFromPathAsync("/Assets/icon.png");
-                                using var stream = await file.OpenStreamForReadAsync();
-                                var coverStream = _coverStream.AsStream();
+                                using var stream = new MemoryStream(NowPlayingItem.PlayItem.LocalFileTag.Pictures[0].Data.Data);
+                                var coverStream = CoverStream.AsStream();
                                 await stream.CopyToAsync(coverStream);
                             }
-
-                        }
-                        else
-                        {
-                            _coverStream.Size = 0;
-                            _coverStream.Seek(0);
-                            using var stream = new MemoryStream(NowPlayingItem.PlayItem.LocalFileTag.Pictures[0].Data.Data);
-                            var coverStream = _coverStream.AsStream();
-                            await stream.CopyToAsync(coverStream);
                         }
                     }
                     else
                     {
-
+                        using var httpClient = new HttpClient();
+                        using var result = await httpClient.GetAsync(new Uri(NowPlayingItem.PlayItem.Album.cover + "?param=" + StaticSource.PICSIZE_AUDIO_PLAYER_COVER));
+                        if (!result.IsSuccessStatusCode)
+                        {
+                            throw new Exception("更新SMTC图片时发生异常");
+                        }
+                        await result.Content.WriteToStreamAsync(CoverStream);
                     }
                 }
-                else
+                catch (Exception)
                 {
-                    _coverStream.Size = 0;
-                    _coverStream.Seek(0);
-                    using var httpClient = new HttpClient();
-                    using var result = await httpClient.GetAsync(new Uri(NowPlayingItem.PlayItem.Album.cover +"?param=" + StaticSource.PICSIZE_AUDIO_PLAYER_COVER));
-                    if (!result.IsSuccessStatusCode)
-                    {
-                        throw new Exception("更新SMTC图片时发生异常");
-                    }
-                    await result.Content.WriteToStreamAsync(_coverStream);
+                    //ignore
                 }
             }
-            catch (Exception)
+            if (CoverStream.Size != 0)
             {
-                //ignore
+                OnSongCoverChanged?.Invoke();
             }
-
             _controlsDisplayUpdater.Update();
         }
     }
@@ -1512,7 +1515,7 @@ public static class HyPlayList
     public static HyPlayItem AppendNcSong(NCSong ncSong, int position = -1)
     {
         var hpi = LoadNcSong(ncSong);
-        if(List.Contains(hpi))
+        if (List.Contains(hpi))
         {
             return hpi;
         }
@@ -1528,7 +1531,7 @@ public static class HyPlayList
     {
         if (position < 0)
             position = List.Count;
-        var insertList = ncSongs.Select(LoadNcSong).Where(t=>!List.Contains(t)).ToList();
+        var insertList = ncSongs.Select(LoadNcSong).Where(t => !List.Contains(t)).ToList();
         List.InsertRange(position, insertList);
         SongAppendDone();
         return insertList;

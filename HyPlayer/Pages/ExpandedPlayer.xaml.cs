@@ -3,22 +3,15 @@
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
-using Microsoft.Toolkit.Uwp.UI;
 using Microsoft.Toolkit.Uwp.UI.Media;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Drawing;
-using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Devices.Input;
 using Windows.Graphics.Imaging;
-using Windows.Networking.NetworkOperators;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
@@ -32,7 +25,6 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
-using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using Windows.Web.Http;
 using Buffer = Windows.Storage.Streams.Buffer;
@@ -92,7 +84,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         AnimationDesired = true,
     };
 
-    public Windows.UI.Color?albumMainColor;
+    public Windows.UI.Color? albumMainColor;
     private bool disposedValue;
     public System.Diagnostics.Stopwatch time = new System.Diagnostics.Stopwatch();
 
@@ -106,11 +98,17 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         HyPlayList.OnPlay += HyPlayList_OnPlay;
         HyPlayList.OnLyricChange += RefreshLyricTime;
         HyPlayList.OnPlayItemChange += OnSongChange;
+        HyPlayList.OnSongCoverChanged += HyPlayList_OnSongCoverChanged;
         HyPlayList.OnLyricLoaded += HyPlayList_OnLyricLoaded;
         Window.Current.SizeChanged += Current_SizeChanged;
         HyPlayList.OnTimerTicked += HyPlayList_OnTimerTicked;
         Common.OnEnterForegroundFromBackground += OnEnteringForeground;
         Common.OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;
+    }
+
+    private void HyPlayList_OnSongCoverChanged()
+    {
+        RefreshAlbumCover();
     }
 
     public double showsize { get; set; }
@@ -126,7 +124,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     {
         _ = Common.Invoke(() =>
         {
-            if(!Common.IsInImmerssiveMode)
+            if (!Common.IsInImmerssiveMode)
             {
                 if (Common.Setting.albumRotate)
                     //网易云音乐圆形唱片
@@ -257,120 +255,120 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void Redesign()
     {
-            if (needRedesign > 5) needRedesign = 5;
-            // 这个函数里面放无法用XAML实现的页面布局方式
-            var lyricMargin = LyricBoxContainer.Margin;
-            lyricMargin.Top = ImageAlbum.ActualOffset.Y;
-            LyricBoxContainer.Margin = lyricMargin;
+        if (needRedesign > 5) needRedesign = 5;
+        // 这个函数里面放无法用XAML实现的页面布局方式
+        var lyricMargin = LyricBoxContainer.Margin;
+        lyricMargin.Top = ImageAlbum.ActualOffset.Y;
+        LyricBoxContainer.Margin = lyricMargin;
 
 
-            if (600 > Math.Min(LeftPanel.ActualHeight, MainGrid.ActualHeight))
-            {
-                /*
-                ImageAlbum.Width = Math.Max(Math.Min(MainGrid.ActualHeight, LeftPanel.ActualWidth) - 80, 1);
-                ImageAlbum.Height = ImageAlbum.Width;
-                */
-
-                /*
-                if (ImageAlbum.Width < 250 || iscompact)
-                    SongInfo.Visibility = Visibility.Collapsed;
-                else
-                    SongInfo.Visibility = Visibility.Visible;
-                */
-                SongInfo.Width = ImageAlbum.Width;
-            }
-            else
-            {
-                ImageAlbum.Width = double.NaN;
-                ImageAlbum.Height = double.NaN;
-                SongInfo.Width = double.NaN;
-            }
-
-            BtnToggleFullScreen.IsChecked = ApplicationView.GetForCurrentView().IsFullScreenMode;
-
+        if (600 > Math.Min(LeftPanel.ActualHeight, MainGrid.ActualHeight))
+        {
             /*
-            if (550 > nowwidth)
-            {
-                ImageAlbum.Width = nowwidth - ImageAlbum.ActualOffset.X - 15;
-                LeftPanel.HorizontalAlignment = HorizontalAlignment.Left;
-                ImageAlbum.HorizontalAlignment = HorizontalAlignment.Left;
-            }
-            else
-            {
-                ImageAlbum.Width = double.NaN;
-                LeftPanel.HorizontalAlignment = HorizontalAlignment.Center;
-                ImageAlbum.HorizontalAlignment = HorizontalAlignment.Center;
-            }
+            ImageAlbum.Width = Math.Max(Math.Min(MainGrid.ActualHeight, LeftPanel.ActualWidth) - 80, 1);
+            ImageAlbum.Height = ImageAlbum.Width;
             */
 
-            float sizey = 1;
-            float sizex = 1;
-            if (WindowMode != ExpandedWindowMode.LyricOnly)
-            {
-                if (SongInfo.ActualOffset.Y + SongInfo.ActualHeight > MainGrid.ActualHeight)
-                    sizey = (float)(MainGrid.ActualHeight / (SongInfo.ActualOffset.Y + SongInfo.ActualHeight));
-
-                if (ImageAlbum.ActualOffset.X + ImageAlbum.ActualWidth > LeftPanel.ActualWidth)
-                    sizex = (float)(LeftPanel.ActualWidth / (ImageAlbum.ActualOffset.X + ImageAlbum.ActualWidth));
-                UIAugmentationSys.ChangeView(0, 0, Math.Min(sizex, sizey));
-            }
-            //{//合并显示
-            //    SongInfo.SetValue(Grid.RowProperty, 1);
-            //    SongInfo.VerticalAlignment = VerticalAlignment.Bottom;
-            //    SongInfo.Background = Application.Current.Resources["ExpandedPlayerMask"] as Brush;
-            //}
-            //else
-            //{
-            //    SongInfo.SetValue(Grid.RowProperty, 2);
-            //    SongInfo.VerticalAlignment = VerticalAlignment.Top;
-            //    SongInfo.Background = null;
-            //}
-
             /*
-             // 小窗下的背景替换
-            if ((nowwidth <= 300 || nowheight <= 300) && iscompact && StackPanelTiny.Visibility == Visibility.Collapsed)
-            {
-                ImageAlbum.Visibility = Visibility.Collapsed;
-                PageContainer.Background = null;
-            }
+            if (ImageAlbum.Width < 250 || iscompact)
+                SongInfo.Visibility = Visibility.Collapsed;
             else
-            {
-                ImageAlbum.Visibility = Visibility.Visible;
-                PageContainer.Background = Application.Current.Resources["ExpandedPlayerMask"] as AcrylicBrush;
-            }
+                SongInfo.Visibility = Visibility.Visible;
             */
-            lastChangedLyricWidth = LyricWidth;
+            SongInfo.Width = ImageAlbum.Width;
+        }
+        else
+        {
+            ImageAlbum.Width = double.NaN;
+            ImageAlbum.Height = double.NaN;
+            SongInfo.Width = double.NaN;
+        }
 
-            //歌词宽度
-            if (nowwidth <= 800)
+        BtnToggleFullScreen.IsChecked = ApplicationView.GetForCurrentView().IsFullScreenMode;
+
+        /*
+        if (550 > nowwidth)
+        {
+            ImageAlbum.Width = nowwidth - ImageAlbum.ActualOffset.X - 15;
+            LeftPanel.HorizontalAlignment = HorizontalAlignment.Left;
+            ImageAlbum.HorizontalAlignment = HorizontalAlignment.Left;
+        }
+        else
+        {
+            ImageAlbum.Width = double.NaN;
+            LeftPanel.HorizontalAlignment = HorizontalAlignment.Center;
+            ImageAlbum.HorizontalAlignment = HorizontalAlignment.Center;
+        }
+        */
+
+        float sizey = 1;
+        float sizex = 1;
+        if (WindowMode != ExpandedWindowMode.LyricOnly)
+        {
+            if (SongInfo.ActualOffset.Y + SongInfo.ActualHeight > MainGrid.ActualHeight)
+                sizey = (float)(MainGrid.ActualHeight / (SongInfo.ActualOffset.Y + SongInfo.ActualHeight));
+
+            if (ImageAlbum.ActualOffset.X + ImageAlbum.ActualWidth > LeftPanel.ActualWidth)
+                sizex = (float)(LeftPanel.ActualWidth / (ImageAlbum.ActualOffset.X + ImageAlbum.ActualWidth));
+            UIAugmentationSys.ChangeView(0, 0, Math.Min(sizex, sizey));
+        }
+        //{//合并显示
+        //    SongInfo.SetValue(Grid.RowProperty, 1);
+        //    SongInfo.VerticalAlignment = VerticalAlignment.Bottom;
+        //    SongInfo.Background = Application.Current.Resources["ExpandedPlayerMask"] as Brush;
+        //}
+        //else
+        //{
+        //    SongInfo.SetValue(Grid.RowProperty, 2);
+        //    SongInfo.VerticalAlignment = VerticalAlignment.Top;
+        //    SongInfo.Background = null;
+        //}
+
+        /*
+         // 小窗下的背景替换
+        if ((nowwidth <= 300 || nowheight <= 300) && iscompact && StackPanelTiny.Visibility == Visibility.Collapsed)
+        {
+            ImageAlbum.Visibility = Visibility.Collapsed;
+            PageContainer.Background = null;
+        }
+        else
+        {
+            ImageAlbum.Visibility = Visibility.Visible;
+            PageContainer.Background = Application.Current.Resources["ExpandedPlayerMask"] as AcrylicBrush;
+        }
+        */
+        lastChangedLyricWidth = LyricWidth;
+
+        //歌词宽度
+        if (nowwidth <= 800)
+        {
+            if (!ManualChangeMode && WindowMode == ExpandedWindowMode.Both)
             {
-                if (!ManualChangeMode && WindowMode == ExpandedWindowMode.Both)
-                {
-                    WindowMode = ExpandedWindowMode.CoverOnly;
-                    ChangeWindowMode();
-                }
+                WindowMode = ExpandedWindowMode.CoverOnly;
+                ChangeWindowMode();
             }
-            else if (nowwidth > 800)
+        }
+        else if (nowwidth > 800)
+        {
+            if (!ManualChangeMode && WindowMode != ExpandedWindowMode.Both)
             {
-                if (!ManualChangeMode && WindowMode != ExpandedWindowMode.Both)
-                {
-                    WindowMode = ExpandedWindowMode.Both;
-                    ChangeWindowMode();
-                }
+                WindowMode = ExpandedWindowMode.Both;
+                ChangeWindowMode();
             }
+        }
 
-            LyricBox.Width = LyricWidth;
+        LyricBox.Width = LyricWidth;
 
-            //LyricList.ForEach(t =>
-            //{
-            //    t.Width = LyricWidth;
-            //    t.RefreshFontSize();
-            //});
+        //LyricList.ForEach(t =>
+        //{
+        //    t.Width = LyricWidth;
+        //    t.RefreshFontSize();
+        //});
 
-            ImageRotateTransform.CenterX = ImageAlbum.ActualSize.X / 2;
-            ImageRotateTransform.CenterY = ImageAlbum.ActualSize.Y / 2;
+        ImageRotateTransform.CenterX = ImageAlbum.ActualSize.X / 2;
+        ImageRotateTransform.CenterY = ImageAlbum.ActualSize.Y / 2;
 
-        
+
     }
 
 
@@ -406,6 +404,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         try
         {
             OnSongChange(HyPlayList.List[HyPlayList.NowPlaying]);
+            HyPlayList_OnSongCoverChanged();
             ChangeWindowMode();
             needRedesign++;
         }
@@ -435,7 +434,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void UpdateFocusingLyric(bool recursionLock = false)
     {
-        if (LyricList.Count == 0 || 
+        if (LyricList.Count == 0 ||
             HyPlayList.LyricPos < 0 || HyPlayList.LyricPos >= LyricList.Count) return;
         if (HyPlayList.LyricPos == -1)
         {
@@ -484,7 +483,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         if (HyPlayList.Lyrics.Count == 0)
             LyricList.Add(new(SongLyric.PureSong));
         else
-            HyPlayList.Lyrics.ForEach(t => LyricList.Add(new (t)));
+            HyPlayList.Lyrics.ForEach(t => LyricList.Add(new(t)));
         LyricBox.Width = LyricWidth;
         lastlrcid = HyPlayList.NowPlayingItem.GetHashCode();
         _ = InitLyricTime();
@@ -498,6 +497,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     public void OnEnteringForeground()
     {
         OnSongChange(HyPlayList.NowPlayingItem);
+        HyPlayList_OnSongCoverChanged();
     }
 
     public void OnSongChange(HyPlayItem mpi)
@@ -540,7 +540,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         ForegroundAccentTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
                         ForegroundIdleTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(66, 255, 255, 255));
                         //ImmersiveCover.Color = Windows.UI.Color.FromArgb(255, 35, 35, 35);
-                     }
+                    }
                 }
                 else
                 {
@@ -564,62 +564,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 LoadLyricsBox();
             }
 
-            async Task LoadCoverImage()
-            {
-                try
-                {
-                    if (ImageAlbumSource.UriSource != null)
-                    {
-                        ImageAlbumSource.UriSource = null;
-                    }
-                    if (mpi.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
-                    {
-                        var storageFile = HyPlayList.NowPlayingStorageFile;
-                        if (mpi.PlayItem.DontSetLocalStorageFile != null)
-                            storageFile = mpi.PlayItem.DontSetLocalStorageFile;
-                        if (!Common.Setting.useTaglibPicture || mpi.PlayItem.LocalFileTag is null ||
-                            mpi.PlayItem.LocalFileTag.Pictures.Length == 0)
-                        {
-                            using var thumbnail = await storageFile?.GetThumbnailAsync(ThumbnailMode.MusicView, 9999);
-                            await ImageAlbumSource.SetSourceAsync(thumbnail);
-                        }
-                        else
-                        {
-
-                            using var ras = new MemoryStream(mpi.PlayItem.LocalFileTag.Pictures[0].Data.Data).AsRandomAccessStream();
-                            await ImageAlbumSource.SetSourceAsync(ras);
-                        }
-                        if (Common.Setting.expandedPlayerBackgroundType == 0 && Background?.GetType() != typeof(ImageBrush))
-                        {
-                            var brush = new ImageBrush
-                            { Stretch = Stretch.UniformToFill };
-                            Background = brush;
-                            brush.ImageSource = (ImageSource)ImageAlbum.Source;
-                        }
-                    }
-                    else
-                    {
-                        if (Common.Setting.expandedPlayerFullCover)
-                            ImageAlbumSource.UriSource = new Uri(mpi.PlayItem.Album.cover);
-                        else
-                            ImageAlbumSource.UriSource = new Uri(mpi.PlayItem.Album.cover + "?param=" +
-                                                                        StaticSource
-                                                                            .PICSIZE_EXPANDEDPLAYER_COVER);
-
-                        if (Common.Setting.expandedPlayerBackgroundType == 0 && Background?.GetType() != typeof(ImageBrush))
-                        {
-                            var brush = new ImageBrush
-                            { Stretch = Stretch.UniformToFill };
-                            Background = brush;
-                            brush.ImageSource = (ImageSource)ImageAlbum.Source;
-                        }
-                            
-                    }
-                }
-                catch (Exception)
-                {
-                }
-            }
 
             if (lastlrcid != HyPlayList.NowPlayingItem.GetHashCode())
             {
@@ -635,7 +579,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             }
 
             needRedesign++;
-            _ = LoadCoverImage();
             LoadLyricColor();
         });
     }
@@ -812,11 +755,11 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 buffer.Length = 0;
             }
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             Common.AddToTeachingTipLists("专辑封面保存失败", ex.Message);
         }
-        
+
     }
 
     private void BtnToggleWindowsMode_Checked(object sender, RoutedEventArgs e)
@@ -1055,7 +998,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 break;
         }
 
-        if(!Common.IsInImmerssiveMode)
+        if (!Common.IsInImmerssiveMode)
         {
             if (Common.Setting.albumRotate)
                 //网易云音乐圆形唱片
@@ -1150,7 +1093,28 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             }
         }
     }
+    public void RefreshAlbumCover()
+    {
+        _ = Common.Invoke(async () =>
+        {
+            try
+            {
+                using var coverStream = HyPlayList.CoverStream.CloneStream();
+                await ImageAlbumSource.SetSourceAsync(coverStream);
+                if (Common.Setting.expandedPlayerBackgroundType == 0 && Background?.GetType() != typeof(ImageBrush))
+                {
+                    var brush = new ImageBrush
+                    { Stretch = Stretch.UniformToFill };
+                    Background = brush;
+                    brush.ImageSource = (ImageSource)ImageAlbum.Source;
+                }
+            }
+            catch
+            {
 
+            }
+        });
+    }
     private void Dispose(bool disposing)
     {
         if (!disposedValue)
@@ -1173,7 +1137,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             HyPlayList.OnPlayItemChange -= OnSongChange;
             HyPlayList.OnLyricLoaded -= HyPlayList_OnLyricLoaded;
             HyPlayList.OnTimerTicked -= HyPlayList_OnTimerTicked;
-            Common.OnEnterForegroundFromBackground -= () => OnSongChange(HyPlayList.NowPlayingItem);
+            Common.OnEnterForegroundFromBackground -= OnEnteringForeground;
+            HyPlayList.OnSongCoverChanged -= HyPlayList_OnSongCoverChanged;
             Common.OnPlaybarVisibilityChanged -= OnPlaybarVisibilityChanged;
             if (Window.Current != null)
                 Window.Current.SizeChanged -= Current_SizeChanged;
@@ -1199,7 +1164,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     public void Show()
     {
         time.Reset();
-        MainGrid.Margin = new Thickness(0,0,0,80);
+        MainGrid.Margin = new Thickness(0, 0, 0, 80);
         LyricBoxContainer.Margin = new Thickness(0);
         if (Common.IsInImmerssiveMode)
         {
@@ -1234,7 +1199,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 if (Common.IsInImmerssiveMode)
                 {
                     DefaultRow.Height = new GridLength(1.35, GridUnitType.Star);
-                    LyricBoxContainer.Margin = new Thickness(0,0,0,-30);
+                    LyricBoxContainer.Margin = new Thickness(0, 0, 0, -30);
                 }
                 var BtnAni = new DoubleAnimation
                 {
@@ -1293,7 +1258,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private void ImmersiveModeIn()
     {
         // if (Common.Setting.AutoHidePlaybar)
-        MainGrid.Margin = new Thickness(0,0,0,80);
+        MainGrid.Margin = new Thickness(0, 0, 0, 80);
         DefaultRow.Height = new GridLength(1.1, GridUnitType.Star);
         //MoreBtn.Margin = new Thickness(0,0,30,130);
         Grid.SetRow(LyricBoxContainer, 1);

@@ -15,7 +15,6 @@ using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
-using ColorAnimation = Windows.UI.Xaml.Media.Animation.ColorAnimation;
 
 #endregion
 
@@ -170,7 +169,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
             TextBoxTranslation.FontSize = actualsize + Common.Setting.lyricScaleSize;
             WordLyricContainer.FontSize = actualsize + Common.Setting.lyricScaleSize;
         }
-        if(Common.Setting.PerformanceMode==1)
+        if (Common.Setting.PerformanceMode == 1)
         {
             TextBoxTranslation.FontSize = actualsize + Common.Setting.lyricScaleSize;
         }
@@ -192,7 +191,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
     public void PlayEnterAni()
     {
         double durationInSeconds = 0.6;
-        if(_lyricIsKaraokeLyric)
+        if (_lyricIsKaraokeLyric)
         {
             if (Common.Setting.PerformanceMode != 0)
             {
@@ -223,7 +222,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
         if (Common.Setting.PerformanceMode == 0)
         { }
-        if(Common.Setting.PerformanceMode==1)
+        if (Common.Setting.PerformanceMode == 1)
         {
             var wordStoryboard = new Storyboard();
             var wordScaleAni = new DoubleAnimation
@@ -238,7 +237,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
             wordStoryboard.Children.Add(wordScaleAni);
             wordStoryboard?.Begin();
         }
-        if(Common.Setting.PerformanceMode==2)
+        if (Common.Setting.PerformanceMode == 2)
         {
             var wordStoryboard = new Storyboard();
             var wordScaleAni = new DoubleAnimation
@@ -285,9 +284,9 @@ public sealed partial class LyricItem : UserControl, IDisposable
     public void PlayLeaveAni()
     {
         double durationInSeconds = 0.8;
-        if(_lyricIsKaraokeLyric)
+        if (_lyricIsKaraokeLyric)
         {
-            if (Common.Setting.PerformanceMode !=0)
+            if (Common.Setting.PerformanceMode != 0)
             {
                 WordTextBlocks.ForEach(w =>
                 {
@@ -306,17 +305,17 @@ public sealed partial class LyricItem : UserControl, IDisposable
                 }
                 );
             }
-            else 
+            else
             {
                 WordTextBlocks.ForEach(w =>
                 w.FontSize = actualsize
-                ); ; 
+                ); ;
             }
         }
 
 
-        if (Common.Setting.PerformanceMode==0) { }
-        if(Common.Setting.PerformanceMode==1)
+        if (Common.Setting.PerformanceMode == 0) { }
+        if (Common.Setting.PerformanceMode == 1)
         {
             var wordStoryboard = new Storyboard();
             var wordScaleAni = new DoubleAnimation
@@ -331,7 +330,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
             wordStoryboard.Children.Add(wordScaleAni);
             wordStoryboard?.Begin();
         }
-        if(Common.Setting.PerformanceMode==2)
+        if (Common.Setting.PerformanceMode == 2)
         {
             var wordStoryboard = new Storyboard();
             var wordScaleAni = new DoubleAnimation
@@ -393,7 +392,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
                     TextBoxTranslation.FontSize = actualsize;
                     WordLyricContainer.FontSize = actualsize;
                 }
-                if(Common.Setting.PerformanceMode==1)
+                if (Common.Setting.PerformanceMode == 1)
                 {
                     TextBoxTranslation.FontSize = actualsize;
                 }
@@ -414,7 +413,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
                 WordTextBlocks.ForEach(w =>
                 {
                     var storyboard = new Storyboard();
-                    if(StoryboardDictionary.TryGetValue(w,out storyboard))
+                    if (StoryboardDictionary.TryGetValue(w, out storyboard))
                         storyboard.Stop();
                     w.Foreground.Opacity = 0.4;
                 });
@@ -496,9 +495,9 @@ public sealed partial class LyricItem : UserControl, IDisposable
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
-        private void PointerIn(object sender, PointerRoutedEventArgs e)
+    private void PointerIn(object sender, PointerRoutedEventArgs e)
     {
-        var Instoryboard=new Storyboard();
+        var Instoryboard = new Storyboard();
         var OpacityAni = new DoubleAnimation
         {
             To = 0.15,

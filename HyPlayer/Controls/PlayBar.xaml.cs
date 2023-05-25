@@ -18,7 +18,6 @@ using Windows.Graphics.Imaging;
 using Windows.Media;
 using Windows.Media.Playback;
 using Windows.Storage;
-using Windows.Storage.FileProperties;
 using Windows.Storage.Streams;
 using Windows.System;
 using Windows.System.Profile;
@@ -31,7 +30,6 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
-using Windows.UI.Xaml.Media.Imaging;
 
 #endregion
 
@@ -94,28 +92,22 @@ DoubleAnimation verticalAnimation;
     public async Task RefreshTile()
     {
         if (HyPlayList.NowPlayingItem?.PlayItem == null || !Common.Setting.enableTile) return;
-        string fileName = (int)HyPlayList.NowPlayingItem.ItemType <= 1
-            ? "LocalMusic"
+        string fileName = HyPlayList.NowPlayingItem.PlayItem.IsLocalFile ? null
             : HyPlayList.NowPlayingItem.PlayItem.Album.id;
-        string downloadLink = (int)HyPlayList.NowPlayingItem.ItemType <= 1
-            ? "https://s2.loli.net/2022/07/24/vwmY7t19uXLHPOr.png"
-            : HyPlayList.NowPlayingItem.PlayItem.Album.cover;
-        if (Common.Setting.saveTileBackgroundToLocalFolder && Common.Setting.tileBackgroundAvailability)
+        string downloadLink = string.Empty;
+        if (Common.Setting.saveTileBackgroundToLocalFolder && Common.Setting.tileBackgroundAvailability && !HyPlayList.NowPlayingItem.PlayItem.IsLocalFile)
         {
+            downloadLink = HyPlayList.NowPlayingItem.PlayItem.Album.cover;
             StorageFolder storageFolder =
                 await ApplicationData.Current.TemporaryFolder.CreateFolderAsync("LocalTileBackground",
                     CreationCollisionOption.OpenIfExists);
             if (!await storageFolder.FileExistsAsync(fileName + ".jpg"))
             {
                 StorageFile storageFile = await storageFolder.CreateFileAsync(fileName + ".jpg");
-                using Windows.Web.Http.HttpClient httpClient = new Windows.Web.Http.HttpClient();
-                var responseMessage = await httpClient.GetAsync(new Uri(downloadLink));
                 using IRandomAccessStream outputStream = new InMemoryRandomAccessStream();
-                using IRandomAccessStream inputStream = new InMemoryRandomAccessStream();
-                await responseMessage.Content.WriteToStreamAsync(inputStream);
-                SoftwareBitmap softwareBitmap;
-                BitmapDecoder decoder = await BitmapDecoder.CreateAsync(inputStream);
-                softwareBitmap = await decoder.GetSoftwareBitmapAsync();
+                using var coverStream = HyPlayList.CoverStream.CloneStream();
+                BitmapDecoder decoder = await BitmapDecoder.CreateAsync(coverStream);
+                using var softwareBitmap = await decoder.GetSoftwareBitmapAsync();
                 BitmapEncoder encoder =
                     await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
                 encoder.SetSoftwareBitmap(softwareBitmap);
@@ -124,8 +116,7 @@ DoubleAnimation verticalAnimation;
                 await outputStream.AsStream().CopyToAsync(fileStream);
             }
         }
-
-        var cover = Common.Setting.tileBackgroundAvailability
+        var cover = Common.Setting.tileBackgroundAvailability && !HyPlayList.NowPlayingItem.PlayItem.IsLocalFile
             ? new TileBackgroundImage()
             {
                 Source = Common.Setting.saveTileBackgroundToLocalFolder
@@ -395,49 +386,8 @@ DoubleAnimation verticalAnimation;
     public void LoadPlayingFile(HyPlayItem mpi)
     {
         if (HyPlayList.NowPlayingItem.PlayItem == null) return;
-        _ = Common.Invoke(() =>
+        try
         {
-            if(AlbumImageSource.UriSource!=null)
-            {
-                AlbumImageSource.UriSource = null;
-            }
-        });
-            try
-            {
-            if (!Common.Setting.noImage && !Common.IsInBackground)
-                if (mpi.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
-                {
-                    _ = Common.Invoke(() => Btn_Comment.Visibility = Visibility.Collapsed);
-                    var storageFile = HyPlayList.NowPlayingStorageFile;
-                    if (mpi.PlayItem.DontSetLocalStorageFile != null)
-                        storageFile = mpi.PlayItem.DontSetLocalStorageFile;
-                    _ = Common.Invoke(async () =>
-                    {
-                        if (!Common.Setting.useTaglibPicture || mpi.PlayItem.LocalFileTag is null ||
-                            mpi.PlayItem.LocalFileTag.Pictures.Length == 0)
-                        {
-                            using var thumbnail = await storageFile?.GetThumbnailAsync(ThumbnailMode.MusicView, 9999);
-                            await AlbumImageSource.SetSourceAsync(thumbnail);
-                        }
-                        else
-                        {
-                            using var ras = new MemoryStream(mpi.PlayItem.LocalFileTag.Pictures[0].Data.Data).AsRandomAccessStream();
-                            await AlbumImageSource.SetSourceAsync(ras);
-                        }
-                    });
-                }
-                else
-                {
-                    if (Common.Setting.notClearMode)
-                        _ = Common.Invoke(() => Btn_Comment.Visibility = Visibility.Visible);
-
-                    _ = Common.Invoke(() =>
-                    {
-                        AlbumImageSource.UriSource = new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=" +
-                                                    StaticSource.PICSIZE_PLAYBAR_ALBUMCOVER);
-                    });
-                }
-
             _ = Common.Invoke(() => ApplicationView.GetForCurrentView().Title =
                     $"{HyPlayList.NowPlayingItem.PlayItem.Name} - {HyPlayList.NowPlayingItem.PlayItem.ArtistString}");
         }
@@ -487,7 +437,6 @@ DoubleAnimation verticalAnimation;
                 TbAlbumName.Content = null;
                 ApplicationView.GetForCurrentView().Title = "";
                 TbSongTag.Text = "无歌曲";
-                AlbumImage.Source = null;
                 return;
             }
 
@@ -521,7 +470,7 @@ DoubleAnimation verticalAnimation;
                 HyPlayList.Player.PlaybackSession.Position.ToString(@"m\:ss");
             PlayStateIcon.Glyph =
                 HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
-                    ? "\uF8AE" : 
+                    ? "\uF8AE" :
                     "\uF5B0";
 
             TbSingerName.Content = HyPlayList.NowPlayingItem.PlayItem.ArtistString;
@@ -565,7 +514,10 @@ DoubleAnimation verticalAnimation;
             HistoryManagement.AddNCSongHistory(mpi.PlayItem.Id);
         }
 
-        _ = RefreshTile();
+        if (!Common.Setting.saveTileBackgroundToLocalFolder)
+        {
+            _ = RefreshTile();
+        }
         /*
         verticalAnimation.To = TbSongName.ActualWidth - TbSongName.Tb.ActualWidth;
         verticalAnimation.SpeedRatio = 0.1;
@@ -629,7 +581,7 @@ DoubleAnimation verticalAnimation;
     {
         if (HyPlayList.NowPlayingItem.PlayItem?.Name != null && HyPlayList.Player.Source == null)
             _ = HyPlayList.LoadPlayerSong(HyPlayList.List[HyPlayList.NowPlaying]);
-        PlayStateIcon.Glyph = HyPlayList.IsPlaying ?"\uF8AE" : "\uF5B0"; ;
+        PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uF8AE" : "\uF5B0"; ;
         if (HyPlayList.IsPlaying)
         {
             HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.PauseFadeOut);
@@ -1059,7 +1011,11 @@ DoubleAnimation verticalAnimation;
         FlyoutBtnPlayList.ContextFlyout?.ShowAt(BtnMore);
         ButtonPlayList_OnClick(sender, e);
     }
-
+    private void OnEnteringForeground()
+    {
+        HyPlayList_OnSongCoverChanged();
+        LoadPlayingFile(HyPlayList.NowPlayingItem);
+    }
     private async void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
         InitializedAni.Begin();
@@ -1073,7 +1029,8 @@ DoubleAnimation verticalAnimation;
         HyPlayList.OnSongRemoveAll += HyPlayListOnOnSongRemoveAll;
         HyPlayList.OnLoginDone += HyPlayListOnOnLoginDone;
         HyPlayList.OnSongLikeStatusChange += HyPlayList_OnSongLikeStatusChange;
-        Common.OnEnterForegroundFromBackground += () => LoadPlayingFile(HyPlayList.NowPlayingItem);
+        HyPlayList.OnSongCoverChanged += HyPlayList_OnSongCoverChanged;
+        Common.OnEnterForegroundFromBackground += OnEnteringForeground;
         if (Common.Setting.playbarButtonsTransparent)
         {
             BtnPlayRollType.Background = new SolidColorBrush(Colors.Transparent);
@@ -1084,7 +1041,7 @@ DoubleAnimation verticalAnimation;
         }
 
         if (Common.Setting.playButtonAccentColor)
-        { 
+        {
             BtnPlayStateChange.Background = Resources["SolidPlayButtonColor"] as Brush;
             PlayStateIcon.Foreground = Resources["SolidPlayButtonIconColor"] as Brush;
         }
@@ -1146,6 +1103,33 @@ DoubleAnimation verticalAnimation;
         Storyboard.SetTargetProperty(verticalAnimation, "Horizontalofset");
         TbSongNameScrollStoryBoard.Begin();
         */
+    }
+
+    private void HyPlayList_OnSongCoverChanged()
+    {
+        RefreshPlayBarCover();
+    }
+    public void RefreshPlayBarCover()
+    {
+        _ = Common.Invoke(async () =>
+        {
+            if (GridSongInfo.Visibility == Visibility.Visible && Opacity != 0)
+            {
+                try
+                {
+                    using var coverStream = HyPlayList.CoverStream.CloneStream();
+                    await AlbumImageSource.SetSourceAsync(coverStream);
+                }
+                catch
+                {
+
+                }
+            }
+        });
+        if (Common.Setting.saveTileBackgroundToLocalFolder)
+        {
+            _ = RefreshTile();
+        }
     }
 
     private void HyPlayList_OnSongLikeStatusChange(bool isLiked)

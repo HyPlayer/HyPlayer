@@ -203,7 +203,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
 
                 Picture pic;
                 using HttpClient httpClient = new HttpClient();
-                var responseMessage = await httpClient.GetAsync(new Uri(ncsong.Album.cover + "?param=" +
+                using var responseMessage = await httpClient.GetAsync(new Uri(ncsong.Album.cover + "?param=" +
                                                                         StaticSource.PICSIZE_DOWNLOAD_ALBUMCOVER));
                 using IRandomAccessStream outputStream = new InMemoryRandomAccessStream();
                 using IRandomAccessStream inputStream = new InMemoryRandomAccessStream();

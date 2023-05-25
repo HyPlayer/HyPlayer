@@ -2,7 +2,7 @@
 
 internal static class StaticSource
 {
-    public static string PICSIZE_AUDIO_PLAYER_COVER = "100y100";
+    public static string PICSIZE_AUDIO_PLAYER_COVER = "640x640";
     public static string PICSIZE_PLAYLIST_ITEM_COVER = "250y250";
     public static string PICSIZE_SIMPLE_LINER_LIST_ITEM = "250y250";
     public static string PICSIZE_SINGLENCSONG_COVER = "75y75";

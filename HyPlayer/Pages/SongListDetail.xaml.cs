@@ -15,7 +15,6 @@ using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 
 #endregion
@@ -89,9 +88,9 @@ public sealed partial class SongListDetail : Page, IDisposable
     }
     public void UpdateLikeBtnStyle()
     {
-        if((bool)ButtonLike.Tag == true)
+        if ((bool)ButtonLike.Tag == true)
         {
-            LikedIcon.Glyph= "\uE10B";
+            LikedIcon.Glyph = "\uE10B";
             LikeBtnText.Text = "已收藏";
         }
         else
@@ -175,7 +174,7 @@ public sealed partial class SongListDetail : Page, IDisposable
                 json["playlist"]["userId"].ToString() == Common.LoginedUser?.id)
             {
                 ButtonIntel.Visibility = Visibility.Visible;
-                BtnsPanel.Margin=new Thickness(0,12,0,-12);
+                BtnsPanel.Margin = new Thickness(0, 12, 0, -12);
                 SongsList.IsMySongList = true;
             }
 
@@ -420,7 +419,7 @@ public sealed partial class SongListDetail : Page, IDisposable
     private void BtnComment_OnClick(object sender, RoutedEventArgs e)
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
-        Common.NavigatePage(typeof(Comments), "pl" + playList.plid) ;
+        Common.NavigatePage(typeof(Comments), "pl" + playList.plid);
     }
 
     private async void Description_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)

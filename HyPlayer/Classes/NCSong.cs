@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using TagLib;
 using Windows.Storage;
-using Windows.UI.Xaml.Media.Imaging;
 
 #endregion
 
@@ -172,7 +171,7 @@ public class NCSong
     public Uri Cover =>
         Common.Setting.noImage
             ? null
-            : new Uri((Album.cover ?? 
+            : new Uri((Album.cover ??
                 "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg") +
                 "?param=" +
                 StaticSource.PICSIZE_SINGLENCSONG_COVER);

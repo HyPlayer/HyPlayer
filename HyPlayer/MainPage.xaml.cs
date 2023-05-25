@@ -1,7 +1,6 @@
 ﻿#region
 
 using HyPlayer.Classes;
-using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
 using System;
@@ -33,7 +32,7 @@ public sealed partial class MainPage
         Common.ncapi.Proxy = new WebProxy(Setting.GetSettings<string>("neteaseProxy", null));
         Common.ncapi.UseProxy = !(ApplicationData.Current.LocalSettings.Values["neteaseProxy"] is null);
         Common.ncapi.UseHttp = Setting.GetSettings<bool>("UseHttp", false);
-        StaticSource.PICSIZE_AUDIO_PLAYER_COVER = Common.Setting.highQualityCoverInSMTC ? "1024y1024" : "100y100";
+        StaticSource.PICSIZE_AUDIO_PLAYER_COVER = Common.Setting.highQualityCoverInSMTC ? "1024y1024" : "640x640";
         if (Common.Setting.uiSound)
         {
             ElementSoundPlayer.State = ElementSoundPlayerState.Off;
@@ -111,6 +110,7 @@ public sealed partial class MainPage
             //lyricstoryboard.Begin();
 
             PointerInAni.Begin();
+            Common.BarPlayBar.RefreshPlayBarCover();
             var BlankAni = new DoubleAnimation
             {
                 To = 0,
@@ -122,7 +122,6 @@ public sealed partial class MainPage
             Storyboard.SetTargetProperty(BlankAni, "Opacity");
             storyboard.Children.Add(BlankAni);
             storyboard.Begin();
-
         }
 
     }
@@ -178,7 +177,7 @@ public sealed partial class MainPage
         Storyboard.SetTargetProperty(BlankAni, "Opacity");
         storyboard.Children.Add(BlankAni);
         storyboard.Begin();
-
+        Common.PageBase.RefreshNavItemCover();
 
     }
     private void Page_PointerEntered(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
