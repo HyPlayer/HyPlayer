@@ -1162,54 +1162,7 @@ public static class HyPlayList
             ApplicationData.Current.LocalSettings.Values["nowSongPointer"] = NowPlaying.ToString();
             if (CoverStream.Size == 0)
             {
-                try
-                {
-                    if (NowPlayingItem.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
-                    {
-                        if (NowPlayingStorageFile != null)
-                        {
-                            if (!Common.Setting.useTaglibPicture || NowPlayingItem.PlayItem.LocalFileTag is null ||
-                            NowPlayingItem.PlayItem.LocalFileTag.Pictures.Length == 0)
-                            {
-                                if (NowPlayingStorageFile != null)
-                                {
-                                    using var thumbnail = await NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.MusicView, 3000);
-                                    using var inputStream = thumbnail.AsStreamForRead();
-                                    var coverStream = CoverStream.AsStream();
-                                    await inputStream.CopyToAsync(coverStream);
-                                }
-                                else
-                                {
-                                    var file = await StorageFile.GetFileFromPathAsync("/Assets/icon.png");
-                                    using var stream = await file.OpenStreamForReadAsync();
-                                    var coverStream = CoverStream.AsStream();
-                                    await stream.CopyToAsync(coverStream);
-                                }
-
-                            }
-                            else
-                            {
-                                using var stream = new MemoryStream(NowPlayingItem.PlayItem.LocalFileTag.Pictures[0].Data.Data);
-                                var coverStream = CoverStream.AsStream();
-                                await stream.CopyToAsync(coverStream);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        using var httpClient = new HttpClient();
-                        using var result = await httpClient.GetAsync(new Uri(NowPlayingItem.PlayItem.Album.cover + "?param=" + StaticSource.PICSIZE_AUDIO_PLAYER_COVER));
-                        if (!result.IsSuccessStatusCode)
-                        {
-                            throw new Exception("更新SMTC图片时发生异常");
-                        }
-                        await result.Content.WriteToStreamAsync(CoverStream);
-                    }
-                }
-                catch (Exception)
-                {
-                    //ignore
-                }
+                await RefreshAlbumCover();
             }
             if (CoverStream.Size != 0)
             {
@@ -1222,6 +1175,63 @@ public static class HyPlayList
             _controlsDisplayUpdater.Update();
         }
     }
+
+    public static async Task RefreshAlbumCover()
+    {
+        try
+        {
+            if (NowPlayingItem.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
+            {
+                if (NowPlayingStorageFile != null)
+                {
+                    if (!Common.Setting.useTaglibPicture || NowPlayingItem.PlayItem.LocalFileTag is null ||
+                        NowPlayingItem.PlayItem.LocalFileTag.Pictures.Length == 0)
+                    {
+                        if (NowPlayingStorageFile != null)
+                        {
+                            using var thumbnail =
+                                await NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.MusicView, 3000);
+                            using var inputStream = thumbnail.AsStreamForRead();
+                            var coverStream = CoverStream.AsStream();
+                            await inputStream.CopyToAsync(coverStream);
+                        }
+                        else
+                        {
+                            var file = await StorageFile.GetFileFromPathAsync("/Assets/icon.png");
+                            using var stream = await file.OpenStreamForReadAsync();
+                            var coverStream = CoverStream.AsStream();
+                            await stream.CopyToAsync(coverStream);
+                        }
+                    }
+                    else
+                    {
+                        using var stream = new MemoryStream(NowPlayingItem.PlayItem.LocalFileTag.Pictures[0].Data.Data);
+                        var coverStream = CoverStream.AsStream();
+                        await stream.CopyToAsync(coverStream);
+                    }
+                }
+            }
+            else
+            {
+                using var httpClient = new HttpClient();
+                var url = NowPlayingItem.PlayItem.Album.cover;
+                if (!Common.IsInImmerssiveMode && !Common.Setting.highQualityCoverInSMTC)
+                    url += "?param=" + StaticSource.PICSIZE_AUDIO_PLAYER_COVER;
+                using var result = await httpClient.GetAsync(new Uri(url));
+                if (!result.IsSuccessStatusCode)
+                {
+                    throw new Exception("更新SMTC图片时发生异常");
+                }
+
+                await result.Content.WriteToStreamAsync(CoverStream);
+            }
+        }
+        catch (Exception)
+        {
+            //ignore
+        }
+    }
+    
     public static void NotifyPlayItemChanged(HyPlayItem targetItem)
     {
         OnPlayItemChange?.Invoke(targetItem);

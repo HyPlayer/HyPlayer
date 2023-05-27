@@ -13,7 +13,7 @@
     Loaded="Page_Loaded"
     NavigationCacheMode="Disabled">
     <Page.Resources>
-        <!--  ReSharper disable once Xaml.RedundantResource  -->
+        <!-- ReSharper disable once Xaml.RedundantResource -->
         <Storyboard x:Key="ImageAlbumAni" x:Name="ImageAlbumAni">
             <DoubleAnimation
                 AutoReverse="True"
@@ -125,6 +125,7 @@
 
 
         <media:AttachedCardShadow
+            x:Name="AlbumCoverDropShadow"
             x:Key="AlbumShadow"
             CornerRadius="12"
             Opacity="{x:Bind hyplayer:Common.Setting.expandedCoverShadowDepth, Converter={StaticResource ShadowConverter}}"

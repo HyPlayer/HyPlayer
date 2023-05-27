@@ -525,8 +525,11 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 {
                     if (Common.Setting.expandedPlayerBackgroundType == 0)
                     {
-                        var CoverColor = albumMainColor.Value;
-                        ImmersiveCover.Color = CoverColor;
+                        if (albumMainColor != null)
+                        {
+                            var coverColor = albumMainColor.Value;
+                            ImmersiveCover.Color = coverColor;
+                        }
                     }
                     if (isBright)
                     {
@@ -864,8 +867,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         {
             using var coverStream = HyPlayList.CoverStream.CloneStream();
             BitmapDecoder decoder = await BitmapDecoder.CreateAsync(coverStream);
-            var colorThief = new ColorThief();
-            var color = await colorThief.GetColor(decoder, ignoreWhite: false);
+            var color = await Common.ColorThief.GetColor(decoder, ignoreWhite: false);
             //var c = GetPixel(bytes, 0, 0, decoder.PixelWidth, decoder.PixelHeight);
             lastSongForBrush = HyPlayList.NowPlayingItem.PlayItem;
             albumMainColor = Windows.UI.Color.FromArgb(color.Color.A, color.Color.R, color.Color.G, color.Color.B);
@@ -1240,12 +1242,15 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         // if (Common.Setting.AutoHidePlaybar)
         MainGrid.Margin = new Thickness(0, 0, 0, 80);
         DefaultRow.Height = new GridLength(1.1, GridUnitType.Star);
+        // Clear Shadow
+        AlbumCoverDropShadow.Opacity = 0;
         //MoreBtn.Margin = new Thickness(0,0,30,130);
         Grid.SetRow(LyricBoxContainer, 1);
         ImageAlbumAni.Pause();
         ImmersiveModeInAni.Begin();
         LeftPanel.VerticalAlignment = VerticalAlignment.Bottom;
         Common.IsInImmerssiveMode = true;
+         _ = HyPlayList.RefreshAlbumCover();
     }
     private void ImmersiveModeExit()
     {
@@ -1253,6 +1258,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         MainGrid.Margin = new Thickness(0, 0, 0, 80);
         LyricBoxContainer.Margin = new Thickness(0);
         DefaultRow.Height = new GridLength(25, GridUnitType.Star);
+        AlbumCoverDropShadow.Opacity = (double)Common.Setting.expandedCoverShadowDepth / 10;
         Grid.SetRow(LyricBoxContainer, 0);
         ImageAlbumAni.Begin();
         ImmersiveModeOutAni.Begin();
