@@ -38,8 +38,27 @@ public sealed partial class LyricItem : UserControl, IDisposable
     public LyricItem(SongLyric lrc)
     {
         Lrc = lrc;
-        _lyricIsKaraokeLyric = typeof(KaraokeLyricsLine) == lrc.LyricLine.GetType();
+        _lyricIsKaraokeLyric = lrc.LyricLine is KaraokeLyricsLine;
+        HyPlayList.OnLyricColorChange += LyricColorRefresh;
         InitializeComponent();
+    }
+
+    private void LyricColorRefresh()
+    {
+        if (_lyricIsOnShow)
+        {
+            TextBoxPureLyric.Foreground = AccentBrush;
+            TextBoxSound.Foreground = AccentBrush;
+            TextBoxTranslation.Foreground = AccentBrush;
+            RefreshWordColor(HyPlayList.Player.Position);
+        }
+        else
+        {
+            TextBoxPureLyric.Foreground = IdleBrush;
+            TextBoxSound.Foreground = IdleBrush;
+            TextBoxTranslation.Foreground = IdleBrush;
+        }
+        
     }
 
 
@@ -480,6 +499,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
                 StoryboardDictionary.Clear();
             }
             if (_lyricIsKaraokeLyric) HyPlayList.OnPlayPositionChange -= RefreshWordColor;
+            HyPlayList.OnLyricColorChange -= LyricColorRefresh;
             disposedValue = true;
         }
     }

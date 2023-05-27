@@ -34,6 +34,7 @@ public static class HyPlayList
     public delegate void LoginDoneEvent();
 
     public delegate void LyricChangeEvent();
+    public delegate void LyricColorChangeEvent();
 
     public delegate void LyricLoadedEvent();
 
@@ -191,6 +192,7 @@ public static class HyPlayList
     public static event LyricLoadedEvent OnLyricLoaded;
 
     public static event LyricChangeEvent OnLyricChange;
+    public static event LyricColorChangeEvent OnLyricColorChange;
 
     public static event MediaEndEvent OnMediaEnd;
 
@@ -253,6 +255,11 @@ public static class HyPlayList
         Common.IsInFm = false;
     }
 
+    public static void FireLyricColorChangeEvent()
+    {
+        OnLyricColorChange?.Invoke();
+    }
+    
     public static void UpdateSmtcPosition(MediaPlaybackSession sender, object args)
     {
         MediaSystemControls.PlaybackRate = Player.PlaybackSession.PlaybackRate;
@@ -1143,6 +1150,7 @@ public static class HyPlayList
     public static async void Player_SourceChanged(MediaPlayer sender, object args)
     {
         if (List.Count <= NowPlaying) return;
+        if (sender.Source == null && NowPlayingItem.PlayItem != null) return;
         SongFadeRequest(SongFadeEffectType.NextFadeIn);
         //当加载一个新的播放文件时,此时你应当加载歌词和 SystemMediaTransportControls
         //加载 SystemMediaTransportControls
