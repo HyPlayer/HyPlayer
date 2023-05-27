@@ -78,6 +78,13 @@
                             <controls:ImageEx.Source>
                                 <BitmapImage x:Name="ImageSource" />
                             </controls:ImageEx.Source>
+                            <ui:Effects.Shadow>
+                                <media:AttachedCardShadow
+                                    CornerRadius="8"
+                                    Opacity="0.3"
+                                    Offset="0,4,1"
+                                    Color="Black" />
+                            </ui:Effects.Shadow>
                         </controls:ImageEx>
                         <StackPanel
                             Grid.Column="1"
