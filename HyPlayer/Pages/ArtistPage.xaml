@@ -135,7 +135,7 @@
                 <PivotItem Header="全部歌曲">
                     <controls1:SongsList
                         x:Name="AllSongContainer"
-                        Margin="20,0,0,0"
+                        Margin="-12,0"
                         Songs="{x:Bind allSongs, Mode=OneWay}">
                         <controls1:SongsList.ListHeader>
                             <Rectangle Height="{x:Bind PivotView.HeaderHeight, Mode=OneWay}" Margin="0,-20,0,0" />
@@ -155,7 +155,7 @@
                     </controls1:SongsList>
                 </PivotItem>
                 <PivotItem Header="专辑">
-                    <controls1:SimpleLinerList x:Name="AlbumContainer" Margin="20,0,0,0">
+                    <controls1:SimpleLinerList x:Name="AlbumContainer" >
                         <controls1:SimpleLinerList.ListHeader>
                             <Rectangle Height="{x:Bind PivotView.HeaderHeight, Mode=OneWay}" />
                         </controls1:SimpleLinerList.ListHeader>
