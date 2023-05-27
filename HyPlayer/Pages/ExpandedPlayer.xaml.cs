@@ -1241,6 +1241,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         // if (Common.Setting.AutoHidePlaybar)
         MainGrid.Margin = new Thickness(0, 0, 0, 80);
         DefaultRow.Height = new GridLength(1.1, GridUnitType.Star);
+        // Clear Shadow
+        AlbumCoverDropShadow.Opacity = 0;
         //MoreBtn.Margin = new Thickness(0,0,30,130);
         Grid.SetRow(LyricBoxContainer, 1);
         ImageAlbumAni.Pause();
@@ -1254,6 +1256,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         MainGrid.Margin = new Thickness(0, 0, 0, 80);
         LyricBoxContainer.Margin = new Thickness(0);
         DefaultRow.Height = new GridLength(25, GridUnitType.Star);
+        AlbumCoverDropShadow.Opacity = (double)Common.Setting.expandedCoverShadowDepth / 10;
         Grid.SetRow(LyricBoxContainer, 0);
         ImageAlbumAni.Begin();
         ImmersiveModeOutAni.Begin();
