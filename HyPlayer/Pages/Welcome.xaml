@@ -20,8 +20,7 @@
                 Source="Assets/icon.png" />
             <StackPanel VerticalAlignment="Center" 
                         Spacing="8">
-                <TextBlock x:Name="TBHINT"
-                           Text="欢迎使用HyPlayer!" 
+                <TextBlock x:Name="TBHINT" Text="欢迎使用 HyPlayer!" 
                            Style="{StaticResource TitleTextBlockStyle}"/>
                 <TextBlock Text="推荐您在登录后进入设置进行个性化" 
                            Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
