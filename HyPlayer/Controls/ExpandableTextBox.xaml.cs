@@ -31,15 +31,15 @@ public sealed partial class ExpandableTextBox : UserControl
     public ExpandableTextBox()
     {
         InitializeComponent();
-        
+        MyTextBlock.IsTextTrimmedChanged += MyTextBlock_IsTextTrimmedChanged;
+        ExpandButton.Visibility = Visibility.Collapsed;
     }
 
-    private void ExpandableTextBox_SizeChanged(object sender, SizeChangedEventArgs e)
+    private void MyTextBlock_IsTextTrimmedChanged(TextBlock sender, IsTextTrimmedChangedEventArgs args)
     {
-        if (MyTextBlock.IsTextTrimmed)
+        if (MyTextBlock.IsTextTrimmed || _isExpanded)
         {
             ExpandButton.Visibility = Visibility.Visible;
-            ActualMaxLine = MaxLines;
         }
         else
         {
