@@ -31,7 +31,6 @@ public sealed partial class SongListDetail : Page, IDisposable
     public static readonly DependencyProperty IsLoadingProperty = DependencyProperty.Register(
         "IsLoading", typeof(bool), typeof(SongListDetail), new PropertyMetadata(true));
 
-    private bool isDescExpanded = false;
     private int page;
     public NCPlayList playList;
     public ObservableCollection<NCSong> Songs;

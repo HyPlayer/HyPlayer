@@ -102,7 +102,7 @@ CheckNetIsolation LoopbackExempt -a -n="48848aaaaaaccd.hyplayer_fkcggvf9kbkw0"
 * TagLibSharp [mono/taglib-sharp](https://github.com/mono/taglib-sharp) (LGPL)
 * LyricParser [HyPlayer/LrcParser](https://github.com/HyPlayer/LyricParser) (MIT License)
 * Inflatable Last.fm [inflatablefriends/lastfm](https://github.com/inflatablefriends/lastfm) ([MIT Licence](https://github.com/inflatablefriends/lastfm/blob/next/LICENCE.md))
-* KSemenenko ColorThief[KSemenenko/ColorThief](https://github.com/KSemenenko/ColorThief) ([MIT License](https://github.com/KSemenenko/ColorThief/blob/master/LICENSE))
+* KSemenenko ColorThief [KSemenenko/ColorThief](https://github.com/KSemenenko/ColorThief) ([MIT License](https://github.com/KSemenenko/ColorThief/blob/master/LICENSE))
 
 
 

@@ -90,7 +90,6 @@ public static class HyPlayList
     private static MediaSource _mediaSource;
 
     public static int LyricPos;
-    private static string _crashedTime;
 
     public static string PlaySourceId;
     private static double _playerOutgoingVolume;

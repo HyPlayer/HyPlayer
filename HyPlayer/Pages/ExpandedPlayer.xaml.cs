@@ -76,7 +76,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private bool programClick;
     private bool realclick;
     private int sclock;
-    private int scrollFailCount = 0;
     private ExpandedWindowMode WindowMode;
 
     private readonly BringIntoViewOptions DefaultBringIntoViewOptions = new BringIntoViewOptions()

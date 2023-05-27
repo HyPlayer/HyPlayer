@@ -57,7 +57,6 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
     private SolidColorBrush? _pureIdleBrushCache;
     private SolidColorBrush? _pureAccentBrushCache;
-    private Color? _karaokIdleColorCache;
     private Color? _karaokAccentColorCache;
     private bool disposedValue;
 

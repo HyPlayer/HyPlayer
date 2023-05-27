@@ -33,7 +33,6 @@ public sealed partial class AlbumPage : Page, IDisposable
     private string albumid;
     private readonly CollectionViewSource AlbumSongsViewSource = new() { IsSourceGrouped = true };
     private List<NCArtist> artists = new();
-    private int page;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
     private Task _albumDynamicLoaderTask;
