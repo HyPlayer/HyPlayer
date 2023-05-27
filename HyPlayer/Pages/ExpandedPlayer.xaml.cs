@@ -526,8 +526,11 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 {
                     if (Common.Setting.expandedPlayerBackgroundType == 0)
                     {
-                        var CoverColor = albumMainColor.Value;
-                        ImmersiveCover.Color = CoverColor;
+                        if (albumMainColor != null)
+                        {
+                            var coverColor = albumMainColor.Value;
+                            ImmersiveCover.Color = coverColor;
+                        }
                     }
                     if (isBright)
                     {
@@ -1249,6 +1252,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         ImmersiveModeInAni.Begin();
         LeftPanel.VerticalAlignment = VerticalAlignment.Bottom;
         Common.IsInImmerssiveMode = true;
+         _ = HyPlayList.RefreshAlbumCover();
     }
     private void ImmersiveModeExit()
     {
