@@ -18,7 +18,6 @@
             Name="SongContainer"
             IsItemClickEnabled="True"
             ItemClick="SongContainer_ItemClick"
-            ItemContainerStyle="{ThemeResource ListViewItemStyle}"
             ItemsSource="{x:Bind VisibleSongs}"
             SelectionMode="{x:Bind MultiSelect, Converter={StaticResource SelectModeConverter}, Mode=OneWay}"
             ShowsScrollingPlaceholders="True">
