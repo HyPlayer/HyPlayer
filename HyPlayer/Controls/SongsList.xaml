@@ -66,6 +66,7 @@
                                     </muxc:NavigationViewItem.InfoBadge>
                                 </muxc:NavigationViewItem>
                                 <muxc:NavigationViewItem
+                                    Visibility="{x:Bind CanViewComments,Mode=OneWay}"
                                     Content="评论"
                                     SelectsOnInvoked="False"
                                     Tag="Comments">

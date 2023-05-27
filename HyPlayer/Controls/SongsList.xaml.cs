@@ -64,6 +64,8 @@ public sealed partial class SongsList : UserControl, IDisposable
 
     private readonly ObservableCollection<NCSong> VisibleSongs = new();
 
+    public static readonly DependencyProperty CanViewCommentsProperty = DependencyProperty.Register(
+    "CanViewComments", typeof(bool), typeof(SongsList), new PropertyMetadata(false));
     //public bool IsManualSelect = true;
 
     public SongsList()
@@ -138,6 +140,11 @@ public sealed partial class SongsList : UserControl, IDisposable
         }
     }
 
+    public bool CanViewComments
+    {
+        get => (bool)GetValue(CanViewCommentsProperty);
+        set => SetValue(CanViewCommentsProperty, value);
+    }
 
     public string ListSource
     {

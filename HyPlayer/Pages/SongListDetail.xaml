@@ -44,7 +44,8 @@
             x:Name="SongsList"
             Grid.RowSpan="2"
             IsSearchEnabled="True"
-            Songs="{x:Bind Songs}">
+            Songs="{x:Bind Songs}"
+            CanViewComments="True">
             <controls1:SongsList.ListHeader>
                 <Grid>
                     <Border
