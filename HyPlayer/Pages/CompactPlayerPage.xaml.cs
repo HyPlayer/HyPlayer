@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using TagLib.Ape;
 using Windows.Storage.FileProperties;
 using Windows.UI;
 using Windows.UI.Text;
@@ -33,9 +34,6 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
 
     public static readonly DependencyProperty TotalProgressProperty = DependencyProperty.Register(
         "TotalProgress", typeof(double), typeof(CompactPlayerPage), new PropertyMetadata(default(double)));
-
-    public static readonly DependencyProperty AlbumCoverProperty = DependencyProperty.Register(
-        "AlbumCover", typeof(Brush), typeof(CompactPlayerPage), new PropertyMetadata(default(Brush)));
 
     public static readonly DependencyProperty ControlHoverProperty = DependencyProperty.Register(
         "ControlHover", typeof(Brush), typeof(CompactPlayerPage),
@@ -68,11 +66,8 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     private List<Run> WordTextBlocks = new();
     private Dictionary<Run, Storyboard> BlockToAnimation = new();
 
-    private SolidColorBrush IdleBrush => GetIdleBrush();
 #nullable enable
     private SolidColorBrush? _pureIdleBrushCache;
-    private SolidColorBrush? _pureAccentBrushCache;
-    private Color? _karaokIdleColorCache;
     private Color? _karaokAccentColorCache;
 #nullable restore
     private bool disposedValue;
@@ -88,35 +83,11 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
             : (Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush)!.Color;
     }
 
-
-    private SolidColorBrush GetAccentBrush()
-    {
-        if (Common.Setting.pureLyricFocusingColor is not null)
-        {
-            return _pureAccentBrushCache ??= new SolidColorBrush(Common.Setting.pureLyricFocusingColor.Value);
-        }
-        return (Common.PageExpandedPlayer != null
-            ? Common.PageExpandedPlayer.ForegroundAccentTextBrush
-            : Application.Current.Resources["SystemControlPageTextBaseHighBrush"] as SolidColorBrush)!;
-    }
-
-    private SolidColorBrush GetIdleBrush()
-    {
-        if (Common.Setting.pureLyricIdleColor is not null)
-        {
-            return _pureIdleBrushCache ??= new SolidColorBrush(Common.Setting.pureLyricIdleColor.Value);
-        }
-
-        return (Common.PageExpandedPlayer != null
-            ? Common.PageExpandedPlayer.ForegroundIdleTextBrush
-            : Application.Current.Resources["TextFillColorTertiaryBrush"] as SolidColorBrush)!;
-    }
-
     public CompactPlayerPage()
     {
         InitializeComponent();
-        HyPlayList.OnPlayPositionChange +=
-            position => _ = Common.Invoke(() => NowProgress = position.TotalMilliseconds);
+        HyPlayList.OnSongCoverChanged += HyPlayList_OnSongCoverChanged;
+        HyPlayList.OnPlayPositionChange += HyPlayList_OnPlayPositionChange;
         HyPlayList.OnPlayItemChange += OnChangePlayItem;
         HyPlayList.OnPlay += HyPlayList_OnPlay;
         HyPlayList.OnPause += HyPlayList_OnPause;
@@ -125,6 +96,35 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         LeaveAnimation.Completed += LeaveAnimation_Completed;
         Common.OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;
         //CompactPlayerAni.Begin();
+    }
+
+    private void HyPlayList_OnSongCoverChanged()
+    {
+            if (!Common.Setting.noImage)
+        {
+            _ = Common.Invoke(async() =>
+            {
+                try
+                {
+                    using var coverStream = HyPlayList.CoverStream.CloneStream();
+                    if (coverStream.Size != 0)
+                    {
+                        await AlbumImageBrushSource.SetSourceAsync(coverStream);
+                    }
+                }
+                catch 
+                { 
+
+                }
+                
+            });
+            
+        }         
+    }
+
+    private void HyPlayList_OnPlayPositionChange(TimeSpan position)
+    {
+        _ = Common.Invoke(() => NowProgress = position.TotalMilliseconds);
     }
 
     private void HyPlayList_OnPlay()
@@ -183,12 +183,6 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     {
         get => (double)GetValue(TotalProgressProperty);
         set => SetValue(TotalProgressProperty, value);
-    }
-
-    public Brush AlbumCover
-    {
-        get => (Brush)GetValue(AlbumCoverProperty);
-        set => SetValue(AlbumCoverProperty, value);
     }
 
     public Brush ControlHover
@@ -309,36 +303,10 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
 
     private void OnChangePlayItem(HyPlayItem item)
     {
-        _ = Common.Invoke(async () =>
+        _ = Common.Invoke(() =>
         {
             NowPlayingName = item?.PlayItem?.Name;
             NowPlayingArtists = item?.PlayItem?.ArtistString;
-            BitmapImage img = null;
-            var brush = new ImageBrush { Stretch = Stretch.UniformToFill };
-            AlbumCover = brush;
-            if (item != null)
-                if (!Common.Setting.noImage)
-                    if (item.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
-                    {
-                        img = new BitmapImage();
-                        if (!Common.Setting.useTaglibPicture || item.PlayItem?.LocalFileTag is null || item.PlayItem.LocalFileTag.Pictures.Length == 0)
-                        {
-                            await img.SetSourceAsync(
-                                await HyPlayList.NowPlayingStorageFile?.GetThumbnailAsync(ThumbnailMode.MusicView, 9999));
-                        }
-                        else
-                        {
-                            using var stream = new MemoryStream(item.PlayItem.LocalFileTag.Pictures[0].Data.Data).AsRandomAccessStream();
-                            await img.SetSourceAsync(stream);
-                        }
-                    }
-                    else
-                    {
-                        img = new BitmapImage();
-                        img.UriSource = new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=" + StaticSource.PICSIZE_EXPANDEDPLAYER_COVER);
-                    }
-            TotalProgress = item?.PlayItem?.LengthInMilliseconds ?? 0;
-            brush.ImageSource = img;
         });
         if (item.ItemType is not HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
         {
@@ -353,6 +321,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
                     : "\uE006";
             });
         }
+        TotalProgress = item?.PlayItem?.LengthInMilliseconds ?? 0;
     }
     public void RefreshWordColor(TimeSpan position)
     {
@@ -398,6 +367,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     {
         base.OnNavigatedTo(e);
         OnChangePlayItem(HyPlayList.NowPlayingItem);
+        HyPlayList_OnSongCoverChanged();
         PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uEDB4" : "\uEDB5";
         Common.BarPlayBar.Visibility = Visibility.Collapsed;
         Window.Current.SetTitleBar(MainGrid);
@@ -436,6 +406,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
             HyPlayList.OnPlayPositionChange -=
             position => _ = Common.Invoke(() => NowProgress = position.TotalMilliseconds);
             HyPlayList.OnPlayItemChange -= OnChangePlayItem;
+            HyPlayList.OnSongCoverChanged -= HyPlayList_OnSongCoverChanged;
             HyPlayList.OnPlay -= HyPlayList_OnPlay;
             HyPlayList.OnPause -= HyPlayList_OnPause;
             HyPlayList.OnLyricChange -= OnLyricChanged;

@@ -94,8 +94,12 @@ DoubleAnimation verticalAnimation;
         if (HyPlayList.NowPlayingItem?.PlayItem == null || !Common.Setting.enableTile) return;
         string fileName = HyPlayList.NowPlayingItem.PlayItem.IsLocalFile ? null
             : HyPlayList.NowPlayingItem.PlayItem.Album.id;
+        bool coverStreamIsAvailable = HyPlayList.CoverStream.Size != 0;
         string downloadLink = string.Empty;
-        if (Common.Setting.saveTileBackgroundToLocalFolder && Common.Setting.tileBackgroundAvailability && !HyPlayList.NowPlayingItem.PlayItem.IsLocalFile)
+        if (Common.Setting.saveTileBackgroundToLocalFolder 
+            && Common.Setting.tileBackgroundAvailability 
+            && !HyPlayList.NowPlayingItem.PlayItem.IsLocalFile
+            && coverStreamIsAvailable)
         {
             downloadLink = HyPlayList.NowPlayingItem.PlayItem.Album.cover;
             StorageFolder storageFolder =
@@ -119,7 +123,7 @@ DoubleAnimation verticalAnimation;
         var cover = Common.Setting.tileBackgroundAvailability && !HyPlayList.NowPlayingItem.PlayItem.IsLocalFile
             ? new TileBackgroundImage()
             {
-                Source = Common.Setting.saveTileBackgroundToLocalFolder
+                Source = Common.Setting.saveTileBackgroundToLocalFolder && coverStreamIsAvailable
                     ? "ms-appdata:///temp/LocalTileBackground/" + fileName + ".jpg"
                     : downloadLink,
                 HintOverlay = 50
@@ -1118,7 +1122,10 @@ DoubleAnimation verticalAnimation;
                 try
                 {
                     using var coverStream = HyPlayList.CoverStream.CloneStream();
-                    await AlbumImageSource.SetSourceAsync(coverStream);
+                    if(coverStream.Size!= 0)
+                    {
+                        await AlbumImageSource.SetSourceAsync(coverStream);
+                    }
                 }
                 catch
                 {

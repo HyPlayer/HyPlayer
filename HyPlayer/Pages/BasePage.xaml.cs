@@ -952,5 +952,27 @@ public sealed partial class BasePage : Page
             }
         });
     }
+    public void RefreshNavItemCover(double collapseTime)
+    {
+        _ = Common.Invoke(async () =>
+        {
+            var time = TimeSpan.FromSeconds(collapseTime + 0.25);
+            await Task.Delay(time);
+            if (NavItemBlank.Opacity != 0 && !Common.isExpanded)
+            {
+                try
+                {
+                    using var coverStream = HyPlayList.CoverStream.CloneStream();
+                    if(coverStream.Size!=0)
+                    {
+                        await NavItemImageSource.SetSourceAsync(coverStream);
+                    }
+                }
+                catch
+                {
 
-}
+                }
+            }
+        });
+    }
+    }

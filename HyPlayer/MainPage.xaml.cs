@@ -177,7 +177,7 @@ public sealed partial class MainPage
         Storyboard.SetTargetProperty(BlankAni, "Opacity");
         storyboard.Children.Add(BlankAni);
         storyboard.Begin();
-        Common.PageBase.RefreshNavItemCover();
+        Common.PageBase.RefreshNavItemCover(3);
 
     }
     private void Page_PointerEntered(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)

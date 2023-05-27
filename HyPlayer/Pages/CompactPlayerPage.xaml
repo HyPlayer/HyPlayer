@@ -11,7 +11,7 @@
     d:Background="White"
     d:DesignHeight="350"
     d:DesignWidth="600"
-    Background="{x:Bind Mode=OneWay, Path=AlbumCover}"
+    Background="{x:Bind Mode=OneWay, Path=AlbumImageBrush}"
     IsRightTapEnabled="True"
     RightTapped="OnRightTapped"
     mc:Ignorable="d">
@@ -572,8 +572,15 @@
             Grid.Row="3"
             Height="256"
             HorizontalAlignment="Stretch"
-            Canvas.ZIndex="1"
-            Fill="{x:Bind AlbumCover, Mode=OneWay}" />
+            Canvas.ZIndex="1">
+            <Rectangle.Fill>
+                <ImageBrush x:Name="AlbumImageBrush" Stretch="UniformToFill">
+                    <ImageBrush.ImageSource >
+                        <BitmapImage x:Name="AlbumImageBrushSource"/>
+                    </ImageBrush.ImageSource>
+                </ImageBrush>
+            </Rectangle.Fill>
+        </Rectangle>
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState>

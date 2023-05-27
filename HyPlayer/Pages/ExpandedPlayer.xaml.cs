@@ -1,5 +1,6 @@
 ﻿#region
 
+using ColorThiefDotNet;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
@@ -862,39 +863,19 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         if (lastSongForBrush == HyPlayList.NowPlayingItem.PlayItem) return ForegroundAccentTextBrush.Color.R == 0;
         try
         {
-            BitmapDecoder decoder;
-            PixelDataProvider data;
-            if (HyPlayList.NowPlayingItem.ItemType is HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
-            {
-                decoder = await BitmapDecoder.CreateAsync(
-                    await HyPlayList.NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.MusicView, 1));
-                data = await decoder.GetPixelDataAsync();
-            }
-            else
-            {
-                using var httpClient = new HttpClient();
-                using var result = await httpClient.GetAsync(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover + "?param=1y1"));
-                if (!result.IsSuccessStatusCode)
-                {
-                    throw new Exception("专辑封面颜色图片获取失败");
-                }
-                using var stream = new InMemoryRandomAccessStream();
-                await result.Content.WriteToStreamAsync(stream);
-                decoder = await BitmapDecoder.CreateAsync(stream);
-                data = await decoder.GetPixelDataAsync();
-            }
-            var bytes = data.DetachPixelData();
+            using var coverStream = HyPlayList.CoverStream.CloneStream();
+            BitmapDecoder decoder = await BitmapDecoder.CreateAsync(coverStream);
+            var colorThief = new ColorThief();
+            var color = await colorThief.GetColor(decoder, ignoreWhite: false);
             //var c = GetPixel(bytes, 0, 0, decoder.PixelWidth, decoder.PixelHeight);
-            var Y = 0.299 * bytes[2] + 0.587 * bytes[1] + 0.114 * bytes[0];
             lastSongForBrush = HyPlayList.NowPlayingItem.PlayItem;
-            albumMainColor = Windows.UI.Color.FromArgb(255, bytes[2], bytes[1], bytes[0]);
+            albumMainColor = Windows.UI.Color.FromArgb(color.Color.A, color.Color.R, color.Color.G, color.Color.B);
             if (Common.Setting.expandedPlayerBackgroundType == 1)
             {
                 PageContainer.Background =
                     new SolidColorBrush(albumMainColor.Value);
             }
-
-            return Y >= 150;
+            return !color.IsDark;
         }
         catch
         {

@@ -1161,11 +1161,6 @@ public static class HyPlayList
 
             //记录下当前播放位置
             ApplicationData.Current.LocalSettings.Values["nowSongPointer"] = NowPlaying.ToString();
-
-            //因为加载图片可能会高耗时,所以在此处加载
-            NotifyPlayItemChanged(NowPlayingItem);
-            //加载歌词
-            _ = LoadLyrics(NowPlayingItem);
             if (CoverStream.Size == 0)
             {
                 try
@@ -1221,6 +1216,10 @@ public static class HyPlayList
             {
                 OnSongCoverChanged?.Invoke();
             }
+            //因为加载图片可能会高耗时,所以在此处加载
+            NotifyPlayItemChanged(NowPlayingItem);
+            //加载歌词
+            _ = LoadLyrics(NowPlayingItem);
             _controlsDisplayUpdater.Update();
         }
     }
