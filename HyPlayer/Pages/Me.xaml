@@ -8,7 +8,9 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hyplayer="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:media="using:Microsoft.Toolkit.Uwp.UI.Media"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:ui="using:Microsoft.Toolkit.Uwp.UI"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
     <Page.Resources>
@@ -23,7 +25,7 @@
                         TintLuminosityOpacity="0.5"
                         TintOpacity="0.5" />
                     <DataTemplate x:Key="ListItemTemplate" x:DataType="classes:SimpleListItem">
-                        <ListViewItem Style="{StaticResource ListViewItemStyle}" CornerRadius="0">
+                        <ListViewItem CornerRadius="0" Style="{StaticResource ListViewItemStyle}">
                             <Grid
                                 Margin="0,5"
                                 HorizontalAlignment="Stretch"
@@ -36,15 +38,15 @@
                                     EnableLazyLoading="True"
                                     IsCacheEnabled="False"
                                     Stretch="UniformToFill"
-                                    Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}" >
+                                    Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}">
                                     <controls:ImageEx.Source>
-                                        <BitmapImage UriSource="{x:Bind CoverUri, Mode=OneTime}"/>
+                                        <BitmapImage UriSource="{x:Bind CoverUri, Mode=OneTime}" />
                                     </controls:ImageEx.Source>
                                 </controls:ImageEx>
                                 <Rectangle
                                     x:Name="RectangleImageAcrylic"
-                                    Fill="{ThemeResource SystemControlAcrylicElementBrush}"
                                     Margin="0,-1,0,-1"
+                                    Fill="{ThemeResource SystemControlAcrylicElementBrush}"
                                     RadiusX="10"
                                     RadiusY="10"
                                     Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}" />
@@ -53,19 +55,19 @@
                                     Background="Transparent"
                                     Tag="{x:Bind ResourceId}"
                                     Tapped="SongListItemClicked">
-                                    <Grid/>
+                                    <Grid />
                                     <StackPanel Orientation="Horizontal">
                                         <controls:ImageEx
                                             x:Name="ImageRect"
-                                            Margin="8,0,0,0"
                                             Width="70"
                                             Height="70"
+                                            Margin="8,0,0,0"
                                             CornerRadius="8"
                                             EnableLazyLoading="True"
                                             IsCacheEnabled="False"
-                                            Stretch="UniformToFill" >
+                                            Stretch="UniformToFill">
                                             <controls:ImageEx.Source>
-                                                <BitmapImage UriSource="{x:Bind CoverUri, Mode=OneTime}"/>
+                                                <BitmapImage UriSource="{x:Bind CoverUri, Mode=OneTime}" />
                                             </controls:ImageEx.Source>
                                         </controls:ImageEx>
                                         <Grid Padding="7,0,0,0">
@@ -79,8 +81,8 @@
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
                                             <TextBlock
-                                                Margin="4,4,0,0"
                                                 Grid.Row="0"
+                                                Margin="4,4,0,0"
                                                 FontSize="19"
                                                 FontWeight="Medium"
                                                 Text="{x:Bind Title}"
@@ -116,24 +118,24 @@
                                         </Grid>
                                     </StackPanel>
                                 </Grid>
-                                <Button x:Name="PlayBtn"
+                                <Button
+                                    x:Name="PlayBtn"
+                                    Width="74"
+                                    Height="74"
                                     Margin="6,3,0,0"
                                     HorizontalAlignment="Left"
-                                    Height="74"
-                                    Width="74"
-                                    CornerRadius="9"
                                     VerticalAlignment="Top"
+                                    Background="{ThemeResource SystemAltLowColor}"
+                                    BorderBrush="Transparent"
                                     Click="BtnPlayClick"
-                                        BorderBrush="Transparent"
-                                        Background="{ThemeResource SystemAltLowColor}"
-                                    Tag="{x:Bind ResourceId}"
+                                    CornerRadius="9"
                                     FocusVisualSecondaryBrush="AliceBlue"
-                                    ToolTipService.ToolTip="播放"
-                                        >
+                                    Tag="{x:Bind ResourceId}"
+                                    ToolTipService.ToolTip="播放">
                                     <FontIcon
                                         Name="PlayStateIcon"
-                                        Glyph="&#xF5B0;" 
-                                        FontSize="14"/>
+                                        FontSize="14"
+                                        Glyph="&#xF5B0;" />
                                 </Button>
                             </Grid>
                         </ListViewItem>
@@ -145,6 +147,171 @@
     </Page.Resources>
 
     <muxc:ItemsRepeaterScrollHost>
+        <ScrollViewer>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0">
+                    <Border x:Name="RectangleImageBack" Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}">
+                        <Border.Background>
+                            <ImageBrush ImageSource="{x:Bind ImageRect.ImageSource, Mode=OneWay}" Stretch="UniformToFill" />
+                        </Border.Background>
+                    </Border>
+                    <Border
+                        x:Name="RectangleImageAcrylic"
+                        Background="{ThemeResource MePageAcrylicBrush}"
+                        Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}" />
+                    <controls:DockPanel
+                        x:Name="GridPersonalInformation"
+                        Margin="8"
+                        LastChildFill="True">
+                        <Rectangle
+                            x:Name="RectangleImage"
+                            Width="120"
+                            Height="120"
+                            Margin="20"
+                            controls:DockPanel.Dock="Left"
+                            RadiusX="8"
+                            RadiusY="8">
+                            <Rectangle.Fill>
+                                <ImageBrush x:Name="ImageRect" Stretch="UniformToFill">
+                                    <ImageBrush.ImageSource>
+                                        <BitmapImage UriSource="/Assets/icon.png" />
+                                    </ImageBrush.ImageSource>
+                                </ImageBrush>
+                            </Rectangle.Fill>
+                            <ui:Effects.Shadow>
+                                <media:AttachedCardShadow
+                                    CornerRadius="8"
+                                    Opacity="0.3"
+                                    Offset="0,4,1"
+                                    Color="Black" />
+                            </ui:Effects.Shadow>
+                        </Rectangle>
+                        <StackPanel
+                            Name="StackPanelUserInfo"
+                            VerticalAlignment="Center"
+                            Spacing="8">
+                            <TextBlock
+                                x:Name="TextBoxUserName"
+                                FontWeight="Bold"
+                                IsTextSelectionEnabled="True"
+                                Style="{StaticResource TitleTextBlockStyle}"
+                                Text="用户名"
+                                TextWrapping="NoWrap" />
+                            <controls1:SelectableTextBox
+                                x:Name="TextBoxSignature"
+                                FontSize="16"
+                                Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
+                                Text="签名" />
+                            <Button
+                                x:Name="ButtonLogout"
+                                VerticalAlignment="Bottom"
+                                Click="Logout_OnClick"
+                                Foreground="White">
+                                <StackPanel Orientation="Horizontal">
+                                    <FontIcon
+                                        Margin="0,0,8,0"
+                                        FontSize="14"
+                                        Glyph="&#xF3B1;" />
+                                    <TextBlock Text="退出登录" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </controls:DockPanel>
+
+                    <ui:Effects.Shadow>
+                        <media:AttachedCardShadow
+                            CornerRadius="0"
+                            Opacity="0.5"
+                            Offset="0,1,0"
+                            Color="Black" />
+                    </ui:Effects.Shadow>
+                </Grid>
+                <Grid
+                    x:Name="MainGrid"
+                    Grid.Row="1"
+                    Margin="16,0"
+                    ColumnSpacing="50"
+                    RowSpacing="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Grid
+                        x:Name="FirstGrid"
+                        Grid.Column="0"
+                        Margin="0,5,-15,0"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        CornerRadius="8">
+                        <StackPanel
+                            Grid.Column="0"
+                            Margin="25,20,0,60"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Orientation="Horizontal">
+                            <FontIcon Margin="0,0,10,0" Glyph="&#xEA8C;" />
+                            <TextBlock
+                                Margin="0,-2,0,0"
+                                FontSize="20"
+                                FontWeight="Bold"
+                                Text="我的歌单" />
+
+                        </StackPanel>
+                        <muxc:ItemsRepeater
+                            x:Name="MySongListBox"
+                            Margin="0,60,0,0"
+                            ItemTemplate="{StaticResource ListItemTemplate}"
+                            ItemsSource="{x:Bind myPlayList}">
+                            <muxc:ItemsRepeater.Layout>
+                                <muxc:StackLayout Orientation="Vertical" />
+                            </muxc:ItemsRepeater.Layout>
+                        </muxc:ItemsRepeater>
+
+                    </Grid>
+                    <Grid
+                        x:Name="SecondGrid"
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Margin="-15,5,0,0"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        CornerRadius="8">
+                        <StackPanel
+                            Margin="30,20,0,0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            Orientation="Horizontal">
+                            <FontIcon Margin="0,0,10,0" Glyph="&#xE1CF;" />
+                            <TextBlock
+                                Margin="0"
+                                FontSize="20"
+                                FontWeight="Bold"
+                                Text="收藏歌单" />
+                        </StackPanel>
+                        <muxc:ItemsRepeater
+                            x:Name="LikedSongList"
+                            Margin="0,60,0,0"
+                            HorizontalAlignment="Stretch"
+                            ItemTemplate="{StaticResource ListItemTemplate}"
+                            ItemsSource="{x:Bind likedPlayList}">
+                            <muxc:ItemsRepeater.Layout>
+                                <muxc:StackLayout Orientation="Vertical" />
+                            </muxc:ItemsRepeater.Layout>
+
+                        </muxc:ItemsRepeater>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </ScrollViewer>
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup>
                 <VisualState x:Name="NarrowState">
@@ -186,160 +353,5 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateManager.VisualStateGroups>
-        <ScrollViewer>
-
-            <Grid Margin="20,20,20,130">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                <Grid Grid.Row="0">
-                    <Border
-                        x:Name="RectangleImageBack"
-                        CornerRadius="16"
-                        Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}">
-                        <Border.Background>
-                            <ImageBrush ImageSource="{x:Bind ImageRect.ImageSource, Mode=OneWay}"
-                                        Stretch="UniformToFill" />
-                        </Border.Background>
-                    </Border>
-                    <Border
-                        x:Name="RectangleImageAcrylic"
-                        Background="{ThemeResource MePageAcrylicBrush}"
-                        CornerRadius="8"
-                        Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}" />
-                    <controls:DockPanel
-                        x:Name="GridPersonalInformation"
-                        LastChildFill="True">
-                        <Rectangle
-                            x:Name="RectangleImage"
-                            Width="130"
-                            Height="130"
-                            Margin="20"
-                            controls:DockPanel.Dock="Left"
-                            RadiusX="8"
-                            RadiusY="8">
-                            <Rectangle.Fill>
-                                <ImageBrush x:Name="ImageRect" Stretch="UniformToFill">
-                                    <ImageBrush.ImageSource>
-                                        <BitmapImage UriSource="/Assets/icon.png" />
-                                    </ImageBrush.ImageSource>
-                                </ImageBrush>
-                            </Rectangle.Fill>
-                        </Rectangle>
-                        <StackPanel
-                            Name="StackPanelUserInfo"
-                            Margin="0,18,0,0"
-                            Spacing="8"
-                            Orientation="Vertical">
-                            <TextBlock
-                                IsTextSelectionEnabled="True"
-                                x:Name="TextBoxUserName"
-                                Style="{StaticResource TitleTextBlockStyle}"
-                                FontWeight="Bold"
-                                Text="用户名"
-                                TextWrapping="NoWrap" />
-                            <controls1:SelectableTextBox
-                                x:Name="TextBoxSignature"
-                                FontSize="16"
-                                Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
-                                Text="签名" />
-
-                        </StackPanel>
-                    </controls:DockPanel>
-                    <Button  HorizontalAlignment="Right"
-                             VerticalAlignment="Bottom"
-                             Margin="0,0,46,18"
-                             Background="OrangeRed"
-                             x:Name="ButtonLogout"
-                             Foreground="White"
-                             Click="Logout_OnClick">
-                        <StackPanel Orientation="Horizontal">
-                            <FontIcon Glyph="&#xF3B1;" Margin="0,0,5,0"/>
-                            <TextBlock Text="退出登录"/>
-                        </StackPanel>
-                    </Button>
-                </Grid>
-                <Grid
-                    x:Name="MainGrid"
-                    Grid.Row="1"
-                    Margin="0,10,0,10"
-                    ColumnSpacing="50"
-                    RowSpacing="10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition />
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition />
-                        <RowDefinition />
-                    </Grid.RowDefinitions>
-                    <Grid
-                        x:Name="FirstGrid"
-                        Grid.Column="0"
-                        Margin="0,5,-15,0"
-                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                        CornerRadius="8"
-                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
-                        <StackPanel                            
-                            Grid.Column="0"
-                            Margin="25,20,0,60"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            Orientation="Horizontal">
-                            <FontIcon Glyph="&#xEA8C;" Margin="0,0,10,0"/>
-                            <TextBlock
-                            FontSize="20"
-                            Margin="0,-2,0,0"
-                            FontWeight="Bold"
-                            Text="我的歌单" />
-
-                        </StackPanel>
-                        <muxc:ItemsRepeater
-                            x:Name="MySongListBox"
-                            Margin="0,60,0,0"
-                            ItemTemplate="{StaticResource ListItemTemplate}" 
-                            ItemsSource="{x:Bind myPlayList}"
-                            >
-                            <muxc:ItemsRepeater.Layout>
-                                <muxc:StackLayout Orientation="Vertical" />
-                            </muxc:ItemsRepeater.Layout>
-                        </muxc:ItemsRepeater>
-
-                    </Grid>
-                    <Grid
-                        x:Name="SecondGrid"
-                        Grid.Row="0"
-                        Grid.Column="1"
-                        Margin="-15,5,0,0"
-                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                        CornerRadius="8">
-                        <StackPanel                            
-                            Margin="30,20,0,0"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            Orientation="Horizontal">
-                            <FontIcon Glyph="&#xE1CF;" Margin="0,0,10,0"/>
-                            <TextBlock
-                            FontSize="20"
-                            Margin="0"
-                            FontWeight="Bold"
-                            Text="收藏歌单" />
-                        </StackPanel>
-                        <muxc:ItemsRepeater
-                            x:Name="LikedSongList"
-                            Margin="0,60,0,0"
-                            ItemTemplate="{StaticResource ListItemTemplate}" HorizontalAlignment="Stretch"
-                            ItemsSource="{x:Bind likedPlayList}">
-                            <muxc:ItemsRepeater.Layout>
-                                <muxc:StackLayout Orientation="Vertical" />
-                            </muxc:ItemsRepeater.Layout>
-                            
-                        </muxc:ItemsRepeater>
-                    </Grid>
-                </Grid>
-            </Grid>
-        </ScrollViewer>
     </muxc:ItemsRepeaterScrollHost>
 </Page>
