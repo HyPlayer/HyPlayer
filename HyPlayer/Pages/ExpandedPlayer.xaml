@@ -6,13 +6,14 @@
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:controls1="using:HyPlayer.Controls"
     xmlns:hyplayer="using:HyPlayer"
+    xmlns:media="using:Microsoft.Toolkit.Uwp.UI.Media"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:ui="using:Microsoft.Toolkit.Uwp.UI"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
     Loaded="Page_Loaded"
     NavigationCacheMode="Disabled">
     <Page.Resources>
-        <!-- ReSharper disable once Xaml.RedundantResource -->
+        <!--  ReSharper disable once Xaml.RedundantResource  -->
         <Storyboard x:Key="ImageAlbumAni" x:Name="ImageAlbumAni">
             <DoubleAnimation
                 AutoReverse="True"
@@ -52,29 +53,27 @@
             </DoubleAnimation>
 
         </Storyboard>
-        <Storyboard x:Name="ImageResetPositionAni" x:Key="ImageResetPositionAni">
+        <Storyboard x:Key="ImageResetPositionAni" x:Name="ImageResetPositionAni">
             <DoubleAnimation
-                To="0"
-                Duration="0:0:0.25"
                 Storyboard.TargetName="ImagePositionOffset"
-                Storyboard.TargetProperty="X">
-            </DoubleAnimation>
+                Storyboard.TargetProperty="X"
+                To="0"
+                Duration="0:0:0.25" />
             <DoubleAnimation
-                To="0"
-                Duration="0:0:0.25"
                 Storyboard.TargetName="ImagePositionOffset"
-                Storyboard.TargetProperty="Y">
-            </DoubleAnimation>
+                Storyboard.TargetProperty="Y"
+                To="0"
+                Duration="0:0:0.25" />
         </Storyboard>
-        <Storyboard x:Name="ShowAni"></Storyboard>
-        <Storyboard x:Name="CollapseAni"></Storyboard>
-        <Storyboard x:Name="ImmersiveModeInAni" >
+        <Storyboard x:Name="ShowAni" />
+        <Storyboard x:Name="CollapseAni" />
+        <Storyboard x:Name="ImmersiveModeInAni">
             <DoubleAnimation
                 Storyboard.TargetName="BlackCover"
                 Storyboard.TargetProperty="Opacity"
                 To="1">
                 <DoubleAnimation.EasingFunction>
-                    <CircleEase EasingMode="EaseInOut"/>
+                    <CircleEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
             <DoubleAnimation
@@ -82,7 +81,7 @@
                 Storyboard.TargetProperty="Opacity"
                 To="0">
                 <DoubleAnimation.EasingFunction>
-                    <CircleEase EasingMode="EaseInOut"/>
+                    <CircleEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
             <DoubleAnimation
@@ -101,7 +100,7 @@
                 Storyboard.TargetProperty="Opacity"
                 To="0">
                 <DoubleAnimation.EasingFunction>
-                    <CircleEase EasingMode="EaseInOut"/>
+                    <CircleEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
             <DoubleAnimation
@@ -109,7 +108,7 @@
                 Storyboard.TargetProperty="Opacity"
                 To="1">
                 <DoubleAnimation.EasingFunction>
-                    <CircleEase EasingMode="EaseInOut"/>
+                    <CircleEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
             <DoubleAnimation
@@ -124,11 +123,10 @@
         </Storyboard>
 
 
-        <ui:AttachedDropShadow
-            x:Key="AlbumDropShadow"
-            BlurRadius="20"
-            CastTo="{x:Bind ShadowTarget}"
-            IsMasked="False"
+
+        <media:AttachedCardShadow
+            x:Key="AlbumShadow"
+            CornerRadius="12"
             Opacity="{x:Bind hyplayer:Common.Setting.expandedCoverShadowDepth, Converter={StaticResource ShadowConverter}}"
             Offset="0,4"
             Color="Black" />
@@ -141,12 +139,24 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="30" />
         </Grid.RowDefinitions>
-        <Rectangle x:Name="AcrylicCover"  HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="{ThemeResource ExpandedPlayerMask}" Grid.Row="0" Grid.RowSpan="3" />
-        <Rectangle x:Name="BlackCover" Opacity="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  Grid.Row="0" Grid.RowSpan="3">
+        <Rectangle
+            x:Name="AcrylicCover"
+            Grid.Row="0"
+            Grid.RowSpan="3"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Fill="{ThemeResource ExpandedPlayerMask}" />
+        <Rectangle
+            x:Name="BlackCover"
+            Grid.Row="0"
+            Grid.RowSpan="3"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Opacity="0">
             <Rectangle.Fill>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                    <GradientStop Offset="0.25" Color="{ThemeResource SystemAltLowColor}"/>
-                    <GradientStop x:Name="ImmersiveCover" Offset="0.95"/>
+                    <GradientStop Offset="0.25" Color="{ThemeResource SystemAltLowColor}" />
+                    <GradientStop x:Name="ImmersiveCover" Offset="0.95" />
                 </LinearGradientBrush>
             </Rectangle.Fill>
         </Rectangle>
@@ -182,22 +192,22 @@
                     <Border x:Name="ShadowTarget" Grid.Row="1" />
                     <controls:ImageEx
                         x:Name="ImageAlbum"
-                        ManipulationMode="Rotate,TranslateX,TranslateY"
-                        ManipulationDelta="ImageAlbum_OnManipulationDelta"
-                        ManipulationCompleted="ImageAlbum_OnManipulationCompleted"
                         Grid.Row="1"
                         MaxWidth="600"
                         MaxHeight="600"
                         Margin="20"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        ui:Effects.Shadow="{StaticResource AlbumDropShadow}"
+                        ui:Effects.Shadow="{StaticResource AlbumShadow}"
                         ui:VisualExtensions.NormalizedCenterPoint="0.5"
                         x:FieldModifier="public"
                         BorderBrush="Black"
                         BorderThickness="80"
                         CornerRadius="12"
                         IsCacheEnabled="False"
+                        ManipulationCompleted="ImageAlbum_OnManipulationCompleted"
+                        ManipulationDelta="ImageAlbum_OnManipulationDelta"
+                        ManipulationMode="Rotate,TranslateX,TranslateY"
                         PlaceholderStretch="Uniform"
                         RightTapped="{x:Bind hyplayer:Common.UIElement_RightTapped}"
                         Stretch="Uniform"
@@ -236,7 +246,7 @@
                             </MenuFlyout>
                         </controls:ImageEx.ContextFlyout>
                         <controls:ImageEx.Source>
-                            <BitmapImage x:Name="ImageAlbumSource" UriSource="/Assets/icon.png"/>
+                            <BitmapImage x:Name="ImageAlbumSource" UriSource="/Assets/icon.png" />
                         </controls:ImageEx.Source>
                     </controls:ImageEx>
                     <StackPanel
@@ -271,7 +281,8 @@
                             <HyperlinkButton
                                 Name="TextBlockSinger"
                                 Click="TextBlockSinger_OnTapped"
-                                FontSize="18" Style="{StaticResource TextBlockButtonStyle}" />
+                                FontSize="18"
+                                Style="{StaticResource TextBlockButtonStyle}" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="5">
                             <TextBlock
@@ -284,7 +295,8 @@
                             <HyperlinkButton
                                 Name="TextBlockAlbum"
                                 Click="TextBlockAlbum_OnTapped"
-                                FontSize="18" Style="{StaticResource TextBlockButtonStyle}" />
+                                FontSize="18"
+                                Style="{StaticResource TextBlockButtonStyle}" />
                         </StackPanel>
                     </StackPanel>
                 </Grid>
@@ -357,7 +369,7 @@
                         </MenuFlyout>
                     </ScrollViewer.ContextFlyout>
                     <ScrollViewer.Content>
-                        <Grid x:Name="LyricBoxHost" >
+                        <Grid x:Name="LyricBoxHost">
                             <StackPanel
                                 Orientation="Horizontal"
                                 Spacing="5"
@@ -366,9 +378,9 @@
                             </StackPanel>
                             <muxc:ItemsRepeater
                                 x:Name="LyricBox"
+                                ItemsSource="{x:Bind LyricList, Mode=OneWay}"
                                 PointerWheelChanged="LyricBoxContainer_OnPointerWheelChanged"
-                                Tapped="LyricBox_Tapped"
-                                ItemsSource="{x:Bind LyricList, Mode=OneWay}">
+                                Tapped="LyricBox_Tapped">
                                 <muxc:ItemsRepeater.Layout>
                                     <muxc:StackLayout Orientation="Vertical" Spacing="40" />
                                 </muxc:ItemsRepeater.Layout>
@@ -376,10 +388,10 @@
                                     <DataTemplate x:DataType="controls1:LyricItemModel">
                                         <Border>
                                             <controls1:LyricItemWrapper
-                                            x:Name="LyricWrapper"
-                                            HorizontalAlignment="Stretch"
-                                            IsShow="{x:Bind IsShow, Mode=OneWay}"
-                                            SongLyric="{x:Bind SongLyric}" />
+                                                x:Name="LyricWrapper"
+                                                HorizontalAlignment="Stretch"
+                                                IsShow="{x:Bind IsShow, Mode=OneWay}"
+                                                SongLyric="{x:Bind SongLyric}" />
                                         </Border>
                                     </DataTemplate>
                                 </muxc:ItemsRepeater.ItemTemplate>
@@ -400,7 +412,6 @@
             </Grid>
             <Button
                 x:Name="MoreBtn"
-                x:FieldModifier="public"
                 Grid.Row="1"
                 Grid.Column="0"
                 Grid.ColumnSpan="2"
@@ -410,6 +421,7 @@
                 Padding="-5"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Bottom"
+                x:FieldModifier="public"
                 Background="Transparent"
                 BorderThickness="0"
                 CornerRadius="30"
@@ -459,7 +471,8 @@
                             x:Name="BtnToggleImmersiveMode"
                             HorizontalContentAlignment="Left"
                             Background="Transparent"
-                            Text="沉浸模式" Click="BtnToggleImmersiveMode_OnClicked">
+                            Click="BtnToggleImmersiveMode_OnClicked"
+                            Text="沉浸模式">
                             <ToggleMenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xE93C;" />
                             </ToggleMenuFlyoutItem.Icon>

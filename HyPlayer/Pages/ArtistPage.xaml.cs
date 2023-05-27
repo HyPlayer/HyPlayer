@@ -293,16 +293,14 @@ public sealed partial class ArtistPage : Page, IDisposable
         GridPersonalInformation.Opacity = 1 - PivotView.HeaderScrollProgress * 1.4;
         RectangleImageBack.Opacity = 1 - PivotView.HeaderScrollProgress * 1.1;
         RectangleImageBackAcrylic.Opacity = 1 - PivotView.HeaderScrollProgress * 1.1;
-        RectangleImageBack.RadiusX = 10 + PivotView.HeaderScrollProgress * 60;
-        RectangleImageBackAcrylic.RadiusX = 10 + PivotView.HeaderScrollProgress * 60;
-        RectangleImageBack.RadiusY = 10 + PivotView.HeaderScrollProgress * 60;
-        RectangleImageBackAcrylic.RadiusY = 10 + PivotView.HeaderScrollProgress * 60;
+        TextBlockDesc.Opacity = 1 - PivotView.HeaderScrollProgress * 0.8;
+
         UserScale.ScaleX = 1 - PivotView.HeaderScrollProgress * 0.8;
-        RectangleImage.RadiusX = 10 + PivotView.HeaderScrollProgress * 100;
-        RectangleImage.RadiusY = 10 + PivotView.HeaderScrollProgress * 100;
         UserScale.ScaleY = 1 - PivotView.HeaderScrollProgress * 0.8;
         UserInfoScale.ScaleX = 1 - PivotView.HeaderScrollProgress * 0.6;
         UserInfoScale.ScaleY = 1 - PivotView.HeaderScrollProgress * 0.6;
+        DescScale.ScaleX = 1 - PivotView.HeaderScrollProgress * 0.4;
+        DescScale.ScaleY = 1 - PivotView.HeaderScrollProgress * 0.4;
     }
 
     private void Dispose(bool disposing)

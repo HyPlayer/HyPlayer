@@ -18,7 +18,7 @@
         <Setter Property="AllowDrop" Value="False" />
         <Setter Property="UseSystemFocusVisuals" Value="{StaticResource UseSystemFocusVisuals}" />
         <Setter Property="FocusVisualMargin" Value="0" />
-        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="CornerRadius" Value="4"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ListViewItem">
@@ -466,13 +466,13 @@
                         <Rectangle x:Name="PlaceholderRect" Visibility="Collapsed" Fill="{ThemeResource ListViewItemPlaceholderBackground}" />
                         <Border x:Name="MultiSelectSquare"
                             BorderBrush="{ThemeResource SystemControlForegroundBaseMediumHighBrush}"
-                            BorderThickness="2"
+                            BorderThickness="1"
                             Width="20"
                             Height="20"
                             Margin="12,0,0,0"
                             VerticalAlignment="Center"
                             HorizontalAlignment="Left"
-                            Visibility="Collapsed">
+                            Visibility="Collapsed" CornerRadius="4">
                             <Border.Clip>
                                 <RectangleGeometry Rect="0,0,20,20">
                                     <RectangleGeometry.Transform>

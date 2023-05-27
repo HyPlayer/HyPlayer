@@ -31,7 +31,20 @@ public sealed partial class ExpandableTextBox : UserControl
     public ExpandableTextBox()
     {
         InitializeComponent();
-        ActualMaxLine = MaxLines;
+        MyTextBlock.IsTextTrimmedChanged += MyTextBlock_IsTextTrimmedChanged;
+        ExpandButton.Visibility = Visibility.Collapsed;
+    }
+
+    private void MyTextBlock_IsTextTrimmedChanged(TextBlock sender, IsTextTrimmedChangedEventArgs args)
+    {
+        if (MyTextBlock.IsTextTrimmed || _isExpanded)
+        {
+            ExpandButton.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            ExpandButton.Visibility = Visibility.Collapsed;
+        }
     }
 
     public string ButtonText
@@ -49,7 +62,10 @@ public sealed partial class ExpandableTextBox : UserControl
     public string Text
     {
         get => (string)GetValue(TextProperty);
-        set => SetValue(TextProperty, value);
+        set 
+        {
+            SetValue(TextProperty, value);
+        }
     }
 
 
