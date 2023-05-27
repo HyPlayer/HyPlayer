@@ -56,6 +56,7 @@
             Name="TextBoxSound"
             Grid.Row="2"
             Grid.Column="0"
+            Margin="8,0,0,0"
             controls:DockPanel.Dock="Bottom"
             FontSize="15"
             TextAlignment="Center"
