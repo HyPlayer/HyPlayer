@@ -31,6 +31,8 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Animation;
+using ColorThiefDotNet;
+using Color = Windows.UI.Color;
 #if !DEBUG
 using Microsoft.AppCenter.Crashes;
 #endif
@@ -57,6 +59,7 @@ namespace HyPlayer
         public static BasePage? PageBase;
         public static KawazuConverter? KawazuConv;
 #nullable restore
+        public static ColorThief ColorThief = new();
         public static Setting Setting = new();
         public static bool ShowLyricSound = true;
         public static bool ShowLyricTrans = true;

@@ -868,8 +868,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         {
             using var coverStream = HyPlayList.CoverStream.CloneStream();
             BitmapDecoder decoder = await BitmapDecoder.CreateAsync(coverStream);
-            var colorThief = new ColorThief();
-            var color = await colorThief.GetColor(decoder, ignoreWhite: false);
+            var color = await Common.ColorThief.GetColor(decoder, ignoreWhite: false);
             //var c = GetPixel(bytes, 0, 0, decoder.PixelWidth, decoder.PixelHeight);
             lastSongForBrush = HyPlayList.NowPlayingItem.PlayItem;
             albumMainColor = Windows.UI.Color.FromArgb(color.Color.A, color.Color.R, color.Color.G, color.Color.B);
