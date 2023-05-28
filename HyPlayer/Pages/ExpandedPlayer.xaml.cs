@@ -1279,8 +1279,10 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         MainGrid.Margin = new Thickness(0, 0, 0, 80);
         LyricBoxContainer.Margin = new Thickness(0);
         DefaultRow.Height = new GridLength(25, GridUnitType.Star);
+        if(!Common.Setting.albumRound)
         AlbumCoverDropShadow.Opacity = (double)Common.Setting.expandedCoverShadowDepth / 10;
         Grid.SetRow(LyricBoxContainer, 0);
+        if(Common.Setting.albumRound)
         ImageAlbumAni.Begin();
         ImmersiveModeOutAni.Begin();
         LeftPanel.VerticalAlignment = VerticalAlignment.Top;
