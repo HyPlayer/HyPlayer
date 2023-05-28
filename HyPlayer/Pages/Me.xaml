@@ -234,7 +234,7 @@
                 <Grid
                     x:Name="MainGrid"
                     Grid.Row="1"
-                    Margin="16,0"
+                    Margin="16,16,16,130"
                     ColumnSpacing="50"
                     RowSpacing="10">
                     <Grid.ColumnDefinitions>
