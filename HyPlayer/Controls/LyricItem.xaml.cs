@@ -134,7 +134,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
             var playedWords =
                 ((KaraokeLyricsLine)Lrc.LyricLine).WordInfos.Where(word => word.StartTime <= position).ToList();
             var playedBlocks = WordTextBlocks.GetRange(0, playedWords.Count).ToList();
-            if (playedBlocks.Count <= 0) return;
+            if (playedBlocks.Count <= 0 || StoryboardDictionary.Count <= 0) return;
             foreach (var playedBlock in playedBlocks.GetRange(0, playedBlocks.Count - 1))
             {
                 //playedBlock.Foreground = IdleBrush;
