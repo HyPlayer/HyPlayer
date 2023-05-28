@@ -78,14 +78,13 @@ namespace HyPlayer.Classes
         public static async Task TryLoginLastfmAccountFromBrowser(string token)
         {
             var signature = LastFMUtils.GetLastFMAPISignature(token);
-            using HttpClient httpClient = new HttpClient();
             try
             {
-                using var responseData = await httpClient.GetAsync($"https://ws.audioscrobbler.com/2.0/?method=auth.getSession&format=json&token={token}&api_key={LastFMAPIKey}&api_sig={signature}");
-                if (responseData != null && responseData.IsSuccessStatusCode)
-                {
-                    string sessionStringData = await responseData.Content.ReadAsStringAsync();
-                    JObject sessionJsonObject = JObject.Parse(sessionStringData);
+                using var responseData = await Common.HttpClient.TryGetStringAsync(
+                    new Uri($"https://ws.audioscrobbler.com/2.0/?method=auth.getSession&format=json&token={token}&api_key={LastFMAPIKey}&api_sig={signature}"));
+                if (responseData != null && responseData.Succeeded)
+                {     
+                    JObject sessionJsonObject = JObject.Parse(responseData.Value);
                     var session = new LastUserSession()
                     {
                         Username = sessionJsonObject["session"]["name"].ToString(),
@@ -96,10 +95,9 @@ namespace HyPlayer.Classes
                     OnLoginDone.Invoke();
                     sessionJsonObject.RemoveAll();
                 }
-                else if (responseData != null)
+                else if (responseData.Value != null)
                 {
-                    string errorMessageStringData = await responseData.Content.ReadAsStringAsync();
-                    JObject errorMessageJsonObject = JObject.Parse(errorMessageStringData);
+                    JObject errorMessageJsonObject = JObject.Parse(responseData.Value);
                     OnLoginError.Invoke(new Exception(errorMessageJsonObject["message"].ToString()));
                     errorMessageJsonObject.RemoveAll();
                 }

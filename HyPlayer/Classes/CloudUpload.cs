@@ -5,14 +5,14 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.Storage;
+using Windows.Web.Http;
+using Windows.Web.Http.Headers;
 
 #endregion
 
@@ -73,17 +73,17 @@ internal class CloudUpload
                 var s = tokenRes["result"]["objectKey"].ToString() /*.Replace("/", "%2F")*/;
                 var r = new Regex("\\/");
                 var objkey = r.Replace(s, "%2F", 1);
-                var request = new HttpClient();
-                var content = new StreamContent(await file.OpenStreamForReadAsync());
-                content.Headers.Add("x-nos-token", tokenRes["result"]["token"].ToString());
-                content.Headers.ContentType = new MediaTypeHeaderValue("audio/mpeg");
+                var targetLink = "http://45.127.129.8/jd-musicrep-privatecloud-audio-public/" + objkey + "?offset=0&complete=true&version=1.0";
+                using var request = new HttpRequestMessage(HttpMethod.Post, 
+                    new Uri(targetLink));
+                using var fileStream = await file.OpenAsync(FileAccessMode.Read);
+                using var content = new HttpStreamContent(fileStream);
+                content.Headers.ContentLength = basicprop.Size;
                 content.Headers.Add("Content-MD5", md5);
-                content.Headers.ContentLength = (long)basicprop.Size;
-
-                await request.PostAsync(
-                    "http://45.127.129.8/jd-musicrep-privatecloud-audio-public/" + objkey +
-                    "?offset=0&complete=true&version=1.0",
-                    content);
+                request.Headers.Add("x-nos-token", tokenRes["result"]["token"].ToString());
+                content.Headers.ContentType = new HttpMediaTypeHeaderValue(file.ContentType);
+                request.Content = content;
+                await Common.HttpClient.SendRequestAsync(request);
             }
 
             var title = string.IsNullOrEmpty(musicprop.Title)
