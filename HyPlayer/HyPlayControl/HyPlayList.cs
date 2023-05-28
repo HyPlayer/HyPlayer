@@ -1221,11 +1221,10 @@ public static class HyPlayList
             }
             else
             {
-                using var httpClient = new HttpClient();
                 var url = NowPlayingItem.PlayItem.Album.cover;
                 if (!Common.IsInImmerssiveMode && !Common.Setting.highQualityCoverInSMTC)
                     url += "?param=" + StaticSource.PICSIZE_AUDIO_PLAYER_COVER;
-                using var result = await httpClient.GetAsync(new Uri(url));
+                using var result = await Common.HttpClient.GetAsync(new Uri(url));
                 if (!result.IsSuccessStatusCode)
                 {
                     throw new Exception("更新SMTC图片时发生异常");

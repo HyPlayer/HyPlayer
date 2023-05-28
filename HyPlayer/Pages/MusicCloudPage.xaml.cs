@@ -78,8 +78,8 @@ public sealed partial class MusicCloudPage : Page, IDisposable
                     //ignore
                 }
                 NextPage.Visibility = json["hasMore"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
-                json.RemoveAll();
             }
+            json.RemoveAll();
         }
         catch (Exception ex)
         {

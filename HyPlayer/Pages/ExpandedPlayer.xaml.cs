@@ -748,9 +748,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             if (HyPlayList.NowPlayingItem.ItemType != HyPlayItemType.Local ||
                 HyPlayList.NowPlayingItem.ItemType != HyPlayItemType.LocalProgressive)
             {
-                using var httpClient = new HttpClient();
                 using var coverResult =
-                    await httpClient.GetAsync(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover));
+                    await Common.HttpClient.GetAsync(new Uri(HyPlayList.NowPlayingItem.PlayItem.Album.cover));
                 if (coverResult.IsSuccessStatusCode)
                 {
                     var cover = await coverResult.Content.ReadAsBufferAsync();
