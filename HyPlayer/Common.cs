@@ -1,6 +1,7 @@
 ﻿#region
 
 #nullable enable
+using ColorThiefDotNet;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
@@ -31,7 +32,6 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Animation;
-using ColorThiefDotNet;
 using Windows.Web.Http;
 using Color = Windows.UI.Color;
 #if !DEBUG

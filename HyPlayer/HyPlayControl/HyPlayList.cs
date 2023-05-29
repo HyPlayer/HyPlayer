@@ -1276,10 +1276,9 @@ public static class HyPlayList
                     await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
                 encoder.SetSoftwareBitmap(softwareBitmap);
                 await encoder.FlushAsync();
-                 var buffer = new Buffer((uint)outputStream.Size);
+                var buffer = new Buffer((uint)outputStream.Size);
                 await outputStream.ReadAsync(buffer, (uint)outputStream.Size, InputStreamOptions.None);
-                using var fileStream = await storageFile.OpenAsync(FileAccessMode.ReadWrite);
-                await fileStream.WriteAsync(buffer);
+                await FileIO.WriteBufferAsync(storageFile, buffer);
             }
         }
         var cover = Common.Setting.tileBackgroundAvailability && !NowPlayingItem.PlayItem.IsLocalFile

@@ -728,7 +728,7 @@ public sealed partial class BasePage : Page
             while (!Common.Logined && nowqrkey == key["unikey"].ToString())
             {
                 var res = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginQrCheck,
-                    new Dictionary<string, object> { { "key", key["unikey"].ToString() } });
+                    new Dictionary<string, object> { { "key", key["unikey"].ToString() } }, noCookie: true);
                 if (res["code"].ToString() == "800")
                 {
                     key = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginQrKey,
