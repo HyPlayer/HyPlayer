@@ -3,22 +3,17 @@
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
-using Microsoft.Toolkit.Uwp.Helpers;
 using Microsoft.Toolkit.Uwp.Notifications;
 using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.DataTransfer;
-using Windows.Graphics.Imaging;
 using Windows.Media;
 using Windows.Media.Playback;
 using Windows.Storage;
-using Windows.Storage.Streams;
 using Windows.System;
 using Windows.System.Profile;
 using Windows.UI;
@@ -87,154 +82,6 @@ DoubleAnimation verticalAnimation;
             TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds);
         // Update the System Media transport Controls 
         HyPlayList.MediaSystemControls.UpdateTimelineProperties(timelineProperties);
-    }
-
-    public async Task RefreshTile()
-    {
-        if (HyPlayList.NowPlayingItem?.PlayItem == null || !Common.Setting.enableTile) return;
-        string fileName = HyPlayList.NowPlayingItem.PlayItem.IsLocalFile ? null
-            : HyPlayList.NowPlayingItem.PlayItem.Album.id;
-        bool coverStreamIsAvailable = HyPlayList.CoverStream.Size != 0;
-        string downloadLink = string.Empty;
-        if (Common.Setting.saveTileBackgroundToLocalFolder 
-            && Common.Setting.tileBackgroundAvailability 
-            && !HyPlayList.NowPlayingItem.PlayItem.IsLocalFile
-            && coverStreamIsAvailable)
-        {
-            downloadLink = HyPlayList.NowPlayingItem.PlayItem.Album.cover;
-            StorageFolder storageFolder =
-                await ApplicationData.Current.TemporaryFolder.CreateFolderAsync("LocalTileBackground",
-                    CreationCollisionOption.OpenIfExists);
-            if (!await storageFolder.FileExistsAsync(fileName + ".jpg"))
-            {
-                StorageFile storageFile = await storageFolder.CreateFileAsync(fileName + ".jpg");
-                using IRandomAccessStream outputStream = new InMemoryRandomAccessStream();
-                using var coverStream = HyPlayList.CoverStream.CloneStream();
-                BitmapDecoder decoder = await BitmapDecoder.CreateAsync(coverStream);
-                using var softwareBitmap = await decoder.GetSoftwareBitmapAsync();
-                BitmapEncoder encoder =
-                    await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
-                encoder.SetSoftwareBitmap(softwareBitmap);
-                await encoder.FlushAsync();
-                using var fileStream = (await storageFile.OpenAsync(FileAccessMode.ReadWrite)).AsStream();
-                await outputStream.AsStream().CopyToAsync(fileStream);
-            }
-        }
-        var cover = Common.Setting.tileBackgroundAvailability && !HyPlayList.NowPlayingItem.PlayItem.IsLocalFile
-            ? new TileBackgroundImage()
-            {
-                Source = Common.Setting.saveTileBackgroundToLocalFolder && coverStreamIsAvailable
-                    ? "ms-appdata:///temp/LocalTileBackground/" + fileName + ".jpg"
-                    : downloadLink,
-                HintOverlay = 50
-            }
-            : null;
-        var tileContent = new TileContent()
-        {
-            Visual = new TileVisual()
-            {
-                DisplayName = "HyPlayer 正在播放",
-                TileSmall = new TileBinding()
-                {
-                    Content = new TileBindingContentAdaptive()
-                    {
-                        BackgroundImage = cover,
-                    }
-                },
-                TileMedium = new TileBinding()
-                {
-                    Branding = TileBranding.NameAndLogo,
-                    Content = new TileBindingContentAdaptive()
-                    {
-                        BackgroundImage = cover,
-                        Children =
-                        {
-                            new AdaptiveText()
-                            {
-                                Text = HyPlayList.NowPlayingItem?.PlayItem.Name,
-                                HintStyle = AdaptiveTextStyle.Base
-                            },
-                            new AdaptiveText()
-                            {
-                                Text = HyPlayList.NowPlayingItem?.PlayItem.ArtistString,
-                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
-                                HintWrap = true,
-                                HintMaxLines = 2
-                            },
-                            new AdaptiveText()
-                            {
-                                Text = HyPlayList.NowPlayingItem?.PlayItem.AlbumString,
-                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
-                                HintWrap = true,
-                                HintMaxLines = 2
-                            }
-                        }
-                    }
-                },
-                TileWide = new TileBinding()
-                {
-                    Branding = TileBranding.NameAndLogo,
-                    Content = new TileBindingContentAdaptive()
-                    {
-                        BackgroundImage = cover,
-                        Children =
-                        {
-                            new AdaptiveText()
-                            {
-                                Text = HyPlayList.NowPlayingItem?.PlayItem.Name,
-                                HintStyle = AdaptiveTextStyle.Base
-                            },
-                            new AdaptiveText()
-                            {
-                                Text = HyPlayList.NowPlayingItem?.PlayItem.ArtistString,
-                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
-                                HintWrap = true,
-                                HintMaxLines = 3
-                            },
-                            new AdaptiveText()
-                            {
-                                Text = HyPlayList.NowPlayingItem?.PlayItem.AlbumString,
-                                HintStyle = AdaptiveTextStyle.CaptionSubtle
-                            }
-                        }
-                    }
-                },
-                TileLarge = new TileBinding()
-                {
-                    Branding = TileBranding.NameAndLogo,
-                    Content = new TileBindingContentAdaptive()
-                    {
-                        BackgroundImage = cover,
-                        Children =
-                        {
-                            new AdaptiveText()
-                            {
-                                Text = HyPlayList.NowPlayingItem?.PlayItem.Name,
-                                HintStyle = AdaptiveTextStyle.Base
-                            },
-                            new AdaptiveText()
-                            {
-                                Text = HyPlayList.NowPlayingItem?.PlayItem.ArtistString,
-                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
-                                HintWrap = true,
-                                HintMaxLines = 3
-                            },
-                            new AdaptiveText()
-                            {
-                                Text = HyPlayList.NowPlayingItem?.PlayItem.AlbumString,
-                                HintStyle = AdaptiveTextStyle.CaptionSubtle
-                            }
-                        }
-                    }
-                }
-            }
-        };
-
-        // Create the tile notification
-        var tileNotif = new TileNotification(tileContent.GetXml());
-
-        // And send the notification to the primary tile
-        TileUpdateManager.CreateTileUpdaterForApplication().Update(tileNotif);
     }
 
     public void InitializeDesktopLyric()
@@ -518,10 +365,6 @@ DoubleAnimation verticalAnimation;
             HistoryManagement.AddNCSongHistory(mpi.PlayItem.Id);
         }
 
-        if (!Common.Setting.saveTileBackgroundToLocalFolder)
-        {
-            _ = RefreshTile();
-        }
         /*
         verticalAnimation.To = TbSongName.ActualWidth - TbSongName.Tb.ActualWidth;
         verticalAnimation.SpeedRatio = 0.1;
@@ -1122,7 +965,7 @@ DoubleAnimation verticalAnimation;
                 try
                 {
                     using var coverStream = HyPlayList.CoverStream.CloneStream();
-                    if(coverStream.Size!= 0)
+                    if (coverStream.Size != 0)
                     {
                         await AlbumImageSource.SetSourceAsync(coverStream);
                     }
@@ -1133,10 +976,6 @@ DoubleAnimation verticalAnimation;
                 }
             }
         });
-        if (Common.Setting.saveTileBackgroundToLocalFolder)
-        {
-            _ = RefreshTile();
-        }
     }
 
     private void HyPlayList_OnSongLikeStatusChange(bool isLiked)

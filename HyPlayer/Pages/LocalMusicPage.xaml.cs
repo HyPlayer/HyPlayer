@@ -32,7 +32,6 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
     private Task CurrentFileScanTask;
     private CancellationTokenSource cancellationTokenSource = new();
     private CancellationToken _cancellationToken;
-    private int index;
     private bool disposedValue = false;
 
     public LocalMusicPage()
@@ -87,7 +86,6 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
 
     private void Refresh_Click(object sender, RoutedEventArgs e)
     {
-        index = 0;
         if (CurrentFileScanTask == null || CurrentFileScanTask.IsCompleted == true) CurrentFileScanTask = LoadLocalMusic();
     }
 

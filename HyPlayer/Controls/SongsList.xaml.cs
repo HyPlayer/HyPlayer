@@ -142,7 +142,7 @@ public sealed partial class SongsList : UserControl, IDisposable
 
     public bool CanViewComments
     {
-        get => (bool)GetValue(CanViewCommentsProperty)&&Common.Setting.notClearMode;
+        get => (bool)GetValue(CanViewCommentsProperty) && Common.Setting.notClearMode;
         set => SetValue(CanViewCommentsProperty, value);
     }
 

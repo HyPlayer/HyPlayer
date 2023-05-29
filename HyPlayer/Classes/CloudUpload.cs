@@ -74,7 +74,7 @@ internal class CloudUpload
                 var r = new Regex("\\/");
                 var objkey = r.Replace(s, "%2F", 1);
                 var targetLink = "http://45.127.129.8/jd-musicrep-privatecloud-audio-public/" + objkey + "?offset=0&complete=true&version=1.0";
-                using var request = new HttpRequestMessage(HttpMethod.Post, 
+                using var request = new HttpRequestMessage(HttpMethod.Post,
                     new Uri(targetLink));
                 using var fileStream = await file.OpenAsync(FileAccessMode.Read);
                 using var content = new HttpStreamContent(fileStream);

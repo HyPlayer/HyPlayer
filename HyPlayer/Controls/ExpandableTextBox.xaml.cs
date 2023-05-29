@@ -62,7 +62,7 @@ public sealed partial class ExpandableTextBox : UserControl
     public string Text
     {
         get => (string)GetValue(TextProperty);
-        set 
+        set
         {
             SetValue(TextProperty, value);
         }

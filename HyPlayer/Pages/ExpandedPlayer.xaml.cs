@@ -1,6 +1,5 @@
 ﻿#region
 
-using ColorThiefDotNet;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
@@ -8,7 +7,6 @@ using Microsoft.Toolkit.Uwp.UI.Media;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
@@ -28,7 +26,6 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
-using Windows.Web.Http;
 using Buffer = Windows.Storage.Streams.Buffer;
 using Color = System.Drawing.Color;
 
@@ -469,7 +466,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     ele.StartBringIntoView(DefaultBringIntoViewOptions);
                 }
             }
-            catch (Exception e)
+            catch
             {
                 // ignore
             }
@@ -1034,37 +1031,37 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
                 break;
             case 0 when Math.Abs(e.Cumulative.Translation.Y) > Math.Abs(e.Cumulative.Translation.X):
-            {
-                // 竖直方向滑动
-                if (e.Cumulative.Translation.Y >= 0)
-                    Common.PageMain.ExpandedPlayerPositionOffset.Y = e.Cumulative.Translation.Y;
-                else
                 {
-                    ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;
-                }
+                    // 竖直方向滑动
+                    if (e.Cumulative.Translation.Y >= 0)
+                        Common.PageMain.ExpandedPlayerPositionOffset.Y = e.Cumulative.Translation.Y;
+                    else
+                    {
+                        ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;
+                    }
 
-                if (e.Cumulative.Translation.Y > 200)
-                {
-                    e.Complete();
-                    Common.BarPlayBar.CollapseExpandedPlayer();
-                }
+                    if (e.Cumulative.Translation.Y > 200)
+                    {
+                        e.Complete();
+                        Common.BarPlayBar.CollapseExpandedPlayer();
+                    }
 
-                break;
-            }
+                    break;
+                }
             case 0:
-            {
-                ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
-                if (e.Cumulative.Translation.X > 400)
                 {
-                    e.Complete();
-                }
-                else if (e.Cumulative.Translation.X < -400)
-                {
-                    e.Complete();
-                }
+                    ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
+                    if (e.Cumulative.Translation.X > 400)
+                    {
+                        e.Complete();
+                    }
+                    else if (e.Cumulative.Translation.X < -400)
+                    {
+                        e.Complete();
+                    }
 
-                break;
-            }
+                    break;
+                }
         }
     }
 
@@ -1100,7 +1097,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 if (Common.Setting.expandedPlayerBackgroundType == 0 && Background?.GetType() != typeof(ImageBrush))
                 {
                     var brush = new ImageBrush
-                        { Stretch = Stretch.UniformToFill };
+                    { Stretch = Stretch.UniformToFill };
                     Background = brush;
                     brush.ImageSource = (ImageSource)ImageAlbum.Source;
                 }
@@ -1279,11 +1276,11 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         MainGrid.Margin = new Thickness(0, 0, 0, 80);
         LyricBoxContainer.Margin = new Thickness(0);
         DefaultRow.Height = new GridLength(25, GridUnitType.Star);
-        if(!Common.Setting.albumRound)
-        AlbumCoverDropShadow.Opacity = (double)Common.Setting.expandedCoverShadowDepth / 10;
+        if (!Common.Setting.albumRound)
+            AlbumCoverDropShadow.Opacity = (double)Common.Setting.expandedCoverShadowDepth / 10;
         Grid.SetRow(LyricBoxContainer, 0);
-        if(Common.Setting.albumRound)
-        ImageAlbumAni.Begin();
+        if (Common.Setting.albumRound)
+            ImageAlbumAni.Begin();
         ImmersiveModeOutAni.Begin();
         LeftPanel.VerticalAlignment = VerticalAlignment.Top;
         Common.IsInImmerssiveMode = false;

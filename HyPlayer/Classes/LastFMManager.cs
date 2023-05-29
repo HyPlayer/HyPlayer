@@ -4,7 +4,6 @@ using IF.Lastfm.Core.Api.Enums;
 using IF.Lastfm.Core.Objects;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -83,7 +82,7 @@ namespace HyPlayer.Classes
                 using var responseData = await Common.HttpClient.TryGetStringAsync(
                     new Uri($"https://ws.audioscrobbler.com/2.0/?method=auth.getSession&format=json&token={token}&api_key={LastFMAPIKey}&api_sig={signature}"));
                 if (responseData != null && responseData.Succeeded)
-                {     
+                {
                     JObject sessionJsonObject = JObject.Parse(responseData.Value);
                     var session = new LastUserSession()
                     {

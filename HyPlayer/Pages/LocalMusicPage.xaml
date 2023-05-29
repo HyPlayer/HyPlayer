@@ -62,9 +62,9 @@
                                             Width="340"
                                             HorizontalAlignment="Left"
                                             Orientation="Vertical">
-                                                <TextBlock Text="{x:Bind PlayItem.Name, Mode=OneWay}" />
+                                                <TextBlock Text="{x:Bind PlayItem.Name}" />
                                                 <TextBlock Foreground="Gray"
-                                                       Text="{x:Bind PlayItem.ArtistString, Mode=OneWay}" />
+                                                       Text="{x:Bind PlayItem.ArtistString}" />
                                             </StackPanel>
                                             <Button
                                             x:Name="UploadCloud"

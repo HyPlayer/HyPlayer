@@ -50,7 +50,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
             TextBoxPureLyric.Foreground = AccentBrush;
             TextBoxSound.Foreground = AccentBrush;
             TextBoxTranslation.Foreground = AccentBrush;
-            RefreshWordColor(HyPlayList.Player.Position);
+            RefreshWordColor(HyPlayList.Player.PlaybackSession.Position);
         }
         else
         {
@@ -58,7 +58,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
             TextBoxSound.Foreground = IdleBrush;
             TextBoxTranslation.Foreground = IdleBrush;
         }
-        
+
     }
 
 

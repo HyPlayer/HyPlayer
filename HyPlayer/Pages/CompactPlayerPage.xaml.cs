@@ -4,10 +4,7 @@ using LyricParser.Abstraction;
 using Microsoft.Toolkit.Uwp.UI.Media;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using TagLib.Ape;
-using Windows.Storage.FileProperties;
 using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.ViewManagement;
@@ -17,7 +14,6 @@ using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
-using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
@@ -67,7 +63,6 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     private Dictionary<Run, Storyboard> BlockToAnimation = new();
 
 #nullable enable
-    private SolidColorBrush? _pureIdleBrushCache;
     private Color? _karaokAccentColorCache;
 #nullable restore
     private bool disposedValue;
@@ -100,9 +95,9 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
 
     private void HyPlayList_OnSongCoverChanged()
     {
-            if (!Common.Setting.noImage)
+        if (!Common.Setting.noImage)
         {
-            _ = Common.Invoke(async() =>
+            _ = Common.Invoke(async () =>
             {
                 try
                 {
@@ -112,14 +107,14 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
                         await AlbumImageBrushSource.SetSourceAsync(coverStream);
                     }
                 }
-                catch 
-                { 
+                catch
+                {
 
                 }
-                
+
             });
-            
-        }         
+
+        }
     }
 
     private void HyPlayList_OnPlayPositionChange(TimeSpan position)
@@ -319,9 +314,9 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
                 IconLiked.Glyph = isLiked
                     ? "\uE00B"
                     : "\uE006";
+                TotalProgress = item?.PlayItem?.LengthInMilliseconds ?? 0;
             });
         }
-        TotalProgress = item?.PlayItem?.LengthInMilliseconds ?? 0;
     }
     public void RefreshWordColor(TimeSpan position)
     {

@@ -4,6 +4,8 @@ using HyPlayer.Classes;
 using Kawazu;
 using LyricParser.Abstraction;
 using LyricParser.Implementation;
+using Microsoft.Toolkit.Uwp.Helpers;
+using Microsoft.Toolkit.Uwp.Notifications;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
 using System;
@@ -14,6 +16,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Windows.Devices.Enumeration;
 using Windows.Foundation.Collections;
+using Windows.Graphics.Imaging;
 using Windows.Media;
 using Windows.Media.Core;
 using Windows.Media.Playback;
@@ -23,7 +26,8 @@ using Windows.Storage.AccessCache;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
-using Windows.Web.Http;
+using Windows.UI.Notifications;
+using Buffer = Windows.Storage.Streams.Buffer;
 using File = TagLib.File;
 #endregion
 
@@ -259,7 +263,7 @@ public static class HyPlayList
     {
         OnLyricColorChange?.Invoke();
     }
-    
+
     public static void UpdateSmtcPosition(MediaPlaybackSession sender, object args)
     {
         MediaSystemControls.PlaybackRate = Player.PlaybackSession.PlaybackRate;
@@ -1180,6 +1184,8 @@ public static class HyPlayList
             NotifyPlayItemChanged(NowPlayingItem);
             //加载歌词
             _ = LoadLyrics(NowPlayingItem);
+            //更新磁贴
+            _ = RefreshTile();
             _controlsDisplayUpdater.Update();
         }
     }
@@ -1238,10 +1244,159 @@ public static class HyPlayList
             //ignore
         }
     }
-    
+
     public static void NotifyPlayItemChanged(HyPlayItem targetItem)
     {
         OnPlayItemChange?.Invoke(targetItem);
+    }
+    public static async Task RefreshTile()
+    {
+        if (NowPlayingItem?.PlayItem == null || !Common.Setting.enableTile) return;
+        string fileName = NowPlayingItem.PlayItem.IsLocalFile ? null
+            : NowPlayingItem.PlayItem.Album.id;
+        bool coverStreamIsAvailable = CoverStream.Size != 0;
+        string downloadLink = string.Empty;
+        if (Common.Setting.saveTileBackgroundToLocalFolder
+            && Common.Setting.tileBackgroundAvailability
+            && !NowPlayingItem.PlayItem.IsLocalFile
+            && coverStreamIsAvailable)
+        {
+            downloadLink = NowPlayingItem.PlayItem.Album.cover;
+            StorageFolder storageFolder =
+                await ApplicationData.Current.TemporaryFolder.CreateFolderAsync("LocalTileBackground",
+                    CreationCollisionOption.OpenIfExists);
+            if (!await storageFolder.FileExistsAsync(fileName + ".jpg"))
+            {
+                StorageFile storageFile = await storageFolder.CreateFileAsync(fileName + ".jpg");
+                using IRandomAccessStream outputStream = new InMemoryRandomAccessStream();
+                using var coverStream = CoverStream.CloneStream();
+                BitmapDecoder decoder = await BitmapDecoder.CreateAsync(coverStream);
+                using var softwareBitmap = await decoder.GetSoftwareBitmapAsync();
+                BitmapEncoder encoder =
+                    await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
+                encoder.SetSoftwareBitmap(softwareBitmap);
+                await encoder.FlushAsync();
+                 var buffer = new Buffer((uint)outputStream.Size);
+                await outputStream.ReadAsync(buffer, (uint)outputStream.Size, InputStreamOptions.None);
+                using var fileStream = await storageFile.OpenAsync(FileAccessMode.ReadWrite);
+                await fileStream.WriteAsync(buffer);
+            }
+        }
+        var cover = Common.Setting.tileBackgroundAvailability && !NowPlayingItem.PlayItem.IsLocalFile
+            ? new TileBackgroundImage()
+            {
+                Source = Common.Setting.saveTileBackgroundToLocalFolder && coverStreamIsAvailable
+                    ? "ms-appdata:///temp/LocalTileBackground/" + fileName + ".jpg"
+                    : downloadLink,
+                HintOverlay = 50
+            }
+            : null;
+        var tileContent = new TileContent()
+        {
+            Visual = new TileVisual()
+            {
+                DisplayName = "HyPlayer 正在播放",
+                TileSmall = new TileBinding()
+                {
+                    Content = new TileBindingContentAdaptive()
+                    {
+                        BackgroundImage = cover,
+                    }
+                },
+                TileMedium = new TileBinding()
+                {
+                    Branding = TileBranding.NameAndLogo,
+                    Content = new TileBindingContentAdaptive()
+                    {
+                        BackgroundImage = cover,
+                        Children =
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = NowPlayingItem?.PlayItem.Name,
+                                HintStyle = AdaptiveTextStyle.Base
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = NowPlayingItem?.PlayItem.ArtistString,
+                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                                HintWrap = true,
+                                HintMaxLines = 2
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = NowPlayingItem?.PlayItem.AlbumString,
+                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                                HintWrap = true,
+                                HintMaxLines = 2
+                            }
+                        }
+                    }
+                },
+                TileWide = new TileBinding()
+                {
+                    Branding = TileBranding.NameAndLogo,
+                    Content = new TileBindingContentAdaptive()
+                    {
+                        BackgroundImage = cover,
+                        Children =
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = NowPlayingItem?.PlayItem.Name,
+                                HintStyle = AdaptiveTextStyle.Base
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = NowPlayingItem?.PlayItem.ArtistString,
+                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                                HintWrap = true,
+                                HintMaxLines = 3
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = NowPlayingItem?.PlayItem.AlbumString,
+                                HintStyle = AdaptiveTextStyle.CaptionSubtle
+                            }
+                        }
+                    }
+                },
+                TileLarge = new TileBinding()
+                {
+                    Branding = TileBranding.NameAndLogo,
+                    Content = new TileBindingContentAdaptive()
+                    {
+                        BackgroundImage = cover,
+                        Children =
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = NowPlayingItem?.PlayItem.Name,
+                                HintStyle = AdaptiveTextStyle.Base
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = NowPlayingItem?.PlayItem.ArtistString,
+                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                                HintWrap = true,
+                                HintMaxLines = 3
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = NowPlayingItem?.PlayItem.AlbumString,
+                                HintStyle = AdaptiveTextStyle.CaptionSubtle
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        // Create the tile notification
+        var tileNotif = new TileNotification(tileContent.GetXml());
+
+        // And send the notification to the primary tile
+        TileUpdateManager.CreateTileUpdaterForApplication().Update(tileNotif);
     }
     private static void PlaybackSession_PositionChanged(MediaPlaybackSession sender, object args)
     {

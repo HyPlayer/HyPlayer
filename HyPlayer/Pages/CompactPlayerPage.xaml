@@ -11,7 +11,7 @@
     d:Background="White"
     d:DesignHeight="350"
     d:DesignWidth="600"
-    Background="{x:Bind Mode=OneWay, Path=AlbumImageBrush}"
+    Background="{x:Bind AlbumImageBrush}"
     IsRightTapEnabled="True"
     RightTapped="OnRightTapped"
     mc:Ignorable="d">

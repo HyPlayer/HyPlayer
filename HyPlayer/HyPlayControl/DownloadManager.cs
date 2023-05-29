@@ -20,7 +20,6 @@ using Windows.Graphics.Imaging;
 using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
 using Windows.Storage.Streams;
-using Windows.Web.Http;
 using File = TagLib.File;
 
 #endregion

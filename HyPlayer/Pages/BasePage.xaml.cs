@@ -10,14 +10,12 @@ using Newtonsoft.Json.Linq;
 using QRCoder;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.Storage;
-using Windows.Storage.FileProperties;
 using Windows.Storage.Streams;
 using Windows.System;
 using Windows.System.Profile;
@@ -963,7 +961,7 @@ public sealed partial class BasePage : Page
                 try
                 {
                     using var coverStream = HyPlayList.CoverStream.CloneStream();
-                    if(coverStream.Size!=0)
+                    if (coverStream.Size != 0)
                     {
                         await NavItemImageSource.SetSourceAsync(coverStream);
                     }
@@ -975,4 +973,4 @@ public sealed partial class BasePage : Page
             }
         });
     }
-    }
+}
