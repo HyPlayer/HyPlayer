@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
@@ -353,7 +354,7 @@ public sealed partial class BasePage : Page
         Common.NavigateBack();
     }
 
-    public async Task<bool> LoginDone()
+    public async Task<bool> LoginDone(bool isNoCookie = false, JObject resultInHttpContent = null)
     {
         JObject LoginStatus;
         try
@@ -370,22 +371,30 @@ public sealed partial class BasePage : Page
         InfoBarLoginHint.IsOpen = true;
         InfoBarLoginHint.Title = "登录成功";
         //存储Cookie
-        var cookiestr = "";
-        foreach (Cookie cookie in Common.ncapi.Cookies)
+        string cookieStr = string.Empty;
+        var cookieStringBuilder = new StringBuilder();
+        if (Common.ncapi.Cookies != null && Common.ncapi.Cookies.Count != 0 && !isNoCookie)
         {
-            var thiscookiestr = cookie.Name + "=" + cookie.Value;
-            if (!string.IsNullOrEmpty(cookie.Domain))
-                thiscookiestr += "; Domain=" + cookie.Domain;
-            if (cookie.Expires != DateTime.MinValue)
-                thiscookiestr += "; Expires=" + cookie.Expires.ToString("R");
-            if (!string.IsNullOrEmpty(cookie.Path))
-                thiscookiestr += "; Path=" + cookie.Path;
-            thiscookiestr += "; Secure=" + cookie.Secure;
-            thiscookiestr += "; HttpOnly=" + cookie.HttpOnly;
-            cookiestr += thiscookiestr + "\r\n";
-        }
+            foreach (Cookie cookie in Common.ncapi.Cookies)
+            {
+                cookieStringBuilder.Append($"{cookie.Name}={cookie.Value}");
 
-        ApplicationData.Current.LocalSettings.Values["cookie"] = cookiestr;
+                if (!string.IsNullOrEmpty(cookie.Domain))
+                    cookieStringBuilder.Append($"; Domain={cookie.Domain}");
+                if (cookie.Expires != DateTime.MinValue)
+                    cookieStringBuilder.Append($"; Expires={cookie.Expires.ToString("R")}");
+                if (!string.IsNullOrEmpty(cookie.Path))
+                    cookieStringBuilder.Append($"; Path={cookie.Path}");
+                cookieStringBuilder.Append($"; Secure={cookie.Secure}");
+                cookieStringBuilder.AppendLine($"; HttpOnly={cookie.HttpOnly}");
+                cookieStr = cookieStringBuilder.ToString();
+            }
+        }
+        else
+        {
+            cookieStr = resultInHttpContent["cookie"].ToString();
+        }
+        ApplicationData.Current.LocalSettings.Values["cookie"] = cookieStr;
         if (LoginStatus?["profile"].HasValues ?? false)
             Common.LoginedUser = NCUser.CreateFromJson(LoginStatus["profile"]);
         else
@@ -752,7 +761,7 @@ public sealed partial class BasePage : Page
                     InfoBarLoginHint.IsOpen = true;
                     InfoBarLoginHint.Title = "登录成功";
                     ButtonLogin.Content = "登录成功";
-                    await LoginDone();
+                    await LoginDone(true, res);
                     break;
                 }
                 else if (res["code"].ToString() == "802")
