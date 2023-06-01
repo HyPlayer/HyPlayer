@@ -408,7 +408,7 @@ public static class HyPlayList
     private static async Task LoadLocalFile(HyPlayItem targetItem)
     {
         // 此处可以改进
-        if (targetItem.PlayItem.DontSetLocalStorageFile.FileType != ".ncm") throw new ArgumentException();
+        if (targetItem.PlayItem.DontSetLocalStorageFile.FileType == ".ncm") throw new ArgumentException();
         if (targetItem.PlayItem.DontSetLocalStorageFile != null)
         {
             if (targetItem.ItemType != HyPlayItemType.LocalProgressive)
@@ -1116,6 +1116,10 @@ public static class HyPlayList
                     break;
                 case HyPlayItemType.Local:
                 case HyPlayItemType.LocalProgressive:
+                    if (targetItem.PlayItem.DontSetLocalStorageFile == null && targetItem.PlayItem.Url != null)
+                    {
+                        targetItem.PlayItem.DontSetLocalStorageFile = await StorageFile.GetFileFromPathAsync(targetItem.PlayItem.Url);
+                    }
                     if (targetItem.PlayItem.DontSetLocalStorageFile.FileType == ".ncm")
                     {
                         await LoadNCMFile(targetItem);
@@ -1123,15 +1127,8 @@ public static class HyPlayList
                     }
                     else
                     {
-                        try
-                        {
-                            await LoadLocalFile(targetItem);
-                            _mediaSource = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
-                        }
-                        catch
-                        {
-                            _mediaSource = MediaSource.CreateFromUri(new Uri(targetItem.PlayItem.Url));
-                        }
+                        await LoadLocalFile(targetItem);
+                        _mediaSource = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
                     }
 
                     break;
@@ -1142,6 +1139,14 @@ public static class HyPlayList
             _mediaSource?.CustomProperties.Add("nowPlayingItem", targetItem);
             MediaSystemControls.IsEnabled = true;
             await _mediaSource.OpenAsync();
+            var duration = _mediaSource.Duration?.TotalMilliseconds;
+            if (duration != null)
+            {
+                if (targetItem.PlayItem.LengthInMilliseconds != duration.Value)
+                {
+                    targetItem.PlayItem.LengthInMilliseconds = duration.Value;
+                }
+            }
             Player.Source = _mediaSource;
         }
         catch (Exception e)

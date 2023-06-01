@@ -38,6 +38,7 @@
                     <controls:ImageEx
                         x:Name="RectangleImageBack"
                         Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}"
+                        x:Load="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}"
                         Grid.ColumnSpan="2"
                         Height="85"
                         Margin="0,-10,0,-10"
@@ -53,6 +54,7 @@
                       <Rectangle
                         x:Name="RectangleImageAcrylic"
                         Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}"
+                        x:Load="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}"
                         Grid.ColumnSpan="2"
                         Margin="0,-10,0,-10"
                         Fill="{ThemeResource SystemControlAcrylicElementBrush}"

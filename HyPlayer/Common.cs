@@ -68,6 +68,7 @@ namespace HyPlayer
         public static List<string> LikedSongs = new();
         public static List<NCPlayList> MySongLists = new();
         public static readonly Stack<NavigationHistoryItem> NavigationHistory = new();
+        public static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).ToLocalTime();
 
         public static bool isExpanded
         {
@@ -1416,6 +1417,108 @@ namespace HyPlayer
         }
 
         public bool LastFMLogined => LastFMManager.LastfmLogined;
+        public bool SaveCookies()
+        {
+            var container = ApplicationData.Current.LocalSettings.CreateContainer("Cookies", ApplicationDataCreateDisposition.Always);
+            if (Common.ncapi.Cookies.Count != 0)
+            {
+                container.Values.Clear();
+                container.Values["CookieCount"] = Common.ncapi.Cookies.Count;
+                var cookieStringBuilder = new StringBuilder();
+                for (int i = 0; i < Common.ncapi.Cookies.Count; i++)
+                {
+                    Cookie cookie = Common.ncapi.Cookies[i];
+                    cookieStringBuilder.Append($"{cookie.Name}={cookie.Value}");
+                    if (!string.IsNullOrEmpty(cookie.Domain))
+                        cookieStringBuilder.Append($"; Domain={cookie.Domain}");
+                    if (cookie.Expires != DateTime.MinValue)
+                        cookieStringBuilder.Append($"; Expires={cookie.Expires.ToString("R")}");
+                    if (!string.IsNullOrEmpty(cookie.Path))
+                        cookieStringBuilder.Append($"; Path={cookie.Path}");
+                    cookieStringBuilder.Append($"; Secure={cookie.Secure}");
+                    cookieStringBuilder.Append($"; HttpOnly={cookie.HttpOnly}");
+                    container.Values[$"Cookie-{i}"] = cookieStringBuilder.ToString();
+                    cookieStringBuilder.Clear();
+                }
+                return true;
+            }
+            return false;
+        }
+        public bool LoadCookies()
+        {
+            if (ApplicationData.Current.LocalSettings.Containers.TryGetValue("Cookies", out var container))
+            {
+                if (container.Values.Count == 0)
+                {
+                    return false;
+                }
+                else
+                {
+                    var count = (int)container.Values["CookieCount"];
+                    for (int i = 0; i < count; i++)
+                    {
+                        var cookie = (string)container.Values[$"Cookie-{i}"];
+                        PhraseCookie(cookie);
+                    }
+                    return true;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+        private bool PhraseCookie(string cookieHeader)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(cookieHeader)) return false; ;
+                var cookie = new Cookie();
+                var CookieDic = new Dictionary<string, string>();
+                var arr1 = cookieHeader.Split(';').ToList();
+                var arr2 = arr1[0].Trim().Split('=');
+                cookie.Name = arr2[0];
+                cookie.Value = arr2[1];
+                arr1.RemoveAt(0);
+                if (string.IsNullOrEmpty(cookie.Value))
+                    return false;
+                foreach (var cookiediac in arr1)
+                    try
+                    {
+                        var cookiesetarr = cookiediac.Trim().Split('=');
+                        switch (cookiesetarr[0].Trim().ToLower())
+                        {
+                            case "expires":
+                                cookie.Expires = DateTime.Parse(cookiesetarr[1].Trim());
+                                break;
+                            case "max-age":
+                                cookie.Expires = DateTime.Now.AddSeconds(int.Parse(cookiesetarr[1]));
+                                break;
+                            case "domain":
+                                cookie.Domain = cookiesetarr[1].Trim();
+                                break;
+                            case "path":
+                                cookie.Path = cookiesetarr[1].Trim().Replace("%x2F", "/");
+                                break;
+                            case "secure":
+                                cookie.Secure = cookiesetarr[1].Trim().ToLower() == "true";
+                                break;
+                            case "httponly":
+                                cookie.HttpOnly = cookiesetarr[1].Trim().ToLower() == "true";
+                                break;
+                        }
+                    }
+                    catch
+                    {
+                    }
+                Common.ncapi.Cookies.Add(cookie);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
 #nullable enable
         public event PropertyChangedEventHandler? PropertyChanged;
 #nullable restore

@@ -191,7 +191,10 @@ public sealed partial class Me : Page, IDisposable
             await Common.ncapi.RequestAsync(CloudMusicApiProviders.Logout);
             Common.Logined = false;
             Common.LoginedUser = new NCUser();
-            ApplicationData.Current.LocalSettings.Values["cookie"] = "";
+            if (ApplicationData.Current.LocalSettings.Containers.TryGetValue("Cookies", out var container))
+            {
+                container.Values.Clear();
+            }
             Common.ncapi = new CloudMusicApi();
             Common.PageMain.MainFrame.Navigate(typeof(BlankPage));
             Common.PageMain.MainFrame.Navigate(typeof(BasePage));

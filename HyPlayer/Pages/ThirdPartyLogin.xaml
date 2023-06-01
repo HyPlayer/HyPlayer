@@ -5,14 +5,14 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     NavigationCacheMode="Disabled"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls">
 
     <Grid>
-        <WebView
-            LoadCompleted="ThirdPartyLoginWebview_OnLoadCompleted"
+        <controls:WebView2
+            Loaded="ThirdPartyLoginWebview_Loaded"
             Margin="0,0,0,120"
             NavigationCompleted="ThirdPartyLoginWebview_NavigationCompleted"
-            Source="https://music.163.com"
             x:Name="ThirdPartyLoginWebview" />
         <Border
             Background="{StaticResource SystemControlAcrylicElementBrush}"

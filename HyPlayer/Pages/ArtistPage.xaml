@@ -38,7 +38,8 @@
                         x:Name="RectangleImageBack"
                         Grid.RowSpan="2"
                         Margin="-32"
-                        Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}">
+                        Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}"
+                        x:Load="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}">
                         <Rectangle.Fill>
                             <ImageBrush x:Name="ImageRect1" Stretch="UniformToFill" />
                         </Rectangle.Fill>
@@ -48,7 +49,8 @@
                         Grid.RowSpan="2"
                         Margin="-32"
                         Fill="{ThemeResource SystemControlAcrylicElementBrush}"
-                        Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}" />
+                        Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}"
+                        x:Load="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}"/>
                     <controls:DockPanel
                         x:Name="GridPersonalInformation"
                         Grid.Row="0"

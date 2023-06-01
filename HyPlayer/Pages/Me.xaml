@@ -38,7 +38,8 @@
                                     EnableLazyLoading="True"
                                     IsCacheEnabled="False"
                                     Stretch="UniformToFill"
-                                    Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}">
+                                    Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}"
+                                    x:Load="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}">
                                     <controls:ImageEx.Source>
                                         <BitmapImage UriSource="{x:Bind CoverUri, Mode=OneTime}" />
                                     </controls:ImageEx.Source>
@@ -49,7 +50,8 @@
                                     Fill="{ThemeResource SystemControlAcrylicElementBrush}"
                                     RadiusX="10"
                                     RadiusY="10"
-                                    Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}" />
+                                    Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}" 
+                                    x:Load="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}"/>
                                 <Grid
                                     Grid.Column="0"
                                     Background="Transparent"
@@ -155,7 +157,7 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Grid Grid.Row="0">
-                    <Border x:Name="RectangleImageBack" Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}">
+                    <Border x:Name="RectangleImageBack" Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}" x:Load="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}">
                         <Border.Background>
                             <ImageBrush ImageSource="{x:Bind ImageRect.ImageSource, Mode=OneWay}" Stretch="UniformToFill" />
                         </Border.Background>
@@ -163,7 +165,8 @@
                     <Border
                         x:Name="RectangleImageAcrylic"
                         Background="{ThemeResource MePageAcrylicBrush}"
-                        Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}" />
+                        Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}" 
+                        x:Load="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}" />
                     <controls:DockPanel
                         x:Name="GridPersonalInformation"
                         Margin="8"

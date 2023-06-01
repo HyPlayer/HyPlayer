@@ -226,7 +226,8 @@
                                 IsCacheEnabled="False"
                                 Opacity="0.6"
                                 Stretch="Fill"
-                                Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}">
+                                Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}"
+                                x:Load="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}">
                                 <controls:ImageEx.Source>
                                     <BitmapImage UriSource="{x:Bind Cover}" />
                                 </controls:ImageEx.Source>
@@ -238,7 +239,8 @@
                                 Fill="{ThemeResource SystemControlBaseLowAcrylicElementBrush}"
                                 RadiusX="10"
                                 RadiusY="10"
-                                Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}" />
+                                Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}" 
+                                 x:Load="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}"/>
 
                             <StackPanel Grid.Column="0" Orientation="Horizontal">
                                 <controls:ImageEx

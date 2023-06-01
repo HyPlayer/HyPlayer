@@ -12,11 +12,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
-using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.System;
 using Windows.System.Profile;
@@ -195,68 +193,12 @@ public sealed partial class BasePage : Page
         */
     }
 
-    private void PhraseCookie(string cookielines)
-    {
-        try
-        {
-            foreach (var cookieHeader in cookielines.Split("\r\n"))
-            {
-                if (string.IsNullOrEmpty(cookieHeader)) continue;
-                var cookie = new Cookie();
-                var CookieDic = new Dictionary<string, string>();
-                var arr1 = cookieHeader.Split(';').ToList();
-                var arr2 = arr1[0].Trim().Split('=');
-                cookie.Name = arr2[0];
-                cookie.Value = arr2[1];
-                arr1.RemoveAt(0);
-                if (string.IsNullOrEmpty(cookie.Value))
-                    continue;
-                foreach (var cookiediac in arr1)
-                    try
-                    {
-                        var cookiesetarr = cookiediac.Trim().Split('=');
-                        switch (cookiesetarr[0].Trim().ToLower())
-                        {
-                            case "expires":
-                                cookie.Expires = DateTime.Parse(cookiesetarr[1].Trim());
-                                break;
-                            case "max-age":
-                                cookie.Expires = DateTime.Now.AddSeconds(int.Parse(cookiesetarr[1]));
-                                break;
-                            case "domain":
-                                cookie.Domain = cookiesetarr[1].Trim();
-                                break;
-                            case "path":
-                                cookie.Path = cookiesetarr[1].Trim().Replace("%x2F", "/");
-                                break;
-                            case "secure":
-                                cookie.Secure = cookiesetarr[1].Trim().ToLower() == "true";
-                                break;
-                            case "httponly":
-                                cookie.HttpOnly = cookiesetarr[1].Trim().ToLower() == "true";
-                                break;
-                        }
-                    }
-                    catch
-                    {
-                    }
-
-                Common.ncapi.Cookies.Add(cookie);
-            }
-        }
-        catch (Exception)
-        {
-        }
-    }
-
     private async Task LoadLoginData()
     {
         try
         {
-            if (ApplicationData.Current.LocalSettings.Values.ContainsKey("cookie") &&
-                !string.IsNullOrEmpty(ApplicationData.Current.LocalSettings.Values["cookie"].ToString()))
+            if (Common.Setting.LoadCookies())
             {
-                PhraseCookie(ApplicationData.Current.LocalSettings.Values["cookie"].ToString());
                 try
                 {
                     await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginStatus);
@@ -371,30 +313,7 @@ public sealed partial class BasePage : Page
         InfoBarLoginHint.IsOpen = true;
         InfoBarLoginHint.Title = "登录成功";
         //存储Cookie
-        string cookieStr = string.Empty;
-        var cookieStringBuilder = new StringBuilder();
-        if (Common.ncapi.Cookies != null && Common.ncapi.Cookies.Count != 0 && !isNoCookie)
-        {
-            foreach (Cookie cookie in Common.ncapi.Cookies)
-            {
-                cookieStringBuilder.Append($"{cookie.Name}={cookie.Value}");
-
-                if (!string.IsNullOrEmpty(cookie.Domain))
-                    cookieStringBuilder.Append($"; Domain={cookie.Domain}");
-                if (cookie.Expires != DateTime.MinValue)
-                    cookieStringBuilder.Append($"; Expires={cookie.Expires.ToString("R")}");
-                if (!string.IsNullOrEmpty(cookie.Path))
-                    cookieStringBuilder.Append($"; Path={cookie.Path}");
-                cookieStringBuilder.Append($"; Secure={cookie.Secure}");
-                cookieStringBuilder.AppendLine($"; HttpOnly={cookie.HttpOnly}");
-                cookieStr = cookieStringBuilder.ToString();
-            }
-        }
-        else
-        {
-            cookieStr = resultInHttpContent["cookie"].ToString();
-        }
-        ApplicationData.Current.LocalSettings.Values["cookie"] = cookieStr;
+        Common.Setting.SaveCookies();
         if (LoginStatus?["profile"].HasValues ?? false)
             Common.LoginedUser = NCUser.CreateFromJson(LoginStatus["profile"]);
         else
@@ -730,19 +649,19 @@ public sealed partial class BasePage : Page
         {
             var key = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginQrKey,
                 new Dictionary<string, object>
-                    { { "timestamp", (DateTime.Now.Ticks - 621356256000000000) / 10000 } });
+                    { { "timestamp", (DateTime.Now - Common.UnixEpoch).TotalMilliseconds } });
 
             _ = ReFreshQr(key);
             nowqrkey = key["unikey"].ToString();
             while (!Common.Logined && nowqrkey == key["unikey"].ToString())
             {
                 var res = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginQrCheck,
-                    new Dictionary<string, object> { { "key", key["unikey"].ToString() } }, noCookie: true);
+                    new Dictionary<string, object> { { "key", key["unikey"].ToString() } });
                 if (res["code"].ToString() == "800")
                 {
                     key = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginQrKey,
                         new Dictionary<string, object>
-                            { { "timestamp", (DateTime.Now.Ticks - 621356256000000000) / 10000 } });
+                            { { "timestamp", (DateTime.Now - Common.UnixEpoch).TotalMilliseconds } });
                     try
                     {
                         _ = ReFreshQr(key);
