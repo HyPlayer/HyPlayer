@@ -354,7 +354,7 @@ public sealed partial class BasePage : Page
         Common.NavigateBack();
     }
 
-    public async Task<bool> LoginDone(bool isNoCookie = false, JObject resultInHttpContent = null)
+    public async Task<bool> LoginDone()
     {
         JObject LoginStatus;
         try
@@ -761,7 +761,7 @@ public sealed partial class BasePage : Page
                     InfoBarLoginHint.IsOpen = true;
                     InfoBarLoginHint.Title = "登录成功";
                     ButtonLogin.Content = "登录成功";
-                    await LoginDone(true, res);
+                    await LoginDone();
                     break;
                 }
                 else if (res["code"].ToString() == "802")
