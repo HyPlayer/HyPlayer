@@ -1431,7 +1431,7 @@
                                         </StackPanel>
                                         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
                                             <HyperlinkButton Content="Github" NavigateUri="https://github.com/kengwang" />
-                                            <HyperlinkButton Content="博客" NavigateUri="https://blog.kengwang.co" />
+                                            <HyperlinkButton Content="博客" NavigateUri="https://blog.kengwang.com.cn" />
                                             <HyperlinkButton Content="酷安@kengwang" NavigateUri="http://www.coolapk.com/u/1683034" />
                                             <HyperlinkButton Content="爱发电打赏" NavigateUri="https://afdian.net/@kengwang" />
                                         </StackPanel>
