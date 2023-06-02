@@ -344,18 +344,18 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
 
     private void MovePrevious(object sender, RoutedEventArgs e)
     {
-        HyPlayList.SongMovePrevious();
+        HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.UserNextFadeOut, HyPlayList.SongChangeType.Previous);
     }
 
     private void MoveNext(object sender, RoutedEventArgs e)
     {
-        HyPlayList.SongMoveNext();
+        HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.UserNextFadeOut, HyPlayList.SongChangeType.Next);
     }
 
     private void ChangePlayState(object sender, RoutedEventArgs e)
     {
-        if (HyPlayList.IsPlaying) HyPlayList.Player.Pause();
-        else HyPlayList.Player.Play();
+        if (HyPlayList.IsPlaying) HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.PauseFadeOut);
+        else HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.PlayFadeIn);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
