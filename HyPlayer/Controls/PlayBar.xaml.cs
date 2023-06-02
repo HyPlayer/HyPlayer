@@ -428,7 +428,7 @@ DoubleAnimation verticalAnimation;
     {
         if (HyPlayList.NowPlayingItem.PlayItem?.Name != null && HyPlayList.Player.Source == null)
             _ = HyPlayList.LoadPlayerSong(HyPlayList.List[HyPlayList.NowPlaying]);
-        PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uF8AE" : "\uF5B0"; ;
+        PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uF8AE" : "\uF5B0";
         if (HyPlayList.IsPlaying)
         {
             HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.PauseFadeOut);

@@ -5,6 +5,7 @@ using Microsoft.Toolkit.Uwp.UI.Media;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Windows.Media.Playback;
 using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.ViewManagement;
@@ -84,8 +85,6 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         HyPlayList.OnSongCoverChanged += HyPlayList_OnSongCoverChanged;
         HyPlayList.OnPlayPositionChange += HyPlayList_OnPlayPositionChange;
         HyPlayList.OnPlayItemChange += OnChangePlayItem;
-        HyPlayList.OnPlay += HyPlayList_OnPlay;
-        HyPlayList.OnPause += HyPlayList_OnPause;
         HyPlayList.OnLyricChange += OnLyricChanged;
         HyPlayList.OnSongLikeStatusChange += HyPlayList_OnSongLikeStatusChange;
         LeaveAnimation.Completed += LeaveAnimation_Completed;
@@ -119,17 +118,23 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
 
     private void HyPlayList_OnPlayPositionChange(TimeSpan position)
     {
-        _ = Common.Invoke(() => NowProgress = position.TotalMilliseconds);
-    }
-
-    private void HyPlayList_OnPlay()
-    {
-        _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB5");
-    }
-
-    private void HyPlayList_OnPause()
-    {
-        _ = Common.Invoke(() => PlayStateIcon.Glyph = "\uEDB5");
+        _ = Common.Invoke(() => {
+            NowProgress = position.TotalMilliseconds;
+            if (HyPlayList.FadeProcessStatus && !HyPlayList.AutoFadeProcessing)
+            {
+                PlayStateIcon.Glyph =
+                HyPlayList.CurrentFadeInOutState == HyPlayList.FadeInOutState.FadeIn
+                    ? "\uF8AE"
+                    : "\uF5B0";
+            }
+            else
+            {
+                PlayStateIcon.Glyph =
+                HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
+                    ? "\uF8AE"
+                    : "\uF5B0";
+            }
+        });
     }
 
     private void LeaveAnimation_Completed(object sender, object e)
@@ -302,6 +307,10 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         {
             NowPlayingName = item?.PlayItem?.Name;
             NowPlayingArtists = item?.PlayItem?.ArtistString;
+            PlayStateIcon.Glyph =
+                HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
+                    ? "\uF8AE" :
+                    "\uF5B0";
         });
         if (item.ItemType is not HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
         {
@@ -356,6 +365,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     {
         if (HyPlayList.IsPlaying) HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.PauseFadeOut);
         else HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.PlayFadeIn);
+        PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uF8AE" : "\uF5B0";
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -402,8 +412,6 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
             position => _ = Common.Invoke(() => NowProgress = position.TotalMilliseconds);
             HyPlayList.OnPlayItemChange -= OnChangePlayItem;
             HyPlayList.OnSongCoverChanged -= HyPlayList_OnSongCoverChanged;
-            HyPlayList.OnPlay -= HyPlayList_OnPlay;
-            HyPlayList.OnPause -= HyPlayList_OnPause;
             HyPlayList.OnLyricChange -= OnLyricChanged;
             HyPlayList.OnSongLikeStatusChange -= HyPlayList_OnSongLikeStatusChange;
             Common.OnPlaybarVisibilityChanged -= OnPlaybarVisibilityChanged;
