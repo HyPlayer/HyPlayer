@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.Devices.Enumeration;
 using Windows.Foundation.Collections;
@@ -439,9 +440,9 @@ public static class HyPlayList
         if (NCMFile.IsCorrectNCMFile(stream))
         {
             var info = NCMFile.GetNCMMusicInfo(stream);
-            using var coverStream = NCMFile.GetCoverStream(stream);
-            var targetCoverStream = CoverStream.AsStream();
-            coverStream.CopyTo(targetCoverStream);
+            var coverArray = NCMFile.GetCoverByteArray(stream);
+            var buffer = coverArray.AsBuffer();
+           await CoverStream.WriteAsync(buffer);
             using var encStream = NCMFile.GetEncryptedStream(stream);
             encStream.Seek(0, SeekOrigin.Begin);
             var songDataStream = new InMemoryRandomAccessStream();
@@ -1210,23 +1211,24 @@ public static class HyPlayList
                         {
                             using var thumbnail =
                                 await NowPlayingStorageFile.GetThumbnailAsync(ThumbnailMode.MusicView, 3000);
-                            using var inputStream = thumbnail.AsStreamForRead();
-                            var coverStream = CoverStream.AsStream();
-                            await inputStream.CopyToAsync(coverStream);
+                            var buffer = new Buffer((uint)thumbnail.Size);
+                            await thumbnail.ReadAsync(buffer, (uint)thumbnail.Size, InputStreamOptions.None);
+                            await CoverStream.WriteAsync(buffer);
                         }
                         else
                         {
                             var file = await StorageFile.GetFileFromPathAsync("/Assets/icon.png");
-                            using var stream = await file.OpenStreamForReadAsync();
-                            var coverStream = CoverStream.AsStream();
-                            await stream.CopyToAsync(coverStream);
+                            using var thumbnail = await file.GetThumbnailAsync(ThumbnailMode.MusicView, 3000);
+                            var buffer = new Buffer((uint)thumbnail.Size);
+                            await thumbnail.ReadAsync(buffer, (uint)thumbnail.Size, InputStreamOptions.None);
+                            await CoverStream.WriteAsync(buffer);
                         }
                     }
                     else
                     {
-                        using var stream = new MemoryStream(NowPlayingItem.PlayItem.LocalFileTag.Pictures[0].Data.Data);
-                        var coverStream = CoverStream.AsStream();
-                        await stream.CopyToAsync(coverStream);
+                        var bufferByte = NowPlayingItem.PlayItem.LocalFileTag.Pictures[0].Data.Data;
+                        var buffer = bufferByte.AsBuffer();
+                        await CoverStream.WriteAsync(buffer);
                     }
                 }
             }
@@ -1259,7 +1261,7 @@ public static class HyPlayList
         if (NowPlayingItem?.PlayItem == null || !Common.Setting.enableTile) return;
         string fileName = NowPlayingItem.PlayItem.IsLocalFile ? null
             : NowPlayingItem.PlayItem.Album.id;
-        bool coverStreamIsAvailable = CoverStream.Size != 0;
+        bool coverStreamIsAvailable = CoverStream.Size != 0 && fileName is not null or "0";
         string downloadLink = string.Empty;
         if (Common.Setting.saveTileBackgroundToLocalFolder
             && Common.Setting.tileBackgroundAvailability
@@ -1275,7 +1277,8 @@ public static class HyPlayList
                 StorageFile storageFile = await storageFolder.CreateFileAsync(fileName + ".jpg");
                 using IRandomAccessStream outputStream = new InMemoryRandomAccessStream();
                 using var coverStream = CoverStream.CloneStream();
-                BitmapDecoder decoder = await BitmapDecoder.CreateAsync(coverStream);
+                var pictureMime = await MIMEHelper.GetPictureCodec(coverStream);
+                BitmapDecoder decoder = await BitmapDecoder.CreateAsync(pictureMime,coverStream);
                 using var softwareBitmap = await decoder.GetSoftwareBitmapAsync();
                 BitmapEncoder encoder =
                     await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);

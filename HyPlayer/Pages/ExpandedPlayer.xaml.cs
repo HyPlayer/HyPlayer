@@ -1267,7 +1267,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         ImmersiveModeInAni.Begin();
         LeftPanel.VerticalAlignment = VerticalAlignment.Bottom;
         Common.IsInImmerssiveMode = true;
-        _ = HyPlayList.RefreshAlbumCover();
     }
 
     private void ImmersiveModeExit()

@@ -92,6 +92,7 @@
     <Compile Include="Classes\Converters.cs" />
     <Compile Include="Classes\Extensions.cs" />
     <Compile Include="Classes\LastFMManager.cs" />
+    <Compile Include="Classes\MIMEHelper.cs" />
     <Compile Include="Classes\NCMFile.cs" />
     <Compile Include="Classes\NCSong.cs" />
     <Compile Include="Classes\PersonalFM.cs" />

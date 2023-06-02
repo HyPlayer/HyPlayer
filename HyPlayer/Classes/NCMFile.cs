@@ -50,6 +50,11 @@ internal static class NCMFile
         stream.Seek(9, SeekOrigin.Current);
         return new MemoryStream(ReadChunk(stream));
     }
+    public static byte[] GetCoverByteArray(Stream stream)
+    {
+        stream.Seek(9, SeekOrigin.Current);
+        return ReadChunk(stream);
+    }
 
     public static Stream GetEncryptedStream(Stream sourceStream)
     {
