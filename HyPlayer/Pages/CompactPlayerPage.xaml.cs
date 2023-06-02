@@ -118,7 +118,8 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
 
     private void HyPlayList_OnPlayPositionChange(TimeSpan position)
     {
-        _ = Common.Invoke(() => {
+        _ = Common.Invoke(() =>
+        {
             NowProgress = position.TotalMilliseconds;
             if (HyPlayList.FadeProcessStatus && !HyPlayList.AutoFadeProcessing)
             {

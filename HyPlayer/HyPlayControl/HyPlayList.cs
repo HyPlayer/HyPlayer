@@ -442,7 +442,7 @@ public static class HyPlayList
             var info = NCMFile.GetNCMMusicInfo(stream);
             var coverArray = NCMFile.GetCoverByteArray(stream);
             var buffer = coverArray.AsBuffer();
-           await CoverStream.WriteAsync(buffer);
+            await CoverStream.WriteAsync(buffer);
             using var encStream = NCMFile.GetEncryptedStream(stream);
             encStream.Seek(0, SeekOrigin.Begin);
             var songDataStream = new InMemoryRandomAccessStream();
@@ -1278,7 +1278,7 @@ public static class HyPlayList
                 using IRandomAccessStream outputStream = new InMemoryRandomAccessStream();
                 using var coverStream = CoverStream.CloneStream();
                 var pictureMime = await MIMEHelper.GetPictureCodec(coverStream);
-                BitmapDecoder decoder = await BitmapDecoder.CreateAsync(pictureMime,coverStream);
+                BitmapDecoder decoder = await BitmapDecoder.CreateAsync(pictureMime, coverStream);
                 using var softwareBitmap = await decoder.GetSoftwareBitmapAsync();
                 BitmapEncoder encoder =
                     await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
