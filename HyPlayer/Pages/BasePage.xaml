@@ -316,13 +316,13 @@
                                             KeyDown="TextBoxPassword_OnKeyDown"
                                             PlaceholderText="密码" />
                                         <Grid>
-                                            <TextBlock Text="登录代表你同意相关条款" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" VerticalAlignment="Center"/>
+                                            <TextBlock Text="登录代表你同意相关条款" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" VerticalAlignment="Center"/>
                                             <Button
                                                 Name="ButtonLogin"
                                                 HorizontalAlignment="Right"
                                                 Click="ButtonLogin_OnClick"
                                                 Content="登录"
-                                                Style="{StaticResource AccentButtonStyle}" />
+                                                Style="{ThemeResource AccentButtonStyle}" />
                                         </Grid>
 
                                     </StackPanel>
@@ -375,7 +375,7 @@
                             BorderBrush="Transparent"
                             Click="ThirdPartyLogin_Click"
                             Tag="QQ">
-                            <Image Source="/Assets/ThirdPartyIcons/QQ.png" Stretch="Fill" />
+                            <BitmapIcon UriSource="/Assets/ThirdPartyIcons/QQ.png" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" />
                         </Button>
                         <Button
                             x:Name="WXLogin"
@@ -385,7 +385,7 @@
                             BorderBrush="Transparent"
                             Click="ThirdPartyLogin_Click"
                             Tag="WX">
-                            <Image Source="/Assets/ThirdPartyIcons/WX.png" Stretch="Fill" />
+                            <BitmapIcon UriSource="/Assets/ThirdPartyIcons/WX.png" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"/>
                         </Button>
                         <Button
                             x:Name="WBLogin"
@@ -397,7 +397,7 @@
                             CornerRadius="5"
                             Tag="WB">
                             <Button.Content>
-                                <Image Source="/Assets/ThirdPartyIcons/SinaWB.png" Stretch="Fill" />
+                                <BitmapIcon UriSource="/Assets/ThirdPartyIcons/SinaWB.png" Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}" />
                             </Button.Content>
                         </Button>
                         <HyperlinkButton Content="无法登录?" NavigateUri="https://blog.kengwang.com.cn/hyplayer-login-help" HorizontalAlignment="Right"/>

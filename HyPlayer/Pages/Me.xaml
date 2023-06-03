@@ -214,13 +214,15 @@
                                 x:Name="ButtonLogout"
                                 VerticalAlignment="Bottom"
                                 Click="Logout_OnClick"
-                                Foreground="White">
+                                Foreground="{ThemeResource SystemControlForegroundAccentBrush}">
                                 <StackPanel Orientation="Horizontal">
                                     <FontIcon
                                         Margin="0,0,8,0"
                                         FontSize="14"
-                                        Glyph="&#xF3B1;" />
-                                    <TextBlock Text="退出登录" />
+                                        Glyph="&#xF3B1;"
+                                        Foreground="{ThemeResource SystemColorButtonFaceBrush}"/>
+                                    <TextBlock Text="退出登录"
+                                               Foreground="{ThemeResource SystemColorButtonFaceBrush}"/>
                                 </StackPanel>
                             </Button>
                         </StackPanel>

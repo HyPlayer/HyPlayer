@@ -271,7 +271,6 @@ public sealed partial class BasePage : Page
             else
             {
                 await LoginDone();
-                Common.NavigatePage(typeof(Home));
             }
             json.RemoveAll();
         }

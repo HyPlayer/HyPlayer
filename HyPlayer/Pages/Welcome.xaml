@@ -23,7 +23,7 @@
                 <TextBlock x:Name="TBHINT" Text="欢迎使用 HyPlayer!" 
                            Style="{StaticResource TitleTextBlockStyle}"/>
                 <TextBlock Text="推荐您在登录后进入设置进行个性化" 
-                           Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                           Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                            FontSize="18"/>
                 <Button x:Name="LoginBtn" 
                         Click="LoginBtn_Click">
