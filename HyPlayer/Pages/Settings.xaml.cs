@@ -71,9 +71,6 @@ public sealed partial class Settings : Page, IDisposable
         TextBoxXREALIP.Text = ApplicationData.Current.LocalSettings.Values["xRealIp"] != null
             ? ApplicationData.Current.LocalSettings.Values["xRealIp"].ToString()
             : "";
-        TextBoxPROXY.Text = ApplicationData.Current.LocalSettings.Values["neteaseProxy"] != null
-            ? ApplicationData.Current.LocalSettings.Values["neteaseProxy"].ToString()
-            : "";
         var package = Package.Current;
         var packageId = package.Id;
         var version = packageId.Version;
@@ -199,17 +196,10 @@ public sealed partial class Settings : Page, IDisposable
         if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         ApplicationData.Current.LocalSettings.Values["xRealIp"] =
             TextBoxXREALIP.Text == "" ? null : TextBoxXREALIP.Text;
-        Common.ncapi.RealIP = (string)ApplicationData.Current.LocalSettings.Values["xRealIp"];
-    }
-
-
-    private void ButtonPROXYSave_OnClick(object sender, RoutedEventArgs e)
-    {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
-        ApplicationData.Current.LocalSettings.Values["neteaseProxy"] =
-            TextBoxPROXY.Text == "" ? null : TextBoxPROXY.Text;
-        Common.ncapi.UseProxy = !(ApplicationData.Current.LocalSettings.Values["neteaseProxy"] is null);
-        Common.ncapi.Proxy = new WebProxy((string)ApplicationData.Current.LocalSettings.Values["neteaseProxy"]);
+        if (Common.ncapi != null)
+        {
+            Common.ncapi.RealIP = (string)ApplicationData.Current.LocalSettings.Values["xRealIp"];
+        }
     }
 
     private async void ButtonDownloadSelect_OnClick(object sender, RoutedEventArgs e)

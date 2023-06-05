@@ -33,6 +33,7 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.Web.Http;
+using Windows.Web.Http.Filters;
 using Color = Windows.UI.Color;
 #if !DEBUG
 using Microsoft.AppCenter.Crashes;
@@ -47,7 +48,6 @@ namespace HyPlayer
         public delegate void EnterForegroundFromBackgroundEvent();
         public delegate void PlaybarVisibilityChangedEvent(bool isActivated);
 
-        public static CloudMusicApi ncapi = new();
         public static bool Logined = false;
         public static bool IsInFm = false;
         public static bool IsInBackground = false;
@@ -59,9 +59,11 @@ namespace HyPlayer
         public static Frame? BaseFrame;
         public static BasePage? PageBase;
         public static KawazuConverter? KawazuConv;
+        public static HttpBaseProtocolFilter? HttpBaseProtocolFilter;
+        public static HttpClient? HttpClient;
+        public static CloudMusicApi? ncapi;
 #nullable restore
         public static ColorThief ColorThief = new();
-        public static HttpClient HttpClient = new();
         public static Setting Setting = new();
         public static bool ShowLyricSound = true;
         public static bool ShowLyricTrans = true;
@@ -69,7 +71,15 @@ namespace HyPlayer
         public static List<NCPlayList> MySongLists = new();
         public static readonly Stack<NavigationHistoryItem> NavigationHistory = new();
         public static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).ToLocalTime();
-
+        public static void InitializeHttpClientAndAPI()
+        {
+            ncapi = new CloudMusicApi(Setting.EnableProxy);
+            HttpBaseProtocolFilter = new HttpBaseProtocolFilter
+            {
+                UseProxy =Setting.EnableProxy
+            };
+            HttpClient = new HttpClient(HttpBaseProtocolFilter);
+        }
         public static bool isExpanded
         {
             get => _isExpanded;
@@ -1445,7 +1455,10 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(UseHttp)] = value;
-                Common.ncapi.UseHttp = value;
+                if (Common.ncapi != null)
+                {
+                    Common.ncapi.UseHttp = value;
+                }
                 OnPropertyChanged();
             }
         }
@@ -1469,19 +1482,27 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-
+        public bool EnableProxy
+        {
+            get => GetSettings(nameof(EnableProxy), false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(EnableProxy)] = value;
+                OnPropertyChanged();
+            }
+        }
         public bool LastFMLogined => LastFMManager.LastfmLogined;
         public bool SaveCookies()
         {
             var container = ApplicationData.Current.LocalSettings.CreateContainer("Cookies", ApplicationDataCreateDisposition.Always);
-            if (Common.ncapi.Cookies.Count != 0)
+            if (Common.ncapi?.Cookies.Count != 0)
             {
                 container.Values.Clear();
-                container.Values["CookieCount"] = Common.ncapi.Cookies.Count;
+                container.Values["CookieCount"] = Common.ncapi?.Cookies.Count;
                 var cookieStringBuilder = new StringBuilder();
-                for (int i = 0; i < Common.ncapi.Cookies.Count; i++)
+                for (int i = 0; i < Common.ncapi?.Cookies.Count; i++)
                 {
-                    Cookie cookie = Common.ncapi.Cookies[i];
+                    Cookie cookie = Common.ncapi?.Cookies[i];
                     cookieStringBuilder.Append($"{cookie.Name}={cookie.Value}");
                     if (!string.IsNullOrEmpty(cookie.Domain))
                         cookieStringBuilder.Append($"; Domain={cookie.Domain}");
@@ -1565,7 +1586,7 @@ namespace HyPlayer
                     catch
                     {
                     }
-                Common.ncapi.Cookies.Add(cookie);
+                Common.ncapi?.Cookies.Add(cookie);
                 return true;
             }
             catch (Exception)
@@ -1708,7 +1729,7 @@ namespace HyPlayer
             var retsongs = new List<NCSong>();
             try
             {
-                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
+                var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.SongDetail,
                     new Dictionary<string, object>
                     {
                         ["ids"] = string.Join(",",
@@ -1744,7 +1765,7 @@ namespace HyPlayer
             var ret = new List<NCPlayList>();
             try
             {
-                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Batch, queries);
+                var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.Batch, queries);
 
                 for (var k = 0; k < json.Count - 1; k++)
                     ret.Add(NCPlayList.CreateFromJson(
@@ -1787,7 +1808,7 @@ namespace HyPlayer
                     Math.Min(500, trackIds.Count - nowIndex * 500));
                 try
                 {
-                    var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
+                    var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.SongDetail,
                         new Dictionary<string, object> { ["ids"] = string.Join(",", nowIds) });
                     nowIndex++;
                     var i = 0;

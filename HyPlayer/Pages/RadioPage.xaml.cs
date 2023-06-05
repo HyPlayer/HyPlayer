@@ -62,7 +62,7 @@ public sealed partial class RadioPage : Page, IDisposable
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.DjProgram,
+            var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.DjProgram,
                 new Dictionary<string, object>
                 {
                     { "rid", Radio.id },
@@ -93,7 +93,7 @@ public sealed partial class RadioPage : Page, IDisposable
         if (e.Parameter is string rid)
             try
             {
-                var json1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.DjDetail,
+                var json1 = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.DjDetail,
                     new Dictionary<string, object> { { "rid", rid } });
                 Radio = NCRadio.CreateFromJson(json1["djRadio"]);
                 json1.RemoveAll();
@@ -178,7 +178,7 @@ public sealed partial class RadioPage : Page, IDisposable
             while (hasMore is true)
                 try
                 {
-                    var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.DjProgram,
+                    var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.DjProgram,
                         new Dictionary<string, object>
                         {
                             { "rid", Radio.id },

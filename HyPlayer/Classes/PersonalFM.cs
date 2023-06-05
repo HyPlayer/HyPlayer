@@ -46,7 +46,7 @@ internal static class PersonalFM
                 if (HyPlayList.List.Count < 1)
                 {
                     //只有一首需要请求下一首
-                    var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PersonalFm);
+                    var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.PersonalFm);
                     var song1 = json["data"][0];
                     var song2 = json["data"][1];
                     var item1 = HyPlayList.AppendNcSong(NCSong.CreateFromJson(song1));

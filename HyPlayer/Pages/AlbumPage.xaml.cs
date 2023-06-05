@@ -93,7 +93,7 @@ public sealed partial class AlbumPage : Page, IDisposable
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(AlbumPage));
         _cancellationToken.ThrowIfCancellationRequested();
-        var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.AlbumDetailDynamic,
+        var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.AlbumDetailDynamic,
             new Dictionary<string, object> { { "id", albumid } });
         BtnSub.IsChecked = json["isSub"].ToObject<bool>();
         json.RemoveAll();
@@ -106,7 +106,7 @@ public sealed partial class AlbumPage : Page, IDisposable
         JObject json;
         try
         {
-            json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Album,
+            json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.Album,
                 new Dictionary<string, object> { { "id", albumid } });
             Album = NCAlbum.CreateFromJson(json["album"]);
             if (Common.Setting.noImage) ImageRect.ImageSource = null;
@@ -218,7 +218,7 @@ public sealed partial class AlbumPage : Page, IDisposable
     private void BtnSub_Click(object sender, RoutedEventArgs e)
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(AlbumPage));
-        _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.AlbumSubscribe,
+        _ = Common.ncapi?.RequestAsync(CloudMusicApiProviders.AlbumSubscribe,
             new Dictionary<string, object>
                 { { "id", albumid }, { "t", BtnSub.IsChecked.GetValueOrDefault(false) ? "1" : "0" } });
     }

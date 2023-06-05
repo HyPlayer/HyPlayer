@@ -106,7 +106,7 @@ public sealed partial class Search : Page, IDisposable
         SongResults.Clear();
         try
         {
-            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Cloudsearch,
+            var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.Cloudsearch,
                 new Dictionary<string, object>
                 {
                     { "keywords", searchText },
@@ -537,7 +537,7 @@ public sealed partial class Search : Page, IDisposable
 
         try
         {
-            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchSuggest,
+            var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.SearchSuggest,
                 new Dictionary<string, object> { { "keywords", sender.Text }, { "type", "mobile" } });
 
             if (json["result"] != null && json["result"]["allMatch"] != null &&

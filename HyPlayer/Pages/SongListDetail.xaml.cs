@@ -125,7 +125,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         try
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendSongs);
+            var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.RecommendSongs);
             if (json["data"]["dailySongs"][0]["alg"].ToString() == "birthDaySong")
             {
                 // 诶呀,没想到还过生了,吼吼
@@ -158,7 +158,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         try
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
+            var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
                 new Dictionary<string, object> { { "id", playList.plid } });
             if (!json["playlist"]["trackIds"].HasValues) return;
             var trackIds = json["playlist"]["trackIds"].Select(t => (int)t["id"]).Skip(page * 500)
@@ -177,7 +177,7 @@ public sealed partial class SongListDetail : Page, IDisposable
 
             try
             {
-                json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
+                json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.SongDetail,
                     new Dictionary<string, object> { ["ids"] = string.Join(",", trackIds) });
                 var idx = page * 500;
                 var i = 0;
@@ -243,7 +243,7 @@ public sealed partial class SongListDetail : Page, IDisposable
 
                 try
                 {
-                    var json = await Common.ncapi.RequestAsync(
+                    var json = await Common.ncapi?.RequestAsync(
                         CloudMusicApiProviders.PlaylistDetail,
                         new Dictionary<string, object> { { "id", pid } });
                     if (json["code"].ToString() != "200")
@@ -304,7 +304,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         HyPlayList.RemoveAllSong();
         try
         {
-            var jsona = await Common.ncapi.RequestAsync(
+            var jsona = await Common.ncapi?.RequestAsync(
                 CloudMusicApiProviders.PlaymodeIntelligenceList,
                 new Dictionary<string, object>
                     { { "pid", playList.plid }, { "id", Songs[0].sid } /*, { "sid", Songs[0].sid }*/ });
@@ -354,7 +354,7 @@ public sealed partial class SongListDetail : Page, IDisposable
     private void LikeBtnClick(object sender, RoutedEventArgs e)
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
-        _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistSubscribe,
+        _ = Common.ncapi?.RequestAsync(CloudMusicApiProviders.PlaylistSubscribe,
             new Dictionary<string, object> { { "id", playList.plid }, { "t", playList.subscribed ? "0" : "1" } });
         playList.subscribed = !playList.subscribed;
         ButtonLike.Tag = playList.subscribed;
@@ -422,7 +422,7 @@ public sealed partial class SongListDetail : Page, IDisposable
     private async void Description_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
     {
         var description = playList.desc;
-        var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.RecommendSongs);
+        var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.RecommendSongs);
         if (json["data"]["dailySongs"][0]["alg"].ToString() == "birthDaySong")
         {
             description = "生日快乐~ 今天也要开心哦!";

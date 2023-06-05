@@ -43,7 +43,7 @@ internal class CloudUpload
             var md5 = sBuilder.ToString();
 
 
-            var res = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CloudUploadCheck,
+            var res = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.CloudUploadCheck,
                 new Dictionary<string, object>
                 {
                     { "bitrate", musicprop.Bitrate },
@@ -52,7 +52,7 @@ internal class CloudUpload
                 });
 
 
-            var tokenres = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CloudUploadToken,
+            var tokenres = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.CloudUploadToken,
                 new Dictionary<string, object>
                 {
                     { "ext", file.FileType },
@@ -63,7 +63,7 @@ internal class CloudUpload
             if (res["needUpload"].ToObject<bool>())
             {
                 // 文件需要上传
-                var tokenRes = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CloudUploadToken,
+                var tokenRes = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.CloudUploadToken,
                     new Dictionary<string, object>
                     {
                         { "ext", file.FileType },
@@ -89,7 +89,7 @@ internal class CloudUpload
             var title = string.IsNullOrEmpty(musicprop.Title)
                 ? Path.GetFileNameWithoutExtension(file.Path)
                 : musicprop.Title;
-            var res2 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UploadCloudInfo,
+            var res2 = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.UploadCloudInfo,
                 new Dictionary<string, object>
                 {
                     { "md5", md5 },
@@ -102,7 +102,7 @@ internal class CloudUpload
                     { "resourceId", tokenres["result"]["resourceId"].ToString() }
                 });
 
-            var res3 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CloudPub,
+            var res3 = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.CloudPub,
                 new Dictionary<string, object>
                 {
                     { "songid", res2["songId"] }

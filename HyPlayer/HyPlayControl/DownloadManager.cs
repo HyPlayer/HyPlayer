@@ -247,7 +247,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
         {
             try
             {
-                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Lyric,
+                var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.Lyric,
                     new Dictionary<string, object> { { "id", ncsong.sid } });
                 if (!(json.ContainsKey("nolyric") && json["nolyric"].ToString().ToLower() == "true") &&
                     !(json.ContainsKey("uncollected") && json["uncollected"].ToString().ToLower() == "true"))
@@ -392,7 +392,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                 HasPaused = false;
                 Message = "正在获取下载链接";
             });
-            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongUrlV1,
+            var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.SongUrlV1,
                 new Dictionary<string, object> { { "id", ncsong.sid }, { "level", Common.Setting.downloadAudioRate } });
 
             if (json["data"]?[0]?["code"]?.ToString() != "200")

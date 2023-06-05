@@ -201,7 +201,7 @@ public sealed partial class BasePage : Page
             {
                 try
                 {
-                    await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginStatus);
+                    await Common.ncapi?.RequestAsync(CloudMusicApiProviders.LoginStatus);
                     await LoginDone();
                 }
                 catch
@@ -256,7 +256,7 @@ public sealed partial class BasePage : Page
 
             queries[isPhone ? "phone" : "email"] = account;
             queries["password"] = TextBoxPassword.Password;
-            json = await Common.ncapi.RequestAsync(
+            json = await Common.ncapi?.RequestAsync(
                 isPhone ? CloudMusicApiProviders.LoginCellphone : CloudMusicApiProviders.Login, queries);
             if (json?["code"]?.ToString() != "200")
             {
@@ -271,7 +271,6 @@ public sealed partial class BasePage : Page
             else
             {
                 await LoginDone();
-                Common.NavigatePage(typeof(Home));
             }
             json.RemoveAll();
         }
@@ -301,7 +300,7 @@ public sealed partial class BasePage : Page
         JObject LoginStatus;
         try
         {
-            LoginStatus = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginStatus);
+            LoginStatus = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.LoginStatus);
         }
         catch (Exception e)
         {
@@ -358,7 +357,7 @@ public sealed partial class BasePage : Page
         // 播放数据记录
         if (item.ItemType != HyPlayItemType.Netease && Common.Setting.doScrobble /* || Common.IsInFm ||
             string.IsNullOrEmpty(HyPlayList.PlaySourceId)*/) return;
-        var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Scrobble, new Dictionary<string, object>
+        var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.Scrobble, new Dictionary<string, object>
         {
             { "id", item.PlayItem.Id },
             { "sourceId", HyPlayList.PlaySourceId ?? "-1" },
@@ -377,8 +376,8 @@ public sealed partial class BasePage : Page
 
     private static void DoDailySign()
     {
-        _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.DailySignin);
-        _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.DailySignin,
+        _ = Common.ncapi?.RequestAsync(CloudMusicApiProviders.DailySignin);
+        _ = Common.ncapi?.RequestAsync(CloudMusicApiProviders.DailySignin,
             new Dictionary<string, object> { { "type", 1 } });
     }
 
@@ -386,7 +385,7 @@ public sealed partial class BasePage : Page
     {
         try
         {
-            var js = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Likelist,
+            var js = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.Likelist,
                 new Dictionary<string, object> { { "uid", Common.LoginedUser.id } });
             Common.LikedSongs = js["ids"].ToObject<List<string>>();
         }
@@ -402,7 +401,7 @@ public sealed partial class BasePage : Page
         var nowitem = NavItemsMyList;
         try
         {
-            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
+            var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.UserPlaylist,
                 new Dictionary<string, object> { { "uid", Common.LoginedUser.id } });
 
             NavItemsLikeList.MenuItems.Clear();
@@ -485,7 +484,7 @@ public sealed partial class BasePage : Page
 
         if (nowitem.Tag.ToString() == "PageMe" && !Common.Logined)
         {
-            foreach (Cookie ncapiCookie in Common.ncapi.Cookies) ncapiCookie.Expired = true; //清一遍Cookie防止出错
+            foreach (Cookie ncapiCookie in Common.ncapi?.Cookies) ncapiCookie.Expired = true; //清一遍Cookie防止出错
             await DialogLogin.ShowAsync();
             return;
         }
@@ -577,9 +576,9 @@ public sealed partial class BasePage : Page
         HyPlayList.RemoveAllSong();
         try
         {
-            var jsoon = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
+            var jsoon = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
                 new Dictionary<string, object> { { "id", Common.MySongLists[0].plid } });
-            var jsona = await Common.ncapi.RequestAsync(
+            var jsona = await Common.ncapi?.RequestAsync(
                 CloudMusicApiProviders.PlaymodeIntelligenceList,
                 new Dictionary<string, object>
                 {
@@ -647,7 +646,7 @@ public sealed partial class BasePage : Page
     {
         try
         {
-            var key = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginQrKey,
+            var key = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.LoginQrKey,
                 new Dictionary<string, object>
                     { { "timestamp", (DateTime.Now - Common.UnixEpoch).TotalMilliseconds } });
 
@@ -655,11 +654,11 @@ public sealed partial class BasePage : Page
             nowqrkey = key["unikey"].ToString();
             while (!Common.Logined && nowqrkey == key["unikey"].ToString())
             {
-                var res = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginQrCheck,
+                var res = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.LoginQrCheck,
                     new Dictionary<string, object> { { "key", key["unikey"].ToString() } });
                 if (res["code"].ToString() == "800")
                 {
-                    key = await Common.ncapi.RequestAsync(CloudMusicApiProviders.LoginQrKey,
+                    key = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.LoginQrKey,
                         new Dictionary<string, object>
                             { { "timestamp", (DateTime.Now - Common.UnixEpoch).TotalMilliseconds } });
                     try
@@ -773,7 +772,7 @@ public sealed partial class BasePage : Page
     {
         try
         {
-            await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistPrivacy,
+            await Common.ncapi?.RequestAsync(CloudMusicApiProviders.PlaylistPrivacy,
                 new Dictionary<string, object>
                 {
                     { "id", nowplid }
@@ -791,7 +790,7 @@ public sealed partial class BasePage : Page
     {
         try
         {
-            await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDelete,
+            await Common.ncapi?.RequestAsync(CloudMusicApiProviders.PlaylistDelete,
                 new Dictionary<string, object>
                 {
                     { "ids", nowplid }
@@ -828,7 +827,7 @@ public sealed partial class BasePage : Page
 
         try
         {
-            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SearchSuggest,
+            var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.SearchSuggest,
                 new Dictionary<string, object> { { "keywords", sender.Text }, { "type", "mobile" } });
 
             if (json["result"] != null && json["result"]["allMatch"] != null &&

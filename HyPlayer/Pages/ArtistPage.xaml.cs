@@ -55,7 +55,7 @@ public sealed partial class ArtistPage : Page, IDisposable
         base.OnNavigatedTo(e);
         try
         {
-            var res = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistDetail,
+            var res = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.ArtistDetail,
                 new Dictionary<string, object> { { "id", (string)e.Parameter } });
             artist = NCArtist.CreateFromJson(res["data"]["artist"]);
             if (res["data"]["artist"]["cover"].ToString().StartsWith("http"))
@@ -135,12 +135,12 @@ public sealed partial class ArtistPage : Page, IDisposable
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var j1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistTopSong,
+            var j1 = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.ArtistTopSong,
                 new Dictionary<string, object> { { "id", artist.id } });
 
             hotSongs.Clear();
             var idx = 0;
-            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
+            var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.SongDetail,
                 new Dictionary<string, object>
                 { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) }, false);
             foreach (var jToken in json["songs"])
@@ -168,12 +168,12 @@ public sealed partial class ArtistPage : Page, IDisposable
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var j1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistSongs,
+            var j1 = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.ArtistSongs,
                 new Dictionary<string, object> { { "id", artist.id }, { "limit", 50 }, { "offset", page * 50 } });
             var idx = 0;
             try
             {
-                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
+                var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.SongDetail,
                     new Dictionary<string, object>
                     { ["ids"] = string.Join(",", j1["songs"].ToList().Select(t => t["id"])) });
                 foreach (var jToken in json["songs"])
@@ -232,7 +232,7 @@ public sealed partial class ArtistPage : Page, IDisposable
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var j1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistAlbum,
+            var j1 = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.ArtistAlbum,
                 new Dictionary<string, object> { { "id", artist.id }, { "limit", 50 }, { "offset", page * 50 } });
 
             AlbumContainer.ListItems.Clear();

@@ -472,7 +472,10 @@ public static class HyPlayList
         OnSongMoveNext?.Invoke();
         if (List.Count == 0) return;
         MoveSongPointer(true);
-        _ = LoadPlayerSong(List[NowPlaying]);
+        if (!Common.IsInFm && List.Count != 0)
+        {
+            _ = LoadPlayerSong(List[NowPlaying]);
+        }
     }
 
     public static void SongMovePrevious()
@@ -489,8 +492,10 @@ public static class HyPlayList
                 ShufflingIndex = ShuffleList.Count - 1;
             NowPlaying = ShuffleList[ShufflingIndex];
         }
-
-        _ = LoadPlayerSong(List[NowPlaying]);
+        if (!Common.IsInFm && List.Count != 0)
+        {
+            _ = LoadPlayerSong(List[NowPlaying]);
+        }
     }
 
     public static void SongMoveTo(int index)
@@ -564,7 +569,7 @@ public static class HyPlayList
                     break;
                 }
             case HyPlayItemType.Radio:
-                _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.ResourceLike,
+                _ = Common.ncapi?.RequestAsync(CloudMusicApiProviders.ResourceLike,
                     new Dictionary<string, object>
                         { { "type", "4" }, { "t", "1" }, { "id", NowPlayingItem.PlayItem.Id } });
                 OnSongLikeStatusChange?.Invoke(!isLiked);
@@ -645,7 +650,10 @@ public static class HyPlayList
         OnMediaEnd?.Invoke(NowPlayingItem);
         MoveSongPointer();
         //然后尝试加载下一首歌
-        _ = LoadPlayerSong(List[NowPlaying]);
+        if (!Common.IsInFm && List.Count != 0)
+        {
+            _ = LoadPlayerSong(List[NowPlaying]);
+        }
     }
 
     public static async Task AdvFadeProcess()
@@ -972,7 +980,7 @@ public static class HyPlayList
             Common.Setting.songUrlLazyGet)
             try
             {
-                var json = await Common.ncapi.RequestAsync(
+                var json = await Common.ncapi?.RequestAsync(
                     CloudMusicApiProviders.SongUrlV1,
                     new Dictionary<string, object>
                     {
@@ -1234,10 +1242,12 @@ public static class HyPlayList
             }
             else
             {
-                var url = NowPlayingItem.PlayItem.Album.cover;
-                if (!Common.IsInImmerssiveMode && !Common.Setting.highQualityCoverInSMTC)
-                    url += "?param=" + StaticSource.PICSIZE_AUDIO_PLAYER_COVER;
-                using var result = await Common.HttpClient.GetAsync(new Uri(url));
+                string param = StaticSource.PICSIZE_AUDIO_PLAYER_COVER;
+                if (Common.IsInImmerssiveMode)
+                {
+                    param = "2048x2048";
+                }
+                using var result = await Common.HttpClient.GetAsync(new Uri(NowPlayingItem.PlayItem.Album.cover + "?param=" + param));
                 if (!result.IsSuccessStatusCode)
                 {
                     throw new Exception("更新SMTC图片时发生异常");
@@ -1577,7 +1587,7 @@ public static class HyPlayList
 
                 if (Common.Setting.karaokLyric)
                 {
-                    json = await Common.ncapi.RequestAsync(
+                    json = await Common.ncapi?.RequestAsync(
                         CloudMusicApiProviders.LyricNew,
                         new Dictionary<string, object> { { "id", ncp.PlayItem.Id } });
                     string lrc, romaji, karaoklrc, translrc;
@@ -1616,7 +1626,7 @@ public static class HyPlayList
                 {
 
 
-                    json = await Common.ncapi.RequestAsync(
+                    json = await Common.ncapi?.RequestAsync(
                         CloudMusicApiProviders.Lyric,
                         new Dictionary<string, object> { { "id", ncp.PlayItem.Id } });
                     if (json["nolyric"]?.ToString().ToLower() == "true")
@@ -1629,7 +1639,7 @@ public static class HyPlayList
                         /*
                              * 此接口失效
                             //Ask for Cloud Pan
-                            json = await Common.ncapi.RequestAsync(
+                            json = await Common.ncapi?.RequestAsync(
                                 CloudMusicApiProviders.CloudLyric,
                                 new Dictionary<string, object>
                                     { { "id", ncp.PlayItem.Id }, { "userId", Common.LoginedUser?.id } });
@@ -1816,7 +1826,7 @@ public static class HyPlayList
                     await AppendPlayList(sourceId.Substring(2, sourceId.Length - 2));
                     return true;
                 case "ns":
-                    var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
+                    var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.SongDetail,
                         new Dictionary<string, object>
                             { { "ids", sourceId.Substring(2, sourceId.Length - 2) } });
                     _ = AppendNcSong(NCSong.CreateFromJson(json["songs"]?[0]));
@@ -1849,11 +1859,11 @@ public static class HyPlayList
     {
         try
         {
-            var j1 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistTopSong,
+            var j1 = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.ArtistTopSong,
                 new Dictionary<string, object> { { "id", id } });
 
 
-            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
+            var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.SongDetail,
                 new Dictionary<string, object>
                 {
                     ["ids"] = string.Join(",",
@@ -1889,7 +1899,7 @@ public static class HyPlayList
     {
         try
         {
-            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Album,
+            var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.Album,
                 new Dictionary<string, object> { { "id", albumId } });
 
             var list = new List<NCSong>();
@@ -1922,7 +1932,7 @@ public static class HyPlayList
             while (hasMore is true)
                 try
                 {
-                    var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.DjProgram,
+                    var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.DjProgram,
                         new Dictionary<string, object>
                         {
                             { "rid", radioId },
@@ -1957,7 +1967,7 @@ public static class HyPlayList
     {
         try
         {
-            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
+            var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
                 new Dictionary<string, object> { { "id", playlistId } });
 
             var nowIndex = 0;
@@ -1969,7 +1979,7 @@ public static class HyPlayList
                     Math.Min(500, trackIds.Count - nowIndex * 500));
                 try
                 {
-                    json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.SongDetail,
+                    json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.SongDetail,
                         new Dictionary<string, object> { ["ids"] = string.Join(",", nowIds) });
                     nowIndex++;
                     var i = 0;

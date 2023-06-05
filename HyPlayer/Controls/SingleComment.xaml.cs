@@ -77,7 +77,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         try
         {
             if (!IsLoadMoreComments) floorComments.Clear();
-            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentFloor,
+            var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.CommentFloor,
                 new Dictionary<string, object>
                 {
                     { "parentCommentId", MainComment.cid }, { "id", MainComment.resourceId },
@@ -104,7 +104,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
 
     private async void Like_Click(object sender, RoutedEventArgs e)
     {
-        await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentLike,
+        await Common.ncapi?.RequestAsync(CloudMusicApiProviders.CommentLike,
             new Dictionary<string, object>
             {
                 { "id", MainComment.resourceId }, { "cid", MainComment.cid }, { "type", MainComment.resourceType },
@@ -117,7 +117,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
 
     private async void Delete_Click(object sender, RoutedEventArgs e)
     {
-        await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment,
+        await Common.ncapi?.RequestAsync(CloudMusicApiProviders.Comment,
             new Dictionary<string, object>
             {
                 { "id", MainComment.resourceId }, { "t", "0" }, { "type", MainComment.resourceType },
@@ -137,7 +137,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         {
             try
             {
-                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment,
+                var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.Comment,
                     new Dictionary<string, object>
                     {
                         { "id", MainComment.resourceId }, { "commentId", MainComment.cid },

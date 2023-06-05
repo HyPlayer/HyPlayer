@@ -82,7 +82,7 @@ public sealed partial class ThirdPartyLogin : Page, IDisposable
                 rescookie.Secure = cookie.IsSecure;
                 rescookie.Expires = Common.UnixEpoch.AddSeconds(cookie.Expires);
                 rescookie.Path = cookie.Path;
-                Common.ncapi.Cookies.Add(rescookie);
+                Common.ncapi?.Cookies.Add(rescookie);
             }
             await Common.PageBase.LoginDone();
         }

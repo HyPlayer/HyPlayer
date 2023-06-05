@@ -92,7 +92,7 @@ public sealed partial class PageFavorite : Page, IDisposable
         if (disposedValue) throw new ObjectDisposedException(nameof(PageFavorite));
         try
         {
-            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.DjSublist,
+            var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.DjSublist,
                 new Dictionary<string, object>
                 {
                     { "offset", page * 25 }
@@ -126,7 +126,7 @@ public sealed partial class PageFavorite : Page, IDisposable
         if (disposedValue) throw new ObjectDisposedException(nameof(PageFavorite));
         try
         {
-            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.ArtistSublist,
+            var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.ArtistSublist,
                 new Dictionary<string, object>
                 {
                     { "offset", page * 25 }
@@ -162,7 +162,7 @@ public sealed partial class PageFavorite : Page, IDisposable
         if (disposedValue) throw new ObjectDisposedException(nameof(PageFavorite));
         try
         {
-            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.AlbumSublist,
+            var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.AlbumSublist,
                 new Dictionary<string, object>
                 {
                     { "offset", page * 25 }
