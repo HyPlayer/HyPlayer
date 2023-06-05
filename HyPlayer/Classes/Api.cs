@@ -15,7 +15,7 @@ internal class Api
     {
         try
         {
-            await Common.ncapi.RequestAsync(CloudMusicApiProviders.Like,
+            await Common.ncapi?.RequestAsync(CloudMusicApiProviders.Like,
                 new Dictionary<string, object> { { "id", songid }, { "like", like ? "true" : "false" } });
         }
         catch (Exception ex)

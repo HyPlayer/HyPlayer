@@ -98,7 +98,7 @@ public sealed partial class History : Page, IDisposable
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var ret3 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserRecord,
+            var ret3 = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.UserRecord,
                 new Dictionary<string, object> { { "uid", Common.LoginedUser.id }, { "type", "0" } });
 
             var weekData = ret3["allData"].ToArray();
@@ -124,7 +124,7 @@ public sealed partial class History : Page, IDisposable
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var ret2 = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserRecord,
+            var ret2 = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.UserRecord,
                 new Dictionary<string, object> { { "uid", Common.LoginedUser.id }, { "type", "1" } });
 
             var weekData = ret2["weekData"].ToArray();

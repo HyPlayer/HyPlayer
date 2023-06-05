@@ -62,6 +62,7 @@ sealed partial class App : Application
         MemoryManager.AppMemoryUsageLimitChanging += MemoryManagerOnAppMemoryUsageLimitChanging;
         if (Common.Setting.themeRequest != 0)
             RequestedTheme = Common.Setting.themeRequest == 1 ? ApplicationTheme.Light : ApplicationTheme.Dark;
+        Common.InitializeHttpClientAndAPI();
         _ = InitializeThings();
     }
 

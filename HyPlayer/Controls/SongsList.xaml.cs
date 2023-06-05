@@ -339,14 +339,14 @@ public sealed partial class SongsList : UserControl, IDisposable
     {
         if (SongContainer.SelectedItems.Count == 0) return;
         if (!(SongContainer.SelectedItem as NCSong).IsCloud)
-            await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistTracks,
+            await Common.ncapi?.RequestAsync(CloudMusicApiProviders.PlaylistTracks,
             new Dictionary<string, object>
             {
                 { "op", "del" },
                 { "pid", ListSource.Substring(2, ListSource.Length - 2) },
                 { "tracks", (SongContainer.SelectedItem as NCSong).sid }
             });
-        else await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserCloudDelete,
+        else await Common.ncapi?.RequestAsync(CloudMusicApiProviders.UserCloudDelete,
             new Dictionary<string, object>
             {
                 { "id", (SongContainer.SelectedItem as NCSong).sid },

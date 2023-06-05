@@ -125,7 +125,7 @@ public sealed partial class Comments : Page, IDisposable
         var isHotCommentsPage = HotCommentsContainer.Visibility == Visibility.Visible;
         try
         {
-            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.CommentNew,
+            var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.CommentNew,
                 new Dictionary<string, object>
                 {
                     { "cursor", page != 1 && type == 3 ? cursor : null },
@@ -190,7 +190,7 @@ public sealed partial class Comments : Page, IDisposable
         {
             try
             {
-                var result = await Common.ncapi.RequestAsync(CloudMusicApiProviders.Comment,
+                var result = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.Comment,
                     new Dictionary<string, object>
                     {
                         {

@@ -22,7 +22,7 @@ public sealed partial class SongListSelect : ContentDialog
 
     private async void ListViewSongList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistTracks, new Dictionary<string, object>
+        await Common.ncapi?.RequestAsync(CloudMusicApiProviders.PlaylistTracks, new Dictionary<string, object>
         {
             { "op", "add" },
             { "pid", Common.MySongLists[ListViewSongList.SelectedIndex].plid },

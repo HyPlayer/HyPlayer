@@ -86,7 +86,7 @@ public sealed partial class Me : Page, IDisposable
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserPlaylist,
+            var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.UserPlaylist,
                 new Dictionary<string, object> { ["uid"] = uid, ["limit"] = 999 });
 
 
@@ -151,7 +151,7 @@ public sealed partial class Me : Page, IDisposable
         {
             try
             {
-                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserDetail,
+                var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.UserDetail,
                     new Dictionary<string, object> { ["uid"] = uid });
 
                 TextBoxUserName.Text = json["profile"]["nickname"].ToString();
@@ -175,7 +175,7 @@ public sealed partial class Me : Page, IDisposable
             }
         }
         /*
-        (bool isok, JObject json) = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserLevel);
+        (bool isok, JObject json) = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.UserLevel);
         if (isok)
         {
             TextBlockLevel.Text = "LV. " + json["data"]["level"].ToString();
@@ -188,15 +188,14 @@ public sealed partial class Me : Page, IDisposable
         if (disposedValue) throw new ObjectDisposedException(nameof(Me));
         try
         {
-            await Common.ncapi.RequestAsync(CloudMusicApiProviders.Logout);
+            await Common.ncapi?.RequestAsync(CloudMusicApiProviders.Logout);
             Common.Logined = false;
             Common.LoginedUser = new NCUser();
             if (ApplicationData.Current.LocalSettings.Containers.TryGetValue("Cookies", out var container))
             {
                 container.Values.Clear();
             }
-            Common.ncapi = new CloudMusicApi();
-            Common.PageMain.MainFrame.Navigate(typeof(BlankPage));
+            Common.ncapi?.ClearCookies();
             Common.PageMain.MainFrame.Navigate(typeof(BasePage));
             _ = ((App)Application.Current).InitializeJumpList();
         }

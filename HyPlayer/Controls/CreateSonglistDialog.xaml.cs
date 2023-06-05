@@ -21,12 +21,16 @@ public sealed partial class CreateSonglistDialog : ContentDialog
     private async void ContentDialog_PrimaryButtonClick(ContentDialog sender,
         ContentDialogButtonClickEventArgs args)
     {
+        string realIpBackup = Common.ncapi?.RealIP;
         // This request would return with a 250 error without RealIP set
-        var realIpBackup = Common.ncapi.RealIP;
-        Common.ncapi.RealIP = "118.88.88.88";
+        if (Common.ncapi != null)
+        {
+            Common.ncapi.RealIP = "118.88.88.88";
+        }
+
         try
         {
-            await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistCreate,
+            await Common.ncapi?.RequestAsync(CloudMusicApiProviders.PlaylistCreate,
                 new Dictionary<string, object>
                     { { "name", SonglistTitle.Text }, { "privacy", (bool)PrivateCheckBox.IsChecked ? 10 : 0 } });
         }
@@ -38,7 +42,10 @@ public sealed partial class CreateSonglistDialog : ContentDialog
 
         Common.AddToTeachingTipLists("创建成功");
         _ = Common.PageBase.LoadSongList();
-        Common.ncapi.RealIP = realIpBackup; // Restore user setting
+        if (Common.ncapi != null)
+        {
+            Common.ncapi.RealIP = realIpBackup;
+        }// Restore user setting
     }
 
     private void ContentDialog_SecondaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)

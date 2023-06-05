@@ -644,7 +644,7 @@ DoubleAnimation verticalAnimation;
         }
         else
         {
-            _ = Common.ncapi.RequestAsync(CloudMusicApiProviders.FmTrash,
+            _ = Common.ncapi?.RequestAsync(CloudMusicApiProviders.FmTrash,
                 new Dictionary<string, object> { { "id", HyPlayList.NowPlayingItem.PlayItem.Id } });
             PersonalFM.LoadNextFM();
         }

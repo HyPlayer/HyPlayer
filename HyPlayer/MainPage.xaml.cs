@@ -28,14 +28,11 @@ public sealed partial class MainPage
     public MainPage()
     {
         Common.PageMain = this;
-        Common.ncapi.RealIP = Setting.GetSettings<string>("xRealIp", null);
-        var proxy = Setting.GetSettings<string>("neteaseProxy", null);
-        if(!string.IsNullOrEmpty(proxy))
+        if (Common.ncapi != null)
         {
-            Common.ncapi.UseProxy = true;
-            Common.ncapi.Proxy = new WebProxy(proxy);
+            Common.ncapi.RealIP = Setting.GetSettings<string>("xRealIp", null);
+            Common.ncapi.UseHttp = Setting.GetSettings("UseHttp", false);
         }
-        Common.ncapi.UseHttp = Setting.GetSettings<bool>("UseHttp", false);
         StaticSource.PICSIZE_AUDIO_PLAYER_COVER = Common.Setting.highQualityCoverInSMTC ? "1024y1024" : "640x640";
         if (Common.Setting.uiSound)
         {

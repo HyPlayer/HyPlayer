@@ -45,7 +45,7 @@ public sealed partial class MusicCloudPage : Page, IDisposable
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.UserCloud,
+            var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.UserCloud,
                 new Dictionary<string, object>
                 {
                     { "limit", 200 },

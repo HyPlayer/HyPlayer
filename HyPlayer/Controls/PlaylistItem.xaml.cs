@@ -62,7 +62,7 @@ public sealed partial class PlaylistItem : UserControl, IDisposable
     {
         try
         {
-            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistPrivacy,
+            var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.PlaylistPrivacy,
                 new Dictionary<string, object>
                 {
                     { "id", playList.plid }
@@ -83,7 +83,7 @@ public sealed partial class PlaylistItem : UserControl, IDisposable
     {
         try
         {
-            await Common.ncapi.RequestAsync(CloudMusicApiProviders.PlaylistDelete,
+            await Common.ncapi?.RequestAsync(CloudMusicApiProviders.PlaylistDelete,
                 new Dictionary<string, object>
                 {
                     { "ids", playList.plid }

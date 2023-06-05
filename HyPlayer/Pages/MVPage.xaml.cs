@@ -71,7 +71,7 @@ public sealed partial class MVPage : Page, IDisposable
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.MlogRcmdFeedList,
+            var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.MlogRcmdFeedList,
                 new Dictionary<string, object>
                 {
                     { "id", mvid },
@@ -148,7 +148,7 @@ public sealed partial class MVPage : Page, IDisposable
             //纯MV
             try
             {
-                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.MvUrl,
+                var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.MvUrl,
                     new Dictionary<string, object> { { "id", mvid }, { "r", mvquality } });
 
                 MediaPlayerElement.Source = MediaSource.CreateFromUri(new Uri(json["data"]["url"].ToString()));
@@ -164,7 +164,7 @@ public sealed partial class MVPage : Page, IDisposable
         else
             try
             {
-                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.MlogUrl,
+                var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.MlogUrl,
                     new Dictionary<string, object>
                     {
                         { "id", mvid },
@@ -192,7 +192,7 @@ public sealed partial class MVPage : Page, IDisposable
         {
             try
             {
-                var json = await Common.ncapi.RequestAsync(CloudMusicApiProviders.MvDetail,
+                var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.MvDetail,
                     new Dictionary<string, object> { { "mvid", mvid } });
                 TextBoxVideoName.Text = json["data"]["name"].ToString();
                 TextBoxSinger.Text = json["data"]["artistName"].ToString();
