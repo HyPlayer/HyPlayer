@@ -4,8 +4,11 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using Kawazu;
 using LyricParser.Abstraction;
+using Microsoft.Toolkit.Uwp.UI.Media;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 using System;
+using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -27,6 +30,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Animation;
+using Point = Windows.Foundation.Point;
 
 #endregion
 
@@ -502,5 +506,28 @@ public sealed partial class Settings : Page, IDisposable
     {
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
+    }
+
+    private void ApplyNewAcrylic()
+    {
+        var Brush = new Microsoft.UI.Xaml.Media.AcrylicBrush()
+        {
+            BackgroundSource = AcrylicBackgroundSource.HostBackdrop,
+            TintColor = (Windows.UI.Color)Application.Current.Resources["SystemRevealAltHighColor"],
+            TintOpacity = TintOpacitySlider.Value,
+            TintLuminosityOpacity = TintOpacityLuminositySlider.Value,
+            FallbackColor = (Windows.UI.Color)Application.Current.Resources["SystemRevealAltHighColor"],
+        };
+       PreviewAcrylic.Fill=Brush;
+    }
+
+    private void TintOpacity_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+    {
+        ApplyNewAcrylic();
+    }
+
+    private void TintOpacityLuminosity_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+    {
+        ApplyNewAcrylic();
     }
 }

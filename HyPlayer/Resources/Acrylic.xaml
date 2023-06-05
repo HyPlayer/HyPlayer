@@ -46,13 +46,6 @@
         TintColor="#4D76B3"
         FallbackColor="#2B2B2B" />
     <AcrylicBrush 
-        x:Key="TransparentWindowBackgroundAcrylic"
-        BackgroundSource="HostBackdrop"
-        TintColor="{ThemeResource SystemRevealAltHighColor}"
-        TintOpacity="0.15"
-        TintLuminosityOpacity="0.25"
-        FallbackColor="{ThemeResource SystemRevealAltHighColor}"/>
-    <AcrylicBrush 
         x:Key="NormalWindowBackgroundAcrylic"
         BackgroundSource="HostBackdrop"
         TintColor="{ThemeResource SystemRevealAltHighColor}"

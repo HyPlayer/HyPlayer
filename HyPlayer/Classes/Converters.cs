@@ -12,8 +12,19 @@ namespace HyPlayer.Classes
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            if (value is true && Common.Setting.TintOpacityValue is true) return Application.Current.Resources["TransparentWindowBackgroundAcrylic"] as Brush;
-            if (value is true && Common.Setting.TintOpacityValue is false) return Application.Current.Resources["NormalWindowBackgroundAcrylic"] as Brush;
+            if (value is true && Common.Setting.CustomAcrylic is true)
+            {
+                var Brush = new Windows.UI.Xaml.Media.AcrylicBrush()
+                {
+                    BackgroundSource = AcrylicBackgroundSource.HostBackdrop,
+                    TintColor = (Windows.UI.Color)Application.Current.Resources["SystemRevealAltHighColor"],
+                    TintOpacity = Common.Setting.CustomTintOpacity,
+                    TintLuminosityOpacity = Common.Setting.CustomTintLuminosityOpacity,
+                    FallbackColor = (Windows.UI.Color)Application.Current.Resources["SystemRevealAltHighColor"],
+                };
+                return Brush;
+            }
+            if (value is true && Common.Setting.CustomAcrylic is false) return Application.Current.Resources["NormalWindowBackgroundAcrylic"] as Brush;
             return null;
         }
 
