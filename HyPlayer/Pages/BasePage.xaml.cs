@@ -348,7 +348,7 @@ public sealed partial class BasePage : Page
         _ = ((App)Application.Current).InitializeJumpList();
         if (!Common.Setting.forceMemoryGarbage)
             NavMain.SelectedItem = NavItemLogin;
-        //Common.NavigatePage(typeof(Me));
+        Common.NavigatePage(typeof(Me));
         return true;
     }
 
@@ -672,11 +672,18 @@ public sealed partial class BasePage : Page
                 }
                 else if (res["code"].ToString() == "801")
                 {
+                    if (!InfoBarLoginHint.IsOpen)
+                    {
+                        InfoBarLoginHint.IsOpen = true;
+                    }
                     InfoBarLoginHint.Title = "请扫描上方二维码登录";
                 }
                 else if (res["code"].ToString() == "803")
                 {
-                    InfoBarLoginHint.IsOpen = true;
+                    if (!InfoBarLoginHint.IsOpen)
+                    {
+                        InfoBarLoginHint.IsOpen = true;
+                    }
                     InfoBarLoginHint.Title = "登录成功";
                     ButtonLogin.Content = "登录成功";
                     await LoginDone();
@@ -684,6 +691,10 @@ public sealed partial class BasePage : Page
                 }
                 else if (res["code"].ToString() == "802")
                 {
+                    if (!InfoBarLoginHint.IsOpen)
+                    {
+                        InfoBarLoginHint.IsOpen = true;
+                    }
                     InfoBarLoginHint.Title = "请在手机上授权登录";
                 }
 

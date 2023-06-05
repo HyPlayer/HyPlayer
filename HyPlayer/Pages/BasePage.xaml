@@ -303,7 +303,7 @@
                         <RowDefinition/>
                     </Grid.RowDefinitions>
                     <controls1:PivotView>
-                        <controls1:PivotEx>
+                        <controls1:PivotEx SelectionChanged="Pivot_SelectionChanged">
                             <PivotItem Header="密码登录">
                                 <Grid Margin="0,48,0,0">
                                     <StackPanel Orientation="Vertical" Spacing="12">
