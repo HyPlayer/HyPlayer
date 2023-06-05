@@ -11,6 +11,8 @@
     xmlns:media="using:Microsoft.Toolkit.Uwp.UI.Media"
     xmlns:pages="using:HyPlayer.Pages"
     xmlns:ui="using:Microsoft.Toolkit.Uwp.UI"
+    xmlns:behaviors="using:Microsoft.Toolkit.Uwp.UI.Behaviors" 
+    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
     x:Name="Page"
     d:DataContext="{d:DesignInstance Type=pages:SongListDetail}"
     NavigationCacheMode="Disabled"
@@ -55,12 +57,14 @@
                         Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}"
                         x:Load="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}">
                         <Border.Background>
-                            <ImageBrush ImageSource="{x:Bind ImageSource}" />
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1" Opacity="0.5">
+                                <GradientStop x:Name="AlbumColor" Color="Transparent" Offset="0"/>
+                                <GradientStop Color="Transparent" Offset="1"/>
+                            </LinearGradientBrush>
                         </Border.Background>
                     </Border>
                     <Grid
                         Padding="32"
-                        Background="{ThemeResource SystemControlAcrylicElementBrush}"
                         ColumnSpacing="24">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
@@ -197,20 +201,20 @@
                             x:Name="DescriptionTextBlock"
                             Grid.Row="1"
                             Grid.ColumnSpan="2"
-                            Margin="0,12,0,0"
+                            Margin="0,12,0,35"
                             FontSize="16"
                             Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
                             MaxLines="4"
                             Text="简介"
                             TextWrapping="Wrap" />
                     </Grid>
-                    <ui:Effects.Shadow>
+                    <!--<ui:Effects.Shadow>
                         <media:AttachedCardShadow 
                             CornerRadius="0"
                             Opacity="0.5"
                             Offset="0,1,0"
                             Color="Black" />
-                    </ui:Effects.Shadow>
+                    </ui:Effects.Shadow>-->
                 </Grid>
                 <!--<Grid x:Name="GridPersonalInformation" Margin="0,15,0,12">
                     <Grid.ColumnDefinitions>
