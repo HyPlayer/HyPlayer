@@ -33,7 +33,7 @@ public sealed partial class MainPage
             Common.ncapi.RealIP = Setting.GetSettings<string>("xRealIp", null);
             Common.ncapi.UseHttp = Setting.GetSettings("UseHttp", false);
         }
-        StaticSource.PICSIZE_AUDIO_PLAYER_COVER = Common.Setting.highQualityCoverInSMTC ? "1024y1024" : "640x640";
+        StaticSource.PICSIZE_AUDIO_PLAYER_COVER = Common.Setting.highQualityCoverInSMTC ? "1024y1024" : "640y640";
         if (Common.Setting.uiSound)
         {
             ElementSoundPlayer.State = ElementSoundPlayerState.Off;

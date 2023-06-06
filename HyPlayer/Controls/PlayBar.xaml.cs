@@ -584,6 +584,7 @@ DoubleAnimation verticalAnimation;
         Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
         Window.Current.SetTitleBar(Common.PageBase.AppTitleBar);
         Common.isExpanded = false;
+        RefreshPlayBarCover();
     }
 
     private void ButtonCleanAll_OnClick(object sender, RoutedEventArgs e)
@@ -860,8 +861,8 @@ DoubleAnimation verticalAnimation;
     }
     private void OnEnteringForeground()
     {
-        HyPlayList_OnSongCoverChanged();
         LoadPlayingFile(HyPlayList.NowPlayingItem);
+        RefreshPlayBarCover();
     }
     private async void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
@@ -876,7 +877,7 @@ DoubleAnimation verticalAnimation;
         HyPlayList.OnSongRemoveAll += HyPlayListOnOnSongRemoveAll;
         HyPlayList.OnLoginDone += HyPlayListOnOnLoginDone;
         HyPlayList.OnSongLikeStatusChange += HyPlayList_OnSongLikeStatusChange;
-        HyPlayList.OnSongCoverChanged += HyPlayList_OnSongCoverChanged;
+        HyPlayList.OnSongCoverChanged += RefreshPlayBarCover;
         Common.OnEnterForegroundFromBackground += OnEnteringForeground;
         if (Common.Setting.playbarButtonsTransparent)
         {
@@ -898,7 +899,6 @@ DoubleAnimation verticalAnimation;
             ButtonDesktopLyrics.Visibility = Visibility.Collapsed;
         InitializeDesktopLyric();
         realSelectSong = false;
-        ListBoxPlayList.ItemsSource = PlayItems;
         realSelectSong = true;
         Common.Logs.Add("Now PlaySource is " + HyPlayList.PlaySourceId);
 
@@ -950,11 +950,6 @@ DoubleAnimation verticalAnimation;
         Storyboard.SetTargetProperty(verticalAnimation, "Horizontalofset");
         TbSongNameScrollStoryBoard.Begin();
         */
-    }
-
-    private void HyPlayList_OnSongCoverChanged()
-    {
-        RefreshPlayBarCover();
     }
     public void RefreshPlayBarCover()
     {
