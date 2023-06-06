@@ -3,6 +3,7 @@
 internal static class StaticSource
 {
     public static string PICSIZE_AUDIO_PLAYER_COVER = "640x640";
+    public static string PICSIZE_IMMERSIVEMODE_COVER = "1024y1024";
     public static string PICSIZE_PLAYLIST_ITEM_COVER = "250y250";
     public static string PICSIZE_SIMPLE_LINER_LIST_ITEM = "250y250";
     public static string PICSIZE_SINGLENCSONG_COVER = "75y75";
@@ -13,9 +14,6 @@ internal static class StaticSource
     public static string PICSIZE_SINGLENCRADIO_COVER = "70y70";
     public static string PICSIZE_SINGLENCPLAYLIST_COVER = "70y70";
     public static string PICSIZE_SINGLENCSINGER_COVER = "70y70";
-    public static string PICSIZE_PLAYBAR_ALBUMCOVER = "100y100";
-    public static string PICSIZE_EXPANDEDPLAYER_PREVIEWALBUMCOVER = "100y100"; //这个仅是为了快速加载防止空白期而加载的小图片
     public static string PICSIZE_DOWNLOAD_ALBUMCOVER = "640y640";
     public static string PICSIZE_NAVITEM_USERAVATAR = "30y30";
-    public static string PICSIZE_EXPANDEDPLAYER_COVER = "700y700";
 }
