@@ -688,11 +688,54 @@
                                             IsOn="{x:Bind hyplayer:Common.Setting.acrylicBackgroundStatus, Mode=TwoWay}" />
                                     </Grid>
                                     <Grid Visibility="{x:Bind hyplayer:Common.Setting.acrylicBackgroundStatus, Mode=OneWay}">
-                                        <TextBlock VerticalAlignment="Center" Text="提高Acrylic透明度" />
+                                        <TextBlock VerticalAlignment="Top" Text="自定义Acrylic(需重启)" />
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.TintOpacityValue, Mode=TwoWay}" />
+                                            VerticalAlignment="Top"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.CustomAcrylic, Mode=TwoWay}" />
+                                        <Grid Visibility="{x:Bind hyplayer:Common.Setting.CustomAcrylic, Mode=OneWay}" Background="{ThemeResource SystemListLowColor}" CornerRadius="8" Margin="0,40,0,0">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition/>
+                                                    <ColumnDefinition Width="256"/>
+                                                </Grid.ColumnDefinitions>
+                                                <ListView Grid.Column="0" Padding="0">
+                                                    <Grid>
+                                                        <TextBlock VerticalAlignment="Center" Text="TintOpacity值" />
+                                                        <Slider
+                                            x:Name="TintOpacitySlider"
+                                            Width="256"
+                                            HorizontalAlignment="Right"
+                                            IsEnabled="{x:Bind hyplayer:Common.Setting.CustomAcrylic, Mode=OneWay}"
+                                            Maximum="1"
+                                            Minimum="0"
+                                            ToolTipService.ToolTip="{x:Bind TintOpacitySlider.Value}"
+                                            Value="{x:Bind hyplayer:Common.Setting.CustomTintOpacity, Mode=TwoWay}" StepFrequency="0.01" ValueChanged="TintOpacity_ValueChanged" />
+                                                    </Grid>
+                                                    <Grid>
+                                                        <TextBlock VerticalAlignment="Center" Text="TintOpacityLuminosity值" />
+                                                        <Slider
+                                            x:Name="TintOpacityLuminositySlider"
+                                            Width="256"
+                                            HorizontalAlignment="Right"
+                                            IsEnabled="{x:Bind hyplayer:Common.Setting.CustomAcrylic, Mode=OneWay}"
+                                            Maximum="1"
+                                            Minimum="0"
+                                            ToolTipService.ToolTip="{x:Bind TintOpacityLuminositySlider.Value}"
+                                            Value="{x:Bind hyplayer:Common.Setting.CustomTintLuminosityOpacity, Mode=TwoWay}" StepFrequency="0.01" ValueChanged="TintOpacityLuminosity_ValueChanged"/>
+                                                    </Grid>
+                                                </ListView>
+                                                <Rectangle
+                                                Grid.Column="1"
+                                            x:Name="PreviewAcrylic"
+                                                VerticalAlignment="Stretch"
+                                            Width="256"
+                                            RadiusX="10"
+                                            RadiusY="10"/>
+                                            </Grid>
+                                        </Grid>
+
                                     </Grid>
                                     <Grid>
                                         <TextBlock VerticalAlignment="Center" Text="无图模式(需重启应用)" />
@@ -791,7 +834,7 @@
                                             IsOn="{x:Bind hyplayer:Common.Setting.expandAlbumBreath, Mode=TwoWay}" />
                                     </Grid>
                                     <Grid>
-                                        <TextBlock VerticalAlignment="Center" Text="表头背景模糊" />
+                                        <TextBlock VerticalAlignment="Center" Text="表头启用封面主题色" />
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"

@@ -416,15 +416,69 @@ namespace HyPlayer
             }
         }
 
-        public bool TintOpacityValue
-        {
-            get => GetSettings(nameof(TintOpacityValue), false);
+        public bool CustomAcrylic
+        { 
+            get => GetSettings(nameof(CustomAcrylic), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values[nameof(TintOpacityValue)] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(CustomAcrylic)] = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(acrylicBackgroundStatus));
             }
+        }
+
+        public double CustomTintOpacity
+        {
+            get
+            {
+                try
+                {
+                    if (CustomAcrylic)
+                    {
+                        return GetSettings<double>(nameof(CustomTintOpacity), 3d);
+                    }
+                    else
+                    {
+                        return 0d;
+                    }
+                }
+                catch
+                {
+                    return 3d;
+                }
+            }
+
+            set => ApplicationData.Current.LocalSettings.Values[nameof(CustomTintOpacity)] = value;
+            //get => GetSettings(nameof(CustomTintOpacity),0);
+            //set
+            //{
+            //    ApplicationData.Current.LocalSettings.Values[nameof(CustomTintOpacity)] = value;
+            //    OnPropertyChanged();
+            //}
+        }
+
+        public double CustomTintLuminosityOpacity
+        {
+            get
+            {
+                try
+                {
+                    if (CustomAcrylic)
+                    {
+                        return GetSettings<double>(nameof(CustomTintLuminosityOpacity), 3d);
+                    }
+                    else
+                    {
+                        return 0d;
+                    }
+                }
+                catch
+                {
+                    return 3d;
+                }
+            }
+
+            set => ApplicationData.Current.LocalSettings.Values[nameof(CustomTintLuminosityOpacity)] = value;
         }
 
         public bool downloadLyric

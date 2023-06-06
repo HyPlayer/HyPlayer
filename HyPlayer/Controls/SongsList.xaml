@@ -32,13 +32,13 @@
             <ListView.Header>
                 <StackPanel x:Name="HeaderPanel">
                     <ContentControl
-                        Margin="0,0,0,0"
+                        Margin="0,0,0,-75"
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Stretch"
                         Content="{x:Bind ListHeader}" />
                     <Grid
                         x:Name="Toolbar"
-                        Margin="0,0,0,-26"
+                        Margin="0,0,0,-16"
                         ColumnSpacing="12"
                         Visibility="{x:Bind IsSearchEnabled}">
                         <Grid.ColumnDefinitions>
@@ -46,10 +46,11 @@
                         </Grid.ColumnDefinitions>
                         <muxc:NavigationView
                             x:Name="ToolbarNavigationView"
-                            Margin="0,4,0,0"
+                            Margin="15,4,0,0"
                             IsBackButtonVisible="Collapsed"
                             IsSettingsVisible="False"
                             ItemInvoked="ToolbarNavigationView_ItemInvoked"
+                            Background="Transparent"
                             PaneDisplayMode="Top">
                             <muxc:NavigationView.MenuItems>
                                 <muxc:NavigationViewItem Content="歌曲" IsSelected="True">
@@ -224,7 +225,7 @@
                                 CornerRadius="12"
                                 EnableLazyLoading="True"
                                 IsCacheEnabled="False"
-                                Opacity="0.6"
+                                Opacity="1"
                                 Stretch="Fill"
                                 Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}"
                                 x:Load="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}">

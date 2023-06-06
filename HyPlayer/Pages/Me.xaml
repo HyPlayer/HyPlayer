@@ -220,9 +220,9 @@
                                         Margin="0,0,8,0"
                                         FontSize="14"
                                         Glyph="&#xF3B1;"
-                                        Foreground="{ThemeResource SystemColorButtonFaceBrush}"/>
+                                        Foreground="{ThemeResource SystemBaseMediumHighColor}"/>
                                     <TextBlock Text="退出登录"
-                                               Foreground="{ThemeResource SystemColorButtonFaceBrush}"/>
+                                               Foreground="{ThemeResource SystemBaseMediumHighColor}"/>
                                 </StackPanel>
                             </Button>
                         </StackPanel>

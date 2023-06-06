@@ -2,15 +2,20 @@
 
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
+using Microsoft.Toolkit.Uwp.UI.Behaviors;
+using Microsoft.Xaml.Interactivity;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.Graphics.Imaging;
+using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -64,6 +69,27 @@ public sealed partial class SongListDetail : Page, IDisposable
         set => SetValue(IsLoadingProperty, value);
     }
 
+    public async Task LoadAlbumImage()
+    {
+        ImageSource.UriSource = new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER);
+        var file = await StorageFile.CreateStreamedFileFromUriAsync("temp.jpg", ImageSource.UriSource, null);
+        var stream = await file.OpenReadAsync();
+        var decoder = await BitmapDecoder.CreateAsync(stream);
+        var softwareBitmap = await decoder.GetSoftwareBitmapAsync();
+        var pixelData = new byte[4 * softwareBitmap.PixelWidth * softwareBitmap.PixelHeight];
+        softwareBitmap.CopyToBuffer(pixelData.AsBuffer());
+        int x = 40;
+        int y = 30;
+        int width = softwareBitmap.PixelWidth;
+        int height = softwareBitmap.PixelHeight;
+        int index = (y * width + x) * 4;
+        var b = pixelData[index];
+        var g = pixelData[index + 1];
+        var r = pixelData[index + 2];
+        var a = pixelData[index + 3];
+        AlbumColor.Color = Color.FromArgb(a, r, g, b);
+    }
+
     public void LoadSongListDetail()
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
@@ -73,7 +99,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         }
         else
         {
-            ImageSource.UriSource = new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER);
+            _ = LoadAlbumImage();
         }
 
         TextBoxPLName.Text = playList.name;
@@ -81,7 +107,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         TextBoxAuthor.Content = playList.creater.name;
         ButtonLike.Tag = playList.subscribed;
         UpdateLikeBtnStyle();
-
+        Interaction.GetBehaviors(SongsList).Add(new FadeHeaderBehavior());
         if (playList.updateTime.Year != 0001)
             TextBoxUpdateTime.Text = $"{DateConverter.FriendFormat(playList.updateTime)}更新";
     }
@@ -417,22 +443,5 @@ public sealed partial class SongListDetail : Page, IDisposable
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
         Common.NavigatePage(typeof(Comments), "pl" + playList.plid);
-    }
-
-    private async void Description_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
-    {
-        var description = playList.desc;
-        var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.RecommendSongs);
-        if (json["data"]["dailySongs"][0]["alg"].ToString() == "birthDaySong")
-        {
-            description = "生日快乐~ 今天也要开心哦!";
-        }
-        var dialog = new ContentDialog();
-        dialog.Title = playList.name + "的简介";
-        dialog.Content = description;
-        dialog.CloseButtonText = "关闭";
-        dialog.IsPrimaryButtonEnabled = false;
-        json.RemoveAll();
-        _ = dialog.ShowAsync();
     }
 }
