@@ -155,11 +155,11 @@
                                         <FontIcon
                                             x:Name="IconLiked"
                                             FontSize="14"
-                                            Foreground="{ThemeResource SystemColorButtonFaceBrush}"
+                                            Foreground="{ThemeResource SystemBaseHighColor}"
                                             Glyph="&#xE00B;" />
                                         <TextBlock
                                             Margin="8,0,0,0"
-                                            Foreground="{ThemeResource SystemColorButtonFaceBrush}"
+                                            Foreground="{ThemeResource SystemBaseHighColor}"
                                             Text="心动模式" />
                                     </StackPanel>
                                 </Button>
