@@ -4,15 +4,12 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using Kawazu;
 using LyricParser.Abstraction;
-using Microsoft.Toolkit.Uwp.UI.Media;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using System;
-using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Core;
@@ -508,7 +505,7 @@ public sealed partial class Settings : Page, IDisposable
             TintLuminosityOpacity = TintOpacityLuminositySlider.Value,
             FallbackColor = (Windows.UI.Color)Application.Current.Resources["SystemRevealAltHighColor"],
         };
-       PreviewAcrylic.Fill=Brush;
+        PreviewAcrylic.Fill = Brush;
     }
 
     private void TintOpacity_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)

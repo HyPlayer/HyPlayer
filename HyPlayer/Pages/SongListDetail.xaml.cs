@@ -15,7 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Graphics.Imaging;
-using Windows.Storage;
+using Windows.Storage.Streams;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -42,6 +42,7 @@ public sealed partial class SongListDetail : Page, IDisposable
     private bool disposedValue = false;
     private DataTransferManager _dataTransferManager = DataTransferManager.GetForCurrentView();
     private Task _songListLoaderTask;
+    private Task _songListColorLoaderTask;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
 
@@ -71,23 +72,21 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     public async Task LoadAlbumImage()
     {
-        ImageSource.UriSource = new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER);
-        var file = await StorageFile.CreateStreamedFileFromUriAsync("temp.jpg", ImageSource.UriSource, null);
-        var stream = await file.OpenReadAsync();
-        var decoder = await BitmapDecoder.CreateAsync(stream);
-        var softwareBitmap = await decoder.GetSoftwareBitmapAsync();
-        var pixelData = new byte[4 * softwareBitmap.PixelWidth * softwareBitmap.PixelHeight];
-        softwareBitmap.CopyToBuffer(pixelData.AsBuffer());
-        int x = 40;
-        int y = 30;
-        int width = softwareBitmap.PixelWidth;
-        int height = softwareBitmap.PixelHeight;
-        int index = (y * width + x) * 4;
-        var b = pixelData[index];
-        var g = pixelData[index + 1];
-        var r = pixelData[index + 2];
-        var a = pixelData[index + 3];
-        AlbumColor.Color = Color.FromArgb(a, r, g, b);
+        _cancellationToken.ThrowIfCancellationRequested();
+        using var result = await Common.HttpClient.GetAsync(new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
+        if (result.IsSuccessStatusCode)
+        {
+            using var stream = new InMemoryRandomAccessStream();
+            await result.Content.WriteToStreamAsync(stream);
+            _cancellationToken.ThrowIfCancellationRequested();
+            var mime = await MIMEHelper.GetPictureCodec(stream);
+            var decoder = await BitmapDecoder.CreateAsync(mime, stream);
+            var color = await Common.ColorThief.GetColor(decoder);
+            if (AlbumColor != null)
+            {
+                _ = Common.Invoke(() => AlbumColor.Color = Color.FromArgb(color.Color.A, color.Color.R, color.Color.G, color.Color.B));
+            }
+        }
     }
 
     public void LoadSongListDetail()
@@ -95,11 +94,12 @@ public sealed partial class SongListDetail : Page, IDisposable
         if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
         if (Common.Setting.noImage)
         {
-            ImageSource = null;
+            AlbumImageSource = null;
         }
         else
         {
-            _ = LoadAlbumImage();
+            AlbumImageSource.UriSource = new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER);
+            _songListColorLoaderTask = LoadAlbumImage();
         }
 
         TextBoxPLName.Text = playList.name;
@@ -246,8 +246,17 @@ public sealed partial class SongListDetail : Page, IDisposable
             }
             catch
             {
-                Dispose();
-                return;
+            }
+        }
+        if (_songListColorLoaderTask != null && !_songListColorLoaderTask.IsCompleted)
+        {
+            try
+            {
+                _cancellationTokenSource.Cancel();
+                await _songListColorLoaderTask;
+            }
+            catch
+            {
             }
         }
         Dispose();
@@ -418,7 +427,7 @@ public sealed partial class SongListDetail : Page, IDisposable
             {
                 Songs.Clear();
                 playList = null;
-                ImageSource = null;
+                AlbumImageSource = null;
                 _cancellationTokenSource.Dispose();
             }
             SongsList.Dispose();

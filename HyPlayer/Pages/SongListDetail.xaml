@@ -81,7 +81,7 @@
                             HorizontalAlignment="Left"
                             CornerRadius="8">
                             <controls:ImageEx.Source>
-                                <BitmapImage x:Name="ImageSource" />
+                                <BitmapImage x:Name="AlbumImageSource" />
                             </controls:ImageEx.Source>
                             <ui:Effects.Shadow>
                                 <media:AttachedCardShadow
