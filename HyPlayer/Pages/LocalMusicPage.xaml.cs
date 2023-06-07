@@ -76,12 +76,12 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
         DownloadPageFrame.Navigate(typeof(DownloadPage));
     }
 
-    private async void Playall_Click(object sender, RoutedEventArgs e)
+    private void Playall_Click(object sender, RoutedEventArgs e)
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(LocalMusicPage));
         HyPlayList.RemoveAllSong();
         HyPlayList.List.AddRange(localHyItems);
-        await HyPlayList.SongMoveTo(0);
+        HyPlayList.SongMoveTo(0);
     }
 
     private void Refresh_Click(object sender, RoutedEventArgs e)
@@ -170,12 +170,12 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
     }
 
 
-    private async void ListBoxLocalMusicContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void ListBoxLocalMusicContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (ListBoxLocalMusicContainer.SelectedIndex == -1) return;
         HyPlayList.RemoveAllSong();
         HyPlayList.List.AddRange(localHyItems);
-        await HyPlayList.SongMoveTo(ListBoxLocalMusicContainer.SelectedIndex);
+        HyPlayList.SongMoveTo(ListBoxLocalMusicContainer.SelectedIndex);
     }
 
     private async void UploadCloud_Click(object sender, RoutedEventArgs e)

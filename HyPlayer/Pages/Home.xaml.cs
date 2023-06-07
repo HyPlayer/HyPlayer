@@ -250,7 +250,7 @@ public sealed partial class Home : Page, IDisposable
             try
             {
                 HyPlayList.AppendNcSongs(Songs);
-                await HyPlayList.SongMoveTo(0);
+                HyPlayList.SongMoveTo(0);
             }
             catch (Exception ex)
             {

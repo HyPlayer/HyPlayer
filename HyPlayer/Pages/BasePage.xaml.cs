@@ -596,7 +596,7 @@ public sealed partial class BasePage : Page
             try
             {
                 HyPlayList.AppendNcSongs(Songs);
-                await HyPlayList.SongMoveTo(0);
+                HyPlayList.SongMoveTo(0);
             }
             catch (Exception ex)
             {
@@ -889,7 +889,7 @@ public sealed partial class BasePage : Page
             }
         });
     }
-    public void RefreshNavItemCover(double collapseTime,int hashCode)
+    public void RefreshNavItemCover(double collapseTime, int hashCode)
     {
         _ = Common.Invoke(async () =>
         {

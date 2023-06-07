@@ -214,7 +214,7 @@ public sealed partial class Me : Page, IDisposable
             HyPlayList.PlaySourceId = ((Button)sender).Tag.ToString().Substring(2);
 
         HyPlayList.NowPlaying = -1;
-        await HyPlayList.SongMoveNext();
+        HyPlayList.SongMoveNext();
     }
 
     private void SongListItemClicked(object sender, TappedRoutedEventArgs e)

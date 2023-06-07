@@ -3,7 +3,6 @@
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
-using LyricParser.Abstraction;
 using Microsoft.Toolkit.Uwp.UI.Media;
 using System;
 using System.Collections.Generic;
@@ -22,7 +21,6 @@ using Windows.UI.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
@@ -430,7 +428,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void RefreshLyricTime(bool isInitLyricTime)
     {
-        if (isInitLyricTime) 
+        if (isInitLyricTime)
         {
             _lyricHasBeenLoaded = true;
             RefreshLyricColor();
@@ -518,7 +516,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     {
         OnSongChange(HyPlayList.NowPlayingItem);
         HyPlayList_OnSongCoverChanged(HyPlayList.NowPlayingHashCode);
-        if(!_lyricHasBeenLoaded)HyPlayList_OnLyricLoaded();
+        if (!_lyricHasBeenLoaded) HyPlayList_OnLyricLoaded();
     }
 
     public void OnSongChange(HyPlayItem mpi)
@@ -559,12 +557,12 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     }
                     LyricBox.Width = LyricWidth;
                     _lyricIsCleaning = false;
-                    if(_lyricIsReadyToGo)
+                    if (_lyricIsReadyToGo)
                     {
                         LoadLyricsBox();
                     }
                 }
-                
+
             }
             needRedesign++;
         });
@@ -572,7 +570,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     public void RefreshLyricColor()
     {
-        if((!_lyricHasBeenLoaded || !_lyricColorLoaded)&&_lyricCoverChanged) return;
+        if ((!_lyricHasBeenLoaded || !_lyricColorLoaded) && _lyricCoverChanged) return;
         _lyricCoverChanged = false;
         HyPlayList.FireLyricColorChangeEvent();
     }
@@ -840,7 +838,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         {
             if (lastlrcid != HyPlayList.NowPlayingHashCode) return ActualTheme == ElementTheme.Light;
             var mime = await MIMEHelper.GetPictureCodec(coverStream);
-            BitmapDecoder decoder = await BitmapDecoder.CreateAsync(mime,coverStream);
+            BitmapDecoder decoder = await BitmapDecoder.CreateAsync(mime, coverStream);
             var color = await Common.ColorThief.GetColor(decoder, ignoreWhite: false);
             //var c = GetPixel(bytes, 0, 0, decoder.PixelWidth, decoder.PixelHeight);
             lastSongForBrush = HyPlayList.NowPlayingItem.PlayItem;
@@ -1031,7 +1029,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         }
     }
 
-    private async void ImageAlbum_OnManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
+    private void ImageAlbum_OnManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
     {
         ImageResetPositionAni.Begin();
         Common.PageMain.ImageResetPositionAni.Begin();
@@ -1042,11 +1040,11 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 // 切换上下曲
                 if (e.Cumulative.Translation.X > 150)
                 {
-                    await HyPlayList.SongMovePrevious();
+                    HyPlayList.SongMovePrevious();
                 }
                 else if (e.Cumulative.Translation.X < -150)
                 {
-                    await HyPlayList.SongMoveNext();
+                    HyPlayList.SongMoveNext();
                 }
             }
         }

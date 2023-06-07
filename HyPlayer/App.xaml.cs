@@ -252,7 +252,7 @@ sealed partial class App : Application
         }
 
         HyPlayList.PlaySourceId = "local";
-        await HyPlayList.SongMoveTo(0);
+       HyPlayList.SongMoveTo(0);
     }
 
     /// <summary>

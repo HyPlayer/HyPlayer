@@ -76,7 +76,7 @@ namespace HyPlayer
             ncapi = new CloudMusicApi(Setting.EnableProxy);
             HttpBaseProtocolFilter = new HttpBaseProtocolFilter
             {
-                UseProxy =Setting.EnableProxy
+                UseProxy = Setting.EnableProxy
             };
             HttpClient = new HttpClient(HttpBaseProtocolFilter);
         }
@@ -260,7 +260,7 @@ namespace HyPlayer
                     break;
                 case "ns":
                     await HyPlayList.AppendNcSource(resourceId);
-                    await HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => "ns" + t.PlayItem.Id == resourceId));
+                    HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => "ns" + t.PlayItem.Id == resourceId));
                     break;
                 case "ml":
                     NavigatePage(typeof(MVPage), resourceId.Substring(2));
@@ -417,7 +417,7 @@ namespace HyPlayer
         }
 
         public bool CustomAcrylic
-        { 
+        {
             get => GetSettings(nameof(CustomAcrylic), false);
             set
             {

@@ -137,7 +137,7 @@ public sealed partial class RadioPage : Page, IDisposable
         {
             await HyPlayList.AppendNcSource("rd" + Radio.id);
             if (asc) HyPlayList.List.Reverse();
-            await HyPlayList.SongMoveTo(0);
+            HyPlayList.SongMoveTo(0);
         }
         catch (Exception ex)
         {

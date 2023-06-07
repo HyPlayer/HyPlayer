@@ -473,7 +473,7 @@ DoubleAnimation verticalAnimation;
         await HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.UserNextFadeOut, HyPlayList.SongChangeType.Next);
     }
 
-    private async void ListBoxPlayList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void ListBoxPlayList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (HyPlayList.NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating &&
             Common.Setting.displayShuffledList)
@@ -482,7 +482,7 @@ DoubleAnimation verticalAnimation;
                 ListBoxPlayList.SelectedIndex != HyPlayList.ShuffleList[ListBoxPlayList.SelectedIndex] &&
                 realSelectSong)
             {
-                await HyPlayList.SongMoveTo(HyPlayList.ShuffleList[ListBoxPlayList.SelectedIndex]);
+                HyPlayList.SongMoveTo(HyPlayList.ShuffleList[ListBoxPlayList.SelectedIndex]);
                 HyPlayList.ShufflingIndex = ListBoxPlayList.SelectedIndex;
             }
         }
@@ -490,7 +490,7 @@ DoubleAnimation verticalAnimation;
         {
             if (ListBoxPlayList.SelectedIndex != -1 && ListBoxPlayList.SelectedIndex != HyPlayList.NowPlaying &&
                 realSelectSong)
-                await HyPlayList.SongMoveTo(ListBoxPlayList.SelectedIndex);
+                HyPlayList.SongMoveTo(ListBoxPlayList.SelectedIndex);
         }
     }
 
@@ -597,7 +597,7 @@ DoubleAnimation verticalAnimation;
         _ = HyPlayList.PickLocalFile();
     }
 
-    private async void PlayListRemove_OnClick(object sender, RoutedEventArgs e)
+    private void PlayListRemove_OnClick(object sender, RoutedEventArgs e)
     {
         try
         {
@@ -605,7 +605,7 @@ DoubleAnimation verticalAnimation;
             {
                 var item = btn.DataContext as HyPlayItem;
                 var index = HyPlayList.List.IndexOf(item);
-                await HyPlayList.RemoveSong(index);
+                HyPlayList.RemoveSong(index);
                 RefreshSongList();
             }
         }
@@ -1011,11 +1011,11 @@ DoubleAnimation verticalAnimation;
         }
     }
 
-    private async void PlayListTitle_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+    private void PlayListTitle_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
         HyPlayList.List.Reverse();
         HyPlayList.SongAppendDone();
-        await HyPlayList.SongMoveTo(0);
+        HyPlayList.SongMoveTo(0);
     }
 
     private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)

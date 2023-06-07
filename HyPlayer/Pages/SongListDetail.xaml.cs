@@ -308,14 +308,14 @@ public sealed partial class SongListDetail : Page, IDisposable
             await HyPlayList.AppendPlayList(playList.plid);
             HyPlayList.PlaySourceId = playList.plid;
             HyPlayList.NowPlaying = -1;
-            await HyPlayList.SongMoveNext();
+            HyPlayList.SongMoveNext();
         }
         else
         {
             HyPlayList.AppendNcSongs(Songs.ToList());
             HyPlayList.PlaySourceId = playList.plid;
             HyPlayList.NowPlaying = -1;
-            await HyPlayList.SongMoveNext();
+            HyPlayList.SongMoveNext();
         }
     }
 
@@ -365,7 +365,7 @@ public sealed partial class SongListDetail : Page, IDisposable
             {
                 HyPlayList.AppendNcSongs(IntSongs);
                 HyPlayList.PlaySourceId = playList.plid;
-                await HyPlayList.SongMoveTo(0);
+                HyPlayList.SongMoveTo(0);
             }
             catch (Exception ex)
             {

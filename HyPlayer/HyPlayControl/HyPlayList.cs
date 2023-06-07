@@ -90,7 +90,7 @@ public static class HyPlayList
     private static SystemMediaTransportControlsDisplayUpdater _controlsDisplayUpdater;
     private static readonly BackgroundDownloader Downloader = new();
     public static InMemoryRandomAccessStream CoverStream = new InMemoryRandomAccessStream();
-    public static int NowPlayingHashCode;
+    public static int NowPlayingHashCode = 0;
     public static RandomAccessStreamReference CoverStreamRefrence = RandomAccessStreamReference.CreateFromStream(CoverStream);
     private static InMemoryRandomAccessStream _ncmPlayableStream;
     private static string _ncmPlayableStreamMIMEType = string.Empty;
@@ -302,7 +302,7 @@ public static class HyPlayList
         _ = Common.Invoke(() => OnSongBufferStart?.Invoke());
     }
 
-    private static async void PlayerOnMediaFailed(MediaPlayer sender, string reason)
+    private static void PlayerOnMediaFailed(MediaPlayer sender, string reason)
     {
         //歌曲崩溃了的话就是这个
         //SongMoveNext();
@@ -310,7 +310,7 @@ public static class HyPlayList
 
         Common.AddToTeachingTipLists("播放失败 切到下一曲",
             "歌曲" + NowPlayingItem.PlayItem.Name + "\r\n" + reason);
-        await SongMoveNext();
+        SongMoveNext();
     }
 
     public static async Task PickLocalFile()
@@ -400,7 +400,7 @@ public static class HyPlayList
             if (!isFirstLoad) continue;
             SongAppendDone();
             isFirstLoad = false;
-            await SongMoveTo(List.Count - 1);
+            SongMoveTo(List.Count - 1);
         }
 
         SongAppendDone();
@@ -469,19 +469,18 @@ public static class HyPlayList
             _ = Common.Invoke(() => OnPlayListAddDone?.Invoke());
     }
 
-    public static async Task SongMoveNext()
+    public static void SongMoveNext()
     {
         OnSongMoveNext?.Invoke();
         if (List.Count == 0) return;
         MoveSongPointer(true);
         if (!Common.IsInFm && List.Count != 0)
         {
-            if (_playerLoaderTask != null && !_playerLoaderTask.IsCompleted) await _playerLoaderTask;
-            _playerLoaderTask = LoadPlayerSong(List[NowPlaying]);
+            _ = LoadPlayerSong(List[NowPlaying]);
         }
     }
 
-    public static async Task SongMovePrevious()
+    public static void SongMovePrevious()
     {
         if (List.Count == 0) return;
         if (NowPlaying - 1 < 0)
@@ -497,22 +496,20 @@ public static class HyPlayList
         }
         if (!Common.IsInFm && List.Count != 0)
         {
-            if (_playerLoaderTask != null && !_playerLoaderTask.IsCompleted) await _playerLoaderTask;
-            _playerLoaderTask = LoadPlayerSong(List[NowPlaying]);
+            _ = LoadPlayerSong(List[NowPlaying]);
         }
     }
 
-    public static async Task SongMoveTo(int index)
+    public static void SongMoveTo(int index)
     {
         if (List.Count <= index) return;
         NowPlaying = index;
         if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
             ShufflingIndex = ShuffleList.IndexOf(index);
-        if (_playerLoaderTask != null && !_playerLoaderTask.IsCompleted) await _playerLoaderTask;
-        _playerLoaderTask = LoadPlayerSong(List[NowPlaying]);
+        _ = LoadPlayerSong(List[NowPlaying]);
     }
 
-    public static async Task RemoveSong(int index)
+    public static void RemoveSong(int index)
     {
         if (List.Count <= index) return;
         if (List.Count - 1 == 0)
@@ -524,8 +521,7 @@ public static class HyPlayList
         if (index == NowPlaying)
         {
             List.RemoveAt(index);
-            if (_playerLoaderTask != null && !_playerLoaderTask.IsCompleted) await _playerLoaderTask;
-            _playerLoaderTask = LoadPlayerSong(List[NowPlaying]);
+            _ = LoadPlayerSong(List[NowPlaying]);
         }
 
         if (index < NowPlaying)
@@ -648,7 +644,7 @@ public static class HyPlayList
         }
     }
 
-    private static async void Player_MediaEnded(MediaPlayer sender, object args)
+    private static void Player_MediaEnded(MediaPlayer sender, object args)
     {
         //当播放结束时,此时你应当进行切歌操作
         //不过在此之前还是把订阅了的时间给返回回去吧
@@ -657,8 +653,7 @@ public static class HyPlayList
         //然后尝试加载下一首歌
         if (!Common.IsInFm && List.Count != 0)
         {
-            if (_playerLoaderTask != null && !_playerLoaderTask.IsCompleted) await _playerLoaderTask;
-            _playerLoaderTask = LoadPlayerSong(List[NowPlaying]);
+            _ = LoadPlayerSong(List[NowPlaying]);
         }
     }
 
@@ -760,7 +755,7 @@ public static class HyPlayList
     }
 
 
-    private static async Task FindChancetoMoveSong(SongChangeType songChangeType)
+    private static void FindChancetoMoveSong(SongChangeType songChangeType)
     {
         while (UserRequestedChangingSong)
         {
@@ -772,11 +767,11 @@ public static class HyPlayList
             {
                 if (songChangeType == SongChangeType.Next)
                 {
-                    await SongMoveNext();
+                    SongMoveNext();
                 }
                 else
                 {
-                    await SongMovePrevious();
+                    SongMovePrevious();
                 }
 #if DEBUG
                 Debug.WriteLine("FindEnd");
@@ -894,11 +889,11 @@ public static class HyPlayList
                     {
                         if (songChangeType == SongChangeType.Next)
                         {
-                            await SongMoveNext();
+                            SongMoveNext();
                         }
                         else
                         {
-                            await SongMovePrevious();
+                            SongMovePrevious();
                         }
                         return;
                     }
@@ -917,11 +912,11 @@ public static class HyPlayList
                         {
                             if (songChangeType == SongChangeType.Next)
                             {
-                                await SongMoveNext();
+                                SongMoveNext();
                             }
                             else
                             {
-                                await SongMovePrevious();
+                                SongMovePrevious();
                             }
                         }
                     }
@@ -932,7 +927,7 @@ public static class HyPlayList
                         if (!UserRequestedChangingSong)
                         {
                             UserRequestedChangingSong = true;
-                            await FindChancetoMoveSong(songChangeType);
+                            FindChancetoMoveSong(songChangeType);
                         }
                         else
                         {
@@ -1028,12 +1023,20 @@ public static class HyPlayList
 
     public static async Task LoadPlayerSong(HyPlayItem targetItem)
     {
+        if (_playerLoaderTask != null && !_playerLoaderTask.IsCompleted)
+        {
+            await _playerLoaderTask;
+        }
+        _playerLoaderTask = LoadMediaSource(targetItem);
+    }
+    public static async Task LoadMediaSource(HyPlayItem targetItem)
+    {
         if (targetItem.PlayItem?.Name == null)
         {
             MoveSongPointer();
             return;
         }
-        NowPlayingHashCode = -1;
+        NowPlayingHashCode = 0;
         if (CoverStream.Size != 0)
         {
             CoverStream.Size = 0;
@@ -1275,7 +1278,7 @@ public static class HyPlayList
         if (NowPlayingItem?.PlayItem == null || !Common.Setting.enableTile) return;
         string fileName = NowPlayingItem.PlayItem.IsLocalFile ? null
             : NowPlayingItem.PlayItem.Album.id;
-        bool coverStreamIsAvailable = CoverStream.Size != 0 && fileName is not null or "0";
+        bool coverStreamIsAvailable = CoverStream.Size != 0 && fileName is not null or "0" && NowPlayingHashCode != 0;
         string downloadLink = string.Empty;
         if (Common.Setting.saveTileBackgroundToLocalFolder
             && Common.Setting.tileBackgroundAvailability

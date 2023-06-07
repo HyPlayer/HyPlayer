@@ -61,6 +61,6 @@ public partial class SimpleLinerList : UserControl
             ((Button)sender).Tag.ToString().Substring(0, 2) == "al")
             HyPlayList.PlaySourceId = ((Button)sender).Tag.ToString().Substring(2);
         HyPlayList.NowPlaying = -1;
-        await HyPlayList.SongMoveNext();
+        HyPlayList.SongMoveNext();
     }
 }

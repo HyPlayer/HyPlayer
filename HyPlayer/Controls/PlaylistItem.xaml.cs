@@ -55,7 +55,7 @@ public sealed partial class PlaylistItem : UserControl, IDisposable
         await HyPlayList.AppendPlayList(playList.plid);
         HyPlayList.PlaySourceId = playList.plid;
         HyPlayList.NowPlaying = -1;
-        await HyPlayList.SongMoveNext();
+        HyPlayList.SongMoveNext();
     }
 
     private async void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)
