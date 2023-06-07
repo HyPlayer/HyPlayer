@@ -55,7 +55,7 @@ internal static class PersonalFM
                     item2.ItemType = HyPlayItemType.Netease;
                     json.RemoveAll();
                 }
-                HyPlayList.SongMoveTo(0);
+                await HyPlayList.SongMoveTo(0);
                 Common.IsInFm = true;
             }
             catch (Exception e)

@@ -140,7 +140,7 @@ public sealed partial class GroupedSongsList : IDisposable
         Grid_RightTapped(((StackPanel)((Button)sender)?.Parent)?.Parent, null);
     }
 
-    private void FlyoutItemPlay_Click(object sender, RoutedEventArgs e)
+    private async void FlyoutItemPlay_Click(object sender, RoutedEventArgs e)
     {
         if (SongContainer.SelectedItems.Count == 0) return;
         if (!(SongContainer.SelectedItem as NCSong).IsAvailable)
@@ -153,7 +153,7 @@ public sealed partial class GroupedSongsList : IDisposable
         if (SongContainer.SelectedItem != null)
         {
             var targetPlayItemIndex = HyPlayList.List.FindIndex(t => t.PlayItem.Id == (SongContainer.SelectedItem as NCSong).sid);
-            HyPlayList.SongMoveTo(targetPlayItemIndex);
+            await HyPlayList.SongMoveTo(targetPlayItemIndex);
         }
     }
 
@@ -275,7 +275,7 @@ public sealed partial class GroupedSongsList : IDisposable
             ListSource.Substring(0, 2) == "al")
             HyPlayList.PlaySourceId = ListSource.Substring(2);
         if (!shiftSong)
-            HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem?.Id == (e.ClickedItem as NCSong).sid));
+            await HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem?.Id == (e.ClickedItem as NCSong).sid));
         else
             HyPlayList.NowPlaying =
                 HyPlayList.List.FindIndex(song => song.PlayItem.Id == ((e.ClickedItem as NCSong).sid));

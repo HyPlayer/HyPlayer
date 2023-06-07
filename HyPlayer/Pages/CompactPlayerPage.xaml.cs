@@ -92,7 +92,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         //CompactPlayerAni.Begin();
     }
 
-    private void HyPlayList_OnSongCoverChanged()
+    private void HyPlayList_OnSongCoverChanged(int hashCode)
     {
         if (!Common.Setting.noImage)
         {
@@ -103,6 +103,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
                     using var coverStream = HyPlayList.CoverStream.CloneStream();
                     if (coverStream.Size != 0)
                     {
+                        if (hashCode != HyPlayList.NowPlayingHashCode) return;
                         await AlbumImageBrushSource.SetSourceAsync(coverStream);
                     }
                 }
@@ -352,20 +353,20 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         });
     }
 
-    private void MovePrevious(object sender, RoutedEventArgs e)
+    private async void MovePrevious(object sender, RoutedEventArgs e)
     {
-        HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.UserNextFadeOut, HyPlayList.SongChangeType.Previous);
+        await HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.UserNextFadeOut, HyPlayList.SongChangeType.Previous);
     }
 
-    private void MoveNext(object sender, RoutedEventArgs e)
+    private async void MoveNext(object sender, RoutedEventArgs e)
     {
-        HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.UserNextFadeOut, HyPlayList.SongChangeType.Next);
+        await HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.UserNextFadeOut, HyPlayList.SongChangeType.Next);
     }
 
-    private void ChangePlayState(object sender, RoutedEventArgs e)
+    private async void ChangePlayState(object sender, RoutedEventArgs e)
     {
-        if (HyPlayList.IsPlaying) HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.PauseFadeOut);
-        else HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.PlayFadeIn);
+        if (HyPlayList.IsPlaying) await HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.PauseFadeOut);
+        else await HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.PlayFadeIn);
         PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uF8AE" : "\uF5B0";
     }
 
@@ -373,7 +374,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     {
         base.OnNavigatedTo(e);
         OnChangePlayItem(HyPlayList.NowPlayingItem);
-        HyPlayList_OnSongCoverChanged();
+        HyPlayList_OnSongCoverChanged(HyPlayList.NowPlayingHashCode);
         PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uEDB4" : "\uEDB5";
         Common.BarPlayBar.Visibility = Visibility.Collapsed;
         Window.Current.SetTitleBar(MainGrid);

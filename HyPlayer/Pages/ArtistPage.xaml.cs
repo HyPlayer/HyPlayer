@@ -202,13 +202,13 @@ public sealed partial class ArtistPage : Page, IDisposable
         }
     }
 
-    private void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
+    private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(ArtistPage));
         try
         {
             HyPlayList.AppendNcSongs(hotSongs);
-            HyPlayList.SongMoveTo(0);
+            await HyPlayList.SongMoveTo(0);
         }
         catch (Exception ex)
         {

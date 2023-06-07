@@ -86,9 +86,9 @@ public sealed partial class BasePage : Page
         // Window.Current.CoreWindow.Dispatcher.AcceleratorKeyActivated += Dispatcher_AcceleratorKeyActivated;
     }
 
-    private void HyPlayList_OnSongCoverChanged()
+    private void HyPlayList_OnSongCoverChanged(int hashCode)
     {
-        RefreshNavItemCover();
+        RefreshNavItemCover(hashCode);
     }
 
     /*
@@ -596,7 +596,7 @@ public sealed partial class BasePage : Page
             try
             {
                 HyPlayList.AppendNcSongs(Songs);
-                HyPlayList.SongMoveTo(0);
+                await HyPlayList.SongMoveTo(0);
             }
             catch (Exception ex)
             {
@@ -870,7 +870,7 @@ public sealed partial class BasePage : Page
             }
         });
     }
-    public void RefreshNavItemCover()
+    public void RefreshNavItemCover(int hashCode)
     {
         _ = Common.Invoke(async () =>
         {
@@ -879,6 +879,7 @@ public sealed partial class BasePage : Page
                 try
                 {
                     using var coverStream = HyPlayList.CoverStream.CloneStream();
+                    if (hashCode != HyPlayList.NowPlayingHashCode) return;
                     await NavItemImageSource.SetSourceAsync(coverStream);
                 }
                 catch
@@ -888,7 +889,7 @@ public sealed partial class BasePage : Page
             }
         });
     }
-    public void RefreshNavItemCover(double collapseTime)
+    public void RefreshNavItemCover(double collapseTime,int hashCode)
     {
         _ = Common.Invoke(async () =>
         {
@@ -901,6 +902,7 @@ public sealed partial class BasePage : Page
                     using var coverStream = HyPlayList.CoverStream.CloneStream();
                     if (coverStream.Size != 0)
                     {
+                        if (hashCode != HyPlayList.NowPlayingHashCode) return;
                         await NavItemImageSource.SetSourceAsync(coverStream);
                     }
                 }
