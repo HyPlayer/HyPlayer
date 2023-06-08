@@ -1209,7 +1209,8 @@ public static class HyPlayList
             //加载歌词
             _ = LoadLyrics(NowPlayingItem);
             //更新磁贴
-            _ = RefreshTile(NowPlayingHashCode, NowPlayingItem);
+            await RefreshTile(NowPlayingHashCode, NowPlayingItem);
+            //RASR罪大恶极，害的磁贴怨声载道
             _controlsDisplayUpdater.Update();
         }
     }
