@@ -347,7 +347,7 @@ public static class HyPlayList
             if (Path.GetExtension(file.Path) == ".ncm")
             {
                 //脑残Music
-                var stream = await file.OpenStreamForReadAsync();
+                using var stream = await file.OpenStreamForReadAsync();
                 if (NCMFile.IsCorrectNCMFile(stream))
                 {
                     var Info = NCMFile.GetNCMMusicInfo(stream);
@@ -389,8 +389,6 @@ public static class HyPlayList
 
                     List.Add(hyitem);
                 }
-
-                stream.Dispose();
             }
             else
             {
@@ -398,13 +396,11 @@ public static class HyPlayList
             }
 
             if (!isFirstLoad) continue;
-            SongAppendDone();
             isFirstLoad = false;
-            SongMoveTo(List.Count - 1);
         }
-
-        SongAppendDone();
         //HyPlayList.SongMoveTo(0);
+        SongAppendDone();
+        SongMoveTo(List.Count - 1);
     }
 
 
@@ -1178,9 +1174,9 @@ public static class HyPlayList
     public static async void Player_SourceChanged(MediaPlayer sender, object args)
     {
         if (List.Count <= NowPlaying) return;
-        if (sender.Source == null || NowPlayingItem.PlayItem == null) 
-        { 
-            return; 
+        if (sender.Source == null || NowPlayingItem.PlayItem == null)
+        {
+            return;
         }
         await SongFadeRequest(SongFadeEffectType.NextFadeIn);
         //当加载一个新的播放文件时,此时你应当加载歌词和 SystemMediaTransportControls
@@ -1276,7 +1272,7 @@ public static class HyPlayList
     {
         OnPlayItemChange?.Invoke(targetItem);
     }
-    public static async Task RefreshTile(int hashCode,HyPlayItem targetItem)
+    public static async Task RefreshTile(int hashCode, HyPlayItem targetItem)
     {
         if (targetItem?.PlayItem == null || !Common.Setting.enableTile) return;
         string fileName = targetItem.PlayItem.IsLocalFile ? null
@@ -1526,6 +1522,8 @@ public static class HyPlayList
             case HyPlayItemType.Local:
                 try
                 {
+                    var folder = StorageFolder.GetFolderFromPathAsync(Path.GetDirectoryName(NowPlayingItem.PlayItem.Url));
+                    var fileName = Path.GetFileNameWithoutExtension(NowPlayingItem.PlayItem.Url);
                     pureLyricInfo = new PureLyricInfo
                     {
                         PureLyrics = await FileIO.ReadTextAsync(
@@ -1778,12 +1776,11 @@ public static class HyPlayList
         return hpi;
     }
 
-    public static void AppendNcSongs(IList<NCSong> ncSongs,
-        bool needRemoveList = true)
+    public static void AppendNcSongs(IList<NCSong> ncSongs, bool needRemoveList = true, bool resetPlaying = true)
     {
         if (ncSongs == null) return;
         if (needRemoveList)
-            RemoveAllSong();
+            RemoveAllSong(resetPlaying);
         try
         {
             foreach (var ncSong in ncSongs)
@@ -2007,7 +2004,6 @@ public static class HyPlayList
                         (ex.InnerException ?? new Exception()).Message);
                 }
             }
-            SongAppendDone();
             json.RemoveAll();
             return true;
         }

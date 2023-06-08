@@ -268,7 +268,6 @@ public sealed partial class GroupedSongsList : IDisposable
             // Change Music Source
             HyPlayList.RemoveAllSong(!shiftSong);
             await HyPlayList.AppendNcSource(ListSource);
-            HyPlayList.SongAppendDone();
         }
 
         if (ListSource.Substring(0, 2) == "pl" ||

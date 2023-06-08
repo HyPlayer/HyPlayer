@@ -416,7 +416,6 @@ public sealed partial class SongListDetail : Page, IDisposable
             await HyPlayList.AppendPlayList(playList.plid);
         else
             HyPlayList.AppendNcSongs(Songs.ToList());
-        HyPlayList.SongAppendDone();
     }
 
     private void Dispose(bool disposing)

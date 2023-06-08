@@ -418,7 +418,7 @@ public sealed partial class SongsList : UserControl, IDisposable
         IsAddingSongToPlaylist = true;
         if (ListSource != null && ListSource != "content" && Songs.Count == VisibleSongs.Count)
         {
-            if (HyPlayList.PlaySourceId != ListSource.Substring(2) || HyPlayList.List.Count != VisibleSongs.Where(t=>t.IsAvailable).Count())
+            if (HyPlayList.PlaySourceId != ListSource.Substring(2) || HyPlayList.List.Count != VisibleSongs.Where(t => t.IsAvailable).Count())
             {
                 // Change Music Source
                 HyPlayList.RemoveAllSong(!shiftSong);
@@ -443,7 +443,7 @@ public sealed partial class SongsList : UserControl, IDisposable
         //}
         else
         {
-            HyPlayList.AppendNcSongs(VisibleSongs);
+            HyPlayList.AppendNcSongs(VisibleSongs, resetPlaying: shiftSong);
             if (ListSource?.Substring(0, 2) == "pl" ||
                 ListSource?.Substring(0, 2) == "al")
                 HyPlayList.PlaySourceId = ListSource.Substring(2);
