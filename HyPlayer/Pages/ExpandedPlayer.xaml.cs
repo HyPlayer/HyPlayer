@@ -1054,70 +1054,73 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     {
         _ = Common.Invoke(async () =>
         {
-            try
+            if (!Common.Setting.noImage)
             {
-                _lyricColorLoaded = false;
-                using var coverStream = HyPlayList.CoverStream.CloneStream();
-                if (hashCode != HyPlayList.NowPlayingHashCode) return;
-                await ImageAlbumSource.SetSourceAsync(coverStream);
-                if (Common.Setting.expandedPlayerBackgroundType == 0 && Background?.GetType() != typeof(ImageBrush))
+                try
                 {
-                    var brush = new ImageBrush
-                    { Stretch = Stretch.UniformToFill };
-                    Background = brush;
-                    brush.ImageSource = (ImageSource)ImageAlbum.Source;
-                }
-                if (hashCode != HyPlayList.NowPlayingHashCode) return;
-                var isBright = await IsBrightAsync(coverStream);
-                if (Common.Setting.lyricColor != 3 || albumMainColor == null)
-                {
-                    if (Common.Setting.expandedPlayerBackgroundType == 0)
+                    _lyricColorLoaded = false;
+                    using var coverStream = HyPlayList.CoverStream.CloneStream();
+                    if (hashCode != HyPlayList.NowPlayingHashCode) return;
+                    await ImageAlbumSource.SetSourceAsync(coverStream);
+                    if (Common.Setting.expandedPlayerBackgroundType == 0 && Background?.GetType() != typeof(ImageBrush))
                     {
-                        if (albumMainColor != null)
-                        {
-                            var coverColor = albumMainColor.Value;
-                            ImmersiveCover.Color = coverColor;
-                        }
+                        var brush = new ImageBrush
+                        { Stretch = Stretch.UniformToFill };
+                        Background = brush;
+                        brush.ImageSource = (ImageSource)ImageAlbum.Source;
                     }
-
-                    if (isBright)
+                    if (hashCode != HyPlayList.NowPlayingHashCode) return;
+                    var isBright = await IsBrightAsync(coverStream);
+                    if (Common.Setting.lyricColor != 3 || albumMainColor == null)
                     {
-                        ForegroundAccentTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0, 0, 0));
-                        ForegroundIdleTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(114, 0, 0, 0));
-                        //ImmersiveCover.Color = Windows.UI.Color.FromArgb(255, 210,210, 210);
+                        if (Common.Setting.expandedPlayerBackgroundType == 0)
+                        {
+                            if (albumMainColor != null)
+                            {
+                                var coverColor = albumMainColor.Value;
+                                ImmersiveCover.Color = coverColor;
+                            }
+                        }
+
+                        if (isBright)
+                        {
+                            ForegroundAccentTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0, 0, 0));
+                            ForegroundIdleTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(114, 0, 0, 0));
+                            //ImmersiveCover.Color = Windows.UI.Color.FromArgb(255, 210,210, 210);
+                        }
+                        else
+                        {
+                            ForegroundAccentTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
+                            ForegroundIdleTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(66, 255, 255, 255));
+                            //ImmersiveCover.Color = Windows.UI.Color.FromArgb(255, 35, 35, 35);
+                        }
                     }
                     else
                     {
-                        ForegroundAccentTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
-                        ForegroundIdleTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(66, 255, 255, 255));
-                        //ImmersiveCover.Color = Windows.UI.Color.FromArgb(255, 35, 35, 35);
+                        ForegroundAccentTextBrush = new SolidColorBrush(albumMainColor.Value);
+                        var idleColor = albumMainColor.Value;
+                        idleColor.A -= 10;
+                        idleColor.R -= 10;
+                        idleColor.G -= 10;
+                        idleColor.B -= 10;
+                        ForegroundIdleTextBrush = new SolidColorBrush(idleColor);
                     }
+
+
+                    TextBlockSongTitle.Foreground = ForegroundAccentTextBrush;
+                    TextBlockSingerNameTip.Foreground = ForegroundIdleTextBrush;
+                    TextBlockAlbumNameTip.Foreground = ForegroundIdleTextBrush;
+                    TextBlockSinger.Foreground = ForegroundAccentTextBrush;
+                    TextBlockAlbum.Foreground = ForegroundAccentTextBrush;
+                    if (Common.Setting.playbarBackgroundElay)
+                        Common.BarPlayBar.SetPlayBarIdleBackground(ForegroundIdleTextBrush);
+                    //LoadLyricsBox();
+                    _lyricColorLoaded = true;
+                    RefreshLyricColor();
                 }
-                else
+                catch
                 {
-                    ForegroundAccentTextBrush = new SolidColorBrush(albumMainColor.Value);
-                    var idleColor = albumMainColor.Value;
-                    idleColor.A -= 10;
-                    idleColor.R -= 10;
-                    idleColor.G -= 10;
-                    idleColor.B -= 10;
-                    ForegroundIdleTextBrush = new SolidColorBrush(idleColor);
                 }
-
-
-                TextBlockSongTitle.Foreground = ForegroundAccentTextBrush;
-                TextBlockSingerNameTip.Foreground = ForegroundIdleTextBrush;
-                TextBlockAlbumNameTip.Foreground = ForegroundIdleTextBrush;
-                TextBlockSinger.Foreground = ForegroundAccentTextBrush;
-                TextBlockAlbum.Foreground = ForegroundAccentTextBrush;
-                if (Common.Setting.playbarBackgroundElay)
-                    Common.BarPlayBar.SetPlayBarIdleBackground(ForegroundIdleTextBrush);
-                //LoadLyricsBox();
-                _lyricColorLoaded = true;
-                RefreshLyricColor();
-            }
-            catch
-            {
             }
         });
     }

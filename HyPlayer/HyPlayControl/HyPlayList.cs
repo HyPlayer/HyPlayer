@@ -95,6 +95,8 @@ public static class HyPlayList
     private static string _ncmPlayableStreamMIMEType = string.Empty;
     private static MediaSource _mediaSource;
     private static Task _playerLoaderTask;
+    private static HyPlayItem _requestedItem;
+    private static int _songIsWaitingForLoadCount = 0;
 
     public static int LyricPos;
 
@@ -1018,11 +1020,30 @@ public static class HyPlayList
 
     public static async Task LoadPlayerSong(HyPlayItem targetItem)
     {
+        _requestedItem = targetItem;
+        if (_songIsWaitingForLoadCount > 1)
+        {
+            return;
+        }
         if (_playerLoaderTask != null && !_playerLoaderTask.IsCompleted)
         {
-            await _playerLoaderTask;
+            _songIsWaitingForLoadCount++;
+            if (_songIsWaitingForLoadCount <= 1)
+            {
+                await _playerLoaderTask;
+                _songIsWaitingForLoadCount--;
+            }
+            else
+            {
+                _songIsWaitingForLoadCount--;
+                return;
+            }
         }
-        _playerLoaderTask = LoadMediaSource(targetItem);
+        if (_requestedItem != null)
+        {
+            _playerLoaderTask = LoadMediaSource(_requestedItem);
+            _requestedItem = null;
+        }
     }
     public static async Task LoadMediaSource(HyPlayItem targetItem)
     {
@@ -1197,34 +1218,38 @@ public static class HyPlayList
 
             //记录下当前播放位置
             ApplicationData.Current.LocalSettings.Values["nowSongPointer"] = NowPlaying.ToString();
-            if (CoverStream.Size == 0)
+            if (CoverStream.Size == 0 && !Common.Setting.noImage)
             {
                 await RefreshAlbumCover();
             }
             if (CoverStream.Size != 0)
             {
-                if (hashCodeWhenRequested == NowPlayingHashCode)
+                if ((hashCodeWhenRequested == NowPlayingHashCode) && !Common.Setting.noImage)
                 {
                     OnSongCoverChanged?.Invoke(hashCodeWhenRequested);
                 }
-                else
-                {
-                    CoverStream.Size = 0;
-                    CoverStream.Seek(0);
-                    Common.AddToTeachingTipLists("专辑封面与当前专辑不对应", $"检测到专辑封面和当前正在播放的歌曲专辑不对应\n已经取消当前歌曲的专辑封面更新\n受影响歌曲:\n{playItemWhenRequested.PlayItem.Name}");
-                }
             }
-            //因为加载图片可能会高耗时,所以在此处加载
-            NotifyPlayItemChanged(NowPlayingItem);
-            //加载歌词
-            _ = LoadLyrics(NowPlayingItem);
+            if (hashCodeWhenRequested == NowPlayingHashCode)
+            {
+                //因为加载图片可能会高耗时,所以在此处加载
+                NotifyPlayItemChanged(playItemWhenRequested);
+            }
+            if (hashCodeWhenRequested == NowPlayingHashCode)
+            {
+                //加载歌词
+                _ = LoadLyrics(playItemWhenRequested);
+            }
             //更新磁贴
             if (hashCodeWhenRequested == NowPlayingHashCode)
             {
-                await RefreshTile(hashCodeWhenRequested, NowPlayingItem);
+                await RefreshTile(hashCodeWhenRequested, playItemWhenRequested);
             }
-            //RASR罪大恶极，害的磁贴怨声载道
-            _controlsDisplayUpdater.Update();
+            if (hashCodeWhenRequested == NowPlayingHashCode)
+            {
+                //RASR罪大恶极，害的磁贴怨声载道
+                _controlsDisplayUpdater.Update();
+            }
+            //这里要判断这么多次的原因在于如果只判断一次的话，后面如果切歌是无法知晓的。所以只能用这个蠢方法
         }
     }
 
@@ -1444,7 +1469,7 @@ public static class HyPlayList
             // And send the notification to the primary tile
             TileUpdateManager.CreateTileUpdaterForApplication().Update(tileNotif);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             Common.AddToTeachingTipLists("更新磁贴时发生错误", ex.Message);
         }
