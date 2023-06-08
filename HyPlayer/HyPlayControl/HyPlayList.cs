@@ -4,7 +4,6 @@ using HyPlayer.Classes;
 using Kawazu;
 using LyricParser.Abstraction;
 using LyricParser.Implementation;
-using Microsoft.Toolkit.Uwp.Helpers;
 using Microsoft.Toolkit.Uwp.Notifications;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
@@ -174,9 +173,9 @@ public static class HyPlayList
     {
         get
         {
-            if (Player.Source != null)
+            if (_mediaSource != null && _mediaSource.IsOpen)
             {
-                return (Player.Source as MediaSource).CustomProperties["nowPlayingItem"] as HyPlayItem;
+                return _mediaSource.CustomProperties["nowPlayingItem"] as HyPlayItem;
             }
             if (List.Count <= NowPlaying || NowPlaying == -1)
                 return new HyPlayItem { ItemType = HyPlayItemType.Netease };
@@ -1152,6 +1151,7 @@ public static class HyPlayList
                     break;
             }
             _mediaSource?.CustomProperties.Add("nowPlayingItem", targetItem);
+            NowPlayingHashCode = targetItem.GetHashCode();
             MediaSystemControls.IsEnabled = true;
             await _mediaSource.OpenAsync();
             var duration = _mediaSource.Duration?.TotalMilliseconds;
@@ -1178,6 +1178,8 @@ public static class HyPlayList
         {
             return;
         }
+        var hashCodeWhenRequested = NowPlayingHashCode;
+        var playItemWhenRequested = NowPlayingItem;
         await SongFadeRequest(SongFadeEffectType.NextFadeIn);
         //当加载一个新的播放文件时,此时你应当加载歌词和 SystemMediaTransportControls
         //加载 SystemMediaTransportControls
@@ -1195,21 +1197,32 @@ public static class HyPlayList
 
             //记录下当前播放位置
             ApplicationData.Current.LocalSettings.Values["nowSongPointer"] = NowPlaying.ToString();
-            NowPlayingHashCode = NowPlayingItem.GetHashCode();
             if (CoverStream.Size == 0)
             {
                 await RefreshAlbumCover();
             }
             if (CoverStream.Size != 0)
             {
-                OnSongCoverChanged?.Invoke(NowPlayingHashCode);
+                if (hashCodeWhenRequested == NowPlayingHashCode)
+                {
+                    OnSongCoverChanged?.Invoke(hashCodeWhenRequested);
+                }
+                else
+                {
+                    CoverStream.Size = 0;
+                    CoverStream.Seek(0);
+                    Common.AddToTeachingTipLists("专辑封面与当前专辑不对应", $"检测到专辑封面和当前正在播放的歌曲专辑不对应\n已经取消当前歌曲的专辑封面更新\n受影响歌曲:\n{playItemWhenRequested.PlayItem.Name}");
+                }
             }
             //因为加载图片可能会高耗时,所以在此处加载
             NotifyPlayItemChanged(NowPlayingItem);
             //加载歌词
             _ = LoadLyrics(NowPlayingItem);
             //更新磁贴
-            await RefreshTile(NowPlayingHashCode, NowPlayingItem);
+            if (hashCodeWhenRequested == NowPlayingHashCode)
+            {
+                await RefreshTile(hashCodeWhenRequested, NowPlayingItem);
+            }
             //RASR罪大恶极，害的磁贴怨声载道
             _controlsDisplayUpdater.Update();
         }
@@ -1275,149 +1288,166 @@ public static class HyPlayList
     }
     public static async Task RefreshTile(int hashCode, HyPlayItem targetItem)
     {
-        if (targetItem?.PlayItem == null || !Common.Setting.enableTile) return;
-        string fileName = targetItem.PlayItem.IsLocalFile ? null
-            : targetItem.PlayItem.Album.id;
-        bool coverStreamIsAvailable = CoverStream.Size != 0 && fileName != null && fileName != "0" && NowPlayingHashCode == hashCode;
-        string downloadLink = string.Empty;
-        if (Common.Setting.saveTileBackgroundToLocalFolder
-            && Common.Setting.tileBackgroundAvailability
-            && !targetItem.PlayItem.IsLocalFile
-            && coverStreamIsAvailable)
+        try
         {
-            using var coverStream = CoverStream.CloneStream();
-            downloadLink = targetItem.PlayItem.Album.cover;
-            StorageFolder storageFolder =
-                await ApplicationData.Current.TemporaryFolder.CreateFolderAsync("LocalTileBackground",
-                    CreationCollisionOption.OpenIfExists);
-            if (!await storageFolder.FileExistsAsync(fileName + ".jpg"))
+            if (targetItem?.PlayItem == null || !Common.Setting.enableTile) return;
+            string fileName = targetItem.PlayItem.IsLocalFile ? null
+                : targetItem.PlayItem.Album.id;
+            bool coverStreamIsAvailable = CoverStream.Size != 0 && fileName != null && fileName != "0" && NowPlayingHashCode == hashCode;
+            bool localCoverIsAvailable = false;
+            string downloadLink = string.Empty;
+            if (Common.Setting.saveTileBackgroundToLocalFolder
+                && Common.Setting.tileBackgroundAvailability
+                && !targetItem.PlayItem.IsLocalFile
+                && coverStreamIsAvailable)
             {
-                StorageFile storageFile = await storageFolder.CreateFileAsync(fileName + ".jpg");
-                using var outputStream = await storageFile.OpenAsync(FileAccessMode.ReadWrite);
-                var pictureMime = await MIMEHelper.GetPictureCodec(coverStream);
-                BitmapDecoder decoder = await BitmapDecoder.CreateAsync(pictureMime, coverStream);
-                using var softwareBitmap = await decoder.GetSoftwareBitmapAsync();
-                BitmapEncoder encoder =
-                    await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
-                encoder.SetSoftwareBitmap(softwareBitmap);
-                await encoder.FlushAsync();
-            }
-        }
-        var cover = Common.Setting.tileBackgroundAvailability && !targetItem.PlayItem.IsLocalFile
-            ? new TileBackgroundImage()
-            {
-                Source = Common.Setting.saveTileBackgroundToLocalFolder && coverStreamIsAvailable
-                    ? "ms-appdata:///temp/LocalTileBackground/" + fileName + ".jpg"
-                    : downloadLink,
-                HintOverlay = 50
-            }
-            : null;
-        var tileContent = new TileContent()
-        {
-            Visual = new TileVisual()
-            {
-                DisplayName = "HyPlayer 正在播放",
-                TileSmall = new TileBinding()
+                using var coverStream = CoverStream.CloneStream();
+                downloadLink = targetItem.PlayItem.Album.cover;
+                StorageFolder storageFolder =
+                    await ApplicationData.Current.TemporaryFolder.CreateFolderAsync("LocalTileBackground",
+                        CreationCollisionOption.OpenIfExists);
+                var storageFile = await storageFolder.CreateFileAsync(fileName + ".jpg", CreationCollisionOption.OpenIfExists);
+                var properties = await storageFile.GetBasicPropertiesAsync();
+                if (properties.Size == 0)
                 {
-                    Content = new TileBindingContentAdaptive()
+                    using var outputStream = await storageFile.OpenAsync(FileAccessMode.ReadWrite);
+                    var pictureMime = await MIMEHelper.GetPictureCodec(coverStream);
+                    BitmapDecoder decoder = await BitmapDecoder.CreateAsync(pictureMime, coverStream);
+                    using var softwareBitmap = await decoder.GetSoftwareBitmapAsync();
+                    BitmapEncoder encoder =
+                        await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
+                    encoder.SetSoftwareBitmap(softwareBitmap);
+                    await encoder.FlushAsync();
+                    if (hashCode != NowPlayingHashCode)
                     {
-                        BackgroundImage = cover,
+                        await storageFile.DeleteAsync();
                     }
-                },
-                TileMedium = new TileBinding()
-                {
-                    Branding = TileBranding.NameAndLogo,
-                    Content = new TileBindingContentAdaptive()
+                    else
                     {
-                        BackgroundImage = cover,
-                        Children =
-                        {
-                            new AdaptiveText()
-                            {
-                                Text = NowPlayingItem?.PlayItem.Name,
-                                HintStyle = AdaptiveTextStyle.Base
-                            },
-                            new AdaptiveText()
-                            {
-                                Text = NowPlayingItem?.PlayItem.ArtistString,
-                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
-                                HintWrap = true,
-                                HintMaxLines = 2
-                            },
-                            new AdaptiveText()
-                            {
-                                Text = NowPlayingItem?.PlayItem.AlbumString,
-                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
-                                HintWrap = true,
-                                HintMaxLines = 2
-                            }
-                        }
-                    }
-                },
-                TileWide = new TileBinding()
-                {
-                    Branding = TileBranding.NameAndLogo,
-                    Content = new TileBindingContentAdaptive()
-                    {
-                        BackgroundImage = cover,
-                        Children =
-                        {
-                            new AdaptiveText()
-                            {
-                                Text = NowPlayingItem?.PlayItem.Name,
-                                HintStyle = AdaptiveTextStyle.Base
-                            },
-                            new AdaptiveText()
-                            {
-                                Text = NowPlayingItem?.PlayItem.ArtistString,
-                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
-                                HintWrap = true,
-                                HintMaxLines = 3
-                            },
-                            new AdaptiveText()
-                            {
-                                Text = NowPlayingItem?.PlayItem.AlbumString,
-                                HintStyle = AdaptiveTextStyle.CaptionSubtle
-                            }
-                        }
-                    }
-                },
-                TileLarge = new TileBinding()
-                {
-                    Branding = TileBranding.NameAndLogo,
-                    Content = new TileBindingContentAdaptive()
-                    {
-                        BackgroundImage = cover,
-                        Children =
-                        {
-                            new AdaptiveText()
-                            {
-                                Text = NowPlayingItem?.PlayItem.Name,
-                                HintStyle = AdaptiveTextStyle.Base
-                            },
-                            new AdaptiveText()
-                            {
-                                Text = NowPlayingItem?.PlayItem.ArtistString,
-                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
-                                HintWrap = true,
-                                HintMaxLines = 3
-                            },
-                            new AdaptiveText()
-                            {
-                                Text = NowPlayingItem?.PlayItem.AlbumString,
-                                HintStyle = AdaptiveTextStyle.CaptionSubtle
-                            }
-                        }
+                        localCoverIsAvailable = true;
                     }
                 }
             }
-        };
+            var cover = Common.Setting.tileBackgroundAvailability && !targetItem.PlayItem.IsLocalFile && localCoverIsAvailable
+                ? new TileBackgroundImage()
+                {
+                    Source = Common.Setting.saveTileBackgroundToLocalFolder && coverStreamIsAvailable
+                        ? "ms-appdata:///temp/LocalTileBackground/" + fileName + ".jpg"
+                        : downloadLink,
+                    HintOverlay = 50
+                }
+                : null;
+            var tileContent = new TileContent()
+            {
+                Visual = new TileVisual()
+                {
+                    DisplayName = "HyPlayer 正在播放",
+                    TileSmall = new TileBinding()
+                    {
+                        Content = new TileBindingContentAdaptive()
+                        {
+                            BackgroundImage = cover,
+                        }
+                    },
+                    TileMedium = new TileBinding()
+                    {
+                        Branding = TileBranding.NameAndLogo,
+                        Content = new TileBindingContentAdaptive()
+                        {
+                            BackgroundImage = cover,
+                            Children =
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = targetItem?.PlayItem.Name,
+                                HintStyle = AdaptiveTextStyle.Base
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = targetItem?.PlayItem.ArtistString,
+                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                                HintWrap = true,
+                                HintMaxLines = 2
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = targetItem?.PlayItem.AlbumString,
+                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                                HintWrap = true,
+                                HintMaxLines = 2
+                            }
+                        }
+                        }
+                    },
+                    TileWide = new TileBinding()
+                    {
+                        Branding = TileBranding.NameAndLogo,
+                        Content = new TileBindingContentAdaptive()
+                        {
+                            BackgroundImage = cover,
+                            Children =
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = targetItem?.PlayItem.Name,
+                                HintStyle = AdaptiveTextStyle.Base
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = targetItem?.PlayItem.ArtistString,
+                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                                HintWrap = true,
+                                HintMaxLines = 3
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = targetItem?.PlayItem.AlbumString,
+                                HintStyle = AdaptiveTextStyle.CaptionSubtle
+                            }
+                        }
+                        }
+                    },
+                    TileLarge = new TileBinding()
+                    {
+                        Branding = TileBranding.NameAndLogo,
+                        Content = new TileBindingContentAdaptive()
+                        {
+                            BackgroundImage = cover,
+                            Children =
+                        {
+                            new AdaptiveText()
+                            {
+                                Text = targetItem?.PlayItem.Name,
+                                HintStyle = AdaptiveTextStyle.Base
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = targetItem?.PlayItem.ArtistString,
+                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                                HintWrap = true,
+                                HintMaxLines = 3
+                            },
+                            new AdaptiveText()
+                            {
+                                Text = targetItem?.PlayItem.AlbumString,
+                                HintStyle = AdaptiveTextStyle.CaptionSubtle
+                            }
+                        }
+                        }
+                    }
+                }
+            };
 
-        // Create the tile notification
-        var tileNotif = new TileNotification(tileContent.GetXml());
+            // Create the tile notification
+            var tileNotif = new TileNotification(tileContent.GetXml());
 
-        // And send the notification to the primary tile
-        TileUpdateManager.CreateTileUpdaterForApplication().Update(tileNotif);
+            // And send the notification to the primary tile
+            TileUpdateManager.CreateTileUpdaterForApplication().Update(tileNotif);
+        }
+        catch(Exception ex)
+        {
+            Common.AddToTeachingTipLists("更新磁贴时发生错误", ex.Message);
+        }
     }
     private static async void PlaybackSession_PositionChanged(MediaPlaybackSession sender, object args)
     {
