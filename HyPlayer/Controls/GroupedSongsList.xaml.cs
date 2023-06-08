@@ -263,7 +263,7 @@ public sealed partial class GroupedSongsList : IDisposable
             Common.AddToTeachingTipLists("歌曲不可用", $"歌曲 {(e.ClickedItem as NCSong).songname} 当前不可用");
             return;
         }
-        if (HyPlayList.PlaySourceId != ListSource.Substring(2))
+        if (HyPlayList.PlaySourceId != ListSource.Substring(2) || SongContainer.Items.Cast<NCSong>().Where(t => t.IsAvailable).Count() != HyPlayList.List.Count)
         {
             // Change Music Source
             HyPlayList.RemoveAllSong(!shiftSong);

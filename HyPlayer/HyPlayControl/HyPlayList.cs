@@ -1178,7 +1178,10 @@ public static class HyPlayList
     public static async void Player_SourceChanged(MediaPlayer sender, object args)
     {
         if (List.Count <= NowPlaying) return;
-        if (sender.Source == null && NowPlayingItem.PlayItem != null) return;
+        if (sender.Source == null || NowPlayingItem.PlayItem == null) 
+        { 
+            return; 
+        }
         await SongFadeRequest(SongFadeEffectType.NextFadeIn);
         //当加载一个新的播放文件时,此时你应当加载歌词和 SystemMediaTransportControls
         //加载 SystemMediaTransportControls
@@ -1210,7 +1213,7 @@ public static class HyPlayList
             //加载歌词
             _ = LoadLyrics(NowPlayingItem);
             //更新磁贴
-            _ = RefreshTile();
+            _ = RefreshTile(NowPlayingHashCode, NowPlayingItem);
             _controlsDisplayUpdater.Update();
         }
     }
@@ -1273,27 +1276,27 @@ public static class HyPlayList
     {
         OnPlayItemChange?.Invoke(targetItem);
     }
-    public static async Task RefreshTile()
+    public static async Task RefreshTile(int hashCode,HyPlayItem targetItem)
     {
-        if (NowPlayingItem?.PlayItem == null || !Common.Setting.enableTile) return;
-        string fileName = NowPlayingItem.PlayItem.IsLocalFile ? null
-            : NowPlayingItem.PlayItem.Album.id;
-        bool coverStreamIsAvailable = CoverStream.Size != 0 && fileName is not null or "0" && NowPlayingHashCode != 0;
+        if (targetItem?.PlayItem == null || !Common.Setting.enableTile) return;
+        string fileName = targetItem.PlayItem.IsLocalFile ? null
+            : targetItem.PlayItem.Album.id;
+        bool coverStreamIsAvailable = CoverStream.Size != 0 && fileName != null && fileName != "0" && NowPlayingHashCode == hashCode;
         string downloadLink = string.Empty;
         if (Common.Setting.saveTileBackgroundToLocalFolder
             && Common.Setting.tileBackgroundAvailability
-            && !NowPlayingItem.PlayItem.IsLocalFile
+            && !targetItem.PlayItem.IsLocalFile
             && coverStreamIsAvailable)
         {
-            downloadLink = NowPlayingItem.PlayItem.Album.cover;
+            using var coverStream = CoverStream.CloneStream();
+            downloadLink = targetItem.PlayItem.Album.cover;
             StorageFolder storageFolder =
                 await ApplicationData.Current.TemporaryFolder.CreateFolderAsync("LocalTileBackground",
                     CreationCollisionOption.OpenIfExists);
             if (!await storageFolder.FileExistsAsync(fileName + ".jpg"))
             {
                 StorageFile storageFile = await storageFolder.CreateFileAsync(fileName + ".jpg");
-                using IRandomAccessStream outputStream = new InMemoryRandomAccessStream();
-                using var coverStream = CoverStream.CloneStream();
+                using var outputStream = await storageFile.OpenAsync(FileAccessMode.ReadWrite);
                 var pictureMime = await MIMEHelper.GetPictureCodec(coverStream);
                 BitmapDecoder decoder = await BitmapDecoder.CreateAsync(pictureMime, coverStream);
                 using var softwareBitmap = await decoder.GetSoftwareBitmapAsync();
@@ -1301,13 +1304,9 @@ public static class HyPlayList
                     await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
                 encoder.SetSoftwareBitmap(softwareBitmap);
                 await encoder.FlushAsync();
-                var buffer = new Buffer((uint)outputStream.Size);
-                await outputStream.ReadAsync(buffer, (uint)outputStream.Size, InputStreamOptions.None);
-                await FileIO.WriteBufferAsync(storageFile, buffer);
-
             }
         }
-        var cover = Common.Setting.tileBackgroundAvailability && !NowPlayingItem.PlayItem.IsLocalFile
+        var cover = Common.Setting.tileBackgroundAvailability && !targetItem.PlayItem.IsLocalFile
             ? new TileBackgroundImage()
             {
                 Source = Common.Setting.saveTileBackgroundToLocalFolder && coverStreamIsAvailable
@@ -1917,7 +1916,7 @@ public static class HyPlayList
                 list.Add(ncSong);
             }
 
-            list.RemoveAll(t => t == null);
+            list.RemoveAll(t => t == null || !t.IsAvailable);
             AppendNcSongs(list, false);
             list.Clear();
             json.RemoveAll();
