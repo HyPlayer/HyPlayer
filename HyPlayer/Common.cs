@@ -45,8 +45,8 @@ namespace HyPlayer
 {
     internal static class Common
     {
-        public delegate void EnterForegroundFromBackgroundEvent();
-        public delegate void PlaybarVisibilityChangedEvent(bool isActivated);
+        public delegate Task EnterForegroundFromBackgroundEvent();
+        public delegate Task PlaybarVisibilityChangedEvent(bool isActivated);
 
         public static bool Logined = false;
         public static bool IsInFm = false;

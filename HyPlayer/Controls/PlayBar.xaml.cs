@@ -9,11 +9,13 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Media;
 using Windows.Media.Playback;
 using Windows.Storage;
+using Windows.Storage.Streams;
 using Windows.System;
 using Windows.System.Profile;
 using Windows.UI;
@@ -531,13 +533,12 @@ DoubleAnimation verticalAnimation;
         ShowExpandedPlayer();
     }
 
-    public void ButtonCollapse_OnClick(object sender, RoutedEventArgs e)
+    public async void ButtonCollapse_OnClick(object sender, RoutedEventArgs e)
     {
-        CollapseExpandedPlayer();
-
+        await CollapseExpandedPlayer();
     }
 
-    public void CollapseExpandedPlayer()
+    public async Task CollapseExpandedPlayer()
     {
         Common.PageMain.IsExpandedPlayerInitialized = false;
         if (Common.PageExpandedPlayer == null) return;
@@ -584,7 +585,8 @@ DoubleAnimation verticalAnimation;
         Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
         Window.Current.SetTitleBar(Common.PageBase.AppTitleBar);
         Common.isExpanded = false;
-        RefreshPlayBarCover(HyPlayList.NowPlayingHashCode);
+        using var coverStream = HyPlayList.CoverStream.CloneStream();
+        await RefreshPlayBarCover(HyPlayList.NowPlayingHashCode,coverStream);
     }
 
     private void ButtonCleanAll_OnClick(object sender, RoutedEventArgs e)
@@ -725,7 +727,7 @@ DoubleAnimation verticalAnimation;
         }
     }
 
-    private void Btn_Comment_OnClick(object sender, RoutedEventArgs e)
+    private async void Btn_Comment_OnClick(object sender, RoutedEventArgs e)
     {
         if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
             Common.NavigatePage(typeof(Comments), "sg" + HyPlayList.NowPlayingItem.PlayItem.Id);
@@ -733,7 +735,7 @@ DoubleAnimation verticalAnimation;
             Common.NavigatePage(typeof(Comments), "fm" + HyPlayList.NowPlayingItem.PlayItem.Album.alias);
         if (Common.Setting.forceMemoryGarbage)
             Common.NavigatePage(typeof(BlankPage));
-        CollapseExpandedPlayer();
+        await CollapseExpandedPlayer();
     }
 
     private void Btn_Share_OnClick(object sender, RoutedEventArgs e)
@@ -859,10 +861,11 @@ DoubleAnimation verticalAnimation;
         FlyoutBtnPlayList.ContextFlyout?.ShowAt(BtnMore);
         ButtonPlayList_OnClick(sender, e);
     }
-    private void OnEnteringForeground()
+    private async Task OnEnteringForeground()
     {
         LoadPlayingFile(HyPlayList.NowPlayingItem);
-        RefreshPlayBarCover(HyPlayList.NowPlayingHashCode);
+        using var coverStream = HyPlayList.CoverStream.CloneStream();
+        await RefreshPlayBarCover(HyPlayList.NowPlayingHashCode,coverStream);
     }
     private async void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
@@ -951,19 +954,19 @@ DoubleAnimation verticalAnimation;
         TbSongNameScrollStoryBoard.Begin();
         */
     }
-    public void RefreshPlayBarCover(int hashCode)
+    public async Task RefreshPlayBarCover(int hashCode, IRandomAccessStream coverStream)
     {
-        _ = Common.Invoke(async () =>
+        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal,async () =>
         {
+            using var stream = coverStream.CloneStream();
             if (GridSongInfo.Visibility == Visibility.Visible && Opacity != 0)
             {
                 try
                 {
-                    using var coverStream = HyPlayList.CoverStream.CloneStream();
-                    if (coverStream.Size != 0)
+                    if (stream.Size != 0)
                     {
                         if (hashCode != HyPlayList.NowPlayingHashCode) return;
-                        await AlbumImageSource.SetSourceAsync(coverStream);
+                        await AlbumImageSource.SetSourceAsync(stream);
                     }
                 }
                 catch

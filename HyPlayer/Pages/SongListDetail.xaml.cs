@@ -21,6 +21,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using Buffer = Windows.Storage.Streams.Buffer;
 
 #endregion
 
@@ -79,7 +80,9 @@ public sealed partial class SongListDetail : Page, IDisposable
             using var stream = new InMemoryRandomAccessStream();
             await result.Content.WriteToStreamAsync(stream);
             _cancellationToken.ThrowIfCancellationRequested();
-            var mime = await MIMEHelper.GetPictureCodec(stream);
+            var buffer = new Buffer(MIMEHelper.PICTURE_FILE_HEADER_CAPACITY);
+            await stream.ReadAsync(buffer, MIMEHelper.PICTURE_FILE_HEADER_CAPACITY, InputStreamOptions.None);
+            var mime = MIMEHelper.GetPictureCodecFromBuffer(buffer);
             var decoder = await BitmapDecoder.CreateAsync(mime, stream);
             var color = await Common.ColorThief.GetColor(decoder);
             if (AlbumColor != null)

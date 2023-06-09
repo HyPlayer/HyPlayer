@@ -72,7 +72,7 @@ public static class HyPlayList
 
     public delegate void SongLikeStatusChanged(bool isLiked);
 
-    public delegate void SongCoverChanged(int hashCode);
+    public delegate Task SongCoverChanged(int hashCode,IRandomAccessStream coverStream);
 
     public static int NowPlaying;
     private static readonly System.Timers.Timer SecTimer = new(1000); // 公用秒表
@@ -1200,6 +1200,7 @@ public static class HyPlayList
             return;
         }
         var hashCodeWhenRequested = NowPlayingHashCode;
+        using var streamWhenRequested = CoverStream.CloneStream();
         var playItemWhenRequested = NowPlayingItem;
         await SongFadeRequest(SongFadeEffectType.NextFadeIn);
         //当加载一个新的播放文件时,此时你应当加载歌词和 SystemMediaTransportControls
@@ -1222,17 +1223,22 @@ public static class HyPlayList
             {
                 await RefreshAlbumCover();
             }
-            if (CoverStream.Size != 0)
-            {
-                if ((hashCodeWhenRequested == NowPlayingHashCode) && !Common.Setting.noImage)
-                {
-                    OnSongCoverChanged?.Invoke(hashCodeWhenRequested);
-                }
-            }
             if (hashCodeWhenRequested == NowPlayingHashCode)
             {
                 //因为加载图片可能会高耗时,所以在此处加载
                 NotifyPlayItemChanged(playItemWhenRequested);
+            }
+            if (CoverStream.Size != 0)
+            {
+                if ((hashCodeWhenRequested == NowPlayingHashCode) && !Common.Setting.noImage)
+                {
+                    var taskShallowCopy = OnSongCoverChanged.Clone();
+                    if(taskShallowCopy != null)
+                    {
+                        await ((SongCoverChanged)taskShallowCopy)(hashCodeWhenRequested, streamWhenRequested);
+                    }
+
+                }
             }
             if (hashCodeWhenRequested == NowPlayingHashCode)
             {
@@ -1242,7 +1248,7 @@ public static class HyPlayList
             //更新磁贴
             if (hashCodeWhenRequested == NowPlayingHashCode)
             {
-                await RefreshTile(hashCodeWhenRequested, playItemWhenRequested);
+                await RefreshTile(hashCodeWhenRequested, playItemWhenRequested, streamWhenRequested);
             }
             if (hashCodeWhenRequested == NowPlayingHashCode)
             {
@@ -1311,7 +1317,7 @@ public static class HyPlayList
     {
         OnPlayItemChange?.Invoke(targetItem);
     }
-    public static async Task RefreshTile(int hashCode, HyPlayItem targetItem)
+    public static async Task RefreshTile(int hashCode, HyPlayItem targetItem, IRandomAccessStream coverStream)
     {
         try
         {
@@ -1326,7 +1332,6 @@ public static class HyPlayList
                 && !targetItem.PlayItem.IsLocalFile
                 && coverStreamIsAvailable)
             {
-                using var coverStream = CoverStream.CloneStream();
                 downloadLink = targetItem.PlayItem.Album.cover;
                 StorageFolder storageFolder =
                     await ApplicationData.Current.TemporaryFolder.CreateFolderAsync("LocalTileBackground",
@@ -1336,8 +1341,10 @@ public static class HyPlayList
                 if (properties.Size == 0)
                 {
                     using var outputStream = await storageFile.OpenAsync(FileAccessMode.ReadWrite);
-                    var pictureMime = await MIMEHelper.GetPictureCodec(coverStream);
-                    BitmapDecoder decoder = await BitmapDecoder.CreateAsync(pictureMime, coverStream);
+                    var buffer = new Buffer(MIMEHelper.PICTURE_FILE_HEADER_CAPACITY);
+                    await coverStream.ReadAsync(buffer, MIMEHelper.PICTURE_FILE_HEADER_CAPACITY, InputStreamOptions.None);
+                    var mime = MIMEHelper.GetPictureCodecFromBuffer(buffer);
+                    BitmapDecoder decoder = await BitmapDecoder.CreateAsync(mime, coverStream);
                     using var softwareBitmap = await decoder.GetSoftwareBitmapAsync();
                     BitmapEncoder encoder =
                         await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);
