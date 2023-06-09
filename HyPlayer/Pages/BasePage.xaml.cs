@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.ServiceModel.Channels;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
@@ -23,6 +24,7 @@ using Windows.UI.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
@@ -913,4 +915,27 @@ public sealed partial class BasePage : Page
             }
         });
     }
+
+    private void BaseFrame_Navigated(object sender, NavigationEventArgs e)
+    {
+        Task.Run(() =>
+        {
+            System.Timers.Timer timer = new System.Timers.Timer(1000);
+            timer.Elapsed += new System.Timers.ElapsedEventHandler(delegate (object sender, System.Timers.ElapsedEventArgs e)
+            {
+                timer.Enabled = false;
+                Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+                {
+                    NavMain.SelectionChanged -= NavMain_OnSelectionChanged;
+                    Bindings.Update();
+                    NavMain.SelectionChanged += NavMain_OnSelectionChanged;
+                }
+            );
+            });
+            timer.AutoReset = false;
+            timer.Enabled = true;
+        }
+        );
+    }
+
 }

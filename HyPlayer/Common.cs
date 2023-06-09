@@ -226,10 +226,11 @@ namespace HyPlayer
                 BaseFrame?.Navigate(SourcePageType, paratmer,
                     new SlideNavigationTransitionInfo { Effect = SlideNavigationTransitionEffect.FromRight });
             }
-
+            /*
             if (previousNavigationItem == PageBase.NavMain.SelectedItem)
                 PageBase.NavMain.SelectedItem = PageBase.NavItemBlank;
             previousNavigationItem = PageBase.NavMain.SelectedItem;
+            */
         }
 
         public static void NavigateRefresh()
@@ -312,7 +313,9 @@ namespace HyPlayer
                     BaseFrame?.Navigate(bak.PageType, bak.Paratmers,
                         new SlideNavigationTransitionInfo { Effect = SlideNavigationTransitionEffect.FromLeft });
                     NavigatingBack = true;
+                    /*
                     PageBase.NavMain.SelectedItem = bak.Item;
+                    */
                     NavigatingBack = false;
                     GC.Collect();
                 }
