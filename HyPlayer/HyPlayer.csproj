@@ -146,6 +146,7 @@
     <Compile Include="Controls\SongsList.xaml.cs">
       <DependentUpon>SongsList.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Converters\PageToNavigationViewIndicatorConverter.cs" />
     <Compile Include="HyPlayControl\DownloadManager.cs" />
     <Compile Include="HyPlayControl\HyPlayList.cs" />
     <Compile Include="MainPage.xaml.cs">
