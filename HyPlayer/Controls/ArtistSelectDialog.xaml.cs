@@ -24,14 +24,14 @@ public sealed partial class ArtistSelectDialog : ContentDialog
     }
 
 
-    private void ListViewArtists_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    private async void ListViewArtists_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         Common.NavigatePage(typeof(ArtistPage), aartists[ListViewArtists.SelectedIndex].id);
         if (Common.isExpanded)
         {
             if (Common.Setting.forceMemoryGarbage)
                 Common.NavigatePage(typeof(BlankPage));
-            Common.BarPlayBar.CollapseExpandedPlayer();
+            await Common.BarPlayBar.CollapseExpandedPlayer();
         }
 
         Hide();

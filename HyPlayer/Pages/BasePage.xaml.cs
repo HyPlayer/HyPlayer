@@ -86,9 +86,9 @@ public sealed partial class BasePage : Page
         // Window.Current.CoreWindow.Dispatcher.AcceleratorKeyActivated += Dispatcher_AcceleratorKeyActivated;
     }
 
-    private void HyPlayList_OnSongCoverChanged(int hashCode)
+    private async Task HyPlayList_OnSongCoverChanged(int hashCode,IRandomAccessStream coverStream)
     {
-        RefreshNavItemCover(hashCode);
+        await RefreshNavItemCover(hashCode,coverStream);
     }
 
     /*
@@ -137,21 +137,21 @@ public sealed partial class BasePage : Page
         args.Handled = true;
     }
     */
-    private void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs args)
+    private async void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs args)
     {
         if (args.CurrentPoint.Properties.IsXButton1Pressed)
             if (Common.isExpanded)
-                Common.BarPlayBar.CollapseExpandedPlayer();
+                await Common.BarPlayBar.CollapseExpandedPlayer();
             else
                 Common.NavigateBack();
     }
 
-    private void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
+    private async void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
     {
         if (args.VirtualKey == VirtualKey.GamepadB)
         {
             if (Common.isExpanded)
-                Common.BarPlayBar.CollapseExpandedPlayer();
+                await Common.BarPlayBar.CollapseExpandedPlayer();
             else
                 Common.NavigateBack();
             args.Handled = true;
@@ -164,7 +164,7 @@ public sealed partial class BasePage : Page
 
         if (args.VirtualKey == VirtualKey.Escape)
             if (Common.isExpanded)
-                Common.BarPlayBar.CollapseExpandedPlayer();
+                await Common.BarPlayBar.CollapseExpandedPlayer();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -870,17 +870,17 @@ public sealed partial class BasePage : Page
             }
         });
     }
-    public void RefreshNavItemCover(int hashCode)
+    public async Task RefreshNavItemCover(int hashCode,IRandomAccessStream coverStream)
     {
-        _ = Common.Invoke(async () =>
+        await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,async () =>
         {
-            if (NavItemBlank.Opacity != 0 && !Common.isExpanded)
+            using var stream = coverStream.CloneStream();
+            if (NavItemBlank.Opacity != 0 && !Common.isExpanded && !Common.Setting.noImage && stream.Size!=0)
             {
                 try
                 {
-                    using var coverStream = HyPlayList.CoverStream.CloneStream();
                     if (hashCode != HyPlayList.NowPlayingHashCode) return;
-                    await NavItemImageSource.SetSourceAsync(coverStream);
+                    await NavItemImageSource.SetSourceAsync(stream);
                 }
                 catch
                 {
@@ -889,22 +889,19 @@ public sealed partial class BasePage : Page
             }
         });
     }
-    public void RefreshNavItemCover(double collapseTime, int hashCode)
+    public async Task RefreshNavItemCover(double collapseTime, int hashCode, IRandomAccessStream coverStream)
     {
-        _ = Common.Invoke(async () =>
+        await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
         {
+            using var stream = coverStream.CloneStream();
             var time = TimeSpan.FromSeconds(collapseTime + 0.25);
             await Task.Delay(time);
-            if (NavItemBlank.Opacity != 0 && !Common.isExpanded)
+            if (NavItemBlank.Opacity != 0 && !Common.isExpanded && !Common.Setting.noImage && stream.Size != 0)
             {
                 try
                 {
-                    using var coverStream = HyPlayList.CoverStream.CloneStream();
-                    if (coverStream.Size != 0)
-                    {
-                        if (hashCode != HyPlayList.NowPlayingHashCode) return;
-                        await NavItemImageSource.SetSourceAsync(coverStream);
-                    }
+                    if(hashCode != HyPlayList.NowPlayingHashCode) return;
+                    await NavItemImageSource.SetSourceAsync(stream);
                 }
                 catch
                 {
