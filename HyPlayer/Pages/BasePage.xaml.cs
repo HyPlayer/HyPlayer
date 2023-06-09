@@ -12,7 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.ServiceModel.Channels;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
@@ -24,7 +23,6 @@ using Windows.UI.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
@@ -88,9 +86,9 @@ public sealed partial class BasePage : Page
         // Window.Current.CoreWindow.Dispatcher.AcceleratorKeyActivated += Dispatcher_AcceleratorKeyActivated;
     }
 
-    private async Task HyPlayList_OnSongCoverChanged(int hashCode,IRandomAccessStream coverStream)
+    private async Task HyPlayList_OnSongCoverChanged(int hashCode, IRandomAccessStream coverStream)
     {
-        await RefreshNavItemCover(hashCode,coverStream);
+        await RefreshNavItemCover(hashCode, coverStream);
     }
 
     /*
@@ -872,12 +870,12 @@ public sealed partial class BasePage : Page
             }
         });
     }
-    public async Task RefreshNavItemCover(int hashCode,IRandomAccessStream coverStream)
+    public async Task RefreshNavItemCover(int hashCode, IRandomAccessStream coverStream)
     {
-        await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,async () =>
+        await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
         {
             using var stream = coverStream.CloneStream();
-            if (NavItemBlank.Opacity != 0 && !Common.isExpanded && !Common.Setting.noImage && stream.Size!=0)
+            if (NavItemBlank.Opacity != 0 && !Common.isExpanded && !Common.Setting.noImage && stream.Size != 0)
             {
                 try
                 {
@@ -902,7 +900,7 @@ public sealed partial class BasePage : Page
             {
                 try
                 {
-                    if(hashCode != HyPlayList.NowPlayingHashCode) return;
+                    if (hashCode != HyPlayList.NowPlayingHashCode) return;
                     await NavItemImageSource.SetSourceAsync(stream);
                 }
                 catch
@@ -921,7 +919,7 @@ public sealed partial class BasePage : Page
             timer.Elapsed += new System.Timers.ElapsedEventHandler(delegate (object sender, System.Timers.ElapsedEventArgs e)
             {
                 timer.Enabled = false;
-                Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+                _ = Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
                 {
                     NavMain.SelectionChanged -= NavMain_OnSelectionChanged;
                     Bindings.Update();

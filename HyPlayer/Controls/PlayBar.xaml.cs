@@ -586,7 +586,7 @@ DoubleAnimation verticalAnimation;
         Window.Current.SetTitleBar(Common.PageBase.AppTitleBar);
         Common.isExpanded = false;
         using var coverStream = HyPlayList.CoverStream.CloneStream();
-        await RefreshPlayBarCover(HyPlayList.NowPlayingHashCode,coverStream);
+        await RefreshPlayBarCover(HyPlayList.NowPlayingHashCode, coverStream);
     }
 
     private void ButtonCleanAll_OnClick(object sender, RoutedEventArgs e)
@@ -865,7 +865,7 @@ DoubleAnimation verticalAnimation;
     {
         LoadPlayingFile(HyPlayList.NowPlayingItem);
         using var coverStream = HyPlayList.CoverStream.CloneStream();
-        await RefreshPlayBarCover(HyPlayList.NowPlayingHashCode,coverStream);
+        await RefreshPlayBarCover(HyPlayList.NowPlayingHashCode, coverStream);
     }
     private async void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
@@ -956,7 +956,7 @@ DoubleAnimation verticalAnimation;
     }
     public async Task RefreshPlayBarCover(int hashCode, IRandomAccessStream coverStream)
     {
-        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal,async () =>
+        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
         {
             using var stream = coverStream.CloneStream();
             if (GridSongInfo.Visibility == Visibility.Visible && Opacity != 0)

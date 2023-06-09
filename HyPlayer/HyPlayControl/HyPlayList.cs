@@ -72,7 +72,7 @@ public static class HyPlayList
 
     public delegate void SongLikeStatusChanged(bool isLiked);
 
-    public delegate Task SongCoverChanged(int hashCode,IRandomAccessStream coverStream);
+    public delegate Task SongCoverChanged(int hashCode, IRandomAccessStream coverStream);
 
     public static int NowPlaying;
     private static readonly System.Timers.Timer SecTimer = new(1000); // 公用秒表
@@ -1233,7 +1233,7 @@ public static class HyPlayList
                 if ((hashCodeWhenRequested == NowPlayingHashCode) && !Common.Setting.noImage)
                 {
                     var taskShallowCopy = OnSongCoverChanged.Clone();
-                    if(taskShallowCopy != null)
+                    if (taskShallowCopy != null)
                     {
                         await ((SongCoverChanged)taskShallowCopy)(hashCodeWhenRequested, streamWhenRequested);
                     }

@@ -393,7 +393,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         {
             OnSongChange(HyPlayList.List[HyPlayList.NowPlaying]);
             using var coverStream = HyPlayList.CoverStream.CloneStream();
-            await RefreshAlbumCover(HyPlayList.NowPlayingHashCode,coverStream);
+            await RefreshAlbumCover(HyPlayList.NowPlayingHashCode, coverStream);
             ChangeWindowMode();
             needRedesign++;
         }
@@ -507,7 +507,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     {
         OnSongChange(HyPlayList.NowPlayingItem);
         using var coverStream = HyPlayList.CoverStream.CloneStream();
-        await RefreshAlbumCover(HyPlayList.NowPlayingHashCode,coverStream);
+        await RefreshAlbumCover(HyPlayList.NowPlayingHashCode, coverStream);
         if (!_lyricHasBeenLoaded) HyPlayList_OnLyricLoaded();
     }
 
@@ -1043,9 +1043,9 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         }
     }
 
-    public async Task RefreshAlbumCover(int hashCode,IRandomAccessStream coverStream)
+    public async Task RefreshAlbumCover(int hashCode, IRandomAccessStream coverStream)
     {
-        await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,async () =>
+        await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
         {
             using var stream = coverStream.CloneStream();
             if (!Common.Setting.noImage)
@@ -1291,7 +1291,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         if (!Common.Setting.albumRound)
             AlbumCoverDropShadow.Opacity = (double)Common.Setting.expandedCoverShadowDepth / 10;
         Grid.SetRow(LyricBoxContainer, 0);
-        if(Common.Setting.albumRotate)
+        if (Common.Setting.albumRotate)
             RotateAnimationSet.StartAsync();
         if (Common.Setting.expandAlbumBreath)
             ImageAlbumAni.Begin();

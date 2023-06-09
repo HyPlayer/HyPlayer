@@ -1,10 +1,13 @@
-﻿using System;
+﻿using HyPlayer.Pages;
+using System;
+using System.Linq;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
+using NavigationViewItem = Microsoft.UI.Xaml.Controls.NavigationViewItem;
 
 namespace HyPlayer.Classes
 {
@@ -342,6 +345,74 @@ namespace HyPlayer.Classes
 
 
 
+        }
+    }
+    public class PageToNavigationViewIndicatorConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, string language)
+        {
+            NavigationViewItem pageNavigationViewItem;
+            if (value == null)
+            {
+                return Common.PageBase.NavItemBlank;
+            }
+            Type pageType = value.GetType();
+            if (pageType == typeof(Home))
+                pageNavigationViewItem = Common.PageBase.NavItemPageHome;
+            else if (pageType == typeof(SongListDetail))
+            {
+                var displayedList = (SongListDetail)value;
+                while (displayedList.playList == null)
+                {
+                }
+                if (displayedList.playList.name == "每日歌曲推荐")
+                    pageNavigationViewItem = Common.PageBase.NavItemDailyRcmd;
+                else if (displayedList.playList.plid == Common.MySongLists[0].plid)
+                    pageNavigationViewItem = Common.PageBase.NavItemsMyLovedPlaylist;
+                else
+                {
+                    var item = Common.PageBase.NavItemsMyList.MenuItems.Where(t => (((NavigationViewItem)t)?.Tag as string) == $"Playlist{displayedList.playList.plid}").FirstOrDefault()
+                        ?? Common.PageBase.NavItemsLikeList.MenuItems.Where(t => (((NavigationViewItem)t)?.Tag as string) == $"Playlist{displayedList.playList.plid}").FirstOrDefault();
+                    if (item != null)
+                    {
+                        pageNavigationViewItem = (NavigationViewItem)item;
+                    }
+                    else
+                    {
+                        pageNavigationViewItem = Common.PageBase.NavItemBlank;
+                    }
+                }
+            }
+            else if (pageType == typeof(LocalMusicPage))
+            {
+                pageNavigationViewItem = Common.PageBase.NavItemPageLocal;
+            }
+            else if (pageType == typeof(History))
+            {
+                pageNavigationViewItem = Common.PageBase.PageHistory;
+            }
+            else if (pageType == typeof(PageFavorite))
+            {
+                pageNavigationViewItem = Common.PageBase.NavItemPageFavorite;
+            }
+            else if (pageType == typeof(MusicCloudPage))
+            {
+                pageNavigationViewItem = Common.PageBase.NavItemMusicCloud;
+            }
+            else if (pageType == typeof(Settings))
+            {
+                pageNavigationViewItem = Common.PageBase.NavItemPageSettings;
+            }
+            else if (pageType == typeof(Me))
+            {
+                pageNavigationViewItem = Common.PageBase.NavItemLogin;
+            }
+            else pageNavigationViewItem = Common.PageBase.NavItemBlank;
+            return pageNavigationViewItem;
+        }
+        public object ConvertBack(object value, Type targetType, object parameter, string language)
+        {
+            throw new NotImplementedException();
         }
     }
 }

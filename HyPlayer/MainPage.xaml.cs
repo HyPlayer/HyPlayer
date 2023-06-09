@@ -111,7 +111,7 @@ public sealed partial class MainPage
 
             PointerInAni.Begin();
             using var coverStream = HyPlayList.CoverStream.CloneStream();
-            await Common.BarPlayBar.RefreshPlayBarCover(HyPlayList.NowPlayingHashCode,coverStream);
+            await Common.BarPlayBar.RefreshPlayBarCover(HyPlayList.NowPlayingHashCode, coverStream);
             var BlankAni = new DoubleAnimation
             {
                 To = 0,
@@ -179,7 +179,7 @@ public sealed partial class MainPage
         storyboard.Children.Add(BlankAni);
         storyboard.Begin();
         using var coverStream = HyPlayList.CoverStream.CloneStream();
-        await Common.PageBase.RefreshNavItemCover(3, HyPlayList.NowPlayingHashCode,coverStream);
+        await Common.PageBase.RefreshNavItemCover(3, HyPlayList.NowPlayingHashCode, coverStream);
 
     }
     private void Page_PointerEntered(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
