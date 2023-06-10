@@ -2,11 +2,12 @@
     x:Class="HyPlayer.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:theme="using:HyPlayer.Resources">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+                <theme:Theme/>
                 <ResourceDictionary Source="/Resources/Acrylic.xaml" />
                 <ResourceDictionary Source="/Resources/Theme.xaml" />
                 <ResourceDictionary Source="/Resources/UnsupportedFontIcon.xaml"/>
