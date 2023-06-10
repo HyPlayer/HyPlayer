@@ -1163,6 +1163,9 @@
                                 x:Name="SaveTileBackgroundToLocalFolder"
                                 Content="磁贴背景缓存至本地(Windows 10需打开此项才会显示磁贴)"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.saveTileBackgroundToLocalFolder, Mode=TwoWay}" />
+                            <CheckBox
+                                Content="启用旧版主题(可能会导致未知问题)(需重启应用)"
+                                IsChecked="{x:Bind hyplayer:Common.Setting.IsOldThemeEnabled, Mode=TwoWay}" />
                             <Button
                                 x:Name="ClearTileCache"
                                 Click="ClearTileCache_Click"

@@ -1235,6 +1235,16 @@ namespace HyPlayer
             }
         }
 
+        public bool IsOldThemeEnabled
+        {
+            get => GetSettings(nameof(IsOldThemeEnabled), false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(IsOldThemeEnabled)] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public int expandedCoverShadowDepth
         {
             get => GetSettings(nameof(expandedCoverShadowDepth), 4);
