@@ -1671,7 +1671,7 @@
                                             HorizontalAlignment="Right"
                                             Orientation="Horizontal"
                                             Tapped="UIElement_OnTapped">
-                                            <HyperlinkButton Content="Github" NavigateUri="https://github.com/ClarisS01017" />
+                                            <HyperlinkButton Content="Github" NavigateUri="https://github.com/Clrs17" />
                                         </StackPanel>
                                     </Grid>
                                 </Border>
