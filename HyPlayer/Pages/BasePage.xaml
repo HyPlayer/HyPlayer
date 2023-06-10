@@ -23,6 +23,7 @@
                     </ResourceDictionary.ThemeDictionaries>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
+
         </ResourceDictionary>
     </Page.Resources>
     <Grid x:Name="MainGrid">
@@ -100,7 +101,8 @@
             IsTitleBarAutoPaddingEnabled="False"
             ItemInvoked="NavMain_ItemInvoked"
             PaneDisplayMode="Auto"
-            SelectionChanged="NavMain_OnSelectionChanged" >
+            SelectionChanged="NavMain_OnSelectionChanged"
+            SelectedItem="{x:Bind BaseFrame.Content, Converter={StaticResource PageToNavigationViewIndicatorConverter}}">
             <muxc:NavigationView.AutoSuggestBox>
                 <AutoSuggestBox x:Name="SearchAutoSuggestBox" 
                                 QuerySubmitted="AutoSuggestBox_QuerySubmitted" 
@@ -115,12 +117,18 @@
                 <muxc:NavigationViewItemHeader Content="发现" Margin="0,3,3,3"/>
                 <muxc:NavigationViewItem
                     Content="主页" 
-                    Tag="PageHome">
+                    Tag="PageHome"
+                    x:Name="NavItemPageHome"
+                    x:FieldModifier="public">
                     <muxc:NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xEA8A;" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
-                <muxc:NavigationViewItem Content="每日推荐" Tag="DailyRcmd">
+                <muxc:NavigationViewItem
+                    Content="每日推荐"
+                    Tag="DailyRcmd"
+                    x:Name="NavItemDailyRcmd"
+                    x:FieldModifier="public">
                     <muxc:NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xEA89;" />
                     </muxc:NavigationViewItem.Icon>
@@ -149,7 +157,11 @@
                 </muxc:NavigationViewItem>
                 <muxc:NavigationViewItemHeader Content="音乐" Margin="0,3,3,3"/>
 
-                <muxc:NavigationViewItem Content="离线音乐" Tag="PageLocal">
+                <muxc:NavigationViewItem 
+                    Content="离线音乐"
+                    Tag="PageLocal"
+                    x:FieldModifier="public"
+                    x:Name="NavItemPageLocal">
                     <muxc:NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE188;" />
                     </muxc:NavigationViewItem.Icon>
@@ -157,18 +169,27 @@
                 <muxc:NavigationViewItem
                     x:Name="PageHistory"
                     Content="播放历史"
-                    Tag="PageHistory" >
+                    Tag="PageHistory"
+                    x:FieldModifier="public">
                     <muxc:NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xEB49;"/>
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
 
-                <muxc:NavigationViewItem Content="我的收藏" Tag="PageFavorite">
+                <muxc:NavigationViewItem
+                    Content="我的收藏"
+                    Tag="PageFavorite"
+                    x:FieldModifier="public"
+                    x:Name="NavItemPageFavorite">
                     <muxc:NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE00A;" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
-                <muxc:NavigationViewItem Content="我的云盘" Tag="MusicCloud">
+                <muxc:NavigationViewItem 
+                    Content="我的云盘" 
+                    Tag="MusicCloud"
+                    x:FieldModifier="public"
+                    x:Name="NavItemMusicCloud">
                     <muxc:NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xEB4E;" />
                     </muxc:NavigationViewItem.Icon>
@@ -185,6 +206,7 @@
                     x:Name="NavItemsMyLovedPlaylist"
                     Content="我喜欢的音乐"
                     Tag="SonglistMyLike"
+                    x:FieldModifier="public"
                     Visibility="Collapsed">
                     <muxc:NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE006;" />
@@ -195,12 +217,14 @@
                     Content="我创建的歌单"
                     Icon="List"
                     IsExpanded="True"
+                    x:FieldModifier="public"
                     Visibility="Collapsed" />
                 <muxc:NavigationViewItem
                     x:Name="NavItemsLikeList"
                     Content="我收藏的歌单"
                     Icon="List"
                     IsExpanded="True"
+                    x:FieldModifier="public"
                     Visibility="Collapsed" />
             </muxc:NavigationView.MenuItems>
             <muxc:NavigationView.FooterMenuItems>
@@ -211,11 +235,14 @@
                     Content="登录"
                     Icon="Contact"
                     Tag="PageMe"
-                    Tapped="NavigationViewItem_Tapped" />
+                    Tapped="NavigationViewItem_Tapped" 
+                    x:FieldModifier="public"/>
                 <muxc:NavigationViewItem
                     Content="设置"
                     Tag="PageSettings" 
-                    Tapped="NavigationViewItem_Tapped" >
+                    Tapped="NavigationViewItem_Tapped" 
+                    x:FieldModifier="public"
+                    x:Name="NavItemPageSettings">
                     <muxc:NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xF8B0;"/>
                     </muxc:NavigationViewItem.Icon>
@@ -269,7 +296,7 @@
                 </muxc:NavigationViewItem>
             </muxc:NavigationView.FooterMenuItems>
             <Grid>
-                <Frame x:Name="BaseFrame" Grid.Row="1" Margin="0,48,0,0"/>
+                <Frame x:Name="BaseFrame" Grid.Row="1" Margin="0,48,0,0" Navigated="BaseFrame_Navigated"/>
             </Grid>
         </muxc:NavigationView>
         <!--  登录弹窗  -->

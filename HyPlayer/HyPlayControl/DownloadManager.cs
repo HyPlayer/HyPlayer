@@ -20,6 +20,7 @@ using Windows.Graphics.Imaging;
 using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
 using Windows.Storage.Streams;
+using Buffer = Windows.Storage.Streams.Buffer;
 using File = TagLib.File;
 
 #endregion
@@ -200,8 +201,10 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                 using IRandomAccessStream inputStream = new InMemoryRandomAccessStream();
                 await responseMessage.Content.WriteToStreamAsync(inputStream);
                 SoftwareBitmap softwareBitmap;
-                var pictureMime = await MIMEHelper.GetPictureCodec(inputStream);
-                BitmapDecoder decoder = await BitmapDecoder.CreateAsync(pictureMime, inputStream);
+                var buffer = new Buffer(MIMEHelper.PICTURE_FILE_HEADER_CAPACITY);
+                await inputStream.ReadAsync(buffer, MIMEHelper.PICTURE_FILE_HEADER_CAPACITY, InputStreamOptions.None);
+                var mime = MIMEHelper.GetPictureCodecFromBuffer(buffer);
+                BitmapDecoder decoder = await BitmapDecoder.CreateAsync(mime, inputStream);
                 softwareBitmap = await decoder.GetSoftwareBitmapAsync();
                 BitmapEncoder encoder =
                     await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, outputStream);

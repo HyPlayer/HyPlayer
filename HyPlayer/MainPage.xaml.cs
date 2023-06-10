@@ -4,6 +4,7 @@ using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
 using System;
+using System.Threading.Tasks;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media.Animation;
@@ -74,20 +75,20 @@ public sealed partial class MainPage
                 break;
         }
     }
-    private void OnPlaybarVisibilityChanged(bool isActivated)
+    private async Task OnPlaybarVisibilityChanged(bool isActivated)
     {
         if (!Common.Setting.AutoHidePlaybar) return;
         if (isActivated)
         {
-            ShowBar();
+            await ShowBar();
         }
         else
         {
-            CollapseBar(3);
+            await CollapseBar(3);
         }
     }
 
-    private void ShowBar()
+    private async Task ShowBar()
     {
         Common.PageBase.NavItemBlank.IsEnabled = false;
         if (IsPlaybarOnShow)
@@ -109,7 +110,8 @@ public sealed partial class MainPage
             //lyricstoryboard.Begin();
 
             PointerInAni.Begin();
-            Common.BarPlayBar.RefreshPlayBarCover(HyPlayList.NowPlayingHashCode);
+            using var coverStream = HyPlayList.CoverStream.CloneStream();
+            await Common.BarPlayBar.RefreshPlayBarCover(HyPlayList.NowPlayingHashCode, coverStream);
             var BlankAni = new DoubleAnimation
             {
                 To = 0,
@@ -125,7 +127,7 @@ public sealed partial class MainPage
 
     }
 
-    private void CollapseBar(double time)
+    private async Task CollapseBar(double time)
     {
         IsPlaybarOnShow = false;
 
@@ -176,7 +178,8 @@ public sealed partial class MainPage
         Storyboard.SetTargetProperty(BlankAni, "Opacity");
         storyboard.Children.Add(BlankAni);
         storyboard.Begin();
-        Common.PageBase.RefreshNavItemCover(3, HyPlayList.NowPlayingHashCode);
+        using var coverStream = HyPlayList.CoverStream.CloneStream();
+        await Common.PageBase.RefreshNavItemCover(3, HyPlayList.NowPlayingHashCode, coverStream);
 
     }
     private void Page_PointerEntered(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)

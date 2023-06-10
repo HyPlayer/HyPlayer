@@ -18,5 +18,5 @@
     <classes:DateConverter x:Key="DateConverter" />
     <classes:NullableColorToColorConverter x:Key="NullableColorToColorConverter" />
     <classes:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisibilityConverter" />
-
+    <classes:PageToNavigationViewIndicatorConverter x:Key="PageToNavigationViewIndicatorConverter"/>
 </ResourceDictionary>
