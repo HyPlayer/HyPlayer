@@ -915,7 +915,7 @@ public sealed partial class BasePage : Page
     {
         Task.Run(() =>
         {
-            System.Timers.Timer timer = new System.Timers.Timer(1000);
+            System.Timers.Timer timer = new System.Timers.Timer(550);
             timer.Elapsed += new System.Timers.ElapsedEventHandler(delegate (object sender, System.Timers.ElapsedEventArgs e)
             {
                 timer.Enabled = false;
