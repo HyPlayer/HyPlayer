@@ -353,15 +353,7 @@ namespace HyPlayer
     {
         public int lyricSize
         {
-            get
-            {
-                var ret = 0;
-                if (ApplicationData.Current.LocalSettings.Values.ContainsKey(nameof(lyricSize)))
-                    if (int.TryParse(ApplicationData.Current.LocalSettings.Values[nameof(lyricSize)].ToString(),
-                            out ret))
-                        return ret;
-                return ret;
-            }
+            get => GetSettings(nameof(lyricSize), 0);
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(lyricSize)] = value;

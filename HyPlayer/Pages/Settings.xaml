@@ -102,16 +102,17 @@
                                         <TextBlock
                                             HorizontalAlignment="Left"
                                             VerticalAlignment="Center"
-                                            Text="歌词大小 (负数为自动)" />
+                                            Text="歌词大小 (0为自动)" />
                                         <controls:NumberBox
                                             x:Name="LyricSize"
                                             MinWidth="100"
                                             HorizontalAlignment="Right"
                                             LargeChange="5"
                                             SmallChange="1"
+                                            Minimum="0"
                                             SpinButtonPlacementMode="Compact"
-                                            ValueChanged="LyricSize_OnValueChanged"
-                                            Value="{x:Bind hyplayer:Common.Setting.lyricSize}" />
+                                            Value="{x:Bind hyplayer:Common.Setting.lyricSize, Mode=TwoWay}"
+                                            ValueChanged="LyricSize_OnValueChanged"/>
                                     </Grid>
                                     <Grid>
                                         <TextBlock VerticalAlignment="Center" Text="罗马字大小" />
@@ -121,8 +122,10 @@
                                             HorizontalAlignment="Right"
                                             LargeChange="5"
                                             SmallChange="1"
+                                            Minimum="1"
                                             SpinButtonPlacementMode="Compact"
-                                            Value="{x:Bind hyplayer:Common.Setting.romajiSize, Mode=TwoWay}" />
+                                            Value="{x:Bind hyplayer:Common.Setting.romajiSize, Mode=TwoWay}"
+                                            ValueChanged="LyricSize_OnValueChanged"/>
                                     </Grid>
                                     <Grid>
                                         <TextBlock VerticalAlignment="Center" Text="焦点歌词放大大小" />
@@ -132,8 +135,10 @@
                                             HorizontalAlignment="Right"
                                             LargeChange="5"
                                             SmallChange="1"
+                                            Minimum="0"
                                             SpinButtonPlacementMode="Compact"
-                                            Value="{x:Bind hyplayer:Common.Setting.lyricScaleSize, Mode=TwoWay}" />
+                                            Value="{x:Bind hyplayer:Common.Setting.lyricScaleSize, Mode=TwoWay}"
+                                            ValueChanged="LyricSize_OnValueChanged"/>
                                     </Grid>
                                 </StackPanel>
                             </controls:Expander>
@@ -266,7 +271,8 @@
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.lyricAlignment, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:Common.Setting.lyricAlignment, Mode=TwoWay}"
+                                            Toggled="LyricAlignment_OnToggled"/>
                                     </Grid>
                                     <Grid>
                                         <TextBlock VerticalAlignment="Center" Text="开启时启动热词" />

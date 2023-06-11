@@ -269,25 +269,13 @@ public sealed partial class Settings : Page, IDisposable
         Clipboard.SetContent(dp);
     }
 
-    private void LyricSize_OnValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
+    private async void LyricSize_OnValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         if (isbyprogram) return;
-        var size = 18;
-        if (int.TryParse(LyricSize.Text, out size))
-        {
-            Common.Setting.lyricSize = size;
-            _lyricItem.RefreshFontSize();
+        await Task.Delay(20);
+        _lyricItem.RefreshFontSize();
         }
-
-        size = 15;
-        if (int.TryParse(RomajiSize?.Text, out size))
-        {
-            size = Math.Max(size, 1);
-            Common.Setting.romajiSize = size;
-            _lyricItem.RefreshFontSize();
-        }
-    }
 
     private void NBShadowDepth_OnValueChanged(object o, RangeBaseValueChangedEventArgs rangeBaseValueChangedEventArgs)
     {
@@ -516,5 +504,13 @@ public sealed partial class Settings : Page, IDisposable
     private void TintOpacityLuminosity_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
         ApplyNewAcrylic();
+    }
+    
+    private async void LyricAlignment_OnToggled(object sender, RoutedEventArgs e)
+    {
+        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
+        if (isbyprogram) return;
+        await Task.Delay(20);
+        _lyricItem.RefreshFontSize();
     }
 }
