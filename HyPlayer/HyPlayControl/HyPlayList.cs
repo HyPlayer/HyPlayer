@@ -1120,16 +1120,16 @@ public static class HyPlayList
                                     //尝试从DownloadOperation下载
                                     if (playUrl != null)
                                     {
-                                        var destinationFile =
-                                            await (await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync(
+                                        var destinationFolder = await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync(
                                                 "songCache",
-                                                CreationCollisionOption.OpenIfExists)).CreateFileAsync(
+                                                CreationCollisionOption.OpenIfExists);
+                                        var destinationFile =
+                                            await destinationFolder.CreateFileAsync(
                                                 targetItem.PlayItem.Id +
                                                 ".cache",
                                                 CreationCollisionOption.ReplaceExisting);
                                         var downloadOperation =
                                             Downloader.CreateDownload(new Uri(playUrl), destinationFile);
-                                        downloadOperation.IsRandomAccessRequired = true;
                                         _mediaSource = MediaSource.CreateFromDownloadOperation(downloadOperation);
                                     }
                                 }
