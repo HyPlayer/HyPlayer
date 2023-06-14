@@ -26,7 +26,9 @@ using Windows.Storage.AccessCache;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
+using Windows.UI;
 using Windows.UI.Notifications;
+using Windows.UI.Xaml.Media;
 using Buffer = Windows.Storage.Streams.Buffer;
 using File = TagLib.File;
 #endregion
@@ -994,16 +996,35 @@ public static class HyPlayList
 
                     playUrl = json["data"][0]["url"]?.ToString();
                     var tag = json["data"]?[0]?["level"]?.ToString() switch
-                    {
-                        "standard" => "128K",
-                        "exhigh" => "320K",
-                        "lossless" => "无损",
-                        "hires" => "Hi-Res",
-                        _ => "在线"
-                    };
+                              {
+                                  "standard" => "标准",
+                                  "higher"   => "较高",
+                                  "exhigh"   => "极高",
+                                  "lossless" => "无损",
+                                  "hires"    => "Hi-Res",
+                                  "jyeffect" => "高清环绕声",
+                                  "sky"      => "沉浸环绕声",
+                                  "jymaster" => "超清母带",
+                                  _          => "在线"
+                              };
                     targetItem.PlayItem.Tag = tag;
                     AudioEffectsProperties["AudioGain_GainValue"] = float.Parse(json["data"]?[0]?["gain"].ToString());
-                    _ = Common.Invoke(() => { Common.BarPlayBar.TbSongTag.Text = tag; });
+                    _ = Common.Invoke(() =>
+                    {
+                        Common.BarPlayBar.TbSongTag.Text = tag;
+                        if (tag.Length > 2)
+                        {
+                            var brush = new SolidColorBrush(Colors.Gold);
+                            Common.BarPlayBar.SongInfoTag.BorderBrush = brush;
+                            Common.BarPlayBar.TbSongTag.Foreground = brush;
+                        }
+                        else
+                        {
+                            var brush = new SolidColorBrush(Colors.Red);
+                            Common.BarPlayBar.SongInfoTag.BorderBrush = brush;
+                            Common.BarPlayBar.TbSongTag.Foreground = brush;
+                        }
+                    });
                     json.RemoveAll();
                 }
                 else

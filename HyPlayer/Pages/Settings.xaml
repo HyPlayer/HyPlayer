@@ -331,9 +331,13 @@
                                         HorizontalAlignment="Right"
                                         SelectionChanged="ComboBoxSongBr_SelectionChanged">
                                         <ComboBoxItem Content="标准 (128k)" Tag="standard" />
+                                        <ComboBoxItem Content="较高 (???k)" Tag="higher" />
                                         <ComboBoxItem Content="极高 (320k)" Tag="exhigh" />
                                         <ComboBoxItem Content="无损 (VIP)" Tag="lossless" />
                                         <ComboBoxItem Content="Hi-Res (VIP)" Tag="hires" />
+                                        <ComboBoxItem Content="高清环绕声 (Spatial Audio)" Tag="jyeffect" />
+                                        <ComboBoxItem Content="沉浸环绕声 (Surround Audio)" Tag="sky" />
+                                        <ComboBoxItem Content="超清母带 (Master)" Tag="jymaster" />
                                     </ComboBox>
                                     <TextBlock
                                         Grid.Row="1"
@@ -346,9 +350,13 @@
                                         HorizontalAlignment="Right"
                                         SelectionChanged="ComboBoxSongDownloadBr_SelectionChanged">
                                         <ComboBoxItem Content="标准 (128k)" Tag="standard" />
+                                        <ComboBoxItem Content="较高 (???k)" Tag="higher" />
                                         <ComboBoxItem Content="极高 (320k)" Tag="exhigh" />
                                         <ComboBoxItem Content="无损 (VIP)" Tag="lossless" />
                                         <ComboBoxItem Content="Hi-Res (VIP)" Tag="hires" />
+                                        <ComboBoxItem Content="高清环绕声 (Spatial Audio)" Tag="jyeffect" />
+                                        <ComboBoxItem Content="沉浸环绕声 (Surround Audio)" Tag="sky" />
+                                        <ComboBoxItem Content="超清母带 (Master)" Tag="jymaster" />
                                     </ComboBox>
                                 </Grid>
                             </controls:Expander>

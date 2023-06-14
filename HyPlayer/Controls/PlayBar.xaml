@@ -405,6 +405,7 @@
                         x:Name="SongInfoTag"
                         Height="20"
                         Padding="3,0"
+                        x:FieldModifier="public"
                         HorizontalAlignment="Left"
                         BorderBrush="Red"
                         BorderThickness="1.5"
