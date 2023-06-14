@@ -202,6 +202,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                 await responseMessage.Content.WriteToStreamAsync(inputStream);
                 SoftwareBitmap softwareBitmap;
                 var buffer = new Buffer(MIMEHelper.PICTURE_FILE_HEADER_CAPACITY);
+                inputStream.Seek(0);
                 await inputStream.ReadAsync(buffer, MIMEHelper.PICTURE_FILE_HEADER_CAPACITY, InputStreamOptions.None);
                 var mime = MIMEHelper.GetPictureCodecFromBuffer(buffer);
                 BitmapDecoder decoder = await BitmapDecoder.CreateAsync(mime, inputStream);
