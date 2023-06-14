@@ -98,7 +98,7 @@ public sealed partial class BasePage : Page
         {
             if (Window.Current.CoreWindow.GetKeyState(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down))//判断ctrl是否按下
             {
-                switch(args.VirtualKey) 
+                switch(args.VirtualKey)
                 {
                     case VirtualKey.P:
                         {
@@ -116,7 +116,7 @@ public sealed partial class BasePage : Page
                     case VirtualKey.Right:
                         {
 
-                            HyPlayList.SongMoveNext();  
+                            HyPlayList.SongMoveNext();
                             break;
                         }
                     case VirtualKey.M:
@@ -127,7 +127,7 @@ public sealed partial class BasePage : Page
                         }
                 }
             }
-            else if(args.VirtualKey==VirtualKey.Space) 
+            else if(args.VirtualKey==VirtualKey.Space)
             {
                 if (HyPlayList.Player.PlaybackSession.PlaybackState == Windows.Media.Playback.MediaPlaybackState.Playing)
                     HyPlayList.Player.Pause();
@@ -180,7 +180,6 @@ public sealed partial class BasePage : Page
             dialog.IsPrimaryButtonEnabled = true;
             dialog.PrimaryButtonClick += (_, _) => _ = ApplicationView.GetForCurrentView().TryConsolidateAsync();
             _ = dialog.ShowAsync();
-
         }
 
         // 不要阻塞页面加载
@@ -272,6 +271,7 @@ public sealed partial class BasePage : Page
             {
                 await LoginDone();
             }
+
             json.RemoveAll();
         }
         catch (Exception ex)
@@ -317,20 +317,21 @@ public sealed partial class BasePage : Page
             Common.LoginedUser = NCUser.CreateFromJson(LoginStatus["profile"]);
         else
             Common.LoginedUser = new NCUser
-            {
-                avatar = "ms-appx:///Assets/icon.png",
-                id = LoginStatus["account"]["id"].ToString(),
-                name = LoginStatus["account"]["userName"].ToString(),
-                signature = "此账号未进行手机号验证, 请使用网易云音乐客户端登录后再继续操作"
-            };
+                                 {
+                                     avatar = "ms-appx:///Assets/icon.png",
+                                     id = LoginStatus["account"]["id"].ToString(),
+                                     name = LoginStatus["account"]["userName"].ToString(),
+                                     signature = "此账号未进行手机号验证, 请使用网易云音乐客户端登录后再继续操作"
+                                 };
 
         Common.Logined = true;
         NavItemLogin.Content = Common.LoginedUser.name;
         NavItemLogin.Icon = new BitmapIcon
-        {
-            UriSource = new Uri(Common.LoginedUser.avatar + "?param=" + StaticSource.PICSIZE_NAVITEM_USERAVATAR),
-            ShowAsMonochrome = false
-        };
+                            {
+                                UriSource = new Uri(Common.LoginedUser.avatar + "?param=" +
+                                                    StaticSource.PICSIZE_NAVITEM_USERAVATAR),
+                                ShowAsMonochrome = false
+                            };
         InfoBarLoginHint.Severity = InfoBarSeverity.Success;
         InfoBarLoginHint.Message = "欢迎 " + Common.LoginedUser.name;
         DialogLogin.Hide();
@@ -358,11 +359,17 @@ public sealed partial class BasePage : Page
         if (item.ItemType != HyPlayItemType.Netease && Common.Setting.doScrobble /* || Common.IsInFm ||
             string.IsNullOrEmpty(HyPlayList.PlaySourceId)*/) return;
         var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.Scrobble, new Dictionary<string, object>
-        {
-            { "id", item.PlayItem.Id },
-            { "sourceId", HyPlayList.PlaySourceId ?? "-1" },
-            { "time", TimeSpan.FromMilliseconds(item.PlayItem.LengthInMilliseconds).TotalSeconds.ToString("f0") }
-        });
+                                                        {
+                                                            { "id", item.PlayItem.Id },
+                                                            { "sourceId", HyPlayList.PlaySourceId ?? "-1" },
+                                                            {
+                                                                "time",
+                                                                TimeSpan.FromMilliseconds(
+                                                                            item.PlayItem.LengthInMilliseconds)
+                                                                        .TotalSeconds
+                                                                        .ToString("f0")
+                                                            }
+                                                        });
         json.RemoveAll();
         try
         {
@@ -378,7 +385,7 @@ public sealed partial class BasePage : Page
     {
         _ = Common.ncapi?.RequestAsync(CloudMusicApiProviders.DailySignin);
         _ = Common.ncapi?.RequestAsync(CloudMusicApiProviders.DailySignin,
-            new Dictionary<string, object> { { "type", 1 } });
+                                       new Dictionary<string, object> { { "type", 1 } });
     }
 
     private static async Task LoadMyLikelist()
@@ -386,7 +393,8 @@ public sealed partial class BasePage : Page
         try
         {
             var js = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.Likelist,
-                new Dictionary<string, object> { { "uid", Common.LoginedUser.id } });
+                                                      new Dictionary<string, object>
+                                                      { { "uid", Common.LoginedUser.id } });
             Common.LikedSongs = js["ids"].ToObject<List<string>>();
         }
         catch (Exception ex)
@@ -402,7 +410,8 @@ public sealed partial class BasePage : Page
         try
         {
             var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.UserPlaylist,
-                new Dictionary<string, object> { { "uid", Common.LoginedUser.id } });
+                                                        new Dictionary<string, object>
+                                                        { { "uid", Common.LoginedUser.id } });
 
             NavItemsLikeList.MenuItems.Clear();
             NavItemsMyList.MenuItems.Clear();
@@ -416,15 +425,15 @@ public sealed partial class BasePage : Page
                 if (jToken["subscribed"].ToString() == "True")
                 {
                     var item = new NavigationViewItem
-                    {
-                        Content = jToken["name"].ToString(),
-                        Tag = "Playlist" + jToken["id"],
-                        IsRightTapEnabled = true,
-                        Icon = new FontIcon
-                        {
-                            Glyph = "\uE142"
-                        }
-                    };
+                               {
+                                   Content = jToken["name"].ToString(),
+                                   Tag = "Playlist" + jToken["id"],
+                                   IsRightTapEnabled = true,
+                                   Icon = new FontIcon
+                                          {
+                                              Glyph = "\uE142"
+                                          }
+                               };
                     item.RightTapped += (_, __) =>
                     {
                         nowplid = jToken["id"].ToString();
@@ -443,15 +452,15 @@ public sealed partial class BasePage : Page
                     }
 
                     var item = new NavigationViewItem
-                    {
-                        Icon = new FontIcon
-                        {
-                            Glyph = jToken["privacy"].ToString() == "0" ? "\uE142" : "\uE72E"
-                        },
-                        Content = jToken["name"].ToString(),
-                        Tag = "Playlist" + jToken["id"],
-                        IsRightTapEnabled = true
-                    };
+                               {
+                                   Icon = new FontIcon
+                                          {
+                                              Glyph = jToken["privacy"].ToString() == "0" ? "\uE142" : "\uE72E"
+                                          },
+                                   Content = jToken["name"].ToString(),
+                                   Tag = "Playlist" + jToken["id"],
+                                   IsRightTapEnabled = true
+                               };
                     if (jToken["privacy"].ToString() != "0")
                         item.Icon.Foreground = new SolidColorBrush(Color.FromArgb(255, 211, 39, 100));
 
@@ -465,6 +474,7 @@ public sealed partial class BasePage : Page
                     };
                     NavItemsMyList.MenuItems.Add(item);
                 }
+
             json.RemoveAll();
         }
         catch (Exception ex)
@@ -474,7 +484,7 @@ public sealed partial class BasePage : Page
     }
 
     private async void NavMain_OnSelectionChanged(NavigationView sender,
-        NavigationViewSelectionChangedEventArgs args)
+                                                  NavigationViewSelectionChangedEventArgs args)
     {
         if (Common.NavigatingBack) return;
         var nowitem = sender.SelectedItem as NavigationViewItem;
@@ -493,31 +503,32 @@ public sealed partial class BasePage : Page
 
         if (nowitem.Tag.ToString() == "DailyRcmd")
             Common.NavigatePage(typeof(SongListDetail), new NCPlayList
-            {
-                cover = "ms-appx:/Assets/icon.png",
-                creater = new NCUser
-                {
-                    avatar = "https://p1.music.126.net/KxePid7qTvt6V2iYVy-rYQ==/109951165050882728.jpg",
-                    id = "1",
-                    name = "网易云音乐",
-                    signature = "网易云音乐官方账号 "
-                },
-                plid = "-666",
-                subscribed = false,
-                name = "每日歌曲推荐",
-                desc = "根据你的口味生成，每天6:00更新"
-            });
+                                                        {
+                                                            cover = "ms-appx:/Assets/icon.png",
+                                                            creater = new NCUser
+                                                                      {
+                                                                          avatar =
+                                                                              "https://p1.music.126.net/KxePid7qTvt6V2iYVy-rYQ==/109951165050882728.jpg",
+                                                                          id = "1",
+                                                                          name = "网易云音乐",
+                                                                          signature = "网易云音乐官方账号 "
+                                                                      },
+                                                            plid = "-666",
+                                                            subscribed = false,
+                                                            name = "每日歌曲推荐",
+                                                            desc = "根据你的口味生成，每天6:00更新"
+                                                        });
 
         if (nowitem.Tag.ToString() == "SonglistMyLike")
         {
             Common.NavigatePage(typeof(SongListDetail), Common.MySongLists[0].plid,
-                new EntranceNavigationTransitionInfo());
+                                new EntranceNavigationTransitionInfo());
             return;
         }
 
         if (nowitem.Tag.ToString().StartsWith("Playlist"))
             Common.NavigatePage(typeof(SongListDetail), nowitem.Tag.ToString().Substring(8),
-                new EntranceNavigationTransitionInfo());
+                                new EntranceNavigationTransitionInfo());
 
         switch (nowitem.Tag.ToString())
         {
@@ -548,23 +559,23 @@ public sealed partial class BasePage : Page
     // Invoked events of not-for-navigation items can be handled separately.
     // Meanwhile we set "SelectsOnInvoked" property of these items "False" to avoid the navigation pane indicator being set to them.
     private async void NavMain_ItemInvoked(NavigationView sender,
-        NavigationViewItemInvokedEventArgs args)
+                                           NavigationViewItemInvokedEventArgs args)
     {
         var invokedItemTag = (args.InvokedItemContainer as NavigationViewItem)?.Tag?.ToString();
         if (invokedItemTag is null || invokedItemTag == string.Empty) return;
         switch (invokedItemTag)
         {
             case "SonglistCreate":
-                {
-                    await new CreateSonglistDialog().ShowAsync();
-                    _ = LoadSongList();
-                    break;
-                }
+            {
+                await new CreateSonglistDialog().ShowAsync();
+                _ = LoadSongList();
+                break;
+            }
             case "PersonalFM":
-                {
-                    PersonalFM.InitPersonalFM();
-                    break;
-                }
+            {
+                PersonalFM.InitPersonalFM();
+                break;
+            }
             case "HeartBeat":
                 _ = LoadHeartBeat();
                 break;
@@ -577,7 +588,8 @@ public sealed partial class BasePage : Page
         try
         {
             var jsoon = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
-                new Dictionary<string, object> { { "id", Common.MySongLists[0].plid } });
+                                                         new Dictionary<string, object>
+                                                         { { "id", Common.MySongLists[0].plid } });
             var jsona = await Common.ncapi?.RequestAsync(
                 CloudMusicApiProviders.PlaymodeIntelligenceList,
                 new Dictionary<string, object>
@@ -602,6 +614,7 @@ public sealed partial class BasePage : Page
             {
                 Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
             }
+
             jsoon.RemoveAll();
             jsona.RemoveAll();
             Songs.Clear();
@@ -647,20 +660,31 @@ public sealed partial class BasePage : Page
         try
         {
             var key = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.LoginQrKey,
-                new Dictionary<string, object>
-                    { { "timestamp", (DateTime.Now - Common.UnixEpoch).TotalMilliseconds } });
+                                                       new Dictionary<string, object>
+                                                       {
+                                                           {
+                                                               "timestamp",
+                                                               (DateTime.Now - Common.UnixEpoch).TotalMilliseconds
+                                                           }
+                                                       });
 
             _ = ReFreshQr(key);
             nowqrkey = key["unikey"].ToString();
             while (!Common.Logined && nowqrkey == key["unikey"].ToString())
             {
                 var res = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.LoginQrCheck,
-                    new Dictionary<string, object> { { "key", key["unikey"].ToString() } });
+                                                           new Dictionary<string, object>
+                                                           { { "key", key["unikey"].ToString() } });
                 if (res["code"].ToString() == "800")
                 {
                     key = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.LoginQrKey,
-                        new Dictionary<string, object>
-                            { { "timestamp", (DateTime.Now - Common.UnixEpoch).TotalMilliseconds } });
+                                                           new Dictionary<string, object>
+                                                           {
+                                                               {
+                                                                   "timestamp",
+                                                                   (DateTime.Now - Common.UnixEpoch).TotalMilliseconds
+                                                               }
+                                                           });
                     try
                     {
                         _ = ReFreshQr(key);
@@ -676,6 +700,7 @@ public sealed partial class BasePage : Page
                     {
                         InfoBarLoginHint.IsOpen = true;
                     }
+
                     InfoBarLoginHint.Title = "请扫描上方二维码登录";
                 }
                 else if (res["code"].ToString() == "803")
@@ -684,6 +709,7 @@ public sealed partial class BasePage : Page
                     {
                         InfoBarLoginHint.IsOpen = true;
                     }
+
                     InfoBarLoginHint.Title = "登录成功";
                     ButtonLogin.Content = "登录成功";
                     await LoginDone();
@@ -695,6 +721,7 @@ public sealed partial class BasePage : Page
                     {
                         InfoBarLoginHint.IsOpen = true;
                     }
+
                     InfoBarLoginHint.Title = "请在手机上授权登录";
                 }
 
@@ -727,6 +754,7 @@ public sealed partial class BasePage : Page
             await img.SetSourceAsync(stream);
             QrContainer.Source = img;
         }
+
         InfoBarLoginHint.Title = "请扫描上方二维码登录";
     }
 
@@ -746,7 +774,9 @@ public sealed partial class BasePage : Page
     {
         Common.NavigatePage(typeof(Search), sender.Text, new EntranceNavigationTransitionInfo());
     }
-    private void SearchAutoSuggestBox_OnSuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs args)
+
+    private void SearchAutoSuggestBox_OnSuggestionChosen(AutoSuggestBox sender,
+                                                         AutoSuggestBoxSuggestionChosenEventArgs args)
     {
         sender.Text = (string)args.SelectedItem;
     }
@@ -761,13 +791,13 @@ public sealed partial class BasePage : Page
     }
 
     private void NavMain_DisplayModeChanged(NavigationView sender,
-        NavigationViewDisplayModeChangedEventArgs args)
+                                            NavigationViewDisplayModeChangedEventArgs args)
     {
         const int topIndent = 16;
         const int expandedIndent = 48;
         var minimalIndent = 104;
         if (NavMain.IsBackButtonVisible.Equals(NavigationViewBackButtonVisible
-                .Collapsed))
+                                                   .Collapsed))
             minimalIndent = 48;
 
         var currMargin = AppTitleBar.Margin;
@@ -784,10 +814,10 @@ public sealed partial class BasePage : Page
         try
         {
             await Common.ncapi?.RequestAsync(CloudMusicApiProviders.PlaylistPrivacy,
-                new Dictionary<string, object>
-                {
-                    { "id", nowplid }
-                });
+                                             new Dictionary<string, object>
+                                             {
+                                                 { "id", nowplid }
+                                             });
             Common.AddToTeachingTipLists("成功公开歌单");
             _ = LoadSongList();
         }
@@ -802,10 +832,10 @@ public sealed partial class BasePage : Page
         try
         {
             await Common.ncapi?.RequestAsync(CloudMusicApiProviders.PlaylistDelete,
-                new Dictionary<string, object>
-                {
-                    { "ids", nowplid }
-                });
+                                             new Dictionary<string, object>
+                                             {
+                                                 { "ids", nowplid }
+                                             });
             Common.AddToTeachingTipLists("成功删除");
             _ = LoadSongList();
         }
@@ -839,13 +869,14 @@ public sealed partial class BasePage : Page
         try
         {
             var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.SearchSuggest,
-                new Dictionary<string, object> { { "keywords", sender.Text }, { "type", "mobile" } });
+                                                        new Dictionary<string, object>
+                                                        { { "keywords", sender.Text }, { "type", "mobile" } });
 
             if (json["result"] != null && json["result"]["allMatch"] != null &&
                 json["result"]["allMatch"].HasValues)
                 sender.ItemsSource = json["result"]["allMatch"].ToArray().ToList()
-                    .Select(t => t["keyword"].ToString())
-                    .ToList();
+                                                               .Select(t => t["keyword"].ToString())
+                                                               .ToList();
             json.RemoveAll();
         }
         catch (Exception ex)
@@ -870,6 +901,7 @@ public sealed partial class BasePage : Page
             }
         });
     }
+
     public async Task RefreshNavItemCover(int hashCode, IRandomAccessStream coverStream)
     {
         await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
@@ -884,11 +916,11 @@ public sealed partial class BasePage : Page
                 }
                 catch
                 {
-
                 }
             }
         });
     }
+
     public async Task RefreshNavItemCover(double collapseTime, int hashCode, IRandomAccessStream coverStream)
     {
         await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
@@ -905,32 +937,27 @@ public sealed partial class BasePage : Page
                 }
                 catch
                 {
-
                 }
             }
         });
     }
 
-    private void BaseFrame_Navigated(object sender, NavigationEventArgs e)
+    private async void BaseFrame_Navigated(object sender, NavigationEventArgs e)
     {
-        Task.Run(() =>
-        {
-            System.Timers.Timer timer = new System.Timers.Timer(550);
-            timer.Elapsed += new System.Timers.ElapsedEventHandler(delegate (object sender, System.Timers.ElapsedEventArgs e)
+        await Task.Delay(1000);
+        _ = Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
             {
-                timer.Enabled = false;
-                _ = Dispatcher.RunAsync(CoreDispatcherPriority.Low, () =>
+                try
                 {
                     NavMain.SelectionChanged -= NavMain_OnSelectionChanged;
                     Bindings.Update();
                     NavMain.SelectionChanged += NavMain_OnSelectionChanged;
                 }
-            );
-            });
-            timer.AutoReset = false;
-            timer.Enabled = true;
-        }
+                catch
+                {
+                    // ignored
+                }
+            }
         );
     }
-
 }

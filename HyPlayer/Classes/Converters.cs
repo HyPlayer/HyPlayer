@@ -354,17 +354,15 @@ namespace HyPlayer.Classes
             NavigationViewItem pageNavigationViewItem;
             if (value == null)
             {
-                return Common.PageBase.NavItemBlank;
+                return Common.PageBase?.NavItemBlank;
             }
             Type pageType = value.GetType();
             if (pageType == typeof(Home))
-                pageNavigationViewItem = Common.PageBase.NavItemPageHome;
+                pageNavigationViewItem = Common.PageBase?.NavItemPageHome;
             else if (pageType == typeof(SongListDetail))
             {
                 var displayedList = (SongListDetail)value;
-                while (displayedList.playList == null)
-                {
-                }
+                if (displayedList.playList == null) return Common.PageBase?.NavItemBlank;
                 if (displayedList.playList.name == "每日歌曲推荐")
                     pageNavigationViewItem = Common.PageBase.NavItemDailyRcmd;
                 else if (displayedList.playList.plid == Common.MySongLists[0].plid)
