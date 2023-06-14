@@ -7,6 +7,7 @@ using Microsoft.Toolkit.Uwp.UI.Media;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
@@ -76,12 +77,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private bool realclick;
     private int sclock;
     private ExpandedWindowMode WindowMode;
-
-    private readonly BringIntoViewOptions DefaultBringIntoViewOptions = new BringIntoViewOptions()
-    {
-        VerticalAlignmentRatio = 0.5,
-        AnimationDesired = true,
-    };
 
     public Windows.UI.Color? albumMainColor;
     private bool disposedValue;
@@ -424,9 +419,24 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             _lyricHasBeenLoaded = true;
             RefreshLyricColor();
         }
+
         if (!_lyricHasBeenLoaded) return;
         _ = Common.Invoke(() => UpdateFocusingLyric());
     }
+
+    private readonly BringIntoViewOptions AnimatedBringIntoViewOptions =
+        new BringIntoViewOptions()
+        {
+            VerticalAlignmentRatio = 0.5,
+            AnimationDesired = true,
+        };
+    
+    private readonly BringIntoViewOptions NoAnimationBringIntoViewOptions =
+        new BringIntoViewOptions()
+        {
+            VerticalAlignmentRatio = 0.5,
+            AnimationDesired = false,
+        };
 
     private void UpdateFocusingLyric(bool recursionLock = false)
     {
@@ -466,8 +476,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     actualElement = LyricBox.GetOrCreateElement(k) as Border;
                     isNewLoaded = true;
                 }
-                    
-                
+
+
                 var lyricItem = (actualElement as Border)?.FindName("LyricWrapper") as LyricItemWrapper;
                 if (isNewLoaded && lyricItem != null)
                 {
@@ -478,12 +488,16 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     !string.IsNullOrEmpty(lyricItem.SongLyric.LyricLine.CurrentLyric))
                 {
                     actualElement.UpdateLayout();
-                    DefaultBringIntoViewOptions.AnimationDesired = !isNewLoaded;
-                    actualElement.StartBringIntoView(DefaultBringIntoViewOptions);
-                    if (isNewLoaded && !recursionLock)
+                    if (!isNewLoaded)
                     {
-                        UpdateFocusingLyric(true);
+                        LyricBoxContainer.ChangeView(0,actualElement.ActualOffset.Y, 1,false);
                     }
+                    else
+                    {
+                        actualElement.StartBringIntoView(NoAnimationBringIntoViewOptions);
+                    }
+                    var opt = isNewLoaded ? NoAnimationBringIntoViewOptions : AnimatedBringIntoViewOptions;
+                    Debug.WriteLine(opt.AnimationDesired);                    
                 }
             }
             catch
@@ -496,6 +510,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     {
         _ = Common.Invoke(() =>
         {
+            LyricBoxContainer.ChangeView(null, 0, null, false);
             _lyricIsReadyToGo = true;
             if (!_lyricIsCleaning)
             {
@@ -507,6 +522,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     else
                         HyPlayList.Lyrics.ForEach(t => LyricList.Add(new(t)));
                 }
+
                 lastlrcid = HyPlayList.NowPlayingHashCode;
                 if (HyPlayList.NowPlayingItem == null) return;
                 var blanksize = LyricBoxContainer.ViewportHeight / 2;
@@ -569,6 +585,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         LyricList.Clear();
                         LyricList.Add(new LyricItemModel(SongLyric.LoadingLyric));
                     }
+
                     LyricBox.Width = LyricWidth;
                     _lyricIsCleaning = false;
                     if (_lyricIsReadyToGo)
@@ -576,8 +593,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         LoadLyricsBox();
                     }
                 }
-
             }
+
             needRedesign++;
         });
     }
@@ -667,7 +684,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
                 if (HyPlayList.NowPlayingItem.PlayItem.Album.id != "0")
                     Common.NavigatePage(typeof(AlbumPage),
-                        HyPlayList.NowPlayingItem.PlayItem.Album.id);
+                                        HyPlayList.NowPlayingItem.PlayItem.Album.id);
 
             if (HyPlayList.NowPlayingItem.PlayItem.Artist[0].Type == HyPlayItemType.Radio)
                 Common.NavigatePage(typeof(RadioPage), HyPlayList.NowPlayingItem.PlayItem.Album.id);
@@ -694,7 +711,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 }
 
                 Common.NavigatePage(typeof(ArtistPage),
-                    HyPlayList.NowPlayingItem.PlayItem.Artist[0].id);
+                                    HyPlayList.NowPlayingItem.PlayItem.Artist[0].id);
             }
 
             if (HyPlayList.NowPlayingItem.PlayItem.Artist[0].Type == HyPlayItemType.Radio)
@@ -1010,37 +1027,37 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
                 break;
             case 0 when Math.Abs(e.Cumulative.Translation.Y) > Math.Abs(e.Cumulative.Translation.X):
+            {
+                // 竖直方向滑动
+                if (e.Cumulative.Translation.Y >= 0)
+                    Common.PageMain.ExpandedPlayerPositionOffset.Y = e.Cumulative.Translation.Y;
+                else
                 {
-                    // 竖直方向滑动
-                    if (e.Cumulative.Translation.Y >= 0)
-                        Common.PageMain.ExpandedPlayerPositionOffset.Y = e.Cumulative.Translation.Y;
-                    else
-                    {
-                        ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;
-                    }
-
-                    if (e.Cumulative.Translation.Y > 200)
-                    {
-                        e.Complete();
-                        await Common.BarPlayBar.CollapseExpandedPlayer();
-                    }
-
-                    break;
+                    ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;
                 }
+
+                if (e.Cumulative.Translation.Y > 200)
+                {
+                    e.Complete();
+                    await Common.BarPlayBar.CollapseExpandedPlayer();
+                }
+
+                break;
+            }
             case 0:
+            {
+                ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
+                if (e.Cumulative.Translation.X > 400)
                 {
-                    ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
-                    if (e.Cumulative.Translation.X > 400)
-                    {
-                        e.Complete();
-                    }
-                    else if (e.Cumulative.Translation.X < -400)
-                    {
-                        e.Complete();
-                    }
-
-                    break;
+                    e.Complete();
                 }
+                else if (e.Cumulative.Translation.X < -400)
+                {
+                    e.Complete();
+                }
+
+                break;
+            }
         }
     }
 
@@ -1081,10 +1098,11 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     if (Common.Setting.expandedPlayerBackgroundType == 0 && Background?.GetType() != typeof(ImageBrush))
                     {
                         var brush = new ImageBrush
-                        { Stretch = Stretch.UniformToFill };
+                                    { Stretch = Stretch.UniformToFill };
                         Background = brush;
                         brush.ImageSource = (ImageSource)ImageAlbum.Source;
                     }
+
                     if (hashCode != HyPlayList.NowPlayingHashCode) return;
                     if (Common.Setting.lyricColor != 3 || albumMainColor == null)
                     {
@@ -1105,7 +1123,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         }
                         else
                         {
-                            ForegroundAccentTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
+                            ForegroundAccentTextBrush =
+                                new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
                             ForegroundIdleTextBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(66, 255, 255, 255));
                             //ImmersiveCover.Color = Windows.UI.Color.FromArgb(255, 35, 35, 35);
                         }
@@ -1199,11 +1218,11 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         }
 
         var BtnAni = new DoubleAnimation
-        {
-            To = 1,
-            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
-            EnableDependentAnimation = true
-        };
+                     {
+                         To = 1,
+                         EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+                         EnableDependentAnimation = true
+                     };
         var storyboard = new Storyboard();
         Storyboard.SetTarget(BtnAni, MoreBtn);
         Storyboard.SetTargetProperty(BtnAni, "Opacity");
@@ -1233,11 +1252,11 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 }
 
                 var BtnAni = new DoubleAnimation
-                {
-                    To = 0,
-                    EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
-                    EnableDependentAnimation = true
-                };
+                             {
+                                 To = 0,
+                                 EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+                                 EnableDependentAnimation = true
+                             };
                 var storyboard = new Storyboard();
                 Storyboard.SetTarget(BtnAni, MoreBtn);
                 Storyboard.SetTargetProperty(BtnAni, "Opacity");
