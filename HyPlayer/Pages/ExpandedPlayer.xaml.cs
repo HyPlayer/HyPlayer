@@ -490,14 +490,20 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     actualElement.UpdateLayout();
                     if (!isNewLoaded)
                     {
-                        LyricBoxContainer.ChangeView(0,actualElement.ActualOffset.Y, 1,false);
+                        if (Common.IsInImmerssiveMode)
+                        {
+                            LyricBoxContainer.ChangeView(0,actualElement.ActualOffset.Y + LyricBoxContainer.ActualHeight - actualElement.ActualSize.Y , 1, false);
+
+                        }
+                        else
+                        {
+                            LyricBoxContainer.ChangeView(0,actualElement.ActualOffset.Y + LyricBoxContainer.ActualHeight/4 - actualElement.ActualSize.Y , 1, false);
+                        }
                     }
                     else
                     {
                         actualElement.StartBringIntoView(NoAnimationBringIntoViewOptions);
                     }
-                    var opt = isNewLoaded ? NoAnimationBringIntoViewOptions : AnimatedBringIntoViewOptions;
-                    Debug.WriteLine(opt.AnimationDesired);                    
                 }
             }
             catch
