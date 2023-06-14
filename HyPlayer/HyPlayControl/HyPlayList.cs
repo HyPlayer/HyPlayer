@@ -1202,7 +1202,7 @@ public static class HyPlayList
         var hashCodeWhenRequested = NowPlayingHashCode;
         using var streamWhenRequested = CoverStream.CloneStream();
         var playItemWhenRequested = NowPlayingItem;
-        await SongFadeRequest(SongFadeEffectType.NextFadeIn);
+        _ = SongFadeRequest(SongFadeEffectType.NextFadeIn);
         //当加载一个新的播放文件时,此时你应当加载歌词和 SystemMediaTransportControls
         //加载 SystemMediaTransportControls
         if (NowPlayingItem.PlayItem != null)
@@ -1216,28 +1216,27 @@ public static class HyPlayList
             _controlsDisplayUpdater.MusicProperties.Genres.Clear();
             if (NowPlayingItem.ItemType == HyPlayItemType.Netease)
                 _controlsDisplayUpdater.MusicProperties.Genres.Add("NCM-" + NowPlayingItem.PlayItem.Id);
+            // 第一次刷新, 以便热词切歌词
+            _controlsDisplayUpdater.Update();
 
             //记录下当前播放位置
             ApplicationData.Current.LocalSettings.Values["nowSongPointer"] = NowPlaying.ToString();
+            if (hashCodeWhenRequested == NowPlayingHashCode)
+            {
+                NotifyPlayItemChanged(playItemWhenRequested);
+            }
+            
+            // 图片加载放在之后
             if (CoverStream.Size == 0 && !Common.Setting.noImage)
             {
                 await RefreshAlbumCover();
-            }
-            if (hashCodeWhenRequested == NowPlayingHashCode)
-            {
-                //因为加载图片可能会高耗时,所以在此处加载
-                NotifyPlayItemChanged(playItemWhenRequested);
             }
             if (CoverStream.Size != 0)
             {
                 if ((hashCodeWhenRequested == NowPlayingHashCode) && !Common.Setting.noImage)
                 {
-                    var taskShallowCopy = OnSongCoverChanged.Clone();
-                    if (taskShallowCopy != null)
-                    {
-                        await ((SongCoverChanged)taskShallowCopy)(hashCodeWhenRequested, streamWhenRequested);
-                    }
-
+                    CoverStream.Seek(0);
+                    OnSongCoverChanged?.Invoke(hashCodeWhenRequested, CoverStream);
                 }
             }
             if (hashCodeWhenRequested == NowPlayingHashCode)
@@ -1248,11 +1247,14 @@ public static class HyPlayList
             //更新磁贴
             if (hashCodeWhenRequested == NowPlayingHashCode)
             {
-                await RefreshTile(hashCodeWhenRequested, playItemWhenRequested, streamWhenRequested);
+                CoverStream.Seek(0);
+                _ = RefreshTile(hashCodeWhenRequested, playItemWhenRequested, CoverStream);
             }
             if (hashCodeWhenRequested == NowPlayingHashCode)
             {
-                //RASR罪大恶极，害的磁贴怨声载道
+                // RASR 罪大恶极，害的磁贴怨声载道
+                CoverStream.Seek(0);
+                _controlsDisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromStream(CoverStream);
                 _controlsDisplayUpdater.Update();
             }
             //这里要判断这么多次的原因在于如果只判断一次的话，后面如果切歌是无法知晓的。所以只能用这个蠢方法

@@ -152,11 +152,13 @@
                                     Click="ButtonHeartBeat_OnClick"
                                     Visibility="Collapsed">
                                     <StackPanel Orientation="Horizontal">
+                                        <!-- ReSharper disable once Xaml.InvalidResourceType -->
                                         <FontIcon
                                             x:Name="IconLiked"
                                             FontSize="14"
                                             Foreground="{ThemeResource SystemBaseHighColor}"
                                             Glyph="&#xE00B;" />
+                                        <!-- ReSharper disable once Xaml.InvalidResourceType -->
                                         <TextBlock
                                             Margin="8,0,0,0"
                                             Foreground="{ThemeResource SystemBaseHighColor}"

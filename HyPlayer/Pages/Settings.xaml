@@ -700,6 +700,7 @@
                                             HorizontalAlignment="Right"
                                             VerticalAlignment="Top"
                                             IsOn="{x:Bind hyplayer:Common.Setting.CustomAcrylic, Mode=TwoWay}" />
+                                        <!-- ReSharper disable once Xaml.InvalidResourceType -->
                                         <Grid Visibility="{x:Bind hyplayer:Common.Setting.CustomAcrylic, Mode=OneWay}" Background="{ThemeResource SystemListLowColor}" CornerRadius="8" Margin="0,40,0,0">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>

@@ -120,6 +120,7 @@
                                         </Grid>
                                     </StackPanel>
                                 </Grid>
+                                <!-- ReSharper disable once Xaml.InvalidResourceType -->
                                 <Button
                                     x:Name="PlayBtn"
                                     Width="74"
@@ -216,11 +217,13 @@
                                 Click="Logout_OnClick"
                                 Foreground="{ThemeResource SystemControlForegroundAccentBrush}">
                                 <StackPanel Orientation="Horizontal">
+                                    <!-- ReSharper disable once Xaml.InvalidResourceType -->
                                     <FontIcon
                                         Margin="0,0,8,0"
                                         FontSize="14"
                                         Glyph="&#xF3B1;"
                                         Foreground="{ThemeResource SystemBaseMediumHighColor}"/>
+                                    <!-- ReSharper disable once Xaml.InvalidResourceType -->
                                     <TextBlock Text="退出登录"
                                                Foreground="{ThemeResource SystemBaseMediumHighColor}"/>
                                 </StackPanel>
