@@ -249,4 +249,10 @@ public sealed partial class Me : Page, IDisposable
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
+
+    private void RectangleImage_OnRightTapped(object sender, RightTappedRoutedEventArgs e)
+    {
+        Common.Setting.IsOldThemeEnabled = false;
+        Common.AddToTeachingTipLists("已重置, 请重启");
+    }
 }

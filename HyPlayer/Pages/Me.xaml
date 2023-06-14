@@ -178,6 +178,7 @@
                             Height="120"
                             Margin="20"
                             controls:DockPanel.Dock="Left"
+                            RightTapped="RectangleImage_OnRightTapped"
                             RadiusX="8"
                             RadiusY="8">
                             <Rectangle.Fill>
