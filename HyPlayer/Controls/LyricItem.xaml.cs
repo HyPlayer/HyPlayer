@@ -59,6 +59,16 @@ public sealed partial class LyricItem : UserControl, IDisposable
             TextBoxTranslation.Foreground = IdleBrush;
         }
 
+        if (_lyricIsKaraokeLyric)
+        {
+            var accBrush = new SolidColorBrush(GetKaraokAccentBrush());
+            accBrush.Opacity = 0.41;
+            foreach (var wordTextBlock in WordTextBlocks)
+            {
+                wordTextBlock.Foreground = accBrush;
+            }
+        }
+
     }
 
 
@@ -470,12 +480,13 @@ public sealed partial class LyricItem : UserControl, IDisposable
         if (_lyricIsKaraokeLyric)
         {
 
+            var accBrush = new SolidColorBrush(GetKaraokAccentBrush());
             foreach (var item in ((KaraokeLyricsLine)Lrc.LyricLine).WordInfos)
             {
                 var textBlock = new Run()
                 {
                     Text = item.CurrentWords,
-                    Foreground = new SolidColorBrush(GetKaraokAccentBrush()),
+                    Foreground = accBrush,
                 };
                 textBlock.Foreground.Opacity = 0.4;
                 WordTextBlocks.Add(textBlock);
