@@ -455,13 +455,35 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         if (k >= 0)
             try
             {
-                var ele = LyricBox.GetOrCreateElement(k) as FrameworkElement;
-                var lyricItem = (ele as Border)?.FindName("LyricWrapper") as LyricItemWrapper;
-                if (ele != null && lyricItem != null &&
+                UIElement actualElement;
+                bool isNewLoaded = false;
+                if (LyricBox.TryGetElement(k) is { } ele)
+                {
+                    actualElement = ele;
+                }
+                else
+                {
+                    actualElement = LyricBox.GetOrCreateElement(k) as Border;
+                    isNewLoaded = true;
+                }
+                    
+                
+                var lyricItem = (actualElement as Border)?.FindName("LyricWrapper") as LyricItemWrapper;
+                if (isNewLoaded && lyricItem != null)
+                {
+                    lyricItem.IsShow = true;
+                }
+
+                if (actualElement != null && lyricItem != null &&
                     !string.IsNullOrEmpty(lyricItem.SongLyric.LyricLine.CurrentLyric))
                 {
-                    ele.UpdateLayout();
-                    ele.StartBringIntoView(DefaultBringIntoViewOptions);
+                    actualElement.UpdateLayout();
+                    DefaultBringIntoViewOptions.AnimationDesired = !isNewLoaded;
+                    actualElement.StartBringIntoView(DefaultBringIntoViewOptions);
+                    if (isNewLoaded && !recursionLock)
+                    {
+                        UpdateFocusingLyric(true);
+                    }
                 }
             }
             catch
