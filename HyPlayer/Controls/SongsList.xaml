@@ -295,15 +295,17 @@
                                             FontSize="14"
                                             Foreground="Gray"
                                             Text="{x:Bind ConvertTranslate(transname)}" />
-                                        <Image
+                                        <BitmapIcon
                                             Height="20"
-                                            Source="/Assets/cloud.png"
-                                            Visibility="{x:Bind IsCloud}" />
-                                        <Image
+                                            UriSource="/Assets/cloud.png"
+                                            Visibility="{x:Bind IsCloud}" 
+                                            Foreground="DeepSkyBlue"/>
+                                        <BitmapIcon
                                             Height="20"
                                             Margin="0,2,0,0"
-                                            Source="/Assets/vip.png"
-                                            Visibility="{x:Bind IsVip}" />
+                                            UriSource="/Assets/vip.png"
+                                            Visibility="{x:Bind IsVip}" 
+                                            Foreground="Red"/>
                                     </StackPanel>
                                 </Grid>
                             </StackPanel>

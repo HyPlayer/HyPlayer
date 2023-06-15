@@ -81,6 +81,7 @@ public sealed partial class SongListDetail : Page, IDisposable
             await result.Content.WriteToStreamAsync(stream);
             _cancellationToken.ThrowIfCancellationRequested();
             var buffer = new Buffer(MIMEHelper.PICTURE_FILE_HEADER_CAPACITY);
+            stream.Seek(0);
             await stream.ReadAsync(buffer, MIMEHelper.PICTURE_FILE_HEADER_CAPACITY, InputStreamOptions.None);
             var mime = MIMEHelper.GetPictureCodecFromBuffer(buffer);
             var decoder = await BitmapDecoder.CreateAsync(mime, stream);

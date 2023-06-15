@@ -92,7 +92,6 @@ public static class HyPlayList
     private static readonly BackgroundDownloader Downloader = new();
     public static InMemoryRandomAccessStream CoverStream = new InMemoryRandomAccessStream();
     public static int NowPlayingHashCode = 0;
-    public static RandomAccessStreamReference CoverStreamRefrence = RandomAccessStreamReference.CreateFromStream(CoverStream);
     private static InMemoryRandomAccessStream _ncmPlayableStream;
     private static string _ncmPlayableStreamMIMEType = string.Empty;
     private static MediaSource _mediaSource;
@@ -231,7 +230,6 @@ public static class HyPlayList
         };
         MediaSystemControls = SystemMediaTransportControls.GetForCurrentView();
         _controlsDisplayUpdater = MediaSystemControls.DisplayUpdater;
-        _controlsDisplayUpdater.Thumbnail = CoverStreamRefrence;
         Player.CommandManager.IsEnabled = Common.Setting.ancientSMTC;
         MediaSystemControls.IsPlayEnabled = true;
         MediaSystemControls.IsPauseEnabled = true;
@@ -451,7 +449,7 @@ public static class HyPlayList
             encStream.CopyTo(targetSongDataStream);
             _ncmPlayableStream = songDataStream;
             NowPlayingStorageFile = targetItem.PlayItem.DontSetLocalStorageFile;
-            _ncmPlayableStreamMIMEType = NCMFile.NCMFileMIMEType[info.format];
+            _ncmPlayableStreamMIMEType = MIMEHelper.GetNCMFileMimeType(info.format);
         }
     }
 
@@ -1221,7 +1219,6 @@ public static class HyPlayList
             return;
         }
         var hashCodeWhenRequested = NowPlayingHashCode;
-        using var streamWhenRequested = CoverStream.CloneStream();
         var playItemWhenRequested = NowPlayingItem;
         _ = SongFadeRequest(SongFadeEffectType.NextFadeIn);
         //当加载一个新的播放文件时,此时你应当加载歌词和 SystemMediaTransportControls
@@ -1235,6 +1232,7 @@ public static class HyPlayList
             _controlsDisplayUpdater.MusicProperties.TrackNumber = (uint)NowPlaying;
             _controlsDisplayUpdater.MusicProperties.AlbumTrackCount = (uint)List.Count;
             _controlsDisplayUpdater.MusicProperties.Genres.Clear();
+            _controlsDisplayUpdater.Thumbnail = null;
             if (NowPlayingItem.ItemType == HyPlayItemType.Netease)
                 _controlsDisplayUpdater.MusicProperties.Genres.Add("NCM-" + NowPlayingItem.PlayItem.Id);
             // 第一次刷新, 以便热词切歌词
@@ -1269,7 +1267,7 @@ public static class HyPlayList
             if (hashCodeWhenRequested == NowPlayingHashCode)
             {
                 CoverStream.Seek(0);
-                _ = RefreshTile(hashCodeWhenRequested, playItemWhenRequested, CoverStream);
+                await RefreshTile(hashCodeWhenRequested, playItemWhenRequested, CoverStream);
             }
             if (hashCodeWhenRequested == NowPlayingHashCode)
             {
@@ -1347,7 +1345,7 @@ public static class HyPlayList
             if (targetItem?.PlayItem == null || !Common.Setting.enableTile) return;
             string fileName = targetItem.PlayItem.IsLocalFile ? null
                 : targetItem.PlayItem.Album.id;
-            bool coverStreamIsAvailable = CoverStream.Size != 0 && fileName != null && fileName != "0" && NowPlayingHashCode == hashCode;
+            bool coverStreamIsAvailable = coverStream.Size != 0 && fileName != null && fileName != "0" && NowPlayingHashCode == hashCode;
             bool localCoverIsAvailable = false;
             string downloadLink = string.Empty;
             if (Common.Setting.saveTileBackgroundToLocalFolder
@@ -1365,6 +1363,7 @@ public static class HyPlayList
                 {
                     using var outputStream = await storageFile.OpenAsync(FileAccessMode.ReadWrite);
                     var buffer = new Buffer(MIMEHelper.PICTURE_FILE_HEADER_CAPACITY);
+                    coverStream.Seek(0);
                     await coverStream.ReadAsync(buffer, MIMEHelper.PICTURE_FILE_HEADER_CAPACITY, InputStreamOptions.None);
                     var mime = MIMEHelper.GetPictureCodecFromBuffer(buffer);
                     BitmapDecoder decoder = await BitmapDecoder.CreateAsync(mime, coverStream);

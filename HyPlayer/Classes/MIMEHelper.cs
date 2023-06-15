@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
@@ -10,6 +11,22 @@ namespace HyPlayer.Classes
 {
     public static class MIMEHelper
     {
+        public static Dictionary<string, string> NCMFileMIMEType = new Dictionary<string, string>()
+    {
+        {"mp3","audio/mpeg" },
+        {"flac","audio/x-flac" }
+    };
+        public static string GetNCMFileMimeType(string fileExtension)
+        {
+            if (NCMFileMIMEType.TryGetValue(fileExtension, out var mimeType))
+            {
+                return mimeType;
+            }
+            else
+            {
+                throw new ArgumentException();
+            }
+        }
         public static readonly uint PICTURE_FILE_HEADER_CAPACITY = 10;
         public static async Task<Guid> GetPictureCodecFromStream(IRandomAccessStream stream)
         {

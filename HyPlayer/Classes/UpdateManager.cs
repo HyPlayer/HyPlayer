@@ -65,7 +65,7 @@ public static class UpdateManager
             new Uri($"https://hyplayer.kengwang.com.cn/Channel/{(isCanary ? 2 : 3)}/latest"));
         if (!versionsResponse.Succeeded)
         {
-            Common.AddToTeachingTipLists("获取更新失败", await versionsResponse.ResponseMessage.Content.ReadAsStringAsync());
+            Common.AddToTeachingTipLists("获取更新失败", $"HTTP状态码:{versionsResponse.ResponseMessage.StatusCode}");
             throw new Exception("获取更新失败");
         }
 

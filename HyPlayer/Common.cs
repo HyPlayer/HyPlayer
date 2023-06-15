@@ -93,7 +93,6 @@ namespace HyPlayer
         private static bool _isExpanded = false;
 #nullable enable
         public static TeachingTip? GlobalTip;
-        private static object? previousNavigationItem;
         public static EnterForegroundFromBackgroundEvent? OnEnterForegroundFromBackground;
         public static PlaybarVisibilityChangedEvent? OnPlaybarVisibilityChanged;
         public static readonly Queue<KeyValuePair<string, string?>> TeachingTipList = new();
