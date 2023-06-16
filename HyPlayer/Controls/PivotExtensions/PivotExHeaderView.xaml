@@ -179,25 +179,25 @@
                                                         Storyboard.TargetName="BorderBackground"
                                                         Storyboard.TargetProperty="Fill">
                                                         <DiscreteObjectKeyFrame KeyTime="0"
-                                                            Value="{ThemeResource ListViewItemBackgroundPressed}" />
+                                                            Value="{ThemeResource ListViewItemBackgroundPointerOver}" />
                                                     </ObjectAnimationUsingKeyFrames>
                                                     <ObjectAnimationUsingKeyFrames
                                                         Storyboard.TargetName="ContentPresenter"
                                                         Storyboard.TargetProperty="Foreground">
                                                         <DiscreteObjectKeyFrame KeyTime="0"
-                                                            Value="{ThemeResource ListViewItemForegroundPressed}" />
+                                                            Value="{ThemeResource ListViewItemForegroundPointerOver}" />
                                                     </ObjectAnimationUsingKeyFrames>
                                                     <ObjectAnimationUsingKeyFrames
                                                         Storyboard.TargetName="MultiSelectSquare"
                                                         Storyboard.TargetProperty="BorderBrush">
                                                         <DiscreteObjectKeyFrame KeyTime="0"
-                                                            Value="{ThemeResource ListViewItemForegroundPressed}" />
+                                                            Value="{ThemeResource ListViewItemForegroundPointerOver}" />
                                                     </ObjectAnimationUsingKeyFrames>
                                                     <ObjectAnimationUsingKeyFrames
                                                         Storyboard.TargetName="MultiSelectCheck"
                                                         Storyboard.TargetProperty="Foreground">
                                                         <DiscreteObjectKeyFrame KeyTime="0"
-                                                            Value="{ThemeResource ListViewItemForegroundPressed}" />
+                                                            Value="{ThemeResource ListViewItemForegroundPointerOver}" />
                                                     </ObjectAnimationUsingKeyFrames>
                                                 </Storyboard>
                                             </VisualState>
@@ -303,46 +303,33 @@
                                             <VisualState x:Name="PressedSelected">
 
                                                 <Storyboard>
-                                                    <DoubleAnimation Storyboard.TargetName="MultiSelectCheck"
-                                                                     Storyboard.TargetProperty="Opacity"
-                                                                     Duration="0:0:0"
-                                                                     To="1" />
                                                     <DoubleAnimation Storyboard.TargetName="BorderBackground"
                                                                      Storyboard.TargetProperty="Opacity"
                                                                      Duration="0"
                                                                      To="1" />
-                                                    <DoubleAnimation Storyboard.TargetName="SelectionIndicator"
-                                                                     Storyboard.TargetProperty="Opacity"
-                                                                     Duration="0"
-                                                                     To="1" />
-                                                    <DoubleAnimation
-                                                        Storyboard.TargetName="SelectionIndicatorTransform"
-                                                        Storyboard.TargetProperty="ScaleX"
-                                                        Duration="0"
-                                                        To="1" />
                                                     <ObjectAnimationUsingKeyFrames
                                                         Storyboard.TargetName="BorderBackground"
                                                         Storyboard.TargetProperty="Fill">
                                                         <DiscreteObjectKeyFrame KeyTime="0"
-                                                            Value="{ThemeResource ListViewItemBackgroundPressed}" />
+                                                            Value="{ThemeResource ListViewItemBackgroundPointerOver}" />
                                                     </ObjectAnimationUsingKeyFrames>
                                                     <ObjectAnimationUsingKeyFrames
                                                         Storyboard.TargetName="ContentPresenter"
                                                         Storyboard.TargetProperty="Foreground">
                                                         <DiscreteObjectKeyFrame KeyTime="0"
-                                                            Value="{ThemeResource ListViewItemForegroundPressed}" />
+                                                            Value="{ThemeResource ListViewItemForegroundPointerOver}" />
                                                     </ObjectAnimationUsingKeyFrames>
                                                     <ObjectAnimationUsingKeyFrames
                                                         Storyboard.TargetName="MultiSelectSquare"
                                                         Storyboard.TargetProperty="BorderBrush">
                                                         <DiscreteObjectKeyFrame KeyTime="0"
-                                                            Value="{ThemeResource ListViewItemForegroundPressed}" />
+                                                            Value="{ThemeResource ListViewItemForegroundPointerOver}" />
                                                     </ObjectAnimationUsingKeyFrames>
                                                     <ObjectAnimationUsingKeyFrames
                                                         Storyboard.TargetName="MultiSelectCheck"
                                                         Storyboard.TargetProperty="Foreground">
                                                         <DiscreteObjectKeyFrame KeyTime="0"
-                                                            Value="{ThemeResource ListViewItemForegroundPressed}" />
+                                                            Value="{ThemeResource ListViewItemForegroundPointerOver}" />
                                                     </ObjectAnimationUsingKeyFrames>
                                                 </Storyboard>
                                             </VisualState>
@@ -642,7 +629,6 @@
                                     </VisualStateManager.VisualStateGroups>
                                     <Rectangle x:Name="BorderBackground"
                                                IsHitTestVisible="False"
-                                               Fill="{ThemeResource ListViewItemBorderBackground}"
                                                Opacity="0"
                                                Control.IsTemplateFocusTarget="True" />
                                     <Grid x:Name="ContentPresenterGrid" Background="Transparent" Margin="0,0,0,0">
@@ -704,9 +690,7 @@
                                             Height="20"
                                             VerticalAlignment="Center"
                                             HorizontalAlignment="Left"
-                                            Background="{ThemeResource ListViewItemMultiArrangeOverlayTextBackground}"
-                                            BorderThickness="2"
-                                            BorderBrush="{ThemeResource ListViewItemMultiArrangeOverlayTextBorder}">
+                                            BorderThickness="2">
                                         <TextBlock x:Name="MultiArrangeOverlayText"
                                                    Text="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TemplateSettings.DragItemsCount}"
                                                    Style="{ThemeResource CaptionTextBlockStyle}"

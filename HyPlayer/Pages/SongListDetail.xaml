@@ -40,6 +40,10 @@
         </Grid.RowDefinitions>
         <controls2:ProgressRing
             Grid.Row="0"
+            Height="100"
+            Width="100"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
             IsActive="True"
             Visibility="{x:Bind IsLoading, Mode=OneWay}" />
         <controls1:SongsList

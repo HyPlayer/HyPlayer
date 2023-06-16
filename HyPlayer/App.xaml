@@ -22,6 +22,11 @@
             <Thickness x:Key="NavigationViewContentMargin">0,48,0,0</Thickness>
             <Thickness x:Key="NavigationViewContentGridBorderThickness">1,1,0,0</Thickness>
             <CornerRadius x:Key="NavigationViewContentGridCornerRadius">8,0,0,0</CornerRadius>
+            <SolidColorBrush x:Key="NavigationViewTopPaneBackground" Color="Transparent"/>
+            <StaticResource x:Key="ListViewItemBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
+            <SolidColorBrush x:Key="SubtleFillColorTertiaryBrush" Color="{StaticResource SubtleFillColorTertiary}" />
+            <Color x:Key="SubtleFillColorTertiary">#0AFFFFFF</Color>
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

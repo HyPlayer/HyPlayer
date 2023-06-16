@@ -46,7 +46,7 @@
                         </Grid.ColumnDefinitions>
                         <muxc:NavigationView
                             x:Name="ToolbarNavigationView"
-                            Margin="15,4,0,0"
+                            Margin="16,4,16,0"
                             IsBackButtonVisible="Collapsed"
                             IsSettingsVisible="False"
                             ItemInvoked="ToolbarNavigationView_ItemInvoked"
