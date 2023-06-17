@@ -91,6 +91,7 @@ public static class HyPlayList
     private static SystemMediaTransportControlsDisplayUpdater _controlsDisplayUpdater;
     private static readonly BackgroundDownloader Downloader = new();
     public static InMemoryRandomAccessStream CoverStream = new InMemoryRandomAccessStream();
+    public static RandomAccessStreamReference CoverStreamReference = RandomAccessStreamReference.CreateFromStream(CoverStream);
     public static int NowPlayingHashCode = 0;
     private static InMemoryRandomAccessStream _ncmPlayableStream;
     private static string _ncmPlayableStreamMIMEType = string.Empty;
@@ -1273,7 +1274,7 @@ public static class HyPlayList
             {
                 // RASR 罪大恶极，害的磁贴怨声载道
                 CoverStream.Seek(0);
-                _controlsDisplayUpdater.Thumbnail = RandomAccessStreamReference.CreateFromStream(CoverStream);
+                _controlsDisplayUpdater.Thumbnail = CoverStreamReference;
                 _controlsDisplayUpdater.Update();
             }
             //这里要判断这么多次的原因在于如果只判断一次的话，后面如果切歌是无法知晓的。所以只能用这个蠢方法
