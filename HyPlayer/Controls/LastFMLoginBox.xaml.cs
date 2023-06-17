@@ -28,7 +28,7 @@ namespace HyPlayer.Controls
         {
             LastFMManager.OnLoginError -= OnLoginError;
             LastFMManager.OnLoginDone -= OnLoginDone;
-            return;
+            Hide();
         }
         private void TextBoxAccount_OnKeyDown(object sender, KeyRoutedEventArgs e)
         {
