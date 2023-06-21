@@ -1382,6 +1382,10 @@ public static class HyPlayList
                         localCoverIsAvailable = true;
                     }
                 }
+                else
+                {
+                    localCoverIsAvailable = true;
+                }
             }
             var cover = Common.Setting.tileBackgroundAvailability && !targetItem.PlayItem.IsLocalFile && localCoverIsAvailable
                 ? new TileBackgroundImage()
