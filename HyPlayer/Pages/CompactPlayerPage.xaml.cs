@@ -118,7 +118,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
 
     private void HyPlayList_OnPlayPositionChange(TimeSpan position)
     {
-        _ = Common.Invoke(() =>
+        _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
         {
             NowProgress = position.TotalMilliseconds;
             if (HyPlayList.FadeProcessStatus && !HyPlayList.AutoFadeProcessing)
@@ -165,7 +165,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
 
     private void HyPlayList_OnSongLikeStatusChange(bool isLiked)
     {
-        _ = Common.Invoke(() =>
+        _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
         {
             IconLiked.Foreground = isLiked
                 ? new SolidColorBrush(Colors.Red)
@@ -236,7 +236,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     }
     private void ChangeLyric()
     {
-        _ = Common.Invoke(() =>
+        _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
         {
 
             WordTextBlocks.Clear();
@@ -303,7 +303,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
 
     private void OnChangePlayItem(HyPlayItem item)
     {
-        _ = Common.Invoke(() =>
+        _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
         {
             NowPlayingName = item?.PlayItem?.Name;
             NowPlayingArtists = item?.PlayItem?.ArtistString;
@@ -315,7 +315,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         if (item.ItemType is not HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
         {
             var isLiked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
-            _ = Common.Invoke(() =>
+            _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
                 IconLiked.Foreground = isLiked
                     ? new SolidColorBrush(Colors.Red)
@@ -330,7 +330,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     public void RefreshWordColor(TimeSpan position)
     {
         if (!_lyricIsKaraokeLyric) return;
-        _ = Common.Invoke(() =>
+        _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
         {
             var playedWords =
                 ((KaraokeLyricsLine)Lrc.LyricLine).WordInfos.Where(word => word.StartTime <= position).ToList();
@@ -411,7 +411,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
             {
             }
             HyPlayList.OnPlayPositionChange -=
-            position => _ = Common.Invoke(() => NowProgress = position.TotalMilliseconds);
+            position => _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => NowProgress = position.TotalMilliseconds);
             HyPlayList.OnPlayItemChange -= OnChangePlayItem;
             HyPlayList.OnSongCoverChanged -= HyPlayList_OnSongCoverChanged;
             HyPlayList.OnLyricChange -= OnLyricChanged;
