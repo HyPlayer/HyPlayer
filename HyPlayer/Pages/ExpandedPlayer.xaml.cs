@@ -112,7 +112,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     {
         _ = Common.Invoke(() =>
         {
-            if (!Common.IsInImmerssiveMode)
+            if (!Common.IsInImmersiveMode)
             {
                 if (Common.Setting.albumRotate)
                     //网易云音乐圆形唱片
@@ -370,7 +370,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         base.OnNavigatedTo(e);
         Common.IsInBackground = false;
         Common.PageExpandedPlayer = this;
-        Common.IsInImmerssiveMode = false;
+        Common.IsInImmersiveMode = false;
         Window.Current.SetTitleBar(AppTitleBar);
         if (Common.Setting.lyricAlignment)
         {
@@ -490,7 +490,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     actualElement.UpdateLayout();
                     if (!isNewLoaded)
                     {
-                        if (Common.IsInImmerssiveMode)
+                        if (Common.IsInImmersiveMode)
                         {
                             LyricBoxContainer.ChangeView(0,actualElement.ActualOffset.Y + LyricBoxContainer.ActualHeight - actualElement.ActualSize.Y , 1, false);
 
@@ -993,7 +993,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 break;
         }
 
-        if (!Common.IsInImmerssiveMode)
+        if (!Common.IsInImmersiveMode)
         {
             if (Common.Setting.albumRotate)
                 //网易云音乐圆形唱片
@@ -1218,7 +1218,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         time.Reset();
         MainGrid.Margin = new Thickness(0, 0, 0, 80);
         LyricBoxContainer.Margin = new Thickness(0);
-        if (Common.IsInImmerssiveMode)
+        if (Common.IsInImmersiveMode)
         {
             DefaultRow.Height = new GridLength(1.1, GridUnitType.Star);
             LyricBoxContainer.Margin = new Thickness(0);
@@ -1252,7 +1252,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             {
                 MainGrid.Margin = new Thickness(0);
                 LyricBoxContainer.Margin = new Thickness(0, 0, 0, -60);
-                if (Common.IsInImmerssiveMode)
+                if (Common.IsInImmersiveMode)
                 {
                     DefaultRow.Height = new GridLength(1.35, GridUnitType.Star);
                     LyricBoxContainer.Margin = new Thickness(0, 0, 0, -30);
@@ -1327,7 +1327,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             ImageAlbumAni.Pause();
         ImmersiveModeInAni.Begin();
         LeftPanel.VerticalAlignment = VerticalAlignment.Bottom;
-        Common.IsInImmerssiveMode = true;
+        Common.IsInImmersiveMode = true;
     }
 
     private void ImmersiveModeExit()
@@ -1345,7 +1345,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             ImageAlbumAni.Begin();
         ImmersiveModeOutAni.Begin();
         LeftPanel.VerticalAlignment = VerticalAlignment.Top;
-        Common.IsInImmerssiveMode = false;
+        Common.IsInImmersiveMode = false;
     }
 }
 
