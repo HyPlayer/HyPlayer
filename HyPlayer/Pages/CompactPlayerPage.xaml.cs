@@ -11,6 +11,7 @@ using Windows.Storage.Streams;
 using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.ViewManagement;
+using Windows.UI.WindowManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Documents;
@@ -377,15 +378,16 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         using var coverStream = HyPlayList.CoverStream.CloneStream();
         await HyPlayList_OnSongCoverChanged(HyPlayList.NowPlayingHashCode, coverStream);
         PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uEDB4" : "\uEDB5";
-        Common.BarPlayBar.Visibility = Visibility.Collapsed;
-        Window.Current.SetTitleBar(MainGrid);
+        //Common.BarPlayBar.Visibility = Visibility.Collapsed;
+        (e.Parameter as AppWindow).TitleBar.ExtendsContentIntoTitleBar = true;
+        //Window.Current.SetTitleBar(MainGrid);
     }
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
         Dispose();
-        Common.BarPlayBar.Visibility = Visibility.Visible;
+        //Common.BarPlayBar.Visibility = Visibility.Visible;
     }
 
     private void OnRightTapped(object sender, RightTappedRoutedEventArgs e)
@@ -401,7 +403,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     private void ExitButton_Click(object sender, RoutedEventArgs e)
     {
         _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
-        Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer));
+        Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer), false);
     }
 
     private void Dispose(bool disposing)

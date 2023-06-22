@@ -20,8 +20,10 @@ using Windows.Storage.Streams;
 using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.ViewManagement;
+using Windows.UI.WindowManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
@@ -371,7 +373,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         Common.IsInBackground = false;
         Common.PageExpandedPlayer = this;
         Common.IsInImmerssiveMode = false;
-        Window.Current.SetTitleBar(AppTitleBar);
+        if (e.Parameter is null || (bool)e.Parameter)
+            Window.Current.SetTitleBar(AppTitleBar);
         if (Common.Setting.lyricAlignment)
         {
             ToggleButtonTranslation.HorizontalAlignment = HorizontalAlignment.Left;
@@ -430,7 +433,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             VerticalAlignmentRatio = 0.5,
             AnimationDesired = true,
         };
-    
+
     private readonly BringIntoViewOptions NoAnimationBringIntoViewOptions =
         new BringIntoViewOptions()
         {
@@ -492,12 +495,12 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     {
                         if (Common.IsInImmerssiveMode)
                         {
-                            LyricBoxContainer.ChangeView(0,actualElement.ActualOffset.Y + LyricBoxContainer.ActualHeight - actualElement.ActualSize.Y , 1, false);
+                            LyricBoxContainer.ChangeView(0, actualElement.ActualOffset.Y + LyricBoxContainer.ActualHeight - actualElement.ActualSize.Y, 1, false);
 
                         }
                         else
                         {
-                            LyricBoxContainer.ChangeView(0,actualElement.ActualOffset.Y + LyricBoxContainer.ActualHeight/4 - actualElement.ActualSize.Y , 1, false);
+                            LyricBoxContainer.ChangeView(0, actualElement.ActualOffset.Y + LyricBoxContainer.ActualHeight / 4 - actualElement.ActualSize.Y, 1, false);
                         }
                     }
                     else
@@ -954,10 +957,16 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         _ = new LyricShareDialog { Lyrics = HyPlayList.Lyrics }.ShowAsync();
     }
 
-    private void BtnToggleTinyModeClick(object sender, RoutedEventArgs e)
+    private async void BtnToggleTinyModeClick(object sender, RoutedEventArgs e)
     {
-        _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.CompactOverlay);
-        Common.PageMain.ExpandedPlayer.Navigate(typeof(CompactPlayerPage));
+        AppWindow expandedPlayerWindow = await AppWindow.TryCreateAsync();
+        expandedPlayerWindow.Presenter.RequestPresentation(AppWindowPresentationKind.CompactOverlay);
+        Frame expandedPlayerWindowContentFrame = new Frame();
+        expandedPlayerWindowContentFrame.Navigate(typeof(CompactPlayerPage), expandedPlayerWindow);
+        ElementCompositionPreview.SetAppWindowContent(expandedPlayerWindow, expandedPlayerWindowContentFrame);
+        await expandedPlayerWindow.TryShowAsync();
+
+        //Common.PageMain.ExpandedPlayer.Navigate(typeof(CompactPlayerPage));
     }
 
     private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)
@@ -1034,37 +1043,37 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
                 break;
             case 0 when Math.Abs(e.Cumulative.Translation.Y) > Math.Abs(e.Cumulative.Translation.X):
-            {
-                // 竖直方向滑动
-                if (e.Cumulative.Translation.Y >= 0)
-                    Common.PageMain.ExpandedPlayerPositionOffset.Y = e.Cumulative.Translation.Y;
-                else
                 {
-                    ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;
-                }
+                    // 竖直方向滑动
+                    if (e.Cumulative.Translation.Y >= 0)
+                        Common.PageMain.ExpandedPlayerPositionOffset.Y = e.Cumulative.Translation.Y;
+                    else
+                    {
+                        ImagePositionOffset.Y = e.Cumulative.Translation.Y / 10;
+                    }
 
-                if (e.Cumulative.Translation.Y > 200)
-                {
-                    e.Complete();
-                    await Common.BarPlayBar.CollapseExpandedPlayer();
-                }
+                    if (e.Cumulative.Translation.Y > 200)
+                    {
+                        e.Complete();
+                        await Common.BarPlayBar.CollapseExpandedPlayer();
+                    }
 
-                break;
-            }
+                    break;
+                }
             case 0:
-            {
-                ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
-                if (e.Cumulative.Translation.X > 400)
                 {
-                    e.Complete();
-                }
-                else if (e.Cumulative.Translation.X < -400)
-                {
-                    e.Complete();
-                }
+                    ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
+                    if (e.Cumulative.Translation.X > 400)
+                    {
+                        e.Complete();
+                    }
+                    else if (e.Cumulative.Translation.X < -400)
+                    {
+                        e.Complete();
+                    }
 
-                break;
-            }
+                    break;
+                }
         }
     }
 
@@ -1105,7 +1114,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     if (Common.Setting.expandedPlayerBackgroundType == 0 && Background?.GetType() != typeof(ImageBrush))
                     {
                         var brush = new ImageBrush
-                                    { Stretch = Stretch.UniformToFill };
+                        { Stretch = Stretch.UniformToFill };
                         Background = brush;
                         brush.ImageSource = (ImageSource)ImageAlbum.Source;
                     }
@@ -1225,11 +1234,11 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         }
 
         var BtnAni = new DoubleAnimation
-                     {
-                         To = 1,
-                         EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
-                         EnableDependentAnimation = true
-                     };
+        {
+            To = 1,
+            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+            EnableDependentAnimation = true
+        };
         var storyboard = new Storyboard();
         Storyboard.SetTarget(BtnAni, MoreBtn);
         Storyboard.SetTargetProperty(BtnAni, "Opacity");
@@ -1259,11 +1268,11 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 }
 
                 var BtnAni = new DoubleAnimation
-                             {
-                                 To = 0,
-                                 EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
-                                 EnableDependentAnimation = true
-                             };
+                {
+                    To = 0,
+                    EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+                    EnableDependentAnimation = true
+                };
                 var storyboard = new Storyboard();
                 Storyboard.SetTarget(BtnAni, MoreBtn);
                 Storyboard.SetTargetProperty(BtnAni, "Opacity");
