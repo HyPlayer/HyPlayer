@@ -79,7 +79,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private bool realclick;
     private int sclock;
     private ExpandedWindowMode WindowMode;
-
+    private AppWindow expandedPlayerWindow;
     public Windows.UI.Color? albumMainColor;
     private bool disposedValue;
     public System.Diagnostics.Stopwatch time = new System.Diagnostics.Stopwatch();
@@ -959,15 +959,29 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private async void BtnToggleTinyModeClick(object sender, RoutedEventArgs e)
     {
-        AppWindow expandedPlayerWindow = await AppWindow.TryCreateAsync();
-        expandedPlayerWindow.Presenter.RequestPresentation(AppWindowPresentationKind.CompactOverlay);
-        Frame expandedPlayerWindowContentFrame = new Frame();
-        expandedPlayerWindowContentFrame.Navigate(typeof(CompactPlayerPage), expandedPlayerWindow);
-        ElementCompositionPreview.SetAppWindowContent(expandedPlayerWindow, expandedPlayerWindowContentFrame);
-        await expandedPlayerWindow.TryShowAsync();
+        try
+        {
+            expandedPlayerWindow.GetDisplayRegions();//判断窗口状态
+        }
+        catch
+        {
+            expandedPlayerWindow = await AppWindow.TryCreateAsync();
+
+        }
+        if(BtnToggleTinyMode.IsChecked)
+        {
+            expandedPlayerWindow.Presenter.RequestPresentation(AppWindowPresentationKind.CompactOverlay);
+            Frame expandedPlayerWindowContentFrame = new Frame();
+            expandedPlayerWindowContentFrame.Navigate(typeof(CompactPlayerPage), expandedPlayerWindow);
+            ElementCompositionPreview.SetAppWindowContent(expandedPlayerWindow, expandedPlayerWindowContentFrame);
+            await expandedPlayerWindow.TryShowAsync();
+        }
+        else await expandedPlayerWindow.CloseAsync();
 
         //Common.PageMain.ExpandedPlayer.Navigate(typeof(CompactPlayerPage));
     }
+
+
 
     private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)
     {

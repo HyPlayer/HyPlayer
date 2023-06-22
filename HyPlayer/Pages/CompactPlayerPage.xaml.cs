@@ -230,11 +230,8 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     {
         if (HyPlayList.LyricPos == -1) return;
         if (HyPlayList.Lyrics.Count <= HyPlayList.LyricPos) return;
+        _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { LeaveAnimation.Begin(); });
 
-        _ = Common.Invoke(() =>
-        {
-            LeaveAnimation.Begin();
-        });
 
     }
     private void ChangeLyric()
@@ -403,7 +400,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     private void ExitButton_Click(object sender, RoutedEventArgs e)
     {
         _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.Default);
-        Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer), false);
+        //Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer), false);
     }
 
     private void Dispose(bool disposing)
@@ -433,5 +430,16 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     {
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
+    }
+
+    private void Grid_PointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        OnPlaybarVisibilityChanged(true);
+
+    }
+
+    private void Grid_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        OnPlaybarVisibilityChanged(false);
     }
 }
