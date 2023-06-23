@@ -959,31 +959,41 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private async void BtnToggleTinyModeClick(object sender, RoutedEventArgs e)
     {
-        try
-        {
-            expandedPlayerWindow.GetDisplayRegions();//判断窗口状态
-        }
-        catch
+        if(expandedPlayerWindow is null)//判断窗口状态
         {
             expandedPlayerWindow = await AppWindow.TryCreateAsync();
-
+            expandedPlayerWindow.Closed += ExpandedPlayerClosed;
         }
-        if(BtnToggleTinyMode.IsChecked)
+
+        if (BtnToggleTinyMode.IsChecked)
         {
-            expandedPlayerWindow.Presenter.RequestPresentation(AppWindowPresentationKind.CompactOverlay);
             Frame expandedPlayerWindowContentFrame = new Frame();
             expandedPlayerWindowContentFrame.Navigate(typeof(CompactPlayerPage), expandedPlayerWindow);
             ElementCompositionPreview.SetAppWindowContent(expandedPlayerWindow, expandedPlayerWindowContentFrame);
             expandedPlayerWindow.TitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
             expandedPlayerWindow.TitleBar.ButtonBackgroundColor = Colors.Transparent;
-            await expandedPlayerWindow.TryShowAsync();
+            if(expandedPlayerWindow.Presenter.RequestPresentation(AppWindowPresentationKind.CompactOverlay))
+            {
+                await expandedPlayerWindow.TryShowAsync();
+            }
+            else
+            {
+                throw new Exception();
+            }
         }
-        else await expandedPlayerWindow.CloseAsync();
+        else
+        {
+            await expandedPlayerWindow.CloseAsync();
+        }
 
-        //Common.PageMain.ExpandedPlayer.Navigate(typeof(CompactPlayerPage));
+            //Common.PageMain.ExpandedPlayer.Navigate(typeof(CompactPlayerPage));
+        }
+
+    private void ExpandedPlayerClosed(AppWindow sender, AppWindowClosedEventArgs args)
+    {
+        BtnToggleTinyMode.IsChecked = false;
+        expandedPlayerWindow = null;
     }
-
-
 
     private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)
     {
