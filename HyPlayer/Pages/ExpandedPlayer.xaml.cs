@@ -974,6 +974,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             Frame expandedPlayerWindowContentFrame = new Frame();
             expandedPlayerWindowContentFrame.Navigate(typeof(CompactPlayerPage), expandedPlayerWindow);
             ElementCompositionPreview.SetAppWindowContent(expandedPlayerWindow, expandedPlayerWindowContentFrame);
+            expandedPlayerWindow.TitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+            expandedPlayerWindow.TitleBar.ButtonBackgroundColor = Colors.Transparent;
             await expandedPlayerWindow.TryShowAsync();
         }
         else await expandedPlayerWindow.CloseAsync();
