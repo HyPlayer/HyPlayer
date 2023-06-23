@@ -972,14 +972,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             ElementCompositionPreview.SetAppWindowContent(expandedPlayerWindow, expandedPlayerWindowContentFrame);
             expandedPlayerWindow.TitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
             expandedPlayerWindow.TitleBar.ButtonBackgroundColor = Colors.Transparent;
-            if(expandedPlayerWindow.Presenter.RequestPresentation(AppWindowPresentationKind.CompactOverlay))
-            {
-                await expandedPlayerWindow.TryShowAsync();
-            }
-            else
-            {
-                throw new Exception();
-            }
+            await expandedPlayerWindow.TryShowAsync();
+            expandedPlayerWindow.Presenter.RequestPresentation(AppWindowPresentationKind.CompactOverlay);
         }
         else
         {
