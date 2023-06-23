@@ -1319,7 +1319,7 @@ public static class HyPlayList
             }
             else
             {
-                string param = Common.IsInImmerssiveMode ? StaticSource.PICSIZE_IMMERSIVEMODE_COVER : StaticSource.PICSIZE_AUDIO_PLAYER_COVER;
+                string param = Common.IsInImmersiveMode ? StaticSource.PICSIZE_IMMERSIVEMODE_COVER : StaticSource.PICSIZE_AUDIO_PLAYER_COVER;
                 using var result = await Common.HttpClient.GetAsync(new Uri(NowPlayingItem.PlayItem.Album.cover + "?param=" + param));
                 if (!result.IsSuccessStatusCode)
                 {
