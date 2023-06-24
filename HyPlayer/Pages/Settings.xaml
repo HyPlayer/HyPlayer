@@ -944,10 +944,10 @@
                                                 x:Name="TextBoxCacheDir"
                                                 Width="256"
                                                 IsEnabled="{x:Bind hyplayer:Common.Setting.enableCache, Mode=OneWay}"
-                                                Text="{x:Bind hyplayer:Common.Setting.cacheDir, Mode=TwoWay}" />
+                                                Text="{x:Bind hyplayer:Common.Setting.cacheDir, Mode=OneWay}" />
                                             <Button
                                                 x:Name="ButtonCacheSelect"
-                                                Click="ButtonSearchingSelect_OnClick"
+                                                Click="ButtonCacheSelect_OnClick"
                                                 Content="选择"
                                                 IsEnabled="{x:Bind hyplayer:Common.Setting.enableCache, Mode=OneWay}" />
                                         </StackPanel>

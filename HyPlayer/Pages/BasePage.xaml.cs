@@ -317,21 +317,21 @@ public sealed partial class BasePage : Page
             Common.LoginedUser = NCUser.CreateFromJson(LoginStatus["profile"]);
         else
             Common.LoginedUser = new NCUser
-                                 {
-                                     avatar = "ms-appx:///Assets/icon.png",
-                                     id = LoginStatus["account"]["id"].ToString(),
-                                     name = LoginStatus["account"]["userName"].ToString(),
-                                     signature = "此账号未进行手机号验证, 请使用网易云音乐客户端登录后再继续操作"
-                                 };
+            {
+                avatar = "ms-appx:///Assets/icon.png",
+                id = LoginStatus["account"]["id"].ToString(),
+                name = LoginStatus["account"]["userName"].ToString(),
+                signature = "此账号未进行手机号验证, 请使用网易云音乐客户端登录后再继续操作"
+            };
 
         Common.Logined = true;
         NavItemLogin.Content = Common.LoginedUser.name;
         NavItemLogin.Icon = new BitmapIcon
-                            {
-                                UriSource = new Uri(Common.LoginedUser.avatar + "?param=" +
+        {
+            UriSource = new Uri(Common.LoginedUser.avatar + "?param=" +
                                                     StaticSource.PICSIZE_NAVITEM_USERAVATAR),
-                                ShowAsMonochrome = false
-                            };
+            ShowAsMonochrome = false
+        };
         InfoBarLoginHint.Severity = InfoBarSeverity.Success;
         InfoBarLoginHint.Message = "欢迎 " + Common.LoginedUser.name;
         DialogLogin.Hide();
@@ -425,15 +425,15 @@ public sealed partial class BasePage : Page
                 if (jToken["subscribed"].ToString() == "True")
                 {
                     var item = new NavigationViewItem
-                               {
-                                   Content = jToken["name"].ToString(),
-                                   Tag = "Playlist" + jToken["id"],
-                                   IsRightTapEnabled = true,
-                                   Icon = new FontIcon
-                                          {
-                                              Glyph = "\uE142"
-                                          }
-                               };
+                    {
+                        Content = jToken["name"].ToString(),
+                        Tag = "Playlist" + jToken["id"],
+                        IsRightTapEnabled = true,
+                        Icon = new FontIcon
+                        {
+                            Glyph = "\uE142"
+                        }
+                    };
                     item.RightTapped += (_, __) =>
                     {
                         nowplid = jToken["id"].ToString();
@@ -452,15 +452,15 @@ public sealed partial class BasePage : Page
                     }
 
                     var item = new NavigationViewItem
-                               {
-                                   Icon = new FontIcon
-                                          {
-                                              Glyph = jToken["privacy"].ToString() == "0" ? "\uE142" : "\uE72E"
-                                          },
-                                   Content = jToken["name"].ToString(),
-                                   Tag = "Playlist" + jToken["id"],
-                                   IsRightTapEnabled = true
-                               };
+                    {
+                        Icon = new FontIcon
+                        {
+                            Glyph = jToken["privacy"].ToString() == "0" ? "\uE142" : "\uE72E"
+                        },
+                        Content = jToken["name"].ToString(),
+                        Tag = "Playlist" + jToken["id"],
+                        IsRightTapEnabled = true
+                    };
                     if (jToken["privacy"].ToString() != "0")
                         item.Icon.Foreground = new SolidColorBrush(Color.FromArgb(255, 211, 39, 100));
 
@@ -503,21 +503,21 @@ public sealed partial class BasePage : Page
 
         if (nowitem.Tag.ToString() == "DailyRcmd")
             Common.NavigatePage(typeof(SongListDetail), new NCPlayList
-                                                        {
-                                                            cover = "ms-appx:/Assets/icon.png",
-                                                            creater = new NCUser
-                                                                      {
-                                                                          avatar =
+            {
+                cover = "ms-appx:/Assets/icon.png",
+                creater = new NCUser
+                {
+                    avatar =
                                                                               "https://p1.music.126.net/KxePid7qTvt6V2iYVy-rYQ==/109951165050882728.jpg",
-                                                                          id = "1",
-                                                                          name = "网易云音乐",
-                                                                          signature = "网易云音乐官方账号 "
-                                                                      },
-                                                            plid = "-666",
-                                                            subscribed = false,
-                                                            name = "每日歌曲推荐",
-                                                            desc = "根据你的口味生成，每天6:00更新"
-                                                        });
+                    id = "1",
+                    name = "网易云音乐",
+                    signature = "网易云音乐官方账号 "
+                },
+                plid = "-666",
+                subscribed = false,
+                name = "每日歌曲推荐",
+                desc = "根据你的口味生成，每天6:00更新"
+            });
 
         if (nowitem.Tag.ToString() == "SonglistMyLike")
         {
@@ -566,16 +566,16 @@ public sealed partial class BasePage : Page
         switch (invokedItemTag)
         {
             case "SonglistCreate":
-            {
-                await new CreateSonglistDialog().ShowAsync();
-                _ = LoadSongList();
-                break;
-            }
+                {
+                    await new CreateSonglistDialog().ShowAsync();
+                    _ = LoadSongList();
+                    break;
+                }
             case "PersonalFM":
-            {
-                PersonalFM.InitPersonalFM();
-                break;
-            }
+                {
+                    PersonalFM.InitPersonalFM();
+                    break;
+                }
             case "HeartBeat":
                 _ = LoadHeartBeat();
                 break;
