@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Devices.Input;
+using Windows.Foundation;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
@@ -490,14 +491,16 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     actualElement.UpdateLayout();
                     if (!isNewLoaded)
                     {
-                        if (Common.IsInImmersiveMode)
+                        var transform = actualElement?.TransformToVisual((UIElement)LyricBoxContainer.ContentTemplateRoot);
+                        var position = transform?.TransformPoint(new Point(0, 0));
+                        if (false)
                         {
                             LyricBoxContainer.ChangeView(0,actualElement.ActualOffset.Y + LyricBoxContainer.ActualHeight - actualElement.ActualSize.Y , 1, false);
 
                         }
                         else
                         {
-                            LyricBoxContainer.ChangeView(0,actualElement.ActualOffset.Y + LyricBoxContainer.ActualHeight/4 - actualElement.ActualSize.Y , 1, false);
+                            LyricBoxContainer.ChangeView(0,position?.Y + LyricBoxHost.Margin.Top - MainGrid.ActualHeight / 4 , 1, false);
                         }
                     }
                     else
