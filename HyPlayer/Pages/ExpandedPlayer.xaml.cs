@@ -492,12 +492,12 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     {
                         if (Common.IsInImmersiveMode)
                         {
-                            LyricBoxContainer.ChangeView(0, actualElement.ActualOffset.Y + LyricBoxContainer.ActualHeight / 8 - actualElement.ActualSize.Y, 1, false);
+                            LyricBoxContainer.ChangeView(0, actualElement.ActualOffset.Y + LyricBoxContainer.ActualHeight / 2 - actualElement.ActualSize.Y, 1, false);
 
                         }
                         else
                         {
-                            LyricBoxContainer.ChangeView(0, actualElement.ActualOffset.Y - LyricBoxContainer.ActualHeight / 16 - actualElement.ActualSize.Y, 1, false);
+                            LyricBoxContainer.ChangeView(0, actualElement.ActualOffset.Y - actualElement.ActualSize.Y, 1, false);
                         }
                     }
                     else
