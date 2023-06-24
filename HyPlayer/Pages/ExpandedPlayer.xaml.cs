@@ -20,8 +20,10 @@ using Windows.Storage.Streams;
 using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.ViewManagement;
+using Windows.UI.WindowManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
@@ -77,7 +79,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private bool realclick;
     private int sclock;
     private ExpandedWindowMode WindowMode;
-
+    private AppWindow expandedPlayerWindow;
     public Windows.UI.Color? albumMainColor;
     private bool disposedValue;
     public System.Diagnostics.Stopwatch time = new System.Diagnostics.Stopwatch();
@@ -371,7 +373,9 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         Common.IsInBackground = false;
         Common.PageExpandedPlayer = this;
         Common.IsInImmersiveMode = false;
-        Window.Current.SetTitleBar(AppTitleBar);
+        if (e.Parameter is null || (bool)e.Parameter)
+            Window.Current.SetTitleBar(AppTitleBar);
+
         if (Common.Setting.lyricAlignment)
         {
             ToggleButtonTranslation.HorizontalAlignment = HorizontalAlignment.Left;
@@ -956,10 +960,36 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         _ = new LyricShareDialog { Lyrics = HyPlayList.Lyrics }.ShowAsync();
     }
 
-    private void BtnToggleTinyModeClick(object sender, RoutedEventArgs e)
+    private async void BtnToggleTinyModeClick(object sender, RoutedEventArgs e)
     {
-        _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.CompactOverlay);
-        Common.PageMain.ExpandedPlayer.Navigate(typeof(CompactPlayerPage));
+        if(expandedPlayerWindow is null)//判断窗口状态
+        {
+            expandedPlayerWindow = await AppWindow.TryCreateAsync();
+            expandedPlayerWindow.Closed += ExpandedPlayerClosed;
+        }
+
+        if (BtnToggleTinyMode.IsChecked)
+        {
+            Frame expandedPlayerWindowContentFrame = new Frame();
+            expandedPlayerWindowContentFrame.Navigate(typeof(CompactPlayerPage), expandedPlayerWindow);
+            ElementCompositionPreview.SetAppWindowContent(expandedPlayerWindow, expandedPlayerWindowContentFrame);
+            expandedPlayerWindow.TitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+            expandedPlayerWindow.TitleBar.ButtonBackgroundColor = Colors.Transparent;
+            await expandedPlayerWindow.TryShowAsync();
+            expandedPlayerWindow.Presenter.RequestPresentation(AppWindowPresentationKind.CompactOverlay);
+        }
+        else
+        {
+            await expandedPlayerWindow.CloseAsync();
+        }
+
+            //Common.PageMain.ExpandedPlayer.Navigate(typeof(CompactPlayerPage));
+        }
+
+    private void ExpandedPlayerClosed(AppWindow sender, AppWindowClosedEventArgs args)
+    {
+        BtnToggleTinyMode.IsChecked = false;
+        expandedPlayerWindow = null;
     }
 
     private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)

@@ -388,7 +388,9 @@
         </Storyboard>
 
     </Page.Resources>
-    <Grid Background="{StaticResource AcrylicInAppFillColorDefaultBrush}">
+    <Grid Background="{StaticResource AcrylicInAppFillColorDefaultBrush}"
+          PointerEntered="Grid_PointerEntered"
+          PointerExited="Grid_PointerExited">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
@@ -554,7 +556,7 @@
                 BorderBrush="Transparent"
                 Click="ExitButton_Click"
                 Visibility="{x:Bind PlayProgress.Visibility, Mode=OneWay}">
-                <FontIcon FontSize="14" Glyph="&#xE1D9;" />
+                <FontIcon FontSize="14" Glyph="&#xE78B;" />
                 <Button.RenderTransform>
                     <CompositeTransform/>
                 </Button.RenderTransform>
