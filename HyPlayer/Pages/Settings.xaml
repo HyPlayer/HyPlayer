@@ -1064,7 +1064,7 @@
                                             Maximum="100"
                                             Minimum="1"
                                             SmallChange="1"
-                                            Value="{x:Bind hyplayer:Common.Setting.maxDownloadCount, Mode=TwoWay}" />
+                                            Value="{x:Bind hyplayer:Common.Setting.maxDownloadCount, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
                                     </Grid>
                                 </StackPanel>
                             </controls:Expander>
@@ -1088,6 +1088,7 @@
                             Margin="0,0,0,150"
                             Orientation="Vertical"
                             Spacing="12">
+                            <TextBlock FontWeight="Black" FontSize="25" Text="如无特别说明, 请勿轻易修改此选项卡内容" />
                             <StackPanel Orientation="Horizontal">
                                 <TextBox
                                     x:Name="TextBoxXREALIP"
@@ -1099,6 +1100,7 @@
                                     Click="ButtonXREALIPSave_OnClick"
                                     Content="设置" />
                             </StackPanel>
+                            
                             <CheckBox 
                                 x:Name="ProxyState"
                                 Margin="0,12,0,0"
@@ -1113,27 +1115,33 @@
                                             <Paragraph>
                                                 HyPlayer支持使用系统代理作为请求的代理服务器
                                                 <LineBreak />
-                                                如果代理服务器是环回地址(127.0.0.1),请执行以下命令以解除环回限制
+                                                <Bold>请在设置代理后使用 cmd 运行下方解除网络环回 (Loopback) 指令</Bold>
                                                 <LineBreak />
-                                                CheckNetIsolation LoopbackExempt -a -n="48848aaaaaaccd.hyplayer_fkcggvf9kbkw0"
+                                                <Bold>同时建议开启降级 HTTP</Bold>
                                                 <LineBreak />
-                                                请注意: 更改此选项之后需要重启HyPlayer
+                                                请注意: 更改此选项之后需要重启 HyPlayer
                                             </Paragraph>
                                         </RichTextBlock>
                                     </Flyout>
                                 </Button.Flyout>
                             </Button>
-
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock
+                                    Text="解除网络环回 (Loopback) 指令, 请粘贴到 cmd 管理员模式中运行" />
+                                <TextBox
+                                    HorizontalAlignment="Left"
+                                    Text="CheckNetIsolation LoopbackExempt -a -n=&quot;48848aaaaaaccd.hyplayer_fkcggvf9kbkw0&quot;" />
+                            </StackPanel>
                             <CheckBox
                                 x:Name="UseHttpCheckBox"
                                 Margin="0,12,0,0"
                                 Content="降级HTTPS为HTTP"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.UseHttp, Mode=TwoWay}" />
 
-                            <!--<CheckBox
+                            <CheckBox
                                 x:Name="LazySongUrlGetCheck"
                                 Content="在播放时才获取播放链接"
-                                IsChecked="{x:Bind hyplayer:Common.Setting.songUrlLazyGet, Mode=TwoWay}" />-->
+                                IsChecked="{x:Bind hyplayer:Common.Setting.songUrlLazyGet, Mode=TwoWay}" />
                             <CheckBox
                                 x:Name="XboxPointerSet"
                                 Content="Xbox上隐藏指针（不要开启!）"
@@ -1144,7 +1152,7 @@
                                 IsChecked="{x:Bind hyplayer:Common.Setting.forceMemoryGarbage, Mode=TwoWay}" />
                             <CheckBox Content="开启高级音乐历史存储 (超过 100 首)" IsChecked="{x:Bind hyplayer:Common.Setting.advancedMusicHistoryStorage, Mode=TwoWay}" />
 
-                            <CheckBox Content="开启播放缓存 (可能造成播放前空白)" IsChecked="{x:Bind hyplayer:Common.Setting.enableCache, Mode=TwoWay}" />
+                            <CheckBox Content="开启播放缓存 (可能造成无法播放, 请勿轻易开启)" IsChecked="{x:Bind hyplayer:Common.Setting.enableCache, Mode=TwoWay}" />
                             <CheckBox Content="本地文件扫描渐进式加载 (Progressive Loading)" IsChecked="{x:Bind hyplayer:Common.Setting.localProgressiveLoad, Mode=TwoWay}" />
                             <CheckBox Content="本地文件使用 TagLib 读取封面" IsChecked="{x:Bind hyplayer:Common.Setting.useTaglibPicture, Mode=TwoWay}" />
 
@@ -1179,7 +1187,7 @@
                                 Content="磁贴背景缓存至本地(Windows 10需打开此项才会显示磁贴)"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.saveTileBackgroundToLocalFolder, Mode=TwoWay}" />
                             <CheckBox
-                                Content="启用旧版主题(可能会导致未知问题)(需重启应用)"
+                                Content="启用旧版主题 (可能会导致未知问题)(需重启应用)"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.IsOldThemeEnabled, Mode=TwoWay}" />
                             <Button
                                 x:Name="ClearTileCache"
@@ -1191,7 +1199,7 @@
                                 VerticalAlignment="Center"
                                 Click="RestartBtn_Click"
                                 Content="立即重启 HyPlayer"
-                                Visibility="Collapsed" />
+                                Visibility="Visible" />
                             <Button
                                 x:Name="BtnXboxReserve"
                                 Click="BtnXboxReserve_Click"
