@@ -90,6 +90,7 @@ public static class HyPlayList
     public static SystemMediaTransportControls MediaSystemControls;
     private static SystemMediaTransportControlsDisplayUpdater _controlsDisplayUpdater;
     private static readonly BackgroundDownloader Downloader = new();
+    private static Dictionary<HyPlayItem, DownloadOperation> DownloadOperations = new();
     public static InMemoryRandomAccessStream CoverStream = new InMemoryRandomAccessStream();
     public static RandomAccessStreamReference CoverStreamReference = RandomAccessStreamReference.CreateFromStream(CoverStream);
     public static int NowPlayingHashCode = 0;
@@ -995,17 +996,17 @@ public static class HyPlayList
 
                     playUrl = json["data"][0]["url"]?.ToString();
                     var tag = json["data"]?[0]?["level"]?.ToString() switch
-                              {
-                                  "standard" => "标准",
-                                  "higher"   => "较高",
-                                  "exhigh"   => "极高",
-                                  "lossless" => "无损",
-                                  "hires"    => "Hi-Res",
-                                  "jyeffect" => "高清环绕声",
-                                  "sky"      => "沉浸环绕声",
-                                  "jymaster" => "超清母带",
-                                  _          => "在线"
-                              };
+                    {
+                        "standard" => "标准",
+                        "higher" => "较高",
+                        "exhigh" => "极高",
+                        "lossless" => "无损",
+                        "hires" => "Hi-Res",
+                        "jyeffect" => "高清环绕声",
+                        "sky" => "沉浸环绕声",
+                        "jymaster" => "超清母带",
+                        _ => "在线"
+                    };
                     targetItem.PlayItem.Tag = tag;
                     AudioEffectsProperties["AudioGain_GainValue"] = float.Parse(json["data"]?[0]?["gain"].ToString());
                     _ = Common.Invoke(() =>
@@ -1140,17 +1141,19 @@ public static class HyPlayList
                                     //尝试从DownloadOperation下载
                                     if (playUrl != null)
                                     {
-                                        var destinationFolder = await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync(
-                                                "songCache",
-                                                CreationCollisionOption.OpenIfExists);
-                                        var destinationFile =
-                                            await destinationFolder.CreateFileAsync(
-                                                targetItem.PlayItem.Id +
-                                                ".cache",
-                                                CreationCollisionOption.ReplaceExisting);
-                                        var downloadOperation =
-                                            Downloader.CreateDownload(new Uri(playUrl), destinationFile);
-                                        _mediaSource = MediaSource.CreateFromDownloadOperation(downloadOperation);
+                                        if (!DownloadOperations.ContainsKey(targetItem))
+                                        {
+                                            var destinationFolder = await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir);
+                                            var destinationFile =
+                                                await destinationFolder.CreateFileAsync(
+                                                    targetItem.PlayItem.Id +
+                                                    ".cache",
+                                                    CreationCollisionOption.ReplaceExisting);
+                                            var downloadOperation =
+                                                Downloader.CreateDownload(new Uri(playUrl), destinationFile);
+                                            _ = HandleDownloadAsync(downloadOperation, targetItem);
+                                        }
+                                        _mediaSource = MediaSource.CreateFromUri(new Uri(playUrl));
                                     }
                                 }
                                 catch
@@ -1211,7 +1214,30 @@ public static class HyPlayList
             PlayerOnMediaFailed(Player, e.Message);
         }
     }
+    private static async Task HandleDownloadAsync(DownloadOperation dl, HyPlayItem item)
+    {
+        var process = new Progress<DownloadOperation>(ProgressCallback);
+        try
+        {
+            DownloadOperations.Add(item, dl);
+            await dl.StartAsync().AsTask(process);
+            DownloadOperations.Remove(item);
+        }
+        catch (Exception E)
+        {
+            Common.AddToTeachingTipLists("下载错误 " + E.Message);
+            DownloadOperations.Remove(item);
+        }
+    }
 
+    private static void ProgressCallback(DownloadOperation obj)
+    {
+        if (obj.Progress.TotalBytesToReceive == 0)
+        {
+            Common.AddToTeachingTipLists("缓存文件下载错误", "下载错误 " + obj.CurrentWebErrorStatus);
+            return;
+        }
+    }
     public static async void Player_SourceChanged(MediaPlayer sender, object args)
     {
         if (List.Count <= NowPlaying) return;
@@ -1245,7 +1271,7 @@ public static class HyPlayList
             {
                 NotifyPlayItemChanged(playItemWhenRequested);
             }
-            
+
             // 图片加载放在之后
             if (CoverStream.Size == 0 && !Common.Setting.noImage)
             {
@@ -1280,7 +1306,6 @@ public static class HyPlayList
             //这里要判断这么多次的原因在于如果只判断一次的话，后面如果切歌是无法知晓的。所以只能用这个蠢方法
         }
     }
-
     public static async Task RefreshAlbumCover()
     {
         try

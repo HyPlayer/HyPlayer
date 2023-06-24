@@ -275,7 +275,7 @@ public sealed partial class Settings : Page, IDisposable
         if (isbyprogram) return;
         await Task.Delay(20);
         _lyricItem.RefreshFontSize();
-        }
+    }
 
     private void NBShadowDepth_OnValueChanged(object o, RangeBaseValueChangedEventArgs rangeBaseValueChangedEventArgs)
     {
@@ -296,8 +296,8 @@ public sealed partial class Settings : Page, IDisposable
         var folder = await folderPicker.PickSingleFolderAsync();
         if (folder != null)
         {
+            StorageApplicationPermissions.FutureAccessList.AddOrReplace("cacheFolder", folder);
             Common.Setting.cacheDir = folder.Path;
-            TextBoxCacheDir.Text = Common.Setting.cacheDir;
         }
     }
 
@@ -505,7 +505,7 @@ public sealed partial class Settings : Page, IDisposable
     {
         ApplyNewAcrylic();
     }
-    
+
     private async void LyricAlignment_OnToggled(object sender, RoutedEventArgs e)
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
