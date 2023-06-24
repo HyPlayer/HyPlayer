@@ -1139,19 +1139,22 @@ public static class HyPlayList
                                 {
                                     var playUrl = await GetNowPlayingUrl(targetItem);
                                     //尝试从DownloadOperation下载
-                                    if (playUrl != null && !DownloadOperations.ContainsKey(targetItem))
+                                    if (playUrl != null)
                                     {
-                                        var destinationFolder = await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir);
-                                        var destinationFile =
-                                            await destinationFolder.CreateFileAsync(
-                                                targetItem.PlayItem.Id +
-                                                ".cache",
-                                                CreationCollisionOption.ReplaceExisting);
-                                        var downloadOperation =
-                                            Downloader.CreateDownload(new Uri(playUrl), destinationFile);
-                                        _ = HandleDownloadAsync(downloadOperation, targetItem);
+                                        if (!DownloadOperations.ContainsKey(targetItem))
+                                        {
+                                            var destinationFolder = await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir);
+                                            var destinationFile =
+                                                await destinationFolder.CreateFileAsync(
+                                                    targetItem.PlayItem.Id +
+                                                    ".cache",
+                                                    CreationCollisionOption.ReplaceExisting);
+                                            var downloadOperation =
+                                                Downloader.CreateDownload(new Uri(playUrl), destinationFile);
+                                            _ = HandleDownloadAsync(downloadOperation, targetItem);
+                                        }
+                                        _mediaSource = MediaSource.CreateFromUri(new Uri(playUrl));
                                     }
-                                    _mediaSource = MediaSource.CreateFromUri(new Uri(playUrl));
                                 }
                                 catch
                                 {
