@@ -66,9 +66,15 @@ public sealed partial class RadioPage : Page, IDisposable
                 new Dictionary<string, object>
                 {
                     { "rid", Radio.id },
-                    { "offset", page * 30 },
+                    {   "limit" , 100 },
+                    { "offset", page * 100 },
                     { "asc", asc }
-                });
+                }, true);
+            if (json["code"].ToString() == "405") {
+                treashold = ++cooldownTime * 10;   
+                page--;
+                throw new Exception($"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求"); 
+            }
             NextPage.Visibility = json["more"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
             foreach (var jToken in json["programs"])
             {
@@ -121,8 +127,34 @@ public sealed partial class RadioPage : Page, IDisposable
         Songs.Clear();
         SongContainer.ListSource = "rd" + Radio.id;
         _programLoaderTask = LoadProgram();
+        if (Common.Setting.greedlyLoadPlayContainerItems)
+            HyPlayList.OnTimerTicked += GreedlyLoad;
     }
 
+    int treashold = 3;
+    int cooldownTime = 0;
+
+    private async void GreedlyLoad()
+    {
+        _ = Common.Invoke(() =>
+        {
+            if (treashold > 10)
+            {
+                treashold--;
+                return;
+            }
+            if (Songs.Count > 0 && NextPage.Visibility == Visibility.Visible && treashold-- <= 0 && !disposedValue)
+            {
+                NextPage_OnClickPage_OnClick(null, null);
+                treashold = 3;
+            }
+            else if (SongContainer.Songs.Count > 0 && NextPage.Visibility == Visibility.Collapsed || disposedValue)
+            {
+                HyPlayList.OnTimerTicked -= GreedlyLoad;
+            }
+        });
+    }
+    
     private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(RadioPage));

@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
@@ -691,6 +692,17 @@ namespace HyPlayer
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(albumRound)] = value;
                 if (!value) albumRotate = false;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool greedlyLoadPlayContainerItems
+        {
+            get => GetSettings(nameof(greedlyLoadPlayContainerItems), false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(greedlyLoadPlayContainerItems)] = value;
+                if (!value) greedlyLoadPlayContainerItems = false;
                 OnPropertyChanged();
             }
         }
