@@ -73,7 +73,7 @@
                 Storyboard.TargetProperty="Opacity"
                 To="1">
                 <DoubleAnimation.EasingFunction>
-                    <CircleEase EasingMode="EaseInOut" />
+                    <PowerEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
             <DoubleAnimation
@@ -81,7 +81,7 @@
                 Storyboard.TargetProperty="Opacity"
                 To="0">
                 <DoubleAnimation.EasingFunction>
-                    <CircleEase EasingMode="EaseInOut" />
+                    <PowerEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
             <DoubleAnimation
@@ -89,7 +89,7 @@
                 Storyboard.TargetProperty="Opacity"
                 To="0">
                 <DoubleAnimation.EasingFunction>
-                    <CircleEase EasingMode="EaseInOut" />
+                    <PowerEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
 
@@ -100,7 +100,7 @@
                 Storyboard.TargetProperty="Opacity"
                 To="0">
                 <DoubleAnimation.EasingFunction>
-                    <CircleEase EasingMode="EaseInOut" />
+                    <PowerEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
             <DoubleAnimation
@@ -108,7 +108,7 @@
                 Storyboard.TargetProperty="Opacity"
                 To="1">
                 <DoubleAnimation.EasingFunction>
-                    <CircleEase EasingMode="EaseInOut" />
+                    <PowerEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
             <DoubleAnimation
@@ -116,7 +116,7 @@
                 Storyboard.TargetProperty="Opacity"
                 To="1">
                 <DoubleAnimation.EasingFunction>
-                    <CircleEase EasingMode="EaseInOut" />
+                    <PowerEase EasingMode="EaseInOut" />
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
 

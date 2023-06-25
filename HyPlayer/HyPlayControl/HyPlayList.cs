@@ -1014,14 +1014,22 @@ public static class HyPlayList
                         Common.BarPlayBar.TbSongTag.Text = tag;
                         if (tag.Length > 2)
                         {
-                            var brush = new SolidColorBrush(Colors.Gold);
-                            Common.BarPlayBar.SongInfoTag.BorderBrush = brush;
-                            Common.BarPlayBar.TbSongTag.Foreground = brush;
+                            var backgroundbrush = new LinearGradientBrush();
+                            backgroundbrush.StartPoint = new Windows.Foundation.Point(0, 0);
+                            backgroundbrush.EndPoint = new Windows.Foundation.Point(1, 1);
+
+                            backgroundbrush.GradientStops.Add(new GradientStop { Offset = 0, Color = Color.FromArgb(255,251,251,206)});
+                            backgroundbrush.GradientStops.Add(new GradientStop { Offset = 1, Color = Color.FromArgb(255, 223, 155, 28)});
+
+                            Common.BarPlayBar.SongInfoTag.Background=backgroundbrush;
+                            Common.BarPlayBar.SongInfoTag.BorderBrush = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
+                            Common.BarPlayBar.TbSongTag.Foreground = new SolidColorBrush(Color.FromArgb(255, 0, 0, 0));
                         }
                         else
                         {
                             var brush = new SolidColorBrush(Colors.Red);
                             Common.BarPlayBar.SongInfoTag.BorderBrush = brush;
+                            Common.BarPlayBar.SongInfoTag.Background = null;
                             Common.BarPlayBar.TbSongTag.Foreground = brush;
                         }
                     });

@@ -148,14 +148,14 @@ public sealed partial class MainPage
             BeginTime = TimeSpan.FromSeconds(time),
             To = 0,
             EnableDependentAnimation = true,
-            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+            EasingFunction = new PowerEase() { EasingMode = EasingMode.EaseInOut },
         };
         var PlayBarTransAni = new DoubleAnimation
         {
             BeginTime = TimeSpan.FromSeconds(time),
             To = 20,
             EnableDependentAnimation = true,
-            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+            EasingFunction = new PowerEase() { EasingMode = EasingMode.EaseInOut },
         };
         var PointerOutAni = new Storyboard();
         Storyboard.SetTarget(PlayBarAni, GridPlayBar);
@@ -171,7 +171,7 @@ public sealed partial class MainPage
             BeginTime = TimeSpan.FromSeconds(time),
             To = 1,
             EnableDependentAnimation = true,
-            EasingFunction = new CircleEase() { EasingMode = EasingMode.EaseOut },
+            EasingFunction = new PowerEase() { EasingMode = EasingMode.EaseInOut },
         };
         var storyboard = new Storyboard();
         Storyboard.SetTarget(BlankAni, Common.PageBase.NavItemBlank);
