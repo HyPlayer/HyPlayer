@@ -680,6 +680,7 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(albumRotate)] = value;
+                if (value) albumRound = true;
                 OnPropertyChanged();
             }
         }
@@ -690,6 +691,7 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(albumRound)] = value;
+                if (!value) albumRotate = false;
                 OnPropertyChanged();
             }
         }
