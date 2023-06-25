@@ -1,4 +1,5 @@
 ﻿#region
+
 using AudioEffectComponent;
 using HyPlayer.Classes;
 using Kawazu;
@@ -31,6 +32,7 @@ using Windows.UI.Notifications;
 using Windows.UI.Xaml.Media;
 using Buffer = Windows.Storage.Streams.Buffer;
 using File = TagLib.File;
+
 #endregion
 
 namespace HyPlayer.HyPlayControl;
@@ -40,6 +42,7 @@ public static class HyPlayList
     public delegate void LoginDoneEvent();
 
     public delegate void LyricChangeEvent();
+
     public delegate void LyricColorChangeEvent();
 
     public delegate void LyricLoadedEvent();
@@ -92,7 +95,10 @@ public static class HyPlayList
     private static readonly BackgroundDownloader Downloader = new();
     private static Dictionary<HyPlayItem, DownloadOperation> DownloadOperations = new();
     public static InMemoryRandomAccessStream CoverStream = new InMemoryRandomAccessStream();
-    public static RandomAccessStreamReference CoverStreamReference = RandomAccessStreamReference.CreateFromStream(CoverStream);
+
+    public static RandomAccessStreamReference CoverStreamReference =
+        RandomAccessStreamReference.CreateFromStream(CoverStream);
+
     public static int NowPlayingHashCode = 0;
     private static InMemoryRandomAccessStream _ncmPlayableStream;
     private static string _ncmPlayableStreamMIMEType = string.Empty;
@@ -117,17 +123,20 @@ public static class HyPlayList
     public static bool UserRequestedChangingSong = false;
     public static FadeInOutState CurrentFadeInOutState;
     private static bool OnlyFadeOutVolume = false;
+
     public enum FadeInOutState
     {
         FadeIn = 0,
         FadeOut = 1
     };
+
     public enum SongChangeType
     {
         Previous = 0,
         Next = 1,
         None = -1
     }
+
     public enum SongFadeEffectType
     {
         PauseFadeOut = 1,
@@ -137,6 +146,7 @@ public static class HyPlayList
         NextFadeIn = 5,
         AdvFadeOut = 6
     }
+
     private static bool FadeReveserd = false;
     public static bool FadeLocked = false;
     private static double FadeTime;
@@ -182,6 +192,7 @@ public static class HyPlayList
             {
                 return _mediaSource.CustomProperties["nowPlayingItem"] as HyPlayItem;
             }
+
             if (List.Count <= NowPlaying || NowPlaying == -1)
                 return new HyPlayItem { ItemType = HyPlayItemType.Netease };
             return List[NowPlaying];
@@ -387,7 +398,7 @@ public static class HyPlayList
                         }
                     };
                     hyitem.PlayItem.Artist = Info.artist.Select(t => new NCArtist
-                    { name = t[0].ToString(), id = t[1].ToString() })
+                            { name = t[0].ToString(), id = t[1].ToString() })
                         .ToList();
 
                     List.Add(hyitem);
@@ -401,6 +412,7 @@ public static class HyPlayList
             if (!isFirstLoad) continue;
             isFirstLoad = false;
         }
+
         //HyPlayList.SongMoveTo(0);
         SongAppendDone();
         SongMoveTo(List.Count - 1);
@@ -434,6 +446,7 @@ public static class HyPlayList
 
         //Player_SourceChanged(null, null);
     }
+
     public async static Task LoadNCMFile(HyPlayItem targetItem)
     {
         // 脑残Music解析
@@ -456,13 +469,12 @@ public static class HyPlayList
     }
 
     /********        方法         ********/
-    public static void SongAppendDone()
+    public static void SongAppendDone(string currentSongId = "-1")
     {
         Common.IsInFm = false;
-        PlaySourceId = null;
         if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
         {
-            CreateShufflePlayLists();
+            CreateShufflePlayLists(currentSongId);
         }
         else
             _ = Common.Invoke(() => OnPlayListAddDone?.Invoke());
@@ -493,6 +505,7 @@ public static class HyPlayList
                 ShufflingIndex = ShuffleList.Count - 1;
             NowPlaying = ShuffleList[ShufflingIndex];
         }
+
         if (!Common.IsInFm && List.Count != 0)
         {
             _ = LoadPlayerSong(List[NowPlaying]);
@@ -552,22 +565,23 @@ public static class HyPlayList
         OnSongRemoveAll?.Invoke();
         SongAppendDone();
     }
+
     public static void LikeSong()
     {
         var isLiked = Common.LikedSongs.Contains(NowPlayingItem.PlayItem.Id);
         switch (NowPlayingItem.ItemType)
         {
             case HyPlayItemType.Netease:
-                {
-                    _ = Api.LikeSong(NowPlayingItem.PlayItem.Id,
-                        !isLiked);
-                    if (isLiked)
-                        Common.LikedSongs.Remove(NowPlayingItem.PlayItem.Id);
-                    else
-                        Common.LikedSongs.Add(NowPlayingItem.PlayItem.Id);
-                    OnSongLikeStatusChange?.Invoke(!isLiked);
-                    break;
-                }
+            {
+                _ = Api.LikeSong(NowPlayingItem.PlayItem.Id,
+                    !isLiked);
+                if (isLiked)
+                    Common.LikedSongs.Remove(NowPlayingItem.PlayItem.Id);
+                else
+                    Common.LikedSongs.Add(NowPlayingItem.PlayItem.Id);
+                OnSongLikeStatusChange?.Invoke(!isLiked);
+                break;
+            }
             case HyPlayItemType.Radio:
                 _ = Common.ncapi?.RequestAsync(CloudMusicApiProviders.ResourceLike,
                     new Dictionary<string, object>
@@ -661,21 +675,24 @@ public static class HyPlayList
         var fadeNextTime = TimeSpan.FromSeconds(Common.Setting.fadeNextTime);
         while (AdvFadeProcessStatus)
         {
-            AdvFadeVolume = 1 - TimeRangeToVolumeRangeConverter(currentTime: Player.PlaybackSession.Position, fadeStartTime: Player.PlaybackSession.NaturalDuration - fadeNextTime, fadeEndTime: Player.PlaybackSession.NaturalDuration, miniumVolume: 0, maxiumVolume: 1);
+            AdvFadeVolume = 1 - TimeRangeToVolumeRangeConverter(currentTime: Player.PlaybackSession.Position,
+                fadeStartTime: Player.PlaybackSession.NaturalDuration - fadeNextTime,
+                fadeEndTime: Player.PlaybackSession.NaturalDuration, miniumVolume: 0, maxiumVolume: 1);
             if (AdvFadeVolume < 0)
             {
                 AdvFadeVolume = 0;
                 AdvFadeProcessStatus = false;
             }
+
             if (AdvFadeVolume > 1)
             {
                 AdvFadeVolume = 1;
                 AdvFadeProcessStatus = false;
             }
+
             VolumeChangeProcess();
             await Task.Delay(10);
         }
-
     }
 
     private static async Task FadeProcess()
@@ -693,11 +710,15 @@ public static class HyPlayList
             {
                 if (FadeReveserd)
                 {
-                    FadeVolume = TimeRangeToVolumeRangeConverter(currentTime: DateTime.Now, fadeStartTime: FadeStartTime, fadeEndTime: FadeStartTime.AddSeconds(FadeTime), miniumVolume: FadeLastVolume, maxiumVolume: 1);
+                    FadeVolume = TimeRangeToVolumeRangeConverter(currentTime: DateTime.Now,
+                        fadeStartTime: FadeStartTime, fadeEndTime: FadeStartTime.AddSeconds(FadeTime),
+                        miniumVolume: FadeLastVolume, maxiumVolume: 1);
                 }
                 else
                 {
-                    FadeVolume = TimeRangeToVolumeRangeConverter(currentTime: DateTime.Now, fadeStartTime: FadeStartTime, fadeEndTime: FadeStartTime.AddSeconds(FadeTime), miniumVolume: 0, maxiumVolume: 1);
+                    FadeVolume = TimeRangeToVolumeRangeConverter(currentTime: DateTime.Now,
+                        fadeStartTime: FadeStartTime, fadeEndTime: FadeStartTime.AddSeconds(FadeTime), miniumVolume: 0,
+                        maxiumVolume: 1);
                 }
 
                 if (FadeTime == 0 || FadeVolume > 1)
@@ -713,12 +734,17 @@ public static class HyPlayList
             {
                 if (FadeReveserd)
                 {
-                    FadeVolume = 1 - TimeRangeToVolumeRangeConverter(currentTime: DateTime.Now, fadeStartTime: FadeStartTime, fadeEndTime: FadeStartTime.AddSeconds(FadeTime), miniumVolume: 1 - FadeLastVolume, maxiumVolume: 1);
+                    FadeVolume = 1 - TimeRangeToVolumeRangeConverter(currentTime: DateTime.Now,
+                        fadeStartTime: FadeStartTime, fadeEndTime: FadeStartTime.AddSeconds(FadeTime),
+                        miniumVolume: 1 - FadeLastVolume, maxiumVolume: 1);
                 }
                 else
                 {
-                    FadeVolume = 1 - TimeRangeToVolumeRangeConverter(currentTime: DateTime.Now, fadeStartTime: FadeStartTime, fadeEndTime: FadeStartTime.AddSeconds(FadeTime), miniumVolume: 0, maxiumVolume: 1);
+                    FadeVolume = 1 - TimeRangeToVolumeRangeConverter(currentTime: DateTime.Now,
+                        fadeStartTime: FadeStartTime, fadeEndTime: FadeStartTime.AddSeconds(FadeTime), miniumVolume: 0,
+                        maxiumVolume: 1);
                 }
+
                 if (FadeTime == 0 || FadeVolume < 0)
                 {
                     FadeVolume = 0;
@@ -730,9 +756,9 @@ public static class HyPlayList
                     {
                         Player.Pause();
                     }
-
                 }
             }
+
             VolumeChangeProcess();
             await Task.Delay(10);
         }
@@ -750,6 +776,7 @@ public static class HyPlayList
         {
             CurrentFadeInOutState = FadeInOutState.FadeIn;
         }
+
         FadeReveserd = true;
     }
 
@@ -777,6 +804,7 @@ public static class HyPlayList
 #endif
                 UserRequestedChangingSong = false;
             }
+
             if (CurrentFadeInOutState == FadeInOutState.FadeIn)
             {
 #if DEBUG
@@ -787,7 +815,8 @@ public static class HyPlayList
         }
     }
 
-    private static double TimeRangeToVolumeRangeConverter(DateTime currentTime, DateTime fadeStartTime, DateTime fadeEndTime, double miniumVolume, double maxiumVolume)
+    private static double TimeRangeToVolumeRangeConverter(DateTime currentTime, DateTime fadeStartTime,
+        DateTime fadeEndTime, double miniumVolume, double maxiumVolume)
     {
         double resultVolume;
         var fadeTimeRange = fadeEndTime - fadeStartTime;
@@ -800,9 +829,12 @@ public static class HyPlayList
         {
             resultVolume = ((currentTime - fadeStartTime) * volumeRange / fadeTimeRange) + miniumVolume;
         }
+
         return resultVolume;
     }
-    private static double TimeRangeToVolumeRangeConverter(TimeSpan currentTime, TimeSpan fadeStartTime, TimeSpan fadeEndTime, double miniumVolume, double maxiumVolume)
+
+    private static double TimeRangeToVolumeRangeConverter(TimeSpan currentTime, TimeSpan fadeStartTime,
+        TimeSpan fadeEndTime, double miniumVolume, double maxiumVolume)
     {
         double resultVolume;
         var fadeTimeRange = fadeEndTime - fadeStartTime;
@@ -815,6 +847,7 @@ public static class HyPlayList
         {
             resultVolume = ((currentTime - fadeStartTime) * volumeRange / fadeTimeRange) + miniumVolume;
         }
+
         return resultVolume;
     }
 
@@ -827,7 +860,8 @@ public static class HyPlayList
 #endif
     }
 
-    public static async Task SongFadeRequest(SongFadeEffectType requestedFadeType, SongChangeType songChangeType = SongChangeType.Next)
+    public static async Task SongFadeRequest(SongFadeEffectType requestedFadeType,
+        SongChangeType songChangeType = SongChangeType.Next)
     {
         if (!FadeLocked)
         {
@@ -840,12 +874,12 @@ public static class HyPlayList
                     {
                         CurrentFadeInOutState = FadeInOutState.FadeOut;
                         await FadeProcess();
-
                     }
                     else
                     {
                         FadeProcessingChanged();
                     }
+
                     break;
                 case SongFadeEffectType.PlayFadeIn:
                     OnlyFadeOutVolume = false;
@@ -854,12 +888,12 @@ public static class HyPlayList
                     {
                         CurrentFadeInOutState = FadeInOutState.FadeIn;
                         await FadeProcess();
-
                     }
                     else
                     {
                         FadeProcessingChanged();
                     }
+
                     break;
                 case SongFadeEffectType.AutoNextFadeOut:
                     OnlyFadeOutVolume = true;
@@ -870,6 +904,7 @@ public static class HyPlayList
                     {
                         FadeTime = 0;
                     }
+
                     if (!FadeProcessStatus)
                     {
                         CurrentFadeInOutState = FadeInOutState.FadeOut;
@@ -882,6 +917,7 @@ public static class HyPlayList
                         CurrentFadeInOutState = FadeInOutState.FadeOut;
                         FadeReveserd = true;
                     }
+
                     break;
                 case SongFadeEffectType.UserNextFadeOut:
                     if (Common.Setting.disableFadeWhenChangingSongManually)
@@ -894,8 +930,10 @@ public static class HyPlayList
                         {
                             SongMovePrevious();
                         }
+
                         return;
                     }
+
                     OnlyFadeOutVolume = false;
                     FadeLocked = true;
                     FadeTime = Common.Setting.fadeNextTime;
@@ -903,6 +941,7 @@ public static class HyPlayList
                     {
                         FadeTime = 0;
                     }
+
                     if (!FadeProcessStatus)
                     {
                         CurrentFadeInOutState = FadeInOutState.FadeOut;
@@ -933,10 +972,11 @@ public static class HyPlayList
                             UserRequestedChangingSong = false;
                         }
                     }
+
                     break;
             }
-
         }
+
         switch (requestedFadeType)
         {
             case SongFadeEffectType.NextFadeIn:
@@ -958,6 +998,7 @@ public static class HyPlayList
                     CurrentFadeInOutState = FadeInOutState.FadeIn;
                     await FadeProcess();
                 }
+
                 break;
             case SongFadeEffectType.AdvFadeOut:
                 AutoFadeProcessing = true;
@@ -966,10 +1007,10 @@ public static class HyPlayList
                     AdvFadeProcessStatus = true;
                     await AdvFadeProcess();
                 }
+
                 break;
         }
     }
-
 
 
     private static async Task<string> GetNowPlayingUrl(HyPlayItem targetItem)
@@ -1044,6 +1085,7 @@ public static class HyPlayList
             {
                 throw new Exception("下载链接获取失败"); //传一个播放失败
             }
+
         return playUrl;
     }
 
@@ -1054,6 +1096,7 @@ public static class HyPlayList
         {
             return;
         }
+
         if (_playerLoaderTask != null && !_playerLoaderTask.IsCompleted)
         {
             _songIsWaitingForLoadCount++;
@@ -1068,12 +1111,14 @@ public static class HyPlayList
                 return;
             }
         }
+
         if (_requestedItem != null)
         {
             _playerLoaderTask = LoadMediaSource(_requestedItem);
             _requestedItem = null;
         }
     }
+
     public static async Task LoadMediaSource(HyPlayItem targetItem)
     {
         if (targetItem.PlayItem?.Name == null)
@@ -1081,21 +1126,25 @@ public static class HyPlayList
             MoveSongPointer();
             return;
         }
+
         NowPlayingHashCode = 0;
         if (CoverStream.Size != 0)
         {
             CoverStream.Size = 0;
             CoverStream.Seek(0);
         }
+
         if (_ncmPlayableStream != null && _ncmPlayableStream.Size != 0)
         {
             _ncmPlayableStream.Dispose();
             _ncmPlayableStream = null;
         }
+
         if (_ncmPlayableStreamMIMEType != string.Empty)
         {
             _ncmPlayableStreamMIMEType = string.Empty;
         }
+
         try
         {
             Player.Source = null;
@@ -1151,7 +1200,8 @@ public static class HyPlayList
                                     {
                                         if (!DownloadOperations.ContainsKey(targetItem))
                                         {
-                                            var destinationFolder = await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir);
+                                            var destinationFolder =
+                                                await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir);
                                             var destinationFile =
                                                 await destinationFolder.CreateFileAsync(
                                                     targetItem.PlayItem.Id +
@@ -1161,6 +1211,7 @@ public static class HyPlayList
                                                 Downloader.CreateDownload(new Uri(playUrl), destinationFile);
                                             _ = HandleDownloadAsync(downloadOperation, targetItem);
                                         }
+
                                         _mediaSource = MediaSource.CreateFromUri(new Uri(playUrl));
                                     }
                                 }
@@ -1184,8 +1235,10 @@ public static class HyPlayList
                 case HyPlayItemType.LocalProgressive:
                     if (targetItem.PlayItem.DontSetLocalStorageFile == null && targetItem.PlayItem.Url != null)
                     {
-                        targetItem.PlayItem.DontSetLocalStorageFile = await StorageFile.GetFileFromPathAsync(targetItem.PlayItem.Url);
+                        targetItem.PlayItem.DontSetLocalStorageFile =
+                            await StorageFile.GetFileFromPathAsync(targetItem.PlayItem.Url);
                     }
+
                     if (targetItem.PlayItem.DontSetLocalStorageFile.FileType == ".ncm")
                     {
                         await LoadNCMFile(targetItem);
@@ -1202,6 +1255,7 @@ public static class HyPlayList
                     _mediaSource = null;
                     break;
             }
+
             _mediaSource?.CustomProperties.Add("nowPlayingItem", targetItem);
             NowPlayingHashCode = targetItem.GetHashCode();
             MediaSystemControls.IsEnabled = true;
@@ -1214,6 +1268,7 @@ public static class HyPlayList
                     targetItem.PlayItem.LengthInMilliseconds = duration.Value;
                 }
             }
+
             Player.Source = _mediaSource;
         }
         catch (Exception e)
@@ -1222,6 +1277,7 @@ public static class HyPlayList
             PlayerOnMediaFailed(Player, e.Message);
         }
     }
+
     private static async Task HandleDownloadAsync(DownloadOperation dl, HyPlayItem item)
     {
         var process = new Progress<DownloadOperation>(ProgressCallback);
@@ -1246,6 +1302,7 @@ public static class HyPlayList
             return;
         }
     }
+
     public static async void Player_SourceChanged(MediaPlayer sender, object args)
     {
         if (List.Count <= NowPlaying) return;
@@ -1253,6 +1310,7 @@ public static class HyPlayList
         {
             return;
         }
+
         var hashCodeWhenRequested = NowPlayingHashCode;
         var playItemWhenRequested = NowPlayingItem;
         _ = SongFadeRequest(SongFadeEffectType.NextFadeIn);
@@ -1285,6 +1343,7 @@ public static class HyPlayList
             {
                 await RefreshAlbumCover();
             }
+
             if (CoverStream.Size != 0)
             {
                 if ((hashCodeWhenRequested == NowPlayingHashCode) && !Common.Setting.noImage)
@@ -1293,17 +1352,20 @@ public static class HyPlayList
                     OnSongCoverChanged?.Invoke(hashCodeWhenRequested, CoverStream);
                 }
             }
+
             if (hashCodeWhenRequested == NowPlayingHashCode)
             {
                 //加载歌词
                 _ = LoadLyrics(playItemWhenRequested);
             }
+
             //更新磁贴
             if (hashCodeWhenRequested == NowPlayingHashCode)
             {
                 CoverStream.Seek(0);
                 await RefreshTile(hashCodeWhenRequested, playItemWhenRequested, CoverStream);
             }
+
             if (hashCodeWhenRequested == NowPlayingHashCode)
             {
                 // RASR 罪大恶极，害的磁贴怨声载道
@@ -1314,6 +1376,7 @@ public static class HyPlayList
             //这里要判断这么多次的原因在于如果只判断一次的话，后面如果切歌是无法知晓的。所以只能用这个蠢方法
         }
     }
+
     public static async Task RefreshAlbumCover()
     {
         try
@@ -1352,8 +1415,11 @@ public static class HyPlayList
             }
             else
             {
-                string param = Common.IsInImmersiveMode ? StaticSource.PICSIZE_IMMERSIVEMODE_COVER : StaticSource.PICSIZE_AUDIO_PLAYER_COVER;
-                using var result = await Common.HttpClient.GetAsync(new Uri(NowPlayingItem.PlayItem.Album.cover + "?param=" + param));
+                string param = Common.IsInImmersiveMode
+                    ? StaticSource.PICSIZE_IMMERSIVEMODE_COVER
+                    : StaticSource.PICSIZE_AUDIO_PLAYER_COVER;
+                using var result =
+                    await Common.HttpClient.GetAsync(new Uri(NowPlayingItem.PlayItem.Album.cover + "?param=" + param));
                 if (!result.IsSuccessStatusCode)
                 {
                     throw new Exception("更新SMTC图片时发生异常");
@@ -1372,14 +1438,17 @@ public static class HyPlayList
     {
         OnPlayItemChange?.Invoke(targetItem);
     }
+
     public static async Task RefreshTile(int hashCode, HyPlayItem targetItem, IRandomAccessStream coverStream)
     {
         try
         {
             if (targetItem?.PlayItem == null || !Common.Setting.enableTile) return;
-            string fileName = targetItem.PlayItem.IsLocalFile ? null
+            string fileName = targetItem.PlayItem.IsLocalFile
+                ? null
                 : targetItem.PlayItem.Album.id;
-            bool coverStreamIsAvailable = coverStream.Size != 0 && fileName != null && fileName != "0" && NowPlayingHashCode == hashCode;
+            bool coverStreamIsAvailable = coverStream.Size != 0 && fileName != null && fileName != "0" &&
+                                          NowPlayingHashCode == hashCode;
             bool localCoverIsAvailable = false;
             string downloadLink = string.Empty;
             if (Common.Setting.saveTileBackgroundToLocalFolder
@@ -1391,14 +1460,16 @@ public static class HyPlayList
                 StorageFolder storageFolder =
                     await ApplicationData.Current.TemporaryFolder.CreateFolderAsync("LocalTileBackground",
                         CreationCollisionOption.OpenIfExists);
-                var storageFile = await storageFolder.CreateFileAsync(fileName + ".jpg", CreationCollisionOption.OpenIfExists);
+                var storageFile =
+                    await storageFolder.CreateFileAsync(fileName + ".jpg", CreationCollisionOption.OpenIfExists);
                 var properties = await storageFile.GetBasicPropertiesAsync();
                 if (properties.Size == 0)
                 {
                     using var outputStream = await storageFile.OpenAsync(FileAccessMode.ReadWrite);
                     var buffer = new Buffer(MIMEHelper.PICTURE_FILE_HEADER_CAPACITY);
                     coverStream.Seek(0);
-                    await coverStream.ReadAsync(buffer, MIMEHelper.PICTURE_FILE_HEADER_CAPACITY, InputStreamOptions.None);
+                    await coverStream.ReadAsync(buffer, MIMEHelper.PICTURE_FILE_HEADER_CAPACITY,
+                        InputStreamOptions.None);
                     var mime = MIMEHelper.GetPictureCodecFromBuffer(buffer);
                     BitmapDecoder decoder = await BitmapDecoder.CreateAsync(mime, coverStream);
                     using var softwareBitmap = await decoder.GetSoftwareBitmapAsync();
@@ -1420,7 +1491,9 @@ public static class HyPlayList
                     localCoverIsAvailable = true;
                 }
             }
-            var cover = Common.Setting.tileBackgroundAvailability && !targetItem.PlayItem.IsLocalFile && localCoverIsAvailable
+
+            var cover = Common.Setting.tileBackgroundAvailability && !targetItem.PlayItem.IsLocalFile &&
+                        localCoverIsAvailable
                 ? new TileBackgroundImage()
                 {
                     Source = Common.Setting.saveTileBackgroundToLocalFolder && coverStreamIsAvailable
@@ -1448,27 +1521,27 @@ public static class HyPlayList
                         {
                             BackgroundImage = cover,
                             Children =
-                        {
-                            new AdaptiveText()
                             {
-                                Text = targetItem?.PlayItem.Name,
-                                HintStyle = AdaptiveTextStyle.Base
-                            },
-                            new AdaptiveText()
-                            {
-                                Text = targetItem?.PlayItem.ArtistString,
-                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
-                                HintWrap = true,
-                                HintMaxLines = 2
-                            },
-                            new AdaptiveText()
-                            {
-                                Text = targetItem?.PlayItem.AlbumString,
-                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
-                                HintWrap = true,
-                                HintMaxLines = 2
+                                new AdaptiveText()
+                                {
+                                    Text = targetItem?.PlayItem.Name,
+                                    HintStyle = AdaptiveTextStyle.Base
+                                },
+                                new AdaptiveText()
+                                {
+                                    Text = targetItem?.PlayItem.ArtistString,
+                                    HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                                    HintWrap = true,
+                                    HintMaxLines = 2
+                                },
+                                new AdaptiveText()
+                                {
+                                    Text = targetItem?.PlayItem.AlbumString,
+                                    HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                                    HintWrap = true,
+                                    HintMaxLines = 2
+                                }
                             }
-                        }
                         }
                     },
                     TileWide = new TileBinding()
@@ -1478,25 +1551,25 @@ public static class HyPlayList
                         {
                             BackgroundImage = cover,
                             Children =
-                        {
-                            new AdaptiveText()
                             {
-                                Text = targetItem?.PlayItem.Name,
-                                HintStyle = AdaptiveTextStyle.Base
-                            },
-                            new AdaptiveText()
-                            {
-                                Text = targetItem?.PlayItem.ArtistString,
-                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
-                                HintWrap = true,
-                                HintMaxLines = 3
-                            },
-                            new AdaptiveText()
-                            {
-                                Text = targetItem?.PlayItem.AlbumString,
-                                HintStyle = AdaptiveTextStyle.CaptionSubtle
+                                new AdaptiveText()
+                                {
+                                    Text = targetItem?.PlayItem.Name,
+                                    HintStyle = AdaptiveTextStyle.Base
+                                },
+                                new AdaptiveText()
+                                {
+                                    Text = targetItem?.PlayItem.ArtistString,
+                                    HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                                    HintWrap = true,
+                                    HintMaxLines = 3
+                                },
+                                new AdaptiveText()
+                                {
+                                    Text = targetItem?.PlayItem.AlbumString,
+                                    HintStyle = AdaptiveTextStyle.CaptionSubtle
+                                }
                             }
-                        }
                         }
                     },
                     TileLarge = new TileBinding()
@@ -1506,25 +1579,25 @@ public static class HyPlayList
                         {
                             BackgroundImage = cover,
                             Children =
-                        {
-                            new AdaptiveText()
                             {
-                                Text = targetItem?.PlayItem.Name,
-                                HintStyle = AdaptiveTextStyle.Base
-                            },
-                            new AdaptiveText()
-                            {
-                                Text = targetItem?.PlayItem.ArtistString,
-                                HintStyle = AdaptiveTextStyle.CaptionSubtle,
-                                HintWrap = true,
-                                HintMaxLines = 3
-                            },
-                            new AdaptiveText()
-                            {
-                                Text = targetItem?.PlayItem.AlbumString,
-                                HintStyle = AdaptiveTextStyle.CaptionSubtle
+                                new AdaptiveText()
+                                {
+                                    Text = targetItem?.PlayItem.Name,
+                                    HintStyle = AdaptiveTextStyle.Base
+                                },
+                                new AdaptiveText()
+                                {
+                                    Text = targetItem?.PlayItem.ArtistString,
+                                    HintStyle = AdaptiveTextStyle.CaptionSubtle,
+                                    HintWrap = true,
+                                    HintMaxLines = 3
+                                },
+                                new AdaptiveText()
+                                {
+                                    Text = targetItem?.PlayItem.AlbumString,
+                                    HintStyle = AdaptiveTextStyle.CaptionSubtle
+                                }
                             }
-                        }
                         }
                     }
                 }
@@ -1541,12 +1614,14 @@ public static class HyPlayList
             Common.AddToTeachingTipLists("更新磁贴时发生错误", ex.Message);
         }
     }
+
     private static async void PlaybackSession_PositionChanged(MediaPlaybackSession sender, object args)
     {
         OnPlayPositionChange?.Invoke(Player.PlaybackSession.Position);
         LoadLyricChange();
         await CheckMediaTimeRemaining();
     }
+
     public static async Task CheckMediaTimeRemaining()
     {
         if (NowPlayingItem.PlayItem == null) return;
@@ -1554,7 +1629,8 @@ public static class HyPlayList
         if (!Common.Setting.advFade)
         {
             AdvFadeVolume = 1;
-            if (Player.PlaybackSession.Position.TotalMilliseconds >= NowPlayingItem.PlayItem.LengthInMilliseconds - nextFadeTime.TotalMilliseconds)
+            if (Player.PlaybackSession.Position.TotalMilliseconds >=
+                NowPlayingItem.PlayItem.LengthInMilliseconds - nextFadeTime.TotalMilliseconds)
             {
                 UserRequestedChangingSong = false;
                 await SongFadeRequest(SongFadeEffectType.AutoNextFadeOut);
@@ -1571,7 +1647,8 @@ public static class HyPlayList
         }
         else
         {
-            if (Player.PlaybackSession.Position.TotalMilliseconds >= NowPlayingItem.PlayItem.LengthInMilliseconds - nextFadeTime.TotalMilliseconds)
+            if (Player.PlaybackSession.Position.TotalMilliseconds >=
+                NowPlayingItem.PlayItem.LengthInMilliseconds - nextFadeTime.TotalMilliseconds)
             {
                 await SongFadeRequest(SongFadeEffectType.AdvFadeOut);
             }
@@ -1645,7 +1722,8 @@ public static class HyPlayList
             case HyPlayItemType.Local:
                 try
                 {
-                    var folder = StorageFolder.GetFolderFromPathAsync(Path.GetDirectoryName(NowPlayingItem.PlayItem.Url));
+                    var folder =
+                        StorageFolder.GetFolderFromPathAsync(Path.GetDirectoryName(NowPlayingItem.PlayItem.Url));
                     var fileName = Path.GetFileNameWithoutExtension(NowPlayingItem.PlayItem.Url);
                     pureLyricInfo = new PureLyricInfo
                     {
@@ -1738,7 +1816,9 @@ public static class HyPlayList
                         lrc = string.Join('\n',
                             (json["lrc"]?["lyric"]?.ToString() ?? string.Empty).Split("\n")
                             .Where(t => !t.StartsWith("{")).ToArray());
-                        karaoklrc = string.Join('\n', (json["yrc"]?["lyric"]?.ToString() ?? string.Empty).Split("\n").Where(t => !t.StartsWith("{")).ToArray());
+                        karaoklrc = string.Join('\n',
+                            (json["yrc"]?["lyric"]?.ToString() ?? string.Empty).Split("\n")
+                            .Where(t => !t.StartsWith("{")).ToArray());
                         romaji = json["yromalrc"]?["lyric"]?.ToString();
                         translrc = json["ytlrc"]?["lyric"]?.ToString();
                         return new KaraokLyricInfo()
@@ -1752,8 +1832,6 @@ public static class HyPlayList
                 }
                 else
                 {
-
-
                     json = await Common.ncapi?.RequestAsync(
                         CloudMusicApiProviders.Lyric,
                         new Dictionary<string, object> { { "id", ncp.PlayItem.Id } });
@@ -1797,6 +1875,7 @@ public static class HyPlayList
                         //DEBUG
                     }
                 }
+
                 json.RemoveAll();
             }
             catch (Exception ex)
@@ -1834,6 +1913,7 @@ public static class HyPlayList
         {
             return hpi;
         }
+
         if (position < 0)
             position = List.Count;
         if (hpi != null)
@@ -1847,6 +1927,15 @@ public static class HyPlayList
         if (position < 0)
             position = List.Count;
         var insertList = ncSongs.Select(LoadNcSong).Where(t => !List.Contains(t)).ToList();
+        if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
+        {
+            insertList = insertList.Except(List,new HyPlayerItemComparer()).ToList();
+            // 防止重新打乱列表
+            if (insertList.Count <= 0)
+            {
+                return insertList;
+            }
+        }
         List.InsertRange(position, insertList);
         SongAppendDone();
         return insertList;
@@ -1899,7 +1988,8 @@ public static class HyPlayList
         return hpi;
     }
 
-    public static void AppendNcSongs(IList<NCSong> ncSongs, bool needRemoveList = true, bool resetPlaying = true)
+    public static void AppendNcSongs(IList<NCSong> ncSongs, bool needRemoveList = true, bool resetPlaying = true,
+        string currentSongId = "-1")
     {
         if (ncSongs == null) return;
         if (needRemoveList)
@@ -1926,7 +2016,8 @@ public static class HyPlayList
                 };
                 AppendNcPlayItem(ncp);
             }
-            SongAppendDone();
+
+            SongAppendDone(currentSongId);
         }
         catch (Exception ex)
         {
@@ -2127,6 +2218,7 @@ public static class HyPlayList
                         (ex.InnerException ?? new Exception()).Message);
                 }
             }
+
             json.RemoveAll();
             return true;
         }
@@ -2152,11 +2244,13 @@ public static class HyPlayList
             !The163KeyHelper.TryGetMusicInfo(tagFile.Tag, out var mi))
         {
             //TagLib.File afi = TagLib.File.Create(new UwpStorageFileAbstraction(sf), ReadStyle.Average);
-            var songPerformersList = tagFile.Tag.Performers.Select(t => new NCArtist { name = t, Type = HyPlayItemType.Local }).ToList();
+            var songPerformersList = tagFile.Tag.Performers
+                .Select(t => new NCArtist { name = t, Type = HyPlayItemType.Local }).ToList();
             if (songPerformersList.Count == 0)
             {
                 songPerformersList.Add(new NCArtist { name = "未知歌手", Type = HyPlayItemType.Local });
             }
+
             var hyPlayItem = new HyPlayItem
             {
                 PlayItem = new PlayItem
@@ -2227,13 +2321,25 @@ public static class HyPlayList
         };
     }
 
-    public static Task CreateShufflePlayLists()
+    public static Task CreateShufflePlayLists(string currentSongId = "-1")
     {
         ShuffleList.Clear();
-        ShufflingIndex = -1;
+        ShufflingIndex = 0;
         if (List.Count != 0)
         {
             HashSet<int> shuffledNumbers = new();
+            bool hasSpecifiedCorrectCurrentSong = false;
+            if (currentSongId != "-1")
+            {
+                int playItemIndex = List.FindIndex(s => s.ToNCSong().sid == currentSongId);
+                if (playItemIndex != -1)
+                {
+                    shuffledNumbers.Add(playItemIndex);
+                    ShuffleList.Add(playItemIndex);
+                    hasSpecifiedCorrectCurrentSong = true;
+                }
+            }
+
             while (shuffledNumbers.Count < List.Count)
             {
                 var buffer = Guid.NewGuid().ToByteArray();
@@ -2245,7 +2351,9 @@ public static class HyPlayList
             }
 
             if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
-                ShufflingIndex = ShuffleList.IndexOf(NowPlaying);
+            {
+                ShufflingIndex = hasSpecifiedCorrectCurrentSong ? 0 : ShuffleList.IndexOf(NowPlaying);
+            }
         }
 
         // Call 一下来触发前端显示的播放列表更新
@@ -2289,21 +2397,20 @@ public static class Utils
     {
         using var parsedlyrics = LrcParser.ParseLrc(lyricAllText.AsSpan());
         return parsedlyrics.Lines.OrderBy(t => t.StartTime).Select(lyricsLine => new SongLyric
-        { LyricLine = lyricsLine, Translation = null })
-                        .ToList();
+                { LyricLine = lyricsLine, Translation = null })
+            .ToList();
     }
 
     public static void ConvertTranslation(string lyricAllText, List<SongLyric> lyrics)
     {
         using var parsedlyrics = LrcParser.ParseLrc(lyricAllText.AsSpan());
         foreach (var lyricsLine in parsedlyrics.Lines)
-            foreach (var songLyric in lyrics.Where(songLyric =>
-                         songLyric.LyricLine.StartTime == lyricsLine.StartTime))
-            {
-                songLyric.Translation = lyricsLine.CurrentLyric;
-                break;
-            }
-
+        foreach (var songLyric in lyrics.Where(songLyric =>
+                     songLyric.LyricLine.StartTime == lyricsLine.StartTime))
+        {
+            songLyric.Translation = lyricsLine.CurrentLyric;
+            break;
+        }
     }
 
     public static void ConvertNeteaseRomaji(string lyricAllText, List<SongLyric> lyrics)
@@ -2311,12 +2418,12 @@ public static class Utils
         if (string.IsNullOrEmpty(lyricAllText)) return;
         using var parsedlyrics = LrcParser.ParseLrc(lyricAllText.AsSpan());
         foreach (var lyricsLine in parsedlyrics.Lines)
-            foreach (var songLyric in lyrics.Where(songLyric =>
-                         songLyric.LyricLine.StartTime == lyricsLine.StartTime))
-            {
-                songLyric.Romaji = lyricsLine.CurrentLyric;
-                break;
-            }
+        foreach (var songLyric in lyrics.Where(songLyric =>
+                     songLyric.LyricLine.StartTime == lyricsLine.StartTime))
+        {
+            songLyric.Romaji = lyricsLine.CurrentLyric;
+            break;
+        }
     }
 
     public static async Task ConvertKawazuRomaji(List<SongLyric> lyrics)
@@ -2327,7 +2434,8 @@ public static class Utils
             if (!string.IsNullOrWhiteSpace(lyricItem.LyricLine.CurrentLyric))
             {
                 if (Utilities.HasKana(lyricItem.LyricLine.CurrentLyric))
-                    lyricItem.Romaji = await Common.KawazuConv.Convert(lyricItem.LyricLine.CurrentLyric, To.Romaji, Mode.Separated);
+                    lyricItem.Romaji =
+                        await Common.KawazuConv.Convert(lyricItem.LyricLine.CurrentLyric, To.Romaji, Mode.Separated);
             }
         }
     }
@@ -2362,6 +2470,7 @@ public static class Utils
 
             return parsedLyrics.Lines.OrderBy(t => t.StartTime).Select(t => new SongLyric() { LyricLine = t }).ToList();
         }
+
         throw new ArgumentException("LyricInfo is not KaraokeLyricInfo");
     }
 }
