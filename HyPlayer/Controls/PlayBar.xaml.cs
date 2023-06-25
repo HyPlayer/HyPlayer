@@ -1014,13 +1014,6 @@ DoubleAnimation verticalAnimation;
         }
     }
 
-    private void PlayListTitle_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
-    {
-        HyPlayList.List.Reverse();
-        HyPlayList.SongAppendDone();
-        HyPlayList.SongMoveTo(0);
-    }
-
     private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)
     {
         Common.Setting.ABStartPoint = HyPlayList.Player.PlaybackSession.Position;
@@ -1075,5 +1068,12 @@ DoubleAnimation verticalAnimation;
         }
         package.RequestedOperation = DataPackageOperation.Copy;
         Clipboard.SetContent(package);
+    }
+
+    private void BtnReverse_Click(object sender, RoutedEventArgs e)
+    {
+        HyPlayList.List.Reverse();
+        HyPlayList.SongAppendDone();
+        HyPlayList.NowPlaying = HyPlayList.List.Count - HyPlayList.NowPlaying - 1;
     }
 }

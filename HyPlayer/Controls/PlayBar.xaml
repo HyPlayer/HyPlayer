@@ -621,10 +621,17 @@
                     <Flyout>
                         <StackPanel Orientation="Vertical">
                             <controls:DockPanel LastChildFill="True">
+                                <Button
+                                    x:Name="BtnReverse"
+                                    Click="BtnReverse_Click"
+                                    Background="Transparent"
+                                    BorderBrush="Transparent"
+                                    ToolTipService.ToolTip="倒序播放列表">
+                                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE7AD;" />
+                                </Button>
                                 <TextBlock
                                     x:Name="PlayListTitle"
                                     Margin="16,0,0,0"
-                                    DoubleTapped="PlayListTitle_DoubleTapped"
                                     FontSize=" 16"
                                     FontWeight="Bold"
                                     HorizontalTextAlignment="Center"

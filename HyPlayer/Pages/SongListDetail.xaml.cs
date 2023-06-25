@@ -2,6 +2,7 @@
 
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
+using Microsoft.AppCenter.Ingestion.Models;
 using Microsoft.Toolkit.Uwp.UI.Behaviors;
 using Microsoft.Xaml.Interactivity;
 using NeteaseCloudMusicApi;
@@ -190,6 +191,12 @@ public sealed partial class SongListDetail : Page, IDisposable
             _cancellationToken.ThrowIfCancellationRequested();
             var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.PlaylistDetail,
                 new Dictionary<string, object> { { "id", playList.plid } });
+            if (json["code"].ToString() == "405")
+            {
+                treashold = ++cooldownTime * 10;
+                page--;
+                throw new Exception($"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求");
+            }
             if (!json["playlist"]["trackIds"].HasValues) return;
             var trackIds = json["playlist"]["trackIds"].Select(t => (int)t["id"]).Skip(page * 500)
                 .Take(500)
@@ -300,6 +307,32 @@ public sealed partial class SongListDetail : Page, IDisposable
         SongsList.ListSource = "pl" + playList?.plid;
         LoadSongListDetail();
         _songListLoaderTask = LoadSongListItem();
+        if (Common.Setting.greedlyLoadPlayContainerItems)
+            HyPlayList.OnTimerTicked += GreedlyLoad;
+    }
+
+    int treashold = 3;
+    int cooldownTime = 0;
+
+    private async void GreedlyLoad()
+    {
+        _ = Common.Invoke(() =>
+        {
+            if (treashold > 10)
+            {
+                treashold--;
+                return;
+            }
+            if (Songs.Count > 0 && NextPage.Visibility == Visibility.Visible && treashold-- <= 0 && !disposedValue)
+            {
+                NextPage_OnClickPage_OnClick(null, null);
+                treashold = 3;
+            }
+            else if (Songs.Count > 0 && NextPage.Visibility == Visibility.Collapsed || disposedValue)
+            {
+                HyPlayList.OnTimerTicked -= GreedlyLoad;
+            }
+        });
     }
 
 
