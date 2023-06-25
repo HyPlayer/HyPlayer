@@ -410,7 +410,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-
+        
         public bool CustomAcrylic
         {
             get => GetSettings(nameof(CustomAcrylic), false);
@@ -1330,6 +1330,16 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(saveTileBackgroundToLocalFolder)] = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool animationAdaptBPM
+        {
+            get => GetSettings(nameof(animationAdaptBPM), false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(animationAdaptBPM)] = value;
                 OnPropertyChanged();
             }
         }

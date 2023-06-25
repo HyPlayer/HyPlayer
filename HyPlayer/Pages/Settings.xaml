@@ -642,6 +642,7 @@
                                             <ComboBoxItem Content="强制白色" />
                                             <ComboBoxItem Content="强制黑色" />
                                             <ComboBoxItem Content="桌面亚克力" />
+                                            <ComboBoxItem Content="流光溢彩 (实验)" />
                                         </ComboBox>
                                     </Grid>
                                     <Grid>
@@ -680,6 +681,13 @@
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.albumRotate, Mode=TwoWay}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBlock VerticalAlignment="Center" Text="动效适配 BPM" />
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.animationAdaptBPM, Mode=TwoWay}" />
                                     </Grid>
                                 </StackPanel>
                             </controls:Expander>
