@@ -1142,6 +1142,9 @@
                                 Content="使用贪婪加载 (自动加载更多内容, 3 秒一次请求, 可能会导致风控)"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.greedlyLoadPlayContainerItems, Mode=TwoWay}" />
                             <CheckBox
+                                Content="使用贪婪加载完成时自动将加载到的歌曲添加到播放列表"
+                                IsChecked="{x:Bind hyplayer:Common.Setting.AutoAddGreedilyLoadedSongsToPlayList, Mode=TwoWay}" />
+                            <CheckBox
                                 x:Name="LazySongUrlGetCheck"
                                 Content="在播放时才获取播放链接"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.songUrlLazyGet, Mode=TwoWay}" />

@@ -680,7 +680,6 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(albumRotate)] = value;
-                if (value) albumRound = true;
                 OnPropertyChanged();
             }
         }
@@ -691,7 +690,6 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(albumRound)] = value;
-                if (!value) albumRotate = false;
                 OnPropertyChanged();
             }
         }
@@ -702,7 +700,16 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(greedlyLoadPlayContainerItems)] = value;
-                if (!value) greedlyLoadPlayContainerItems = false;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool AutoAddGreedilyLoadedSongsToPlayList
+        {
+            get => GetSettings(nameof(AutoAddGreedilyLoadedSongsToPlayList), false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(AutoAddGreedilyLoadedSongsToPlayList)] = value;
                 OnPropertyChanged();
             }
         }

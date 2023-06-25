@@ -25,6 +25,19 @@ public class HyPlayItem
     }
 }
 
+public class HyPlayerItemComparer : IEqualityComparer<HyPlayItem>
+{
+    public bool Equals(HyPlayItem x, HyPlayItem y)
+    {
+        return x?.ToNCSong().sid == y?.ToNCSong().sid;
+    }
+
+    public int GetHashCode(HyPlayItem obj)
+    {
+        return obj.ToNCSong().sid.GetHashCode();
+    }
+}
+
 public enum HyPlayItemType
 {
     Local,
@@ -48,13 +61,13 @@ public class PureLyricInfo
 public class SongLyric
 {
     public static SongLyric PureSong = new()
-    { LyricLine = new LrcLyricsLine("纯音乐 请欣赏", TimeSpan.Zero) };
+        { LyricLine = new LrcLyricsLine("纯音乐 请欣赏", TimeSpan.Zero) };
 
     public static SongLyric NoLyric = new()
-    { LyricLine = new LrcLyricsLine("无歌词 请欣赏", TimeSpan.Zero) };
+        { LyricLine = new LrcLyricsLine("无歌词 请欣赏", TimeSpan.Zero) };
 
     public static SongLyric LoadingLyric = new()
-    { LyricLine = new LrcLyricsLine("加载歌词中...", TimeSpan.Zero) };
+        { LyricLine = new LrcLyricsLine("加载歌词中...", TimeSpan.Zero) };
 
     public ILyricLine LyricLine;
     public string Translation;
@@ -172,9 +185,9 @@ public class NCSong
         Common.Setting.noImage
             ? null
             : new Uri((Album.cover ??
-                "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg") +
-                "?param=" +
-                StaticSource.PICSIZE_SINGLENCSONG_COVER);
+                       "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg") +
+                      "?param=" +
+                      StaticSource.PICSIZE_SINGLENCSONG_COVER);
 
     public string ArtistString
     {
@@ -227,6 +240,7 @@ public class NCSong
         return string.IsNullOrEmpty(source) ? "" : "(" + source + ")";
     }
 }
+
 public class NCAlbumSong : NCSong
 {
     public string DiscName { get; set; }
@@ -242,12 +256,16 @@ public class SimpleListItem
     public int Order = 0;
     public string ResourceId;
     public string Title;
+
     public Uri CoverUri =>
         Common.Setting.noImage
             ? null
-            : new Uri((string.IsNullOrEmpty(CoverLink) ? "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg" : CoverLink) +
-                                      "?param=" +
-                                      StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM);
+            : new Uri((string.IsNullOrEmpty(CoverLink)
+                          ? "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg"
+                          : CoverLink) +
+                      "?param=" +
+                      StaticSource.PICSIZE_SIMPLE_LINER_LIST_ITEM);
+
     public int DspOrder => Order + 1;
 }
 
@@ -333,8 +351,10 @@ public class NCPlayList
                 playCount = json[playcountpath].ToObject<long>(),
                 trackCount = json["trackCount"].ToObject<long>(),
             };
-            if (json["createTime"] != null) ncp.createTime = DateConverter.GetDateTimeFromTimeStamp(json["createTime"].ToObject<long>());
-            if (json["updateTime"] != null) ncp.updateTime = DateConverter.GetDateTimeFromTimeStamp(json["updateTime"].ToObject<long>());
+            if (json["createTime"] != null)
+                ncp.createTime = DateConverter.GetDateTimeFromTimeStamp(json["createTime"].ToObject<long>());
+            if (json["updateTime"] != null)
+                ncp.updateTime = DateConverter.GetDateTimeFromTimeStamp(json["updateTime"].ToObject<long>());
 
             if (json[subcountpath] != null) ncp.bookCount = json[subcountpath].ToObject<long>();
 
@@ -453,7 +473,7 @@ public class NCAlbum
 
 public class Comment
 {
-    public Comment thisComment => this;//绑定回去用
+    public Comment thisComment => this; //绑定回去用
     public Uri AvatarUri;
     public string cid;
     public string content;

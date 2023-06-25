@@ -46,19 +46,20 @@ public sealed partial class MusicCloudPage : Page, IDisposable
         try
         {
             var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.UserCloud,
-                new Dictionary<string, object>
+                new()
                 {
                     { "limit", 200 },
                     { "offset", page * 200 }
-                });
-            if (json["code"].ToString() == "405")
+                })!;
+            if (json["code"]?.ToString() == "405")
             {
                 treashold = ++cooldownTime * 10;
                 page--;
                 throw new Exception($"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求");
             }
+
             var idx = page * 200;
-            foreach (var jToken in json["data"])
+            foreach (var jToken in json["data"]!)
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 try
@@ -83,8 +84,10 @@ public sealed partial class MusicCloudPage : Page, IDisposable
                 {
                     //ignore
                 }
-                NextPage.Visibility = json["hasMore"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
+
+                NextPage.Visibility = json["hasMore"]!.ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
             }
+
             json.RemoveAll();
         }
         catch (Exception ex)
@@ -110,6 +113,7 @@ public sealed partial class MusicCloudPage : Page, IDisposable
                 return;
             }
         }
+
         Dispose();
     }
 
@@ -120,6 +124,7 @@ public sealed partial class MusicCloudPage : Page, IDisposable
         if (Common.Setting.greedlyLoadPlayContainerItems)
             HyPlayList.OnTimerTicked += GreedlyLoad;
     }
+
     int treashold = 3;
     int cooldownTime = 0;
 
@@ -132,7 +137,9 @@ public sealed partial class MusicCloudPage : Page, IDisposable
                 treashold--;
                 return;
             }
-            if (SongContainer.Songs.Count > 0 && NextPage.Visibility == Visibility.Visible && treashold-- <= 0 && !disposedValue)
+
+            if (SongContainer.Songs.Count > 0 && NextPage.Visibility == Visibility.Visible && treashold-- <= 0 &&
+                !disposedValue)
             {
                 NextPage_OnClickPage_OnClick(null, null);
                 treashold = 3;
@@ -140,8 +147,17 @@ public sealed partial class MusicCloudPage : Page, IDisposable
             else if (SongContainer.Songs.Count > 0 && NextPage.Visibility == Visibility.Collapsed || disposedValue)
             {
                 HyPlayList.OnTimerTicked -= GreedlyLoad;
+                OnLoadedAllSongs();
             }
         });
+    }
+
+    public void OnLoadedAllSongs()
+    {
+        if (Common.Setting.AutoAddGreedilyLoadedSongsToPlayList && HyPlayList.PlaySourceId == "content")
+        {
+            HyPlayList.AppendNcSongRange(SongContainer.Songs.ToList());
+        }
     }
 
     private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
@@ -192,6 +208,7 @@ public sealed partial class MusicCloudPage : Page, IDisposable
                 SongContainer.Dispose();
                 _cancellationTokenSource.Dispose();
             }
+
             disposedValue = true;
         }
     }
