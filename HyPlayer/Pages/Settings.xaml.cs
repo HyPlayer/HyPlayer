@@ -49,7 +49,7 @@ public sealed partial class Settings : Page, IDisposable
     {
         isbyprogram = true;
         InitializeComponent();
-        RomajiStatus.Text = (Common.KawazuConv == null ? "请下载Kawazu资源文件" : "可以转换");
+        RomajiStatus.Header = (Common.KawazuConv == null ? "请下载Kawazu资源文件" : "可以转换");
         ButtonDownloadRomaji.Visibility = Common.KawazuConv == null ? Visibility.Visible : Visibility.Collapsed;
         if (Common.Setting.audioRate.EndsWith('0') || Common.Setting.downloadAudioRate.EndsWith('0'))
         {
@@ -103,7 +103,7 @@ public sealed partial class Settings : Page, IDisposable
     private async Task GetRomaji()
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
-        RomajiStatus.Text = "正在下载资源文件 请稍等";
+        RomajiStatus.Header = "正在下载资源文件 请稍等";
         try
         {
             var undeletedRomajiFile = await ApplicationData.Current.LocalCacheFolder.TryGetItemAsync("RomajiData.zip");
@@ -132,7 +132,7 @@ public sealed partial class Settings : Page, IDisposable
         }
         catch (Exception E)
         {
-            RomajiStatus.Text = "下载错误 " + E.Message;
+            RomajiStatus.Header = "下载错误 " + E.Message;
         }
     }
 
@@ -141,11 +141,11 @@ public sealed partial class Settings : Page, IDisposable
         if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         if (obj.Progress.TotalBytesToReceive == 0)
         {
-            RomajiStatus.Text = "下载错误 " + obj.CurrentWebErrorStatus;
+            RomajiStatus.Header = "下载错误 " + obj.CurrentWebErrorStatus;
             return;
         }
 
-        RomajiStatus.Text = $"正在下载资源文件 ({obj.Progress.BytesReceived * 100 / obj.Progress.TotalBytesToReceive:D}%)";
+        RomajiStatus.Header = $"正在下载资源文件 ({obj.Progress.BytesReceived * 100 / obj.Progress.TotalBytesToReceive:D}%)";
     }
 
     private async Task OnRomajiDownloadDone(DownloadOperation obj)
@@ -155,7 +155,7 @@ public sealed partial class Settings : Page, IDisposable
         {
             //下载完成
             //unzip
-            RomajiStatus.Text = "正在解压,请稍等......";
+            RomajiStatus.Header = "正在解压,请稍等......";
             await Task.Delay(1000);
             var path =
                 (await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("Romaji",
@@ -172,11 +172,11 @@ public sealed partial class Settings : Page, IDisposable
         }
         catch (Exception e)
         {
-            RomajiStatus.Text = "罗马字文件解压错误: " + e.Message;
+            RomajiStatus.Header = "罗马字文件解压错误: " + e.Message;
         }
         finally
         {
-            RomajiStatus.Text =
+            RomajiStatus.Header =
                 (Common.KawazuConv == null ? "请重新下载资源文件" : "可以转换");
             ButtonDownloadRomaji.Visibility = Common.KawazuConv != null ? Visibility.Visible : Visibility.Collapsed;
         }
@@ -192,7 +192,7 @@ public sealed partial class Settings : Page, IDisposable
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         ApplicationData.Current.LocalSettings.Values["xRealIp"] =
-            TextBoxXREALIP.Text == "" ? null : TextBoxXREALIP.Text;
+            TextBoxXREALIP.Text == "" ? null : TextBoxXREALIP.Header;
         if (Common.ncapi != null)
         {
             Common.ncapi.RealIP = (string)ApplicationData.Current.LocalSettings.Values["xRealIp"];
