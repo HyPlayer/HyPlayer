@@ -37,7 +37,10 @@ steps:
 
 - task: NuGetCommand@2
   inputs:
+    command: 'restore'
     restoreSolution: '$(solution)'
+    feedsToUse: 'config'
+    nugetConfigPath: 'nuget.config'
 
 - powershell: |
         $MANIFEST = [xml](Get-Content **\Package.appxmanifest)
