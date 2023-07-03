@@ -57,7 +57,7 @@
                                             Click="ButtonBase_OnClick"
                                             Content="获取罗马字资源文件" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="罗马字源 (切歌后生效)">
+                                    <controls3:SettingsCard Header="罗马字源" Description="切歌后生效">
                                         <ComboBox
                                             x:Name="RomajiSource"
                                             HorizontalAlignment="Right"
@@ -105,7 +105,7 @@
                                     </TransitionCollection>
                                 </controls3:SettingsExpander.Transitions>
                                 <controls3:SettingsExpander.Items>
-                                    <controls3:SettingsCard Header="歌词大小 (0为自动)">
+                                    <controls3:SettingsCard Header="歌词大小" Description="0为自动">
                                         <controls:NumberBox
                                             x:Name="LyricSize"
                                             MinWidth="100"
@@ -171,7 +171,7 @@
                                         </ComboBox>
                                     </controls3:SettingsCard>
 
-                                    <controls3:SettingsCard Header="使用逐字歌词 (试验性功能)">
+                                    <controls3:SettingsCard Header="使用逐字歌词 (试验性功能)" >
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
@@ -186,8 +186,8 @@
                                             <ComboBoxItem Content="唱片主色调" />
                                         </ComboBox>
                                     </controls3:SettingsCard>
-                                    
-                                    <controls3:SettingsCard Header="显示颜色自定义选项 (重置即为歌词主色调)">
+
+                                    <controls3:SettingsCard Header="显示颜色自定义选项" Description="重置即为歌词主色调">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
@@ -562,7 +562,8 @@
                             <controls3:SettingsExpander
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
-                                Header="颜色设置 (需要重启 HyPlayer)"
+                                Header="颜色设置"
+                                Description="需要重启 HyPlayer"
                                 IsExpanded="True">
                                 <controls3:SettingsExpander.HeaderIcon>
                                     <FontIcon Glyph="&#xE790;"/>
@@ -630,7 +631,7 @@
                                             <ComboBoxItem Content="流光溢彩 (实验)" />
                                         </ComboBox>
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="唱片边框厚度 (0 为无边框)">
+                                    <controls3:SettingsCard Header="唱片边框厚度" Description="0 为无边框">
                                         <Slider
                                             x:Name="SliderAlbumBorderLength"
                                             Width="256"
@@ -640,7 +641,7 @@
                                             ToolTipService.ToolTip="{x:Bind SliderAlbumBorderLength.Value}"
                                             Value="{x:Bind hyplayer:Common.Setting.albumBorderLength, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="歌词页面封面阴影强度 (0为无阴影)">
+                                    <controls3:SettingsCard Header="歌词页面封面阴影强度" Description="0为无阴影">
                                         <Slider
                                             x:Name="SliderAlbumShadowDepth"
                                             Width="256"
@@ -685,7 +686,7 @@
                                     </TransitionCollection>
                                 </controls3:SettingsExpander.Transitions>
                                 <controls3:SettingsExpander.Items>
-                                    <controls3:SettingsCard Header="使用亚克力窗口背景 (关闭此选项则为 Mica)">
+                                    <controls3:SettingsCard Header="使用亚克力窗口背景" Description="关闭此选项则为 Mica">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
@@ -742,7 +743,7 @@
                                         </Grid></Grid>
 
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="无图模式(需重启应用)">
+                                    <controls3:SettingsCard Header="无图模式" Description="需重启应用">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
@@ -800,13 +801,13 @@
                                     </TransitionCollection>
                                 </controls3:SettingsExpander.Transitions>
                                 <controls3:SettingsExpander.Items>
-                                    <controls3:SettingsCard Header="歌词页面使用亚克力背景 (否则为一般模糊)">
+                                    <controls3:SettingsCard Header="歌词页面使用亚克力背景" Description="否则为一般模糊">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.expandedUseAcrylic, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="播放条使用封面模糊背景 (否则为窗口亚克力)">
+                                    <controls3:SettingsCard Header="播放条使用封面模糊背景" Description="否则为窗口亚克力">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
@@ -824,7 +825,7 @@
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.playbarBackgroundBreath, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="歌词页面专辑封面呼吸动画 (与阴影冲突)">
+                                    <controls3:SettingsCard Header="歌词页面专辑封面呼吸动画" Description="与阴影冲突">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
@@ -1069,11 +1070,11 @@
                             <controls:InfoBar IsOpen="True"
                                               IsClosable="False"
                                               Severity="Warning"
-                                              Message="如无特别说明, 请勿轻易修改此选项卡内容">
+                                              Message="如无特别说明, 请勿随意修改此选项卡内容">
                                 
                             </controls:InfoBar>
 
-                            <controls3:SettingsCard Header="X-Real-IP (置空不设置)">
+                            <controls3:SettingsCard Header="X-Real-IP" Description="置空不设置">
                                 <controls3:SettingsCard.Content>
                                     <StackPanel Orientation="Horizontal">
                                         <TextBox
@@ -1136,7 +1137,7 @@
                                 Margin="0,0,-100,0"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.greedlyLoadPlayContainerItems, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard Header="使用贪婪加载完成时自动将加载到的歌曲添加到播放列表">
+                            <controls3:SettingsCard Header="贪婪加载完成时自动将加载到的歌曲添加到播放列表">
                                 <CheckBox
                                 Margin="0,0,-100,0"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.AutoAddGreedilyLoadedSongsToPlayList, Mode=TwoWay}" />
@@ -1194,7 +1195,7 @@
                                 Margin="0,0,-100,0"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.ancientSMTC, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard Header="启用安全本地文件访问 (可能会提高内存占用)">
+                            <controls3:SettingsCard Header="启用安全本地文件访问" Description="可能会提高内存占用">
                                 <CheckBox Margin="0,0,-100,0"
                                       IsChecked="{x:Bind hyplayer:Common.Setting.safeFileAccess, Mode=TwoWay}" />
                             </controls3:SettingsCard>
@@ -1235,8 +1236,8 @@
                                 Margin="0,0,-100,0"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.saveTileBackgroundToLocalFolder, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard Header="启用旧版主题(需重启应用)"
-                                                    Description="可能会导致未知问题">
+                            <controls3:SettingsCard Header="启用旧版主题"
+                                                    Description="需重启应用，可能会导致未知问题">
                                 <CheckBox
                                 Margin="0,0,-100,0"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.IsOldThemeEnabled, Mode=TwoWay}" />
