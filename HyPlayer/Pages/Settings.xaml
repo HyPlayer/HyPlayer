@@ -38,6 +38,10 @@
                                 HorizontalContentAlignment="Stretch"
                                 Header="罗马字设置"
                                 IsExpanded="True">
+                                <controls3:SettingsExpander.HeaderIcon>
+                                    <FontIcon Glyph="&#xE8C1;"/>
+                                </controls3:SettingsExpander.HeaderIcon>
+                                    
                                 <controls3:SettingsExpander.Transitions>
                                     <TransitionCollection>
                                         <RepositionThemeTransition />
@@ -93,6 +97,7 @@
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
                                 Header="歌词大小"
+                                HeaderIcon="FontSize"
                                 IsExpanded="True">
                                 <controls3:SettingsExpander.Transitions>
                                     <TransitionCollection>
@@ -148,6 +153,9 @@
                                 HorizontalContentAlignment="Stretch"
                                 Header="歌词显示"
                                 IsExpanded="True">
+                                <controls3:SettingsExpander.HeaderIcon>
+                                    <FontIcon Glyph="&#xE18F;"/>
+                                </controls3:SettingsExpander.HeaderIcon>
                                 <controls3:SettingsExpander.Transitions>
                                     <TransitionCollection>
                                         <RepositionThemeTransition />
@@ -299,6 +307,7 @@
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
                                 Header="音质设置"
+                                HeaderIcon="MusicInfo"
                                 IsExpanded="True">
                                 <controls3:SettingsExpander.Transitions>
                                     <TransitionCollection>
@@ -345,6 +354,9 @@
                                 HorizontalContentAlignment="Stretch"
                                 Header="渐入渐出"
                                 IsExpanded="True">
+                                <controls3:SettingsExpander.HeaderIcon>
+                                    <FontIcon Glyph="&#xE799;"/>
+                                </controls3:SettingsExpander.HeaderIcon>
                                 <controls3:SettingsExpander.Transitions>
                                     <TransitionCollection>
                                         <RepositionThemeTransition />
@@ -408,6 +420,7 @@
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
                                 Header="随机设置"
+                                HeaderIcon="RepeatAll"
                                 IsExpanded="True">
                                 <controls3:SettingsExpander.Transitions>
                                     <TransitionCollection>
@@ -434,6 +447,9 @@
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
                                 IsExpanded="True">
+                                <controls3:SettingsExpander.HeaderIcon>
+                                    <FontIcon Glyph="&#xE7F6;"/>
+                                </controls3:SettingsExpander.HeaderIcon>
                                 <controls3:SettingsExpander.Header>
                                     <Grid HorizontalAlignment="Stretch">
                                         <TextBlock VerticalAlignment="Center" Text="输出设置" />
@@ -471,6 +487,7 @@
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
                                 Header="跳过 VIP 试听歌曲"
+                                HeaderIcon="Forward"
                                 IsExpanded="True">
                                 <controls3:SettingsExpander.Transitions>
                                     <TransitionCollection>
@@ -547,6 +564,9 @@
                                 HorizontalContentAlignment="Stretch"
                                 Header="颜色设置 (需要重启 HyPlayer)"
                                 IsExpanded="True">
+                                <controls3:SettingsExpander.HeaderIcon>
+                                    <FontIcon Glyph="&#xE790;"/>
+                                </controls3:SettingsExpander.HeaderIcon>
                                 <controls3:SettingsExpander.Transitions>
                                     <TransitionCollection>
                                         <RepositionThemeTransition />
@@ -590,6 +610,7 @@
                             <controls3:SettingsExpander
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
+                                HeaderIcon="List"
                                 Header="歌词页面"
                                 IsExpanded="True">
                                 <controls3:SettingsExpander.Transitions>
@@ -655,6 +676,9 @@
                                 HorizontalContentAlignment="Stretch"
                                 Header="个性化"
                                 IsExpanded="True">
+                                <controls3:SettingsExpander.HeaderIcon>
+                                    <FontIcon Glyph="&#xE771;"/>
+                                </controls3:SettingsExpander.HeaderIcon>
                                 <controls3:SettingsExpander.Transitions>
                                     <TransitionCollection>
                                         <RepositionThemeTransition />
@@ -767,6 +791,9 @@
                                 HorizontalContentAlignment="Stretch"
                                 Header="特效设置"
                                 IsExpanded="True">
+                                <controls3:SettingsExpander.HeaderIcon>
+                                    <FontIcon Glyph="&#xE794;"/>
+                                </controls3:SettingsExpander.HeaderIcon>
                                 <controls3:SettingsExpander.Transitions>
                                     <TransitionCollection>
                                         <RepositionThemeTransition />
@@ -845,6 +872,9 @@
                                 HorizontalContentAlignment="Stretch"
                                 Header="路径设置"
                                 IsExpanded="True">
+                                <controls3:SettingsExpander.HeaderIcon>
+                                    <FontIcon Glyph="&#xE28F;"/>
+                                </controls3:SettingsExpander.HeaderIcon>
                                 <controls3:SettingsExpander.Transitions>
                                     <TransitionCollection>
                                         <RepositionThemeTransition />
@@ -907,6 +937,7 @@
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
                                 Header="名称设置"
+                                HeaderIcon="Rename"
                                 IsExpanded="True">
                                 <controls3:SettingsExpander.Transitions>
                                     <TransitionCollection>
@@ -959,6 +990,7 @@
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
                                 Header="下载选项"
+                                HeaderIcon="Download"
                                 IsExpanded="True">
                                 <controls3:SettingsExpander.Transitions>
                                     <TransitionCollection>
