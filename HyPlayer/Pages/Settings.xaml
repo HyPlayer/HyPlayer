@@ -451,14 +451,14 @@
                                     <FontIcon Glyph="&#xE7F6;"/>
                                 </controls3:SettingsExpander.HeaderIcon>
                                 <controls3:SettingsExpander.Header>
-                                    <Grid HorizontalAlignment="Stretch">
+                                    <StackPanel HorizontalAlignment="Stretch" Orientation="Horizontal" Spacing="12">
                                         <TextBlock VerticalAlignment="Center" Text="输出设置" />
                                         <Button
                                             x:Name="BtnChangeAudioRenderDevice"
                                             HorizontalAlignment="Right"
                                             Click="BtnChangeAudioRenderDevice_Click"
                                             Content="选择音频输出设备" />
-                                    </Grid>
+                                    </StackPanel>
                                 </controls3:SettingsExpander.Header>
                                 <controls3:SettingsExpander.Transitions>
                                     <TransitionCollection>
