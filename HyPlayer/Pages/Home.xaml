@@ -3,7 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:muxc="using:Microsoft.UI.Xaml.Controls" xmlns:hyplayer="using:HyPlayer"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -190,6 +190,11 @@
                 Padding="15"
                 Orientation="Vertical"
                 Spacing="10">
+                <Border CornerRadius="8">
+                    <muxc:InfoBar Title="已开启旧版主题" Message="若出现问题，请点击下方开关以关闭（重启后生效）" Severity="Warning" IsOpen="{x:Bind hyplayer:Common.Setting.IsOldThemeEnabled}" >
+                        <ToggleSwitch Margin="0,0,0,24" IsOn="{x:Bind hyplayer:Common.Setting.IsOldThemeEnabled,Mode=TwoWay}"/>
+                    </muxc:InfoBar>
+                </Border>
 
 
                 <StackPanel
