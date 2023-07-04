@@ -419,8 +419,8 @@ namespace HyPlayer.Classes
     {
         public NegationBoolToVisibilityConverter()
         {
-            base.TrueValue = Visibility.Collapsed;
-            base.FalseValue = Visibility.Visible;
+            base.TrueValue = Visibility.Visible;
+            base.FalseValue = Visibility.Collapsed;
         }
     }
 }

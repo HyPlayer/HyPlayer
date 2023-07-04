@@ -597,7 +597,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         1.8,
                         1,
                         TimeSpan.Zero,
-                        TimeSpan.FromSeconds(600 / bpm),
+                        TimeSpan.FromSeconds(480 / bpm),
                         repeatBehavior: RepeatBehavior.Forever,
                         autoReverse: true,
                         easing:new BackEase { EasingMode = EasingMode.EaseInOut });
@@ -606,7 +606,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         1.8,
                         1,
                         TimeSpan.Zero,
-                        TimeSpan.FromSeconds(600 / bpm),
+                        TimeSpan.FromSeconds(480 / bpm),
                         repeatBehavior: RepeatBehavior.Forever,
                         autoReverse: true,
                         easing: new BackEase { EasingMode = EasingMode.EaseInOut });
