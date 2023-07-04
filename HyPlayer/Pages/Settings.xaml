@@ -9,7 +9,6 @@
     xmlns:controls1="using:HyPlayer.Controls"
     xmlns:controls2="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:controls3="using:CommunityToolkit.Labs.WinUI"
-    xmlns:classes="using:HyPlayer.Classes"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
     <Grid>
@@ -694,15 +693,23 @@
                                             IsOn="{x:Bind hyplayer:Common.Setting.acrylicBackgroundStatus, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="自定义Acrylic(需重启)" Visibility="{x:Bind hyplayer:Common.Setting.acrylicBackgroundStatus, Mode=OneWay}">
+                                        <Grid>
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
                                             VerticalAlignment="Top"
                                             IsOn="{x:Bind hyplayer:Common.Setting.CustomAcrylic, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
-
-                                    <controls3:SettingsCard Header="TintOpacity值" Visibility="{x:Bind hyplayer:Common.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource NegationBoolToVisibilityConverter}}" >
-                                        <Slider
+                                        <!-- ReSharper disable once Xaml.InvalidResourceType -->
+                                        <Grid Visibility="{x:Bind hyplayer:Common.Setting.CustomAcrylic, Mode=OneWay}" Background="{ThemeResource SystemListLowColor}" CornerRadius="8" Margin="0,40,0,0">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition/>
+                                                    <ColumnDefinition Width="256"/>
+                                                </Grid.ColumnDefinitions>
+                                                <ListView Grid.Column="0" Padding="0">
+                                                    <Grid>
+                                                        <TextBlock VerticalAlignment="Center" Text="TintOpacity值" />
+                                                        <Slider
                                             x:Name="TintOpacitySlider"
                                             Width="256"
                                             HorizontalAlignment="Right"
@@ -711,10 +718,10 @@
                                             Minimum="0"
                                             ToolTipService.ToolTip="{x:Bind TintOpacitySlider.Value}"
                                             Value="{x:Bind hyplayer:Common.Setting.CustomTintOpacity, Mode=TwoWay}" StepFrequency="0.01" ValueChanged="TintOpacity_ValueChanged" />
-                                    </controls3:SettingsCard>
-
-                                    <controls3:SettingsCard Header="TintOpacityLuminosity值" Visibility="{x:Bind hyplayer:Common.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource NegationBoolToVisibilityConverter}}">
-                                        <Slider
+                                                    </Grid>
+                                                    <Grid>
+                                                        <TextBlock VerticalAlignment="Center" Text="TintOpacityLuminosity值" />
+                                                        <Slider
                                             x:Name="TintOpacityLuminositySlider"
                                             Width="256"
                                             HorizontalAlignment="Right"
@@ -723,19 +730,19 @@
                                             Minimum="0"
                                             ToolTipService.ToolTip="{x:Bind TintOpacityLuminositySlider.Value}"
                                             Value="{x:Bind hyplayer:Common.Setting.CustomTintLuminosityOpacity, Mode=TwoWay}" StepFrequency="0.01" ValueChanged="TintOpacityLuminosity_ValueChanged"/>
-                                    </controls3:SettingsCard>
-
-                                    <controls3:SettingsCard Header="预览Acrylic" Visibility="{x:Bind hyplayer:Common.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource NegationBoolToVisibilityConverter}}">
-                                        <Rectangle
+                                                    </Grid>
+                                                </ListView>
+                                                <Rectangle
                                                 Grid.Column="1"
                                             x:Name="PreviewAcrylic"
                                                 VerticalAlignment="Stretch"
-                                            Height="75"
                                             Width="256"
                                             RadiusX="10"
                                             RadiusY="10"/>
+                                            </Grid>
+                                        </Grid></Grid>
+
                                     </controls3:SettingsCard>
-                                    
                                     <controls3:SettingsCard Header="无图模式" Description="需重启应用">
                                         <ToggleSwitch
                                             MinWidth="10"
