@@ -403,7 +403,7 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <Grid Background="Transparent" Grid.RowSpan="2" />
-            <Grid x:Name="TitleGrid">
+            <Grid x:Name="TitleGrid" Background="Black" Opacity="0.8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />

@@ -7,4 +7,8 @@
         TintColor="#FF606060"
         TintOpacity="0.5" />
     <SolidColorBrush x:Key="FakeMicaBackgroundColor" Color="#26272b" />
+
+    <Color x:Key="CaptionButtonForegroundColor">#FFFFFF</Color>
+    <Color x:Key="CaptionButtonHoverColor">#333333</Color>
+    <Color x:Key="CaptionButtonPressedColor">#323232</Color>
 </ResourceDictionary>
