@@ -69,7 +69,13 @@ public sealed partial class BasePage : Page
             CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
             var titleBar = ApplicationView.GetForCurrentView().TitleBar;
             titleBar.ButtonBackgroundColor = Colors.Transparent;
+            titleBar.ButtonHoverBackgroundColor = (Color)App.Current.Resources["CaptionButtonHoverColor"];
+            titleBar.ButtonPressedBackgroundColor = (Color)App.Current.Resources["CaptionButtonPressedColor"];
             titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+
+            titleBar.ButtonForegroundColor = (Color)App.Current.Resources["CaptionButtonForegroundColor"];
+            titleBar.ButtonPressedForegroundColor = (Color)App.Current.Resources["CaptionButtonForegroundColor"];
+            titleBar.ButtonHoverForegroundColor = (Color)App.Current.Resources["CaptionButtonForegroundColor"];
             Window.Current.SetTitleBar(AppTitleBar);
         }
         else if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
