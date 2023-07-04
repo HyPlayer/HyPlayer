@@ -442,7 +442,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 360,
                 0,
                 TimeSpan.Zero,
-                TimeSpan.FromSeconds(16),
+                TimeSpan.FromSeconds(12),
                 repeatBehavior: RepeatBehavior.Forever,
                 autoReverse: false);
             luminousColorsRotateStoryBoard.Children.Add(luminousColorsRotateAnimation);
@@ -594,20 +594,22 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 {
                     var animationX = BgScale.CreateDoubleAnimation(
                         "ScaleX", 
-                        1.5,
+                        1.8,
                         1,
                         TimeSpan.Zero,
-                        TimeSpan.FromSeconds(60 / bpm),
+                        TimeSpan.FromSeconds(600 / bpm),
                         repeatBehavior: RepeatBehavior.Forever,
-                        autoReverse: true);
+                        autoReverse: true,
+                        easing:new BackEase { EasingMode = EasingMode.EaseInOut });
                     var animationY = BgScale.CreateDoubleAnimation(
                         "ScaleY", 
-                        1.5,
+                        1.8,
                         1,
                         TimeSpan.Zero,
-                        TimeSpan.FromSeconds(60 / bpm),
+                        TimeSpan.FromSeconds(600 / bpm),
                         repeatBehavior: RepeatBehavior.Forever,
-                        autoReverse: true);
+                        autoReverse: true,
+                        easing: new BackEase { EasingMode = EasingMode.EaseInOut });
                     bpmAniStoryboard.Children.Clear();
                     bpmAniStoryboard.Children.Add(animationX);
                     bpmAniStoryboard.Children.Add(animationY);
