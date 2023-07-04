@@ -1,4 +1,5 @@
 ﻿using HyPlayer.Pages;
+using Microsoft.Toolkit.Uwp.UI.Converters;
 using System;
 using System.Linq;
 using Windows.UI;
@@ -411,6 +412,15 @@ namespace HyPlayer.Classes
         public object ConvertBack(object value, Type targetType, object parameter, string language)
         {
             throw new NotImplementedException();
+        }
+    }
+
+    public class NegationBoolToVisibilityConverter : BoolToObjectConverter
+    {
+        public NegationBoolToVisibilityConverter()
+        {
+            base.TrueValue = Visibility.Collapsed;
+            base.FalseValue = Visibility.Visible;
         }
     }
 }

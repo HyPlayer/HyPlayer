@@ -3,7 +3,8 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:theme="using:HyPlayer.Resources">
+    xmlns:theme="using:HyPlayer.Resources"
+    xmlns:classes="using:HyPlayer.Classes">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -26,6 +27,8 @@
             <StaticResource x:Key="ListViewItemBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
             <SolidColorBrush x:Key="SubtleFillColorTertiaryBrush" Color="{StaticResource SubtleFillColorTertiary}" />
             <Color x:Key="SubtleFillColorTertiary">#0AFFFFFF</Color>
+
+            <classes:NegationBoolToVisibilityConverter x:Key="NegationBoolToVisibilityConverter"/>
 
         </ResourceDictionary>
     </Application.Resources>
