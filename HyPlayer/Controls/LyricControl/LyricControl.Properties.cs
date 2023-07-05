@@ -12,7 +12,7 @@ using Windows.UI;
 using HyPlayer.Classes;
 using LyricParser.Abstraction;
 
-namespace HyPlayer.HyPlayControl.LyricControl
+namespace HyPlayer.Controls.LyricControl
 {
     public partial class LyricControl
     {

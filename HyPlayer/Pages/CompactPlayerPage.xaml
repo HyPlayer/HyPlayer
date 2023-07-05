@@ -8,7 +8,7 @@
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:ui="using:Microsoft.Toolkit.Uwp.UI"
     xmlns:hyplayer="using:HyPlayer"
-    xmlns:lyric="using:HyPlayer.HyPlayControl.LyricControl"
+    xmlns:lyric="using:HyPlayer.Controls.LyricControl"
     d:Background="White"
     d:DesignHeight="350"
     d:DesignWidth="600"
@@ -436,7 +436,7 @@
                     Grid.RowSpan="2"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch" />
-                <lyric:LyricControl x:Name="LyricControl" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Height="500" WordWrapping="Wrap" />
+                <lyric:LyricControl x:Name="LyricControl" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Height="500" WordWrapping="NoWrap" />
 
                 <Viewbox Visibility="Collapsed"
                     x:Name="LyricViewBox"

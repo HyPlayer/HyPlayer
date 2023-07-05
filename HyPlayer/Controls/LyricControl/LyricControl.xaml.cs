@@ -21,7 +21,7 @@ using LyricParser.Abstraction;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
-namespace HyPlayer.HyPlayControl.LyricControl
+namespace HyPlayer.Controls.LyricControl
 {
     public sealed partial class LyricControl : UserControl
     {
@@ -142,7 +142,9 @@ namespace HyPlayer.HyPlayControl.LyricControl
                 //获取正在播放单词的长度
                 var currentWidth = textLayout.GetCharacterRegions(position, currentLyric.CurrentWords.Length).Sum(p => p.LayoutBounds.Width);
                 //计算占比
-                var playingWidth = _easeFunction.Ease((currentTime - startTime) / currentLyric.Duration) * currentWidth;
+                //var playingWidth = _easeFunction.Ease((currentTime - startTime) / currentLyric.Duration) * currentWidth;
+                var playingWidth = (currentTime - startTime) / currentLyric.Duration * currentWidth;
+
                 //求和
                 var width = playedWidth + playingWidth;
 

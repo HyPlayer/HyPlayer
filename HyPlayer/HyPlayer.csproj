@@ -148,9 +148,9 @@
     </Compile>
     <Compile Include="HyPlayControl\DownloadManager.cs" />
     <Compile Include="HyPlayControl\HyPlayList.cs" />
-    <Compile Include="HyPlayControl\LyricControl\LyricControl.EaseFunctions.cs" />
-    <Compile Include="HyPlayControl\LyricControl\LyricControl.Properties.cs" />
-    <Compile Include="HyPlayControl\LyricControl\LyricControl.xaml.cs">
+    <Compile Include="Controls\LyricControl\LyricControl.EaseFunctions.cs" />
+    <Compile Include="Controls\LyricControl\LyricControl.Properties.cs" />
+    <Compile Include="Controls\LyricControl\LyricControl.xaml.cs">
       <DependentUpon>LyricControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="MainPage.xaml.cs">
@@ -317,7 +317,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="HyPlayControl\LyricControl\LyricControl.xaml">
+    <Page Include="Controls\LyricControl\LyricControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
