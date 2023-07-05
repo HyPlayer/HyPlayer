@@ -19,6 +19,7 @@
         </Grid.RowDefinitions>
 
         <ContentDialog x:Name="AboutRomajiDialog" 
+                       Title="关于此选项"
                        PrimaryButtonText="好的">
             <RichTextBlock>
                 <Paragraph>
