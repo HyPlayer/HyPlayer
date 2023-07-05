@@ -4,7 +4,9 @@ using LyricParser.Abstraction;
 using Microsoft.Toolkit.Uwp.UI.Media;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media.Playback;
 using Windows.Storage.Streams;
@@ -65,6 +67,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     public SongLyric Lrc;
     private List<Run> WordTextBlocks = new();
     private Dictionary<Run, Storyboard> BlockToAnimation = new();
+    private System.Timers.Timer _timer = new (10);
 
 #nullable enable
     private Color? _karaokAccentColorCache;
@@ -92,7 +95,17 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         HyPlayList.OnSongLikeStatusChange += HyPlayList_OnSongLikeStatusChange;
         LeaveAnimation.Completed += LeaveAnimation_Completed;
         Common.OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;
+        _timer.Elapsed += TimerElapsed;
+        _timer.Start();
         //CompactPlayerAni.Begin();
+    }
+
+    private void TimerElapsed(object sender, System.Timers.ElapsedEventArgs e)
+    {
+        _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+        {
+            LyricControl.CurrentTime = HyPlayList.Player.PlaybackSession.Position - HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.StartTime;
+        });
     }
 
     private async Task HyPlayList_OnSongCoverChanged(int hashCode, IRandomAccessStream coverStream)
@@ -231,20 +244,22 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         if (HyPlayList.LyricPos == -1) return;
         if (HyPlayList.Lyrics.Count <= HyPlayList.LyricPos) return;
         _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { LeaveAnimation.Begin(); });
-
-
     }
+
+
     private void ChangeLyric()
     {
         _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
         {
+            LyricText = HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.CurrentLyric;
 
             WordTextBlocks.Clear();
             BlockToAnimation.Clear();
             WordLyricContainer.Text = "";
-            LyricText = HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.CurrentLyric;
             LyricTranslation = HyPlayList.Lyrics[HyPlayList.LyricPos].Translation;
             LyricSound = HyPlayList.Lyrics[HyPlayList.LyricPos].Romaji;
+            LyricControl.Lyric = HyPlayList.Lyrics[HyPlayList.LyricPos];
+            Debug.WriteLine($"LyricChanged:{HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.CurrentLyric}");
             _lyricIsKaraokeLyric = typeof(KaraokeLyricsLine) == HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.GetType();
             Lrc = HyPlayList.Lyrics[HyPlayList.LyricPos];
             if (HyPlayList.Lyrics.Count <= 2)
@@ -295,8 +310,6 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
             else
             {
                 HyPlayList.OnPlayPositionChange -= RefreshWordColor;
-                WordLyricContainer.Visibility = Visibility.Collapsed;
-                LyricTextBlock.Visibility = Visibility.Visible;
             }
         });
     }
@@ -326,12 +339,14 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
                 TotalProgress = item?.PlayItem?.LengthInMilliseconds ?? 0;
             });
         }
-    }
+    } 
     public void RefreshWordColor(TimeSpan position)
     {
         if (!_lyricIsKaraokeLyric) return;
+
         _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
         {
+            LyricControl.CurrentTime = HyPlayList.Player.PlaybackSession.Position - HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.StartTime;
             var playedWords =
                 ((KaraokeLyricsLine)Lrc.LyricLine).WordInfos.Where(word => word.StartTime <= position).ToList();
             var playedBlocks = WordTextBlocks.GetRange(0, playedWords.Count).ToList();

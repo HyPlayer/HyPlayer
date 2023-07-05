@@ -8,6 +8,7 @@
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:ui="using:Microsoft.Toolkit.Uwp.UI"
     xmlns:hyplayer="using:HyPlayer"
+    xmlns:lyric="using:HyPlayer.HyPlayControl.LyricControl"
     d:Background="White"
     d:DesignHeight="350"
     d:DesignWidth="600"
@@ -435,8 +436,9 @@
                     Grid.RowSpan="2"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch" />
+                <lyric:LyricControl x:Name="LyricControl" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Height="500" WordWrapping="Wrap" />
 
-                <Viewbox
+                <Viewbox Visibility="Collapsed"
                     x:Name="LyricViewBox"
                     MaxHeight="71"
                     Margin="8,0"
@@ -476,6 +478,7 @@
                                 <CompositeTransform />
                             </TextBlock.RenderTransform>
                         </TextBlock>
+
                         <TextBlock
                             x:Name="LyricTranslationBlock"
                             Margin="20,0"
@@ -491,6 +494,7 @@
                     </StackPanel>
 
                 </Viewbox>
+
             </Grid>
         </Grid>
         <Grid

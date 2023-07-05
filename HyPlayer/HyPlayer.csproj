@@ -148,6 +148,11 @@
     </Compile>
     <Compile Include="HyPlayControl\DownloadManager.cs" />
     <Compile Include="HyPlayControl\HyPlayList.cs" />
+    <Compile Include="HyPlayControl\LyricControl\LyricControl.EaseFunctions.cs" />
+    <Compile Include="HyPlayControl\LyricControl\LyricControl.Properties.cs" />
+    <Compile Include="HyPlayControl\LyricControl\LyricControl.xaml.cs">
+      <DependentUpon>LyricControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -309,6 +314,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\LastFMLoginBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="HyPlayControl\LyricControl\LyricControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -567,6 +576,7 @@
       <Name>NeteaseCloudMusicApi</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
