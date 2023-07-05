@@ -17,6 +17,24 @@
             <RowDefinition Height="75" />
             <RowDefinition />
         </Grid.RowDefinitions>
+
+        <ContentDialog x:Name="AboutRomajiDialog" 
+                       PrimaryButtonText="好的">
+            <RichTextBlock>
+                <Paragraph>
+                    HyPlayer支持使用:
+                    <LineBreak />
+                    &#x27A4; 网易云音乐: 网易云音乐提供的罗马字歌词
+                    <LineBreak />
+                    &#x27A4; Kawazu: 内置罗马字转换器 (需下载资源包)
+                    <LineBreak />
+                    &#x27A4; 自动选择：优先使用网易云音乐提供的罗马字
+                    <LineBreak />
+                    如当前歌词网易云音乐没有提供罗马字，则使用 Kawazu 进行转换
+                </Paragraph>
+            </RichTextBlock>
+        </ContentDialog>
+
         <TextBlock
             Grid.Row="0"
             Margin="24,24,24,0"
@@ -70,25 +88,7 @@
                                         </ComboBox>
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard >
-                                        <HyperlinkButton Content="关于此选项">
-                                            <HyperlinkButton.ContextFlyout>
-                                                <Flyout>
-                                                    <RichTextBlock>
-                                                        <Paragraph>
-                                                            HyPlayer支持使用:
-                                                            <LineBreak />
-                                                            &#x27A4; 网易云音乐: 网易云音乐提供的罗马字歌词
-                                                            <LineBreak />
-                                                            &#x27A4; Kawazu: 内置罗马字转换器 (需下载资源包)
-                                                            <LineBreak />
-                                                            &#x27A4; 自动选择：优先使用网易云音乐提供的罗马字
-                                                            <LineBreak />
-                                                            如当前歌词网易云音乐没有提供罗马字，则使用 Kawazu 进行转换
-                                                        </Paragraph>
-                                                    </RichTextBlock>
-                                                </Flyout>
-                                            </HyperlinkButton.ContextFlyout>
-                                        </HyperlinkButton>
+                                        <HyperlinkButton x:Name="AboutRomaji" Content="关于此选项" Click="AboutRomaji_Click"/>
                                     </controls3:SettingsCard>
 
                                 </controls3:SettingsExpander.Items>
@@ -1233,7 +1233,8 @@
                                                     Description="可能会导致设置无法打开等严重问题，若出现异常，可通过个人主页右键头像或在首页关闭&#13;开发者不受理受此功能影响的问题">
                                 <CheckBox
                                 Margin="0,0,-100,0"
-                                IsChecked="{x:Bind hyplayer:Common.Setting.IsOldThemeEnabled, Mode=TwoWay}" />
+                                IsChecked="{x:Bind hyplayer:Common.Setting.IsOldThemeEnabled, Mode=TwoWay}"
+                                />
                             </controls3:SettingsCard>
                             <Button
                                 x:Name="ClearTileCache"

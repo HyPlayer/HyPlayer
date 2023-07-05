@@ -513,4 +513,11 @@ public sealed partial class Settings : Page, IDisposable
         await Task.Delay(20);
         _lyricItem.RefreshFontSize();
     }
+
+    private async void AboutRomaji_Click(object sender, RoutedEventArgs e)
+    {
+
+        await AboutRomajiDialog.ShowAsync();
+        
+    }
 }
