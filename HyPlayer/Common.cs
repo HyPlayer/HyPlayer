@@ -361,6 +361,16 @@ namespace HyPlayer
             }
         }
 
+        public bool gentleBPMAnimation
+        {
+            get => GetSettings(nameof(gentleBPMAnimation), false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(gentleBPMAnimation)] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool hotlyricOnStartup
         {
             get => GetSettings(nameof(hotlyricOnStartup), false);

@@ -671,6 +671,12 @@
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.animationAdaptBPM, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
+                                    <controls3:SettingsCard Visibility="{x:Bind hyplayer:Common.Setting.animationAdaptBPM, Mode=OneWay}" Header="轻柔动效">
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.gentleBPMAnimation, Mode=TwoWay}" />
+                                    </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>
                             <controls3:SettingsExpander
