@@ -507,6 +507,7 @@ DoubleAnimation verticalAnimation;
         Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer), null,
             new EntranceNavigationTransitionInfo());
         Common.PageMain.MainFrame.Visibility = Visibility.Collapsed;
+        Common.PageMain.GridPlayBarMarginBlur.Visibility = Visibility.Collapsed;
         if (Common.Setting.expandAnimation && GridSongInfoContainer.Visibility == Visibility.Visible)
             try
             {
@@ -578,6 +579,7 @@ DoubleAnimation verticalAnimation;
             Common.NavigateBack();
         ButtonExpand.Visibility = Visibility.Visible;
         ButtonCollapse.Visibility = Visibility.Collapsed;
+        Common.PageMain.GridPlayBarMarginBlur.Visibility = Visibility.Visible;
         Common.PageExpandedPlayer.Dispose();
         Common.PageExpandedPlayer = null;
         Common.PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));

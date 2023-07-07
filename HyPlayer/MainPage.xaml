@@ -140,6 +140,7 @@
             Name="GridPlayBarMarginBlur"
             Height="110"
             Margin="0,10,0,0"
+            x:FieldModifier="public"
             VerticalAlignment="Bottom"
             Background="{ThemeResource GridPlayBarBackgroundBlur}"
             Visibility="Visible"
