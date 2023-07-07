@@ -59,4 +59,11 @@
         TintOpacity="0.2"
         TintLuminosityOpacity="0.5"
         FallbackColor="{ThemeResource SystemRevealAltHighColor}"/>
+    <AcrylicBrush 
+        x:Key="GridPlayBarBackgroundBlur"
+        BackgroundSource="Backdrop"
+        TintColor="{ThemeResource SystemRevealAltHighColor}"
+        TintOpacity="0"
+        TintLuminosityOpacity="0"
+        FallbackColor="{ThemeResource SystemRevealAltHighColor}"/>
 </ResourceDictionary>

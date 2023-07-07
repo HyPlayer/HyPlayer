@@ -149,5 +149,10 @@
                 </Border>
             </DataTemplate>
         </ListView.ItemTemplate>
+        <ListView.Resources>
+                <Style TargetType="ScrollBar">
+                    <Setter Property="Margin" Value="0,0,0,110"/>
+                </Style>
+        </ListView.Resources>
     </ListView>
 </UserControl>
