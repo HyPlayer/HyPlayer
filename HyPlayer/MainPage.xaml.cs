@@ -157,13 +157,23 @@ public sealed partial class MainPage
             EnableDependentAnimation = true,
             EasingFunction = new PowerEase() { EasingMode = EasingMode.EaseInOut },
         };
+        var PlayBarBlurTransAni = new DoubleAnimation
+        {
+            BeginTime = TimeSpan.FromSeconds(time),
+            To = 0,
+            EnableDependentAnimation = true,
+            EasingFunction = new PowerEase() { EasingMode = EasingMode.EaseInOut },
+        };
         var PointerOutAni = new Storyboard();
         Storyboard.SetTarget(PlayBarAni, GridPlayBar);
         Storyboard.SetTarget(PlayBarTransAni, PlayBarTrans);
+        Storyboard.SetTarget(PlayBarBlurTransAni, GridPlayBarMarginBlur);
         Storyboard.SetTargetProperty(PlayBarAni, "Opacity");
+        Storyboard.SetTargetProperty(PlayBarBlurTransAni, "Opacity");
         Storyboard.SetTargetProperty(PlayBarTransAni, "Y");
         PointerOutAni.Children.Add(PlayBarAni);
         PointerOutAni.Children.Add(PlayBarTransAni);
+        PointerOutAni.Children.Add(PlayBarBlurTransAni);
         PointerOutAni.Begin();
         Common.PageBase.NavItemBlank.IsEnabled = true;
         var BlankAni = new DoubleAnimation
