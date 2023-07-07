@@ -9,6 +9,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <theme:Theme/>
+                
                 <ResourceDictionary Source="/Resources/Acrylic.xaml" />
                 <ResourceDictionary Source="/Resources/Theme.xaml" />
                 <ResourceDictionary Source="/Resources/UnsupportedFontIcon.xaml"/>

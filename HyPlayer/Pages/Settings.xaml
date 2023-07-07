@@ -25,12 +25,17 @@
             FontWeight="Bold"
             Text="设置" />
         <controls1:PivotView Grid.Row="1" FontFamily="Black">
+        <controls1:PivotView.Resources>
+                <Style TargetType="ScrollBar">
+                    <Setter Property="Margin" Value="0,0,0,110"/>
+                </Style>
+        </controls1:PivotView.Resources>
             <controls1:PivotEx>
                 <PivotItem FontFamily="Thick" Header="歌词设置">
                     <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
                         <StackPanel
                             x:Name="StackPanelLyricSet"
-                            Margin="0,0,0,150"
+                            Margin="20,0,20,150"
                             HorizontalAlignment="Stretch"
                             Orientation="Vertical"
                             Spacing="20">
@@ -301,7 +306,7 @@
                 <PivotItem FontFamily="Thick" Header="播放设置">
                     <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
                         <StackPanel
-                            Margin="0,0,0,150"
+                            Margin="20,0,20,150"
                             Orientation="Vertical"
                             Spacing="20">
                             <controls3:SettingsExpander
@@ -559,7 +564,7 @@
                 </PivotItem>
                 <PivotItem FontFamily="Thick" Header="显示设置">
                     <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
-                        <StackPanel Margin="0,0,0,150" Spacing="20">
+                        <StackPanel Margin="20,0,20,150" Spacing="20">
                             <controls3:SettingsExpander
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
@@ -858,7 +863,7 @@
                 <PivotItem FontFamily="Thick" Header="存储设置">
                     <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
                         <StackPanel
-                            Margin="0,0,0,150"
+                            Margin="20,0,20,150"
                             Orientation="Vertical"
                             Spacing="20">
                             <controls3:SettingsExpander
@@ -1057,7 +1062,7 @@
                 <PivotItem FontFamily="Thick" Header="实验室🧪">
                     <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
                         <StackPanel
-                            Margin="0,0,0,150"
+                            Margin="20,0,20,150"
                             Orientation="Vertical"
                             Spacing="12">
                             <controls:InfoBar IsOpen="True"
