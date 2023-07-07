@@ -399,7 +399,8 @@ public sealed partial class SongsList : UserControl, IDisposable
     }
 
     private void SongListRoot_Loaded(object sender, RoutedEventArgs e)
-    {
+    {      
+        
         MultiSelect = false;
         _ = IndicateNowPlayingItem();
     }

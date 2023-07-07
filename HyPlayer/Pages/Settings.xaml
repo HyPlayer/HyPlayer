@@ -25,6 +25,11 @@
             FontWeight="Bold"
             Text="设置" />
         <controls1:PivotView Grid.Row="1" FontFamily="Black">
+        <controls1:PivotView.Resources>
+                <Style TargetType="ScrollBar">
+                    <Setter Property="Margin" Value="0,0,0,110"/>
+                </Style>
+        </controls1:PivotView.Resources>
             <controls1:PivotEx>
                 <PivotItem FontFamily="Thick" Header="歌词设置">
                     <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
