@@ -7,7 +7,7 @@
         TintColor="#FF606060"
         TintOpacity="0.5" />
     <SolidColorBrush x:Key="FakeMicaBackgroundColor" Color="#26272b" />
-
+    <SolidColorBrush x:Key="CardBorderBrush" Color="Gray" Opacity="0.2"/>
     <Color x:Key="CaptionButtonForegroundColor">#FFFFFF</Color>
     <Color x:Key="CaptionButtonHoverColor">#333333</Color>
     <Color x:Key="CaptionButtonPressedColor">#323232</Color>
