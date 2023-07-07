@@ -11,4 +11,5 @@
     <Color x:Key="CaptionButtonForegroundColor">#FFFFFF</Color>
     <Color x:Key="CaptionButtonHoverColor">#333333</Color>
     <Color x:Key="CaptionButtonPressedColor">#323232</Color>
+    <Color x:Key="GradientColor">#DD000000</Color>
 </ResourceDictionary>

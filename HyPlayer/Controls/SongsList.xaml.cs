@@ -399,12 +399,13 @@ public sealed partial class SongsList : UserControl, IDisposable
     }
 
     private void SongListRoot_Loaded(object sender, RoutedEventArgs e)
-    {
+    {      
+        
         MultiSelect = false;
         _ = IndicateNowPlayingItem();
     }
 
-    private void SongContainer_ItemClick(object sender, ItemClickEventArgs e)
+    private async void SongContainer_ItemClick(object sender, ItemClickEventArgs e)
     {
         if (e.ClickedItem is not NCSong ncSong || IsAddingSongToPlaylist) return;
         if (SongContainer.SelectionMode == ListViewSelectionMode.Multiple) return;
@@ -424,8 +425,9 @@ public sealed partial class SongsList : UserControl, IDisposable
             {
                 // Change Music Source
                 HyPlayList.RemoveAllSong(!shiftSong);
-                _ = HyPlayList.AppendNcSource(ListSource);
+                await HyPlayList.AppendNcSource(ListSource);
             }
+            
         }
         /*else if (ListSource == null)
         {
@@ -445,6 +447,7 @@ public sealed partial class SongsList : UserControl, IDisposable
         if (ListSource?.Substring(0, 2) == "pl" ||
             ListSource?.Substring(0, 2) == "al")
             HyPlayList.PlaySourceId = ListSource.Substring(2);
+        
         if (!shiftSong)
             HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem?.Id == ncSong.sid));
         else

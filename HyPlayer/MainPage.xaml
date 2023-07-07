@@ -6,11 +6,15 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hyPlayerPage="using:HyPlayer.Pages"
     xmlns:hyplayer="using:HyPlayer"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:muxc="using:Microsoft.UI.Xaml.Controls" xmlns:media="using:Microsoft.Toolkit.Uwp.UI.Media"
     mc:Ignorable="d"
     PointerEntered="Page_PointerEntered"
     PointerExited="Page_PointerExited">
     <Page.Resources>
+        <LinearGradientBrush x:Key="OpacityGradientBrush" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="{Binding Source={ThemeResource GradientColor},Converter={StaticResource TransparentColorConverter}}" Offset="0"/>
+            <GradientStop Color="{ThemeResource GradientColor}" Offset="1"/>
+        </LinearGradientBrush>
         <Storyboard x:FieldModifier="public" x:Name="ImageResetPositionAni" x:Key="ImageResetPositionAni">
             <DoubleAnimation
                 To="0"
@@ -30,6 +34,15 @@
                 To="1"
                 Duration="00:00:00.55"
                 Storyboard.TargetName="GridPlayBar"
+                Storyboard.TargetProperty="Opacity">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
+                To="1"
+                Duration="00:00:00.55"
+                Storyboard.TargetName="GridPlayBarMarginBlur"
                 Storyboard.TargetProperty="Opacity">
                 <DoubleAnimation.EasingFunction>
                     <CircleEase EasingMode="EaseOut"/>
@@ -132,7 +145,24 @@
                 <TranslateTransform x:FieldModifier="public" x:Name="ExpandedPlayerPositionOffset" />
             </Frame.RenderTransform>
         </Frame>
-
+        <Grid
+            Name="GridPlayBarMarginBlur"
+            Height="110"
+            Margin="0,10,0,0"
+            x:FieldModifier="public"
+            VerticalAlignment="Bottom"
+            Visibility="Visible"
+            >
+            <Grid.Background>
+                <media:BackdropBlurBrush Amount="16"/>
+            </Grid.Background>
+            <Rectangle
+                x:Name="PlayBarMarginBackground"
+                Grid.Column="0"
+                Opacity="1"
+                Grid.ColumnSpan="4"
+                Fill="{ThemeResource OpacityGradientBrush}"/>
+        </Grid>
         <Grid
             Name="GridPlayBar"
             Height="110"

@@ -18,21 +18,17 @@
             <Button
                 Click="OpenDownloadFolder_Click"
                 Content="打开下载目标文件夹"
-                Style="{StaticResource ButtonRevealStyle}"
                 x:Name="OpenDownloadFolder" />
             <Button
                 Click="PauseAllBtn_Click"
-                Content="暂停全部"
-                Style="{StaticResource ButtonRevealStyle}" />
+                Content="暂停全部" />
             <Button
                 Click="Resume_All"
-                Content="继续全部"
-                Style="{StaticResource ButtonRevealStyle}" />
+                Content="继续全部" />
             <Button
                 Foreground="OrangeRed"
                 Click="Button_CleanAll_Click"
-                Content="删除全部"
-                Style="{StaticResource ButtonRevealStyle}" />
+                Content="删除全部" />
 
         </StackPanel>
         <ListView ItemsSource="{x:Bind hyPlayControl:DownloadManager.DownloadLists}" Grid.Row="1">

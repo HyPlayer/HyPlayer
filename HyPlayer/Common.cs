@@ -1128,7 +1128,7 @@ namespace HyPlayer
 
         public bool playBarMargin
         {
-            get => GetSettings(nameof(playBarMargin), false);
+            get => GetSettings(nameof(playBarMargin), true);
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(playBarMargin)] = value;

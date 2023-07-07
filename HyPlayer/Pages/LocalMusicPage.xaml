@@ -6,6 +6,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:classes="using:HyPlayer.Classes"
     NavigationCacheMode="Disabled"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d">
 
     <Grid>
@@ -31,23 +32,26 @@
                         Grid.Row="0"
                         Padding="15"
                         Orientation="Horizontal"
-                        Spacing="10">
+                        Spacing="10"
+                        >
                         <Button
                             x:Name="Playall"
                             Click="Playall_Click"
-                            Content="播放全部"
-                            Style="{StaticResource ButtonRevealStyle}" />
+                            Content="播放全部" />
                         <Button
                             x:Name="Refresh"
                             Click="Refresh_Click"
-                            Content="开始扫描"
-                            Style="{StaticResource ButtonRevealStyle}" />
+                            Content="开始扫描" />
                         <Button
                             Click="Add_Local"
-                            Content="手动添加"
-                            Style="{StaticResource ButtonRevealStyle}" />
-                        <TextBlock Text="{x:Bind NotificationText, Mode=OneWay}" />
+                            Content="手动添加" />
+                        <TextBlock Grid.Row="0"
+                        Style="{StaticResource BodyTextBlockStyle}"
+                            HorizontalAlignment="Left" 
+                            VerticalAlignment="Center"
+                            Text="{x:Bind NotificationText, Mode=OneWay}" />
                     </StackPanel>
+                    
                     <Grid Grid.Row="1">
                         <ListView
                             Name="ListBoxLocalMusicContainer"
@@ -56,21 +60,23 @@
                             ItemsSource="{x:Bind localHyItems}">
                             <ListView.ItemTemplate>
                                 <DataTemplate x:DataType="classes:HyPlayItem">
-                                    <Border>
+                                    <Border Height="64">
                                         <Grid>
                                             <StackPanel
                                             Width="340"
                                             HorizontalAlignment="Left"
-                                            Orientation="Vertical">
-                                                <TextBlock Text="{x:Bind PlayItem.Name}" />
-                                                <TextBlock Foreground="Gray"
+                                            Orientation="Vertical"
+                                            Margin="10">
+                                                <TextBlock Style="{StaticResource SubtitleTextBlockStyle}"
+                                                    Text="{x:Bind PlayItem.Name}" />
+                                                <TextBlock Style="{StaticResource BodyTextBlockStyle}"
+                                                           Foreground="Gray"
                                                        Text="{x:Bind PlayItem.ArtistString}" />
                                             </StackPanel>
                                             <Button
                                             x:Name="UploadCloud"
                                             HorizontalAlignment="Right"
                                             Click="UploadCloud_Click"
-                                            Style="{StaticResource ButtonRevealStyle}"
                                             Tag="{x:Bind PlayItem.Url}"
                                             ToolTipService.ToolTip="上传到云盘">
                                                 <Button.Content>
@@ -82,7 +88,7 @@
                                 </DataTemplate>
                             </ListView.ItemTemplate>
                         </ListView>
-                        <ProgressRing
+                        <muxc:ProgressRing
                             x:Name="FileLoadingIndicateRing"
                             Width="100"
                             Height="100"
