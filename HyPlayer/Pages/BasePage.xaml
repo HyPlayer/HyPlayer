@@ -13,8 +13,10 @@
     xmlns:controls1="using:HyPlayer.Controls"
     mc:Ignorable="d">
     <Page.Resources>
+        
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                
                 <ResourceDictionary>
                     <ResourceDictionary.ThemeDictionaries>
                         <ResourceDictionary x:Key="Light" />

@@ -11,6 +11,10 @@
     PointerEntered="Page_PointerEntered"
     PointerExited="Page_PointerExited">
     <Page.Resources>
+        <LinearGradientBrush x:Key="OpacityGradientBrush" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="{Binding Source={ThemeResource GradientColor},Converter={StaticResource TransparentColorConverter}}" Offset="0"/>
+            <GradientStop Color="{ThemeResource GradientColor}" Offset="1"/>
+        </LinearGradientBrush>
         <Storyboard x:FieldModifier="public" x:Name="ImageResetPositionAni" x:Key="ImageResetPositionAni">
             <DoubleAnimation
                 To="0"
@@ -132,7 +136,21 @@
                 <TranslateTransform x:FieldModifier="public" x:Name="ExpandedPlayerPositionOffset" />
             </Frame.RenderTransform>
         </Frame>
-
+        <Grid
+            Name="GridPlayBarMarginBlur"
+            Height="110"
+            Margin="0,10,0,0"
+            VerticalAlignment="Bottom"
+            Background="{ThemeResource GridPlayBarBackgroundBlur}"
+            Visibility="Visible"
+            >
+            <Rectangle
+                x:Name="PlayBarMarginBackground"
+                Grid.Column="0"
+                Opacity="1"
+                Grid.ColumnSpan="4"
+                Fill="{ThemeResource OpacityGradientBrush}"/>
+        </Grid>
         <Grid
             Name="GridPlayBar"
             Height="110"
