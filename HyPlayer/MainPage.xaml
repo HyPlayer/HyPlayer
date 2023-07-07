@@ -40,6 +40,15 @@
                 </DoubleAnimation.EasingFunction>
             </DoubleAnimation>
             <DoubleAnimation
+                To="1"
+                Duration="00:00:00.55"
+                Storyboard.TargetName="GridPlayBarMarginBlur"
+                Storyboard.TargetProperty="Opacity">
+                <DoubleAnimation.EasingFunction>
+                    <CircleEase EasingMode="EaseOut"/>
+                </DoubleAnimation.EasingFunction>
+            </DoubleAnimation>
+            <DoubleAnimation
                 To="0"
                Duration="00:00:00.55"
                 Storyboard.TargetName="PlayBarTrans"
