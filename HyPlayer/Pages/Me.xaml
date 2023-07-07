@@ -151,7 +151,11 @@
 
     <muxc:ItemsRepeaterScrollHost>
         <ScrollViewer>
-
+            <ScrollViewer.Resources>
+                <Style TargetType="ScrollBar">
+                    <Setter Property="Margin" Value="0,0,0,110"/>
+                </Style>
+            </ScrollViewer.Resources>
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
