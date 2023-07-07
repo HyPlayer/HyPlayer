@@ -151,7 +151,11 @@
 
     <muxc:ItemsRepeaterScrollHost>
         <ScrollViewer>
-
+            <ScrollViewer.Resources>
+                <Style TargetType="ScrollBar">
+                    <Setter Property="Margin" Value="0,0,0,110"/>
+                </Style>
+            </ScrollViewer.Resources>
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -243,7 +247,7 @@
                 <Grid
                     x:Name="MainGrid"
                     Grid.Row="1"
-                    Margin="16,16,16,130"
+                    Margin="20,20,20,130"
                     ColumnSpacing="50"
                     RowSpacing="10">
                     <Grid.ColumnDefinitions>
@@ -308,7 +312,7 @@
                         </StackPanel>
                         <muxc:ItemsRepeater
                             x:Name="LikedSongList"
-                            Margin="0,60,0,0"
+                            Margin="0,60,10,0"
                             HorizontalAlignment="Stretch"
                             ItemTemplate="{StaticResource ListItemTemplate}"
                             ItemsSource="{x:Bind likedPlayList}">

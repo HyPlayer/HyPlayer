@@ -9,6 +9,7 @@
     xmlns:controls1="using:HyPlayer.Controls"
     xmlns:controls2="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:controls3="using:CommunityToolkit.Labs.WinUI"
+    xmlns:ui="using:Microsoft.Toolkit.Uwp.UI"
     xmlns:classes="using:HyPlayer.Classes"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
@@ -17,6 +18,25 @@
             <RowDefinition Height="75" />
             <RowDefinition />
         </Grid.RowDefinitions>
+
+        <ContentDialog x:Name="AboutRomajiDialog" 
+                       Title="关于此选项"
+                       PrimaryButtonText="好的">
+            <RichTextBlock>
+                <Paragraph>
+                    HyPlayer支持使用:
+                    <LineBreak />
+                    &#x27A4; 网易云音乐: 网易云音乐提供的罗马字歌词
+                    <LineBreak />
+                    &#x27A4; Kawazu: 内置罗马字转换器 (需下载资源包)
+                    <LineBreak />
+                    &#x27A4; 自动选择：优先使用网易云音乐提供的罗马字
+                    <LineBreak />
+                    如当前歌词网易云音乐没有提供罗马字，则使用 Kawazu 进行转换
+                </Paragraph>
+            </RichTextBlock>
+        </ContentDialog>
+
         <TextBlock
             Grid.Row="0"
             Margin="24,24,24,0"
@@ -25,12 +45,17 @@
             FontWeight="Bold"
             Text="设置" />
         <controls1:PivotView Grid.Row="1" FontFamily="Black">
+        <controls1:PivotView.Resources>
+                <Style TargetType="ScrollBar">
+                    <Setter Property="Margin" Value="0,0,0,110"/>
+                </Style>
+        </controls1:PivotView.Resources>
             <controls1:PivotEx>
                 <PivotItem FontFamily="Thick" Header="歌词设置">
                     <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
                         <StackPanel
                             x:Name="StackPanelLyricSet"
-                            Margin="0,0,0,150"
+                            Margin="20,0,20,150"
                             HorizontalAlignment="Stretch"
                             Orientation="Vertical"
                             Spacing="20">
@@ -70,25 +95,7 @@
                                         </ComboBox>
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard >
-                                        <HyperlinkButton Content="关于此选项">
-                                            <HyperlinkButton.ContextFlyout>
-                                                <Flyout>
-                                                    <RichTextBlock>
-                                                        <Paragraph>
-                                                            HyPlayer支持使用:
-                                                            <LineBreak />
-                                                            &#x27A4; 网易云音乐: 网易云音乐提供的罗马字歌词
-                                                            <LineBreak />
-                                                            &#x27A4; Kawazu: 内置罗马字转换器 (需下载资源包)
-                                                            <LineBreak />
-                                                            &#x27A4; 自动选择：优先使用网易云音乐提供的罗马字
-                                                            <LineBreak />
-                                                            如当前歌词网易云音乐没有提供罗马字，则使用 Kawazu 进行转换
-                                                        </Paragraph>
-                                                    </RichTextBlock>
-                                                </Flyout>
-                                            </HyperlinkButton.ContextFlyout>
-                                        </HyperlinkButton>
+                                        <HyperlinkButton x:Name="AboutRomaji" Content="关于此选项" Click="AboutRomaji_Click"/>
                                     </controls3:SettingsCard>
 
                                 </controls3:SettingsExpander.Items>
@@ -301,7 +308,7 @@
                 <PivotItem FontFamily="Thick" Header="播放设置">
                     <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
                         <StackPanel
-                            Margin="0,0,0,150"
+                            Margin="20,0,20,150"
                             Orientation="Vertical"
                             Spacing="20">
                             <controls3:SettingsExpander
@@ -447,26 +454,24 @@
                             <controls3:SettingsExpander
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
-                                IsExpanded="True">
+                                IsExpanded="True"
+                                Header="输出设置">
                                 <controls3:SettingsExpander.HeaderIcon>
                                     <FontIcon Glyph="&#xE7F6;"/>
                                 </controls3:SettingsExpander.HeaderIcon>
-                                <controls3:SettingsExpander.Header>
-                                    <StackPanel HorizontalAlignment="Stretch" Orientation="Horizontal" Spacing="12">
-                                        <TextBlock VerticalAlignment="Center" Text="输出设置" />
-                                        <Button
-                                            x:Name="BtnChangeAudioRenderDevice"
-                                            HorizontalAlignment="Right"
-                                            Click="BtnChangeAudioRenderDevice_Click"
-                                            Content="选择音频输出设备" />
-                                    </StackPanel>
-                                </controls3:SettingsExpander.Header>
                                 <controls3:SettingsExpander.Transitions>
                                     <TransitionCollection>
                                         <RepositionThemeTransition />
                                     </TransitionCollection>
                                 </controls3:SettingsExpander.Transitions>
                                 <controls3:SettingsExpander.Items>
+                                    <controls3:SettingsCard Header="选择音频输出设备">
+                                        <Button
+                                            x:Name="BtnChangeAudioRenderDevice"
+                                            HorizontalAlignment="Right"
+                                            Click="BtnChangeAudioRenderDevice_Click"
+                                            Content="选择" />
+                                    </controls3:SettingsCard>
                                     <controls3:SettingsCard>
                                         <controls3:SettingsCard.Header>
                                         <HyperlinkButton
@@ -559,7 +564,7 @@
                 </PivotItem>
                 <PivotItem FontFamily="Thick" Header="显示设置">
                     <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
-                        <StackPanel Margin="0,0,0,150" Spacing="20">
+                        <StackPanel Margin="20,0,20,150" Spacing="20">
                             <controls3:SettingsExpander
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
@@ -864,7 +869,7 @@
                 <PivotItem FontFamily="Thick" Header="存储设置">
                     <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
                         <StackPanel
-                            Margin="0,0,0,150"
+                            Margin="20,0,20,150"
                             Orientation="Vertical"
                             Spacing="20">
                             <controls3:SettingsExpander
@@ -1063,7 +1068,7 @@
                 <PivotItem FontFamily="Thick" Header="实验室🧪">
                     <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
                         <StackPanel
-                            Margin="0,0,0,150"
+                            Margin="20,0,20,150"
                             Orientation="Vertical"
                             Spacing="12">
                             <controls:InfoBar IsOpen="True"
@@ -1147,6 +1152,8 @@
                                 Margin="0,0,-100,0"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.songUrlLazyGet, Mode=TwoWay}" />
                             </controls3:SettingsCard>
+                            <!---->
+                            <!---->
                             <controls3:SettingsCard Header="Xbox上隐藏指针"
                                                     Description="不要开启!">
                                 <CheckBox
@@ -1239,23 +1246,39 @@
                                                     Description="可能会导致设置无法打开等严重问题，若出现异常，可通过个人主页右键头像或在首页关闭&#13;开发者不受理受此功能影响的问题">
                                 <CheckBox
                                 Margin="0,0,-100,0"
-                                IsChecked="{x:Bind hyplayer:Common.Setting.IsOldThemeEnabled, Mode=TwoWay}" />
+                                IsChecked="{x:Bind hyplayer:Common.Setting.IsOldThemeEnabled, Mode=TwoWay}"
+                                />
                             </controls3:SettingsCard>
-                            <Button
+                            <controls3:SettingsCard>
+                                <controls3:SettingsCard.Header>
+                                    <HyperlinkButton
                                 x:Name="ClearTileCache"
                                 Click="ClearTileCache_Click"
                                 Content="清除磁贴背景缓存" />
-                            <Button
+                                </controls3:SettingsCard.Header>
+                            </controls3:SettingsCard>
+
+                            <controls3:SettingsCard>
+                                <controls3:SettingsCard.Header>
+                                    <HyperlinkButton
                                 x:Name="RestartBtn"
                                 Margin="0,0,0,10"
                                 VerticalAlignment="Center"
                                 Click="RestartBtn_Click"
                                 Content="立即重启 HyPlayer"
                                 Visibility="Visible" />
-                            <Button
+                                </controls3:SettingsCard.Header>
+                            </controls3:SettingsCard>
+
+                            <controls3:SettingsCard>
+                                <controls3:SettingsCard.Header>
+                                    <HyperlinkButton
                                 x:Name="BtnXboxReserve"
                                 Click="BtnXboxReserve_Click"
                                 Content="Xbox 进后台模式" />
+                                </controls3:SettingsCard.Header>
+                            </controls3:SettingsCard>
+                            
 
                         </StackPanel>
                     </ScrollViewer>
@@ -1323,8 +1346,10 @@
                                         Width="256"
                                         Height="80"
                                         Padding="13,10"
-                                        Background="#1A808080"
-                                        CornerRadius="6">
+                                        BorderThickness="1"
+                                        BorderBrush="{StaticResource CardBorderBrush}"
+                                        Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                        CornerRadius="{StaticResource ControlCornerRadius}">
                                         <Grid RowSpacing="8">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
@@ -1362,8 +1387,10 @@
                                         Width="256"
                                         Height="80"
                                         Padding="13,10"
-                                        Background="#1A808080"
-                                        CornerRadius="4">
+                                        BorderThickness="1"
+                                        BorderBrush="{StaticResource CardBorderBrush}"
+                                        Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                        CornerRadius="{StaticResource ControlCornerRadius}">
                                         <Grid RightTapped="DeviceInfo_RightTapped" RowSpacing="8">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
@@ -1416,8 +1443,10 @@
                                         Width="256"
                                         Height="80"
                                         Padding="13,10"
-                                        Background="#1A808080"
-                                        CornerRadius="4">
+                                        BorderThickness="1"
+                                        BorderBrush="{StaticResource CardBorderBrush}"
+                                        Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                        CornerRadius="{StaticResource ControlCornerRadius}">
                                         <Grid RowSpacing="8">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
@@ -1450,8 +1479,10 @@
                                         Width="256"
                                         Height="80"
                                         Padding="13,10"
-                                        Background="#1A808080"
-                                        CornerRadius="4">
+                                        BorderThickness="1"
+                                        BorderBrush="{StaticResource CardBorderBrush}"
+                                        Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                        CornerRadius="{StaticResource ControlCornerRadius}">
                                         <Grid RowSpacing="8">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
@@ -1498,8 +1529,10 @@
                                     MaxWidth="520"
                                     Margin="9,8,9,0"
                                     Padding="13,10"
-                                    Background="#1A808080"
-                                    CornerRadius="4">
+                                    BorderThickness="1"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="{StaticResource ControlCornerRadius}">
                                     <Grid RowSpacing="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" />
@@ -1546,8 +1579,10 @@
 
                                 <Border
                                     Height="64"
-                                    Background="#1A808080"
-                                    CornerRadius="4"
+                                    BorderThickness="1"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="{StaticResource ControlCornerRadius}"
                                     Tapped="UIElement_OnTapped">
 
                                     <Grid Margin="8">
@@ -1574,8 +1609,10 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    Background="#1A808080"
-                                    CornerRadius="4"
+                                    BorderThickness="1"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="{StaticResource ControlCornerRadius}"
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
@@ -1603,8 +1640,10 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    Background="#1A808080"
-                                    CornerRadius="4"
+                                    BorderThickness="1"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="{StaticResource ControlCornerRadius}"
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
@@ -1627,8 +1666,10 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    Background="#1A808080"
-                                    CornerRadius="4"
+                                    BorderThickness="1"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="{StaticResource ControlCornerRadius}"
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
@@ -1654,8 +1695,10 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    Background="#1A808080"
-                                    CornerRadius="4"
+                                    BorderThickness="1"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="{StaticResource ControlCornerRadius}"
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
@@ -1679,8 +1722,10 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    Background="#1A808080"
-                                    CornerRadius="4"
+                                    BorderThickness="1"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="{StaticResource ControlCornerRadius}"
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
@@ -1703,8 +1748,10 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    Background="#1A808080"
-                                    CornerRadius="4"
+                                    BorderThickness="1"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="{StaticResource ControlCornerRadius}"
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
@@ -1728,8 +1775,10 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    Background="#1A808080"
-                                    CornerRadius="4"
+                                    BorderThickness="1"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="{StaticResource ControlCornerRadius}"
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
