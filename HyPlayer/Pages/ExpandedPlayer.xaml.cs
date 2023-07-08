@@ -600,16 +600,16 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         TimeSpan.FromSeconds(60 * (Common.Setting.gentleBPMAnimation ? 10 : 1) / bpm),
                         repeatBehavior: RepeatBehavior.Forever,
                         autoReverse: true,
-                        easing:new BackEase { EasingMode = EasingMode.EaseInOut });
+                        easing: Common.Setting.gentleBPMAnimation ? new BackEase { EasingMode = EasingMode.EaseInOut } : null);
                     var animationY = BgScale.CreateDoubleAnimation(
                         "ScaleY", 
                         1.8,
                         1,
                         TimeSpan.Zero,
-                        TimeSpan.FromSeconds(480 / bpm),
+                        TimeSpan.FromSeconds(60 * (Common.Setting.gentleBPMAnimation ? 10 : 1) / bpm),
                         repeatBehavior: RepeatBehavior.Forever,
                         autoReverse: true,
-                        easing: new BackEase { EasingMode = EasingMode.EaseInOut });
+                        easing: Common.Setting.gentleBPMAnimation ? new BackEase { EasingMode = EasingMode.EaseInOut } : null);
                     bpmAniStoryboard.Children.Clear();
                     bpmAniStoryboard.Children.Add(animationX);
                     bpmAniStoryboard.Children.Add(animationY);
