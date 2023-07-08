@@ -52,18 +52,20 @@ namespace HyPlayer.Controls.LyricControl
         private void CanvasControl_Draw(Microsoft.Graphics.Canvas.UI.Xaml.ICanvasAnimatedControl sender,
                                         Microsoft.Graphics.Canvas.UI.Xaml.CanvasAnimatedDrawEventArgs args)
         {
+            _currentTime = HyPlayList.Player.PlaybackSession.Position - HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.StartTime;//更新播放进度
+
             using (var textFormat = new CanvasTextFormat
-                                    {
-                                        FontSize = _fontSize,
-                                        HorizontalAlignment = _horizontalTextAlignment,
-                                        VerticalAlignment = _verticalTextAlignment,
-                                        Options = CanvasDrawTextOptions.EnableColorFont,
-                                        WordWrapping = CanvasWordWrapping.Wrap,
-                                        Direction = CanvasTextDirection.LeftToRightThenTopToBottom,
-                                        FontStyle = _fontStyle,
-                                        FontWeight = _fontWeight,
-                                        FontFamily = _textFontFamily
-                                    })
+                   {
+                       FontSize = _fontSize,
+                       HorizontalAlignment = _horizontalTextAlignment,
+                       VerticalAlignment = _verticalTextAlignment,
+                       Options = CanvasDrawTextOptions.EnableColorFont,
+                       WordWrapping = CanvasWordWrapping.Wrap,
+                       Direction = CanvasTextDirection.LeftToRightThenTopToBottom,
+                       FontStyle = _fontStyle,
+                       FontWeight = _fontWeight,
+                       FontFamily = _textFontFamily
+                   })
 
             using (var textLayout = new CanvasTextLayout(args.DrawingSession, _lyric.LyricLine.CurrentLyric, textFormat,
                                                          (float)sender.Size.Width, (float)sender.Size.Height))
