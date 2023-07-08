@@ -55,7 +55,7 @@ namespace HyPlayer.Classes
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             if (value is false && Common.Setting.acrylicBackgroundStatus is true && Common.isExpanded is false) return Application.Current.Resources["GridPlayBarBackgroundAcrylic"] as Brush;
-            if (value is false && Common.Setting.acrylicBackgroundStatus is false && Common.isExpanded is false) return Application.Current.Resources["ApplicationPageBackgroundThemeBrush"] as Brush;
+            if (value is false && Common.Setting.acrylicBackgroundStatus is false && Common.isExpanded is false) return Application.Current.Resources["SystemControlAcrylicElementMediumHighBrush"] as Brush;
             return null;
         }
 
