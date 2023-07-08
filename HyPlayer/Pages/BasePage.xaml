@@ -13,10 +13,8 @@
     xmlns:controls1="using:HyPlayer.Controls"
     mc:Ignorable="d">
     <Page.Resources>
-        
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                
                 <ResourceDictionary>
                     <ResourceDictionary.ThemeDictionaries>
                         <ResourceDictionary x:Key="Light" />
@@ -25,9 +23,9 @@
                     </ResourceDictionary.ThemeDictionaries>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
-
         </ResourceDictionary>
     </Page.Resources>
+    
     <Grid x:Name="MainGrid">
         <FlyoutBase.AttachedFlyout>
             <MenuFlyout x:Name="PlaylistFlyout">
@@ -44,12 +42,6 @@
                     Text="删除此歌单" />
             </MenuFlyout>
         </FlyoutBase.AttachedFlyout>
-        <muxc:TeachingTip
-            x:Name="TheTeachingTip"
-            CloseButtonClick="TheTeachingTip_OnCloseButtonClick"
-            Title="一个弹窗, 两个弹窗, 三个弹窗, 四个弹窗...zzzzzz"
-            IsLightDismissEnabled="False"
-            PreferredPlacement="TopRight" />
         <Border
             x:Name="AppTitleBar"
             Height="40"
