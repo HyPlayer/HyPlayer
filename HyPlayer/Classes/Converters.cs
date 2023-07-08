@@ -149,7 +149,7 @@ namespace HyPlayer.Classes
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            return value is true ? new CornerRadius(8) : new CornerRadius(8, 0, 0, 0);
+            return value is true ? new CornerRadius(4) : new CornerRadius(8, 0, 0, 0);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)
@@ -214,7 +214,7 @@ namespace HyPlayer.Classes
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            return value is true ? new CornerRadius(8) : new CornerRadius(8, 8, 0, 0);
+            return value is true ? new CornerRadius(4) : new CornerRadius(8, 8, 0, 0);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)
