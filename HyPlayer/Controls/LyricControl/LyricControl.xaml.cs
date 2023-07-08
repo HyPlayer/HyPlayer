@@ -158,7 +158,7 @@ namespace HyPlayer.Controls.LyricControl
             }
             else
             {
-                return CanvasGeometry.CreateRectangle(canvas, 0, 0, (float)textLayout.LayoutBounds.Width,
+                return CanvasGeometry.CreateRectangle(canvas, (float)textLayout.LayoutBounds.Left,(float)textLayout.LayoutBounds.Top, (float)textLayout.LayoutBounds.Width,
                                                       (float)textLayout.LayoutBounds.Height);
             }
         }
