@@ -147,7 +147,10 @@ namespace HyPlayer.Controls.LyricControl
                 {
                     var startTime = TimeSpan.FromMilliseconds(wordInfos.GetRange(0, index).Sum(p => p.Duration.TotalMilliseconds));
 
-                    var currentPercentage = (_currentTime - startTime) / currentLyric.Duration;
+                    var currentPercentage = (index == wordInfos.Count - 1||currentLyric.Duration.TotalSeconds > 1)
+                        ? _easeFunction.Ease((_currentTime - startTime) / currentLyric.Duration)
+                        : (_currentTime - startTime) / currentLyric.Duration;
+
                     var lastRect = CanvasGeometry.CreateRectangle(
                         canvas, (float)currentRegions[0].LayoutBounds.Left,
                         (float)currentRegions[0].LayoutBounds.Top,

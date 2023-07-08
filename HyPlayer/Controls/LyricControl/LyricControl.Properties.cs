@@ -159,9 +159,9 @@ namespace HyPlayer.Controls.LyricControl
         }
 
         public static readonly DependencyProperty EaseFunctionProperty =
-            DependencyProperty.Register(nameof(EaseFunction), typeof(EaseFunctionBase), typeof(LyricControl), new PropertyMetadata(new SineEase { EasingMode = EasingMode.EaseInOut }, OnEaseFunctionChanged));
+            DependencyProperty.Register(nameof(EaseFunction), typeof(EaseFunctionBase), typeof(LyricControl), new PropertyMetadata(new ExponentialEase { EasingMode = EasingMode.EaseOut,Exponent = 3 }, OnEaseFunctionChanged));
 
-        private EaseFunctionBase _easeFunction = new SineEase { EasingMode = EasingMode.EaseInOut };
+        private EaseFunctionBase _easeFunction = new ExponentialEase { EasingMode = EasingMode.EaseOut, Exponent = 3 };
 
         private static void OnEaseFunctionChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
