@@ -53,6 +53,8 @@ namespace HyPlayer.Controls.LyricControl
         private void CanvasControl_Draw(Microsoft.Graphics.Canvas.UI.Xaml.ICanvasAnimatedControl sender,
                                         Microsoft.Graphics.Canvas.UI.Xaml.CanvasAnimatedDrawEventArgs args)
         {
+            if (HyPlayList.LyricPos < 0 || HyPlayList.LyricPos >= HyPlayList.Lyrics.Count)
+                return;
             _currentTime = HyPlayList.Player.PlaybackSession.Position - HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.StartTime;//更新播放进度
 
             using (var textFormat = new CanvasTextFormat
@@ -80,7 +82,7 @@ namespace HyPlayer.Controls.LyricControl
                 
                 var commandList = new CanvasCommandList(sender);
                 using (var ds = commandList.CreateDrawingSession())
-                ds.FillGeometry(highlightTextGeometry, _accentLyricColor);
+                    ds.FillGeometry(highlightTextGeometry, _accentLyricColor);
                 var shadow = new ColorMatrixEffect
                 {
                     Source = new GaussianBlurEffect
@@ -130,7 +132,7 @@ namespace HyPlayer.Controls.LyricControl
                 var wordInfos = (List<KaraokeWordInfo>)karaokeLyricsLine.WordInfos;
                 var time = TimeSpan.Zero;
                 var currentLyric = wordInfos.Last();
-                var geos = new List<CanvasGeometry>();
+                var geos = new HashSet<CanvasGeometry>();
                 //获取播放中单词在歌词的位置
                 foreach (var item in wordInfos)
                 {
