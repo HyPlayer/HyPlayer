@@ -144,7 +144,8 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
 
     private void LeaveAnimation_Completed(object sender, object e)
     {
-        EnterAnimation.Begin();
+        ChangeLyric();
+        EnterAnimation.Begin();        
     }
     private Task OnPlaybarVisibilityChanged(bool isActivated)
     {
@@ -238,13 +239,15 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
             if (kara.Duration.TotalSeconds > 1)
             {
                 _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { LeaveAnimation.Begin(); });
+                return;
             }
         }else if (HyPlayList.LyricPos < HyPlayList.Lyrics.Count - 1 && HyPlayList.Lyrics[HyPlayList.LyricPos+1].LyricLine is LrcLyricsLine lrcLine)
         {
             if (lrcLine.StartTime.TotalSeconds - HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.StartTime.TotalSeconds > 1)
             {
                 LyricControl.QuickRenderMode = false;
-                _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { LeaveAnimation.Begin(); });                
+                _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { LeaveAnimation.Begin(); });   
+                return;             
             }
             else
             {
