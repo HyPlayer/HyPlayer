@@ -31,12 +31,11 @@
             <DoubleAnimation
                 Storyboard.TargetName="LyricGrid"
                 Storyboard.TargetProperty="Opacity"
+                BeginTime="00:00:00"
                 From="0"
                 To="1"
-                Duration="00:00:00.5">
-                <DoubleAnimation.EasingFunction>
-                    <CircleEase EasingMode="EaseOut" />
-                </DoubleAnimation.EasingFunction>
+                Duration="00:00:00.3">
+
             </DoubleAnimation>
             <DoubleAnimation
                 Storyboard.TargetName="LyricTextBlock"
@@ -84,11 +83,8 @@
                 Storyboard.TargetName="LyricGrid"
                 Storyboard.TargetProperty="Opacity"
                 From="1"
-                To="0.01"
-                Duration="00:00:00.1">
-                <DoubleAnimation.EasingFunction>
-                    <CircleEase EasingMode="EaseOut" />
-                </DoubleAnimation.EasingFunction>
+                To="0"
+                Duration="00:00:00.03">
             </DoubleAnimation>
             <DoubleAnimation
                 Storyboard.TargetName="LyricTextBlock"
