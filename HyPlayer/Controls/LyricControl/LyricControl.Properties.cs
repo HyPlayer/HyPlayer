@@ -123,7 +123,7 @@ namespace HyPlayer.Controls.LyricControl
         public static readonly DependencyProperty WordWrappingProperty =
             DependencyProperty.Register(nameof(WordWrapping), typeof(CanvasWordWrapping), typeof(LyricControl), new PropertyMetadata(CanvasWordWrapping.NoWrap, OnVerticalWordWrappingChanged));
 
-        private CanvasWordWrapping _wordWrapping = CanvasWordWrapping.NoWrap;
+        private CanvasWordWrapping _wordWrapping = CanvasWordWrapping.Wrap;
 
         private static void OnVerticalWordWrappingChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
