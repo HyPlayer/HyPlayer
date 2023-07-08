@@ -594,22 +594,22 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 {
                     var animationX = BgScale.CreateDoubleAnimation(
                         "ScaleX", 
-                        2.0,
-                        1.5,
+                        1.8,
+                        1,
                         TimeSpan.Zero,
                         TimeSpan.FromSeconds(60 * (Common.Setting.gentleBPMAnimation ? 10 : 1) / bpm),
                         repeatBehavior: RepeatBehavior.Forever,
                         autoReverse: true,
-                        easing:new BackEase { EasingMode = EasingMode.EaseInOut });
+                        easing: Common.Setting.gentleBPMAnimation ? new BackEase { EasingMode = EasingMode.EaseInOut } : null);
                     var animationY = BgScale.CreateDoubleAnimation(
                         "ScaleY", 
-                        1.5,
-                        2.0,
+                        1.8,
+                        1,
                         TimeSpan.Zero,
-                        TimeSpan.FromSeconds(480 / bpm),
+                        TimeSpan.FromSeconds(60 * (Common.Setting.gentleBPMAnimation ? 10 : 1) / bpm),
                         repeatBehavior: RepeatBehavior.Forever,
                         autoReverse: true,
-                        easing: new BackEase { EasingMode = EasingMode.EaseInOut });
+                        easing: Common.Setting.gentleBPMAnimation ? new BackEase { EasingMode = EasingMode.EaseInOut } : null);
                     bpmAniStoryboard.Children.Clear();
                     bpmAniStoryboard.Children.Add(animationX);
                     bpmAniStoryboard.Children.Add(animationY);
@@ -1088,10 +1088,12 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             Frame expandedPlayerWindowContentFrame = new Frame();
             expandedPlayerWindowContentFrame.Navigate(typeof(CompactPlayerPage), expandedPlayerWindow);
             ElementCompositionPreview.SetAppWindowContent(expandedPlayerWindow, expandedPlayerWindowContentFrame);
-            expandedPlayerWindow.TitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
-            expandedPlayerWindow.TitleBar.ButtonBackgroundColor = Colors.Transparent;
-            await expandedPlayerWindow.TryShowAsync();
+            expandedPlayerWindow.TitleBar.ExtendsContentIntoTitleBar = true;
+            //expandedPlayerWindow.TitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+            //expandedPlayerWindow.TitleBar.ButtonBackgroundColor = Colors.Transparent;
             expandedPlayerWindow.Presenter.RequestPresentation(AppWindowPresentationKind.CompactOverlay);
+            await expandedPlayerWindow.TryShowAsync();
+            expandedPlayerWindow.Presenter.RequestPresentation(AppWindowPresentationKind.CompactOverlay);//防止进入失败
         }
         else
         {

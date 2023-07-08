@@ -1232,36 +1232,48 @@
                                 Margin="0,0,-100,0"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.tileBackgroundAvailability, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard Header="磁贴背景缓存至本地"
-                                                    Description="Windows 10需打开此项才会显示磁贴">
-                                 <CheckBox
-                                x:Name="SaveTileBackgroundToLocalFolder"
-                                Margin="0,0,-100,0"
-                                IsChecked="{x:Bind hyplayer:Common.Setting.saveTileBackgroundToLocalFolder, Mode=TwoWay}" />
-                            </controls3:SettingsCard>
-                            <controls3:SettingsCard Header="启用旧版主题（需重启应用）"
-                                                    Description="可能会导致设置无法打开等严重问题，若出现异常，可通过个人主页右键头像或在首页关闭&#13;开发者不受理受此功能影响的问题">
+                            <controls3:SettingsCard
+                                Header="磁贴背景缓存至本地"
+                                Description="Windows 10需打开此项才会显示磁贴">
                                 <CheckBox
-                                Margin="0,0,-100,0"
-                                IsChecked="{x:Bind hyplayer:Common.Setting.IsOldThemeEnabled, Mode=TwoWay}"
-                                />
+                                    x:Name="SaveTileBackgroundToLocalFolder"
+                                    Margin="0,0,-100,0"
+                                    IsChecked="{x:Bind hyplayer:Common.Setting.saveTileBackgroundToLocalFolder, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <Button
-                                x:Name="ClearTileCache"
-                                Click="ClearTileCache_Click"
-                                Content="清除磁贴背景缓存" />
-                            <Button
-                                x:Name="RestartBtn"
-                                Margin="0,0,0,10"
-                                VerticalAlignment="Center"
-                                Click="RestartBtn_Click"
-                                Content="立即重启 HyPlayer"
-                                Visibility="Visible" />
-                            <Button
-                                x:Name="BtnXboxReserve"
-                                Click="BtnXboxReserve_Click"
-                                Content="Xbox 进后台模式" />
-
+                            <controls3:SettingsCard
+                                Header="启用旧版主题（需重启应用）"
+                                Description="可能会导致设置无法打开等严重问题，若出现异常，可通过个人主页右键头像或在首页关闭&#13;开发者不受理受此功能影响的问题">
+                                <CheckBox
+                                    Margin="0,0,-100,0"
+                                    IsChecked="{x:Bind hyplayer:Common.Setting.IsOldThemeEnabled, Mode=TwoWay}" />
+                            </controls3:SettingsCard>
+                            <controls3:SettingsCard>
+                                <controls3:SettingsCard.Header>
+                                    <HyperlinkButton
+                                        x:Name="ClearTileCache"
+                                        Click="ClearTileCache_Click"
+                                        Content="清除磁贴背景缓存" />
+                                </controls3:SettingsCard.Header>
+                            </controls3:SettingsCard>
+                            <controls3:SettingsCard>
+                                <controls3:SettingsCard.Header>
+                                    <HyperlinkButton
+                                        x:Name="RestartBtn"
+                                        Margin="0,0,0,10"
+                                        VerticalAlignment="Center"
+                                        Click="RestartBtn_Click"
+                                        Content="立即重启 HyPlayer"
+                                        Visibility="Visible" />
+                                </controls3:SettingsCard.Header>
+                            </controls3:SettingsCard>
+                            <controls3:SettingsCard>
+                                <controls3:SettingsCard.Header>
+                                    <HyperlinkButton
+                                        x:Name="BtnXboxReserve"
+                                        Click="BtnXboxReserve_Click"
+                                        Content="Xbox 进后台模式" />
+                                </controls3:SettingsCard.Header>
+                            </controls3:SettingsCard>
                         </StackPanel>
                     </ScrollViewer>
                 </PivotItem>
@@ -1328,8 +1340,10 @@
                                         Width="256"
                                         Height="80"
                                         Padding="13,10"
-                                        Background="#1A808080"
-                                        CornerRadius="6">
+                                        BorderThickness="1"
+                                        BorderBrush="{StaticResource CardBorderBrush}"
+                                        Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                        CornerRadius="{StaticResource ControlCornerRadius}">
                                         <Grid RowSpacing="8">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
@@ -1367,8 +1381,10 @@
                                         Width="256"
                                         Height="80"
                                         Padding="13,10"
-                                        Background="#1A808080"
-                                        CornerRadius="4">
+                                        BorderThickness="1"
+                                        BorderBrush="{StaticResource CardBorderBrush}"
+                                        Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                        CornerRadius="{StaticResource ControlCornerRadius}">
                                         <Grid RightTapped="DeviceInfo_RightTapped" RowSpacing="8">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
@@ -1421,8 +1437,10 @@
                                         Width="256"
                                         Height="80"
                                         Padding="13,10"
-                                        Background="#1A808080"
-                                        CornerRadius="4">
+                                        BorderThickness="1"
+                                        BorderBrush="{StaticResource CardBorderBrush}"
+                                        Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                        CornerRadius="{StaticResource ControlCornerRadius}">
                                         <Grid RowSpacing="8">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
@@ -1455,8 +1473,10 @@
                                         Width="256"
                                         Height="80"
                                         Padding="13,10"
-                                        Background="#1A808080"
-                                        CornerRadius="4">
+                                        BorderThickness="1"
+                                        BorderBrush="{StaticResource CardBorderBrush}"
+                                        Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                        CornerRadius="{StaticResource ControlCornerRadius}">
                                         <Grid RowSpacing="8">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
@@ -1503,8 +1523,10 @@
                                     MaxWidth="520"
                                     Margin="9,8,9,0"
                                     Padding="13,10"
-                                    Background="#1A808080"
-                                    CornerRadius="4">
+                                    BorderThickness="1"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="{StaticResource ControlCornerRadius}">
                                     <Grid RowSpacing="8">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" />
@@ -1551,8 +1573,10 @@
 
                                 <Border
                                     Height="64"
-                                    Background="#1A808080"
-                                    CornerRadius="4"
+                                    BorderThickness="1"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="{StaticResource ControlCornerRadius}"
                                     Tapped="UIElement_OnTapped">
 
                                     <Grid Margin="8">
@@ -1579,8 +1603,10 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    Background="#1A808080"
-                                    CornerRadius="4"
+                                    BorderThickness="1"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="{StaticResource ControlCornerRadius}"
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
@@ -1608,8 +1634,10 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    Background="#1A808080"
-                                    CornerRadius="4"
+                                    BorderThickness="1"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="{StaticResource ControlCornerRadius}"
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
@@ -1632,8 +1660,10 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    Background="#1A808080"
-                                    CornerRadius="4"
+                                    BorderThickness="1"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="{StaticResource ControlCornerRadius}"
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
@@ -1659,8 +1689,10 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    Background="#1A808080"
-                                    CornerRadius="4"
+                                    BorderThickness="1"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="{StaticResource ControlCornerRadius}"
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
@@ -1684,8 +1716,10 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    Background="#1A808080"
-                                    CornerRadius="4"
+                                    BorderThickness="1"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="{StaticResource ControlCornerRadius}"
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
@@ -1708,8 +1742,10 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    Background="#1A808080"
-                                    CornerRadius="4"
+                                    BorderThickness="1"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="{StaticResource ControlCornerRadius}"
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
@@ -1733,8 +1769,10 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    Background="#1A808080"
-                                    CornerRadius="4"
+                                    BorderThickness="1"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    CornerRadius="{StaticResource ControlCornerRadius}"
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
                                         <StackPanel Orientation="Horizontal" Spacing="12">
