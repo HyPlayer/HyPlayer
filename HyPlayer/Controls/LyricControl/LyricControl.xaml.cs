@@ -21,6 +21,7 @@ using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using LyricParser.Abstraction;
 using Microsoft.Graphics.Canvas.Geometry;
+using Windows.Graphics.Effects;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -71,17 +72,27 @@ namespace HyPlayer.Controls.LyricControl
                                                          (float)sender.Size.Width, (float)sender.Size.Height))
             {
                 args.DrawingSession.DrawTextLayout(textLayout, 0, 0, _lyricColor);
-                var cl = new CanvasCommandList(sender);
-                using (CanvasDrawingSession clds = cl.CreateDrawingSession())
-                {
-                    clds.DrawTextLayout(textLayout, 0, 0, _accentLyricColor);
-                }
-
+                
                 // 获取单词的高亮 Rect 组
                 var highlightGeometry = CreateHighlightGeometry(_currentTime, _lyric.LyricLine, textLayout, sender);
                 var textGeometry = CanvasGeometry.CreateText(textLayout);
                 var highlightTextGeometry = highlightGeometry.CombineWith(textGeometry, Matrix3x2.Identity, CanvasGeometryCombine.Intersect);
-                //args.DrawingSession.FillGeometry(textGeometry, _lyricColor);
+                
+                var commandList = new CanvasCommandList(sender);
+                using (var ds = commandList.CreateDrawingSession())
+                ds.FillGeometry(highlightTextGeometry, _accentLyricColor);
+                var shadow = new ColorMatrixEffect
+                {
+                    Source = new GaussianBlurEffect
+                    {
+                        BlurAmount = _blurAmount,
+                        Source = commandList,
+                        BorderMode = EffectBorderMode.Soft
+                    },
+                    ColorMatrix = GetColorMatrix(_shadowColor)
+                };
+
+                args.DrawingSession.DrawImage(shadow);
                 args.DrawingSession.FillGeometry(highlightTextGeometry, _accentLyricColor);
             }
         }
