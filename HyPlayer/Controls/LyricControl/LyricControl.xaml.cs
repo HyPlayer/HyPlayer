@@ -79,7 +79,7 @@ namespace HyPlayer.Controls.LyricControl
                 var highlightGeometry = CreateHighlightGeometry(_currentTime, _lyric.LyricLine, textLayout, sender);
                 var textGeometry = CanvasGeometry.CreateText(textLayout);
                 var highlightTextGeometry = highlightGeometry.CombineWith(textGeometry, Matrix3x2.Identity, CanvasGeometryCombine.Intersect);
-                args.DrawingSession.FillGeometry(textGeometry, _lyricColor);
+                //args.DrawingSession.FillGeometry(textGeometry, _lyricColor);
                 args.DrawingSession.FillGeometry(highlightTextGeometry, _accentLyricColor);
             }
         }

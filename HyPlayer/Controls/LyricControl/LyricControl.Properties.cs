@@ -121,7 +121,7 @@ namespace HyPlayer.Controls.LyricControl
         }
 
         public static readonly DependencyProperty WordWrappingProperty =
-            DependencyProperty.Register(nameof(WordWrapping), typeof(CanvasWordWrapping), typeof(LyricControl), new PropertyMetadata(CanvasWordWrapping.NoWrap, OnVerticalWordWrappingChanged));
+            DependencyProperty.Register(nameof(WordWrapping), typeof(CanvasWordWrapping), typeof(LyricControl), new PropertyMetadata(CanvasWordWrapping.Wrap, OnVerticalWordWrappingChanged));
 
         private CanvasWordWrapping _wordWrapping = CanvasWordWrapping.Wrap;
 
