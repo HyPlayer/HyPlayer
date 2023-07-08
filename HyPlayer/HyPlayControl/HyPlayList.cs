@@ -15,6 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
+using System.Timers;
 using Windows.Devices.Enumeration;
 using Windows.Foundation.Collections;
 using Windows.Graphics.Imaging;
@@ -270,6 +271,11 @@ public static class HyPlayList
         Player.SourceChanged += Player_SourceChanged;
         SecTimer.Elapsed += (sender, args) => _ = Common.Invoke(() => OnTimerTicked?.Invoke());
         SecTimer.Start();
+        if (Common.Setting.highPreciseLyricTimer)
+        {
+            highTimer.Elapsed += (_,_) => {LoadLyricChange();};
+            highTimer.Start(); 
+        }
         HistoryManagement.InitializeHistoryTrack();
         if (!Common.Setting.EnableAudioGain) AudioEffectsProperties["AudioGain_Disabled"] = true;
         Player.AddAudioEffect(typeof(AudioGainEffect).FullName, true, AudioEffectsProperties);
@@ -1662,6 +1668,8 @@ public static class HyPlayList
         }
     }
 
+    static Timer highTimer = new Timer(10);
+
     private static void LoadLyricChange()
     {
         if (Lyrics.Count == 0) return;
@@ -1690,8 +1698,10 @@ public static class HyPlayList
             // ignored
         }
 
-
-        if (changed) OnLyricChange?.Invoke();
+        
+        if (changed) {
+            OnLyricChange?.Invoke(); 
+        }
     }
 
     private static void Player_CurrentStateChanged(MediaPlayer sender, object args)

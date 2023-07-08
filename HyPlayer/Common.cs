@@ -863,6 +863,12 @@ namespace HyPlayer
             set => ApplicationData.Current.LocalSettings.Values[nameof(enableTouchGestureAction)] = value;
         }
 
+        public bool highPreciseLyricTimer
+        {
+            get => GetSettings(nameof(highPreciseLyricTimer), false);
+            set => ApplicationData.Current.LocalSettings.Values[nameof(highPreciseLyricTimer)] = value;
+        }
+
         public int gestureMode
         {
             get => GetSettings(nameof(gestureMode), 0);

@@ -55,47 +55,55 @@ namespace HyPlayer.Controls.LyricControl
         {
             if (HyPlayList.LyricPos < 0 || HyPlayList.LyricPos >= HyPlayList.Lyrics.Count)
                 return;
-            _currentTime = HyPlayList.Player.PlaybackSession.Position - HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.StartTime;//更新播放进度
+            if (!QuickRenderMode)
+                _currentTime = HyPlayList.Player.PlaybackSession.Position - HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.StartTime;//更新播放进度
 
             using (var textFormat = new CanvasTextFormat
-                   {
-                       FontSize = _fontSize,
-                       HorizontalAlignment = _horizontalTextAlignment,
-                       VerticalAlignment = _verticalTextAlignment,
-                       Options = CanvasDrawTextOptions.EnableColorFont,
-                       WordWrapping = CanvasWordWrapping.Wrap,
-                       Direction = CanvasTextDirection.LeftToRightThenTopToBottom,
-                       FontStyle = _fontStyle,
-                       FontWeight = _fontWeight,
-                       FontFamily = _textFontFamily
-                   })
+            {
+                FontSize = _fontSize,
+                HorizontalAlignment = _horizontalTextAlignment,
+                VerticalAlignment = _verticalTextAlignment,
+                Options = CanvasDrawTextOptions.EnableColorFont,
+                WordWrapping = CanvasWordWrapping.Wrap,
+                Direction = CanvasTextDirection.LeftToRightThenTopToBottom,
+                FontStyle = _fontStyle,
+                FontWeight = _fontWeight,
+                FontFamily = _textFontFamily
+            })
 
             using (var textLayout = new CanvasTextLayout(args.DrawingSession, _lyric.LyricLine.CurrentLyric, textFormat,
                                                          (float)sender.Size.Width, (float)sender.Size.Height))
             {
                 args.DrawingSession.DrawTextLayout(textLayout, 0, 0, _lyricColor);
-                
-                // 获取单词的高亮 Rect 组
-                var highlightGeometry = CreateHighlightGeometry(_currentTime, _lyric.LyricLine, textLayout, sender);
-                var textGeometry = CanvasGeometry.CreateText(textLayout);
-                var highlightTextGeometry = highlightGeometry.CombineWith(textGeometry, Matrix3x2.Identity, CanvasGeometryCombine.Intersect);
-                
-                var commandList = new CanvasCommandList(sender);
-                using (var ds = commandList.CreateDrawingSession())
-                    ds.FillGeometry(highlightTextGeometry, _accentLyricColor);
-                var shadow = new ColorMatrixEffect
+                if (!QuickRenderMode)
                 {
-                    Source = new GaussianBlurEffect
-                    {
-                        BlurAmount = _blurAmount,
-                        Source = commandList,
-                        BorderMode = EffectBorderMode.Soft
-                    },
-                    ColorMatrix = GetColorMatrix(_shadowColor)
-                };
+                    // 获取单词的高亮 Rect 组
+                    var highlightGeometry = CreateHighlightGeometry(_currentTime, _lyric.LyricLine, textLayout, sender);
+                    var textGeometry = CanvasGeometry.CreateText(textLayout);
+                    var highlightTextGeometry = highlightGeometry.CombineWith(textGeometry, Matrix3x2.Identity, CanvasGeometryCombine.Intersect);
 
-                args.DrawingSession.DrawImage(shadow);
-                args.DrawingSession.FillGeometry(highlightTextGeometry, _accentLyricColor);
+                    var commandList = new CanvasCommandList(sender);
+                    using (var ds = commandList.CreateDrawingSession())
+                        ds.FillGeometry(highlightTextGeometry, _accentLyricColor);
+                    var shadow = new ColorMatrixEffect
+                    {
+                        Source = new GaussianBlurEffect
+                        {
+                            BlurAmount = _blurAmount,
+                            Source = commandList,
+                            BorderMode = EffectBorderMode.Soft
+                        },
+                        ColorMatrix = GetColorMatrix(_shadowColor)
+                    };
+
+                    args.DrawingSession.DrawImage(shadow);
+                    args.DrawingSession.FillGeometry(highlightTextGeometry, _accentLyricColor);
+                }
+                else
+                {
+                    var textGeometry = CanvasGeometry.CreateText(textLayout);
+                    args.DrawingSession.FillGeometry(textGeometry, _accentLyricColor);
+                }
             }
         }
 
@@ -160,27 +168,27 @@ namespace HyPlayer.Controls.LyricControl
                 {
                     var startTime = TimeSpan.FromMilliseconds(wordInfos.GetRange(0, index).Sum(p => p.Duration.TotalMilliseconds));
 
-                    var currentPercentage = (index == wordInfos.Count - 1||currentLyric.Duration.TotalSeconds > 1)
+                    var currentPercentage = (index == wordInfos.Count - 1 || currentLyric.Duration.TotalSeconds > 1)
                         ? _easeFunction.Ease((_currentTime - startTime) / currentLyric.Duration)
                         : (_currentTime - startTime) / currentLyric.Duration;
 
                     var lastRect = CanvasGeometry.CreateRectangle(
                         canvas, (float)currentRegions[0].LayoutBounds.Left,
                         (float)currentRegions[0].LayoutBounds.Top,
-                        (float)(currentRegions.Sum(t => t.LayoutBounds.Width)*currentPercentage),
+                        (float)(currentRegions.Sum(t => t.LayoutBounds.Width) * currentPercentage),
                         (float)currentRegions.Sum(t => t.LayoutBounds.Height));
                     geos.Add(lastRect);
                 }
-                
+
                 return CanvasGeometry.CreateGroup(canvas, geos.ToArray());
             }
             else
             {
-                return CanvasGeometry.CreateRectangle(canvas, (float)textLayout.LayoutBounds.Left,(float)textLayout.LayoutBounds.Top, (float)textLayout.LayoutBounds.Width,
+                return CanvasGeometry.CreateRectangle(canvas, (float)textLayout.LayoutBounds.Left, (float)textLayout.LayoutBounds.Top, (float)textLayout.LayoutBounds.Width,
                                                       (float)textLayout.LayoutBounds.Height);
             }
         }
-        
+
         private void CanvasControl_Update(Microsoft.Graphics.Canvas.UI.Xaml.ICanvasAnimatedControl sender,
                                           Microsoft.Graphics.Canvas.UI.Xaml.CanvasAnimatedUpdateEventArgs args)
         {

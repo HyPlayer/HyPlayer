@@ -54,6 +54,15 @@ namespace HyPlayer.Controls.LyricControl
             ((LyricControl)d)._currentTime = (TimeSpan)e.NewValue;
         }
 
+
+        /// <summary>
+        /// 快速渲染模式
+        /// </summary>
+        public bool QuickRenderMode { get; set; }
+
+
+
+
         /// <summary>
         /// 文字样式(斜体等)
         /// </summary>
@@ -159,7 +168,7 @@ namespace HyPlayer.Controls.LyricControl
         }
 
         public static readonly DependencyProperty EaseFunctionProperty =
-            DependencyProperty.Register(nameof(EaseFunction), typeof(EaseFunctionBase), typeof(LyricControl), new PropertyMetadata(new ExponentialEase { EasingMode = EasingMode.EaseOut,Exponent = 3 }, OnEaseFunctionChanged));
+            DependencyProperty.Register(nameof(EaseFunction), typeof(EaseFunctionBase), typeof(LyricControl), new PropertyMetadata(new ExponentialEase { EasingMode = EasingMode.EaseOut, Exponent = 3 }, OnEaseFunctionChanged));
 
         private EaseFunctionBase _easeFunction = new ExponentialEase { EasingMode = EasingMode.EaseOut, Exponent = 3 };
 
@@ -274,9 +283,9 @@ namespace HyPlayer.Controls.LyricControl
         }
 
         public static readonly DependencyProperty LyricProperty =
-            DependencyProperty.Register(nameof(Lyric), typeof(SongLyric), typeof(LyricControl), new PropertyMetadata( new SongLyric { LyricLine = new LrcLyricsLine("无歌词", TimeSpan.Zero) }, OnLyricChanged));
+            DependencyProperty.Register(nameof(Lyric), typeof(SongLyric), typeof(LyricControl), new PropertyMetadata(new SongLyric { LyricLine = new LrcLyricsLine("无歌词", TimeSpan.Zero) }, OnLyricChanged));
 
-        private SongLyric _lyric = new SongLyric{LyricLine = new LrcLyricsLine("无歌词",TimeSpan.Zero)};
+        private SongLyric _lyric = new SongLyric { LyricLine = new LrcLyricsLine("无歌词", TimeSpan.Zero) };
 
         private static void OnLyricChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {

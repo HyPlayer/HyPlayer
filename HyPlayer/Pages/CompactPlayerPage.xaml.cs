@@ -144,7 +144,6 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
 
     private void LeaveAnimation_Completed(object sender, object e)
     {
-        ChangeLyric();
         EnterAnimation.Begin();
     }
     private Task OnPlaybarVisibilityChanged(bool isActivated)
@@ -234,22 +233,42 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     {
         if (HyPlayList.LyricPos == -1) return;
         if (HyPlayList.Lyrics.Count <= HyPlayList.LyricPos) return;
-        _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { LeaveAnimation.Begin(); });
+        if (HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine is KaraokeLyricsLine kara)
+        {
+            if (kara.Duration.TotalSeconds > 1)
+            {
+                _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { LeaveAnimation.Begin(); });
+            }
+        }else if (HyPlayList.LyricPos < HyPlayList.Lyrics.Count - 1 && HyPlayList.Lyrics[HyPlayList.LyricPos+1].LyricLine is LrcLyricsLine lrcLine)
+        {
+            if (lrcLine.StartTime.TotalSeconds - HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.StartTime.TotalSeconds > 1)
+            {
+                LyricControl.QuickRenderMode = false;
+                _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { LeaveAnimation.Begin(); });                
+            }
+            else
+            {
+                LyricControl.QuickRenderMode = true;            
+            }
+        }
+        ChangeLyric();
     }
 
 
     private void ChangeLyric()
     {
+        
         _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
         {
             LyricText = HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.CurrentLyric;
-
+            LyricControl.Lyric = HyPlayList.Lyrics[HyPlayList.LyricPos];
+            return;
             WordTextBlocks.Clear();
             BlockToAnimation.Clear();
             WordLyricContainer.Text = "";
             LyricTranslation = HyPlayList.Lyrics[HyPlayList.LyricPos].Translation;
             LyricSound = HyPlayList.Lyrics[HyPlayList.LyricPos].Romaji;
-            LyricControl.Lyric = HyPlayList.Lyrics[HyPlayList.LyricPos];
+            
             Debug.WriteLine($"LyricChanged:{HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.CurrentLyric}");
             _lyricIsKaraokeLyric = typeof(KaraokeLyricsLine) == HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.GetType();
             Lrc = HyPlayList.Lyrics[HyPlayList.LyricPos];
@@ -303,6 +322,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
                 HyPlayList.OnPlayPositionChange -= RefreshWordColor;
             }
         });
+        
     }
 
     private void OnChangePlayItem(HyPlayItem item)
