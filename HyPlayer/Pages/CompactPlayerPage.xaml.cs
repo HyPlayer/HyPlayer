@@ -67,7 +67,6 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     public SongLyric Lrc;
     private List<Run> WordTextBlocks = new();
     private Dictionary<Run, Storyboard> BlockToAnimation = new();
-    private System.Timers.Timer _timer = new (10);
 
 #nullable enable
     private Color? _karaokAccentColorCache;
@@ -95,18 +94,10 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         HyPlayList.OnSongLikeStatusChange += HyPlayList_OnSongLikeStatusChange;
         LeaveAnimation.Completed += LeaveAnimation_Completed;
         Common.OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;
-        _timer.Elapsed += TimerElapsed;
-        _timer.Start();
         //CompactPlayerAni.Begin();
     }
 
-    private void TimerElapsed(object sender, System.Timers.ElapsedEventArgs e)
-    {
-        _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-        {
-            LyricControl.CurrentTime = HyPlayList.Player.PlaybackSession.Position - HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.StartTime;
-        });
-    }
+
 
     private async Task HyPlayList_OnSongCoverChanged(int hashCode, IRandomAccessStream coverStream)
     {
