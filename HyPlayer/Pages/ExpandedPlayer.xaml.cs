@@ -594,8 +594,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 {
                     var animationX = BgScale.CreateDoubleAnimation(
                         "ScaleX", 
-                        2.0,
-                        1.5,
+                        1.8,
+                        1,
                         TimeSpan.Zero,
                         TimeSpan.FromSeconds(60 * (Common.Setting.gentleBPMAnimation ? 10 : 1) / bpm),
                         repeatBehavior: RepeatBehavior.Forever,
@@ -603,8 +603,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         easing:new BackEase { EasingMode = EasingMode.EaseInOut });
                     var animationY = BgScale.CreateDoubleAnimation(
                         "ScaleY", 
-                        1.5,
-                        2.0,
+                        1.8,
+                        1,
                         TimeSpan.Zero,
                         TimeSpan.FromSeconds(480 / bpm),
                         repeatBehavior: RepeatBehavior.Forever,
