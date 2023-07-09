@@ -21,7 +21,7 @@
         <StackPanel Orientation="Horizontal" Spacing="20">
             <TextBlock
                 Margin="30,30,0,0"
-                FontSize="40"
+                Style="{StaticResource HeaderTextBlockStyle}"
                 FontWeight="Bold"
                 Text="我的云盘"
                 TextWrapping="Wrap" />

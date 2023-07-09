@@ -14,7 +14,7 @@
     mc:Ignorable="d">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="75" />
+            <RowDefinition Height="100" />
             <RowDefinition />
         </Grid.RowDefinitions>
 
@@ -40,7 +40,7 @@
             Grid.Row="0"
             Margin="24,24,24,0"
             CharacterSpacing="80"
-            FontSize="40"
+            Style="{StaticResource HeaderTextBlockStyle}"
             FontWeight="Bold"
             Text="设置" />
         <controls1:PivotView Grid.Row="1" FontFamily="Black">

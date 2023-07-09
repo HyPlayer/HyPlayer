@@ -30,20 +30,16 @@
                                 Margin="0,5"
                                 HorizontalAlignment="Stretch"
                                 Tag="{x:Bind ResourceId}">
-                                <controls:ImageEx
+                                <muxc:PersonPicture
                                     x:Name="RectangleImageBack"
                                     Height="82"
                                     Margin="0"
-                                    CornerRadius="12"
-                                    EnableLazyLoading="True"
-                                    IsCacheEnabled="False"
-                                    Stretch="UniformToFill"
                                     Visibility="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}"
                                     x:Load="{x:Bind hyplayer:Common.Setting.itemOfListBackgroundAcrylicBlur}">
-                                    <controls:ImageEx.Source>
+                                    <muxc:PersonPicture.ProfilePicture>
                                         <BitmapImage UriSource="{x:Bind CoverUri, Mode=OneTime}" />
-                                    </controls:ImageEx.Source>
-                                </controls:ImageEx>
+                                    </muxc:PersonPicture.ProfilePicture>
+                                </muxc:PersonPicture>
                                 <Rectangle
                                     x:Name="RectangleImageAcrylic"
                                     Margin="0,-1,0,-1"

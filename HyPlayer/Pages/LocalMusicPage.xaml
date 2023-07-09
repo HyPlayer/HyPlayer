@@ -13,7 +13,7 @@
         <TextBlock
             Grid.Row="0"
             Margin="24,24,24,0"
-            FontSize="40"
+            Style="{StaticResource HeaderTextBlockStyle}"
             FontWeight="Bold"
             Text="本地歌曲" />
         <Pivot Margin="15,80,30,0">

@@ -42,6 +42,14 @@
                     Text="删除此歌单" />
             </MenuFlyout>
         </FlyoutBase.AttachedFlyout>
+        
+        <muxc:TeachingTip
+            x:Name="TheTeachingTip"
+            CloseButtonClick="TheTeachingTip_OnCloseButtonClick"
+            Title=""
+            IsLightDismissEnabled="False"
+            PreferredPlacement="TopRight" />
+        
         <Border
             x:Name="AppTitleBar"
             Height="40"
@@ -87,7 +95,7 @@
             Canvas.ZIndex="0"
             DisplayModeChanged="NavMain_DisplayModeChanged"
             FlowDirection="LeftToRight"
-            FontFamily="Microsoft Sans Serif"
+            Style="{StaticResource LeftNavViewStyle}"
             IsBackButtonVisible="Visible"
             IsBackEnabled="True"
             IsSettingsVisible="False"
@@ -96,6 +104,7 @@
             ItemInvoked="NavMain_ItemInvoked"
             PaneDisplayMode="Auto"
             SelectionChanged="NavMain_OnSelectionChanged"
+            OpenPaneLength="282"
             SelectedItem="{x:Bind BaseFrame.Content, Converter={StaticResource PageToNavigationViewIndicatorConverter}}">
             <muxc:NavigationView.AutoSuggestBox>
                 <AutoSuggestBox x:Name="SearchAutoSuggestBox" 
@@ -149,8 +158,8 @@
                         <FontIcon Glyph="&#xE12B;" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
+                <muxc:NavigationViewItemSeparator/>
                 <muxc:NavigationViewItemHeader Content="音乐" Margin="0,3,3,3"/>
-
                 <muxc:NavigationViewItem 
                     Content="离线音乐"
                     Tag="PageLocal"
@@ -169,7 +178,6 @@
                         <FontIcon Glyph="&#xEB49;"/>
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
-
                 <muxc:NavigationViewItem
                     Content="我的收藏"
                     Tag="PageFavorite"
@@ -188,6 +196,7 @@
                         <FontIcon Glyph="&#xEB4E;" />
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
+                <muxc:NavigationViewItemSeparator/>
                 <muxc:NavigationViewItemHeader Content="歌单" Margin="0,3,3,3"/>
                 <muxc:NavigationViewItem
                     x:Name="NavItemsAddPlaylist"
@@ -222,8 +231,6 @@
                     Visibility="Collapsed" />
             </muxc:NavigationView.MenuItems>
             <muxc:NavigationView.FooterMenuItems>
-
-
                 <muxc:NavigationViewItem
                     x:Name="NavItemLogin"
                     Content="登录"
@@ -241,32 +248,6 @@
                         <FontIcon Glyph="&#xF8B0;"/>
                     </muxc:NavigationViewItem.Icon>
                 </muxc:NavigationViewItem>
-                <!--抱歉，这部分先暂时删了-->
-                <!--
-                <muxc:NavigationViewItem Height="50" IsTapEnabled="False" SelectsOnInvoked="False" Visibility="Collapsed">
-                    <Grid HorizontalAlignment="Stretch" Margin="-10,0,-20,0">
-                        <StackPanel Spacing="12" Orientation="Horizontal"   >
-                            <Button BorderThickness="0" x:Name="BtnSet" Click="BtnSet_Click" Width="90">
-                                <StackPanel Orientation="Horizontal" Margin="-16,0,-10,0"  >
-                                    <FontIcon Glyph="&#xE713;" FontSize="16" VerticalAlignment="Center" Margin="0,2,0,0"/>
-                                    <TextBlock Text="设置" Margin="15,0,0,0" />
-                                </StackPanel>
-                            </Button>
-                            <Button  Width="110" x:Name="BtnHome" BorderThickness="0" Click="BtnHome_Click">
-                                <StackPanel Orientation="Horizontal" >
-                                    <FontIcon  Glyph="&#xE10F;" FontSize="16" Margin="0,3,0,0"/>
-                                    <TextBlock Margin="5,0,0,0" Text="主页"/>
-                                </StackPanel>
-                            </Button>
-                            <Button x:Name="BtnLogOut" BorderThickness="0"  Click="BtnLogOut_Click" Width="83">
-                                <StackPanel Orientation="Horizontal">
-                                    <FontIcon Glyph="&#xF3B1;" FontSize="16" Margin="0,0,0,0" />
-                                    <TextBlock Text="退出" Margin="8,0,0,0"/>
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
-                    </Grid>
-                </muxc:NavigationViewItem>-->
                 <muxc:NavigationViewItem x:Name="NavItemBlank" x:FieldModifier="public" IsEnabled="False" Height="130" Opacity="0">
                     <Grid Margin="-5,5,-15,0">
                         <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" RadiusX="12" RadiusY="12" >

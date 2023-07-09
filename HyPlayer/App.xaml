@@ -15,20 +15,9 @@
                 <ResourceDictionary Source="/Resources/UnsupportedFontIcon.xaml"/>
                 <ResourceDictionary Source="/Classes/ConvertersDictionary.xaml"/>
                 <ResourceDictionary Source="/Resources/ListView.xaml"/>
-
+                <ResourceDictionary Source="/Resources/StyleOverwrite.xaml"/>
             </ResourceDictionary.MergedDictionaries>
-            <Style TargetType="controls:ImageEx" x:Key="BaseStyle">
-                <Setter Property="IsCacheEnabled" Value="False" />
-            </Style>
-            <Thickness x:Key="NavigationViewHeaderMargin">0,0,0,0</Thickness>
-            <Thickness x:Key="NavigationViewContentMargin">0,48,0,0</Thickness>
-            <Thickness x:Key="NavigationViewContentGridBorderThickness">1,1,0,0</Thickness>
-            <CornerRadius x:Key="NavigationViewContentGridCornerRadius">8,0,0,0</CornerRadius>
-            <SolidColorBrush x:Key="NavigationViewTopPaneBackground" Color="Transparent"/>
-            <StaticResource x:Key="ListViewItemBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
-            <SolidColorBrush x:Key="SubtleFillColorTertiaryBrush" Color="{StaticResource SubtleFillColorTertiary}" />
-            <Color x:Key="SubtleFillColorTertiary">#0AFFFFFF</Color>
-
+           
             <classes:NegationBoolToVisibilityConverter x:Key="NegationBoolToVisibilityConverter"/>
 
         </ResourceDictionary>

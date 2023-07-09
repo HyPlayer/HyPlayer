@@ -12,7 +12,7 @@
         <TextBlock
             Grid.Row="0"
             Margin="24,24,24,0"
-            FontSize="40"
+            Style="{StaticResource HeaderTextBlockStyle}"
             FontWeight="Bold"
             Text="收藏歌曲" />
         <Grid Margin="5,64,0,0">

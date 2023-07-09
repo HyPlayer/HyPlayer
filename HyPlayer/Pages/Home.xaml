@@ -10,7 +10,7 @@
         <Grid>
             <TextBlock
                 Text="主页"
-                FontSize="40"
+                Style="{StaticResource HeaderTextBlockStyle}"
                 FontWeight="Bold"
                 CharacterSpacing="90"
                 Margin="24,24,0,0" />

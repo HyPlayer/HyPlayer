@@ -20,7 +20,7 @@
         <TextBlock
             Grid.Row="0"
             Margin="0,-5,0,20"
-            FontSize="40"
+            Style="{StaticResource HeaderTextBlockStyle}"
             FontWeight="Bold"
             CharacterSpacing="90"
             Text="搜索歌曲" />
