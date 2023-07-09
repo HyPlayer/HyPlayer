@@ -191,7 +191,7 @@
     <Grid
         x:Name="GridThis"
         Background="Transparent"
-        CornerRadius="8,8,0,0">
+        CornerRadius="4,4,0,0">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*" />
             <ColumnDefinition Width="1*" />
@@ -225,7 +225,7 @@
             HorizontalAlignment="Left"
             x:FieldModifier="public"
             Canvas.ZIndex="2"
-            CornerRadius="8,0,0,0">
+            CornerRadius="4,0,0,0">
             <Grid.RenderTransform>
                 <TranslateTransform x:Name="SongInfoScale" />
             </Grid.RenderTransform>

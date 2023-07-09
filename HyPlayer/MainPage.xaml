@@ -154,7 +154,7 @@
             Visibility="Visible"
             >
             <Grid.Background>
-                <media:BackdropBlurBrush Amount="16"/>
+                <media:BackdropBlurBrush Amount="12"/>
             </Grid.Background>
             <Rectangle
                 x:Name="PlayBarMarginBackground"
