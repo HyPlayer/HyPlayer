@@ -52,7 +52,7 @@ public static class LyricRenderComposer
         using var textLayout =
             new CanvasTextLayout(
                 drawingSession, lyric.LyricLine.CurrentLyric, textFormat,
-                (float)drawingSize.Height, (float)drawingSize.Height);
+                (float)drawingSize.Width, (float)drawingSize.Height);
         var textLayoutTranslation = (lyric.HaveTranslation) ? new CanvasTextLayout(drawingSession, lyric.Translation, textFormatTranslation, (float)drawingSize.Width, (float)drawingSize.Height) : null;
         var textLayoutRomaji = (lyric.HaveRomaji) ? new CanvasTextLayout(drawingSession, lyric.Romaji, textFormatTranslation, (float)drawingSize.Width, (float)drawingSize.Height) : null;
 
