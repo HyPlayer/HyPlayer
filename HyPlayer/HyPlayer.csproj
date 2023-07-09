@@ -92,6 +92,7 @@
     <Compile Include="Classes\Converters.cs" />
     <Compile Include="Classes\Extensions.cs" />
     <Compile Include="Classes\LastFMManager.cs" />
+    <Compile Include="Classes\LyricRenderComposer.cs" />
     <Compile Include="Classes\MIMEHelper.cs" />
     <Compile Include="Classes\NCMFile.cs" />
     <Compile Include="Classes\NCSong.cs" />
@@ -148,7 +149,6 @@
     </Compile>
     <Compile Include="HyPlayControl\DownloadManager.cs" />
     <Compile Include="HyPlayControl\HyPlayList.cs" />
-    <Compile Include="Controls\LyricControl\LyricControl.EaseFunctions.cs" />
     <Compile Include="Controls\LyricControl\LyricControl.Properties.cs" />
     <Compile Include="Controls\LyricControl\LyricControl.xaml.cs">
       <DependentUpon>LyricControl.xaml</DependentUpon>
