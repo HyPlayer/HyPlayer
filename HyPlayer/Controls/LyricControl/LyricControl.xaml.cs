@@ -74,7 +74,7 @@ namespace HyPlayer.Controls.LyricControl
 
                                   };
             LyricRenderComposer.RenderOnDrawingSession(args.DrawingSession,
-                                                       HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine,
+                                                       HyPlayList.Lyrics[HyPlayList.LyricPos],
                                                        HyPlayList.Player.PlaybackSession.Position, LyricRenderOption.GetValueOrDefault(),
                                                        sender.Size, QuickRenderMode);
         }

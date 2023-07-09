@@ -19,31 +19,53 @@ namespace HyPlayer.Classes;
 public static class LyricRenderComposer
 {
     public static void RenderOnDrawingSession(
-        CanvasDrawingSession drawingSession, ILyricLine lyricLine,
+        CanvasDrawingSession drawingSession, SongLyric lyric,
         TimeSpan position, LyricRenderOption renderOption, Size drawingSize, bool quickRender = false)
     {
         var _currentTimeInLine = TimeSpan.Zero;
         if (!quickRender)
-            _currentTimeInLine = position - lyricLine.StartTime;
-        using var textFormat = new CanvasTextFormat();
-        textFormat.FontSize = renderOption.FontSize;
-        textFormat.HorizontalAlignment = renderOption.HorizontalAlignment;
-        textFormat.VerticalAlignment = renderOption.VerticalAlignment;
-        textFormat.Options = CanvasDrawTextOptions.EnableColorFont;
-        textFormat.WordWrapping = CanvasWordWrapping.Wrap;
-        textFormat.Direction = CanvasTextDirection.LeftToRightThenTopToBottom;
-        textFormat.FontStyle = renderOption.FontStyle;
-        textFormat.FontWeight = renderOption.FontWeight;
-        textFormat.FontFamily = renderOption.FontFamily;
+            _currentTimeInLine = position - lyric.LyricLine.StartTime;
+        using var textFormat = new CanvasTextFormat
+        {
+            FontSize = renderOption.FontSize,
+            HorizontalAlignment = renderOption.HorizontalAlignment,
+            VerticalAlignment = renderOption.VerticalAlignment, 
+            Options = CanvasDrawTextOptions.EnableColorFont,
+            WordWrapping = CanvasWordWrapping.Wrap,
+            Direction = CanvasTextDirection.LeftToRightThenTopToBottom,
+            FontStyle = renderOption.FontStyle,
+            FontWeight = renderOption.FontWeight,
+            FontFamily = renderOption.FontFamily,
+        };
+
+        using var textFormatTranslation = new CanvasTextFormat
+        {
+            FontSize = 14,
+            HorizontalAlignment = renderOption.HorizontalAlignment,
+            Options = CanvasDrawTextOptions.EnableColorFont,
+            WordWrapping = CanvasWordWrapping.Wrap,
+            Direction = CanvasTextDirection.LeftToRightThenTopToBottom,
+            FontStyle = renderOption.FontStyle,
+            FontFamily = renderOption.FontFamily
+        };
+
         using var textLayout =
             new CanvasTextLayout(
-                drawingSession, lyricLine.CurrentLyric, textFormat,
+                drawingSession, lyric.LyricLine.CurrentLyric, textFormat,
                 (float)drawingSize.Height, (float)drawingSize.Height);
+        var textLayoutTranslation = (lyric.HaveTranslation) ? new CanvasTextLayout(drawingSession, lyric.Translation, textFormatTranslation, (float)drawingSize.Width, (float)drawingSize.Height) : null;
+        var textLayoutRomaji = (lyric.HaveRomaji) ? new CanvasTextLayout(drawingSession, lyric.Romaji, textFormatTranslation, (float)drawingSize.Width, (float)drawingSize.Height) : null;
+
         drawingSession.DrawTextLayout(textLayout, 0, 0, renderOption.LyricIdleColor);
+        if (textLayoutTranslation is not null)
+            drawingSession.DrawTextLayout(textLayoutTranslation, 0, (float)textLayout.DrawBounds.Bottom + 4, Colors.LightGray);
+        if (textLayoutRomaji is not null)
+            drawingSession.DrawTextLayout(textLayoutRomaji, 0, (float)textLayout.DrawBounds.Top - (float)textLayoutRomaji.DrawBounds.Height - 8, Colors.LightGray);
+
         if (!quickRender)
         {
             // 获取单词的高亮 Rect 组
-            var highlightGeometry = CreateHighlightGeometry(_currentTimeInLine, lyricLine, textLayout, drawingSession, renderOption);
+            var highlightGeometry = CreateHighlightGeometry(_currentTimeInLine, lyric.LyricLine, textLayout, drawingSession, renderOption);
             var textGeometry = CanvasGeometry.CreateText(textLayout);
             var highlightTextGeometry =
                 highlightGeometry.CombineWith(textGeometry, Matrix3x2.Identity, CanvasGeometryCombine.Intersect);
