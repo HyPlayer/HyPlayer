@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,66 +27,124 @@ public static class LyricRenderComposer
         if (!quickRender)
             _currentTimeInLine = position - lyric.LyricLine.StartTime;
         using var textFormat = new CanvasTextFormat
-        {
-            FontSize = renderOption.FontSize,
-            HorizontalAlignment = renderOption.HorizontalAlignment,
-            VerticalAlignment = renderOption.VerticalAlignment, 
-            Options = CanvasDrawTextOptions.EnableColorFont,
-            WordWrapping = CanvasWordWrapping.Wrap,
-            Direction = CanvasTextDirection.LeftToRightThenTopToBottom,
-            FontStyle = renderOption.FontStyle,
-            FontWeight = renderOption.FontWeight,
-            FontFamily = renderOption.FontFamily,
-        };
+                               {
+                                   FontSize = renderOption.FontSize,
+                                   HorizontalAlignment = renderOption.HorizontalAlignment,
+                                   VerticalAlignment = renderOption.VerticalAlignment,
+                                   Options = CanvasDrawTextOptions.EnableColorFont,
+                                   WordWrapping = CanvasWordWrapping.Wrap,
+                                   Direction = CanvasTextDirection.LeftToRightThenTopToBottom,
+                                   FontStyle = renderOption.FontStyle,
+                                   FontWeight = renderOption.FontWeight,
+                                   FontFamily = renderOption.FontFamily,
+                               };
 
         using var textFormatTranslation = new CanvasTextFormat
-        {
-            FontSize = 14,
-            HorizontalAlignment = renderOption.HorizontalAlignment,
-            Options = CanvasDrawTextOptions.EnableColorFont,
-            WordWrapping = CanvasWordWrapping.Wrap,
-            Direction = CanvasTextDirection.LeftToRightThenTopToBottom,
-            FontStyle = renderOption.FontStyle,
-            FontFamily = renderOption.FontFamily
-        };
+                                          {
+                                              FontSize = 14,
+                                              HorizontalAlignment = renderOption.HorizontalAlignment,
+                                              Options = CanvasDrawTextOptions.EnableColorFont,
+                                              WordWrapping = CanvasWordWrapping.Wrap,
+                                              Direction = CanvasTextDirection.LeftToRightThenTopToBottom,
+                                              FontStyle = renderOption.FontStyle,
+                                              FontFamily = renderOption.FontFamily
+                                          };
 
         using var textLayout =
             new CanvasTextLayout(
                 drawingSession, lyric.LyricLine.CurrentLyric, textFormat,
                 (float)drawingSize.Width, (float)drawingSize.Height);
-        var textLayoutTranslation = (lyric.HaveTranslation) ? new CanvasTextLayout(drawingSession, lyric.Translation, textFormatTranslation, (float)drawingSize.Width, (float)drawingSize.Height) : null;
-        var textLayoutRomaji = (lyric.HaveRomaji) ? new CanvasTextLayout(drawingSession, lyric.Romaji, textFormatTranslation, (float)drawingSize.Width, (float)drawingSize.Height) : null;
+        var textLayoutTranslation = (lyric.HaveTranslation)
+            ? new CanvasTextLayout(drawingSession, lyric.Translation, textFormatTranslation, (float)drawingSize.Width,
+                                   (float)drawingSize.Height)
+            : null;
+        var textLayoutRomaji = (lyric.HaveRomaji)
+            ? new CanvasTextLayout(drawingSession, lyric.Romaji, textFormatTranslation, (float)drawingSize.Width,
+                                   (float)drawingSize.Height)
+            : null;
 
         drawingSession.DrawTextLayout(textLayout, 0, 0, renderOption.LyricIdleColor);
         if (textLayoutTranslation is not null)
-            drawingSession.DrawTextLayout(textLayoutTranslation, 0, (float)textLayout.DrawBounds.Bottom + 4, Colors.LightGray);
+            drawingSession.DrawTextLayout(textLayoutTranslation, 0, (float)textLayout.DrawBounds.Bottom + 4,
+                                          Colors.LightGray);
         if (textLayoutRomaji is not null)
-            drawingSession.DrawTextLayout(textLayoutRomaji, 0, (float)textLayout.DrawBounds.Top - (float)textLayoutRomaji.DrawBounds.Height - 8, Colors.LightGray);
+            drawingSession.DrawTextLayout(textLayoutRomaji, 0,
+                                          (float)textLayout.DrawBounds.Top - (float)textLayoutRomaji.DrawBounds.Height -
+                                          8, Colors.LightGray);
 
-        if (!quickRender)
+        if (!quickRender && lyric.LyricLine is KaraokeLyricsLine karaokeLyricsLine)
         {
-            // 获取单词的高亮 Rect 组
-            var highlightGeometry = CreateHighlightGeometry(_currentTimeInLine, lyric.LyricLine, textLayout, drawingSession, renderOption);
+            // 获取已高亮字符数
+            var currentWordInfo = GetCurrentWordInfo(_currentTimeInLine, karaokeLyricsLine);
+            var currentWordIndex = karaokeLyricsLine.WordInfos.ToList().IndexOf(currentWordInfo);
+            var letterPosition = GetLetterPosition(currentWordInfo, karaokeLyricsLine);
+            var highlightedGeometry =
+                CreateHighlightedWordsGeometry(textLayout.GetCharacterRegions(0, letterPosition), drawingSession);
+            var startTime =
+                TimeSpan.FromMilliseconds(karaokeLyricsLine.WordInfos.ToList().GetRange(0, currentWordIndex)
+                                                           .Sum(p => p.Duration.TotalMilliseconds));
+            var shouldEase = (currentWordIndex == karaokeLyricsLine.WordInfos.Count - 1 ||
+                              currentWordInfo.Duration.TotalSeconds > 1);
+            var currentPercentage =
+                GetCurrentWordPercentage(startTime.TotalMilliseconds, _currentTimeInLine.TotalMilliseconds,
+                                         currentWordInfo.Duration.TotalMilliseconds, shouldEase, renderOption);
+            var currentWordGeometry = CreateCurrentWordGeometry(currentPercentage, drawingSession,
+                                                                textLayout.GetCharacterRegions(
+                                                                    letterPosition,
+                                                                    currentWordInfo.CurrentWords.Length));
             var textGeometry = CanvasGeometry.CreateText(textLayout);
             var highlightTextGeometry =
-                highlightGeometry.CombineWith(textGeometry, Matrix3x2.Identity, CanvasGeometryCombine.Intersect);
+                highlightedGeometry.CombineWith(textGeometry, Matrix3x2.Identity, CanvasGeometryCombine.Intersect);
+            var currentTextGeometry =
+                currentWordGeometry?.CombineWith(textGeometry, Matrix3x2.Identity, CanvasGeometryCombine.Intersect);
 
-            var commandList = new CanvasCommandList(drawingSession);
-            using (var ds = commandList.CreateDrawingSession())
-                ds.FillGeometry(highlightTextGeometry, renderOption.HighlightColor);
-            var shadow = new ColorMatrixEffect
-                         {
-                             Source = new GaussianBlurEffect
-                                      {
-                                          BlurAmount = renderOption.BlurAmount,
-                                          Source = commandList,
-                                          BorderMode = EffectBorderMode.Soft
-                                      },
-                             ColorMatrix = GetColorMatrix(renderOption.ShadowColor)
-                         };
+            {
+                var commandList = new CanvasCommandList(drawingSession);
+                using (var ds = commandList.CreateDrawingSession())
+                    ds.FillGeometry(highlightTextGeometry, renderOption.HighlightColor);
+                var highlightedShadow = new ColorMatrixEffect
+                                        {
+                                            Source = new GaussianBlurEffect
+                                                     {
+                                                         BlurAmount = renderOption.BlurAmount,
+                                                         Source = commandList,
+                                                         BorderMode = EffectBorderMode.Soft
+                                                     },
+                                            ColorMatrix = GetColorMatrix(renderOption.ShadowColor)
+                                        };
+                drawingSession.DrawImage(highlightedShadow);
+                drawingSession.FillGeometry(highlightTextGeometry, renderOption.HighlightColor);
+            }
 
-            drawingSession.DrawImage(shadow);
-            drawingSession.FillGeometry(highlightTextGeometry, renderOption.HighlightColor);
+            if (currentTextGeometry is not null)
+            {
+
+                    var commandList = new CanvasCommandList(drawingSession);
+                    using (var ds = commandList.CreateDrawingSession())
+                        ds.FillGeometry(currentTextGeometry, renderOption.HighlightColor);
+                    var shadowPercentage = -0.5;
+                    if (shouldEase && false)
+                    {
+                     shadowPercentage =
+                            GetCurrentWordPercentage(startTime.TotalMilliseconds, _currentTimeInLine.TotalMilliseconds,
+                                         currentWordInfo.Duration.TotalMilliseconds, false, renderOption);
+                    }
+                    var wordHighlightShadow = new ColorMatrixEffect
+                                              {
+                                                  Source = new GaussianBlurEffect
+                                                           {
+                                                               BlurAmount = (float)(renderOption.BlurAmount/* * (shouldEase ? shadowPercentage : 1)*/),
+                                                               Source = commandList,
+                                                               BorderMode = EffectBorderMode.Soft
+                                                           },
+                                                  ColorMatrix = GetColorMatrix(renderOption.ShadowColor)
+                                              };
+                    drawingSession.DrawImage(wordHighlightShadow);
+                    drawingSession.FillGeometry(currentTextGeometry, renderOption.HighlightColor);
+                
+
+                drawingSession.FillGeometry(currentTextGeometry, renderOption.HighlightColor);
+            }
         }
         else
         {
@@ -94,66 +153,71 @@ public static class LyricRenderComposer
         }
     }
 
-    private static CanvasGeometry CreateHighlightGeometry(TimeSpan currentTime, ILyricLine lyric,
-                                                          CanvasTextLayout textLayout,
-                                                          ICanvasResourceCreator drawingSession,
-                                                          LyricRenderOption renderOption)
+    private static double GetCurrentWordPercentage(double startTime, double currentTime, double duration,
+                                                   bool shouldEase, LyricRenderOption renderOption)
     {
-        if (lyric is KaraokeLyricsLine karaokeLyricsLine)
+        return shouldEase
+            ? renderOption.EaseFunction.Ease((currentTime - startTime) / duration)
+            : (currentTime - startTime) / (double)duration;
+    }
+
+    private static KaraokeWordInfo GetCurrentWordInfo(TimeSpan currentTime, KaraokeLyricsLine karaokeLyricsLine)
+    {
+        var wordInfos = (List<KaraokeWordInfo>)karaokeLyricsLine.WordInfos;
+        var time = TimeSpan.Zero;
+        var currentLyric = wordInfos.Last();
+        //获取播放中单词在歌词的位置
+        foreach (var item in wordInfos)
         {
-            var wordInfos = (List<KaraokeWordInfo>)karaokeLyricsLine.WordInfos;
-            var time = TimeSpan.Zero;
-            var currentLyric = wordInfos.Last();
-            var geos = new HashSet<CanvasGeometry>();
-            //获取播放中单词在歌词的位置
-            foreach (var item in wordInfos)
+            if (item.Duration + time > currentTime)
             {
-                if (item.Duration + time > currentTime)
-                {
-                    currentLyric = item;
-                    break;
-                }
-
-                time += item.Duration;
+                currentLyric = item;
+                break;
             }
 
-            var index = wordInfos.IndexOf(currentLyric);
-            var letterPosition = wordInfos.GetRange(0, index).Sum(p => p.CurrentWords.Length);
-            var regions = textLayout.GetCharacterRegions(0, letterPosition);
-            foreach (var region in regions)
-            {
-                geos.Add(CanvasGeometry.CreateRectangle(drawingSession, region.LayoutBounds));
-            }
-
-            // 获取当前字符的 Bound
-            //获取正在播放单词的长度
-            var currentRegions = textLayout.GetCharacterRegions(letterPosition, currentLyric.CurrentWords.Length);
-            if (currentRegions is { Length: > 0 })
-            {
-                var startTime =
-                    TimeSpan.FromMilliseconds(wordInfos.GetRange(0, index).Sum(p => p.Duration.TotalMilliseconds));
-
-                var currentPercentage = (index == wordInfos.Count - 1 || currentLyric.Duration.TotalSeconds > 1)
-                    ? renderOption.EaseFunction.Ease((currentTime - startTime) / currentLyric.Duration)
-                    : (currentTime - startTime) / currentLyric.Duration;
-
-                var lastRect = CanvasGeometry.CreateRectangle(
-                    drawingSession, (float)currentRegions[0].LayoutBounds.Left,
-                    (float)currentRegions[0].LayoutBounds.Top,
-                    (float)(currentRegions.Sum(t => t.LayoutBounds.Width) * currentPercentage),
-                    (float)currentRegions.Sum(t => t.LayoutBounds.Height));
-                geos.Add(lastRect);
-            }
-
-            return CanvasGeometry.CreateGroup(drawingSession, geos.ToArray());
+            time += item.Duration;
         }
-        else
+
+        return currentLyric;
+    }
+
+    private static int GetLetterPosition(KaraokeWordInfo currentLyric, KaraokeLyricsLine karaokeLyricsLine)
+    {
+        var wordInfos = karaokeLyricsLine.WordInfos.ToList();
+        var index = wordInfos.IndexOf(currentLyric);
+        var letterPosition = wordInfos.GetRange(0, index).Sum(p => p.CurrentWords.Length);
+        return letterPosition;
+    }
+
+    private static CanvasGeometry? CreateCurrentWordGeometry(double currentPercentage,
+                                                             CanvasDrawingSession drawingSession,
+                                                             CanvasTextLayoutRegion[] currentRegions)
+    {
+        // 获取当前字符的 Bound
+        // 获取正在播放单词的长度
+        if (currentRegions is { Length: > 0 })
         {
-            return CanvasGeometry.CreateRectangle(drawingSession, (float)textLayout.LayoutBounds.Left,
-                                                  (float)textLayout.LayoutBounds.Top,
-                                                  (float)textLayout.LayoutBounds.Width,
-                                                  (float)textLayout.LayoutBounds.Height);
+            var lastRect = CanvasGeometry.CreateRectangle(
+                drawingSession, (float)currentRegions[0].LayoutBounds.Left,
+                (float)currentRegions[0].LayoutBounds.Top,
+                (float)(currentRegions.Sum(t => t.LayoutBounds.Width) * currentPercentage),
+                (float)currentRegions.Sum(t => t.LayoutBounds.Height));
+            return lastRect;
         }
+
+        return null;
+    }
+
+    private static CanvasGeometry CreateHighlightedWordsGeometry(CanvasTextLayoutRegion[] regions,
+                                                                 ICanvasResourceCreator drawingSession)
+    {
+        var geos = new HashSet<CanvasGeometry>();
+        foreach (var region in regions)
+        {
+            geos.Add(CanvasGeometry.CreateRectangle(drawingSession, region.LayoutBounds));
+        }
+
+        return CanvasGeometry.CreateGroup(drawingSession, geos.ToArray());
     }
 
 
