@@ -29,7 +29,6 @@
                     <ContentControl Content="{x:Bind ListHeader}" />
                 </StackPanel>
             </ListView.Header>
-
             <ListView.ItemsPanel>
                 <ItemsPanelTemplate>
                     <ItemsStackPanel x:Name="GroupedStackPanel" AreStickyGroupHeadersEnabled="False" />
@@ -131,6 +130,9 @@
             <ListView.Resources>
                 <Style BasedOn="{StaticResource DefaultListViewItemStyle}" TargetType="ListViewItem">
                     <Setter Property="HorizontalAlignment" Value="Stretch" />
+                </Style>
+                <Style TargetType="ScrollBar">
+                    <Setter Property="Margin" Value="0,0,0,110"/>
                 </Style>
             </ListView.Resources>
             <ListView.ItemTemplate>

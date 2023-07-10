@@ -16,6 +16,7 @@
     Loaded="UserControl_Loaded"
     mc:Ignorable="d">
     <UserControl.Resources>
+        
         <LinearGradientBrush x:Key="SolidPlayButtonColor" StartPoint="0,0" EndPoint="1,1">
             <GradientStop x:Name="PlayBtnGradient" Offset="0.2" Color="#fefefe" />
             <GradientStop Offset="0.8" Color="#f1f1f1" />
@@ -24,6 +25,8 @@
             <GradientStop x:Name="PlayBtnIconGradient" Offset="0.2" Color="{ThemeResource SystemAccentColorLight2}" />
             <GradientStop Offset="0.8" Color="{ThemeResource SystemAccentColorLight1}" />
         </LinearGradientBrush>
+
+
 
         <Flyout x:Key="VolumeFlyout">
             <Grid>
@@ -188,7 +191,7 @@
     <Grid
         x:Name="GridThis"
         Background="Transparent"
-        CornerRadius="8,8,0,0">
+        CornerRadius="4,4,0,0">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*" />
             <ColumnDefinition Width="1*" />
@@ -222,7 +225,7 @@
             HorizontalAlignment="Left"
             x:FieldModifier="public"
             Canvas.ZIndex="2"
-            CornerRadius="8,0,0,0">
+            CornerRadius="4,0,0,0">
             <Grid.RenderTransform>
                 <TranslateTransform x:Name="SongInfoScale" />
             </Grid.RenderTransform>
