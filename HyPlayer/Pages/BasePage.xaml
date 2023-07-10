@@ -422,6 +422,16 @@
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="BaseFrame.Margin" Value="0"/>
+                        <Setter Target="NavMain.IsPaneToggleButtonVisible" Value="True"/>
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+            <VisualStateGroup>
+                <VisualState>
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1008"/>
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
                         <Setter Target="NavMain.IsPaneToggleButtonVisible" Value="False"/>
                     </VisualState.Setters>
                 </VisualState>
