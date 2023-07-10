@@ -1126,6 +1126,7 @@
                                                     Description="请粘贴到 cmd 管理员模式中运行">
                                 <TextBox
                                     HorizontalAlignment="Left"
+                                    IsReadOnly="True"
                                     Text="CheckNetIsolation LoopbackExempt -a -n=&quot;48848aaaaaaccd.hyplayer_fkcggvf9kbkw0&quot;" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="降级HTTPS为HTTP">
