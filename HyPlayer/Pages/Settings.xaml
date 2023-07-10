@@ -45,7 +45,7 @@
             Text="设置" />
         <controls1:PivotView Grid.Row="1" FontFamily="Black">
         <controls1:PivotView.Resources>
-                <Style TargetType="ScrollBar">
+                <Style TargetType="ScrollBar" BasedOn="{StaticResource DefaultScrollBarStyle}">
                     <Setter Property="Margin" Value="0,0,0,110"/>
                 </Style>
         </controls1:PivotView.Resources>

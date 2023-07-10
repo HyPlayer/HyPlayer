@@ -150,9 +150,9 @@
             </DataTemplate>
         </ListView.ItemTemplate>
         <ListView.Resources>
-                <Style TargetType="ScrollBar">
+            <Style TargetType="ScrollBar" BasedOn="{StaticResource DefaultScrollBarStyle}">
                     <Setter Property="Margin" Value="0,0,0,110"/>
-                </Style>
+            </Style>
         </ListView.Resources>
     </ListView>
 </UserControl>
