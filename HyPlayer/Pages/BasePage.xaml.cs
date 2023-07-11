@@ -185,6 +185,7 @@ public sealed partial class BasePage : Page
             dialog.CloseButtonText = "我已知晓";
             dialog.PrimaryButtonText = "退出软件";
             dialog.IsPrimaryButtonEnabled = true;
+            dialog.CloseButtonStyle = (Style) App.Current.Resources["AccentButtonStyle"];
             dialog.PrimaryButtonClick += (_, _) => _ = ApplicationView.GetForCurrentView().TryConsolidateAsync();
             _ = dialog.ShowAsync();
         }
@@ -235,7 +236,7 @@ public sealed partial class BasePage : Page
         }
     }
 
-    private async void ButtonLogin_OnClick(object sender, RoutedEventArgs e)
+    private async void ButtonLogin_OnClick(object sender, ContentDialogButtonClickEventArgs args)
     {
         if (string.IsNullOrWhiteSpace(TextBoxAccount.Text) || string.IsNullOrWhiteSpace(TextBoxPassword.Password))
         {
@@ -244,8 +245,8 @@ public sealed partial class BasePage : Page
             return;
         }
 
-        ButtonLogin.IsEnabled = false;
-        ButtonLogin.Content = "登录中......";
+        DialogLogin.IsPrimaryButtonEnabled = false;
+        DialogLogin.PrimaryButtonText = "登录中......";
         JObject json;
         try
         {
@@ -266,11 +267,10 @@ public sealed partial class BasePage : Page
                 isPhone ? CloudMusicApiProviders.LoginCellphone : CloudMusicApiProviders.Login, queries);
             if (json?["code"]?.ToString() != "200")
             {
-                ButtonLogin.Visibility = Visibility.Visible;
                 InfoBarLoginHint.IsOpen = true;
                 InfoBarLoginHint.Title = "登录失败";
-                ButtonLogin.Content = "登录";
-                ButtonLogin.IsEnabled = true;
+                DialogLogin.PrimaryButtonText = "登录";
+                DialogLogin.IsPrimaryButtonEnabled = true;
                 InfoBarLoginHint.Severity = InfoBarSeverity.Warning;
                 InfoBarLoginHint.Message = "登录失败 " + json["msg"] + json["message"];
             }
@@ -283,7 +283,7 @@ public sealed partial class BasePage : Page
         }
         catch (Exception ex)
         {
-            ButtonLogin.IsEnabled = true;
+            DialogLogin.IsPrimaryButtonEnabled = true;
             InfoBarLoginHint.IsOpen = true;
             InfoBarLoginHint.Severity = InfoBarSeverity.Error;
             InfoBarLoginHint.Message = "登录失败 " + ex;
@@ -291,7 +291,7 @@ public sealed partial class BasePage : Page
         }
     }
 
-    private void ButtonCloseLoginForm_Click(object sender, RoutedEventArgs e)
+    private void ButtonCloseLoginForm_Click(object sender, ContentDialogButtonClickEventArgs args)
     {
         DialogLogin.Hide();
         NavViewBack();
@@ -718,7 +718,7 @@ public sealed partial class BasePage : Page
                     }
 
                     InfoBarLoginHint.Title = "登录成功";
-                    ButtonLogin.Content = "登录成功";
+                    DialogLogin.PrimaryButtonText = "登录成功";
                     await LoginDone();
                     break;
                 }

@@ -8,7 +8,9 @@
     Title="选择歌手"
     FontWeight="Bold"
     CloseButtonText="关闭"
-    CornerRadius="20">
+    CloseButtonStyle="{StaticResource AccentButtonStyle}"
+    CornerRadius="{StaticResource OverlayCornerRadius}"
+    Style="{StaticResource DefaultContentDialogStyle}">
     <StackPanel>
         <ScrollViewer
             VerticalScrollBarVisibility="Auto">
