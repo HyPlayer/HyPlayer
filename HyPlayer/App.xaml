@@ -16,6 +16,7 @@
                 <ResourceDictionary Source="/Classes/ConvertersDictionary.xaml"/>
                 <ResourceDictionary Source="/Resources/ListView.xaml"/>
                 <ResourceDictionary Source="/Resources/NavigationView.xaml"/>
+                <ResourceDictionary Source="/Resources/ContentDialog.xaml"/>
 
             </ResourceDictionary.MergedDictionaries>
             <Style TargetType="controls:ImageEx" x:Key="BaseStyle">

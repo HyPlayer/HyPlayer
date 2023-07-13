@@ -7,11 +7,12 @@
     mc:Ignorable="d"
     Title="创建歌单"
     FontWeight="Bold"
-    CornerRadius="20"
     PrimaryButtonText="创建"
     SecondaryButtonText="取消"
     PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
-    SecondaryButtonClick="ContentDialog_SecondaryButtonClick">
+    SecondaryButtonClick="ContentDialog_SecondaryButtonClick"
+    PrimaryButtonStyle="{StaticResource AccentButtonStyle}"
+    Style="{StaticResource DefaultContentDialogStyle}">
 
     <StackPanel>
         <TextBox MaxLength="20" x:Name="SonglistTitle" PlaceholderText="歌单名称" />
