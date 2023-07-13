@@ -38,7 +38,7 @@ namespace HyPlayer.Controls
         {
             if (e.Key == VirtualKey.Enter) ButtonLogin_OnClick(null, null);
         }
-        private async void ButtonLogin_OnClick(object sender, RoutedEventArgs args)
+        private async void ButtonLogin_OnClick(object sender, ContentDialogButtonClickEventArgs args)
         {
             if (string.IsNullOrWhiteSpace(TextBoxAccount.Text) || string.IsNullOrWhiteSpace(TextBoxPassword.Password))
             {

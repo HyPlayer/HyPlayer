@@ -5,9 +5,11 @@
     xmlns:local="using:HyPlayer.Controls"
     Title="复制歌词"
     PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
+    PrimaryButtonStyle="{StaticResource AccentButtonStyle}"
     PrimaryButtonText="复制"
     SecondaryButtonClick="ContentDialog_SecondaryButtonClick"
-    SecondaryButtonText="取消">
+    SecondaryButtonText="取消"
+    Style="{StaticResource DefaultContentDialogStyle}">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
@@ -100,8 +102,7 @@
                                 &#x27A4;<Bold>{$NEWLINE}</Bold>
                                 : 换行<LineBreak />
                                 <LineBreak />
-                                例如: [{$TIME}]{$ORIGINAL}「{$TRANSLATION}」{$NEWLINE} 为默认的 lrc 输出格式
-                            </Paragraph>
+                                例如: [{$TIME}]{$ORIGINAL}「{$TRANSLATION}」{$NEWLINE} 为默认的 lrc 输出格式</Paragraph>
                         </RichTextBlock>
                     </Flyout>
                 </Button.Flyout>

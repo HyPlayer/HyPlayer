@@ -4,14 +4,15 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
     Title="选择歌手"
-    FontWeight="Bold"
+    CloseButtonStyle="{StaticResource AccentButtonStyle}"
     CloseButtonText="关闭"
-    CornerRadius="20">
+    CornerRadius="{StaticResource OverlayCornerRadius}"
+    FontWeight="Bold"
+    Style="{StaticResource DefaultContentDialogStyle}"
+    mc:Ignorable="d">
     <StackPanel>
-        <ScrollViewer
-            VerticalScrollBarVisibility="Auto">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
             <ListView
                 x:Name="ListViewArtists"
                 SelectionChanged="ListViewArtists_OnSelectionChanged"

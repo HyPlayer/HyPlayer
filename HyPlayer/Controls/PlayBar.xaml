@@ -7,16 +7,16 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hy="using:HyPlayer"
     xmlns:local="using:HyPlayer.Controls"
-    Background="{x:Bind hy:Common.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource BooleanToBarPlayBarBrushesConverter}}"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:media="using:Microsoft.Toolkit.Uwp.UI.Media"
     d:DesignHeight="102.667"
     d:DesignWidth="1289"
+    Background="{x:Bind hy:Common.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource BooleanToBarPlayBarBrushesConverter}}"
     CornerRadius="20"
     Loaded="UserControl_Loaded"
     mc:Ignorable="d">
     <UserControl.Resources>
-        
+
         <LinearGradientBrush x:Key="SolidPlayButtonColor" StartPoint="0,0" EndPoint="1,1">
             <GradientStop x:Name="PlayBtnGradient" Offset="0.2" Color="#fefefe" />
             <GradientStop Offset="0.8" Color="#f1f1f1" />
@@ -215,9 +215,9 @@
         <Rectangle
             x:Name="PlayBarAcrylic"
             Grid.Column="0"
-            Opacity="1"
             Grid.ColumnSpan="4"
             Fill="{ThemeResource SystemControlAltMediumLowAcrylicElementMediumBrush}"
+            Opacity="1"
             Visibility="{x:Bind hy:Common.Setting.playbarBackgroundAcrylic, Mode=OneWay}" />
         <Grid
             x:Name="GridSongInfoContainer"
@@ -271,7 +271,7 @@
                     ToolTipService.ToolTip="下载音乐"
                     Visibility="{x:Bind Btn_Share.IsEnabled, Mode=OneWay}">
                     <FontIcon Glyph="&#xE118;" />
-                </Button> 
+                </Button>
                 <Button
                     x:Name="Btn_Comment"
                     Width="40"
@@ -302,10 +302,11 @@
             </StackPanel>
             <Grid
                 x:Name="GridSongInfo"
-                HorizontalAlignment="Stretch" ColumnSpacing="12">
+                HorizontalAlignment="Stretch"
+                ColumnSpacing="12">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <Grid
                     x:Name="ImageContainer"
@@ -332,35 +333,42 @@
                         x:Name="AlbumImage"
                         EnableLazyLoading="True"
                         IsCacheEnabled="False"
-                        Stretch="UniformToFill" 
-                        PlaceholderStretch="Uniform">
+                        PlaceholderStretch="Uniform"
+                        Stretch="UniformToFill">
                         <controls:ImageEx.Source>
-                            <BitmapImage x:Name="AlbumImageSource" UriSource="/Assets/icon.png"/>
+                            <BitmapImage x:Name="AlbumImageSource" UriSource="/Assets/icon.png" />
                         </controls:ImageEx.Source>
                     </controls:ImageEx>
                 </Grid>
-                <Grid Grid.Column="1" VerticalAlignment="Center" RowSpacing="2">
+                <Grid
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    RowSpacing="2">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
 
-                    <TextBlock Grid.Row="0"
-                               IsTextSelectionEnabled="True"
-                               TextTrimming="CharacterEllipsis" 
+                    <TextBlock
                         x:Name="TbSongName"
+                        Grid.Row="0"
                         HorizontalAlignment="Stretch"
                         FontSize="22"
                         FontWeight="Bold"
-                        ToolTipService.ToolTip="{x:Bind Mode=OneWay, Path=TbSongName.Text}" >
+                        IsTextSelectionEnabled="True"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTipService.ToolTip="{x:Bind Mode=OneWay, Path=TbSongName.Text}">
                         <TextBlock.ContextFlyout>
                             <MenuFlyout>
-                                <MenuFlyoutItem x:Name="CopySongNameFlyoutItem" Text="复制歌曲名" Click="CopySongDetailFlyoutItem_Click" >
+                                <MenuFlyoutItem
+                                    x:Name="CopySongNameFlyoutItem"
+                                    Click="CopySongDetailFlyoutItem_Click"
+                                    Text="复制歌曲名">
                                     <MenuFlyoutItem.Icon>
-                                        <FontIcon Glyph="&#xE16F;"/>
+                                        <FontIcon Glyph="&#xE16F;" />
                                     </MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
                             </MenuFlyout>
@@ -368,48 +376,57 @@
                     </TextBlock>
 
 
-                    <HyperlinkButton  Grid.Row="1" 
+                    <HyperlinkButton
                         x:Name="TbSingerName"
+                        Grid.Row="1"
                         Padding="0"
                         VerticalAlignment="Top"
                         Click="TbSingerName_OnTapped"
                         FontSize="12"
                         Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
-                        Style="{StaticResource TextBlockButtonStyle}" >
+                        Style="{StaticResource TextBlockButtonStyle}">
                         <HyperlinkButton.ContextFlyout>
                             <MenuFlyout>
-                                <MenuFlyoutItem x:Name="CopySingerNameFlyoutItem" Text="复制歌手名" Click="CopySongDetailFlyoutItem_Click" >
+                                <MenuFlyoutItem
+                                    x:Name="CopySingerNameFlyoutItem"
+                                    Click="CopySongDetailFlyoutItem_Click"
+                                    Text="复制歌手名">
                                     <MenuFlyoutItem.Icon>
-                                        <FontIcon Glyph="&#xE16F;"/>
+                                        <FontIcon Glyph="&#xE16F;" />
                                     </MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
                             </MenuFlyout>
                         </HyperlinkButton.ContextFlyout>
                     </HyperlinkButton>
-                    <HyperlinkButton Grid.Row="2"
+                    <HyperlinkButton
                         x:Name="TbAlbumName"
+                        Grid.Row="2"
                         Padding="0"
                         VerticalAlignment="Top"
+                        Click="TbAlbumName_OnTapped"
                         FontSize="12"
                         Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
-                        Style="{StaticResource TextBlockButtonStyle}"
-                        Click="TbAlbumName_OnTapped" >
+                        Style="{StaticResource TextBlockButtonStyle}">
                         <HyperlinkButton.ContextFlyout>
                             <MenuFlyout>
-                                <MenuFlyoutItem x:Name="CopyAlbumNameFlyoutItem" Text="复制专辑名" Click="CopySongDetailFlyoutItem_Click" >
+                                <MenuFlyoutItem
+                                    x:Name="CopyAlbumNameFlyoutItem"
+                                    Click="CopySongDetailFlyoutItem_Click"
+                                    Text="复制专辑名">
                                     <MenuFlyoutItem.Icon>
-                                        <FontIcon Glyph="&#xE16F;"/>
+                                        <FontIcon Glyph="&#xE16F;" />
                                     </MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
                             </MenuFlyout>
                         </HyperlinkButton.ContextFlyout>
                     </HyperlinkButton>
-                    <Grid Grid.Row="3"
+                    <Grid
                         x:Name="SongInfoTag"
+                        Grid.Row="3"
                         Height="20"
                         Padding="3,0"
-                        x:FieldModifier="public"
                         HorizontalAlignment="Left"
+                        x:FieldModifier="public"
                         BorderBrush="Red"
                         BorderThickness="1.5"
                         CornerRadius="4">
@@ -427,7 +444,7 @@
         </Grid>
         <Grid
             x:Name="MainControlGrid"
-            Grid.Column="1" 
+            Grid.Column="1"
             Margin="-200,0,-200,0"
             Canvas.ZIndex="0">
             <Grid.RowDefinitions>
@@ -554,10 +571,10 @@
                     <Slider
                         x:Name="SliderProgress"
                         Margin="-5,0,-5,0"
-                        ManipulationMode="TranslateX"
                         ManipulationCompleted="SliderProgress_ManipulationCompleted"
-                        ManipulationStarting="SliderProgress_OnManipulationStarting"
-                        ManipulationStarted="SliderProgress_ManipulationStarted">
+                        ManipulationMode="TranslateX"
+                        ManipulationStarted="SliderProgress_ManipulationStarted"
+                        ManipulationStarting="SliderProgress_OnManipulationStarting">
                         <Slider.ThumbToolTipValueConverter>
                             <classes:ThumbConverter SecondValue="{Binding SecondValue}" />
 
@@ -595,7 +612,10 @@
                 IsChecked="{x:Bind Mode=OneWay, Path=hy:Common.Setting.toastLyric}"
                 IsThreeState="False"
                 ToolTipService.ToolTip="桌面歌词">
-                <IconSourceElement IconSource="{StaticResource DesktopLyricIcon}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <IconSourceElement
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    IconSource="{StaticResource DesktopLyricIcon}" />
             </ToggleButton>
             <Button
                 x:Name="BtnVolume"
@@ -626,9 +646,9 @@
                             <controls:DockPanel LastChildFill="True">
                                 <Button
                                     x:Name="BtnReverse"
-                                    Click="BtnReverse_Click"
                                     Background="Transparent"
                                     BorderBrush="Transparent"
+                                    Click="BtnReverse_Click"
                                     ToolTipService.ToolTip="倒序播放列表">
                                     <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE7AD;" />
                                 </Button>
@@ -657,9 +677,10 @@
                                 x:Name="ListBoxPlayList"
                                 Width="400"
                                 Height="500"
-                                SelectionChanged="ListBoxPlayList_OnSelectionChanged" ItemContainerStyle="{ThemeResource ListViewItemStyle}"
-                                SelectionMode="Single"
-                                ItemsSource="{x:Bind PlayItems, Mode=OneWay}">
+                                ItemContainerStyle="{ThemeResource ListViewItemStyle}"
+                                ItemsSource="{x:Bind PlayItems, Mode=OneWay}"
+                                SelectionChanged="ListBoxPlayList_OnSelectionChanged"
+                                SelectionMode="Single">
                                 <ListView.ItemTemplate>
                                     <DataTemplate x:DataType="classes:HyPlayItem">
                                         <Border>
@@ -669,16 +690,16 @@
                                                     <TextBlock Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" Text="{x:Bind Path=PlayItem.ArtistString}" />
                                                 </StackPanel>
                                                 <Button
-                                                Width="24"
-                                                Height="24"
-                                                Padding="-5"
-                                                Background="Transparent"
-                                                BorderBrush="Transparent"
-                                                Click="PlayListRemove_OnClick">
+                                                    Width="24"
+                                                    Height="24"
+                                                    Padding="-5"
+                                                    Background="Transparent"
+                                                    BorderBrush="Transparent"
+                                                    Click="PlayListRemove_OnClick">
                                                     <FontIcon
-                                                    HorizontalAlignment="Left"
-                                                    FontSize="16"
-                                                    Glyph="&#xE10A;" />
+                                                        HorizontalAlignment="Left"
+                                                        FontSize="16"
+                                                        Glyph="&#xE10A;" />
                                                 </Button>
                                             </StackPanel>
                                         </Border>
@@ -725,92 +746,92 @@
             <FontIcon FontSize="24" Glyph="&#xE972;" />
         </Button>
         <Button
-                    x:Name="BtnMore"
-                    Grid.Column="3"
-                    Width="40"
-                    Height="40"
-                    Padding="0" Margin="10,48,0,0"
-                    VerticalAlignment="Center"
-                    Background="Transparent"
-                    BorderBrush="Transparent"
-                    CornerRadius="30"
-                    Visibility="Collapsed">
+            x:Name="BtnMore"
+            Grid.Column="3"
+            Width="40"
+            Height="40"
+            Margin="10,48,0,0"
+            Padding="0"
+            VerticalAlignment="Center"
+            Background="Transparent"
+            BorderBrush="Transparent"
+            CornerRadius="30"
+            Visibility="Collapsed">
             <Button.Flyout>
                 <MenuFlyout>
                     <MenuFlyoutItem IsEnabled="False" Text="{x:Bind Mode=OneWay, Path=TbSongName.Text}" />
                     <MenuFlyoutItem IsEnabled="False" Text="{x:Bind Mode=OneWay, Path=TbSingerName.Content}" />
                     <MenuFlyoutSeparator />
                     <MenuFlyoutItem
-                                x:Name="BtnFlyoutLike"
-                                Click="BtnLike_OnClick"
-                                Text="喜欢歌曲">
+                        x:Name="BtnFlyoutLike"
+                        Click="BtnLike_OnClick"
+                        Text="喜欢歌曲">
                         <MenuFlyoutItem.Icon>
                             <FontIcon x:Name="FlyoutLiked" Glyph="&#xE00B;" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                     <MenuFlyoutItem
-                                x:Name="FlyoutDesktopLyrics"
-                                Click="ToggleButton_Click"
-                                Text="桌面歌词">
+                        x:Name="FlyoutDesktopLyrics"
+                        Click="ToggleButton_Click"
+                        Text="桌面歌词">
                         <MenuFlyoutItem.Icon>
                             <FontIcon
-                                        x:Name="FlyoutDesktopLyricIcon"
-                                        Glyph="&#xE001;"
-                                        Visibility="{x:Bind Mode=OneWay, Path=hy:Common.Setting.toastLyric}" />
+                                x:Name="FlyoutDesktopLyricIcon"
+                                Glyph="&#xE001;"
+                                Visibility="{x:Bind Mode=OneWay, Path=hy:Common.Setting.toastLyric}" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                     <MenuFlyoutItem
-                                x:Name="FlyoutPlayRollType"
-                                Click="BtnPlayRollType_OnClick"
-                                Text="顺序播放">
+                        x:Name="FlyoutPlayRollType"
+                        Click="BtnPlayRollType_OnClick"
+                        Text="顺序播放">
                         <MenuFlyoutItem.Icon>
                             <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="{x:Bind Mode=OneWay, Path=IconPlayType.Glyph}" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                     <MenuFlyoutItem
-                                x:Name="FlyoutBtnVolume"
-                                Click="FlyoutBtnVolume_OnClick"
-                                ContextFlyout="{StaticResource VolumeFlyout}"
-                                Text="调整音量">
+                        x:Name="FlyoutBtnVolume"
+                        Click="FlyoutBtnVolume_OnClick"
+                        ContextFlyout="{StaticResource VolumeFlyout}"
+                        Text="调整音量">
                         <MenuFlyoutItem.Icon>
                             <FontIcon x:Name="FlyoutBtnMuteIcon" Glyph="&#xE15D;" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                     <MenuFlyoutItem
-                                x:Name="FlyoutBtnPlayList"
-                                Click="FlyoutBtnPlayList_OnClick"
-                                ContextFlyout="{x:Bind Path=ButtonPlayList.Flyout}"
-                                Text="播放列表">
+                        x:Name="FlyoutBtnPlayList"
+                        Click="FlyoutBtnPlayList_OnClick"
+                        ContextFlyout="{x:Bind Path=ButtonPlayList.Flyout}"
+                        Text="播放列表">
                         <MenuFlyoutItem.Icon>
                             <FontIcon Glyph="&#xE142;" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                     <MenuFlyoutSeparator />
                     <MenuFlyoutItem
-                            x:Name="ABRepeatStateButton"
-                                Text="AB循环"
-                                Click="ABRepeatStateButton_Click">
+                        x:Name="ABRepeatStateButton"
+                        Click="ABRepeatStateButton_Click"
+                        Text="AB循环">
                         <MenuFlyoutItem.Icon>
-                            <FontIcon Glyph="&#xE001;"
-                                        Visibility="{x:Bind hy:Common.Setting.ABRepeatStatus, Mode=OneWay }" />
+                            <FontIcon Glyph="&#xE001;" Visibility="{x:Bind hy:Common.Setting.ABRepeatStatus, Mode=OneWay}" />
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                     <MenuFlyoutItem
-                            HorizontalContentAlignment="Left"
-                            Click="SetABStartPointButton_Click"
-                            Text="设置开始点" />
+                        HorizontalContentAlignment="Left"
+                        Click="SetABStartPointButton_Click"
+                        Text="设置开始点" />
                     <MenuFlyoutItem
-                            Name="ABStartPointItem"
-                            HorizontalAlignment="Left"
-                            Text="{x:Bind hy:Common.Setting.ABStartPointFriendlyValue, Mode=OneWay}" />
+                        Name="ABStartPointItem"
+                        HorizontalAlignment="Left"
+                        Text="{x:Bind hy:Common.Setting.ABStartPointFriendlyValue, Mode=OneWay}" />
                     <MenuFlyoutItem
-                            HorizontalContentAlignment="Left"
-                            Click="SetABEndPointButton_Click"
-                            Text="设置结束点" />
+                        HorizontalContentAlignment="Left"
+                        Click="SetABEndPointButton_Click"
+                        Text="设置结束点" />
                     <MenuFlyoutItem
-                            Name="ABEndPointItem"
-                            HorizontalAlignment="Left"
-                            Text="{x:Bind hy:Common.Setting.ABEndPointFriendlyValue, Mode=OneWay}" />
+                        Name="ABEndPointItem"
+                        HorizontalAlignment="Left"
+                        Text="{x:Bind hy:Common.Setting.ABEndPointFriendlyValue, Mode=OneWay}" />
                 </MenuFlyout>
             </Button.Flyout>
             <FontIcon Glyph="&#xE712;" />

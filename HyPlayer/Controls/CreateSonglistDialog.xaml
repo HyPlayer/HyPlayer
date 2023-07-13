@@ -4,17 +4,21 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
     Title="创建歌单"
     FontWeight="Bold"
-    CornerRadius="20"
-    PrimaryButtonText="创建"
-    SecondaryButtonText="取消"
     PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
-    SecondaryButtonClick="ContentDialog_SecondaryButtonClick">
+    PrimaryButtonStyle="{StaticResource AccentButtonStyle}"
+    PrimaryButtonText="创建"
+    SecondaryButtonClick="ContentDialog_SecondaryButtonClick"
+    SecondaryButtonText="取消"
+    Style="{StaticResource DefaultContentDialogStyle}"
+    mc:Ignorable="d">
 
     <StackPanel>
-        <TextBox MaxLength="20" x:Name="SonglistTitle" PlaceholderText="歌单名称" />
+        <TextBox
+            x:Name="SonglistTitle"
+            MaxLength="20"
+            PlaceholderText="歌单名称" />
         <CheckBox x:Name="PrivateCheckBox" Content="设置为隐私歌单" />
     </StackPanel>
 </ContentDialog>

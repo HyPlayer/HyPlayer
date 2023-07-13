@@ -16,10 +16,20 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <Border x:Name="HeaderContainer" Child="{TemplateBinding Header}" Canvas.ZIndex="1" />
-                        <local:PivotExHeaderView x:Name="PivotExHeaderView" Pivot="{TemplateBinding Pivot}"
-                                                 Grid.Row="1" Canvas.ZIndex="1" Margin="8,0" />
-                        <Border x:Name="PivotContainer" Grid.RowSpan="3" Child="{TemplateBinding Pivot}" />
+                        <Border
+                            x:Name="HeaderContainer"
+                            Canvas.ZIndex="1"
+                            Child="{TemplateBinding Header}" />
+                        <local:PivotExHeaderView
+                            x:Name="PivotExHeaderView"
+                            Grid.Row="1"
+                            Margin="8,0"
+                            Canvas.ZIndex="1"
+                            Pivot="{TemplateBinding Pivot}" />
+                        <Border
+                            x:Name="PivotContainer"
+                            Grid.RowSpan="3"
+                            Child="{TemplateBinding Pivot}" />
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>

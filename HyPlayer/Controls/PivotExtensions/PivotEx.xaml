@@ -18,11 +18,11 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="local:PivotEx">
-                    <Grid x:Name="RootElement"
-                          HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
-                          VerticalAlignment="{TemplateBinding VerticalAlignment}"
-                          Background="{TemplateBinding Background}">
-
+                    <Grid
+                        x:Name="RootElement"
+                        HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
+                        VerticalAlignment="{TemplateBinding VerticalAlignment}"
+                        Background="{TemplateBinding Background}">
                         <Grid.Resources>
                             <Style x:Key="BaseContentControlStyle" TargetType="ContentControl">
                                 <!--<Setter Property="FontFamily" Value="XamlAutoFontFamily" />
@@ -30,89 +30,52 @@
                                 <Setter Property="Template">
                                     <Setter.Value>
                                         <ControlTemplate TargetType="ContentControl">
-                                            <ContentPresenter Content="{TemplateBinding Content}"
-                                                              ContentTemplate="{TemplateBinding ContentTemplate}"
-                                                              Margin="{TemplateBinding Padding}"
-                                                              ContentTransitions="{TemplateBinding ContentTransitions}"
-                                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                                              OpticalMarginAlignment="TrimSideBearings" />
+                                            <ContentPresenter
+                                                Margin="{TemplateBinding Padding}"
+                                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                Content="{TemplateBinding Content}"
+                                                ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                ContentTransitions="{TemplateBinding ContentTransitions}"
+                                                OpticalMarginAlignment="TrimSideBearings" />
                                         </ControlTemplate>
                                     </Setter.Value>
                                 </Setter>
                             </Style>
-                            <Style x:Key="TitleContentControlStyle" TargetType="ContentControl"
-                                   BasedOn="{StaticResource BaseContentControlStyle}">
+                            <Style
+                                x:Key="TitleContentControlStyle"
+                                BasedOn="{StaticResource BaseContentControlStyle}"
+                                TargetType="ContentControl">
                                 <!--<Setter Property="FontFamily" Value="{ThemeResource PivotTitleFontFamily}" />
                                 <Setter Property="FontWeight" Value="{ThemeResource PivotTitleThemeFontWeight}" />
                                 <Setter Property="FontSize" Value="{ThemeResource PivotTitleFontSize}" />-->
                             </Style>
                         </Grid.Resources>
 
-                        <VisualStateManager.VisualStateGroups>
-                            <VisualStateGroup x:Name="Orientation">
-                                <VisualState x:Name="Portrait">
-
-                                    <Storyboard>
-                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="TitleContentControl"
-                                                                       Storyboard.TargetProperty="Margin">
-                                            <DiscreteObjectKeyFrame KeyTime="0"
-                                                                    Value="{ThemeResource PivotPortraitThemePadding}" />
-                                        </ObjectAnimationUsingKeyFrames>
-                                    </Storyboard>
-                                </VisualState>
-                                <VisualState x:Name="Landscape">
-
-                                    <Storyboard>
-                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="TitleContentControl"
-                                                                       Storyboard.TargetProperty="Margin">
-                                            <DiscreteObjectKeyFrame KeyTime="0"
-                                                                    Value="{ThemeResource PivotLandscapeThemePadding}" />
-                                        </ObjectAnimationUsingKeyFrames>
-                                    </Storyboard>
-                                </VisualState>
-
-                            </VisualStateGroup>
-                            <VisualStateGroup x:Name="HeaderStates">
-                                <VisualState x:Name="HeaderDynamic" />
-                                <VisualState x:Name="HeaderStatic">
-
-                                    <Storyboard>
-                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Header"
-                                                                       Storyboard.TargetProperty="Visibility">
-                                            <DiscreteObjectKeyFrame KeyTime="0" Value="Collapsed" />
-                                        </ObjectAnimationUsingKeyFrames>
-                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="StaticHeader"
-                                                                       Storyboard.TargetProperty="Visibility">
-                                            <DiscreteObjectKeyFrame KeyTime="0" Value="Visible" />
-                                        </ObjectAnimationUsingKeyFrames>
-                                    </Storyboard>
-                                </VisualState>
-
-                            </VisualStateGroup>
-
-                        </VisualStateManager.VisualStateGroups>
-
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <Canvas Width="0" Height="0" Visibility="Collapsed">
+                        <Canvas
+                            Width="0"
+                            Height="0"
+                            Visibility="Collapsed">
                             <ContentControl x:Name="TitleContentControl" />
                         </Canvas>
                         <Grid Grid.Row="1">
-                            <ScrollViewer x:Name="ScrollViewer"
-                                          Margin="{TemplateBinding Padding}"
-                                          HorizontalSnapPointsType="MandatorySingle"
-                                          HorizontalSnapPointsAlignment="Center"
-                                          HorizontalScrollBarVisibility="Hidden"
-                                          VerticalScrollMode="Disabled"
-                                          VerticalScrollBarVisibility="Disabled"
-                                          VerticalSnapPointsType="None"
-                                          VerticalContentAlignment="Stretch"
-                                          ZoomMode="Disabled"
-                                          Template="{StaticResource ScrollViewerScrollBarlessTemplate}"
-                                          BringIntoViewOnFocusChange="False">
+                            <ScrollViewer
+                                x:Name="ScrollViewer"
+                                Margin="{TemplateBinding Padding}"
+                                VerticalContentAlignment="Stretch"
+                                BringIntoViewOnFocusChange="False"
+                                HorizontalScrollBarVisibility="Hidden"
+                                HorizontalSnapPointsAlignment="Center"
+                                HorizontalSnapPointsType="MandatorySingle"
+                                Template="{StaticResource ScrollViewerScrollBarlessTemplate}"
+                                VerticalScrollBarVisibility="Disabled"
+                                VerticalScrollMode="Disabled"
+                                VerticalSnapPointsType="None"
+                                ZoomMode="Disabled">
                                 <PivotPanel x:Name="Panel" VerticalAlignment="Stretch">
                                     <Grid x:Name="PivotLayoutElement">
                                         <Grid.RowDefinitions>
@@ -127,17 +90,21 @@
                                         <Grid.RenderTransform>
                                             <CompositeTransform x:Name="PivotLayoutElementTranslateTransform" />
                                         </Grid.RenderTransform>
-                                        <ContentPresenter x:Name="LeftHeaderPresenter"
-                                                          Content="{TemplateBinding LeftHeader}"
-                                                          ContentTemplate="{TemplateBinding LeftHeaderTemplate}"
-                                                          HorizontalAlignment="Stretch"
-                                                          VerticalAlignment="Stretch" />
-                                        <ContentControl x:Name="HeaderClipper" Height="0" Opacity="0"
-                                                        IsHitTestVisible="False"
-                                                        Grid.Column="1"
-                                                        UseSystemFocusVisuals="{StaticResource UseSystemFocusVisuals}"
-                                                        HorizontalContentAlignment="Stretch"
-                                                        IsEnabled="False">
+                                        <ContentPresenter
+                                            x:Name="LeftHeaderPresenter"
+                                            HorizontalAlignment="Stretch"
+                                            VerticalAlignment="Stretch"
+                                            Content="{TemplateBinding LeftHeader}"
+                                            ContentTemplate="{TemplateBinding LeftHeaderTemplate}" />
+                                        <ContentControl
+                                            x:Name="HeaderClipper"
+                                            Grid.Column="1"
+                                            Height="0"
+                                            HorizontalContentAlignment="Stretch"
+                                            IsEnabled="False"
+                                            IsHitTestVisible="False"
+                                            Opacity="0"
+                                            UseSystemFocusVisuals="{StaticResource UseSystemFocusVisuals}">
                                             <ContentControl.Clip>
                                                 <RectangleGeometry x:Name="HeaderClipperGeometry" />
                                             </ContentControl.Clip>
@@ -155,24 +122,29 @@
                                                         <CompositeTransform x:Name="HeaderTranslateTransform" />
                                                     </PivotHeaderPanel.RenderTransform>
                                                 </PivotHeaderPanel>
-                                                <Rectangle x:Name="FocusFollower"
-                                                           IsHitTestVisible="False"
-                                                           Fill="Transparent"
-                                                           Control.IsTemplateFocusTarget="True"
-                                                           HorizontalAlignment="Stretch"
-                                                           VerticalAlignment="Stretch" />
+                                                <Rectangle
+                                                    x:Name="FocusFollower"
+                                                    HorizontalAlignment="Stretch"
+                                                    VerticalAlignment="Stretch"
+                                                    Control.IsTemplateFocusTarget="True"
+                                                    Fill="Transparent"
+                                                    IsHitTestVisible="False" />
                                             </Grid>
                                         </ContentControl>
 
-                                        <ContentPresenter x:Name="RightHeaderPresenter"
-                                                          Grid.Column="2"
-                                                          Content="{TemplateBinding RightHeader}"
-                                                          ContentTemplate="{TemplateBinding RightHeaderTemplate}"
-                                                          HorizontalAlignment="Stretch"
-                                                          VerticalAlignment="Stretch" />
+                                        <ContentPresenter
+                                            x:Name="RightHeaderPresenter"
+                                            Grid.Column="2"
+                                            HorizontalAlignment="Stretch"
+                                            VerticalAlignment="Stretch"
+                                            Content="{TemplateBinding RightHeader}"
+                                            ContentTemplate="{TemplateBinding RightHeaderTemplate}" />
 
-                                        <ItemsPresenter x:Name="PivotItemPresenter" Grid.Row="0" Grid.RowSpan="2"
-                                                        Grid.ColumnSpan="3">
+                                        <ItemsPresenter
+                                            x:Name="PivotItemPresenter"
+                                            Grid.Row="0"
+                                            Grid.RowSpan="2"
+                                            Grid.ColumnSpan="3">
                                             <ItemsPresenter.RenderTransform>
                                                 <TransformGroup>
                                                     <TranslateTransform x:Name="ItemsPresenterTranslateTransform" />
@@ -186,6 +158,43 @@
 
                         </Grid>
 
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="Orientation">
+                                <VisualState x:Name="Portrait">
+
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="TitleContentControl" Storyboard.TargetProperty="Margin">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource PivotPortraitThemePadding}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+                                <VisualState x:Name="Landscape">
+
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="TitleContentControl" Storyboard.TargetProperty="Margin">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource PivotLandscapeThemePadding}" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="HeaderStates">
+                                <VisualState x:Name="HeaderDynamic" />
+                                <VisualState x:Name="HeaderStatic">
+
+                                    <Storyboard>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Header" Storyboard.TargetProperty="Visibility">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="Collapsed" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="StaticHeader" Storyboard.TargetProperty="Visibility">
+                                            <DiscreteObjectKeyFrame KeyTime="0" Value="Visible" />
+                                        </ObjectAnimationUsingKeyFrames>
+                                    </Storyboard>
+                                </VisualState>
+
+                            </VisualStateGroup>
+
+                        </VisualStateManager.VisualStateGroups>
                     </Grid>
 
                 </ControlTemplate>

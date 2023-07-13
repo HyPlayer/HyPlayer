@@ -4,15 +4,15 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
     Title="选择歌单"
-    FontWeight="Bold"
+    CloseButtonText="关闭"
     CornerRadius="20"
-    CloseButtonText="关闭">
+    FontWeight="Bold"
+    mc:Ignorable="d">
     <StackPanel>
         <ListView
-            MaxHeight="400"
             x:Name="ListViewSongList"
+            MaxHeight="400"
             SelectionChanged="ListViewSongList_OnSelectionChanged"
             SelectionMode="Single" />
     </StackPanel>

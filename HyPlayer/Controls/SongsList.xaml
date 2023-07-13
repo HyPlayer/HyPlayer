@@ -28,8 +28,8 @@
                 <Style BasedOn="{StaticResource ListViewItemStyle}" TargetType="ListViewItem">
                     <Setter Property="CornerRadius" Value="0" />
                 </Style>
-                <Style TargetType="ScrollBar" BasedOn="{StaticResource DefaultScrollBarStyle}">
-                    <Setter Property="Margin" Value="0,0,0,110"/>
+                <Style BasedOn="{StaticResource DefaultScrollBarStyle}" TargetType="ScrollBar">
+                    <Setter Property="Margin" Value="0,0,0,110" />
                 </Style>
             </ListView.Resources>
             <ListView.Header>
@@ -50,10 +50,10 @@
                         <muxc:NavigationView
                             x:Name="ToolbarNavigationView"
                             Margin="16,4,16,0"
+                            Background="Transparent"
                             IsBackButtonVisible="Collapsed"
                             IsSettingsVisible="False"
                             ItemInvoked="ToolbarNavigationView_ItemInvoked"
-                            Background="Transparent"
                             PaneDisplayMode="Top">
                             <muxc:NavigationView.MenuItems>
                                 <muxc:NavigationViewItem Content="歌曲" IsSelected="True">
@@ -69,10 +69,10 @@
                                     </muxc:NavigationViewItem.InfoBadge>
                                 </muxc:NavigationViewItem>
                                 <muxc:NavigationViewItem
-                                    Visibility="{x:Bind CanViewComments,Mode=OneWay}"
                                     Content="评论"
                                     SelectsOnInvoked="False"
-                                    Tag="Comments">
+                                    Tag="Comments"
+                                    Visibility="{x:Bind CanViewComments, Mode=OneWay}">
                                     <muxc:NavigationViewItem.Icon>
                                         <FontIcon Glyph="&#xE8F2;" />
                                     </muxc:NavigationViewItem.Icon>
@@ -88,7 +88,7 @@
                                         <FontIcon Glyph="&#xE819;" />
                                     </muxc:NavigationViewItem.Icon>
                                 </muxc:NavigationViewItem>
-                                <muxc:NavigationViewItem SelectsOnInvoked="False" Margin="-12,0,0,0">
+                                <muxc:NavigationViewItem Margin="-12,0,0,0" SelectsOnInvoked="False">
                                     <ToggleButton
                                         Background="Transparent"
                                         BorderBrush="Transparent"
@@ -224,14 +224,14 @@
                                 Grid.ColumnSpan="4"
                                 Height="64"
                                 Margin="2,0,2,0"
+                                x:Load="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}"
                                 x:Phase="4"
                                 CornerRadius="12"
                                 EnableLazyLoading="True"
                                 IsCacheEnabled="False"
                                 Opacity="1"
                                 Stretch="Fill"
-                                Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}"
-                                x:Load="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}">
+                                Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}">
                                 <controls:ImageEx.Source>
                                     <BitmapImage UriSource="{x:Bind Cover}" />
                                 </controls:ImageEx.Source>
@@ -240,11 +240,11 @@
                                 x:Name="RectangleImageAcrylic"
                                 Grid.ColumnSpan="4"
                                 Margin="1,0,1,0"
+                                x:Load="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}"
                                 Fill="{ThemeResource SystemControlBaseLowAcrylicElementBrush}"
                                 RadiusX="10"
                                 RadiusY="10"
-                                Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}" 
-                                 x:Load="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}"/>
+                                Visibility="{x:Bind local:Common.Setting.itemOfListBackgroundAcrylicBlur}" />
 
                             <StackPanel Grid.Column="0" Orientation="Horizontal">
                                 <controls:ImageEx
@@ -300,15 +300,15 @@
                                             Text="{x:Bind ConvertTranslate(transname)}" />
                                         <BitmapIcon
                                             Height="20"
+                                            Foreground="DeepSkyBlue"
                                             UriSource="/Assets/cloud.png"
-                                            Visibility="{x:Bind IsCloud}" 
-                                            Foreground="DeepSkyBlue"/>
+                                            Visibility="{x:Bind IsCloud}" />
                                         <BitmapIcon
                                             Height="20"
                                             Margin="0,2,0,0"
+                                            Foreground="Red"
                                             UriSource="/Assets/vip.png"
-                                            Visibility="{x:Bind IsVip}" 
-                                            Foreground="Red"/>
+                                            Visibility="{x:Bind IsVip}" />
                                     </StackPanel>
                                 </Grid>
                             </StackPanel>

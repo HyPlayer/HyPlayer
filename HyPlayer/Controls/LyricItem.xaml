@@ -11,7 +11,9 @@
     d:DesignWidth="500"
     DoubleTapped="LyricItem_OnDoubleTapped"
     Loaded="LyricPanel_Loaded"
-    mc:Ignorable="d" PointerEntered="PointerIn" PointerExited="PointerOut">
+    PointerEntered="PointerIn"
+    PointerExited="PointerOut"
+    mc:Ignorable="d">
 
     <Grid x:Name="MainGrid">
         <Grid.RowDefinitions>
@@ -20,9 +22,17 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <Rectangle x:Name="OnHoverRectangle" Grid.Row="0" Grid.Column="0" Grid.RowSpan="3"  VerticalAlignment="Stretch" RadiusX=" 8" RadiusY="8" Opacity="0"/>
+        <Rectangle
+            x:Name="OnHoverRectangle"
+            Grid.Row="0"
+            Grid.RowSpan="3"
+            Grid.Column="0"
+            VerticalAlignment="Stretch"
+            Opacity="0"
+            RadiusX=" 8"
+            RadiusY="8" />
         <TextBlock
             Name="WordLyricContainer"
             Grid.Row="0"
@@ -31,8 +41,8 @@
             CharacterSpacing="0"
             FontWeight="Bold"
             TextAlignment="Center"
-            TextWrapping="WrapWholeWords" 
-            Visibility="{x:Bind _lyricIsKaraokeLyric}"/>
+            TextWrapping="WrapWholeWords"
+            Visibility="{x:Bind _lyricIsKaraokeLyric}" />
         <TextBlock
             Name="TextBoxPureLyric"
             Grid.Row="0"
@@ -41,8 +51,8 @@
             CharacterSpacing="0"
             FontWeight="Bold"
             TextAlignment="Center"
-            TextWrapping="WrapWholeWords" 
-            Visibility="{x:Bind _lyricIsKaraokeLyric, Converter={StaticResource ReversedBooleanToVisibilityConverter}}"/>
+            TextWrapping="WrapWholeWords"
+            Visibility="{x:Bind _lyricIsKaraokeLyric, Converter={StaticResource ReversedBooleanToVisibilityConverter}}" />
         <TextBlock
             Name="TextBoxTranslation"
             Grid.Row="1"

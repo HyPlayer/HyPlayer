@@ -60,7 +60,7 @@
                     <TranslateTransform x:Name="Transform" />
                 </controls:ImageEx.RenderTransform>
                 <controls:ImageEx.Source>
-                    <BitmapImage x:Name="ImageContainerSource"/>
+                    <BitmapImage x:Name="ImageContainerSource" />
                 </controls:ImageEx.Source>
             </controls:ImageEx>
             <Button
@@ -76,8 +76,7 @@
                 Style="{StaticResource AccentButtonStyle}"
                 ToolTipService.ToolTip="播放全部">
                 <Button.Content>
-                    <FontIcon Glyph="&#xF5B0;" 
-                              Foreground="White"/>
+                    <FontIcon Foreground="White" Glyph="&#xF5B0;" />
                 </Button.Content>
             </Button>
             <Grid
@@ -91,17 +90,17 @@
                     Width="200"
                     Margin="10,37,19,9"
                     FontSize="10"
-                    TextWrapping="WrapWholeWords"
-                    Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
+                    Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                    TextWrapping="WrapWholeWords" />
                 <TextBlock
-                    HorizontalAlignment="Left"
                     x:Name="TextBlockPLName"
                     MaxWidth="180"
-                    FontWeight="Bold" 
-                    TextTrimming="CharacterEllipsis"
-                    ToolTipService.ToolTip="{x:Bind TextBlockPLName.Text,Mode=OneWay}"
                     Margin="10,12,10,27"
-                    FontSize="15" />
+                    HorizontalAlignment="Left"
+                    FontSize="15"
+                    FontWeight="Bold"
+                    TextTrimming="CharacterEllipsis"
+                    ToolTipService.ToolTip="{x:Bind TextBlockPLName.Text, Mode=OneWay}" />
             </Grid>
         </Grid>
         <Grid.ContextFlyout>

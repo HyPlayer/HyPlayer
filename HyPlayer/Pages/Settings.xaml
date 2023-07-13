@@ -20,7 +20,8 @@
 
         <ContentDialog x:Name="AboutRomajiDialog" 
                        Title="关于此选项"
-                       PrimaryButtonText="好的">
+                       CloseButtonText="好的"
+                       CloseButtonStyle="{StaticResource AccentButtonStyle}">
             <RichTextBlock>
                 <Paragraph>
                     HyPlayer支持使用:

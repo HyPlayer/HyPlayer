@@ -13,30 +13,34 @@
 
     <StackPanel Orientation="Vertical">
         <Grid Margin="12,12">
-            <Border                 
+            <Border
                 Grid.ColumnSpan="3"
-                CornerRadius="8,8,0,0"
-                Background="{ThemeResource SystemControlBackgroundListLowBrush}">
+                Background="{ThemeResource SystemControlBackgroundListLowBrush}"
+                CornerRadius="8,8,0,0">
                 <Grid Margin="12">
                     <Grid.RowDefinitions>
-                        <RowDefinition/>
-                        <RowDefinition/>
+                        <RowDefinition />
+                        <RowDefinition />
                     </Grid.RowDefinitions>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
+                    <StackPanel
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Orientation="Horizontal">
                         <PersonPicture
-                        x:Name="UserAvatar"
-                        Grid.Column="0"
-                        Width="32"
-                        Height="32"
-                        ProfilePicture="{x:Bind AvatarSource, Mode=OneWay}"
-                        Tapped="NavToUser_Click" />
+                            x:Name="UserAvatar"
+                            Grid.Column="0"
+                            Width="32"
+                            Height="32"
+                            ProfilePicture="{x:Bind AvatarSource, Mode=OneWay}"
+                            Tapped="NavToUser_Click" />
                         <StackPanel Margin="8,0,0,0">
                             <HyperlinkButton
                                 x:Name="Nickname"
                                 Padding="0"
                                 Click="NavToUser_Click"
-                                Content="{x:Bind MainComment.Nickname,Mode=OneWay}" Style="{StaticResource TextBlockButtonStyle}" />
-                            <TextBlock Text="{x:Bind MainComment.SendTime,Mode=OneWay}" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"/>
+                                Content="{x:Bind MainComment.Nickname, Mode=OneWay}"
+                                Style="{StaticResource TextBlockButtonStyle}" />
+                            <TextBlock Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" Text="{x:Bind MainComment.SendTime, Mode=OneWay}" />
                         </StackPanel>
                     </StackPanel>
 
@@ -45,8 +49,9 @@
                         <TextBlock
                             x:Name="CommentContent"
                             FontSize="16"
-                            Text="{x:Bind MainComment.content,Mode=OneWay}"
-                            TextWrapping="Wrap" IsTextSelectionEnabled="True"/>
+                            IsTextSelectionEnabled="True"
+                            Text="{x:Bind MainComment.content, Mode=OneWay}"
+                            TextWrapping="Wrap" />
                     </StackPanel>
                 </Grid>
             </Border>
@@ -56,45 +61,51 @@
 
 
         <muxc:Expander
-            HorizontalAlignment="Stretch"
             x:Name="FloorCommentsExpander"
-            Expanding="FloorCommentsExpander_Expanding"
-            Collapsed="FloorCommentsExpander_Collapsed"
-            HorizontalContentAlignment="Stretch"
             Margin="12,-12,12,0"
-            CornerRadius="0,0,8,8">
+            HorizontalAlignment="Stretch"
+            HorizontalContentAlignment="Stretch"
+            Collapsed="FloorCommentsExpander_Collapsed"
+            CornerRadius="0,0,8,8"
+            Expanding="FloorCommentsExpander_Expanding">
             <muxc:Expander.Header>
                 <StackPanel
-                            HorizontalAlignment="Right"
-                            Orientation="Horizontal"
-                            Spacing="6">
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal"
+                    Spacing="6">
                     <ToggleButton
-                                x:Name="Like"
-                                Height="35"
-                                Click="Like_Click"
-                                IsChecked="{x:Bind MainComment.HasLiked,Mode=OneWay}"
-                                ToolTipService.ToolTip="点赞"  Background="Transparent" BorderBrush="Transparent">
+                        x:Name="Like"
+                        Height="35"
+                        Background="Transparent"
+                        BorderBrush="Transparent"
+                        Click="Like_Click"
+                        IsChecked="{x:Bind MainComment.HasLiked, Mode=OneWay}"
+                        ToolTipService.ToolTip="点赞">
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <FontIcon Glyph="&#xE19F;" FontSize="15" />
+                            <FontIcon FontSize="15" Glyph="&#xE19F;" />
                             <TextBlock x:Name="LikeCountTB" Text="{x:Bind MainComment.likedCount}" />
                         </StackPanel>
                     </ToggleButton>
                     <Button
-                                x:Name="Delete"
-                                Height="35"
-                                Click="Delete_Click"
-                                ToolTipService.ToolTip="删除"
-                                Visibility="{x:Bind MainComment.IsByMyself,Mode=OneWay}" Background="Transparent" BorderBrush="Transparent">
-                        <FontIcon Glyph="&#xE107;" FontSize="15" />
+                        x:Name="Delete"
+                        Height="35"
+                        Background="Transparent"
+                        BorderBrush="Transparent"
+                        Click="Delete_Click"
+                        ToolTipService.ToolTip="删除"
+                        Visibility="{x:Bind MainComment.IsByMyself, Mode=OneWay}">
+                        <FontIcon FontSize="15" Glyph="&#xE107;" />
                     </Button>
                     <ToggleButton
-                    x:Name="ReplyBtn"
-                    Height="35"
-                    IsChecked="{x:Bind FloorCommentsExpander.IsExpanded,Mode=TwoWay}"
-                    ToolTipService.ToolTip="回复" Background="Transparent" BorderBrush="Transparent">
+                        x:Name="ReplyBtn"
+                        Height="35"
+                        Background="Transparent"
+                        BorderBrush="Transparent"
+                        IsChecked="{x:Bind FloorCommentsExpander.IsExpanded, Mode=TwoWay}"
+                        ToolTipService.ToolTip="回复">
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <FontIcon Glyph="&#xE134;" FontSize="15" />
-                            <TextBlock x:Name="ReplyCountIndicator"  Text="{x:Bind MainComment.ReplyCount}" />
+                            <FontIcon FontSize="15" Glyph="&#xE134;" />
+                            <TextBlock x:Name="ReplyCountIndicator" Text="{x:Bind MainComment.ReplyCount}" />
                         </StackPanel>
                     </ToggleButton>
 
@@ -119,12 +130,12 @@
                         Content="回复"
                         Style="{StaticResource AccentButtonStyle}" />
                 </Grid>
-                <controls:CommentsList Comments="{x:Bind floorComments,Mode=OneWay}"/>
+                <controls:CommentsList Comments="{x:Bind floorComments, Mode=OneWay}" />
                 <Button
                     x:Name="LoadMore"
                     HorizontalAlignment="Stretch"
                     Click="LoadMore_Click"
-                    Content="加载更多"/>
+                    Content="加载更多" />
             </StackPanel>
         </muxc:Expander>
     </StackPanel>

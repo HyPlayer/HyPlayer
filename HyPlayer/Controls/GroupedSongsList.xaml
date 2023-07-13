@@ -16,11 +16,12 @@
         <ListView
             Name="SongContainer"
             Padding="10"
-            ItemsSource="{x:Bind GroupedSongs.View, Mode=OneWay}"
             IsItemClickEnabled="True"
             ItemClick="SongContainer_OnItemClick"
+            ItemContainerStyle="{StaticResource ListViewItemStyle}"
+            ItemsSource="{x:Bind GroupedSongs.View, Mode=OneWay}"
             SelectionMode="Single"
-            ShowsScrollingPlaceholders="True" ItemContainerStyle="{StaticResource ListViewItemStyle}">
+            ShowsScrollingPlaceholders="True">
             <ListView.Footer>
                 <ContentControl Margin="0,0,0,130" Content="{x:Bind Footer}" />
             </ListView.Footer>
@@ -131,42 +132,42 @@
                 <Style BasedOn="{StaticResource DefaultListViewItemStyle}" TargetType="ListViewItem">
                     <Setter Property="HorizontalAlignment" Value="Stretch" />
                 </Style>
-                <Style TargetType="ScrollBar" BasedOn="{StaticResource DefaultScrollBarStyle}">
-                    <Setter Property="Margin" Value="0,0,0,110"/>
+                <Style BasedOn="{StaticResource DefaultScrollBarStyle}" TargetType="ScrollBar">
+                    <Setter Property="Margin" Value="0,0,0,110" />
                 </Style>
             </ListView.Resources>
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="classes:NCSong">
                     <Border>
                         <Grid
-                        HorizontalAlignment="Stretch"
-                        Background="Transparent"
-                        IsRightTapEnabled="True"
-                        RightTapped="Grid_RightTapped"
-                        Tag="{x:Bind Order}">
+                            HorizontalAlignment="Stretch"
+                            Background="Transparent"
+                            IsRightTapEnabled="True"
+                            RightTapped="Grid_RightTapped"
+                            Tag="{x:Bind Order}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="60" />
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0" Orientation="Horizontal">
                                 <TextBlock
-                                x:Name="OrderId"
-                                Width="30"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                Text="{x:Bind Order}" />
+                                    x:Name="OrderId"
+                                    Width="30"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Text="{x:Bind Order}" />
                                 <controls:ImageEx
-                                x:Name="ImageRect"
-                                Width="75"
-                                Height="75"
-                                x:Phase="4"
-                                CornerRadius="4"
-                                EnableLazyLoading="True"
-                                IsCacheEnabled="False"
-                                IsEnabled="{x:Bind IsAvailable}"
-                                Stretch="UniformToFill" >
+                                    x:Name="ImageRect"
+                                    Width="75"
+                                    Height="75"
+                                    x:Phase="4"
+                                    CornerRadius="4"
+                                    EnableLazyLoading="True"
+                                    IsCacheEnabled="False"
+                                    IsEnabled="{x:Bind IsAvailable}"
+                                    Stretch="UniformToFill">
                                     <controls:ImageEx.Source>
-                                        <BitmapImage UriSource="{x:Bind Cover, Mode=OneTime}"/>
+                                        <BitmapImage UriSource="{x:Bind Cover, Mode=OneTime}" />
                                     </controls:ImageEx.Source>
                                 </controls:ImageEx>
                                 <Grid Padding="7,0,0,0">
@@ -180,71 +181,71 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel
-                                    Grid.Row="0"
-                                    Orientation="Horizontal"
-                                    Spacing="5">
+                                        Grid.Row="0"
+                                        Orientation="Horizontal"
+                                        Spacing="5">
                                         <TextBlock
-                                        Name="TextBlockSongname"
-                                        x:Phase="0"
-                                        FontSize="20"
-                                        Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
-                                        Text="{x:Bind songname}" />
+                                            Name="TextBlockSongname"
+                                            x:Phase="0"
+                                            FontSize="20"
+                                            Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
+                                            Text="{x:Bind songname}" />
                                         <TextBlock
-                                        Name="TextBlockTransName"
-                                        x:Phase="0"
-                                        FontSize="20"
-                                        Foreground="Gray"
-                                        Text="{x:Bind ConvertTranslate(transname)}" />
+                                            Name="TextBlockTransName"
+                                            x:Phase="0"
+                                            FontSize="20"
+                                            Foreground="Gray"
+                                            Text="{x:Bind ConvertTranslate(transname)}" />
                                         <BitmapIcon
-                                        Height="20"
-                                        UriSource="/Assets/cloud.png"
-                                        Visibility="{x:Bind IsCloud}" 
-                                        Foreground="DeepSkyBlue"/>
+                                            Height="20"
+                                            Foreground="DeepSkyBlue"
+                                            UriSource="/Assets/cloud.png"
+                                            Visibility="{x:Bind IsCloud}" />
                                         <BitmapIcon
-                                        Height="20"
-                                        UriSource="/Assets/vip.png"
-                                        Visibility="{x:Bind IsVip}"
-                                        Foreground="Red"/>
+                                            Height="20"
+                                            Foreground="Red"
+                                            UriSource="/Assets/vip.png"
+                                            Visibility="{x:Bind IsVip}" />
                                     </StackPanel>
                                     <TextBlock
-                                    Name="TextBlockAlia"
-                                    Grid.Row="1"
-                                    Margin="0,2,0,-6"
-                                    x:Phase="2"
-                                    FontSize="12"
-                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                                    Text="{x:Bind alias}"
-                                    Visibility="Visible" />
+                                        Name="TextBlockAlia"
+                                        Grid.Row="1"
+                                        Margin="0,2,0,-6"
+                                        x:Phase="2"
+                                        FontSize="12"
+                                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                        Text="{x:Bind alias}"
+                                        Visibility="Visible" />
                                     <TextBlock
-                                    Name="TextBlockArtist"
-                                    Grid.Row="2"
-                                    Margin="0,7,0,-6"
-                                    FontSize="12"
-                                    Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
-                                    Text="{x:Bind ArtistString}" />
+                                        Name="TextBlockArtist"
+                                        Grid.Row="2"
+                                        Margin="0,7,0,-6"
+                                        FontSize="12"
+                                        Foreground="{ThemeResource SystemControlPageTextBaseMediumBrush}"
+                                        Text="{x:Bind ArtistString}" />
                                     <TextBlock
-                                    Name="TextBlockAlbum"
-                                    Grid.Row="3"
-                                    Margin="0,7,0,0"
-                                    FontSize="13"
-                                    Foreground="Gray"
-                                    Text="{x:Bind Album.name}" />
+                                        Name="TextBlockAlbum"
+                                        Grid.Row="3"
+                                        Margin="0,7,0,0"
+                                        FontSize="13"
+                                        Foreground="Gray"
+                                        Text="{x:Bind Album.name}" />
                                 </Grid>
                             </StackPanel>
 
                             <StackPanel
-                            Grid.Column="1"
-                            HorizontalAlignment="Right"
-                            Orientation="Horizontal"
-                            Spacing="8">
+                                Grid.Column="1"
+                                HorizontalAlignment="Right"
+                                Orientation="Horizontal"
+                                Spacing="8">
                                 <Button
-                                x:Name="More"
-                                x:Phase="3"
-                                Background="Transparent"
-                                Click="More_Click"
-                                Style="{StaticResource ButtonRevealStyle}"
-                                Tag="{x:Bind Order}"
-                                ToolTipService.ToolTip="更多">
+                                    x:Name="More"
+                                    x:Phase="3"
+                                    Background="Transparent"
+                                    Click="More_Click"
+                                    Style="{StaticResource ButtonRevealStyle}"
+                                    Tag="{x:Bind Order}"
+                                    ToolTipService.ToolTip="更多">
                                     <FontIcon FontFamily="{StaticResource SymbolThemeFontFamily}" Glyph="&#xE10C;" />
                                 </Button>
                             </StackPanel>
