@@ -1,0 +1,11 @@
+﻿<ResourceDictionary 
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <AcrylicBrush
+        x:Key="ContentDialogBackground"
+        BackgroundSource="Backdrop"
+        FallbackColor="{StaticResource SystemAltMediumLowColor}"
+        TintColor="{StaticResource SystemAltMediumLowColor}"
+        TintLuminosityOpacity="0.183000008692034"
+        TintOpacity="0.67500003206078" />
+</ResourceDictionary>
