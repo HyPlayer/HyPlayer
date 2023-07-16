@@ -8,10 +8,25 @@
     xmlns:local="using:HyPlayer"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:ui="using:Microsoft.Toolkit.Uwp.UI"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="{x:Bind local:Common.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource ReversedBooleanConverter}}"
     Background="{x:Bind local:Common.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource BooleanToWindowBrushesConverter}}"
     NavigationCacheMode="Disabled"
-    mc:Ignorable="d">
+    mc:Ignorable="d"
+    
+    ui:TitleBarExtensions.BackgroundColor="Transparent"
+    ui:TitleBarExtensions.InactiveBackgroundColor="Transparent"
+    
+    ui:TitleBarExtensions.ButtonBackgroundColor="Transparent" 
+    ui:TitleBarExtensions.ButtonHoverBackgroundColor="{StaticResource CaptionButtonHoverColor}"
+    ui:TitleBarExtensions.ButtonPressedBackgroundColor="{StaticResource CaptionButtonPressedColor}"
+    ui:TitleBarExtensions.ButtonInactiveBackgroundColor="Transparent"
+    
+    ui:TitleBarExtensions.ForegroundColor="{StaticResource CaptionButtonForegroundColor}"
+    ui:TitleBarExtensions.InactiveForegroundColor="LightGray"
+    ui:TitleBarExtensions.ButtonForegroundColor="{StaticResource CaptionButtonForegroundColor}"
+    ui:TitleBarExtensions.ButtonHoverForegroundColor="{StaticResource CaptionButtonForegroundColor}"
+    ui:TitleBarExtensions.ButtonPressedForegroundColor="{StaticResource CaptionButtonForegroundColor}">
     <Page.Resources>
 
         <ResourceDictionary>
@@ -365,11 +380,11 @@
                             <PivotItem Header="扫码登录" Tapped="LoadQr">
                                 <Grid Margin="0,36,0,0">
                                     <Image
-                                            x:Name="QrContainer"
-                                            Height="160"
-                                            Margin="0,12,0,0"
-                                            HorizontalAlignment="Left"
-                                            Tapped="LoadQr" />
+                                        x:Name="QrContainer"
+                                        Height="160"
+                                        Margin="0,12,0,0"
+                                        HorizontalAlignment="Left"
+                                        Tapped="LoadQr" />
                                     <StackPanel
                                         Margin="0,12,0,0"
                                         HorizontalAlignment="Right"

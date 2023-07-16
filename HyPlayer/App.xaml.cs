@@ -22,6 +22,8 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
+
+using SettingsService = HyPlayer.Setting;
 #endregion
 
 namespace HyPlayer;
@@ -36,6 +38,7 @@ sealed partial class App : Application
     ///     已执行，逻辑上等同于 main() 或 WinMain()。
     /// </summary>
     private ExtendedExecutionSession executionSession;
+    private Frame rootFrame;
 
     public App()
     {
@@ -132,7 +135,7 @@ sealed partial class App : Application
         base.OnActivated(args);
         if (args.Kind == ActivationKind.ToastNotification)
         {
-            var rootFrame = Window.Current.Content as Frame;
+            rootFrame = Window.Current.Content as Frame;
             if (rootFrame == null)
             {
                 rootFrame = new Frame();
@@ -220,7 +223,7 @@ sealed partial class App : Application
         _ = InitializeJumpList();
         Common.isExpanded = true;
         ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = "[]";
-        var rootFrame = Window.Current.Content as Frame;
+        rootFrame = Window.Current.Content as Frame;
         if (rootFrame == null)
         {
             rootFrame = new Frame();
@@ -260,10 +263,12 @@ sealed partial class App : Application
     ///     将在启动应用程序以打开特定文件等情况下使用。
     /// </summary>
     /// <param name="e">有关启动请求和过程的详细信息。</param>
-    protected override void OnLaunched(LaunchActivatedEventArgs e)
+    protected override async void OnLaunched(LaunchActivatedEventArgs e)
     {
+        OnLaunchedOrActivatedAsync(e);
+        /*
         _ = InitializeJumpList();
-        var rootFrame = Window.Current.Content as Frame;
+        rootFrame = Window.Current.Content as Frame;
 
         // 不要在窗口已包含内容时重复应用程序初始化，
         // 只需确保窗口处于活动状态
@@ -289,7 +294,45 @@ sealed partial class App : Application
 
             // 确保当前窗口处于活动状态
             Window.Current.Activate();
+        }*/
+    }
+
+    protected async void OnLaunchedOrActivatedAsync(IActivatedEventArgs args)
+    {
+        _ = InitializeJumpList();
+
+        base.OnActivated(args);
+
+        rootFrame = Window.Current.Content as Frame;
+        if(rootFrame == null)
+        {
+            rootFrame = new Frame();
+            rootFrame.NavigationFailed += OnNavigationFailed;
+
+            if(args.PreviousExecutionState == ApplicationExecutionState.Terminated)
+            {
+
+            }
+
+            Window.Current.Content = rootFrame;
         }
+
+        if(args is LaunchActivatedEventArgs)
+        {
+            if(rootFrame.Content == null)
+            {
+                NavigateToRootPage(args);
+                Window.Current.Activate();
+            }
+
+        }
+
+
+    }
+
+    private void NavigateToRootPage(IActivatedEventArgs args)
+    {
+        rootFrame.Navigate(typeof(MainPage), (args as LaunchActivatedEventArgs).Arguments);
     }
 
     /// <summary>
