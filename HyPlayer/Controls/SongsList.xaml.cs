@@ -468,8 +468,15 @@ public sealed partial class SongsList : UserControl, IDisposable
             {
                 VisibleSongs.Clear();
             }
-            HyPlayList.OnPlayItemChange -= HyPlayListOnOnPlayItemChange;
-            Songs.CollectionChanged -= Songs_CollectionChanged;
+            try
+            {
+                HyPlayList.OnPlayItemChange -= HyPlayListOnOnPlayItemChange;
+                Songs.CollectionChanged -= Songs_CollectionChanged;
+            }
+            catch
+            {
+                //可能已经被清除
+            }
             disposedValue = true;
         }
     }
