@@ -20,7 +20,8 @@
 
         <ContentDialog x:Name="AboutRomajiDialog" 
                        Title="关于此选项"
-                       PrimaryButtonText="好的">
+                       CloseButtonText="好的"
+                       CloseButtonStyle="{StaticResource AccentButtonStyle}">
             <RichTextBlock>
                 <Paragraph>
                     HyPlayer支持使用:
@@ -45,7 +46,7 @@
             Text="设置" />
         <controls1:PivotView Grid.Row="1" FontFamily="Black">
         <controls1:PivotView.Resources>
-                <Style TargetType="ScrollBar">
+                <Style TargetType="ScrollBar" BasedOn="{StaticResource DefaultScrollBarStyle}">
                     <Setter Property="Margin" Value="0,0,0,110"/>
                 </Style>
         </controls1:PivotView.Resources>
@@ -1126,6 +1127,7 @@
                                                     Description="请粘贴到 cmd 管理员模式中运行">
                                 <TextBox
                                     HorizontalAlignment="Left"
+                                    IsReadOnly="True"
                                     Text="CheckNetIsolation LoopbackExempt -a -n=&quot;48848aaaaaaccd.hyplayer_fkcggvf9kbkw0&quot;" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="降级HTTPS为HTTP">

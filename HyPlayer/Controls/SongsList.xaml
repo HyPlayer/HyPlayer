@@ -28,7 +28,7 @@
                 <Style BasedOn="{StaticResource ListViewItemStyle}" TargetType="ListViewItem">
                     <Setter Property="CornerRadius" Value="0" />
                 </Style>
-                <Style TargetType="ScrollBar">
+                <Style TargetType="ScrollBar" BasedOn="{StaticResource DefaultScrollBarStyle}">
                     <Setter Property="Margin" Value="0,0,0,110"/>
                 </Style>
             </ListView.Resources>

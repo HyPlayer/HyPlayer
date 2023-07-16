@@ -7,7 +7,9 @@
     PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
     PrimaryButtonText="复制"
     SecondaryButtonClick="ContentDialog_SecondaryButtonClick"
-    SecondaryButtonText="取消">
+    SecondaryButtonText="取消"
+    Style="{StaticResource DefaultContentDialogStyle}"
+    PrimaryButtonStyle="{StaticResource AccentButtonStyle}">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />

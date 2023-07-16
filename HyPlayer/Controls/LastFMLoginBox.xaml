@@ -8,8 +8,11 @@
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d"
     Title="登录Last.FM"
+    PrimaryButtonText="登录"
     CloseButtonText="取消"
-    CornerRadius="20">
+    PrimaryButtonClick="ButtonLogin_OnClick"
+    Style="{StaticResource DefaultContentDialogStyle}"
+    PrimaryButtonStyle="{StaticResource AccentButtonStyle}">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
@@ -37,15 +40,9 @@
                                             x:Name="TextBoxPassword"
                                             KeyDown="TextBoxPassword_OnKeyDown"
                                             PlaceholderText="Last.FM密码" />
-                                    <Grid>
+                                    
                                         <TextBlock Text="登录代表你同意相关条款" Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" VerticalAlignment="Center"/>
-                                        <Button
-                                                Name="ButtonLogin"
-                                                HorizontalAlignment="Right"
-                                                Click="ButtonLogin_OnClick"
-                                                Content="登录"
-                                                Style="{StaticResource AccentButtonStyle}" />
-                                    </Grid>
+                                     
 
                                 </StackPanel>
                             </Grid>
