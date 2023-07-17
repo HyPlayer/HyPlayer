@@ -217,57 +217,10 @@ sealed partial class App : Application
         await jumpList.SaveAsync();
     }
 
-    protected override async void OnFileActivated(FileActivatedEventArgs args)
-    {
-        HyPlayList.PlaySourceId = "local";
-        _ = InitializeJumpList();
-        Common.isExpanded = true;
-        ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = "[]";
-        rootFrame = Window.Current.Content as Frame;
-        if (rootFrame == null)
-        {
-            rootFrame = new Frame();
-            Window.Current.Content = rootFrame;
-        }
+    protected override async void OnFileActivated(FileActivatedEventArgs args) => OnLaunchedOrActivatedAsync(args);
 
-        rootFrame.Navigate(typeof(MainPage));
-        Window.Current.Activate();
-        if (HyPlayList.Player == null)
-            HyPlayList.InitializeHyPlaylist();
-        foreach (var storageItem in args.Files)
-        {
-            var file = (StorageFile)storageItem;
-            var folder = await file.GetParentAsync();
-            if (folder != null)
-            {
-                if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(folder.Path.GetHashCode().ToString()))
-                    StorageApplicationPermissions.FutureAccessList.AddOrReplace(folder.Path.GetHashCode().ToString(),
-                        folder);
-            }
-            else
-            {
-                if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(file.Path.GetHashCode().ToString()))
-                    StorageApplicationPermissions.FutureAccessList.AddOrReplace(file.Path.GetHashCode().ToString(),
-                        file);
-            }
-
-            await HyPlayList.AppendStorageFile(file);
-        }
-
-        HyPlayList.PlaySourceId = "local";
-        HyPlayList.SongMoveTo(0);
-    }
-
-    /// <summary>
-    ///     在应用程序由最终用户正常启动时进行调用。
-    ///     将在启动应用程序以打开特定文件等情况下使用。
-    /// </summary>
-    /// <param name="args">有关启动请求和过程的详细信息。</param>
-    protected override async void OnLaunched(LaunchActivatedEventArgs args)
-    {
-        OnLaunchedOrActivatedAsync(args);
-    }
-
+    protected override async void OnLaunched(LaunchActivatedEventArgs args) => OnLaunchedOrActivatedAsync(args);
+    
     protected async void OnLaunchedOrActivatedAsync(IActivatedEventArgs args)
     {
         _ = InitializeJumpList();
@@ -288,6 +241,7 @@ sealed partial class App : Application
             Window.Current.Content = rootFrame;
         }
 
+        // 直接启动
         if(args is LaunchActivatedEventArgs)
         {
             if(rootFrame.Content == null)
@@ -297,11 +251,46 @@ sealed partial class App : Application
             }
 
         }
+        // 本地播放
+        else if(args is FileActivatedEventArgs)
+        {
+            HyPlayList.PlaySourceId = "local";
+            Common.isExpanded = true;
+            ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = "[]";
+
+            NavigateToRootPage();
+            Window.Current.Activate();
+
+            if (HyPlayList.Player == null)
+                HyPlayList.InitializeHyPlaylist();
+            foreach (var storageItem in (args as FileActivatedEventArgs).Files)
+            {
+                var file = (StorageFile)storageItem;
+                var folder = await file.GetParentAsync();
+                if (folder != null)
+                {
+                    if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(folder.Path.GetHashCode().ToString()))
+                        StorageApplicationPermissions.FutureAccessList.AddOrReplace(folder.Path.GetHashCode().ToString(),
+                            folder);
+                }
+                else
+                {
+                    if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(file.Path.GetHashCode().ToString()))
+                        StorageApplicationPermissions.FutureAccessList.AddOrReplace(file.Path.GetHashCode().ToString(),
+                            file);
+                }
+
+                await HyPlayList.AppendStorageFile(file);
+            }
+
+            HyPlayList.PlaySourceId = "local";
+            HyPlayList.SongMoveTo(0);
+        }
 
 
     }
 
-    private void NavigateToRootPage(IActivatedEventArgs args)
+    private void NavigateToRootPage(IActivatedEventArgs args = null)
     {
         rootFrame.Navigate(typeof(MainPage), (args as LaunchActivatedEventArgs).Arguments);
     }
