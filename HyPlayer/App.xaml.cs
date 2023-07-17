@@ -22,6 +22,8 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
+
+using SettingsService = HyPlayer.Setting;
 #endregion
 
 namespace HyPlayer;
@@ -36,6 +38,7 @@ sealed partial class App : Application
     ///     已执行，逻辑上等同于 main() 或 WinMain()。
     /// </summary>
     private ExtendedExecutionSession executionSession;
+    private Frame rootFrame;
 
     public App()
     {
@@ -129,31 +132,7 @@ sealed partial class App : Application
 
     protected override void OnActivated(IActivatedEventArgs args)
     {
-        base.OnActivated(args);
-        if (args.Kind == ActivationKind.ToastNotification)
-        {
-            var rootFrame = Window.Current.Content as Frame;
-            if (rootFrame == null)
-            {
-                rootFrame = new Frame();
-                Window.Current.Content = rootFrame;
-            }
-
-            rootFrame.Navigate(typeof(MainPage));
-            Window.Current.Activate();
-            Common.BarPlayBar.InitializeDesktopLyric();
-            if (Common.isExpanded) return;
-            var animation = Common.Setting.expandAnimation;
-            Common.Setting.expandAnimation = false;
-            Common.BarPlayBar.ShowExpandedPlayer();
-            var a = Common.Setting.expandAnimation;
-            Common.Setting.expandAnimation = animation;
-        }
-        if (args.Kind == ActivationKind.Protocol)
-        {
-            var launchUri = ((ProtocolActivatedEventArgs)args).Uri;
-            if (launchUri.Host == "link.last.fm") _ = LastFMManager.TryLoginLastfmAccountFromBrowser(launchUri.Query.Replace("?token=", string.Empty));
-        }
+        
     }
 
     private async void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -214,82 +193,104 @@ sealed partial class App : Application
         await jumpList.SaveAsync();
     }
 
-    protected override async void OnFileActivated(FileActivatedEventArgs args)
-    {
-        HyPlayList.PlaySourceId = "local";
-        _ = InitializeJumpList();
-        Common.isExpanded = true;
-        ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = "[]";
-        var rootFrame = Window.Current.Content as Frame;
-        if (rootFrame == null)
-        {
-            rootFrame = new Frame();
-            Window.Current.Content = rootFrame;
-        }
+    protected override async void OnFileActivated(FileActivatedEventArgs args) => OnLaunchedOrActivatedAsync(args);
 
-        rootFrame.Navigate(typeof(MainPage));
-        Window.Current.Activate();
-        if (HyPlayList.Player == null)
-            HyPlayList.InitializeHyPlaylist();
-        foreach (var storageItem in args.Files)
-        {
-            var file = (StorageFile)storageItem;
-            var folder = await file.GetParentAsync();
-            if (folder != null)
-            {
-                if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(folder.Path.GetHashCode().ToString()))
-                    StorageApplicationPermissions.FutureAccessList.AddOrReplace(folder.Path.GetHashCode().ToString(),
-                        folder);
-            }
-            else
-            {
-                if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(file.Path.GetHashCode().ToString()))
-                    StorageApplicationPermissions.FutureAccessList.AddOrReplace(file.Path.GetHashCode().ToString(),
-                        file);
-            }
-
-            await HyPlayList.AppendStorageFile(file);
-        }
-
-        HyPlayList.PlaySourceId = "local";
-        HyPlayList.SongMoveTo(0);
-    }
-
-    /// <summary>
-    ///     在应用程序由最终用户正常启动时进行调用。
-    ///     将在启动应用程序以打开特定文件等情况下使用。
-    /// </summary>
-    /// <param name="e">有关启动请求和过程的详细信息。</param>
-    protected override void OnLaunched(LaunchActivatedEventArgs e)
+    protected override async void OnLaunched(LaunchActivatedEventArgs args) => OnLaunchedOrActivatedAsync(args);
+    
+    protected async void OnLaunchedOrActivatedAsync(IActivatedEventArgs args)
     {
         _ = InitializeJumpList();
-        var rootFrame = Window.Current.Content as Frame;
 
-        // 不要在窗口已包含内容时重复应用程序初始化，
-        // 只需确保窗口处于活动状态
-        if (rootFrame == null)
+        rootFrame = Window.Current.Content as Frame;
+        if(rootFrame == null)
         {
-            // 创建要充当导航上下文的框架，并导航到第一页
             rootFrame = new Frame();
-
             rootFrame.NavigationFailed += OnNavigationFailed;
 
-            if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
+            if(args.PreviousExecutionState == ApplicationExecutionState.Terminated)
             {
-                //TODO: 从之前挂起的应用程序加载状态
+
             }
 
-            // 将框架放在当前窗口中
             Window.Current.Content = rootFrame;
         }
 
-        if (e.PrelaunchActivated == false)
+        // 直接启动
+        if(args is LaunchActivatedEventArgs)
         {
-            rootFrame.Navigate(typeof(MainPage), e.Arguments);
+            base.OnLaunched((args as LaunchActivatedEventArgs));
 
-            // 确保当前窗口处于活动状态
-            Window.Current.Activate();
+            if(rootFrame.Content == null)
+            {
+                NavigateToRootPage(args);
+                Window.Current.Activate();
+            }
+
         }
+        // 本地播放
+        else if(args is FileActivatedEventArgs)
+        {
+            HyPlayList.PlaySourceId = "local";
+            Common.isExpanded = true;
+            ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] = "[]";
+
+            NavigateToRootPage();
+            Window.Current.Activate();
+
+            if (HyPlayList.Player == null)
+                HyPlayList.InitializeHyPlaylist();
+            foreach (var storageItem in (args as FileActivatedEventArgs).Files)
+            {
+                var file = (StorageFile)storageItem;
+                var folder = await file.GetParentAsync();
+                if (folder != null)
+                {
+                    if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(folder.Path.GetHashCode().ToString()))
+                        StorageApplicationPermissions.FutureAccessList.AddOrReplace(folder.Path.GetHashCode().ToString(),
+                            folder);
+                }
+                else
+                {
+                    if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(file.Path.GetHashCode().ToString()))
+                        StorageApplicationPermissions.FutureAccessList.AddOrReplace(file.Path.GetHashCode().ToString(),
+                            file);
+                }
+
+                await HyPlayList.AppendStorageFile(file);
+            }
+
+            HyPlayList.PlaySourceId = "local";
+            HyPlayList.SongMoveTo(0);
+        }
+
+        else if(args is IActivatedEventArgs)
+        {
+            base.OnActivated(args);
+            if (args.Kind == ActivationKind.ToastNotification)
+            {
+                rootFrame.Navigate(typeof(MainPage));
+                Window.Current.Activate();
+                Common.BarPlayBar.InitializeDesktopLyric();
+                if (Common.isExpanded) return;
+                var animation = Common.Setting.expandAnimation;
+                Common.Setting.expandAnimation = false;
+                Common.BarPlayBar.ShowExpandedPlayer();
+                var a = Common.Setting.expandAnimation;
+                Common.Setting.expandAnimation = animation;
+            }
+            if (args.Kind == ActivationKind.Protocol)
+            {
+                var launchUri = ((ProtocolActivatedEventArgs)args).Uri;
+                if (launchUri.Host == "link.last.fm") _ = LastFMManager.TryLoginLastfmAccountFromBrowser(launchUri.Query.Replace("?token=", string.Empty));
+            }
+        }
+
+
+    }
+
+    private void NavigateToRootPage(IActivatedEventArgs args = null)
+    {
+        rootFrame.Navigate(typeof(MainPage), (args as LaunchActivatedEventArgs).Arguments);
     }
 
     /// <summary>
