@@ -1088,9 +1088,12 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             Frame expandedPlayerWindowContentFrame = new Frame();
             expandedPlayerWindowContentFrame.Navigate(typeof(CompactPlayerPage), expandedPlayerWindow);
             ElementCompositionPreview.SetAppWindowContent(expandedPlayerWindow, expandedPlayerWindowContentFrame);
+
+
             expandedPlayerWindow.TitleBar.ExtendsContentIntoTitleBar = true;
-            //expandedPlayerWindow.TitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
-            //expandedPlayerWindow.TitleBar.ButtonBackgroundColor = Colors.Transparent;
+            expandedPlayerWindow.TitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+            expandedPlayerWindow.TitleBar.ButtonBackgroundColor = Colors.Transparent;
+
             expandedPlayerWindow.Presenter.RequestPresentation(AppWindowPresentationKind.CompactOverlay);
             await expandedPlayerWindow.TryShowAsync();
             expandedPlayerWindow.Presenter.RequestPresentation(AppWindowPresentationKind.CompactOverlay);//防止进入失败

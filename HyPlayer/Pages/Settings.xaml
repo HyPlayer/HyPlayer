@@ -1242,9 +1242,16 @@
                                     Margin="0,0,-100,0"
                                     IsChecked="{x:Bind hyplayer:Common.Setting.saveTileBackgroundToLocalFolder, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard
-                                Header="启用旧版主题（需重启应用）"
-                                Description="可能会导致设置无法打开等严重问题，若出现异常，可通过个人主页右键头像或在首页关闭&#13;开发者不受理受此功能影响的问题">
+
+                            <controls3:SettingsCard Header="使用高精度歌词计时器"
+                                                    Description="对于部分歌曲的歌词更新率更高, 需重启 HyPlayer">
+                                 <CheckBox
+                                Margin="0,0,-100,0"
+                                IsChecked="{x:Bind hyplayer:Common.Setting.highPreciseLyricTimer, Mode=TwoWay}" />
+                            </controls3:SettingsCard>
+                            <controls3:SettingsCard Header="启用旧版主题（需重启应用）"
+                                                    Description="可能会导致设置无法打开等严重问题，若出现异常，可通过个人主页右键头像或在首页关闭&#13;开发者不受理受此功能影响的问题">
+
                                 <CheckBox
                                     Margin="0,0,-100,0"
                                     IsChecked="{x:Bind hyplayer:Common.Setting.IsOldThemeEnabled, Mode=TwoWay}" />

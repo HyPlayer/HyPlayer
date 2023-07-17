@@ -8,6 +8,7 @@
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:ui="using:Microsoft.Toolkit.Uwp.UI"
     xmlns:hyplayer="using:HyPlayer"
+    xmlns:lyric="using:HyPlayer.Controls.LyricControl"
     d:Background="White"
     d:DesignHeight="350"
     d:DesignWidth="600"
@@ -16,7 +17,7 @@
     RightTapped="OnRightTapped"
     mc:Ignorable="d">
     <Page.Resources>
-        <Storyboard x:Name="EnterAnimation">
+         <Storyboard x:Name="EnterAnimation">
             <DoubleAnimation
                 Storyboard.TargetName="WordLyricContainer"
                 Storyboard.TargetProperty="(UIElement.RenderTransform).(CompositeTransform.TranslateX)"
@@ -30,12 +31,11 @@
             <DoubleAnimation
                 Storyboard.TargetName="LyricGrid"
                 Storyboard.TargetProperty="Opacity"
+                BeginTime="00:00:00"
                 From="0"
                 To="1"
-                Duration="00:00:00.5">
-                <DoubleAnimation.EasingFunction>
-                    <CircleEase EasingMode="EaseOut" />
-                </DoubleAnimation.EasingFunction>
+                Duration="00:00:00.3">
+
             </DoubleAnimation>
             <DoubleAnimation
                 Storyboard.TargetName="LyricTextBlock"
@@ -83,11 +83,8 @@
                 Storyboard.TargetName="LyricGrid"
                 Storyboard.TargetProperty="Opacity"
                 From="1"
-                To="0.01"
-                Duration="00:00:00.1">
-                <DoubleAnimation.EasingFunction>
-                    <CircleEase EasingMode="EaseOut" />
-                </DoubleAnimation.EasingFunction>
+                To="0"
+                Duration="00:00:00.03">
             </DoubleAnimation>
             <DoubleAnimation
                 Storyboard.TargetName="LyricTextBlock"
@@ -388,7 +385,7 @@
         </Storyboard>
 
     </Page.Resources>
-    <Grid Background="{StaticResource AcrylicInAppFillColorDefaultBrush}"
+    <Grid Background="{ThemeResource GridPlayBarBackgroundBlur}"
           PointerEntered="Grid_PointerEntered"
           PointerExited="Grid_PointerExited">
         <Grid.RowDefinitions>
@@ -436,8 +433,9 @@
                     Grid.RowSpan="2"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch" />
+                <lyric:LyricControl x:Name="LyricControl" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Height="500" WordWrapping="NoWrap" />
 
-                <Viewbox
+                <Viewbox Visibility="Collapsed"
                     x:Name="LyricViewBox"
                     MaxHeight="71"
                     Margin="8,0"
@@ -477,6 +475,7 @@
                                 <CompositeTransform />
                             </TextBlock.RenderTransform>
                         </TextBlock>
+
                         <TextBlock
                             x:Name="LyricTranslationBlock"
                             Margin="20,0"
@@ -492,6 +491,7 @@
                     </StackPanel>
 
                 </Viewbox>
+
             </Grid>
         </Grid>
         <Grid

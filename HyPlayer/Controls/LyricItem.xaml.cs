@@ -15,6 +15,7 @@ using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
+using SineEase = Windows.UI.Xaml.Media.Animation.SineEase;
 
 #endregion
 

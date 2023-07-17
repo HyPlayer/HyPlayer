@@ -92,6 +92,7 @@
     <Compile Include="Classes\Converters.cs" />
     <Compile Include="Classes\Extensions.cs" />
     <Compile Include="Classes\LastFMManager.cs" />
+    <Compile Include="Classes\LyricRenderComposer.cs" />
     <Compile Include="Classes\MIMEHelper.cs" />
     <Compile Include="Classes\NCMFile.cs" />
     <Compile Include="Classes\NCSong.cs" />
@@ -148,6 +149,10 @@
     </Compile>
     <Compile Include="HyPlayControl\DownloadManager.cs" />
     <Compile Include="HyPlayControl\HyPlayList.cs" />
+    <Compile Include="Controls\LyricControl\LyricControl.Properties.cs" />
+    <Compile Include="Controls\LyricControl\LyricControl.xaml.cs">
+      <DependentUpon>LyricControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -312,10 +317,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Resources\ContentDialog.xaml">
+    <Page Include="Controls\LyricControl\LyricControl.xaml">
+
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+	<Page Include="Resources\ContentDialog.xaml">
+		<SubType>Designer</SubType>
+		<Generator>MSBuild:Compile</Generator>
+	</Page>
     <Page Include="Resources\ListView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -575,6 +585,7 @@
       <Name>NeteaseCloudMusicApi</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
