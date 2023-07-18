@@ -1882,10 +1882,4 @@ namespace HyPlayer
         NeteaseOnly,
         KawazuOnly
     }
-
-    internal static class Extensions
-    {
-
-       
-    }
 }
