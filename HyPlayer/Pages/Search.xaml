@@ -6,6 +6,7 @@
     xmlns:controls="using:Microsoft.UI.Xaml.Controls" 
     xmlns:hycontrol="using:HyPlayer.Controls"
     xmlns:hyplayer="using:HyPlayer"
+    xmlns:classes="using:HyPlayer.Classes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
@@ -44,7 +45,7 @@
                     x:Name="HistoryComboBox"
                     PlaceholderText="展开搜索历史"
                     HorizontalAlignment="Stretch"
-                    ItemsSource="{x:Bind hyplayer:HistoryManagement.GetSearchHistory()}"
+                    ItemsSource="{x:Bind classes:HistoryManagement.GetSearchHistory()}"
                     SelectionChanged="HistoryComboBox_SelectionChanged"
                     Margin="15,0,15,5">
 

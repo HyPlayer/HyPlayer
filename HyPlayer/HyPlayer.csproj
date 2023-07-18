@@ -91,12 +91,14 @@
     <Compile Include="Classes\CloudUpload.cs" />
     <Compile Include="Classes\Converters.cs" />
     <Compile Include="Classes\Extensions.cs" />
+    <Compile Include="Classes\HistoryMangement.cs" />
     <Compile Include="Classes\LastFMManager.cs" />
     <Compile Include="Classes\LyricRenderComposer.cs" />
     <Compile Include="Classes\MIMEHelper.cs" />
     <Compile Include="Classes\NCMFile.cs" />
     <Compile Include="Classes\NCSong.cs" />
     <Compile Include="Classes\PersonalFM.cs" />
+    <Compile Include="Classes\Settings.cs" />
     <Compile Include="Classes\StaticSource.cs" />
     <Compile Include="Classes\The163KeyHelper.cs" />
     <Compile Include="Classes\UpdateManager.cs" />
@@ -318,14 +320,13 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\LyricControl\LyricControl.xaml">
-
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-	<Page Include="Resources\ContentDialog.xaml">
-		<SubType>Designer</SubType>
-		<Generator>MSBuild:Compile</Generator>
-	</Page>
+    <Page Include="Resources\ContentDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Resources\ListView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

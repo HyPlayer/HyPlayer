@@ -100,7 +100,7 @@ public sealed partial class Search : Page, IDisposable
         }
 
         TBNoRes.Visibility = Visibility.Collapsed;
-        HistoryManagement.AddSearchHistory(searchText);
+        HyPlayer.Classes.HistoryManagement.AddSearchHistory(searchText);
 
         SearchResultContainer.ListItems.Clear();
         SongResults.Clear();

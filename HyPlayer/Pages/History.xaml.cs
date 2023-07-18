@@ -71,7 +71,7 @@ public sealed partial class History : Page, IDisposable
         {
             case "SongHis":
                 Songs.Clear();
-                var Songsl = await HistoryManagement.GetNCSongHistory();
+                var Songsl = await HyPlayer.Classes.HistoryManagement.GetNCSongHistory();
                 var songorder = 0;
                 foreach (var song in Songsl)
                 {

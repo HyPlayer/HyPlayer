@@ -365,7 +365,7 @@ DoubleAnimation verticalAnimation;
                     : "\uE006";
                 //BtnFlyoutLike.IsChecked = Common.LikedSongs.Contains(HyPlayList.NowPlayingItem.PlayItem.Id);
             });
-            HistoryManagement.AddNCSongHistory(mpi.PlayItem.Id);
+            HyPlayer.Classes.HistoryManagement.AddNCSongHistory(mpi.PlayItem.Id);
         }
 
         /*

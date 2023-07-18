@@ -33,6 +33,7 @@ using Windows.UI.Notifications;
 using Windows.UI.Xaml.Media;
 using Buffer = Windows.Storage.Streams.Buffer;
 using File = TagLib.File;
+using Classes = HyPlayer.Classes;
 
 #endregion
 
@@ -276,7 +277,7 @@ public static class HyPlayList
             highTimer.Elapsed += (_,_) => {LoadLyricChange();};
             highTimer.Start(); 
         }
-        HistoryManagement.InitializeHistoryTrack();
+        Classes.HistoryManagement.InitializeHistoryTrack();
         if (!Common.Setting.EnableAudioGain) AudioEffectsProperties["AudioGain_Disabled"] = true;
         Player.AddAudioEffect(typeof(AudioGainEffect).FullName, true, AudioEffectsProperties);
         Common.IsInFm = false;
