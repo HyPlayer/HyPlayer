@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Text;
 using System.Threading.Tasks;
+using Classes = HyPlayer.Classes;
 
 namespace HyPlayer.Classes
 {
@@ -146,8 +147,8 @@ namespace HyPlayer.Classes
         public static string GetLastFMAPISignature(string token)
         {
 
-            var byteData = HyPlayer.Extensions.ToByteArrayUtf8($"api_key{LastFMManager.LastFMAPIKey}methodauth.getSessiontoken{token}{LastFMManager.LastFMAPISecret}");
-            var md5 = HyPlayer.Extensions.ComputeMd5(byteData);
+            var byteData = Classes.Extensions.ToByteArrayUtf8($"api_key{LastFMManager.LastFMAPIKey}methodauth.getSessiontoken{token}{LastFMManager.LastFMAPISecret}");
+            var md5 = Classes.Extensions.ComputeMd5(byteData);
             StringBuilder stringBuilder = new StringBuilder();
             foreach (var data in md5)
             {
