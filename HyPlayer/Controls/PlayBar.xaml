@@ -729,12 +729,12 @@
                     Grid.Column="3"
                     Width="40"
                     Height="40"
-                    Padding="0" Margin="10,48,0,0"
+                    Padding="0" Margin="10,75,0,0"
                     VerticalAlignment="Center"
                     Background="Transparent"
                     BorderBrush="Transparent"
                     CornerRadius="30"
-                    Visibility="Collapsed">
+                    Visibility="Visible">
             <Button.Flyout>
                 <MenuFlyout>
                     <MenuFlyoutItem IsEnabled="False" Text="{x:Bind Mode=OneWay, Path=TbSongName.Text}" />
@@ -783,6 +783,40 @@
                                 Text="播放列表">
                         <MenuFlyoutItem.Icon>
                             <FontIcon Glyph="&#xE142;" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutSeparator />
+                    <MenuFlyoutItem
+                        Text="添加到歌单"
+                        Visibility="{x:Bind Btn_Share.IsEnabled, Mode=OneWay }"
+                        Click="Btn_Sub_OnClick">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon Glyph="&#xE1DA;"/>
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem
+                        Text="下载音乐"
+                        Visibility="{x:Bind Btn_Share.IsEnabled, Mode=OneWay }"
+                        Click="Btn_Down_OnClick">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon Glyph="&#xE118;" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem
+                        Text="查看评论"
+                        IsEnabled="{x:Bind Btn_Share.IsEnabled, Mode=OneWay}"
+                        Visibility="{x:Bind hy:Common.Setting.notClearMode, Mode=OneWay }"
+                        Click="Btn_Comment_OnClick">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon Glyph="&#xE1DA;"/>
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem
+                        Visibility="{x:Bind Btn_Share.IsEnabled, Mode=OneWay }"
+                        Text="分享"
+                        Click="Btn_Share_OnClick">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon Glyph="&#xE72D;"/>
                         </MenuFlyoutItem.Icon>
                     </MenuFlyoutItem>
                     <MenuFlyoutSeparator />
@@ -883,7 +917,6 @@
                         <Setter Target="BtnNextSong.(Grid.Column)" Value="6" />
                         <Setter Target="PlayProgress.Margin" Value="250,0,220,0" />
                         <Setter Target="GridSongInfoContainer.Visibility" Value="Collapsed" />
-                        <Setter Target="BtnMore.Visibility" Value="Visible" />
                         <Setter Target="MainBtnsGrid.Margin" Value="0,5,60,0" />
                     </VisualState.Setters>
                 </VisualState>
