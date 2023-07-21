@@ -130,8 +130,6 @@ CheckNetIsolation LoopbackExempt -a -n="48848aaaaaaccd.hyplayer_fkcggvf9kbkw0"
 
 爱发电: https://afdian.net/@kengwang
 
-以太坊：0xad13286a373221672a4b4fdb6607eb2d2aa5966a
-
 感谢您的支持!
 
 ## 感谢
