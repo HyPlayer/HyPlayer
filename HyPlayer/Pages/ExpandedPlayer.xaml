@@ -372,12 +372,12 @@
                                 <MenuFlyoutItem.Template>
                                     <ControlTemplate TargetType="MenuFlyoutItem">
                                         <controls:DockPanel LastChildFill="True">
-                                            <Button
+                                            <RepeatButton
                                                 x:Name="LyricOffsetMin"
                                                 controls:DockPanel.Dock="Left"
                                                 Click="LyricOffsetMin_Click"
                                                 Content="-" />
-                                            <Button
+                                            <RepeatButton
                                                 x:Name="LyricOffsetAdd"
                                                 controls:DockPanel.Dock="Right"
                                                 Click="LyricOffsetAdd_Click"
