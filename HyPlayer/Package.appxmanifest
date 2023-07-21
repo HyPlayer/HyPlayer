@@ -9,7 +9,7 @@
 
     <Identity
             Name="48848aaaaaaccd.HyPlayer"
-            Publisher="CN=C23FC254-B9D2-439F-BE7C-7849EE55BEB2"
+            Publisher="CN=HyPlayer Team"
             Version="2.1.36.0"/>
 
     <mp:PhoneIdentity PhoneProductId="f59825c1-7418-4bf0-9515-cbd8b69f70ac"
