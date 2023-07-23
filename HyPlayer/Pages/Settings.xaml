@@ -45,6 +45,11 @@
             FontWeight="Bold"
             Text="设置" />
         <controls1:PivotView Grid.Row="1" FontFamily="Black">
+            <controls1:PivotView.Resources>
+                <Style TargetType="ScrollBar" BasedOn="{StaticResource DefaultScrollBarStyle}">
+                    <Setter Property="Margin" Value="0,0,0,120"/>
+                </Style>
+            </controls1:PivotView.Resources>
             <controls1:PivotEx>
                 <PivotItem FontFamily="Thick" Header="歌词设置">
                     <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
@@ -560,13 +565,13 @@
                 <PivotItem FontFamily="Thick" Header="显示设置">
                     <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
                        
-                        <StackPanel Margin="20,0,20,150" Spacing="20">
+                        <StackPanel Margin="20,0,20,160" Spacing="20">
                             <controls3:SettingsExpander
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
                                 Header="颜色设置"
                                 Description="需要重启 HyPlayer"
-                                IsExpanded="True">
+                                IsExpanded="False">
                                 <controls3:SettingsExpander.HeaderIcon>
                                     <FontIcon Glyph="&#xE790;"/>
                                 </controls3:SettingsExpander.HeaderIcon>
