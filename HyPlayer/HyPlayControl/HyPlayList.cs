@@ -1042,6 +1042,10 @@ public static class HyPlayList
                     }
 
                     playUrl = json["data"][0]["url"]?.ToString();
+                    if (Common.Setting.UseHttpWhenGettingSongs && playUrl.Contains("https://"))
+                    {
+                        playUrl = playUrl.Replace("https://", "http://");
+                    }
                     var tag = json["data"]?[0]?["level"]?.ToString() switch
                     {
                         "standard" => "标准",

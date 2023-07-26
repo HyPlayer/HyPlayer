@@ -217,11 +217,11 @@ sealed partial class App : Application
         await jumpList.SaveAsync();
     }
 
-    protected override async void OnFileActivated(FileActivatedEventArgs args) => OnLaunchedOrActivatedAsync(args);
+    protected override void OnFileActivated(FileActivatedEventArgs args) => OnLaunchedOrActivatedAsync(args);
 
-    protected override async void OnLaunched(LaunchActivatedEventArgs args) => OnLaunchedOrActivatedAsync(args);
+    protected override void OnLaunched(LaunchActivatedEventArgs args) => OnLaunchedOrActivatedAsync(args);
     
-    protected async void OnLaunchedOrActivatedAsync(IActivatedEventArgs args)
+    private async void OnLaunchedOrActivatedAsync(IActivatedEventArgs args)
     {
         _ = InitializeJumpList();
 

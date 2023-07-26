@@ -111,7 +111,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
                     if (hashCode != HyPlayList.NowPlayingHashCode) return;
                     await AlbumImageBrushSource.SetSourceAsync(stream);
                 }
-                catch (Exception ex)
+                catch
                 {
 
                 }
@@ -267,65 +267,6 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         {
             LyricText = HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.CurrentLyric;
             LyricControl.Lyric = HyPlayList.Lyrics[HyPlayList.LyricPos];
-            return;
-            WordTextBlocks.Clear();
-            BlockToAnimation.Clear();
-            WordLyricContainer.Text = "";
-            LyricTranslation = HyPlayList.Lyrics[HyPlayList.LyricPos].Translation;
-            LyricSound = HyPlayList.Lyrics[HyPlayList.LyricPos].Romaji;
-            
-            Debug.WriteLine($"LyricChanged:{HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.CurrentLyric}");
-            _lyricIsKaraokeLyric = typeof(KaraokeLyricsLine) == HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.GetType();
-            Lrc = HyPlayList.Lyrics[HyPlayList.LyricPos];
-            if (HyPlayList.Lyrics.Count <= 2)
-            {
-                LyricText = NowPlayingName;
-                LyricTranslation = NowPlayingArtists;
-            }
-            LyricTranslationBlock.Visibility = (LyricTranslation != string.Empty && LyricTranslation != null && Common.ShowLyricTrans) ? Visibility.Visible : Visibility.Collapsed;
-            LyricSoundBlock.Visibility = (LyricSound != string.Empty && LyricSound != null && Common.ShowLyricSound) ? Visibility.Visible : Visibility.Collapsed;
-            if (_lyricIsKaraokeLyric)
-            {
-                WordLyricContainer.Visibility = Visibility.Visible;
-                LyricTextBlock.Visibility = Visibility.Collapsed;
-
-                foreach (var item in ((KaraokeLyricsLine)Lrc.LyricLine).WordInfos)
-                {
-                    var textBlock = new Run()
-                    {
-                        Text = item.CurrentWords,
-                        FontWeight = FontWeights.Bold,
-                        Foreground = new SolidColorBrush(GetKaraokAccentBrush()),
-                    };
-                    textBlock.Foreground.Opacity = 0.4;
-                    WordTextBlocks?.Add(textBlock);
-                    WordLyricContainer.Inlines.Add(textBlock);
-                    var ani = new DoubleAnimation
-                    {
-                        From = 0.4,
-                        To = 1,
-                        Duration = item.Duration,
-                        EnableDependentAnimation = true,
-                    };
-                    item.Duration = (item.Duration < TimeSpan.FromMilliseconds(200)) ? TimeSpan.FromMilliseconds(200) : item.Duration;
-                    ani.EasingFunction = (item.Duration >= TimeSpan.FromMilliseconds(300)) ? new SineEase { EasingMode = EasingMode.EaseOut } : new CircleEase { EasingMode = EasingMode.EaseInOut };
-                    var storyboard = new Storyboard();
-                    Storyboard.SetTarget(ani, textBlock);
-                    Storyboard.SetTargetProperty(ani, "(Run.Foreground).(SolidColorBrush.Opacity)");
-                    storyboard.Children.Add(ani);
-                    BlockToAnimation[textBlock] = storyboard;
-                }
-                WordTextBlocks?.ForEach(w =>
-                {
-                    w.Foreground.Opacity = 0.4;
-                });
-                HyPlayList.OnPlayPositionChange += RefreshWordColor;
-
-            }
-            else
-            {
-                HyPlayList.OnPlayPositionChange -= RefreshWordColor;
-            }
         });
         
     }
