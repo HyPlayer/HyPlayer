@@ -1513,6 +1513,15 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        public bool UseHttpWhenGettingSongs
+        {
+            get => GetSettings(nameof(UseHttpWhenGettingSongs), false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(UseHttpWhenGettingSongs)] = value;
+                OnPropertyChanged();
+            }
+        }
         public bool EnableAudioGain
         {
             get => GetSettings(nameof(EnableAudioGain), false);

@@ -314,7 +314,7 @@ public sealed partial class SongListDetail : Page, IDisposable
     int treashold = 3;
     int cooldownTime = 0;
 
-    private async void GreedlyLoad()
+    private void GreedlyLoad()
     {
         _ = Common.Invoke(() =>
         {

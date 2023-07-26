@@ -142,13 +142,13 @@ namespace HyPlayer.Controls.LyricControl
         /// <summary>
         /// 字体
         /// </summary>
-        public new string TextFontFamily
+        public string TextFontFamily
         {
             get => (string)GetValue(TextFontFamilyProperty);
             set => SetValue(TextFontFamilyProperty, value);
         }
 
-        public new static readonly DependencyProperty TextFontFamilyProperty =
+        public static readonly DependencyProperty TextFontFamilyProperty =
             DependencyProperty.Register(nameof(TextFontFamily), typeof(string), typeof(LyricControl), new PropertyMetadata(FontFamily.XamlAutoFontFamily.Source, OnTextFontFamilyChanged));
 
         private string _textFontFamily = FontFamily.XamlAutoFontFamily.Source;

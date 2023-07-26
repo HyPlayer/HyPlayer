@@ -1130,13 +1130,18 @@
                                 <TextBox
                                     HorizontalAlignment="Left"
                                     IsReadOnly="True"
-                                    Text="CheckNetIsolation LoopbackExempt -a -n=&quot;48848aaaaaaccd.hyplayer_fkcggvf9kbkw0&quot;" />
+                                    Text="CheckNetIsolation LoopbackExempt -a -n=&quot;48848aaaaaaccd.HyPlayer_jdagbttk64fq4&quot;" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard Header="降级HTTPS为HTTP">
+                            <controls3:SettingsCard Header="请求时降级HTTPS为HTTP">
                                 <CheckBox
                                 x:Name="UseHttpCheckBox"
                                 Margin="0,0,-100,0"
                                 IsChecked="{x:Bind hyplayer:Common.Setting.UseHttp, Mode=TwoWay}" />
+                            </controls3:SettingsCard>
+                            <controls3:SettingsCard Header="获取歌曲时降级HTTPS为HTTP">
+                                <CheckBox
+                                Margin="0,0,-100,0"
+                                IsChecked="{x:Bind hyplayer:Common.Setting.UseHttpWhenGettingSongs, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="使用贪婪加载"
                                                     Description="自动加载更多内容, 3 秒一次请求, 可能会导致风控">
