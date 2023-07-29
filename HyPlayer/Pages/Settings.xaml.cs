@@ -192,7 +192,7 @@ public sealed partial class Settings : Page, IDisposable
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         ApplicationData.Current.LocalSettings.Values["xRealIp"] =
-            TextBoxXREALIP.Text == "" ? null : TextBoxXREALIP.Header;
+            TextBoxXREALIP.Text == "" ? null : TextBoxXREALIP.Text;
         if (Common.ncapi != null)
         {
             Common.ncapi.RealIP = (string)ApplicationData.Current.LocalSettings.Values["xRealIp"];
