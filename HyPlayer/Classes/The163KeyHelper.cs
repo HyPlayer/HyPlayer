@@ -172,7 +172,7 @@ internal static class The163KeyHelper
                 bitrate = pi.Bitrate,
                 artist = null,
                 duration = pi.LengthInMilliseconds,
-                musicId = int.Parse(pi.Id),
+                musicId = long.Parse(pi.Id),
                 musicName = pi.Name,
                 format = pi.SubExt.ToLower()
             };
@@ -207,7 +207,7 @@ internal class The163KeyClass
 
     //public string[] alias { get; set; }
     public string album { get; set; }
-    public int musicId { get; set; }
+    public long musicId { get; set; }
     public string musicName { get; set; }
     public double duration { get; set; }
     public int bitrate { get; set; }

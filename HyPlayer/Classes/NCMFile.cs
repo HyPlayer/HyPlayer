@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.Storage;
 using File = TagLib.File;
@@ -159,7 +160,7 @@ internal static class NCMFile
                 {
                     albumId = obj["albumId"].ToObject<int>(),
                     album = obj["album"].ToString(),
-                    musicId = obj["musicId"].ToObject<int>(),
+                    musicId = long.Parse(Regex.Match(obj["musicId"].ToString(),"\\d*$").Value),
                     musicName = obj["musicName"].ToString(),
                     duration = obj["duration"].ToObject<int>(),
                     bitrate = obj["bitrate"].ToObject<int>(),
