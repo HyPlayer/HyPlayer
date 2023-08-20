@@ -29,12 +29,12 @@ steps:
       versionSpec: 4.4.1
       checkLatest: true
 
-- task: NuGetCommand@2
-  inputs:
-    command: 'restore'
-    restoreSolution: '$(solution)'
-    feedsToUse: 'config'
-    nugetConfigPath: 'nuget.config'
+  - task: NuGetCommand@2
+    inputs:
+      command: 'restore'
+      restoreSolution: '$(solution)'
+      feedsToUse: 'config'
+      nugetConfigPath: 'nuget.config'
 
   - task: UseDotNet@2
     displayName: 'Use .NET 6'
