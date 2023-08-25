@@ -1770,17 +1770,18 @@ public static class HyPlayList
             if (Common.Setting.showComposerInLyric)
                 Lyrics.Add(new SongLyric
                 {
-                    LyricLine = new LrcLyricsLine(pureLyricInfo.PureLyrics, TimeSpan.Zero)
+                    LyricLine = new LrcLyricsLine(pureLyricInfo.PureLyrics, string.Empty, TimeSpan.Zero)
                 });
         }
         else
         {
-            Utils.ConvertTranslation(pureLyricInfo.TrLyrics, Lyrics);
+            if(pureLyricInfo is not KaraokLyricInfo karaoke) Utils.ConvertTranslation(pureLyricInfo.TrLyrics, Lyrics);
+            else Utils.ConvertYrcTranslation(karaoke, Lyrics);
             await Utils.ConvertRomaji(pureLyricInfo, Lyrics);
 
             if (Lyrics.Count != 0 && Lyrics[0].LyricLine.StartTime != TimeSpan.Zero)
                 Lyrics.Insert(0,
-                    new SongLyric { LyricLine = new LrcLyricsLine(string.Empty, TimeSpan.Zero) });
+                    new SongLyric { LyricLine = new LrcLyricsLine(string.Empty, string.Empty, TimeSpan.Zero) });
         }
 
         LyricPos = 0;
@@ -1810,7 +1811,7 @@ public static class HyPlayList
                     json = await Common.ncapi?.RequestAsync(
                         CloudMusicApiProviders.LyricNew,
                         new Dictionary<string, object> { { "id", ncp.PlayItem.Id } });
-                    string lrc, romaji, karaoklrc, translrc;
+                    string lrc, romaji, karaoklrc, translrc,yrromaji,yrtranslrc;
                     if (json["yrc"] is null)
                     {
                         lrc = string.Join('\n',
@@ -1833,12 +1834,16 @@ public static class HyPlayList
                         karaoklrc = string.Join('\n',
                             (json["yrc"]?["lyric"]?.ToString() ?? string.Empty).Split("\n")
                             .Where(t => !t.StartsWith("{")).ToArray());
-                        romaji = json["yromalrc"]?["lyric"]?.ToString();
-                        translrc = json["ytlrc"]?["lyric"]?.ToString();
+                        yrromaji = json["yromalrc"]?["lyric"]?.ToString();
+                        yrtranslrc = json["ytlrc"]?["lyric"]?.ToString();
+                        romaji = json["romalrc"]?["lyric"]?.ToString();
+                        translrc = json["tlyric"]?["lyric"]?.ToString();
                         return new KaraokLyricInfo()
                         {
                             PureLyrics = lrc,
                             TrLyrics = translrc,
+                            YrNeteaseRomaji = yrromaji,
+                            YrTrLyrics = yrtranslrc,
                             NeteaseRomaji = romaji,
                             KaraokLyric = karaoklrc
                         };
@@ -2426,17 +2431,82 @@ public static class Utils
             break;
         }
     }
-
+    public static void ConvertYrcTranslation(KaraokLyricInfo lyricInfo, List<SongLyric> lyrics)
+    {
+        using var targetLyrics = LrcParser.ParseLrc(lyricInfo.YrTrLyrics.AsSpan());
+        if (Common.Setting.MigrateLyrics)
+        {
+            using var sourceLyrics = LrcParser.ParseLrc(lyricInfo.TrLyrics.AsSpan());
+            var migrated = MigrationTool.Migrate(targetLyrics, sourceLyrics);
+            foreach (var lyricsLine in migrated.Lines)
+            {
+                foreach (var lyric in lyrics.Where(t =>
+                                     t.LyricLine.StartTime == lyricsLine.StartTime ||
+                                     t.LyricLine?.PossibleStartTime == lyricsLine.StartTime).ToList())
+                {
+                    lyric.Translation = lyricsLine.CurrentLyric;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            foreach (var lyricsLine in targetLyrics.Lines)
+            {
+                foreach (var lyric in lyrics.Where(t =>
+                                     t.LyricLine.StartTime == lyricsLine.StartTime ||
+                                     t.LyricLine?.PossibleStartTime == lyricsLine.StartTime).ToList())
+                {
+                    lyric.Translation = lyricsLine.CurrentLyric;
+                    break;
+                }
+            }
+        }
+    }
     public static void ConvertNeteaseRomaji(string lyricAllText, List<SongLyric> lyrics)
     {
         if (string.IsNullOrEmpty(lyricAllText)) return;
         using var parsedlyrics = LrcParser.ParseLrc(lyricAllText.AsSpan());
         foreach (var lyricsLine in parsedlyrics.Lines)
         foreach (var songLyric in lyrics.Where(songLyric =>
-                     songLyric.LyricLine.StartTime == lyricsLine.StartTime))
+                     songLyric.LyricLine.StartTime == lyricsLine.StartTime ||
+                     songLyric.LyricLine?.PossibleStartTime == lyricsLine.StartTime))
         {
             songLyric.Romaji = lyricsLine.CurrentLyric;
             break;
+        }
+    }
+    public static void ConvertYrcNeteaseRomaji(KaraokLyricInfo lyricInfo, List<SongLyric> lyrics)
+    {
+        if (string.IsNullOrEmpty(lyricInfo.NeteaseRomaji) && string.IsNullOrEmpty(lyricInfo.YrNeteaseRomaji)) return;
+        using var targetLyrics = LrcParser.ParseLrc(lyricInfo.YrNeteaseRomaji.AsSpan());
+        if (Common.Setting.MigrateLyrics)
+        {
+            using var sourceLyrics = LrcParser.ParseLrc(lyricInfo.NeteaseRomaji.AsSpan());
+            var migrated = MigrationTool.Migrate(targetLyrics, sourceLyrics);
+            foreach (var lyricsLine in migrated.Lines)
+            {
+                foreach (var lyric in lyrics.Where(t =>
+                                     t.LyricLine.StartTime == lyricsLine.StartTime ||
+                                     t.LyricLine?.PossibleStartTime == lyricsLine.StartTime).ToList())
+                {
+                    lyric.Romaji = lyricsLine.CurrentLyric;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            foreach (var lyricsLine in targetLyrics.Lines)
+            {
+                foreach (var lyric in lyrics.Where(t =>
+                                     t.LyricLine.StartTime == lyricsLine.StartTime ||
+                                     t.LyricLine?.PossibleStartTime == lyricsLine.StartTime).ToList())
+                {
+                    lyric.Romaji = lyricsLine.CurrentLyric;
+                    break;
+                }
+            }
         }
     }
 
@@ -2462,13 +2532,15 @@ public static class Utils
                 break;
             case RomajiSource.AutoSelect:
                 if (!string.IsNullOrEmpty(pureLyricInfo.NeteaseRomaji))
-                    ConvertNeteaseRomaji(pureLyricInfo.NeteaseRomaji, lyrics);
+                    if (pureLyricInfo is KaraokLyricInfo karaokLyricInfo) ConvertYrcNeteaseRomaji(karaokLyricInfo, lyrics);
+                    else ConvertNeteaseRomaji(pureLyricInfo.NeteaseRomaji, lyrics);
                 else
-                    await ConvertKawazuRomaji(lyrics);
+                        await ConvertKawazuRomaji(lyrics);
                 break;
             case RomajiSource.NeteaseOnly:
                 if (!string.IsNullOrEmpty(pureLyricInfo.NeteaseRomaji))
-                    ConvertNeteaseRomaji(pureLyricInfo.NeteaseRomaji, lyrics);
+                    if (pureLyricInfo is KaraokLyricInfo karaokLyricInfo) ConvertYrcNeteaseRomaji(karaokLyricInfo, lyrics);
+                    else ConvertNeteaseRomaji(pureLyricInfo.NeteaseRomaji, lyrics);
                 break;
             case RomajiSource.KawazuOnly:
                 await ConvertKawazuRomaji(lyrics);
@@ -2481,7 +2553,12 @@ public static class Utils
         if (pureLyricInfo is KaraokLyricInfo karaokLyricInfo && !string.IsNullOrEmpty(karaokLyricInfo.KaraokLyric))
         {
             using var parsedLyrics = KaraokeParser.ParseKaraoke(((KaraokLyricInfo)pureLyricInfo).KaraokLyric.AsSpan());
-
+            if (Common.Setting.MigrateLyrics)
+            {
+                using var pureLyrics = LrcParser.ParseLrc(pureLyricInfo.PureLyrics.AsSpan());
+                var migrated = MigrationTool.Migrate(parsedLyrics, pureLyrics);
+                return migrated.Lines.OrderBy(t => t.StartTime).Select(t => new SongLyric() { LyricLine = t }).ToList();
+            }
             return parsedLyrics.Lines.OrderBy(t => t.StartTime).Select(t => new SongLyric() { LyricLine = t }).ToList();
         }
 

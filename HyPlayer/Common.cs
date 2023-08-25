@@ -1551,6 +1551,15 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        public bool MigrateLyrics
+        {
+            get => GetSettings(nameof(MigrateLyrics), false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(MigrateLyrics)] = value;
+                OnPropertyChanged();
+            }
+        }
         public bool LastFMLogined => LastFMManager.LastfmLogined;
         public bool SaveCookies()
         {

@@ -77,7 +77,7 @@ public sealed partial class Settings : Page, IDisposable
         DeviceInfo.Text = deviceInfo.Id.ToString();
         _lyricItem = new LyricItem(new SongLyric
         {
-            LyricLine = new LrcLyricsLine("歌词大小示例 AaBbCcDd 約束の言葉", TimeSpan.Zero),
+            LyricLine = new LrcLyricsLine("歌词大小示例 AaBbCcDd 約束の言葉", string.Empty, TimeSpan.Zero),
             Translation = "翻译大小示例"
         });
         _lyricItem.Transitions.Add(new RepositionThemeTransition());

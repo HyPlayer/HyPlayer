@@ -49,6 +49,8 @@ public enum HyPlayItemType
 public class KaraokLyricInfo : PureLyricInfo
 {
     public string KaraokLyric;
+    public string YrTrLyrics;
+    public string YrNeteaseRomaji;
 }
 
 public class PureLyricInfo
@@ -61,13 +63,13 @@ public class PureLyricInfo
 public class SongLyric
 {
     public static SongLyric PureSong = new()
-        { LyricLine = new LrcLyricsLine("纯音乐 请欣赏", TimeSpan.Zero) };
+        { LyricLine = new LrcLyricsLine("纯音乐 请欣赏", string.Empty, TimeSpan.Zero) };
 
     public static SongLyric NoLyric = new()
-        { LyricLine = new LrcLyricsLine("无歌词 请欣赏", TimeSpan.Zero) };
+        { LyricLine = new LrcLyricsLine("无歌词 请欣赏", string.Empty, TimeSpan.Zero) };
 
     public static SongLyric LoadingLyric = new()
-        { LyricLine = new LrcLyricsLine("加载歌词中...", TimeSpan.Zero) };
+        { LyricLine = new LrcLyricsLine("加载歌词中...", string.Empty, TimeSpan.Zero) };
 
     public ILyricLine LyricLine;
     public string Translation;
