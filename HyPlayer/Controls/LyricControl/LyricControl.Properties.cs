@@ -283,9 +283,9 @@ namespace HyPlayer.Controls.LyricControl
         }
 
         public static readonly DependencyProperty LyricProperty =
-            DependencyProperty.Register(nameof(Lyric), typeof(SongLyric), typeof(LyricControl), new PropertyMetadata(new SongLyric { LyricLine = new LrcLyricsLine("无歌词", TimeSpan.Zero) }, OnLyricChanged));
+            DependencyProperty.Register(nameof(Lyric), typeof(SongLyric), typeof(LyricControl), new PropertyMetadata(new SongLyric { LyricLine = new LrcLyricsLine("无歌词", string.Empty, TimeSpan.Zero) }, OnLyricChanged));
 
-        private SongLyric _lyric = new SongLyric { LyricLine = new LrcLyricsLine("无歌词", TimeSpan.Zero) };
+        private SongLyric _lyric = new SongLyric { LyricLine = new LrcLyricsLine("无歌词", string.Empty, TimeSpan.Zero) };
 
         private static void OnLyricChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
