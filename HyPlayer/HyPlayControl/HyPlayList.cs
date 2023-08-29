@@ -326,7 +326,14 @@ public static class HyPlayList
     {
         //歌曲崩溃了的话就是这个
         //SongMoveNext();
+
         Common.ErrorMessageList.Add("歌曲" + NowPlayingItem.PlayItem.Name + " 播放失败: " + reason);
+
+        if (reason.Contains("mediasink",StringComparison.OrdinalIgnoreCase))
+        {
+            Common.AddToTeachingTipLists("播放失败","无法创建媒体接收器，请检查设备是否有声音输出设备！");
+            return;
+        }
 
         Common.AddToTeachingTipLists("播放失败 切到下一曲",
             "歌曲" + NowPlayingItem.PlayItem.Name + "\r\n" + reason);
