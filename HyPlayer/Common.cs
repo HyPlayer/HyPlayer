@@ -562,6 +562,16 @@ namespace HyPlayer
             }
         }
 
+        public bool useAiDj
+        {
+            get => GetSettings(nameof(useAiDj), false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(useAiDj)] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool doScrobble
         {
             get => GetSettings(nameof(doScrobble), true);

@@ -498,7 +498,7 @@ public static class HyPlayList
         OnSongMoveNext?.Invoke();
         if (List.Count == 0) return;
         MoveSongPointer(true);
-        if (!Common.IsInFm && List.Count != 0)
+        if (List.Count != 0)
         {
             _ = LoadPlayerSong(List[NowPlaying]);
         }
@@ -677,7 +677,7 @@ public static class HyPlayList
         OnMediaEnd?.Invoke(NowPlayingItem);
         MoveSongPointer();
         //然后尝试加载下一首歌
-        if (!Common.IsInFm && List.Count != 0)
+        if (List.Count != 0)
         {
             _ = LoadPlayerSong(List[NowPlaying]);
         }
@@ -1030,8 +1030,8 @@ public static class HyPlayList
     {
         var playUrl = targetItem.PlayItem.Url;
         // 对了,先看看是否要刷新播放链接
-        if (string.IsNullOrEmpty(targetItem.PlayItem.Url) ||
-            Common.Setting.songUrlLazyGet)
+        if ((string.IsNullOrEmpty(targetItem.PlayItem.Url) ||
+            Common.Setting.songUrlLazyGet ) && targetItem.PlayItem.Id != "-1")
             try
             {
                 var json = await Common.ncapi?.RequestAsync(
@@ -1967,7 +1967,7 @@ public static class HyPlayList
         return insertList;
     }
 
-    private static HyPlayItem LoadNcSong(NCSong ncSong)
+    public static HyPlayItem LoadNcSong(NCSong ncSong)
     {
         try
         {

@@ -1198,6 +1198,9 @@
                                 <CheckBox Margin="0,0,-100,0"
                                       IsChecked="{x:Bind hyplayer:Common.Setting.useTaglibPicture, Mode=TwoWay}" />
                             </controls3:SettingsCard>
+                            <controls3:SettingsCard Header="私人 FM 时使用 私人 DJ">
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.useAiDj, Mode=TwoWay}" />
+                            </controls3:SettingsCard>
                             <controls3:SettingsCard Header="开启 UI 音效">
                                 <CheckBox
                                 x:Name="ControlSoundCheck"
