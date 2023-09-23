@@ -27,9 +27,8 @@
     <AppxPackageDir>D:\Workspace\Personal\HyPlayer\HyPlayer\HyPlayer\AppPackages\2.1.30</AppxPackageDir>
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
     <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
-    <PackageCertificateKeyFile>
-    </PackageCertificateKeyFile>
-    <PackageCertificateThumbprint>443C9A4A61854A432A905671C9B8F810FBE1F85D</PackageCertificateThumbprint>
+    <PackageCertificateKeyFile>HyPlayer_TemporaryKey.pfx</PackageCertificateKeyFile>
+    <PackageCertificateThumbprint>5EABF313D9DDCAF42AD87E19DD98239019C555A7</PackageCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM64'">
     <DebugSymbols>true</DebugSymbols>
@@ -525,8 +524,8 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="CommunityToolkit.Labs.Uwp.SettingsControls">
-      <Version>0.0.18</Version>
+    <PackageReference Include="CommunityToolkit.Uwp.Controls.SettingsControls">
+      <Version>8.0.230907</Version>
     </PackageReference>
     <PackageReference Include="Inflatable.Lastfm">
       <Version>1.2.0</Version>

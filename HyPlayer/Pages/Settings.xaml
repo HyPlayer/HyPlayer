@@ -2,14 +2,14 @@
     x:Class="HyPlayer.Pages.Settings"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:hyplayer="using:HyPlayer"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:classes="using:HyPlayer.Classes"
     xmlns:controls="using:Microsoft.UI.Xaml.Controls"
     xmlns:controls1="using:HyPlayer.Controls"
     xmlns:controls2="using:Microsoft.Toolkit.Uwp.UI.Controls"
-    xmlns:controls3="using:CommunityToolkit.Labs.WinUI"
-    xmlns:classes="using:HyPlayer.Classes"
+    xmlns:controls3="using:CommunityToolkit.WinUI.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hyplayer="using:HyPlayer"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     NavigationCacheMode="Disabled"
     mc:Ignorable="d">
     <Grid>
@@ -18,22 +18,18 @@
             <RowDefinition />
         </Grid.RowDefinitions>
 
-        <ContentDialog x:Name="AboutRomajiDialog" 
-                       Title="关于此选项"
-                       CloseButtonText="好的"
-                       CloseButtonStyle="{StaticResource AccentButtonStyle}">
+        <ContentDialog
+            x:Name="AboutRomajiDialog"
+            Title="关于此选项"
+            CloseButtonStyle="{StaticResource AccentButtonStyle}"
+            CloseButtonText="好的">
             <RichTextBlock>
                 <Paragraph>
-                    HyPlayer支持使用:
-                    <LineBreak />
-                    &#x27A4; 网易云音乐: 网易云音乐提供的罗马字歌词
-                    <LineBreak />
-                    &#x27A4; Kawazu: 内置罗马字转换器 (需下载资源包)
-                    <LineBreak />
-                    &#x27A4; 自动选择：优先使用网易云音乐提供的罗马字
-                    <LineBreak />
-                    如当前歌词网易云音乐没有提供罗马字，则使用 Kawazu 进行转换
-                </Paragraph>
+                    HyPlayer支持使用:<LineBreak />
+                    &#x27A4; 网易云音乐: 网易云音乐提供的罗马字歌词<LineBreak />
+                    &#x27A4; Kawazu: 内置罗马字转换器 (需下载资源包)<LineBreak />
+                    &#x27A4; 自动选择：优先使用网易云音乐提供的罗马字<LineBreak />
+                    如当前歌词网易云音乐没有提供罗马字，则使用 Kawazu 进行转换</Paragraph>
             </RichTextBlock>
         </ContentDialog>
 
@@ -46,8 +42,8 @@
             Text="设置" />
         <controls1:PivotView Grid.Row="1" FontFamily="Black">
             <controls1:PivotView.Resources>
-                <Style TargetType="ScrollBar" BasedOn="{StaticResource DefaultScrollBarStyle}">
-                    <Setter Property="Margin" Value="0,0,0,120"/>
+                <Style BasedOn="{StaticResource DefaultScrollBarStyle}" TargetType="ScrollBar">
+                    <Setter Property="Margin" Value="0,0,0,120" />
                 </Style>
             </controls1:PivotView.Resources>
             <controls1:PivotEx>
@@ -65,9 +61,9 @@
                                 Header="罗马字设置"
                                 IsExpanded="True">
                                 <controls3:SettingsExpander.HeaderIcon>
-                                    <FontIcon Glyph="&#xE8C1;"/>
+                                    <FontIcon Glyph="&#xE8C1;" />
                                 </controls3:SettingsExpander.HeaderIcon>
-                                    
+
                                 <controls3:SettingsExpander.Transitions>
                                     <TransitionCollection>
                                         <RepositionThemeTransition />
@@ -76,14 +72,14 @@
                                 <controls3:SettingsExpander.Items>
 
                                     <controls3:SettingsCard x:Name="RomajiStatus" Header="获取中...">
-                                        
+
                                         <Button
                                             x:Name="ButtonDownloadRomaji"
                                             HorizontalAlignment="Right"
                                             Click="ButtonBase_OnClick"
                                             Content="获取罗马字资源文件" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="罗马字源" Description="切歌后生效">
+                                    <controls3:SettingsCard Description="切歌后生效" Header="罗马字源">
                                         <ComboBox
                                             x:Name="RomajiSource"
                                             HorizontalAlignment="Right"
@@ -94,8 +90,11 @@
                                             <ComboBoxItem Content="Kawazu" />
                                         </ComboBox>
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard >
-                                        <HyperlinkButton x:Name="AboutRomaji" Content="关于此选项" Click="AboutRomaji_Click"/>
+                                    <controls3:SettingsCard>
+                                        <HyperlinkButton
+                                            x:Name="AboutRomaji"
+                                            Click="AboutRomaji_Click"
+                                            Content="关于此选项" />
                                     </controls3:SettingsCard>
 
                                 </controls3:SettingsExpander.Items>
@@ -113,17 +112,17 @@
                                     </TransitionCollection>
                                 </controls3:SettingsExpander.Transitions>
                                 <controls3:SettingsExpander.Items>
-                                    <controls3:SettingsCard Header="歌词大小" Description="0为自动">
+                                    <controls3:SettingsCard Description="0为自动" Header="歌词大小">
                                         <controls:NumberBox
                                             x:Name="LyricSize"
                                             MinWidth="100"
                                             HorizontalAlignment="Right"
                                             LargeChange="5"
-                                            SmallChange="1"
                                             Minimum="0"
+                                            SmallChange="1"
                                             SpinButtonPlacementMode="Compact"
-                                            Value="{x:Bind hyplayer:Common.Setting.lyricSize, Mode=TwoWay}"
-                                            ValueChanged="LyricSize_OnValueChanged"/>
+                                            ValueChanged="LyricSize_OnValueChanged"
+                                            Value="{x:Bind hyplayer:Common.Setting.lyricSize, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="罗马字大小">
                                         <controls:NumberBox
@@ -131,11 +130,11 @@
                                             MinWidth="100"
                                             HorizontalAlignment="Right"
                                             LargeChange="5"
-                                            SmallChange="1"
                                             Minimum="1"
+                                            SmallChange="1"
                                             SpinButtonPlacementMode="Compact"
-                                            Value="{x:Bind hyplayer:Common.Setting.romajiSize, Mode=TwoWay}"
-                                            ValueChanged="LyricSize_OnValueChanged"/>
+                                            ValueChanged="LyricSize_OnValueChanged"
+                                            Value="{x:Bind hyplayer:Common.Setting.romajiSize, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="焦点歌词放大大小">
                                         <controls:NumberBox
@@ -143,11 +142,11 @@
                                             MinWidth="100"
                                             HorizontalAlignment="Right"
                                             LargeChange="5"
-                                            SmallChange="1"
                                             Minimum="0"
+                                            SmallChange="1"
                                             SpinButtonPlacementMode="Compact"
-                                            Value="{x:Bind hyplayer:Common.Setting.lyricScaleSize, Mode=TwoWay}"
-                                            ValueChanged="LyricSize_OnValueChanged"/>
+                                            ValueChanged="LyricSize_OnValueChanged"
+                                            Value="{x:Bind hyplayer:Common.Setting.lyricScaleSize, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>
@@ -162,7 +161,7 @@
                                 Header="歌词显示"
                                 IsExpanded="True">
                                 <controls3:SettingsExpander.HeaderIcon>
-                                    <FontIcon Glyph="&#xE18F;"/>
+                                    <FontIcon Glyph="&#xE18F;" />
                                 </controls3:SettingsExpander.HeaderIcon>
                                 <controls3:SettingsExpander.Transitions>
                                     <TransitionCollection>
@@ -179,13 +178,13 @@
                                         </ComboBox>
                                     </controls3:SettingsCard>
 
-                                    <controls3:SettingsCard Header="使用逐字歌词 (试验性功能)" >
+                                    <controls3:SettingsCard Header="使用逐字歌词 (试验性功能)">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.karaokLyric, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    
+
                                     <controls3:SettingsCard Header="歌词主色调">
                                         <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.lyricColor, Mode=TwoWay}">
                                             <ComboBoxItem Content="自动" />
@@ -195,13 +194,13 @@
                                         </ComboBox>
                                     </controls3:SettingsCard>
 
-                                    <controls3:SettingsCard Header="显示颜色自定义选项" Description="重置即为歌词主色调">
+                                    <controls3:SettingsCard Description="重置即为歌词主色调" Header="显示颜色自定义选项">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind IsAdvancedLyricColorSettingsShow, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    
+
                                     <controls3:SettingsCard Header="非焦点歌词颜色 (普通歌词)" Visibility="{x:Bind IsAdvancedLyricColorSettingsShow, Mode=OneWay}">
                                         <Grid MinWidth="10" HorizontalAlignment="Right">
                                             <Grid.ColumnDefinitions>
@@ -279,7 +278,7 @@
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.lyricAlignment, Mode=TwoWay}"
-                                            Toggled="LyricAlignment_OnToggled"/>
+                                            Toggled="LyricAlignment_OnToggled" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="开启时启动热词">
                                         <ToggleSwitch
@@ -329,38 +328,38 @@
                                     </TransitionCollection>
                                 </controls3:SettingsExpander.Transitions>
                                 <controls3:SettingsExpander.Items>
-                                <controls3:SettingsCard Header="在线播放音质">
-                                    <ComboBox
-                                        x:Name="ComboBoxSongBr"
-                                        HorizontalAlignment="Right"
-                                        SelectionChanged="ComboBoxSongBr_SelectionChanged">
-                                        <ComboBoxItem Content="标准 (128k)" Tag="standard" />
-                                        <ComboBoxItem Content="较高 (???k)" Tag="higher" />
-                                        <ComboBoxItem Content="极高 (320k)" Tag="exhigh" />
-                                        <ComboBoxItem Content="无损 (VIP)" Tag="lossless" />
-                                        <ComboBoxItem Content="Hi-Res (VIP)" Tag="hires" />
-                                        <ComboBoxItem Content="高清环绕声 (Spatial Audio)" Tag="jyeffect" />
-                                        <ComboBoxItem Content="沉浸环绕声 (Surround Audio)" Tag="sky" />
-                                        <ComboBoxItem Content="超清母带 (Master)" Tag="jymaster" />
-                                    </ComboBox>
-                                </controls3:SettingsCard>
-                                <controls3:SettingsCard Header="歌曲下载音质">
-                                    <ComboBox
-                                        x:Name="ComboBoxSongDownloadBr"
-                                        Grid.Row="1"
-                                        HorizontalAlignment="Right"
-                                        SelectionChanged="ComboBoxSongDownloadBr_SelectionChanged">
-                                        <ComboBoxItem Content="标准 (128k)" Tag="standard" />
-                                        <ComboBoxItem Content="较高 (???k)" Tag="higher" />
-                                        <ComboBoxItem Content="极高 (320k)" Tag="exhigh" />
-                                        <ComboBoxItem Content="无损 (VIP)" Tag="lossless" />
-                                        <ComboBoxItem Content="Hi-Res (VIP)" Tag="hires" />
-                                        <ComboBoxItem Content="高清环绕声 (Spatial Audio)" Tag="jyeffect" />
-                                        <ComboBoxItem Content="沉浸环绕声 (Surround Audio)" Tag="sky" />
-                                        <ComboBoxItem Content="超清母带 (Master)" Tag="jymaster" />
-                                    </ComboBox>
-                                </controls3:SettingsCard>
-                            </controls3:SettingsExpander.Items>
+                                    <controls3:SettingsCard Header="在线播放音质">
+                                        <ComboBox
+                                            x:Name="ComboBoxSongBr"
+                                            HorizontalAlignment="Right"
+                                            SelectionChanged="ComboBoxSongBr_SelectionChanged">
+                                            <ComboBoxItem Content="标准 (128k)" Tag="standard" />
+                                            <ComboBoxItem Content="较高 (???k)" Tag="higher" />
+                                            <ComboBoxItem Content="极高 (320k)" Tag="exhigh" />
+                                            <ComboBoxItem Content="无损 (VIP)" Tag="lossless" />
+                                            <ComboBoxItem Content="Hi-Res (VIP)" Tag="hires" />
+                                            <ComboBoxItem Content="高清环绕声 (Spatial Audio)" Tag="jyeffect" />
+                                            <ComboBoxItem Content="沉浸环绕声 (Surround Audio)" Tag="sky" />
+                                            <ComboBoxItem Content="超清母带 (Master)" Tag="jymaster" />
+                                        </ComboBox>
+                                    </controls3:SettingsCard>
+                                    <controls3:SettingsCard Header="歌曲下载音质">
+                                        <ComboBox
+                                            x:Name="ComboBoxSongDownloadBr"
+                                            Grid.Row="1"
+                                            HorizontalAlignment="Right"
+                                            SelectionChanged="ComboBoxSongDownloadBr_SelectionChanged">
+                                            <ComboBoxItem Content="标准 (128k)" Tag="standard" />
+                                            <ComboBoxItem Content="较高 (???k)" Tag="higher" />
+                                            <ComboBoxItem Content="极高 (320k)" Tag="exhigh" />
+                                            <ComboBoxItem Content="无损 (VIP)" Tag="lossless" />
+                                            <ComboBoxItem Content="Hi-Res (VIP)" Tag="hires" />
+                                            <ComboBoxItem Content="高清环绕声 (Spatial Audio)" Tag="jyeffect" />
+                                            <ComboBoxItem Content="沉浸环绕声 (Surround Audio)" Tag="sky" />
+                                            <ComboBoxItem Content="超清母带 (Master)" Tag="jymaster" />
+                                        </ComboBox>
+                                    </controls3:SettingsCard>
+                                </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>
 
                             <controls3:SettingsExpander
@@ -369,7 +368,7 @@
                                 Header="渐入渐出"
                                 IsExpanded="True">
                                 <controls3:SettingsExpander.HeaderIcon>
-                                    <FontIcon Glyph="&#xE799;"/>
+                                    <FontIcon Glyph="&#xE799;" />
                                 </controls3:SettingsExpander.HeaderIcon>
                                 <controls3:SettingsExpander.Transitions>
                                     <TransitionCollection>
@@ -392,9 +391,9 @@
                                             IsEnabled="{x:Bind hyplayer:Common.Setting.fadePause, Mode=OneWay}"
                                             Maximum="5"
                                             Minimum="0"
-                                            
+                                            StepFrequency="0.1"
                                             ToolTipService.ToolTip="{x:Bind FadePauseTime.Value}"
-                                            Value="{x:Bind hyplayer:Common.Setting.fadePauseTime, Mode=TwoWay}" StepFrequency="0.1" />
+                                            Value="{x:Bind hyplayer:Common.Setting.fadePauseTime, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="切歌时">
                                         <ToggleSwitch
@@ -411,8 +410,9 @@
                                             IsEnabled="{x:Bind hyplayer:Common.Setting.fadeNext, Mode=OneWay}"
                                             Maximum="10"
                                             Minimum="0"
+                                            StepFrequency="0.1"
                                             ToolTipService.ToolTip="{x:Bind FadeNextTime.Value}"
-                                            Value="{x:Bind hyplayer:Common.Setting.fadeNextTime, Mode=TwoWay}" StepFrequency="0.1" />
+                                            Value="{x:Bind hyplayer:Common.Setting.fadeNextTime, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="使用基于播放进度切歌渐出方法" Visibility="{x:Bind hyplayer:Common.Setting.fadeNext, Mode=OneWay}">
                                         <ToggleSwitch
@@ -460,10 +460,10 @@
                             <controls3:SettingsExpander
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
-                                IsExpanded="True"
-                                Header="输出设置">
+                                Header="输出设置"
+                                IsExpanded="True">
                                 <controls3:SettingsExpander.HeaderIcon>
-                                    <FontIcon Glyph="&#xE7F6;"/>
+                                    <FontIcon Glyph="&#xE7F6;" />
                                 </controls3:SettingsExpander.HeaderIcon>
                                 <controls3:SettingsExpander.Transitions>
                                     <TransitionCollection>
@@ -480,10 +480,10 @@
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard>
                                         <controls3:SettingsCard.Header>
-                                        <HyperlinkButton
-                                            x:Name="BtnChangeToDefaultAudioRenderDevice"
-                                            Click="BtnChangeToDefaultAudioRenderDevice_Click"
-                                            Content="恢复默认" />
+                                            <HyperlinkButton
+                                                x:Name="BtnChangeToDefaultAudioRenderDevice"
+                                                Click="BtnChangeToDefaultAudioRenderDevice_Click"
+                                                Content="恢复默认" />
 
                                         </controls3:SettingsCard.Header>
                                     </controls3:SettingsCard>
@@ -546,23 +546,24 @@
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard>
                                         <Grid>
-                                    <StackPanel Orientation="Horizontal" Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay}">
-                                        <TextBlock Text="已登录账号：" Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay}" />
-                                        <TextBlock Text="{x:Bind hyplayer:Common.Setting.LastFMUserName, Mode=OneWay}" Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay}" />
-                                    </StackPanel>
-                                    <Grid>
-                                        <Button
-                                            x:Name="LogoffLastFMAccount"
-                                            Click="LogoffLastFMAccount_Click"
-                                            Content="注销LastFM账号"
-                                            Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay}" />
-                                        <Button
-                                            x:Name="LoginLastFMAccount"
-                                            Click="LoginLastFMAccount_Click"
-                                            Content="登录LastFM账号"
-                                            Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay, Converter={StaticResource ReversedBooleanToVisibilityConverter}}" />
-                                    </Grid></Grid>
-                                </controls3:SettingsCard>
+                                            <StackPanel Orientation="Horizontal" Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay}">
+                                                <TextBlock Text="已登录账号：" Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay}" />
+                                                <TextBlock Text="{x:Bind hyplayer:Common.Setting.LastFMUserName, Mode=OneWay}" Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay}" />
+                                            </StackPanel>
+                                            <Grid>
+                                                <Button
+                                                    x:Name="LogoffLastFMAccount"
+                                                    Click="LogoffLastFMAccount_Click"
+                                                    Content="注销LastFM账号"
+                                                    Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay}" />
+                                                <Button
+                                                    x:Name="LoginLastFMAccount"
+                                                    Click="LoginLastFMAccount_Click"
+                                                    Content="登录LastFM账号"
+                                                    Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay, Converter={StaticResource ReversedBooleanToVisibilityConverter}}" />
+                                            </Grid>
+                                        </Grid>
+                                    </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>
                         </StackPanel>
@@ -570,16 +571,16 @@
                 </PivotItem>
                 <PivotItem FontFamily="Thick" Header="显示设置">
                     <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
-                       
+
                         <StackPanel Margin="20,0,20,160" Spacing="20">
                             <controls3:SettingsExpander
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
-                                Header="颜色设置"
                                 Description="需要重启 HyPlayer"
+                                Header="颜色设置"
                                 IsExpanded="False">
                                 <controls3:SettingsExpander.HeaderIcon>
-                                    <FontIcon Glyph="&#xE790;"/>
+                                    <FontIcon Glyph="&#xE790;" />
                                 </controls3:SettingsExpander.HeaderIcon>
                                 <controls3:SettingsExpander.Transitions>
                                     <TransitionCollection>
@@ -624,8 +625,8 @@
                             <controls3:SettingsExpander
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
-                                HeaderIcon="List"
                                 Header="歌词页面"
+                                HeaderIcon="List"
                                 IsExpanded="True">
                                 <controls3:SettingsExpander.Transitions>
                                     <TransitionCollection>
@@ -644,7 +645,7 @@
                                             <ComboBoxItem Content="流光溢彩 (实验)" />
                                         </ComboBox>
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="唱片边框厚度" Description="0 为无边框">
+                                    <controls3:SettingsCard Description="0 为无边框" Header="唱片边框厚度">
                                         <Slider
                                             x:Name="SliderAlbumBorderLength"
                                             Width="256"
@@ -654,7 +655,7 @@
                                             ToolTipService.ToolTip="{x:Bind SliderAlbumBorderLength.Value}"
                                             Value="{x:Bind hyplayer:Common.Setting.albumBorderLength, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="歌词页面封面阴影强度" Description="0为无阴影">
+                                    <controls3:SettingsCard Description="0为无阴影" Header="歌词页面封面阴影强度">
                                         <Slider
                                             x:Name="SliderAlbumShadowDepth"
                                             Width="256"
@@ -683,7 +684,7 @@
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.animationAdaptBPM, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Visibility="{x:Bind hyplayer:Common.Setting.animationAdaptBPM, Mode=OneWay}" Header="轻柔动效">
+                                    <controls3:SettingsCard Header="轻柔动效" Visibility="{x:Bind hyplayer:Common.Setting.animationAdaptBPM, Mode=OneWay}">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
@@ -697,7 +698,7 @@
                                 Header="个性化"
                                 IsExpanded="True">
                                 <controls3:SettingsExpander.HeaderIcon>
-                                    <FontIcon Glyph="&#xE771;"/>
+                                    <FontIcon Glyph="&#xE771;" />
                                 </controls3:SettingsExpander.HeaderIcon>
                                 <controls3:SettingsExpander.Transitions>
                                     <TransitionCollection>
@@ -705,7 +706,7 @@
                                     </TransitionCollection>
                                 </controls3:SettingsExpander.Transitions>
                                 <controls3:SettingsExpander.Items>
-                                    <controls3:SettingsCard Header="使用亚克力窗口背景" Description="关闭此选项则为 Mica">
+                                    <controls3:SettingsCard Description="关闭此选项则为 Mica" Header="使用亚克力窗口背景">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
@@ -719,7 +720,7 @@
                                             IsOn="{x:Bind hyplayer:Common.Setting.CustomAcrylic, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
 
-                                    <controls3:SettingsCard Header="TintOpacity值" Visibility="{x:Bind hyplayer:Common.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource NegationBoolToVisibilityConverter}}" >
+                                    <controls3:SettingsCard Header="TintOpacity值" Visibility="{x:Bind hyplayer:Common.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource NegationBoolToVisibilityConverter}}">
                                         <Slider
                                             x:Name="TintOpacitySlider"
                                             Width="256"
@@ -727,8 +728,10 @@
                                             IsEnabled="{x:Bind hyplayer:Common.Setting.CustomAcrylic, Mode=OneWay}"
                                             Maximum="1"
                                             Minimum="0"
+                                            StepFrequency="0.01"
                                             ToolTipService.ToolTip="{x:Bind TintOpacitySlider.Value}"
-                                            Value="{x:Bind hyplayer:Common.Setting.CustomTintOpacity, Mode=TwoWay}" StepFrequency="0.01" ValueChanged="TintOpacity_ValueChanged" />
+                                            ValueChanged="TintOpacity_ValueChanged"
+                                            Value="{x:Bind hyplayer:Common.Setting.CustomTintOpacity, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
 
                                     <controls3:SettingsCard Header="TintOpacityLuminosity值" Visibility="{x:Bind hyplayer:Common.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource NegationBoolToVisibilityConverter}}">
@@ -739,22 +742,24 @@
                                             IsEnabled="{x:Bind hyplayer:Common.Setting.CustomAcrylic, Mode=OneWay}"
                                             Maximum="1"
                                             Minimum="0"
+                                            StepFrequency="0.01"
                                             ToolTipService.ToolTip="{x:Bind TintOpacityLuminositySlider.Value}"
-                                            Value="{x:Bind hyplayer:Common.Setting.CustomTintLuminosityOpacity, Mode=TwoWay}" StepFrequency="0.01" ValueChanged="TintOpacityLuminosity_ValueChanged"/>
+                                            ValueChanged="TintOpacityLuminosity_ValueChanged"
+                                            Value="{x:Bind hyplayer:Common.Setting.CustomTintLuminosityOpacity, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
 
                                     <controls3:SettingsCard Header="预览Acrylic" Visibility="{x:Bind hyplayer:Common.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource NegationBoolToVisibilityConverter}}">
                                         <Rectangle
-                                                Grid.Column="1"
                                             x:Name="PreviewAcrylic"
-                                                VerticalAlignment="Stretch"
-                                            Height="75"
+                                            Grid.Column="1"
                                             Width="256"
+                                            Height="75"
+                                            VerticalAlignment="Stretch"
                                             RadiusX="10"
-                                            RadiusY="10"/>
+                                            RadiusY="10" />
                                     </controls3:SettingsCard>
-                                    
-                                    <controls3:SettingsCard Header="无图模式" Description="需重启应用">
+
+                                    <controls3:SettingsCard Description="需重启应用" Header="无图模式">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
@@ -793,7 +798,7 @@
                                             Maximum="10"
                                             Minimum="1"
                                             ToolTipService.ToolTip="{x:Bind AutoHidePlayBarTime.Value}"
-                                            Value="{x:Bind hyplayer:Common.Setting.AutoHidePlaybarTime, Mode=TwoWay}"/>
+                                            Value="{x:Bind hyplayer:Common.Setting.AutoHidePlaybarTime, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>
@@ -804,7 +809,7 @@
                                 Header="特效设置"
                                 IsExpanded="True">
                                 <controls3:SettingsExpander.HeaderIcon>
-                                    <FontIcon Glyph="&#xE794;"/>
+                                    <FontIcon Glyph="&#xE794;" />
                                 </controls3:SettingsExpander.HeaderIcon>
                                 <controls3:SettingsExpander.Transitions>
                                     <TransitionCollection>
@@ -812,13 +817,13 @@
                                     </TransitionCollection>
                                 </controls3:SettingsExpander.Transitions>
                                 <controls3:SettingsExpander.Items>
-                                    <controls3:SettingsCard Header="歌词页面使用亚克力背景" Description="否则为一般模糊">
+                                    <controls3:SettingsCard Description="否则为一般模糊" Header="歌词页面使用亚克力背景">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.expandedUseAcrylic, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="播放条使用封面模糊背景" Description="否则为窗口亚克力">
+                                    <controls3:SettingsCard Description="否则为窗口亚克力" Header="播放条使用封面模糊背景">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
@@ -836,7 +841,7 @@
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.playbarBackgroundBreath, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="歌词页面专辑封面呼吸动画" Description="与阴影冲突">
+                                    <controls3:SettingsCard Description="与阴影冲突" Header="歌词页面专辑封面呼吸动画">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
@@ -875,7 +880,7 @@
                 </PivotItem>
                 <PivotItem FontFamily="Thick" Header="存储设置">
                     <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
-  
+
                         <StackPanel
                             Margin="20,0,20,150"
                             Orientation="Vertical"
@@ -886,7 +891,7 @@
                                 Header="路径设置"
                                 IsExpanded="True">
                                 <controls3:SettingsExpander.HeaderIcon>
-                                    <FontIcon Glyph="&#xE28F;"/>
+                                    <FontIcon Glyph="&#xE28F;" />
                                 </controls3:SettingsExpander.HeaderIcon>
                                 <controls3:SettingsExpander.Transitions>
                                     <TransitionCollection>
@@ -1057,19 +1062,19 @@
                             <controls3:SettingsCard>
                                 <controls3:SettingsCard.Header>
                                     <HyperlinkButton
-                                x:Name="ClearHistory"
-                                Click="ClearHistory_Click"
-                                Content="清除历史记录">
-                                <HyperlinkButton.Transitions>
-                                    <TransitionCollection>
-                                        <RepositionThemeTransition />
-                                    </TransitionCollection>
-                                </HyperlinkButton.Transitions>
-                            </HyperlinkButton>
+                                        x:Name="ClearHistory"
+                                        Click="ClearHistory_Click"
+                                        Content="清除历史记录">
+                                        <HyperlinkButton.Transitions>
+                                            <TransitionCollection>
+                                                <RepositionThemeTransition />
+                                            </TransitionCollection>
+                                        </HyperlinkButton.Transitions>
+                                    </HyperlinkButton>
                                 </controls3:SettingsCard.Header>
                             </controls3:SettingsCard>
 
-                            
+
                         </StackPanel>
                     </ScrollViewer>
                 </PivotItem>
@@ -1079,24 +1084,21 @@
                             Margin="20,0,20,150"
                             Orientation="Vertical"
                             Spacing="12">
-                            <controls:InfoBar IsOpen="True"
-                                              IsClosable="False"
-                                              Severity="Warning"
-                                              Message="如无特别说明, 请勿随意修改此选项卡内容">
-                                
-                            </controls:InfoBar>
+                            <controls:InfoBar
+                                IsClosable="False"
+                                IsOpen="True"
+                                Message="如无特别说明, 请勿随意修改此选项卡内容"
+                                Severity="Warning" />
 
-                            <controls3:SettingsCard Header="X-Real-IP" Description="置空不设置">
+                            <controls3:SettingsCard Description="置空不设置" Header="X-Real-IP">
                                 <controls3:SettingsCard.Content>
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBox
-                                    x:Name="TextBoxXREALIP"
-                                    Width="256" />
+                                        <TextBox x:Name="TextBoxXREALIP" Width="256" />
                                         <Button
-                                    x:Name="ButtonXREALIPSave"
-                                    Margin="8,26,0,0"
-                                    Click="ButtonXREALIPSave_OnClick"
-                                    Content="设置" />
+                                            x:Name="ButtonXREALIPSave"
+                                            Margin="8,26,0,0"
+                                            Click="ButtonXREALIPSave_OnClick"
+                                            Content="设置" />
                                     </StackPanel>
                                 </controls3:SettingsCard.Content>
                             </controls3:SettingsCard>
@@ -1110,29 +1112,26 @@
                                                 <Flyout>
                                                     <RichTextBlock>
                                                         <Paragraph>
-                                                            HyPlayer支持使用系统代理作为请求的代理服务器
-                                                            <LineBreak />
+                                                            HyPlayer支持使用系统代理作为请求的代理服务器<LineBreak />
                                                             <Bold>请在设置代理后使用 cmd 运行下方解除网络环回 (Loopback) 指令</Bold>
                                                             <LineBreak />
                                                             <Bold>同时建议开启降级 HTTP</Bold>
                                                             <LineBreak />
-                                                            请注意: 更改此选项之后需要重启 HyPlayer
-                                                        </Paragraph>
+                                                            请注意: 更改此选项之后需要重启 HyPlayer</Paragraph>
                                                     </RichTextBlock>
                                                 </Flyout>
                                             </Button.Flyout>
                                         </Button>
                                     </StackPanel>
                                 </controls3:SettingsCard.Header>
-                                <CheckBox 
-                                x:Name="ProxyState"
-                                Margin="0,0,-100,0"
-                                IsChecked="{x:Bind hyplayer:Common.Setting.EnableProxy, Mode=TwoWay}"/>
+                                <CheckBox
+                                    x:Name="ProxyState"
+                                    Margin="0,0,-100,0"
+                                    IsChecked="{x:Bind hyplayer:Common.Setting.EnableProxy, Mode=TwoWay}" />
                             </controls3:SettingsCard>
 
 
-                            <controls3:SettingsCard Header="解除网络环回 (Loopback) 指令"
-                                                    Description="请粘贴到 cmd 管理员模式中运行">
+                            <controls3:SettingsCard Description="请粘贴到 cmd 管理员模式中运行" Header="解除网络环回 (Loopback) 指令">
                                 <TextBox
                                     HorizontalAlignment="Left"
                                     IsReadOnly="True"
@@ -1140,163 +1139,126 @@
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="请求时降级HTTPS为HTTP">
                                 <CheckBox
-                                x:Name="UseHttpCheckBox"
-                                Margin="0,0,-100,0"
-                                IsChecked="{x:Bind hyplayer:Common.Setting.UseHttp, Mode=TwoWay}" />
+                                    x:Name="UseHttpCheckBox"
+                                    Margin="0,0,-100,0"
+                                    IsChecked="{x:Bind hyplayer:Common.Setting.UseHttp, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="获取歌曲时降级HTTPS为HTTP">
-                                <CheckBox
-                                Margin="0,0,-100,0"
-                                IsChecked="{x:Bind hyplayer:Common.Setting.UseHttpWhenGettingSongs, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.UseHttpWhenGettingSongs, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard Header="使用贪婪加载"
-                                                    Description="自动加载更多内容, 3 秒一次请求, 可能会导致风控">
-                                <CheckBox
-                                Margin="0,0,-100,0"
-                                IsChecked="{x:Bind hyplayer:Common.Setting.greedlyLoadPlayContainerItems, Mode=TwoWay}" />
+                            <controls3:SettingsCard Description="自动加载更多内容, 3 秒一次请求, 可能会导致风控" Header="使用贪婪加载">
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.greedlyLoadPlayContainerItems, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="贪婪加载完成时自动将加载到的歌曲添加到播放列表">
-                                <CheckBox
-                                Margin="0,0,-100,0"
-                                IsChecked="{x:Bind hyplayer:Common.Setting.AutoAddGreedilyLoadedSongsToPlayList, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.AutoAddGreedilyLoadedSongsToPlayList, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="在播放时才获取播放链接">
                                 <CheckBox
-                                x:Name="LazySongUrlGetCheck"
-                                Margin="0,0,-100,0"
-                                IsChecked="{x:Bind hyplayer:Common.Setting.songUrlLazyGet, Mode=TwoWay}" />
+                                    x:Name="LazySongUrlGetCheck"
+                                    Margin="0,0,-100,0"
+                                    IsChecked="{x:Bind hyplayer:Common.Setting.songUrlLazyGet, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard Header="Xbox上隐藏指针"
-                                                    Description="不要开启!">
+                            <controls3:SettingsCard Description="不要开启!" Header="Xbox上隐藏指针">
                                 <CheckBox
-                                x:Name="XboxPointerSet"
-                                Margin="0,0,-100,0"
-                                IsChecked="{x:Bind hyplayer:Common.Setting.xboxHidePointer, Mode=TwoWay}" />
+                                    x:Name="XboxPointerSet"
+                                    Margin="0,0,-100,0"
+                                    IsChecked="{x:Bind hyplayer:Common.Setting.xboxHidePointer, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard Header="频繁内存回收"
-                                                    Description="开启后可能会频繁出现页面重载现象">
+                            <controls3:SettingsCard Description="开启后可能会频繁出现页面重载现象" Header="频繁内存回收">
                                 <CheckBox
-                                x:Name="ForceMemoryCollect"
-                                Margin="0,0,-100,0"
-                                IsChecked="{x:Bind hyplayer:Common.Setting.forceMemoryGarbage, Mode=TwoWay}" />
+                                    x:Name="ForceMemoryCollect"
+                                    Margin="0,0,-100,0"
+                                    IsChecked="{x:Bind hyplayer:Common.Setting.forceMemoryGarbage, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="开启高级音乐历史存储 (超过 100 首)">
-                                <CheckBox Margin="0,0,-100,0"
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.advancedMusicHistoryStorage, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.advancedMusicHistoryStorage, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard Header="开启播放缓存"
-                                                    Description="可能造成无法播放, 请勿轻易开启">
-                                <CheckBox Margin="0,0,-100,0"
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.enableCache, Mode=TwoWay}" />
+                            <controls3:SettingsCard Description="可能造成无法播放, 请勿轻易开启" Header="开启播放缓存">
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.enableCache, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="本地文件扫描渐进式加载 (Progressive Loading)">
-                                <CheckBox
-                                      Margin="0,0,-100,0"
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.localProgressiveLoad, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.localProgressiveLoad, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="本地文件使用 TagLib 读取封面">
-                                <CheckBox Margin="0,0,-100,0"
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.useTaglibPicture, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.useTaglibPicture, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="私人 FM 时使用 私人 DJ">
                                 <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.useAiDj, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="开启 UI 音效">
                                 <CheckBox
-                                x:Name="ControlSoundCheck"
-                                Margin="0,0,-100,0"
-                                Checked="ControlSoundChecked"
-                                IsChecked="{x:Bind hyplayer:Common.Setting.uiSound, Mode=TwoWay}"
-                                Unchecked="ControlSoundUnChecked" />
+                                    x:Name="ControlSoundCheck"
+                                    Margin="0,0,-100,0"
+                                    Checked="ControlSoundChecked"
+                                    IsChecked="{x:Bind hyplayer:Common.Setting.uiSound, Mode=TwoWay}"
+                                    Unchecked="ControlSoundUnChecked" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard Header="同时开启传统SMTC控制"
-                                                    Description="可能会减小后台闪退几率,重启后生效">
+                            <controls3:SettingsCard Description="可能会减小后台闪退几率,重启后生效" Header="同时开启传统SMTC控制">
                                 <CheckBox
-                                x:Name="CBOldSMTC"
-                                Margin="0,0,-100,0"
-                                IsChecked="{x:Bind hyplayer:Common.Setting.ancientSMTC, Mode=TwoWay}" />
+                                    x:Name="CBOldSMTC"
+                                    Margin="0,0,-100,0"
+                                    IsChecked="{x:Bind hyplayer:Common.Setting.ancientSMTC, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard Header="启用安全本地文件访问" Description="可能会提高内存占用">
-                                <CheckBox Margin="0,0,-100,0"
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.safeFileAccess, Mode=TwoWay}" />
+                            <controls3:SettingsCard Description="可能会提高内存占用" Header="启用安全本地文件访问">
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.safeFileAccess, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard Header="进行听歌打卡"
-                                                    Description="将会把听歌数据上传网易云音乐同步">
-                            <CheckBox Margin="0,0,-100,0"
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.doScrobble, Mode=TwoWay}" />
+                            <controls3:SettingsCard Description="将会把听歌数据上传网易云音乐同步" Header="进行听歌打卡">
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.doScrobble, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard Header="SMTC 更新进度条"
-                                                    Description="使用「热词」时需开启">
-                                <CheckBox  Margin="0,0,-100,0"
-                                      IsChecked="{x:Bind hyplayer:Common.Setting.progressInSMTC, Mode=TwoWay}" />
+                            <controls3:SettingsCard Description="使用「热词」时需开启" Header="SMTC 更新进度条">
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.progressInSMTC, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="输出高清图片到SMTC">
-                            <CheckBox
-                                x:Name="HighQualityCoverInSMTC"
-                                Margin="0,0,-100,0"
-                                Content=""
-                                IsChecked="{x:Bind hyplayer:Common.Setting.highQualityCoverInSMTC, Mode=TwoWay}" />
+                                <CheckBox
+                                    x:Name="HighQualityCoverInSMTC"
+                                    Margin="0,0,-100,0"
+                                    Content=""
+                                    IsChecked="{x:Bind hyplayer:Common.Setting.highQualityCoverInSMTC, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="启用磁贴">
                                 <CheckBox
-                                x:Name="DisableTile"
-                                Margin="0,0,-100,0"
-                                IsChecked="{x:Bind hyplayer:Common.Setting.enableTile, Mode=TwoWay}" />
+                                    x:Name="DisableTile"
+                                    Margin="0,0,-100,0"
+                                    IsChecked="{x:Bind hyplayer:Common.Setting.enableTile, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard Header="启用磁贴背景"
-                                                    Description="部分系统下可能导致磁贴不显示">
+                            <controls3:SettingsCard Description="部分系统下可能导致磁贴不显示" Header="启用磁贴背景">
                                 <CheckBox
-                                x:Name="TileBackgroundAvailability"
-                                Margin="0,0,-100,0"
-                                IsChecked="{x:Bind hyplayer:Common.Setting.tileBackgroundAvailability, Mode=TwoWay}" />
+                                    x:Name="TileBackgroundAvailability"
+                                    Margin="0,0,-100,0"
+                                    IsChecked="{x:Bind hyplayer:Common.Setting.tileBackgroundAvailability, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard
-                                Header="磁贴背景缓存至本地"
-                                Description="Windows 10需打开此项才会显示磁贴">
+                            <controls3:SettingsCard Description="Windows 10需打开此项才会显示磁贴" Header="磁贴背景缓存至本地">
                                 <CheckBox
                                     x:Name="SaveTileBackgroundToLocalFolder"
                                     Margin="0,0,-100,0"
                                     IsChecked="{x:Bind hyplayer:Common.Setting.saveTileBackgroundToLocalFolder, Mode=TwoWay}" />
                             </controls3:SettingsCard>
 
-                            <controls3:SettingsCard Header="使用高精度歌词计时器"
-                                                    Description="对于部分歌曲的歌词更新率更高, 需重启 HyPlayer">
-                                 <CheckBox
-                                Margin="0,0,-100,0"
-                                IsChecked="{x:Bind hyplayer:Common.Setting.highPreciseLyricTimer, Mode=TwoWay}" />
+                            <controls3:SettingsCard Description="对于部分歌曲的歌词更新率更高, 需重启 HyPlayer" Header="使用高精度歌词计时器">
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.highPreciseLyricTimer, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard Header="启用旧版主题（需重启应用）"
-                                                    Description="可能会导致设置无法打开等严重问题，若出现异常，可通过个人主页右键头像或在首页关闭&#13;开发者不受理受此功能影响的问题">
+                            <controls3:SettingsCard Description="可能会导致设置无法打开等严重问题，若出现异常，可通过个人主页右键头像或在首页关闭&#13;开发者不受理受此功能影响的问题" Header="启用旧版主题（需重启应用）">
 
-                                <CheckBox
-                                    Margin="0,0,-100,0"
-                                    IsChecked="{x:Bind hyplayer:Common.Setting.IsOldThemeEnabled, Mode=TwoWay}" />
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.IsOldThemeEnabled, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard>
+                            <controls3:SettingsCard Click="ClearTileCache_Click" IsClickEnabled="True">
                                 <controls3:SettingsCard.Header>
-                                    <HyperlinkButton
-                                        x:Name="ClearTileCache"
-                                        Click="ClearTileCache_Click"
-                                        Content="清除磁贴背景缓存" />
+                                    <TextBlock x:Name="ClearTileCache" Text="清除磁贴背景缓存" />
                                 </controls3:SettingsCard.Header>
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard>
+                            <controls3:SettingsCard Click="RestartBtn_Click" IsClickEnabled="True">
                                 <controls3:SettingsCard.Header>
-                                    <HyperlinkButton
+                                    <TextBlock
                                         x:Name="RestartBtn"
-                                        Margin="0,0,0,10"
+                                        Margin="0,0,0,0"
                                         VerticalAlignment="Center"
-                                        Click="RestartBtn_Click"
-                                        Content="立即重启 HyPlayer"
+                                        Text="立即重启 HyPlayer"
                                         Visibility="Visible" />
                                 </controls3:SettingsCard.Header>
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard>
+                            <controls3:SettingsCard Click="BtnXboxReserve_Click" IsClickEnabled="True">
                                 <controls3:SettingsCard.Header>
-                                    <HyperlinkButton
-                                        x:Name="BtnXboxReserve"
-                                        Click="BtnXboxReserve_Click"
-                                        Content="Xbox 进后台模式" />
+                                    <TextBlock x:Name="BtnXboxReserve" Text="Xbox 进后台模式" />
                                 </controls3:SettingsCard.Header>
                             </controls3:SettingsCard>
                         </StackPanel>
@@ -1365,9 +1327,9 @@
                                         Width="256"
                                         Height="80"
                                         Padding="13,10"
-                                        BorderThickness="1"
-                                        BorderBrush="{StaticResource CardBorderBrush}"
                                         Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                        BorderBrush="{StaticResource CardBorderBrush}"
+                                        BorderThickness="1"
                                         CornerRadius="{StaticResource ControlCornerRadius}">
                                         <Grid RowSpacing="8">
                                             <Grid.RowDefinitions>
@@ -1406,9 +1368,9 @@
                                         Width="256"
                                         Height="80"
                                         Padding="13,10"
-                                        BorderThickness="1"
-                                        BorderBrush="{StaticResource CardBorderBrush}"
                                         Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                        BorderBrush="{StaticResource CardBorderBrush}"
+                                        BorderThickness="1"
                                         CornerRadius="{StaticResource ControlCornerRadius}">
                                         <Grid RightTapped="DeviceInfo_RightTapped" RowSpacing="8">
                                             <Grid.RowDefinitions>
@@ -1462,9 +1424,9 @@
                                         Width="256"
                                         Height="80"
                                         Padding="13,10"
-                                        BorderThickness="1"
-                                        BorderBrush="{StaticResource CardBorderBrush}"
                                         Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                        BorderBrush="{StaticResource CardBorderBrush}"
+                                        BorderThickness="1"
                                         CornerRadius="{StaticResource ControlCornerRadius}">
                                         <Grid RowSpacing="8">
                                             <Grid.RowDefinitions>
@@ -1498,9 +1460,9 @@
                                         Width="256"
                                         Height="80"
                                         Padding="13,10"
-                                        BorderThickness="1"
-                                        BorderBrush="{StaticResource CardBorderBrush}"
                                         Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                        BorderBrush="{StaticResource CardBorderBrush}"
+                                        BorderThickness="1"
                                         CornerRadius="{StaticResource ControlCornerRadius}">
                                         <Grid RowSpacing="8">
                                             <Grid.RowDefinitions>
@@ -1548,9 +1510,9 @@
                                     MaxWidth="520"
                                     Margin="9,8,9,0"
                                     Padding="13,10"
-                                    BorderThickness="1"
-                                    BorderBrush="{StaticResource CardBorderBrush}"
                                     Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    BorderThickness="1"
                                     CornerRadius="{StaticResource ControlCornerRadius}">
                                     <Grid RowSpacing="8">
                                         <Grid.RowDefinitions>
@@ -1598,9 +1560,9 @@
 
                                 <Border
                                     Height="64"
-                                    BorderThickness="1"
-                                    BorderBrush="{StaticResource CardBorderBrush}"
                                     Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    BorderThickness="1"
                                     CornerRadius="{StaticResource ControlCornerRadius}"
                                     Tapped="UIElement_OnTapped">
 
@@ -1628,9 +1590,9 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    BorderThickness="1"
-                                    BorderBrush="{StaticResource CardBorderBrush}"
                                     Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    BorderThickness="1"
                                     CornerRadius="{StaticResource ControlCornerRadius}"
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
@@ -1659,9 +1621,9 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    BorderThickness="1"
-                                    BorderBrush="{StaticResource CardBorderBrush}"
                                     Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    BorderThickness="1"
                                     CornerRadius="{StaticResource ControlCornerRadius}"
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
@@ -1685,9 +1647,9 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    BorderThickness="1"
-                                    BorderBrush="{StaticResource CardBorderBrush}"
                                     Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    BorderThickness="1"
                                     CornerRadius="{StaticResource ControlCornerRadius}"
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
@@ -1714,9 +1676,9 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    BorderThickness="1"
-                                    BorderBrush="{StaticResource CardBorderBrush}"
                                     Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    BorderThickness="1"
                                     CornerRadius="{StaticResource ControlCornerRadius}"
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
@@ -1741,9 +1703,9 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    BorderThickness="1"
-                                    BorderBrush="{StaticResource CardBorderBrush}"
                                     Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    BorderThickness="1"
                                     CornerRadius="{StaticResource ControlCornerRadius}"
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
@@ -1767,9 +1729,9 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    BorderThickness="1"
-                                    BorderBrush="{StaticResource CardBorderBrush}"
                                     Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    BorderThickness="1"
                                     CornerRadius="{StaticResource ControlCornerRadius}"
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
@@ -1794,9 +1756,9 @@
                                 </Border>
                                 <Border
                                     Height="64"
-                                    BorderThickness="1"
-                                    BorderBrush="{StaticResource CardBorderBrush}"
                                     Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{StaticResource CardBorderBrush}"
+                                    BorderThickness="1"
                                     CornerRadius="{StaticResource ControlCornerRadius}"
                                     Tapped="UIElement_OnTapped">
                                     <Grid Margin="8">
