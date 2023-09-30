@@ -1199,11 +1199,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             case 0:
                 {
                     ImagePositionOffset.X = e.Cumulative.Translation.X / 10;
-                    if (e.Cumulative.Translation.X > 400)
-                    {
-                        e.Complete();
-                    }
-                    else if (e.Cumulative.Translation.X < -400)
+                    if (e.Cumulative.Translation.X > 400 || e.Cumulative.Translation.X < -400)
                     {
                         e.Complete();
                     }
@@ -1213,9 +1209,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         }
     }
 
-    private void ImageAlbum_OnManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
+    private async void ImageAlbum_OnManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
     {
-        ImageResetPositionAni.Begin();
         Common.PageMain.ImageResetPositionAni.Begin();
         if (Common.Setting.gestureMode == 0)
         {
@@ -1224,14 +1219,35 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 // 切换上下曲
                 if (e.Cumulative.Translation.X > 150)
                 {
+                        var ani1 = ImagePositionOffset.CreateDoubleAnimation("X", 1000, 0, null, TimeSpan.FromMilliseconds(100));
+                        var ani2 = ImagePositionOffset.CreateDoubleAnimation("X", 0, -ImageAlbum.ActualWidth - 50, null, TimeSpan.FromMilliseconds(100));
+                        var sb1 = new Storyboard();
+                        var sb2 = new Storyboard();
+                        sb2.BeginTime = TimeSpan.FromMilliseconds(200);
+                        sb1.Children.Add(ani1);
+                        sb2.Children.Add(ani2);
+                        await sb1.BeginAsync();
+                        sb2.Begin();
                     HyPlayList.SongMovePrevious();
+                    return;
                 }
                 else if (e.Cumulative.Translation.X < -150)
                 {
+                        var ani1 = ImagePositionOffset.CreateDoubleAnimation("X", -1000, 0, null, TimeSpan.FromMilliseconds(100));
+                        var ani2 = ImagePositionOffset.CreateDoubleAnimation("X", 0, ImageAlbum.ActualWidth + 50, null, TimeSpan.FromMilliseconds(100));
+                        var sb1 = new Storyboard();
+                        var sb2 = new Storyboard();
+                        sb2.BeginTime = TimeSpan.FromMilliseconds(200);
+                        sb1.Children.Add(ani1);
+                        sb2.Children.Add(ani2);
+                        await sb1.BeginAsync();
+                        sb2.Begin();
                     HyPlayList.SongMoveNext();
+                    return;
                 }
             }
         }
+        ImageResetPositionAni.Begin();
     }
 
     public async Task RefreshAlbumCover(int hashCode, IRandomAccessStream coverStream)
