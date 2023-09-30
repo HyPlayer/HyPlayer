@@ -262,10 +262,7 @@ public static class HyPlayList
             Player.PlaybackSession.PositionChanged += UpdateSmtcPosition;
         }
 
-        Player.MediaFailed += (sender, reason) =>
-        {
-            PlayerOnMediaFailed(sender, "播放核心：" + reason.ErrorMessage + " " + reason.ExtendedErrorCode);
-        };
+        Player.MediaFailed += PlayerOnMediaFailed;
         Player.BufferingStarted += Player_BufferingStarted;
         Player.BufferingEnded += Player_BufferingEnded;
         Player.SourceChanged += Player_SourceChanged;
@@ -322,21 +319,24 @@ public static class HyPlayList
         _ = Common.Invoke(() => OnSongBufferStart?.Invoke());
     }
 
-    private static void PlayerOnMediaFailed(MediaPlayer sender, string reason)
+    private static void PlayerOnMediaFailed(string reason)
     {
         //歌曲崩溃了的话就是这个
         //SongMoveNext();
 
-        Common.ErrorMessageList.Add("歌曲" + NowPlayingItem.PlayItem.Name + " 播放失败: " + reason);
-
-        if (reason.Contains("mediasink",StringComparison.OrdinalIgnoreCase))
+        Common.ErrorMessageList.Add($"歌曲播放失败: {NowPlayingItem.PlayItem.Name}\n{reason}");
+        Common.AddToTeachingTipLists($"播放失败 切到下一曲 \n 歌曲: {NowPlayingItem.PlayItem.Name}\n{reason}");
+        SongMoveNext();
+    }
+    private static void PlayerOnMediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
+    {
+        if((uint)args.ExtendedErrorCode.HResult == 0xC00D36FA)
         {
-            Common.AddToTeachingTipLists("播放失败","无法创建媒体接收器，请检查设备是否有声音输出设备！");
+            Common.AddToTeachingTipLists("播放失败", "无法创建媒体接收器，请检查设备是否有声音输出设备！");
             return;
         }
-
-        Common.AddToTeachingTipLists("播放失败 切到下一曲",
-            "歌曲" + NowPlayingItem.PlayItem.Name + "\r\n" + reason);
+        Common.ErrorMessageList.Add($"歌曲播放失败: {NowPlayingItem.PlayItem.Name}\n{args.ErrorMessage}\n{args.ExtendedErrorCode}");
+        Common.AddToTeachingTipLists($"播放失败 切到下一曲 \n 歌曲: {NowPlayingItem.PlayItem.Name}\n{args.ErrorMessage}\n{args.ExtendedErrorCode}");
         SongMoveNext();
     }
 
@@ -1291,7 +1291,7 @@ public static class HyPlayList
         catch (Exception e)
         {
             Player.Source = null;
-            PlayerOnMediaFailed(Player, e.Message);
+            PlayerOnMediaFailed(e.Message);
         }
     }
 
