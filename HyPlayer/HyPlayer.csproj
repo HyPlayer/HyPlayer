@@ -27,8 +27,8 @@
     <AppxPackageDir>D:\Workspace\Personal\HyPlayer\HyPlayer\HyPlayer\AppPackages\2.1.30</AppxPackageDir>
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
     <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
-    <PackageCertificateKeyFile>HyPlayer_TemporaryKey.pfx</PackageCertificateKeyFile>
-    <PackageCertificateThumbprint>5EABF313D9DDCAF42AD87E19DD98239019C555A7</PackageCertificateThumbprint>
+    <PackageCertificateKeyFile></PackageCertificateKeyFile>
+    <PackageCertificateThumbprint></PackageCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM64'">
     <DebugSymbols>true</DebugSymbols>
