@@ -577,8 +577,7 @@
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Stretch"
                                 Description="需要重启 HyPlayer"
-                                Header="颜色设置"
-                                IsExpanded="False">
+                                Header="颜色设置">
                                 <controls3:SettingsExpander.HeaderIcon>
                                     <FontIcon Glyph="&#xE790;" />
                                 </controls3:SettingsExpander.HeaderIcon>
@@ -1283,12 +1282,14 @@
                                 <StackPanel
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Top"
+                                    Spacing="16"
                                     Orientation="Horizontal">
                                     <Image
                                         Width="128"
                                         Height="128"
                                         Source="/Assets/icon.png" />
                                     <TextBlock
+                                        FontWeight="Bold"
                                         VerticalAlignment="Center"
                                         Style="{StaticResource HeaderTextBlockStyle}"
                                         Text="HyPlayer" />
@@ -1311,20 +1312,20 @@
                                             Gitee
                                         </Hyperlink>
                                     </Paragraph>
-                                    <Paragraph Margin="0,5,0,0">Copyright © HyPlayer Develop Team 2022</Paragraph>
+                                    <Paragraph Margin="0,5,0,0">Copyright © HyPlayer Develop Team 2023</Paragraph>
                                     <Paragraph>HyPlayer is licensed under the GNU General Public License v3.0</Paragraph>
                                 </RichTextBlock>
                                 <Grid
-                                    MaxWidth="600"
+                                    MaxWidth="800"
                                     Margin="8,12,8,0"
-                                    HorizontalAlignment="Center"
+                                    HorizontalAlignment="Stretch"
                                     ColumnSpacing="8">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <Border
-                                        Width="256"
+                                        Grid.Column="0"
                                         Height="80"
                                         Padding="13,10"
                                         Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
@@ -1365,7 +1366,6 @@
                                     </Border>
                                     <Border
                                         Grid.Column="1"
-                                        Width="256"
                                         Height="80"
                                         Padding="13,10"
                                         Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
@@ -1412,16 +1412,15 @@
                                     </Border>
                                 </Grid>
                                 <Grid
-                                    MaxWidth="600"
+                                    MaxWidth="800"
                                     Margin="10,8,8,0"
-                                    HorizontalAlignment="Center"
+                                    HorizontalAlignment="Stretch"
                                     ColumnSpacing="8">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
                                     <Border
-                                        Width="256"
                                         Height="80"
                                         Padding="13,10"
                                         Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
@@ -1457,7 +1456,6 @@
                                     </Border>
                                     <Border
                                         Grid.Column="1"
-                                        Width="256"
                                         Height="80"
                                         Padding="13,10"
                                         Background="{StaticResource CardBackgroundFillColorDefaultBrush}"
@@ -1507,7 +1505,7 @@
                                 </Grid>
                                 <Border
                                     Height="80"
-                                    MaxWidth="520"
+                                    MaxWidth="800"
                                     Margin="9,8,9,0"
                                     Padding="13,10"
                                     Background="{StaticResource CardBackgroundFillColorDefaultBrush}"

@@ -504,7 +504,7 @@ namespace HyPlayer
 
         public bool karaokLyric
         {
-            get => GetSettings(nameof(karaokLyric), false);
+            get => GetSettings(nameof(karaokLyric), true);
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(karaokLyric)] = value;
