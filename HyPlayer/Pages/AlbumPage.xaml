@@ -26,6 +26,7 @@
                         Width="200"
                         Height="200"
                         Margin="16"
+                        VerticalAlignment="Top"
                         controls:DockPanel.Dock="Left"
                         RadiusX="12"
                         RadiusY="12">
