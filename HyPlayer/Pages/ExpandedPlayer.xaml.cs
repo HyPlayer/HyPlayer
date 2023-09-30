@@ -1223,7 +1223,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         var ani2 = ImagePositionOffset.CreateDoubleAnimation("X", 0, -ImageAlbum.ActualWidth - 50, null, TimeSpan.FromMilliseconds(100));
                         var sb1 = new Storyboard();
                         var sb2 = new Storyboard();
-                        sb2.BeginTime = TimeSpan.FromMilliseconds(200);
                         sb1.Children.Add(ani1);
                         sb2.Children.Add(ani2);
                         await sb1.BeginAsync();
@@ -1237,7 +1236,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         var ani2 = ImagePositionOffset.CreateDoubleAnimation("X", 0, ImageAlbum.ActualWidth + 50, null, TimeSpan.FromMilliseconds(100));
                         var sb1 = new Storyboard();
                         var sb2 = new Storyboard();
-                        sb2.BeginTime = TimeSpan.FromMilliseconds(200);
                         sb1.Children.Add(ani1);
                         sb2.Children.Add(ani2);
                         await sb1.BeginAsync();
