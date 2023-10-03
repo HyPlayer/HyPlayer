@@ -87,8 +87,8 @@ Global
 		{8CB63BD0-1A5E-4CA0-AAAD-4249D37E3A47}.Release|ARM64.Build.0 = Release|ARM64
 		{8CB63BD0-1A5E-4CA0-AAAD-4249D37E3A47}.Release|x64.ActiveCfg = Release|x64
 		{8CB63BD0-1A5E-4CA0-AAAD-4249D37E3A47}.Release|x64.Build.0 = Release|x64
-		{8CB63BD0-1A5E-4CA0-AAAD-4249D37E3A47}.Release|x86.ActiveCfg = Release|x64
-		{8CB63BD0-1A5E-4CA0-AAAD-4249D37E3A47}.Release|x86.Build.0 = Release|x64
+		{8CB63BD0-1A5E-4CA0-AAAD-4249D37E3A47}.Release|x86.ActiveCfg = Release|x86
+		{8CB63BD0-1A5E-4CA0-AAAD-4249D37E3A47}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
