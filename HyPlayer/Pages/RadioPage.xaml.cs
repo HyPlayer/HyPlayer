@@ -82,6 +82,7 @@ public sealed partial class RadioPage : Page, IDisposable
                 var song = NCFmItem.CreateFromJson(jToken);
                 song.Type = HyPlayItemType.Radio;
                 song.Order = i++;
+                song.TrackId = i;
                 Songs.Add(song);
             }
             json.RemoveAll();
