@@ -112,7 +112,6 @@ public sealed partial class SongListDetail : Page, IDisposable
         TextBoxAuthor.Content = playList.creater.name;
         ButtonLike.Tag = playList.subscribed;
         UpdateLikeBtnStyle();
-        Interaction.GetBehaviors(SongsList).Add(new FadeHeaderBehavior());
         if (playList.updateTime.Year != 0001)
             TextBoxUpdateTime.Text = $"{DateConverter.FriendFormat(playList.updateTime)}更新";
     }
