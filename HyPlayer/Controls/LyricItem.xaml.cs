@@ -453,7 +453,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
     private void LyricItem_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
-        HyPlayList.Player.PlaybackSession.Position = Lrc.LyricLine.StartTime;
+        HyPlayList.Seek(Lrc.LyricLine.StartTime);
         if (Common.PageExpandedPlayer != null)
         {
             Common.PageExpandedPlayer.jumpedLyrics = true;

@@ -546,11 +546,19 @@
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard>
                                         <Grid>
-                                            <StackPanel Orientation="Horizontal" Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay}">
-                                                <TextBlock Text="已登录账号：" Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay}" />
-                                                <TextBlock Text="{x:Bind hyplayer:Common.Setting.LastFMUserName, Mode=OneWay}" Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay}" />
-                                            </StackPanel>
-                                            <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <Grid Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay}" Grid.Row="0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="已登录账号：" Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay}" Grid.Column="0"/>
+                                                <TextBlock Text="{x:Bind hyplayer:Common.Setting.LastFMUserName, Mode=OneWay}" Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay}" Grid.Column="1"/>
+                                            </Grid>
+                                            <Grid Grid.Row="1">
                                                 <Button
                                                     x:Name="LogoffLastFMAccount"
                                                     Click="LogoffLastFMAccount_Click"

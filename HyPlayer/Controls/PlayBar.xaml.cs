@@ -1035,7 +1035,7 @@ DoubleAnimation verticalAnimation;
     private void SliderProgress_ManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
     {
         _slidingEventArgs = null;
-        HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(SliderProgress.Value);
+        HyPlayList.Seek(TimeSpan.FromMilliseconds(SliderProgress.Value));
         _isSliding = false;
     }
 
@@ -1047,7 +1047,7 @@ DoubleAnimation verticalAnimation;
 
     private void SliderProgress_OnManipulationStarting(object sender, ManipulationStartingRoutedEventArgs e)
     {
-        HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(SliderProgress.Value);
+        HyPlayList.Seek(TimeSpan.FromMilliseconds(SliderProgress.Value));
     }
 
     private void CopySongDetailFlyoutItem_Click(object sender, RoutedEventArgs e)

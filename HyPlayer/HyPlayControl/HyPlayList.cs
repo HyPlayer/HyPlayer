@@ -22,6 +22,7 @@ using Windows.Graphics.Imaging;
 using Windows.Media;
 using Windows.Media.Core;
 using Windows.Media.Playback;
+using Windows.Media.Streaming.Adaptive;
 using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
@@ -31,6 +32,7 @@ using Windows.Storage.Streams;
 using Windows.UI;
 using Windows.UI.Notifications;
 using Windows.UI.Xaml.Media;
+using static QRCoder.PayloadGenerator;
 using Buffer = Windows.Storage.Streams.Buffer;
 using File = TagLib.File;
 
@@ -163,6 +165,10 @@ public static class HyPlayList
             VolumeChangeProcess();
         }
     }
+    private static bool _seekingTrack = false;
+    private static int _currentSeekingHashCode = -1;
+    private static bool _isBuffering = false;
+    private static TimeSpan? _targetSeekingTimeSpan;
 
     /*********        基本       ********/
     public static PlayMode NowPlayType
@@ -221,10 +227,6 @@ public static class HyPlayList
 
     public static event LyricChangeEvent OnSongMoveNext;
 
-    public static event LyricChangeEvent OnSongBufferStart;
-
-    public static event LyricChangeEvent OnSongBufferEnd;
-
     public static event LoginDoneEvent OnLoginDone;
 
     public static event TimerTicked OnTimerTicked;
@@ -256,6 +258,10 @@ public static class HyPlayList
         Player.CurrentStateChanged += Player_CurrentStateChanged;
         //Player.VolumeChanged += Player_VolumeChanged;
         Player.PlaybackSession.PositionChanged += PlaybackSession_PositionChanged;
+        Player.PlaybackSession.SeekCompleted += PlaybackSession_SeekCompleted;
+        Player.PlaybackSession.BufferedRangesChanged += PlaybackSession_BufferedRangesChanged;
+        Player.PlaybackSession.BufferingStarted += PlaybackSession_BufferingStarted;
+        Player.PlaybackSession.BufferingEnded += PlaybackSession_BufferingEnded;
         if (Common.Setting.progressInSMTC)
         {
             MediaSystemControls.PlaybackPositionChangeRequested += MediaSystemControls_PlaybackPositionChangeRequested;
@@ -263,8 +269,6 @@ public static class HyPlayList
         }
 
         Player.MediaFailed += PlayerOnMediaFailed;
-        Player.BufferingStarted += Player_BufferingStarted;
-        Player.BufferingEnded += Player_BufferingEnded;
         Player.SourceChanged += Player_SourceChanged;
         SecTimer.Elapsed += (sender, args) => _ = Common.Invoke(() => OnTimerTicked?.Invoke());
         SecTimer.Start();
@@ -279,6 +283,86 @@ public static class HyPlayList
         Common.IsInFm = false;
     }
 
+    private static void PlaybackSession_BufferingEnded(MediaPlaybackSession sender, object args)
+    {
+        MediaPlaybackSessionBufferingStartedEventArgs bufferingStartedEventArgs = args as MediaPlaybackSessionBufferingStartedEventArgs;
+
+    }
+
+    private static void PlaybackSession_BufferingStarted(MediaPlaybackSession sender, object args)
+    {
+        throw new NotImplementedException();
+    }
+
+    private static void PlaybackSession_BufferedRangesChanged(MediaPlaybackSession sender, object args)
+    {
+        var rangeList = sender.GetBufferedRanges();
+        string ranges = "";
+        foreach (var range in rangeList)
+        {
+            ranges += $"[{range.Start},{range.End}],";
+        }
+        ranges = ranges.TrimEnd(',');
+        Debug.WriteLine($"MediaPlayer_PlaybackSession_BufferedRangesChanged: {ranges}");
+    }
+
+    private static async void PlaybackSession_SeekCompleted(MediaPlaybackSession sender, object args)
+    {
+        if (_targetSeekingTimeSpan == null) return;
+        if (_currentSeekingHashCode != -1 && _targetSeekingTimeSpan?.GetHashCode() != _currentSeekingHashCode)
+        {
+            await Task.Delay(500);  //哇 你手速好快 但是能先慢点嘛
+            Seek(_targetSeekingTimeSpan, true);
+            return;
+        }
+        _targetSeekingTimeSpan = null;
+        if (_seekingTrack) _seekingTrack = false;
+        _currentSeekingHashCode = -1;
+        
+    }
+
+    public static async void Seek(TimeSpan? targetTimeSpan, bool isHandler = false)
+    {
+        if (targetTimeSpan == null) return;
+        if (_mediaSource?.IsOpen == false) 
+        {
+            return;
+        }
+        if (!_seekingTrack || isHandler)
+        {
+            bool _isFirstSeek = !_seekingTrack;
+            _seekingTrack = true;
+            _targetSeekingTimeSpan = targetTimeSpan;
+            _currentSeekingHashCode = targetTimeSpan.GetHashCode();
+            if(!_isFirstSeek)
+            {
+                bool seekable = false;
+                while (!seekable)
+                {
+                    var ranges = Player.PlaybackSession.GetBufferedRanges();
+                    if (ranges.Count == 0) seekable = true;
+                    foreach (var range in ranges)
+                    {
+                        if (range.End >= targetTimeSpan && range.Start < targetTimeSpan)
+                        {
+                            seekable = true;
+                            break;
+                        }
+                    }
+                    await Task.Delay(125);
+                }
+                Player.PlaybackSession.Position = targetTimeSpan.Value;
+            }
+            else
+            {
+                Player.PlaybackSession.Position = targetTimeSpan.Value;
+            }
+        }
+        else
+        {
+            _targetSeekingTimeSpan = targetTimeSpan;
+        }
+    }
     public static void FireLyricColorChangeEvent()
     {
         OnLyricColorChange?.Invoke();
@@ -300,7 +384,7 @@ public static class HyPlayList
     public static void MediaSystemControls_PlaybackPositionChangeRequested(SystemMediaTransportControls sender,
         PlaybackPositionChangeRequestedEventArgs args)
     {
-        Player.PlaybackSession.Position = args.RequestedPlaybackPosition;
+        Seek(args.RequestedPlaybackPosition);
     }
 
 
@@ -309,15 +393,6 @@ public static class HyPlayList
         _ = Common.Invoke(() => { OnLoginDone?.Invoke(); });
     }
 
-    private static void Player_BufferingEnded(MediaPlayer sender, object args)
-    {
-        _ = Common.Invoke(() => OnSongBufferEnd?.Invoke());
-    }
-
-    private static void Player_BufferingStarted(MediaPlayer sender, object args)
-    {
-        _ = Common.Invoke(() => OnSongBufferStart?.Invoke());
-    }
 
     private static void PlayerOnMediaFailed(string reason)
     {
@@ -1229,21 +1304,35 @@ public static class HyPlayList
                                             _ = HandleDownloadAsync(downloadOperation, targetItem);
                                         }
 
-                                        _mediaSource = MediaSource.CreateFromUri(new Uri(playUrl));
+                                        AdaptiveMediaSourceCreationResult result = await AdaptiveMediaSource.CreateFromUriAsync(new Uri(playUrl));
+                                        if(result.Status == AdaptiveMediaSourceCreationStatus.Success)
+                                        {
+                                            _mediaSource = MediaSource.CreateFromAdaptiveMediaSource(result.MediaSource);
+                                        }
                                     }
                                 }
                                 catch
                                 {
                                     var playUrl = await GetNowPlayingUrl(targetItem);
                                     if (playUrl != null)
-                                        _mediaSource = MediaSource.CreateFromUri(new Uri(playUrl));
+                                    {
+                                        AdaptiveMediaSourceCreationResult result = await AdaptiveMediaSource.CreateFromUriAsync(new Uri(playUrl));
+                                        if (result.Status == AdaptiveMediaSourceCreationStatus.Success)
+                                        {
+                                            _mediaSource = MediaSource.CreateFromAdaptiveMediaSource(result.MediaSource);
+                                        }
+                                    }  
                                 }
                             }
                         }
                         else
                         {
                             var playUrl = await GetNowPlayingUrl(targetItem);
-                            _mediaSource = MediaSource.CreateFromUri(new Uri(playUrl));
+                            AdaptiveMediaSourceCreationResult result = await AdaptiveMediaSource.CreateFromUriAsync(new Uri(playUrl));
+                            if (result.Status == AdaptiveMediaSourceCreationStatus.Success)
+                            {
+                                _mediaSource = MediaSource.CreateFromAdaptiveMediaSource(result.MediaSource);
+                            }
                         }
                     }
 
@@ -2391,7 +2480,7 @@ public static class HyPlayList
     {
         if (currentTime >= Common.Setting.ABEndPoint && Common.Setting.ABEndPoint != TimeSpan.Zero &&
             Common.Setting.ABEndPoint > Common.Setting.ABStartPoint)
-            Player.PlaybackSession.Position = Common.Setting.ABStartPoint;
+            Seek(Common.Setting.ABStartPoint);
     }
 
     public static async void UpdateLastFMNowPlayingAsync(HyPlayItem NowPlayingItem)
