@@ -1304,35 +1304,21 @@ public static class HyPlayList
                                             _ = HandleDownloadAsync(downloadOperation, targetItem);
                                         }
 
-                                        AdaptiveMediaSourceCreationResult result = await AdaptiveMediaSource.CreateFromUriAsync(new Uri(playUrl));
-                                        if(result.Status == AdaptiveMediaSourceCreationStatus.Success)
-                                        {
-                                            _mediaSource = MediaSource.CreateFromAdaptiveMediaSource(result.MediaSource);
-                                        }
+                                        _mediaSource = MediaSource.CreateFromUri(new Uri(playUrl));
                                     }
                                 }
                                 catch
                                 {
                                     var playUrl = await GetNowPlayingUrl(targetItem);
                                     if (playUrl != null)
-                                    {
-                                        AdaptiveMediaSourceCreationResult result = await AdaptiveMediaSource.CreateFromUriAsync(new Uri(playUrl));
-                                        if (result.Status == AdaptiveMediaSourceCreationStatus.Success)
-                                        {
-                                            _mediaSource = MediaSource.CreateFromAdaptiveMediaSource(result.MediaSource);
-                                        }
-                                    }  
+                                        _mediaSource = MediaSource.CreateFromUri(new Uri(playUrl));
                                 }
                             }
                         }
                         else
                         {
                             var playUrl = await GetNowPlayingUrl(targetItem);
-                            AdaptiveMediaSourceCreationResult result = await AdaptiveMediaSource.CreateFromUriAsync(new Uri(playUrl));
-                            if (result.Status == AdaptiveMediaSourceCreationStatus.Success)
-                            {
-                                _mediaSource = MediaSource.CreateFromAdaptiveMediaSource(result.MediaSource);
-                            }
+                            _mediaSource = MediaSource.CreateFromUri(new Uri(playUrl));
                         }
                     }
 
