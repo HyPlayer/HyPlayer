@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using System.Timers;
@@ -165,10 +166,11 @@ public static class HyPlayList
             VolumeChangeProcess();
         }
     }
-    private static bool _seekingTrack = false;
-    private static int _currentSeekingHashCode = -1;
-    private static bool _isBuffering = false;
-    private static TimeSpan? _targetSeekingTimeSpan;
+    public static List<TimeSpan> TargetSeekingTimeSpans = new List<TimeSpan>();
+    public static TimeSpan RunningTimeSpan = TimeSpan.Zero;
+    public static bool LockSeeking = false;
+    public static int IntervalCounter = 0;
+    public static int CurrentRunningSeekingHandler = 0;
 
     /*********        基本       ********/
     public static PlayMode NowPlayType
@@ -259,9 +261,6 @@ public static class HyPlayList
         //Player.VolumeChanged += Player_VolumeChanged;
         Player.PlaybackSession.PositionChanged += PlaybackSession_PositionChanged;
         Player.PlaybackSession.SeekCompleted += PlaybackSession_SeekCompleted;
-        Player.PlaybackSession.BufferedRangesChanged += PlaybackSession_BufferedRangesChanged;
-        Player.PlaybackSession.BufferingStarted += PlaybackSession_BufferingStarted;
-        Player.PlaybackSession.BufferingEnded += PlaybackSession_BufferingEnded;
         if (Common.Setting.progressInSMTC)
         {
             MediaSystemControls.PlaybackPositionChangeRequested += MediaSystemControls_PlaybackPositionChangeRequested;
@@ -283,84 +282,53 @@ public static class HyPlayList
         Common.IsInFm = false;
     }
 
-    private static void PlaybackSession_BufferingEnded(MediaPlaybackSession sender, object args)
+    private static void PlaybackSession_SeekCompleted(MediaPlaybackSession sender, object args)
     {
-        MediaPlaybackSessionBufferingStartedEventArgs bufferingStartedEventArgs = args as MediaPlaybackSessionBufferingStartedEventArgs;
-
+        if (CurrentRunningSeekingHandler > 0) return;
+        CurrentRunningSeekingHandler++;
+        DecreaseRunningSeekingHandler();
     }
-
-    private static void PlaybackSession_BufferingStarted(MediaPlaybackSession sender, object args)
+    public static async void DecreaseRunningSeekingHandler()
     {
-        throw new NotImplementedException();
-    }
-
-    private static void PlaybackSession_BufferedRangesChanged(MediaPlaybackSession sender, object args)
-    {
-        var rangeList = sender.GetBufferedRanges();
-        string ranges = "";
-        foreach (var range in rangeList)
+        var shallowCopy = TargetSeekingTimeSpans.ToList();
+        await Task.Delay(500);
+        while (shallowCopy.Count != 0 && shallowCopy.Last() != RunningTimeSpan)
         {
-            ranges += $"[{range.Start},{range.End}],";
+            await Task.Delay(500);
+            Seek(null, true);
+            shallowCopy = TargetSeekingTimeSpans.ToList();
         }
-        ranges = ranges.TrimEnd(',');
-        Debug.WriteLine($"MediaPlayer_PlaybackSession_BufferedRangesChanged: {ranges}");
+        TargetSeekingTimeSpans.Clear();
+        if (CurrentRunningSeekingHandler >= 1) CurrentRunningSeekingHandler--;
+        IntervalCounter = 0;
     }
-
-    private static async void PlaybackSession_SeekCompleted(MediaPlaybackSession sender, object args)
+    public static void Seek(TimeSpan? targetTimeSpan, bool isHandler = false)
     {
-        if (_targetSeekingTimeSpan == null) return;
-        if (_currentSeekingHashCode != -1 && _targetSeekingTimeSpan?.GetHashCode() != _currentSeekingHashCode)
+        lock (TargetSeekingTimeSpans)
         {
-            await Task.Delay(500);  //哇 你手速好快 但是能先慢点嘛
-            Seek(_targetSeekingTimeSpan, true);
-            return;
-        }
-        _targetSeekingTimeSpan = null;
-        if (_seekingTrack) _seekingTrack = false;
-        _currentSeekingHashCode = -1;
-        
-    }
-
-    public static async void Seek(TimeSpan? targetTimeSpan, bool isHandler = false)
-    {
-        if (targetTimeSpan == null) return;
-        if (_mediaSource?.IsOpen == false) 
-        {
-            return;
-        }
-        if (!_seekingTrack || isHandler)
-        {
-            bool _isFirstSeek = !_seekingTrack;
-            _seekingTrack = true;
-            _targetSeekingTimeSpan = targetTimeSpan;
-            _currentSeekingHashCode = targetTimeSpan.GetHashCode();
-            if(!_isFirstSeek)
+            if (isHandler)
             {
-                bool seekable = false;
-                while (!seekable)
-                {
-                    var ranges = Player.PlaybackSession.GetBufferedRanges();
-                    if (ranges.Count == 0) seekable = true;
-                    foreach (var range in ranges)
-                    {
-                        if (range.End >= targetTimeSpan && range.Start < targetTimeSpan)
-                        {
-                            seekable = true;
-                            break;
-                        }
-                    }
-                    await Task.Delay(125);
-                }
-                Player.PlaybackSession.Position = targetTimeSpan.Value;
+                var timespan = TargetSeekingTimeSpans.Last();
+                RunningTimeSpan = timespan;
+                Player.PlaybackSession.Position = timespan;
+                IntervalCounter++;
             }
             else
             {
-                Player.PlaybackSession.Position = targetTimeSpan.Value;
+
+                if (_playerLoaderTask != null && _playerLoaderTask.IsCompleted == false) return;
+                if (TargetSeekingTimeSpans.Count == 0 && !LockSeeking)
+                {
+                    TargetSeekingTimeSpans.Add(targetTimeSpan.Value);
+                    RunningTimeSpan = targetTimeSpan.Value;
+                    Player.PlaybackSession.Position = targetTimeSpan.Value;
+                    IntervalCounter++;
+                }
+                else
+                {
+                    TargetSeekingTimeSpans.Add(targetTimeSpan.Value);
+                }
             }
-        }
-        else
-        {
-            _targetSeekingTimeSpan = targetTimeSpan;
         }
     }
     public static void FireLyricColorChangeEvent()
@@ -403,12 +371,16 @@ public static class HyPlayList
         Common.AddToTeachingTipLists($"播放失败 切到下一曲 \n 歌曲: {NowPlayingItem.PlayItem.Name}\n{reason}");
         SongMoveNext();
     }
-    private static void PlayerOnMediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
+    private async static void PlayerOnMediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
     {
         if((uint)args.ExtendedErrorCode.HResult == 0xC00D36FA)
         {
             Common.AddToTeachingTipLists("播放失败", "无法创建媒体接收器，请检查设备是否有声音输出设备！");
             return;
+        }
+        if ((uint)args.ExtendedErrorCode.HResult == 0x80004004)
+        {
+            await Task.Delay(500);
         }
         Common.ErrorMessageList.Add($"歌曲播放失败: {NowPlayingItem.PlayItem.Name}\n{args.ErrorMessage}\n{args.ExtendedErrorCode}");
         Common.AddToTeachingTipLists($"播放失败 切到下一曲 \n 歌曲: {NowPlayingItem.PlayItem.Name}\n{args.ErrorMessage}\n{args.ExtendedErrorCode}");
@@ -1218,7 +1190,10 @@ public static class HyPlayList
             MoveSongPointer();
             return;
         }
-
+        RunningTimeSpan = TimeSpan.Zero;
+        IntervalCounter = 0;
+        CurrentRunningSeekingHandler = 0;
+        TargetSeekingTimeSpans.Clear();
         NowPlayingHashCode = 0;
         if (CoverStream.Size != 0)
         {
@@ -1239,6 +1214,7 @@ public static class HyPlayList
 
         try
         {
+            LockSeeking = true;
             Player.Source = null;
             _mediaSource?.Dispose();
             switch (targetItem.ItemType)
@@ -1362,6 +1338,9 @@ public static class HyPlayList
             }
 
             Player.Source = _mediaSource;
+            await Task.Delay(750);
+            if (TargetSeekingTimeSpans.Count != 0 && !(TargetSeekingTimeSpans.Last() == RunningTimeSpan)) Seek(null, true);
+            LockSeeking = false;
         }
         catch (Exception e)
         {

@@ -40,6 +40,7 @@ public sealed partial class PlayBar
     private SolidColorBrush BackgroundElayBrush = new(Colors.Transparent);
     private bool _isSliding = false;
     public PlayMode NowPlayType = PlayMode.DefaultRoll;
+    private TimeSpan StartingTimeSpan = TimeSpan.Zero;
     public ObservableCollection<HyPlayItem> PlayItems = new();
 #nullable enable
     private ManipulationStartedRoutedEventArgs? _slidingEventArgs = null;
@@ -1035,7 +1036,11 @@ DoubleAnimation verticalAnimation;
     private void SliderProgress_ManipulationCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
     {
         _slidingEventArgs = null;
-        HyPlayList.Seek(TimeSpan.FromMilliseconds(SliderProgress.Value));
+        var value = TimeSpan.FromMilliseconds(SliderProgress.Value);
+        if (Math.Abs((value - StartingTimeSpan).TotalMilliseconds) > 250d)
+        {
+            HyPlayList.Seek(value);
+        } 
         _isSliding = false;
     }
 
@@ -1047,7 +1052,9 @@ DoubleAnimation verticalAnimation;
 
     private void SliderProgress_OnManipulationStarting(object sender, ManipulationStartingRoutedEventArgs e)
     {
-        HyPlayList.Seek(TimeSpan.FromMilliseconds(SliderProgress.Value));
+        var value = TimeSpan.FromMilliseconds(SliderProgress.Value);
+        StartingTimeSpan = value;
+        HyPlayList.Seek(value);
     }
 
     private void CopySongDetailFlyoutItem_Click(object sender, RoutedEventArgs e)
