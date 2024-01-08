@@ -70,10 +70,11 @@ public sealed partial class RadioPage : Page, IDisposable
                     { "offset", page * 100 },
                     { "asc", asc }
                 }, true);
-            if (json["code"].ToString() == "405") {
-                treashold = ++cooldownTime * 10;   
+            if (json["code"].ToString() == "405")
+            {
+                treashold = ++cooldownTime * 10;
                 page--;
-                throw new Exception($"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求"); 
+                throw new Exception($"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求");
             }
             NextPage.Visibility = json["more"].ToObject<bool>() ? Visibility.Visible : Visibility.Collapsed;
             foreach (var jToken in json["programs"])
@@ -155,7 +156,7 @@ public sealed partial class RadioPage : Page, IDisposable
             }
         });
     }
-    
+
     private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(RadioPage));

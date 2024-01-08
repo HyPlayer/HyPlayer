@@ -518,6 +518,6 @@ public sealed partial class Settings : Page, IDisposable
     {
 
         await AboutRomajiDialog.ShowAsync();
-        
+
     }
 }

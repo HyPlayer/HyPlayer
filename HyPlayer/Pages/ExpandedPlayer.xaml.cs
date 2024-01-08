@@ -3,7 +3,9 @@
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
+using Microsoft.Toolkit.Uwp.UI.Animations;
 using Microsoft.Toolkit.Uwp.UI.Media;
+using NeteaseCloudMusicApi;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -29,11 +31,8 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
-using NeteaseCloudMusicApi;
-using AcrylicBrush = Windows.UI.Xaml.Media.AcrylicBrush;
 using Buffer = Windows.Storage.Streams.Buffer;
 using Color = System.Drawing.Color;
-using Microsoft.Toolkit.Uwp.UI.Animations;
 
 #endregion
 
@@ -438,7 +437,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         {
             AcrylicCover.Fill = new BackdropBlurBrush { Amount = 250 }; // TintAmountChange
             luminousColorsRotateAnimation = BgRotate.CreateDoubleAnimation(
-                "Angle", 
+                "Angle",
                 360,
                 0,
                 TimeSpan.Zero,
@@ -557,7 +556,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     }
 
     private Storyboard bpmAniStoryboard = new Storyboard();
-    
+
     public async void InitializeBPM()
     {
         bpmAniStoryboard.Stop();
@@ -571,7 +570,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         if (json["code"]?.ToString() != "200") return;
         // 寻找 BPM 的 Node
         var blocks = json["data"]?["blocks"]?.ToArray();
-        if  (blocks is null) return;
+        if (blocks is null) return;
         foreach (var block in blocks)
         {
             if (block["code"]?.ToString() != "SONG_PLAY_ABOUT_SONG_BASIC") continue;
@@ -585,7 +584,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 if (double.TryParse(bpmText, out var bpm))
                 {
                     var animationX = BgScale.CreateDoubleAnimation(
-                        "ScaleX", 
+                        "ScaleX",
                         1.8,
                         1,
                         TimeSpan.Zero,
@@ -594,7 +593,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         autoReverse: true,
                         easing: Common.Setting.gentleBPMAnimation ? new BackEase { EasingMode = EasingMode.EaseInOut } : null);
                     var animationY = BgScale.CreateDoubleAnimation(
-                        "ScaleY", 
+                        "ScaleY",
                         1.8,
                         1,
                         TimeSpan.Zero,
@@ -612,7 +611,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             }
         }
     }
-    
+
     public void LoadLyricsBox()
     {
         _ = Common.Invoke(() =>
@@ -957,7 +956,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     }
 
     private List<Windows.UI.Color> albumColors = new();
-    
+
     private async Task<bool> IsBrightAsync(IRandomAccessStream coverStream)
     {
         using var stream = coverStream.CloneStream();
@@ -1069,7 +1068,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private async void BtnToggleTinyModeClick(object sender, RoutedEventArgs e)
     {
-        if(expandedPlayerWindow is null)//判断窗口状态
+        if (expandedPlayerWindow is null)//判断窗口状态
         {
             expandedPlayerWindow = await AppWindow.TryCreateAsync();
             expandedPlayerWindow.Closed += ExpandedPlayerClosed;
@@ -1095,8 +1094,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             await expandedPlayerWindow.CloseAsync();
         }
 
-            //Common.PageMain.ExpandedPlayer.Navigate(typeof(CompactPlayerPage));
-        }
+        //Common.PageMain.ExpandedPlayer.Navigate(typeof(CompactPlayerPage));
+    }
 
     private void ExpandedPlayerClosed(AppWindow sender, AppWindowClosedEventArgs args)
     {
@@ -1149,7 +1148,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             }
         }
 
-        
+
         LoadLyricsBox();
     }
 
@@ -1218,27 +1217,27 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 // 切换上下曲
                 if (e.Cumulative.Translation.X > 150)
                 {
-                        var ani1 = ImagePositionOffset.CreateDoubleAnimation("X", 1000, 0, null, TimeSpan.FromMilliseconds(100));
-                        var ani2 = ImagePositionOffset.CreateDoubleAnimation("X", 0, -ImageAlbum.ActualWidth - 50, null, TimeSpan.FromMilliseconds(100));
-                        var sb1 = new Storyboard();
-                        var sb2 = new Storyboard();
-                        sb1.Children.Add(ani1);
-                        sb2.Children.Add(ani2);
-                        await sb1.BeginAsync();
-                        sb2.Begin();
+                    var ani1 = ImagePositionOffset.CreateDoubleAnimation("X", 1000, 0, null, TimeSpan.FromMilliseconds(100));
+                    var ani2 = ImagePositionOffset.CreateDoubleAnimation("X", 0, -ImageAlbum.ActualWidth - 50, null, TimeSpan.FromMilliseconds(100));
+                    var sb1 = new Storyboard();
+                    var sb2 = new Storyboard();
+                    sb1.Children.Add(ani1);
+                    sb2.Children.Add(ani2);
+                    await sb1.BeginAsync();
+                    sb2.Begin();
                     HyPlayList.SongMovePrevious();
                     return;
                 }
                 else if (e.Cumulative.Translation.X < -150)
                 {
-                        var ani1 = ImagePositionOffset.CreateDoubleAnimation("X", -1000, 0, null, TimeSpan.FromMilliseconds(100));
-                        var ani2 = ImagePositionOffset.CreateDoubleAnimation("X", 0, ImageAlbum.ActualWidth + 50, null, TimeSpan.FromMilliseconds(100));
-                        var sb1 = new Storyboard();
-                        var sb2 = new Storyboard();
-                        sb1.Children.Add(ani1);
-                        sb2.Children.Add(ani2);
-                        await sb1.BeginAsync();
-                        sb2.Begin();
+                    var ani1 = ImagePositionOffset.CreateDoubleAnimation("X", -1000, 0, null, TimeSpan.FromMilliseconds(100));
+                    var ani2 = ImagePositionOffset.CreateDoubleAnimation("X", 0, ImageAlbum.ActualWidth + 50, null, TimeSpan.FromMilliseconds(100));
+                    var sb1 = new Storyboard();
+                    var sb2 = new Storyboard();
+                    sb1.Children.Add(ani1);
+                    sb2.Children.Add(ani2);
+                    await sb1.BeginAsync();
+                    sb2.Begin();
                     HyPlayList.SongMoveNext();
                     return;
                 }

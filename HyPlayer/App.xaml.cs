@@ -22,8 +22,6 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using UnhandledExceptionEventArgs = System.UnhandledExceptionEventArgs;
-
-using SettingsService = HyPlayer.Setting;
 #endregion
 
 namespace HyPlayer;
@@ -220,7 +218,7 @@ sealed partial class App : Application
     protected override void OnFileActivated(FileActivatedEventArgs args) => OnLaunchedOrActivatedAsync(args);
 
     protected override void OnLaunched(LaunchActivatedEventArgs args) => OnLaunchedOrActivatedAsync(args);
-    
+
     private async void OnLaunchedOrActivatedAsync(IActivatedEventArgs args)
     {
         _ = InitializeJumpList();
@@ -228,12 +226,12 @@ sealed partial class App : Application
         base.OnActivated(args);
 
         rootFrame = Window.Current.Content as Frame;
-        if(rootFrame == null)
+        if (rootFrame == null)
         {
             rootFrame = new Frame();
             rootFrame.NavigationFailed += OnNavigationFailed;
 
-            if(args.PreviousExecutionState == ApplicationExecutionState.Terminated)
+            if (args.PreviousExecutionState == ApplicationExecutionState.Terminated)
             {
 
             }
@@ -242,9 +240,9 @@ sealed partial class App : Application
         }
 
         // 直接启动
-        if(args is LaunchActivatedEventArgs)
+        if (args is LaunchActivatedEventArgs)
         {
-            if(rootFrame.Content == null)
+            if (rootFrame.Content == null)
             {
                 NavigateToRootPage(args);
                 Window.Current.Activate();
@@ -252,7 +250,7 @@ sealed partial class App : Application
 
         }
         // 本地播放
-        else if(args is FileActivatedEventArgs)
+        else if (args is FileActivatedEventArgs)
         {
             HyPlayList.PlaySourceId = "local";
             Common.isExpanded = true;

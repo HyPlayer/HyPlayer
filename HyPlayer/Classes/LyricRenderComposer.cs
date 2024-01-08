@@ -1,4 +1,9 @@
 #nullable enable
+using LyricParser.Abstraction;
+using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.Effects;
+using Microsoft.Graphics.Canvas.Geometry;
+using Microsoft.Graphics.Canvas.Text;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,12 +11,6 @@ using System.Numerics;
 using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml.Media.Animation;
-using HyPlayer.Controls.LyricControl;
-using LyricParser.Abstraction;
-using Microsoft.Graphics.Canvas.Text;
-using Microsoft.Graphics.Canvas;
-using Microsoft.Graphics.Canvas.Effects;
-using Microsoft.Graphics.Canvas.Geometry;
 using FontStyle = Windows.UI.Text.FontStyle;
 using Size = Windows.Foundation.Size;
 
@@ -27,28 +26,28 @@ public static class LyricRenderComposer
         if (!quickRender)
             _currentTimeInLine = position - lyric.LyricLine.StartTime;
         using var textFormat = new CanvasTextFormat
-                               {
-                                   FontSize = renderOption.FontSize,
-                                   HorizontalAlignment = renderOption.HorizontalAlignment,
-                                   VerticalAlignment = renderOption.VerticalAlignment,
-                                   Options = CanvasDrawTextOptions.EnableColorFont,
-                                   WordWrapping = CanvasWordWrapping.Wrap,
-                                   Direction = CanvasTextDirection.LeftToRightThenTopToBottom,
-                                   FontStyle = renderOption.FontStyle,
-                                   FontWeight = renderOption.FontWeight,
-                                   FontFamily = renderOption.FontFamily,
-                               };
+        {
+            FontSize = renderOption.FontSize,
+            HorizontalAlignment = renderOption.HorizontalAlignment,
+            VerticalAlignment = renderOption.VerticalAlignment,
+            Options = CanvasDrawTextOptions.EnableColorFont,
+            WordWrapping = CanvasWordWrapping.Wrap,
+            Direction = CanvasTextDirection.LeftToRightThenTopToBottom,
+            FontStyle = renderOption.FontStyle,
+            FontWeight = renderOption.FontWeight,
+            FontFamily = renderOption.FontFamily,
+        };
 
         using var textFormatTranslation = new CanvasTextFormat
-                                          {
-                                              FontSize = 14,
-                                              HorizontalAlignment = renderOption.HorizontalAlignment,
-                                              Options = CanvasDrawTextOptions.EnableColorFont,
-                                              WordWrapping = CanvasWordWrapping.Wrap,
-                                              Direction = CanvasTextDirection.LeftToRightThenTopToBottom,
-                                              FontStyle = renderOption.FontStyle,
-                                              FontFamily = renderOption.FontFamily
-                                          };
+        {
+            FontSize = 14,
+            HorizontalAlignment = renderOption.HorizontalAlignment,
+            Options = CanvasDrawTextOptions.EnableColorFont,
+            WordWrapping = CanvasWordWrapping.Wrap,
+            Direction = CanvasTextDirection.LeftToRightThenTopToBottom,
+            FontStyle = renderOption.FontStyle,
+            FontFamily = renderOption.FontFamily
+        };
 
         using var textLayout =
             new CanvasTextLayout(
@@ -103,15 +102,15 @@ public static class LyricRenderComposer
                 using (var ds = commandList.CreateDrawingSession())
                     ds.FillGeometry(highlightTextGeometry, renderOption.HighlightColor);
                 var highlightedShadow = new ColorMatrixEffect
-                                        {
-                                            Source = new GaussianBlurEffect
-                                                     {
-                                                         BlurAmount = renderOption.BlurAmount,
-                                                         Source = commandList,
-                                                         BorderMode = EffectBorderMode.Soft
-                                                     },
-                                            ColorMatrix = GetColorMatrix(renderOption.ShadowColor)
-                                        };
+                {
+                    Source = new GaussianBlurEffect
+                    {
+                        BlurAmount = renderOption.BlurAmount,
+                        Source = commandList,
+                        BorderMode = EffectBorderMode.Soft
+                    },
+                    ColorMatrix = GetColorMatrix(renderOption.ShadowColor)
+                };
                 drawingSession.DrawImage(highlightedShadow);
                 drawingSession.FillGeometry(highlightTextGeometry, renderOption.HighlightColor);
             }
@@ -119,29 +118,29 @@ public static class LyricRenderComposer
             if (currentTextGeometry is not null)
             {
 
-                    var commandList = new CanvasCommandList(drawingSession);
-                    using (var ds = commandList.CreateDrawingSession())
-                        ds.FillGeometry(currentTextGeometry, renderOption.HighlightColor);
-                    var shadowPercentage = -0.5;
-                    if (shouldEase && false)
+                var commandList = new CanvasCommandList(drawingSession);
+                using (var ds = commandList.CreateDrawingSession())
+                    ds.FillGeometry(currentTextGeometry, renderOption.HighlightColor);
+                var shadowPercentage = -0.5;
+                if (shouldEase && false)
+                {
+                    shadowPercentage =
+                           GetCurrentWordPercentage(startTime.TotalMilliseconds, _currentTimeInLine.TotalMilliseconds,
+                                        currentWordInfo.Duration.TotalMilliseconds, false, renderOption);
+                }
+                var wordHighlightShadow = new ColorMatrixEffect
+                {
+                    Source = new GaussianBlurEffect
                     {
-                     shadowPercentage =
-                            GetCurrentWordPercentage(startTime.TotalMilliseconds, _currentTimeInLine.TotalMilliseconds,
-                                         currentWordInfo.Duration.TotalMilliseconds, false, renderOption);
-                    }
-                    var wordHighlightShadow = new ColorMatrixEffect
-                                              {
-                                                  Source = new GaussianBlurEffect
-                                                           {
-                                                               BlurAmount = (float)(renderOption.BlurAmount/* * (shouldEase ? shadowPercentage : 1)*/),
-                                                               Source = commandList,
-                                                               BorderMode = EffectBorderMode.Soft
-                                                           },
-                                                  ColorMatrix = GetColorMatrix(renderOption.ShadowColor)
-                                              };
-                    drawingSession.DrawImage(wordHighlightShadow);
-                    drawingSession.FillGeometry(currentTextGeometry, renderOption.HighlightColor);
-                
+                        BlurAmount = (float)(renderOption.BlurAmount/* * (shouldEase ? shadowPercentage : 1)*/),
+                        Source = commandList,
+                        BorderMode = EffectBorderMode.Soft
+                    },
+                    ColorMatrix = GetColorMatrix(renderOption.ShadowColor)
+                };
+                drawingSession.DrawImage(wordHighlightShadow);
+                drawingSession.FillGeometry(currentTextGeometry, renderOption.HighlightColor);
+
 
                 drawingSession.FillGeometry(currentTextGeometry, renderOption.HighlightColor);
             }

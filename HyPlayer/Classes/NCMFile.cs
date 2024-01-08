@@ -160,7 +160,7 @@ internal static class NCMFile
                 {
                     albumId = obj["albumId"].ToObject<int>(),
                     album = obj["album"].ToString(),
-                    musicId = long.Parse(Regex.Match(obj["musicId"].ToString(),"\\d*$").Value),
+                    musicId = long.Parse(Regex.Match(obj["musicId"].ToString(), "\\d*$").Value),
                     musicName = obj["musicName"].ToString(),
                     duration = obj["duration"].ToObject<int>(),
                     bitrate = obj["bitrate"].ToObject<int>(),

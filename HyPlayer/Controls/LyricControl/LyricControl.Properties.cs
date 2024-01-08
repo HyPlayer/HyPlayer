@@ -1,16 +1,12 @@
-﻿using Microsoft.Graphics.Canvas.Text;
+﻿using HyPlayer.Classes;
+using LyricParser.Abstraction;
+using Microsoft.Graphics.Canvas.Text;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Windows.UI;
 using Windows.UI.Text;
-using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media;
-using Windows.UI;
-using HyPlayer.Classes;
-using LyricParser.Abstraction;
+using Windows.UI.Xaml.Media.Animation;
 
 namespace HyPlayer.Controls.LyricControl
 {

@@ -4,7 +4,6 @@ using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using NeteaseCloudMusicApi;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;

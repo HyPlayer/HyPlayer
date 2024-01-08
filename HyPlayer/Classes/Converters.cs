@@ -429,7 +429,7 @@ namespace HyPlayer.Classes
         public object Convert(object value, Type targetType,
                               object parameter, string language)
         {
-            Color convert = (Color)value; 
+            Color convert = (Color)value;
             return Color.FromArgb(0, convert.R, convert.G, convert.B);
         }
 

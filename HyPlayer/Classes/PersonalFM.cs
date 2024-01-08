@@ -2,11 +2,10 @@
 
 using HyPlayer.HyPlayControl;
 using NeteaseCloudMusicApi;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
-using System.Diagnostics;
 
 #endregion
 
@@ -51,11 +50,11 @@ internal static class PersonalFM
                     {
                         {
                             // 预加载下一首
-                            var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.PersonalFm);                            
-                           foreach (var jToken in json["data"]?.Children() ?? new JEnumerable<JToken>())
-                           {
-                               HyPlayList.List.Add(HyPlayList.LoadNcSong(NCSong.CreateFromJson(jToken)));
-                           }
+                            var json = await Common.ncapi?.RequestAsync(CloudMusicApiProviders.PersonalFm);
+                            foreach (var jToken in json["data"]?.Children() ?? new JEnumerable<JToken>())
+                            {
+                                HyPlayList.List.Add(HyPlayList.LoadNcSong(NCSong.CreateFromJson(jToken)));
+                            }
                             json.RemoveAll();
                         }
                     }
@@ -73,21 +72,21 @@ internal static class PersonalFM
                                                           new JEnumerable<JToken>())
                                 {
                                     var playItem = new HyPlayItem()
-                                                   {
-                                                       ItemType = HyPlayItemType.Netease,
-                                                       PlayItem = new PlayItem
-                                                                  {
-                                                                      Album = new NCAlbum
-                                                                              {
-                                                                                  AlbumType = HyPlayItemType.Netease,
-                                                                                  alias = "私人 DJ",
-                                                                                  cover =
+                                    {
+                                        ItemType = HyPlayItemType.Netease,
+                                        PlayItem = new PlayItem
+                                        {
+                                            Album = new NCAlbum
+                                            {
+                                                AlbumType = HyPlayItemType.Netease,
+                                                alias = "私人 DJ",
+                                                cover =
                                                                                       "https://p1.music.126.net/kMuXXbwHbduHpLYDmHXrlA==/109951168152833223.jpg",
-                                                                                  description = "私人 DJ",
-                                                                                  id = "126368130",
-                                                                                  name = "私人 DJ 推荐语"
-                                                                              },
-                                                                      Artist = new List<NCArtist>()
+                                                description = "私人 DJ",
+                                                id = "126368130",
+                                                name = "私人 DJ 推荐语"
+                                            },
+                                            Artist = new List<NCArtist>()
                                                                                {
                                                                                    new NCArtist
                                                                                    {
@@ -100,20 +99,20 @@ internal static class PersonalFM
                                                                                        Type = HyPlayItemType.Netease
                                                                                    }
                                                                                },
-                                                                      Bitrate = 0,
-                                                                      CDName = null,
-                                                                      Id = "-1",
-                                                                      IsLocalFile = false,
-                                                                      LengthInMilliseconds =
+                                            Bitrate = 0,
+                                            CDName = null,
+                                            Id = "-1",
+                                            IsLocalFile = false,
+                                            LengthInMilliseconds =
                                                                           audioItem["validTime"]
                                                                               ?.ToObject<long>() ??
                                                                           114514,
-                                                                      Name = "私人 DJ 推荐语",
-                                                                      Tag = "私人 DJ",
-                                                                      Type = HyPlayItemType.Netease,
-                                                                      Url = audioItem["audioUrl"]?.ToString()
-                                                                  }
-                                                   };
+                                            Name = "私人 DJ 推荐语",
+                                            Tag = "私人 DJ",
+                                            Type = HyPlayItemType.Netease,
+                                            Url = audioItem["audioUrl"]?.ToString()
+                                        }
+                                    };
                                     HyPlayList.List.Add(playItem);
                                 }
                             }

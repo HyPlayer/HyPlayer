@@ -367,7 +367,7 @@ public sealed partial class SongsList : UserControl, IDisposable
 
         SongContainer.ContextFlyout.ShowAt(element,
             new FlyoutShowOptions
-                { Position = e?.GetPosition(element) ?? new Point(element?.ActualWidth ?? 0, 80) });
+            { Position = e?.GetPosition(element) ?? new Point(element?.ActualWidth ?? 0, 80) });
     }
 
     public static Brush GetBrush(bool IsAvailable)
@@ -399,8 +399,8 @@ public sealed partial class SongsList : UserControl, IDisposable
     }
 
     private void SongListRoot_Loaded(object sender, RoutedEventArgs e)
-    {      
-        
+    {
+
         MultiSelect = false;
         _ = IndicateNowPlayingItem();
     }
@@ -427,7 +427,7 @@ public sealed partial class SongsList : UserControl, IDisposable
                 HyPlayList.RemoveAllSong(!shiftSong);
                 await HyPlayList.AppendNcSource(ListSource);
             }
-            
+
         }
         /*else if (ListSource == null)
         {
@@ -447,7 +447,7 @@ public sealed partial class SongsList : UserControl, IDisposable
         if (ListSource?.Substring(0, 2) == "pl" ||
             ListSource?.Substring(0, 2) == "al")
             HyPlayList.PlaySourceId = ListSource.Substring(2);
-        
+
         if (!shiftSong)
             HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem?.Id == ncSong.sid));
         else

@@ -4,14 +4,11 @@ using LyricParser.Abstraction;
 using Microsoft.Toolkit.Uwp.UI.Media;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media.Playback;
 using Windows.Storage.Streams;
 using Windows.UI;
-using Windows.UI.Text;
 using Windows.UI.ViewManagement;
 using Windows.UI.WindowManagement;
 using Windows.UI.Xaml;
@@ -243,17 +240,18 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
                 _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { ChangeLyric(); });
                 return;
             }
-        }else if (HyPlayList.LyricPos < HyPlayList.Lyrics.Count - 1 && HyPlayList.Lyrics[HyPlayList.LyricPos+1].LyricLine is LrcLyricsLine lrcLine)
+        }
+        else if (HyPlayList.LyricPos < HyPlayList.Lyrics.Count - 1 && HyPlayList.Lyrics[HyPlayList.LyricPos + 1].LyricLine is LrcLyricsLine lrcLine)
         {
             if (lrcLine.StartTime.TotalSeconds - HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.StartTime.TotalSeconds > 1)
             {
                 LyricControl.QuickRenderMode = false;
-                _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { ChangeLyric(); });   
-                return;             
+                _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { ChangeLyric(); });
+                return;
             }
             else
             {
-                LyricControl.QuickRenderMode = true;            
+                LyricControl.QuickRenderMode = true;
             }
         }
         ChangeLyric();
@@ -262,13 +260,13 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
 
     private void ChangeLyric()
     {
-        
+
         _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
         {
             LyricText = HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.CurrentLyric;
             LyricControl.Lyric = HyPlayList.Lyrics[HyPlayList.LyricPos];
         });
-        
+
     }
 
     private void OnChangePlayItem(HyPlayItem item)
@@ -296,7 +294,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
                 TotalProgress = item?.PlayItem?.LengthInMilliseconds ?? 0;
             });
         }
-    } 
+    }
     public void RefreshWordColor(TimeSpan position)
     {
         if (!_lyricIsKaraokeLyric) return;

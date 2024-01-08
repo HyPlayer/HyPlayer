@@ -23,7 +23,6 @@ using Windows.UI.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
@@ -176,7 +175,7 @@ public sealed partial class BasePage : Page
             dialog.CloseButtonText = "我已知晓";
             dialog.PrimaryButtonText = "退出软件";
             dialog.IsPrimaryButtonEnabled = true;
-            dialog.CloseButtonStyle = (Style) App.Current.Resources["AccentButtonStyle"];
+            dialog.CloseButtonStyle = (Style)App.Current.Resources["AccentButtonStyle"];
             dialog.PrimaryButtonClick += (_, _) => _ = ApplicationView.GetForCurrentView().TryConsolidateAsync();
             _ = dialog.ShowAsync();
         }

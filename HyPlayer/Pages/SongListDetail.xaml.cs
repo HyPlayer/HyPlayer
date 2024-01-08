@@ -2,9 +2,6 @@
 
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
-using Microsoft.AppCenter.Ingestion.Models;
-using Microsoft.Toolkit.Uwp.UI.Behaviors;
-using Microsoft.Xaml.Interactivity;
 using NeteaseCloudMusicApi;
 using Newtonsoft.Json.Linq;
 using System;
