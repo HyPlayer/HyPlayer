@@ -527,7 +527,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Uwp.Controls.SettingsControls">
-      <Version>8.0.230907</Version>
+      <Version>8.0.240109</Version>
     </PackageReference>
     <PackageReference Include="Inflatable.Lastfm">
       <Version>1.2.0</Version>
