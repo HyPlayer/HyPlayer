@@ -9,6 +9,7 @@
     xmlns:media="using:Microsoft.Toolkit.Uwp.UI.Media"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:ui="using:Microsoft.Toolkit.Uwp.UI"
+    xmlns:lyricrenderer="using:HyPlayer.LyricRenderer"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
     Loaded="Page_Loaded"
     NavigationCacheMode="Disabled">
@@ -338,106 +339,7 @@
                     <RowDefinition x:Name="DefaultRow" Height="25*" />
                     <RowDefinition x:Name="ImmersiveRow" Height="1*" />
                 </Grid.RowDefinitions>
-                <ScrollViewer
-                    x:Name="LyricBoxContainer"
-                    Grid.Row="0"
-                    Margin="0,0,0,0"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Top"
-                    x:FieldModifier="public"
-                    HorizontalScrollBarVisibility="Hidden"
-                    RightTapped="LyricBoxContainer_RightTapped"
-                    VerticalScrollBarVisibility="Hidden">
-                    <ScrollViewer.ContextFlyout>
-                        <MenuFlyout>
-                            <MenuFlyoutItem
-                                Click="BtnLoadLocalLyric"
-                                Style="{StaticResource MenuFlyoutItemRevealStyle}"
-                                Text="加载本地歌词">
-                                <MenuFlyoutItem.Icon>
-                                    <FontIcon Glyph="&#xE160;" />
-                                </MenuFlyoutItem.Icon>
-                            </MenuFlyoutItem>
-                            <MenuFlyoutItem
-                                Click="BtnCopyLyricClicked"
-                                Style="{StaticResource MenuFlyoutItemRevealStyle}"
-                                Text="复制歌词">
-                                <MenuFlyoutItem.Icon>
-                                    <FontIcon Glyph="&#xE16F;" />
-                                </MenuFlyoutItem.Icon>
-                            </MenuFlyoutItem>
-                            <MenuFlyoutSeparator />
-                            <MenuFlyoutItem IsEnabled="false" Text="歌词偏移" />
-                            <MenuFlyoutItem>
-                                <MenuFlyoutItem.Template>
-                                    <ControlTemplate TargetType="MenuFlyoutItem">
-                                        <controls:DockPanel LastChildFill="True">
-                                            <RepeatButton
-                                                x:Name="LyricOffsetMin"
-                                                controls:DockPanel.Dock="Left"
-                                                Click="LyricOffsetMin_Click"
-                                                Content="-" />
-                                            <RepeatButton
-                                                x:Name="LyricOffsetAdd"
-                                                controls:DockPanel.Dock="Right"
-                                                Click="LyricOffsetAdd_Click"
-                                                Content="+" />
-                                            <Button
-                                                x:Name="LyricOffsetUnset"
-                                                x:FieldModifier="public"
-                                                Click="LyricOffsetUnset_Click"
-                                                Content="偏移复原" />
-                                        </controls:DockPanel>
-                                    </ControlTemplate>
-                                </MenuFlyoutItem.Template>
-                            </MenuFlyoutItem>
-                            <MenuFlyoutItem
-                                x:Name="TbOffset"
-                                IsEnabled="false"
-                                Text="00.00" />
-                        </MenuFlyout>
-                    </ScrollViewer.ContextFlyout>
-                    <ScrollViewer.Content>
-                        <Grid x:Name="LyricBoxHost">
-                            <StackPanel
-                                Orientation="Horizontal"
-                                Spacing="5"
-                                Visibility="Collapsed">
-                                <TextBlock HorizontalAlignment="Center" Text="当前暂未播放歌曲" />
-                            </StackPanel>
-                            <muxc:ItemsRepeater
-                                x:Name="LyricBox"
-                                ItemsSource="{x:Bind LyricList, Mode=OneWay}"
-                                PointerWheelChanged="LyricBoxContainer_OnPointerWheelChanged"
-                                Tapped="LyricBox_Tapped">
-                                <muxc:ItemsRepeater.Layout>
-                                    <muxc:StackLayout Orientation="Vertical" Spacing="40" />
-                                </muxc:ItemsRepeater.Layout>
-                                <muxc:ItemsRepeater.ItemTemplate>
-                                    <DataTemplate x:DataType="controls1:LyricItemModel">
-                                        <Border>
-                                            <controls1:LyricItemWrapper
-                                                x:Name="LyricWrapper"
-                                                HorizontalAlignment="Stretch"
-                                                IsShow="{x:Bind IsShow, Mode=OneWay}"
-                                                SongLyric="{x:Bind SongLyric}" />
-                                        </Border>
-                                    </DataTemplate>
-                                </muxc:ItemsRepeater.ItemTemplate>
-                            </muxc:ItemsRepeater>
-                        </Grid>
-
-                        <!--<StackPanel
-                            Name="LyricBox"
-                            Orientation="Vertical"
-                            PointerWheelChanged="LyricBoxContainer_OnPointerWheelChanged"
-                            ScrollViewer.VerticalScrollBarVisibility="Auto"
-                            Spacing="15"
-                            Tapped="LyricBox_Tapped">
-
-                        </StackPanel>-->
-                    </ScrollViewer.Content>
-                </ScrollViewer>
+                <lyricrenderer:LyricRenderView RightTapped="LyricBoxContainer_RightTapped"  x:Name="LyricBox" />
             </Grid>
             <Button
                 x:Name="MoreBtn"

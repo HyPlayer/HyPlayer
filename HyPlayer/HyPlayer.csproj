@@ -156,6 +156,18 @@
     <Compile Include="Controls\LyricControl\LyricControl.xaml.cs">
       <DependentUpon>LyricControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="LyricRenderer\Abstraction\Render\LineRenderOffset.cs" />
+    <Compile Include="LyricRenderer\Abstraction\Render\LineRenderOption.cs" />
+    <Compile Include="LyricRenderer\Abstraction\Render\LineRollingCalculator.cs" />
+    <Compile Include="LyricRenderer\Abstraction\Render\RenderingLyricLine.cs" />
+    <Compile Include="LyricRenderer\Converters\LrcConverter.cs" />
+    <Compile Include="LyricRenderer\LyricLineRenderers\BreathPointRenderingLyricLine.cs" />
+    <Compile Include="LyricRenderer\LyricLineRenderers\SyllablesRenderingLyricLine.cs" />
+    <Compile Include="LyricRenderer\LyricLineRenderers\TextRenderingLyricLine.cs" />
+    <Compile Include="LyricRenderer\LyricRenderView.xaml.cs" />
+    <Compile Include="LyricRenderer\RollingCalculators\ElasticEaseRollingCalculator.cs" />
+    <Compile Include="LyricRenderer\RollingCalculators\LyricifyRollingCalculator.cs" />
+    <Compile Include="LyricRenderer\RollingCalculators\SinRollingCalculator.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -382,6 +394,9 @@
     </Page>
     <Page Include="Controls\SimpleLinerList.xaml" />
     <Page Include="Controls\SongListSelect.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="LyricRenderer\LyricRenderView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Content Include="Resources\Dark.xaml" />
