@@ -8,6 +8,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Microsoft.Graphics.Canvas;
 using System.Diagnostics;
+using HyPlayer.LyricRenderer.LyricLineRenderers;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -106,6 +107,18 @@ namespace HyPlayer.LyricRenderer
             }
         }
 
+        public void ChangeBeatPerMinute(double beatPerMinute)
+        {
+            foreach (var renderingLyricLine in _renderingLyricLines)
+            {
+                if (renderingLyricLine is BreathPointRenderingLyricLine bprl)
+                {
+                    bprl.BeatPerMinute = beatPerMinute;
+                }
+                _isTypographyChanged = true;
+            }
+        }
+
         public void ReflowTime(long time)
         {
             var keys = _keyFrameRendered.Keys.ToArray();
@@ -175,6 +188,8 @@ namespace HyPlayer.LyricRenderer
             lrv._needRecalculateSize = true;
             lrv._needRecalculate = true;
         }
+
+
 
         private void RecalculateItemsSize(CanvasDrawingSession session)
         {

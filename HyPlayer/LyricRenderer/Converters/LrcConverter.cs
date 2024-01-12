@@ -17,7 +17,6 @@ public static class LrcConverter
         {
             var line = lines[index];
             var lyricLine = line.LyricLine;
-            parseLine:
             long endTime = -1;
             if (lyricLine is KaraokeLyricsLine karaokeLyricsLine)
                 endTime = (long)(karaokeLyricsLine.StartTime.TotalMilliseconds +

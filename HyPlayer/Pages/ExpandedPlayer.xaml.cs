@@ -532,7 +532,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     bpmAniStoryboard.Children.Add(animationY);
                     bpmAniStoryboard.Begin();
                     luminousColorsRotateAnimation.Duration = TimeSpan.FromSeconds(3200 / bpm);
-                    //Common.AddToTeachingTipLists("当前歌曲的 BPM 为",bpm.ToString());
+                    LyricBox.ChangeBeatPerMinute(bpm);
                 }
             }
         }
@@ -552,6 +552,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 if (HyPlayList.NowPlayingItem == null) return;
                 LyricBox.Width = LyricWidth;
                 LyricBox.ChangeRenderColor(GetIdleBrush().Color, GetAccentBrush().Color);
+                LyricBox.ChangeRenderFontSize(showsize + 5, showsize, Common.Setting.romajiSize);
             }
         });
     }
@@ -652,9 +653,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     public void RefreshLyricColor()
     {
-        if ((!_lyricHasBeenLoaded || !_lyricColorLoaded) && _lyricCoverChanged) return;
-        _lyricCoverChanged = false;
-        HyPlayList.FireLyricColorChangeEvent();
+        LyricBox.ChangeRenderColor(GetIdleBrush().Color, GetAccentBrush().Color);
     }
 
     public void StartExpandAnimation()

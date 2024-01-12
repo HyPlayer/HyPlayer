@@ -196,7 +196,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                         FontWeight = FontWeights.Normal
                     };
                     tll = new CanvasTextLayout(session, Transliteration, transliterationFormat, _canvasWidth, _canvasHeight);
-                    add += 30;
+                    add += 10;
                 }
 
                 if (!string.IsNullOrWhiteSpace(Translation))
