@@ -63,11 +63,11 @@ steps:
   inputs:
     solution: '$(solution)'
     vsVersion: '17.0'
-    msbuildArgs: '/p:AppxBundlePlatforms="x86"  /p:AppxPackageDir="$(appxPackageDir)"  /p:AppxBundle=Always  /p:PackageCertificateThumbprint=""  /p:UapAppxPackageBuildMode=SideloadOnly  /p:AppxPackageSigningEnabled=true  /p:PackageCertificateKeyFile="$(certificate.secureFilePath)" /p:PackageCertificatePassword="$(signingCert.password)"'
-    platform: 'x86'
+    msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)"  /p:AppxPackageDir="$(appxPackageDir)"  /p:AppxBundle=Always  /p:PackageCertificateThumbprint=""  /p:UapAppxPackageBuildMode=SideloadOnly  /p:AppxPackageSigningEnabled=true  /p:PackageCertificateKeyFile="$(certificate.secureFilePath)" /p:PackageCertificatePassword="$(signingCert.password)"'
+    platform: 'x64'
     configuration: '$(buildConfiguration)'
     clean: true
-    msbuildArchitecture: 'x86'
+    msbuildArchitecture: 'x64'
     customVersion: 'latest'
 
 - task: CopyFiles@2
