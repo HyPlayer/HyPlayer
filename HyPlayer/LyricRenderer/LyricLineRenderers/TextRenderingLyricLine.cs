@@ -49,7 +49,8 @@ public class TextRenderingLyricLine : RenderingLyricLine
         // 画背景
         if (_reactionState == ReactionState.Enter)
         {
-            
+            // 为了应对居中, 获取字符 Offset
+        
             double progress;
             if (renderingTick - _lastReactionTime > ReactionDurationTick)
             {
@@ -66,7 +67,7 @@ public class TextRenderingLyricLine : RenderingLyricLine
                 G = 0,
                 B = 0
             };
-            session.FillRoundedRectangle((float)offset.X, (float)offset.Y, (float)RenderingWidth, (float)RenderingHeight, 6, 6, color);
+            session.FillRoundedRectangle((float)textLayout.LayoutBounds.Left, (float)offset.Y, (float)RenderingWidth, (float)RenderingHeight, 6, 6, color);
         }
 
         if (tll != null)

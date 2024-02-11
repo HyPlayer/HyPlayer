@@ -405,7 +405,7 @@ namespace HyPlayer.LyricRenderer
 
             if (_lastFocusingLine != focusingLine)
             {
-                if (_lastFocusingLine != -1)
+                if (_lastFocusingLine != -1 && RenderingLyricLines.Count > (_lastFocusingLine))
                     RenderingLyricLines[_lastFocusingLine].GoToReactionState(ReactionState.Leave, _renderTick);
                 _lastFocusingLine = focusingLine;
             }

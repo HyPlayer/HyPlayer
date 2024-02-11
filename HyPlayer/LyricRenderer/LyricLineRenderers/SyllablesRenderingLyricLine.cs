@@ -43,15 +43,39 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
 
         public override void GoToReactionState(ReactionState state, long time)
         {
-            //throw new NotImplementedException();
+            _lastReactionTime = time;
+            _reactionState = state;
         }
+        private const long ReactionDurationTick = 5000000;
 
         public override bool Render(CanvasDrawingSession session, LineRenderOffset offset, long currentLyricTime, long renderingTick)
         {
             if (textLayout is null) return true;
             var actualTop = (float)offset.Y + (HiddenOnBlur ? 10 : 30);
             //session.DrawRectangle((float)offset.X, actualTop, (float)RenderingWidth, (float)RenderingHeight, Colors.Yellow);
-
+// 画背景
+            if (_reactionState == ReactionState.Enter)
+            {
+                // 为了应对居中, 获取字符 Offset
+        
+                double progress;
+                if (renderingTick - _lastReactionTime > ReactionDurationTick)
+                {
+                    progress = 1;
+                }
+                else
+                {
+                    progress = Math.Clamp((renderingTick - _lastReactionTime) * 1.0 / ReactionDurationTick, 0 , 1);
+                }
+                var color = new Color()
+                {
+                    A = (byte)(progress * 40),
+                    R = 0,
+                    G = 0,
+                    B = 0
+                };
+                session.FillRoundedRectangle((float)textLayout.LayoutBounds.Left, (float)offset.Y, (float)RenderingWidth, (float)RenderingHeight, 6, 6, color);
+            }
             if (tll != null)
             {
                 actualTop += HiddenOnBlur ? 10 : 0;
@@ -140,6 +164,8 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
         public bool HiddenOnBlur { get; set; }
         private string _text;
         private bool _sizeChanged = true;
+        private long _lastReactionTime;
+        private ReactionState _reactionState = ReactionState.Leave;
 
         public override void OnRenderSizeChanged(CanvasDrawingSession session, double width, double height, long time)
         {
