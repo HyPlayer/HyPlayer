@@ -14,6 +14,8 @@ using Microsoft.Graphics.Canvas.Geometry;
 using Microsoft.Graphics.Canvas.Text;
 using System.Diagnostics;
 using Windows.UI.Xaml;
+using Microsoft.Graphics.Canvas.Effects;
+using Microsoft.Toolkit.Uwp.UI.Media;
 
 namespace HyPlayer.LyricRenderer.LyricLineRenderers
 {
@@ -48,60 +50,102 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
         }
         private const long ReactionDurationTick = 5000000;
 
+        private const long ScaleAnimationDuration = 200;
+
         public override bool Render(CanvasDrawingSession session, LineRenderOffset offset, long currentLyricTime, long renderingTick)
         {
             if (textLayout is null) return true;
             var actualTop = (float)offset.Y + (HiddenOnBlur ? 10 : 30);
             //session.DrawRectangle((float)offset.X, actualTop, (float)RenderingWidth, (float)RenderingHeight, Colors.Yellow);
 // 画背景
-            if (_reactionState == ReactionState.Enter)
-            {
-                // 为了应对居中, 获取字符 Offset
-        
-                double progress;
-                if (renderingTick - _lastReactionTime > ReactionDurationTick)
-                {
-                    progress = 1;
-                }
-                else
-                {
-                    progress = Math.Clamp((renderingTick - _lastReactionTime) * 1.0 / ReactionDurationTick, 0 , 1);
-                }
-                var color = new Color()
-                {
-                    A = (byte)(progress * 40),
-                    R = 0,
-                    G = 0,
-                    B = 0
-                };
-                session.FillRoundedRectangle((float)textLayout.LayoutBounds.Left, (float)offset.Y, (float)RenderingWidth, (float)RenderingHeight, 6, 6, color);
-            }
-            if (tll != null)
-            {
-                actualTop += HiddenOnBlur ? 10 : 0;
-                session.DrawTextLayout(tll, (float)offset.X, actualTop, _isFocusing ? FocusingColor : IdleColor);
-                actualTop += (float)tll.LayoutBounds.Height;
-            }
-            var textTop = actualTop;
-            session.DrawTextLayout(textLayout, (float)offset.X, actualTop, IdleColor);
-            actualTop += (float)textLayout.LayoutBounds.Height;
 
-            if (tl != null)
-            {
-                session.DrawTextLayout(tl, (float)offset.X, actualTop, _isFocusing ? FocusingColor : IdleColor);
+
+            var cl = new CanvasCommandList(session);
+
+            using (CanvasDrawingSession clds = cl.CreateDrawingSession())
+            {              
+                clds.DrawTextLayout(textLayout, (float)offset.X, actualTop, IdleColor);
+                if (_reactionState == ReactionState.Enter)
+                {
+                    // 为了应对居中, 获取字符 Offset
+
+                    double progress;
+                    if (renderingTick - _lastReactionTime > ReactionDurationTick)
+                    {
+                        progress = 1;
+                    }
+                    else
+                    {
+                        progress = Math.Clamp((renderingTick - _lastReactionTime) * 1.0 / ReactionDurationTick, 0, 1);
+                    }
+                    var color = new Color()
+                    {
+                        A = (byte)(progress * 40),
+                        R = 0,
+                        G = 0,
+                        B = 0
+                    };
+                    clds.FillRoundedRectangle((float)textLayout.LayoutBounds.Left, (float)offset.Y, (float)RenderingWidth, (float)RenderingHeight, 6, 6, color);
+                }
+                var textTop = actualTop;
+                if (_isFocusing)
+                {
+                    var highlightGeometry = CreateHighlightGeometry(currentLyricTime, textLayout, session);
+                    var textGeometry = CanvasGeometry.CreateText(textLayout);
+                    var highlightTextGeometry = highlightGeometry.CombineWith(textGeometry, Matrix3x2.Identity, CanvasGeometryCombine.Intersect);
+                    clds.FillGeometry(highlightTextGeometry, (float)offset.X, textTop, FocusingColor);
+                }
+                actualTop += (float)textLayout.LayoutBounds.Height;
+                if (tll != null)
+                {
+                    actualTop += HiddenOnBlur ? 10 : 0;
+                    clds.DrawTextLayout(tll, (float)offset.X, actualTop, _isFocusing ? FocusingColor : IdleColor);
+                    actualTop += (float)tll.LayoutBounds.Height;
+                }
+                if (tl != null)
+                {
+                    clds.DrawTextLayout(tl, (float)offset.X, actualTop, _isFocusing ? FocusingColor : IdleColor);
+                }
             }
 
-            
             if (_isFocusing)
             {
-                var highlightGeometry = CreateHighlightGeometry(currentLyricTime, textLayout, session);
-                var textGeometry = CanvasGeometry.CreateText(textLayout);
-                var highlightTextGeometry = highlightGeometry.CombineWith(textGeometry, Matrix3x2.Identity, CanvasGeometryCombine.Intersect);
-                session.FillGeometry(highlightTextGeometry, (float)offset.X, textTop, FocusingColor);
+                //画发光效果
+                var opacityEffect = new Microsoft.Graphics.Canvas.Effects.OpacityEffect
+                {
+                    Source = new GaussianBlurEffect
+                    {
+                        Source = cl,
+                        BlurAmount = 4,
+                    },
+                    Opacity = 0.4f
+                };
+                session.DrawImage(cl);
+                session.DrawImage(opacityEffect, 0, 0);
             }
+            else
+            {
+                var transformEffect = new Transform2DEffect
+                {
+                    Source = cl,
+                    TransformMatrix = GetCenterMatrix(0, 0, (float)textLayout.LayoutBounds.Width / 2, (float)textLayout.LayoutBounds.Height / 2, 0.9F,0.9F),
+                };
+                session.DrawImage(transformEffect);
+            }
+        
             return true;
-        }
+       }
 
+        /// <summary>
+        /// 根据中心点放大
+        /// </summary>
+        public Matrix3x2 GetCenterMatrix(float X, float Y, float XCenter, float YCenter, float XScle, float YScle)
+        {
+            return Matrix3x2.CreateTranslation(-XCenter, -YCenter)
+                    * Matrix3x2.CreateScale(XScle, YScle)
+                    * Matrix3x2.CreateTranslation(X, Y)
+                     * Matrix3x2.CreateTranslation(XCenter, YCenter);
+        }
         private CanvasGeometry CreateHighlightGeometry(long currentTime, CanvasTextLayout textLayout,
             CanvasDrawingSession drawingSession)
         {
