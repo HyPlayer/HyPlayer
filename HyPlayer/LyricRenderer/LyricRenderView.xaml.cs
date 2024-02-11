@@ -155,6 +155,12 @@ namespace HyPlayer.LyricRenderer
             // Refresh _timeTickesToRerender
             lrv._initializing = true;
             lrv._renderingLyricLines = lrv.RenderingLyricLines;
+            // 将 Id 换为 Index, 方便后续读取
+            for (var i = 0; i < lrv._renderingLyricLines.Count; i++)
+            {
+                lrv._renderingLyricLines[i].Id = i;
+            }
+
             lrv._keyFrameRendered.Clear();
             lrv._targetingKeyFrames.Clear();
             lrv._renderOffsets.Clear();
@@ -236,7 +242,8 @@ namespace HyPlayer.LyricRenderer
                         Math.Abs(_offsetBeforeRolling[currentLine.Id] - renderedAfterStartPosition) > Epsilon)
                     {
                         renderedAfterStartPosition = LineRollingEaseCalculator.CalculateCurrentY(
-                            _offsetBeforeRolling[currentLine.Id], renderedAfterStartPosition, i - _currentLyricLineIndex,
+                            _offsetBeforeRolling[currentLine.Id], renderedAfterStartPosition,
+                            i - _currentLyricLineIndex,
                             _lastKeyFrame,
                             CurrentLyricTime);
                         _needRecalculate = true; // 滚动中, 下一帧继续渲染
@@ -261,7 +268,8 @@ namespace HyPlayer.LyricRenderer
                         Math.Abs(_offsetBeforeRolling[currentLine.Id] - renderedBeforeStartPosition) > Epsilon)
                     {
                         renderedBeforeStartPosition = LineRollingEaseCalculator.CalculateCurrentY(
-                            _offsetBeforeRolling[currentLine.Id], renderedBeforeStartPosition, i - _currentLyricLineIndex,
+                            _offsetBeforeRolling[currentLine.Id], renderedBeforeStartPosition,
+                            i - _currentLyricLineIndex,
                             _lastKeyFrame,
                             CurrentLyricTime);
 
@@ -352,9 +360,11 @@ namespace HyPlayer.LyricRenderer
 
             foreach (var renderingLyricLine in _itemsToBeRender)
             {
-                renderingLyricLine.Render(args.DrawingSession, _renderOffsets[renderingLyricLine.Id], CurrentLyricTime,
-                    _renderTick,_currentLyricLineIndex );
+                renderingLyricLine.Render(args.DrawingSession, _renderOffsets[renderingLyricLine.Id],
+                    CurrentLyricTime,
+                    _renderTick, renderingLyricLine.Id - _currentLyricLineIndex);
             }
+
 
             args.DrawingSession.Dispose();
         }
