@@ -360,6 +360,16 @@ namespace HyPlayer
             }
         }
 
+        public int translationSize
+        {
+            get => GetSettings(nameof(translationSize), 0);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(translationSize)] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool gentleBPMAnimation
         {
             get => GetSettings(nameof(gentleBPMAnimation), false);
@@ -757,9 +767,9 @@ namespace HyPlayer
             set => ApplicationData.Current.LocalSettings.Values[nameof(noImage)] = value;
         }
 
-        public bool lyricAlignment
+        public int lyricAlignment
         {
-            get => GetSettings(nameof(lyricAlignment), false);
+            get => GetSettings(nameof(lyricAlignment), 0);
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(lyricAlignment)] = value;

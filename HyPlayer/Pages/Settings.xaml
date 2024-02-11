@@ -124,6 +124,19 @@
                                             ValueChanged="LyricSize_OnValueChanged"
                                             Value="{x:Bind hyplayer:Common.Setting.lyricSize, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
+                                    <controls3:SettingsCard
+                                        Description="0为自动"
+                                        Header="翻译大小">
+                                        <controls:NumberBox
+                                            MinWidth="100"
+                                            HorizontalAlignment="Right"
+                                            LargeChange="5"
+                                            Minimum="0"
+                                            SmallChange="1"
+                                            SpinButtonPlacementMode="Compact"
+                                            ValueChanged="LyricSize_OnValueChanged"
+                                            Value="{x:Bind hyplayer:Common.Setting.translationSize, Mode=TwoWay}" />
+                                    </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="罗马字大小">
                                         <controls:NumberBox
                                             x:Name="RomajiSize"
@@ -273,12 +286,15 @@
                                         </Grid>
                                     </controls3:SettingsCard>
 
-                                    <controls3:SettingsCard Header="使用左对齐">
-                                        <ToggleSwitch
+                                    <controls3:SettingsCard Header="对齐方式">
+                                        <ComboBox
                                             MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.lyricAlignment, Mode=TwoWay}"
-                                            Toggled="LyricAlignment_OnToggled" />
+                                            SelectedIndex="{x:Bind hyplayer:Common.Setting.lyricAlignment, Mode=TwoWay}"
+                                            HorizontalAlignment="Right">
+                                            <ComboBoxItem Content="左对齐" />
+                                            <ComboBoxItem Content="居中" />
+                                            <ComboBoxItem Content="右对齐" />
+                                        </ComboBox>
                                     </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="开启时启动热词">
                                         <ToggleSwitch

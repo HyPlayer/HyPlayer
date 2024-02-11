@@ -78,9 +78,19 @@ public sealed partial class LyricItem : UserControl, IDisposable
         : Common.PageExpandedPlayer.showsize;
 
     public TextAlignment LyricAlignment =>
-        Common.Setting.lyricAlignment ? TextAlignment.Left : TextAlignment.Center;
+        Common.Setting.lyricAlignment switch
+        {
+            1 => TextAlignment.Center,
+            2 => TextAlignment.Right,
+            _ => TextAlignment.Left
+        };
     public HorizontalAlignment GridAlignment =>
-        Common.Setting.lyricAlignment ? HorizontalAlignment.Left : HorizontalAlignment.Center;
+        Common.Setting.lyricAlignment switch
+        {
+            1 => HorizontalAlignment.Center,
+            2 => HorizontalAlignment.Right,
+            _ => HorizontalAlignment.Left
+        };
     private SolidColorBrush AccentBrush => GetAccentBrush();
 
     private SolidColorBrush IdleBrush => GetIdleBrush();

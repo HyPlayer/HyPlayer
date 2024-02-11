@@ -113,7 +113,16 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void LyricBox_OnBeforeRender(LyricRenderer.LyricRenderView view)
     {
-        view.CurrentLyricTime = (long)HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
+        if (HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds < view.CurrentLyricTime)
+        {
+            view.CurrentLyricTime = (long)HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
+            LyricBox.ReflowTime(0);
+        }
+        else
+        {
+            view.CurrentLyricTime = (long)HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
+        }
+
     }
 
     public double showsize { get; set; }
@@ -377,8 +386,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         }
 
         LyricBox.Width = LyricWidth;
-        LyricBox.ChangeRenderFontSize(showsize, showsize, Common.Setting.romajiSize);
-        
+        LyricBox.ChangeRenderFontSize(showsize, (Common.Setting.translationSize > 0) ? Common.Setting.translationSize : showsize / 2, Common.Setting.romajiSize);
+
         ImageRotateTransform.CenterX = ImageAlbum.ActualSize.X / 2;
         ImageRotateTransform.CenterY = ImageAlbum.ActualSize.Y / 2;
 
@@ -411,12 +420,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         Common.IsInImmersiveMode = false;
         if (e.Parameter is null || (bool)e.Parameter)
             Window.Current.SetTitleBar(AppTitleBar);
-
-        if (Common.Setting.lyricAlignment)
-        {
-            ToggleButtonTranslation.HorizontalAlignment = HorizontalAlignment.Left;
-            ToggleButtonSound.HorizontalAlignment = HorizontalAlignment.Left;
-        }
 
         Current_SizeChanged(null, null);
         Redesign();
@@ -546,13 +549,18 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             if (!_lyricIsCleaning)
             {
                 LyricBox.RenderingLyricLines = LrcConverter.Convert(HyPlayList.Lyrics);
-                LyricBox.ChangeAlignment(Common.Setting.lyricAlignment ? TextAlignment.Left : TextAlignment.Center);
+                LyricBox.ChangeAlignment(Common.Setting.lyricAlignment  switch
+                {
+                    1 => TextAlignment.Center,
+                    2 => TextAlignment.Right,
+                    _ => TextAlignment.Left
+                });
                 LyricBox.ReflowTime(0);
                 lastlrcid = HyPlayList.NowPlayingHashCode;
                 if (HyPlayList.NowPlayingItem == null) return;
                 LyricBox.Width = LyricWidth;
                 LyricBox.ChangeRenderColor(GetIdleBrush().Color, GetAccentBrush().Color);
-                LyricBox.ChangeRenderFontSize(showsize + 5, showsize, Common.Setting.romajiSize);
+                LyricBox.ChangeRenderFontSize(showsize, (Common.Setting.translationSize > 0 ) ? Common.Setting.translationSize : showsize / 2, Common.Setting.romajiSize);
             }
         });
     }

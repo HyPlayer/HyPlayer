@@ -19,18 +19,31 @@ public class BreathPointRenderingLyricLine : RenderingLyricLine
 
     public override bool Render(CanvasDrawingSession session, LineRenderOffset offset, long currentLyricTime)
     {
+        float actualX = (float)offset.X;
+        switch(TextAlignment)
+        {
+            case Windows.UI.Xaml.TextAlignment.Left:
+                actualX += MaxRadius / 2;
+                break;
+            case Windows.UI.Xaml.TextAlignment.Center:
+                actualX += (float)(RenderingWidth / 2 - MaxRadius);
+                break;
+            case Windows.UI.Xaml.TextAlignment.Right:
+                actualX += (float)(RenderingWidth - MaxRadius * 2);
+                break;
+        }   
         if (currentLyricTime <= EndTime && currentLyricTime >= StartTime)
         {
             // bpm to animation duration
             var duration = 60 / BeatPerMinute * 1000; // ms
             var progress = Math.Abs(Math.Sin(Math.PI / duration * (EndTime - currentLyricTime)));
 
-            session.FillCircle((float)offset.X + MaxRadius + 15, (float)offset.Y + MaxRadius + 15,
+            session.FillCircle(actualX + 15, (float)offset.Y + MaxRadius + 15,
                 MinRadius + (MaxRadius - MinRadius) * (float)progress, Colors.White);
         }
         else
         {
-            session.FillCircle((float)offset.X + MaxRadius, (float)offset.Y + MaxRadius, MinRadius, Colors.Gray);
+            session.FillCircle((float)actualX, (float)offset.Y + MaxRadius, MinRadius, Colors.Gray);
         }
 
         return true;
@@ -57,6 +70,7 @@ public class BreathPointRenderingLyricLine : RenderingLyricLine
             Hidden = true;
         }
         RenderingHeight = MaxRadius + 80;
+        RenderingWidth = width;
     }
 
     public override void OnTypographyChanged(CanvasDrawingSession session)
