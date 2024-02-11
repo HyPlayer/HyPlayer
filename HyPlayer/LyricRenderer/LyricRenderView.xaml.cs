@@ -116,6 +116,7 @@ namespace HyPlayer.LyricRenderer
                 {
                     bprl.BeatPerMinute = beatPerMinute;
                 }
+
                 _isTypographyChanged = true;
             }
         }
@@ -191,7 +192,6 @@ namespace HyPlayer.LyricRenderer
         }
 
 
-
         private void RecalculateItemsSize(CanvasDrawingSession session)
         {
             var itemWidth = _renderingWidth * LyricWidthRatio;
@@ -220,7 +220,7 @@ namespace HyPlayer.LyricRenderer
             var theoryRenderStartPosition = LyricPaddingTopRatio * _renderingHeight + _wheelDelta;
             var renderedAfterStartPosition = theoryRenderStartPosition;
             var renderedBeforeStartPosition = theoryRenderStartPosition;
-            
+
             for (var i = firstIndex; i < RenderingLyricLines.Count; i++)
             {
                 var currentLine = RenderingLyricLines[i];
@@ -272,14 +272,14 @@ namespace HyPlayer.LyricRenderer
                 _renderOffsets[currentLine.Id].X = 0;
                 if (renderedBeforeStartPosition + currentLine.RenderingHeight >= 0)
                     _itemsToBeRender.Add(currentLine);
-                if (i > 0)
-                    if (renderedBeforeStartPosition + RenderingLyricLines[i - 1].RenderingHeight < 0)
-                        break;
+                if (i <= 0) continue;
+                if (renderedBeforeStartPosition + RenderingLyricLines[i - 1].RenderingHeight < 0)
+                    break;
             }
         }
 
         private long _renderTick = 0;
-        
+
         private void LyricView_Draw(Microsoft.Graphics.Canvas.UI.Xaml.ICanvasAnimatedControl sender,
             Microsoft.Graphics.Canvas.UI.Xaml.CanvasAnimatedDrawEventArgs args)
         {
@@ -291,8 +291,8 @@ namespace HyPlayer.LyricRenderer
             {
                 // 缓动来一下吧
                 // 0.5 秒缓动到 0
-                var progress = Math.Clamp((_renderTick - _lastWheelTime - 50000000) / 5000000.0, 0 , 1);
-                _wheelDelta = (int) (_wheelDelta * (1 - progress));
+                var progress = Math.Clamp((_renderTick - _lastWheelTime - 50000000) / 5000000.0, 0, 1);
+                _wheelDelta = (int)(_wheelDelta * (1 - progress));
                 if (progress == 1)
                 {
                     _lastWheelTime = 0;
@@ -301,7 +301,7 @@ namespace HyPlayer.LyricRenderer
 
                 _needRecalculate = true;
             }
-            
+
             if (_isTypographyChanged)
             {
                 _isTypographyChanged = false;
@@ -310,7 +310,7 @@ namespace HyPlayer.LyricRenderer
                     renderingLyricLine.OnTypographyChanged(args.DrawingSession);
                 }
             }
-            
+
             foreach (var key in _keyFrameRendered.Keys.ToArray())
             {
                 if (_keyFrameRendered[key] == true) continue;
@@ -351,8 +351,10 @@ namespace HyPlayer.LyricRenderer
 
             foreach (var renderingLyricLine in _itemsToBeRender)
             {
-                renderingLyricLine.Render(args.DrawingSession, _renderOffsets[renderingLyricLine.Id], CurrentLyricTime);
+                renderingLyricLine.Render(args.DrawingSession, _renderOffsets[renderingLyricLine.Id], CurrentLyricTime,
+                    _renderTick);
             }
+
             args.DrawingSession.Dispose();
         }
 
@@ -373,11 +375,40 @@ namespace HyPlayer.LyricRenderer
 
         private int _wheelDelta = 0;
         private long _lastWheelTime = 0;
+
         private void LyricView_OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
         {
             _wheelDelta += e.GetCurrentPoint(this).Properties.MouseWheelDelta;
             _lastWheelTime = _renderTick;
             _needRecalculate = true;
+        }
+
+        private int _lastFocusingLine = -1;
+
+        private void LyricView_OnPointerMoved(object sender, PointerRoutedEventArgs e)
+        {
+            // 指针事件
+            // 获取在指针范围的行
+            var focusingLine = -1;
+            foreach (var renderOffsetsKey in _renderOffsets.Keys)
+            {
+                if (_renderOffsets[renderOffsetsKey].Y <= e.GetCurrentPoint(this).Position.Y &&
+                    _renderOffsets[renderOffsetsKey].Y + RenderingLyricLines[renderOffsetsKey].RenderingHeight >=
+                    e.GetCurrentPoint(this).Position.Y)
+                {
+                    if (_lastFocusingLine == renderOffsetsKey) return;
+                    RenderingLyricLines[renderOffsetsKey].GoToReactionState(ReactionState.Enter, _renderTick);
+                    focusingLine = renderOffsetsKey;
+                    break;
+                }
+            }
+
+            if (_lastFocusingLine != focusingLine)
+            {
+                if (_lastFocusingLine != -1)
+                    RenderingLyricLines[_lastFocusingLine].GoToReactionState(ReactionState.Leave, _renderTick);
+                _lastFocusingLine = focusingLine;
+            }
         }
     }
 }

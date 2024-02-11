@@ -31,7 +31,7 @@ public abstract class RenderingLyricLine
     public TextAlignment TextAlignment { get; set; } = TextAlignment.Left;
 
     public abstract void GoToReactionState(ReactionState state, long time);
-    public abstract bool Render(CanvasDrawingSession session, LineRenderOffset offset, long currentLyricTime);
+    public abstract bool Render(CanvasDrawingSession session, LineRenderOffset offset, long currentLyricTime, long renderingTick);
     public abstract void OnKeyFrame(CanvasDrawingSession session,long time);
     public abstract void OnRenderSizeChanged(CanvasDrawingSession session, double width, double height, long time);
     public abstract void OnTypographyChanged(CanvasDrawingSession session);

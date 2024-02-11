@@ -46,7 +46,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             //throw new NotImplementedException();
         }
 
-        public override bool Render(CanvasDrawingSession session, LineRenderOffset offset, long currentLyricTime)
+        public override bool Render(CanvasDrawingSession session, LineRenderOffset offset, long currentLyricTime, long renderingTick)
         {
             if (textLayout is null) return true;
             var actualTop = (float)offset.Y + (HiddenOnBlur ? 10 : 30);

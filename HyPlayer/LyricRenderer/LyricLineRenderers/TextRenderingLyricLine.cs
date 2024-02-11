@@ -1,4 +1,5 @@
-﻿using Windows.Foundation;
+﻿using System;
+using Windows.Foundation;
 using Windows.UI;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using Microsoft.Graphics.Canvas;
@@ -7,6 +8,7 @@ using Microsoft.Graphics.Canvas.Text;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
 using Microsoft.Graphics.Canvas.Effects;
+using System.Diagnostics;
 
 namespace HyPlayer.LyricRenderer.LyricLineRenderers;
 
@@ -28,6 +30,7 @@ public class TextRenderingLyricLine : RenderingLyricLine
     private float _canvasHeight = 0.0f;
 
     private long _lastReactionTime = 0;
+    private const long ReactionDurationTick = 5000000;
     private ReactionState _reactionState = ReactionState.Leave;
 
     public override void GoToReactionState(ReactionState state, long time)
@@ -36,17 +39,43 @@ public class TextRenderingLyricLine : RenderingLyricLine
         _reactionState = state;
     }
 
-    public override bool Render(CanvasDrawingSession session, LineRenderOffset offset, long currentLyricTime)
+    public override bool Render(CanvasDrawingSession session, LineRenderOffset offset, long currentLyricTime,
+        long renderingTick)
     {
         var actualTop = (float)offset.Y + (HiddenOnBlur ? 10 : 30);
         if (textLayout is null)
             return true;
+
+        // 画背景
+        if (_reactionState == ReactionState.Enter)
+        {
+            
+            double progress;
+            if (renderingTick - _lastReactionTime > ReactionDurationTick)
+            {
+                progress = 1;
+            }
+            else
+            {
+                progress = Math.Clamp((renderingTick - _lastReactionTime) * 1.0 / ReactionDurationTick, 0 , 1);
+            }
+            var color = new Color()
+            {
+                A = (byte)(progress * 40),
+                R = 0,
+                G = 0,
+                B = 0
+            };
+            session.FillRoundedRectangle((float)offset.X, (float)offset.Y, (float)RenderingWidth, (float)RenderingHeight, 6, 6, color);
+        }
+
         if (tll != null)
         {
             actualTop += HiddenOnBlur ? 10 : 0;
             session.DrawTextLayout(tll, (float)offset.X, actualTop, _isFocusing ? FocusingColor : IdleColor);
             actualTop += (float)tll.LayoutBounds.Height;
         }
+
         var textTop = actualTop;
         session.DrawTextLayout(textLayout, (float)offset.X, actualTop, IdleColor);
         actualTop += (float)textLayout.LayoutBounds.Height;
@@ -54,6 +83,7 @@ public class TextRenderingLyricLine : RenderingLyricLine
         {
             session.DrawTextLayout(tl, (float)offset.X, actualTop, _isFocusing ? FocusingColor : IdleColor);
         }
+
         if (_isFocusing)
         {
             // 做一下扫词
@@ -90,8 +120,8 @@ public class TextRenderingLyricLine : RenderingLyricLine
         {
             Hidden = true;
         }
+
         if (_canvasWidth == 0.0f) return;
-        
     }
 
     public override void OnRenderSizeChanged(CanvasDrawingSession session, double width, double height, long time)

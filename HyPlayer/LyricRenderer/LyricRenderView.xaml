@@ -15,5 +15,6 @@
         x:Name="LyricView"
         PointerWheelChanged="LyricView_OnPointerWheelChanged"
         SizeChanged="LyricView_OnSizeChanged"
+        PointerMoved="LyricView_OnPointerMoved"
         Draw="LyricView_Draw" />
 </UserControl>
