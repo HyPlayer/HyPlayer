@@ -40,7 +40,7 @@ public class TextRenderingLyricLine : RenderingLyricLine
     }
 
     public override bool Render(CanvasDrawingSession session, LineRenderOffset offset, long currentLyricTime,
-        long renderingTick)
+        long renderingTick, int gap)
     {
         var actualTop = (float)offset.Y + (HiddenOnBlur ? 10 : 30);
         if (textLayout is null)

@@ -206,22 +206,23 @@ namespace HyPlayer.LyricRenderer
         private readonly Dictionary<long, List<RenderingLyricLine>> _targetingKeyFrames = new();
         private readonly Dictionary<int, double> _offsetBeforeRolling = new();
         private long _lastKeyFrame = 0;
+        private int _currentLyricLineIndex = 0;
 
         private void RecalculateRenderOffset(CanvasDrawingSession session)
         {
             if (RenderingLyricLines is { Count: <= 0 }) return;
-            var firstIndex =
+            _currentLyricLineIndex =
                 RenderingLyricLines.FindIndex(x =>
                     x.StartTime <= CurrentLyricTime && x.EndTime >= CurrentLyricTime);
-            if (firstIndex < 0)
-                firstIndex = RenderingLyricLines.FindIndex(x => x.StartTime >= CurrentLyricTime);
-            if (firstIndex < 0) firstIndex = RenderingLyricLines.Count - 1;
+            if (_currentLyricLineIndex < 0)
+                _currentLyricLineIndex = RenderingLyricLines.FindIndex(x => x.StartTime >= CurrentLyricTime);
+            if (_currentLyricLineIndex < 0) _currentLyricLineIndex = RenderingLyricLines.Count - 1;
             _itemsToBeRender.Clear();
             var theoryRenderStartPosition = LyricPaddingTopRatio * _renderingHeight + _wheelDelta;
             var renderedAfterStartPosition = theoryRenderStartPosition;
             var renderedBeforeStartPosition = theoryRenderStartPosition;
 
-            for (var i = firstIndex; i < RenderingLyricLines.Count; i++)
+            for (var i = _currentLyricLineIndex; i < RenderingLyricLines.Count; i++)
             {
                 var currentLine = RenderingLyricLines[i];
                 if (currentLine.Hidden)
@@ -235,7 +236,7 @@ namespace HyPlayer.LyricRenderer
                         Math.Abs(_offsetBeforeRolling[currentLine.Id] - renderedAfterStartPosition) > Epsilon)
                     {
                         renderedAfterStartPosition = LineRollingEaseCalculator.CalculateCurrentY(
-                            _offsetBeforeRolling[currentLine.Id], renderedAfterStartPosition, i - firstIndex,
+                            _offsetBeforeRolling[currentLine.Id], renderedAfterStartPosition, i - _currentLyricLineIndex,
                             _lastKeyFrame,
                             CurrentLyricTime);
                         _needRecalculate = true; // 滚动中, 下一帧继续渲染
@@ -247,7 +248,7 @@ namespace HyPlayer.LyricRenderer
             }
 
             // 算之前的
-            for (var i = firstIndex - 1; i >= 0; i--)
+            for (var i = _currentLyricLineIndex - 1; i >= 0; i--)
             {
                 var currentLine = RenderingLyricLines[i];
                 if (currentLine.Hidden) continue;
@@ -260,7 +261,7 @@ namespace HyPlayer.LyricRenderer
                         Math.Abs(_offsetBeforeRolling[currentLine.Id] - renderedBeforeStartPosition) > Epsilon)
                     {
                         renderedBeforeStartPosition = LineRollingEaseCalculator.CalculateCurrentY(
-                            _offsetBeforeRolling[currentLine.Id], renderedBeforeStartPosition, i - firstIndex,
+                            _offsetBeforeRolling[currentLine.Id], renderedBeforeStartPosition, i - _currentLyricLineIndex,
                             _lastKeyFrame,
                             CurrentLyricTime);
 
@@ -352,7 +353,7 @@ namespace HyPlayer.LyricRenderer
             foreach (var renderingLyricLine in _itemsToBeRender)
             {
                 renderingLyricLine.Render(args.DrawingSession, _renderOffsets[renderingLyricLine.Id], CurrentLyricTime,
-                    _renderTick);
+                    _renderTick,_currentLyricLineIndex );
             }
 
             args.DrawingSession.Dispose();
@@ -383,7 +384,7 @@ namespace HyPlayer.LyricRenderer
             _needRecalculate = true;
         }
 
-        private int _lastFocusingLine = -1;
+        private int _lastMouseFocusingLine = -1;
 
         private void LyricView_OnPointerMoved(object sender, PointerRoutedEventArgs e)
         {
@@ -396,18 +397,18 @@ namespace HyPlayer.LyricRenderer
                     _renderOffsets[renderOffsetsKey].Y + RenderingLyricLines[renderOffsetsKey].RenderingHeight >=
                     e.GetCurrentPoint(this).Position.Y)
                 {
-                    if (_lastFocusingLine == renderOffsetsKey) return;
+                    if (_lastMouseFocusingLine == renderOffsetsKey) return;
                     RenderingLyricLines[renderOffsetsKey].GoToReactionState(ReactionState.Enter, _renderTick);
                     focusingLine = renderOffsetsKey;
                     break;
                 }
             }
 
-            if (_lastFocusingLine != focusingLine)
+            if (_lastMouseFocusingLine != focusingLine)
             {
-                if (_lastFocusingLine != -1 && RenderingLyricLines.Count > (_lastFocusingLine))
-                    RenderingLyricLines[_lastFocusingLine].GoToReactionState(ReactionState.Leave, _renderTick);
-                _lastFocusingLine = focusingLine;
+                if (_lastMouseFocusingLine != -1 && RenderingLyricLines.Count > (_lastMouseFocusingLine))
+                    RenderingLyricLines[_lastMouseFocusingLine].GoToReactionState(ReactionState.Leave, _renderTick);
+                _lastMouseFocusingLine = focusingLine;
             }
         }
     }

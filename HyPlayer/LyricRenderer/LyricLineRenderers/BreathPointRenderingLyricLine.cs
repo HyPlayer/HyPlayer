@@ -17,7 +17,7 @@ public class BreathPointRenderingLyricLine : RenderingLyricLine
         // TODO
     }
 
-    public override bool Render(CanvasDrawingSession session, LineRenderOffset offset, long currentLyricTime, long renderingTick)
+    public override bool Render(CanvasDrawingSession session, LineRenderOffset offset, long currentLyricTime, long renderingTick, int gap)
     {
         float actualX = (float)offset.X;
         switch(TextAlignment)
