@@ -1,6 +1,5 @@
 ﻿using System;
 using Windows.Foundation;
-using Windows.UI;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using Microsoft.Graphics.Canvas;
 using System.Globalization;
@@ -9,6 +8,8 @@ using Windows.UI.Text;
 using Windows.UI.Xaml;
 using Microsoft.Graphics.Canvas.Effects;
 using System.Diagnostics;
+using System.Numerics;
+using Windows.UI;
 
 namespace HyPlayer.LyricRenderer.LyricLineRenderers;
 
@@ -42,7 +43,7 @@ public class TextRenderingLyricLine : RenderingLyricLine
     public override bool Render(CanvasDrawingSession session, LineRenderOffset offset, long currentLyricTime,
         long renderingTick, int gap)
     {
-        var actualTop = (float)offset.Y + (HiddenOnBlur ? 10 : 30);
+        var drawingTop = (float)offset.Y + (HiddenOnBlur ? 10 : 30);
         if (textLayout is null)
             return true;
 
@@ -69,48 +70,95 @@ public class TextRenderingLyricLine : RenderingLyricLine
             };
             session.FillRoundedRectangle((float)textLayout.LayoutBounds.Left, (float)offset.Y, (float)RenderingWidth, (float)RenderingHeight, 6, 6, color);
         }
-
-        if (tll != null)
+        var actualTop = 0.0f;
+        var totalCommand = new CanvasCommandList(session);
+        using (var targetSession = totalCommand.CreateDrawingSession())
         {
-            actualTop += HiddenOnBlur ? 10 : 0;
-            session.DrawTextLayout(tll, (float)offset.X, actualTop, _isFocusing ? FocusingColor : IdleColor);
-            actualTop += (float)tll.LayoutBounds.Height;
-        }
-
-        var textTop = actualTop;
-        session.DrawTextLayout(textLayout, (float)offset.X, actualTop, IdleColor);
-        actualTop += (float)textLayout.LayoutBounds.Height;
-        if (tl != null)
-        {
-            session.DrawTextLayout(tl, (float)offset.X, actualTop, _isFocusing ? FocusingColor : IdleColor);
-        }
-
-        if (_isFocusing)
-        {
-            // 做一下扫词
-            var currentProgress = (currentLyricTime - StartTime) * 1.0 / (EndTime - StartTime);
-            if (currentProgress < 0) return true;
-            var cl = new CanvasCommandList(session);
-            using (CanvasDrawingSession clds = cl.CreateDrawingSession())
+            if (tll != null)
             {
-                clds.DrawTextLayout(textLayout, 0, 0, FocusingColor);
+                actualTop += HiddenOnBlur ? 10 : 0;
+                targetSession.DrawTextLayout(tll, (float)offset.X, actualTop, _isFocusing ? FocusingColor : IdleColor);
+                actualTop += (float)tll.LayoutBounds.Height;
             }
 
-            var accentLyric = new CropEffect
+            var textTop = actualTop;
+            targetSession.DrawTextLayout(textLayout, (float)offset.X, actualTop, IdleColor);
+            actualTop += (float)textLayout.LayoutBounds.Height;
+            if (tl != null)
             {
-                Source = cl,
-                SourceRectangle = new Rect(textLayout.LayoutBounds.Left, textLayout.LayoutBounds.Top,
-                    currentProgress * textLayout.LayoutBounds.Width, textLayout.LayoutBounds.Height),
+                targetSession.DrawTextLayout(tl, (float)offset.X, actualTop, _isFocusing ? FocusingColor : IdleColor);
+            }
+
+            if (_isFocusing)
+            {
+                // 做一下扫词
+                var currentProgress = (currentLyricTime - StartTime) * 1.0 / (EndTime - StartTime);
+                if (currentProgress < 0) return true;
+                var cl = new CanvasCommandList(targetSession);
+                using (CanvasDrawingSession clds = cl.CreateDrawingSession())
+                {
+                    clds.DrawTextLayout(textLayout, 0, 0, FocusingColor);
+                }
+
+                var accentLyric = new CropEffect
+                {
+                    Source = cl,
+                    SourceRectangle = new Rect(textLayout.LayoutBounds.Left, textLayout.LayoutBounds.Top,
+                        currentProgress * textLayout.LayoutBounds.Width, textLayout.LayoutBounds.Height),
+                };
+                targetSession.DrawImage(accentLyric, (float)offset.X, textTop);
+            }
+        }
+        if (gap != 0)
+        {
+            _lastNoneGapTime = currentLyricTime;
+            var transformEffect = new Transform2DEffect
+            {
+                Source = totalCommand,
+                TransformMatrix = _unfocusMatrix,
             };
-            session.DrawImage(accentLyric, (float)offset.X, textTop);
+            session.DrawImage(transformEffect, (float)offset.X, drawingTop);
+        }
+        else
+        {
+            // 计算 Progress
+            var progress = 1.0f;
+            if (currentLyricTime - _lastNoneGapTime <= ScaleAnimationDuration)
+            {
+                progress = Math.Clamp((currentLyricTime - _lastNoneGapTime) * 1.0f / ScaleAnimationDuration, 0, 1);
+            }
+            var scaling = 0.9F + progress * 0.1f;
+            var transformEffect = new Transform2DEffect
+            {
+                Source = totalCommand,
+                TransformMatrix = GetCenterMatrix(0, 0, _scalingCenterX,
+                    (float)textLayout.LayoutBounds.Height / 2, scaling, scaling),
+            };
+            session.DrawImage(transformEffect, (float)offset.X, drawingTop);
         }
 
         return true;
     }
 
+    /// <summary>
+    /// 根据中心点放大
+    /// </summary>
+    public Matrix3x2 GetCenterMatrix(float X, float Y, float XCenter, float YCenter, float XScle, float YScle)
+    {
+        return Matrix3x2.CreateTranslation(-XCenter, -YCenter)
+               * Matrix3x2.CreateScale(XScle, YScle)
+               * Matrix3x2.CreateTranslation(X, Y)
+               * Matrix3x2.CreateTranslation(XCenter, YCenter);
+    }
+    
+    private const long ScaleAnimationDuration = 200;
+
     private bool _isFocusing = false;
 
     public bool HiddenOnBlur = false;
+    private long _lastNoneGapTime;
+    private float _scalingCenterX;
+    private Matrix3x2 _unfocusMatrix = Matrix3x2.Identity;
 
     public override void OnKeyFrame(CanvasDrawingSession session, long time)
     {
@@ -205,8 +253,15 @@ public class TextRenderingLyricLine : RenderingLyricLine
             add += tll?.LayoutBounds.Height ?? 0;
             add += tl?.LayoutBounds.Height ?? 0;
         }
-
+        _scalingCenterX = (float)(TextAlignment switch
+        {
+            TextAlignment.Left => 0,
+            TextAlignment.Center => textLayout.LayoutBounds.Left + textLayout.LayoutBounds.Width / 2,
+            TextAlignment.Right => textLayout.LayoutBounds.Left + textLayout.LayoutBounds.Width,
+        });
+        _unfocusMatrix = GetCenterMatrix(0, 0, _scalingCenterX,
+            (float)textLayout.LayoutBounds.Height / 2, 0.9F, 0.9F);
         RenderingHeight = textLayout.LayoutBounds.Height + add + (HiddenOnBlur ? 10 : 30);
-        RenderingWidth = textLayout.LayoutBounds.Width + 10;
+        RenderingWidth = textLayout.LayoutBounds.Width;
     }
 }

@@ -421,5 +421,13 @@ namespace HyPlayer.LyricRenderer
                 _lastMouseFocusingLine = focusingLine;
             }
         }
+
+        private void LyricRenderView_OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            _secondTimer.Stop();
+            _secondTimer.Dispose();
+            LyricView.RemoveFromVisualTree();
+            LyricView = null;
+        }
     }
 }

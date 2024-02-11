@@ -347,8 +347,8 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             _scalingCenterX = (float)(TextAlignment switch
             {
                 TextAlignment.Left => 0,
-                TextAlignment.Center => RenderingWidth / 2,
-                TextAlignment.Right => RenderingWidth + 78,
+                TextAlignment.Center => textLayout.LayoutBounds.Left + textLayout.LayoutBounds.Width / 2,
+                TextAlignment.Right => textLayout.LayoutBounds.Left + textLayout.LayoutBounds.Width,
             });
             _unfocusMatrix = GetCenterMatrix(0, 0, _scalingCenterX,
                 (float)textLayout.LayoutBounds.Height / 2, 0.9F, 0.9F);
