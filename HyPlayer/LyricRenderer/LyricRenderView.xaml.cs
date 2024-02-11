@@ -360,9 +360,10 @@ namespace HyPlayer.LyricRenderer
 
             foreach (var renderingLyricLine in _itemsToBeRender)
             {
-                renderingLyricLine.Render(args.DrawingSession, _renderOffsets[renderingLyricLine.Id],
+                var doRender = renderingLyricLine.Render(args.DrawingSession, _renderOffsets[renderingLyricLine.Id],
                     CurrentLyricTime,
                     _renderTick, renderingLyricLine.Id - _currentLyricLineIndex);
+                if (doRender == false) break;
             }
 
 
