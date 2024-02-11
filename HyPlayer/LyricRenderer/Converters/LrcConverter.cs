@@ -51,7 +51,7 @@ public static class LrcConverter
                     });
                 }
                 else
-                    result.Add(new BreathPointRenderingLyricLine
+                    result.Add(new ProgressBarRenderingLyricLine
                     {
                         Id = index,
                         KeyFrames =
@@ -62,7 +62,6 @@ public static class LrcConverter
                         StartTime = startTime,
                         EndTime = endTime,
                         HiddenOnBlur = true,
-                        BeatPerMinute = 60
                     });
                 
                 continue;
@@ -88,7 +87,7 @@ public static class LrcConverter
                 });
             }
             else
-                result.Add(new BreathPointRenderingLyricLine
+                result.Add(new ProgressBarRenderingLyricLine
                 {
                     Id = index,
                     KeyFrames =
@@ -99,7 +98,6 @@ public static class LrcConverter
                     StartTime = startTime,
                     EndTime = endTime,
                     HiddenOnBlur = true,
-                    BeatPerMinute = 60
                 });
         }
 

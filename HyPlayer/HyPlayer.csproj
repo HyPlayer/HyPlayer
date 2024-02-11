@@ -162,6 +162,7 @@
     <Compile Include="LyricRenderer\Abstraction\Render\RenderingLyricLine.cs" />
     <Compile Include="LyricRenderer\Converters\LrcConverter.cs" />
     <Compile Include="LyricRenderer\LyricLineRenderers\BreathPointRenderingLyricLine.cs" />
+    <Compile Include="LyricRenderer\LyricLineRenderers\ProgressBarRenderingLyricLine.cs" />
     <Compile Include="LyricRenderer\LyricLineRenderers\SyllablesRenderingLyricLine.cs" />
     <Compile Include="LyricRenderer\LyricLineRenderers\TextRenderingLyricLine.cs" />
     <Compile Include="LyricRenderer\LyricRenderView.xaml.cs" />
