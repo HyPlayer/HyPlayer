@@ -68,6 +68,9 @@ namespace HyPlayer.LyricRenderer
         public delegate void BeforeRenderDelegate(LyricRenderView view);
 
         public event BeforeRenderDelegate OnBeforeRender;
+        
+        public delegate void RequestSeekDelegate(long time);
+        public event RequestSeekDelegate OnRequestSeek;
 
         public LyricRenderView()
         {
@@ -436,6 +439,22 @@ namespace HyPlayer.LyricRenderer
             if (_lastMouseFocusingLine != -1 && RenderingLyricLines.Count > _lastMouseFocusingLine)
                 RenderingLyricLines[_lastMouseFocusingLine].GoToReactionState(ReactionState.Leave, _renderTick);
             _lastMouseFocusingLine = -1;
+        }
+
+
+        private void LyricView_OnPointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            foreach (var renderOffsetsKey in _renderOffsets.Keys)
+            {
+                if (_renderOffsets[renderOffsetsKey].Y <= e.GetCurrentPoint(this).Position.Y &&
+                    _renderOffsets[renderOffsetsKey].Y + RenderingLyricLines[renderOffsetsKey].RenderingHeight >=
+                    e.GetCurrentPoint(this).Position.Y)
+                {
+                    RenderingLyricLines[renderOffsetsKey].GoToReactionState(ReactionState.Press, _renderTick);
+                    OnRequestSeek?.Invoke(RenderingLyricLines[renderOffsetsKey].StartTime);
+                    break;
+                }
+            }
         }
     }
 }

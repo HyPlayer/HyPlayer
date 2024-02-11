@@ -34,6 +34,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.LyricRenderer;
 using Buffer = Windows.Storage.Streams.Buffer;
 using Color = System.Drawing.Color;
 
@@ -106,9 +107,15 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         Common.OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;
         LyricBox.LineRollingEaseCalculator = new ElasticEaseRollingCalculator();
         LyricBox.OnBeforeRender += LyricBox_OnBeforeRender;
+        LyricBox.OnRequestSeek += LyricBoxOnOnRequestSeek;
         LyricBox.LyricWidthRatio = 1;
         LyricBox.LyricPaddingTopRatio = 0.1;
         LyricBox.CurrentLyricTime = 0;
+    }
+
+    private void LyricBoxOnOnRequestSeek(long time)
+    {
+        HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(time);
     }
 
     private void LyricBox_OnBeforeRender(LyricRenderer.LyricRenderView view)

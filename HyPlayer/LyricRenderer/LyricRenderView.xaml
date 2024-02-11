@@ -15,6 +15,7 @@
     <win2d:CanvasAnimatedControl
         x:Name="LyricView"
         PointerExited="LyricView_OnPointerExited"
+        PointerPressed="LyricView_OnPointerPressed"
         PointerWheelChanged="LyricView_OnPointerWheelChanged"
         SizeChanged="LyricView_OnSizeChanged"
         PointerMoved="LyricView_OnPointerMoved"
