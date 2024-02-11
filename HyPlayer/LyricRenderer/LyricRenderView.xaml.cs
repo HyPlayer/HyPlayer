@@ -8,6 +8,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Microsoft.Graphics.Canvas;
 using System.Diagnostics;
+using Windows.UI.Xaml.Input;
 using HyPlayer.LyricRenderer.LyricLineRenderers;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
@@ -216,17 +217,15 @@ namespace HyPlayer.LyricRenderer
                 firstIndex = RenderingLyricLines.FindIndex(x => x.StartTime >= CurrentLyricTime);
             if (firstIndex < 0) firstIndex = RenderingLyricLines.Count - 1;
             _itemsToBeRender.Clear();
-            var theoryRenderStartPosition = LyricPaddingTopRatio * _renderingHeight;
+            var theoryRenderStartPosition = LyricPaddingTopRatio * _renderingHeight + _wheelDelta;
             var renderedAfterStartPosition = theoryRenderStartPosition;
             var renderedBeforeStartPosition = theoryRenderStartPosition;
-
-            var hiddenLinesCount = 0;
+            
             for (var i = firstIndex; i < RenderingLyricLines.Count; i++)
             {
                 var currentLine = RenderingLyricLines[i];
                 if (currentLine.Hidden)
                 {
-                    hiddenLinesCount++;
                     _renderOffsets[currentLine.Id].Y = renderedAfterStartPosition;
                     continue;
                 }
@@ -279,11 +278,30 @@ namespace HyPlayer.LyricRenderer
             }
         }
 
+        private long _renderTick = 0;
+        
         private void LyricView_Draw(Microsoft.Graphics.Canvas.UI.Xaml.ICanvasAnimatedControl sender,
             Microsoft.Graphics.Canvas.UI.Xaml.CanvasAnimatedDrawEventArgs args)
         {
+            _renderTick = args.Timing.TotalTime.Ticks;
             if (_initializing) return;
             OnBeforeRender?.Invoke(this);
+            // 鼠标滚轮时间 5 s 清零
+            if (_wheelDelta != 0 && _renderTick - _lastWheelTime > 50000000)
+            {
+                // 缓动来一下吧
+                // 0.5 秒缓动到 0
+                var progress = Math.Clamp((_renderTick - _lastWheelTime - 50000000) / 5000000.0, 0 , 1);
+                _wheelDelta = (int) (_wheelDelta * (1 - progress));
+                if (progress == 1)
+                {
+                    _lastWheelTime = 0;
+                    _wheelDelta = 0;
+                }
+
+                _needRecalculate = true;
+            }
+            
             if (_isTypographyChanged)
             {
                 _isTypographyChanged = false;
@@ -292,7 +310,7 @@ namespace HyPlayer.LyricRenderer
                     renderingLyricLine.OnTypographyChanged(args.DrawingSession);
                 }
             }
-
+            
             foreach (var key in _keyFrameRendered.Keys.ToArray())
             {
                 if (_keyFrameRendered[key] == true) continue;
@@ -351,6 +369,15 @@ namespace HyPlayer.LyricRenderer
         {
             _sizeChangedWidth = e.NewSize.Width;
             _sizeChangedHeight = e.NewSize.Height;
+        }
+
+        private int _wheelDelta = 0;
+        private long _lastWheelTime = 0;
+        private void LyricView_OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
+        {
+            _wheelDelta += e.GetCurrentPoint(this).Properties.MouseWheelDelta;
+            _lastWheelTime = _renderTick;
+            _needRecalculate = true;
         }
     }
 }

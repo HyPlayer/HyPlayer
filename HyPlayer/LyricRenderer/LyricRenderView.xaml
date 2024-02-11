@@ -13,6 +13,7 @@
 
     <win2d:CanvasAnimatedControl
         x:Name="LyricView"
+        PointerWheelChanged="LyricView_OnPointerWheelChanged"
         SizeChanged="LyricView_OnSizeChanged"
         Draw="LyricView_Draw" />
 </UserControl>
