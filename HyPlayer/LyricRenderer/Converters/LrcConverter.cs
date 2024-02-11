@@ -36,6 +36,7 @@ public static class LrcConverter
                 {
                     result.Add(new SyllablesRenderingLyricLine
                     {
+                        IsSyllable = true,
                         Id = index,
                         HiddenOnBlur = false,
                         KeyFrames =
@@ -71,8 +72,9 @@ public static class LrcConverter
             if (!string.IsNullOrWhiteSpace(line.LyricLine.CurrentLyric))
             {
                 
-                result.Add(new TextRenderingLyricLine
+                result.Add(new SyllablesRenderingLyricLine()
                 {
+                    IsSyllable = false,
                     Id = index,
                     KeyFrames =
                     [
