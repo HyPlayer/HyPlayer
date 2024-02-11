@@ -430,5 +430,12 @@ namespace HyPlayer.LyricRenderer
             LyricView.RemoveFromVisualTree();
             LyricView = null;
         }
+
+        private void LyricView_OnPointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            if (_lastMouseFocusingLine != -1 && RenderingLyricLines.Count > _lastMouseFocusingLine)
+                RenderingLyricLines[_lastMouseFocusingLine].GoToReactionState(ReactionState.Leave, _renderTick);
+            _lastMouseFocusingLine = -1;
+        }
     }
 }
