@@ -407,6 +407,8 @@ namespace HyPlayer.LyricRenderer
             var focusingLine = -1;
             foreach (var renderOffsetsKey in _renderOffsets.Keys)
             {
+                if (RenderingLyricLines[renderOffsetsKey].Hidden)
+                    continue;
                 if (_renderOffsets[renderOffsetsKey].Y <= e.GetCurrentPoint(this).Position.Y &&
                     _renderOffsets[renderOffsetsKey].Y + RenderingLyricLines[renderOffsetsKey].RenderingHeight >=
                     e.GetCurrentPoint(this).Position.Y)
@@ -446,6 +448,8 @@ namespace HyPlayer.LyricRenderer
         {
             foreach (var renderOffsetsKey in _renderOffsets.Keys)
             {
+                if (RenderingLyricLines[renderOffsetsKey].Hidden)
+                    continue;
                 if (_renderOffsets[renderOffsetsKey].Y <= e.GetCurrentPoint(this).Position.Y &&
                     _renderOffsets[renderOffsetsKey].Y + RenderingLyricLines[renderOffsetsKey].RenderingHeight >=
                     e.GetCurrentPoint(this).Position.Y)
