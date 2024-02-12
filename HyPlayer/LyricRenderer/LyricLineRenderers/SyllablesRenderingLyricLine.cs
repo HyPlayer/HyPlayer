@@ -101,8 +101,17 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 var cl = new CanvasCommandList(targetDrawingSession);
                 using (CanvasDrawingSession clds = cl.CreateDrawingSession())
                 {
+                    //罗马字
+                    var idleColor = FocusingColor;
+                    idleColor.A = (byte)(idleColor.A * 0.6);
+                    if (tll != null)
+                    {
+                        actualTop += HiddenOnBlur ? 10 : 0;
+                        clds.DrawTextLayout(tll, (float)offset.X, actualTop, _isFocusing ? FocusingColor : idleColor);
+                        actualTop += (float)tll.LayoutBounds.Height;
+                    }
+                    //歌词
                     clds.DrawTextLayout(textLayout, (float)offset.X, actualTop, IdleColor);
-
                     var textTop = actualTop;
                     if (_isFocusing)
                     {
@@ -123,17 +132,9 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                         clds.FillGeometry(highlightTextGeometry, (float)offset.X, textTop, FocusingColor);
 
                     }
-
                     actualTop += (float)textLayout.LayoutBounds.Height;
-                    var idleColor = FocusingColor;
-                    idleColor.A =(byte)(idleColor.A * 0.6);
-                    if (tll != null)
-                    {
-                        actualTop += HiddenOnBlur ? 10 : 0;
-                        clds.DrawTextLayout(tll, (float)offset.X, actualTop,_isFocusing? FocusingColor: idleColor);
-                        actualTop += (float)tll.LayoutBounds.Height;
-                    }
 
+                    //翻译
                     if (tl != null)
                     {
                         clds.DrawTextLayout(tl, (float)offset.X, actualTop, _isFocusing ? FocusingColor : idleColor);
