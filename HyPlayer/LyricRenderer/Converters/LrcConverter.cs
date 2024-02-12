@@ -32,9 +32,11 @@ public static class LrcConverter
                     StartTime = (long)t.StartTime.TotalMilliseconds,
                     EndTime = (long)t.StartTime.TotalMilliseconds + (long)t.Duration.TotalMilliseconds,
                 }).ToList();
+
+
                 if (syllables.Count > 0 && !syllables.All(t=>string.IsNullOrWhiteSpace(t.Syllable)))
                 {
-                    result.Add(new SyllablesRenderingLyricLine
+                    var lyric = new SyllablesRenderingLyricLine
                     {
                         IsSyllable = true,
                         Id = index,
@@ -49,7 +51,25 @@ public static class LrcConverter
                         Syllables = syllables,
                         Transliteration = line.HaveRomaji ? line.Romaji : null,
                         Translation = line.HaveTranslation ? line.Translation : null
-                    });
+                    };
+                    if(line.Romaji is not null or "")
+                    {
+                        try
+                        {
+                            var romajiSyllables = syllableLineInfo.RomajiWordInfos.Select(t => new RenderingSyllable
+                            {
+                                Syllable = t.CurrentWords,
+                                StartTime = (long)t.StartTime.TotalMilliseconds,
+                                EndTime = (long)t.StartTime.TotalMilliseconds + (long)t.Duration.TotalMilliseconds,
+                            }).ToList();
+                            lyric.RomajiSyllables = romajiSyllables;
+                        }
+                        catch
+                        {
+
+                        }
+                    }
+                    result.Add(lyric);
                 }
                 else
                     result.Add(new ProgressBarRenderingLyricLine

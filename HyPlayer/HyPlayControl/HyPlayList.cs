@@ -2589,13 +2589,58 @@ public static class Utils
         {
             if (!string.IsNullOrWhiteSpace(lyricItem.LyricLine.CurrentLyric))
             {
-                if (Utilities.HasKana(lyricItem.LyricLine.CurrentLyric))
-                    lyricItem.Romaji =
-                        await Common.KawazuConv.Convert(lyricItem.LyricLine.CurrentLyric, To.Romaji, Mode.Separated);
+                if (!Utilities.HasKana(lyricItem.LyricLine.CurrentLyric)) return;
+                lyricItem.Romaji =
+                    await Common.KawazuConv.Convert(lyricItem.LyricLine.CurrentLyric, To.Romaji, Mode.Separated);
+                if (lyricItem.LyricLine is not KaraokeLyricsLine klyric) return;
+                var list = await Common.KawazuConv.ConvertToList(lyricItem.LyricLine.CurrentLyric, To.Romaji, Mode.Separated);
+                klyric.RomajiWordInfos = GetRomajiKaraoke(list, klyric.WordInfos);
             }
         }
     }
-
+    public static List<KaraokeWordInfo> GetRomajiKaraoke(IEnumerable<(string,string)> romajiInfo,IEnumerable<KaraokeWordInfo> wordInfo)
+    {
+        var result = new List<KaraokeWordInfo>();
+        //将原始逐字数据完全分割为单字
+        var splited = new List<KaraokeWordInfo>();
+        foreach(var item in wordInfo)
+        {
+            if (item.CurrentWords.Length <= 1)
+            {
+                splited.Add(item);
+                continue;
+            }
+            var duration = item.Duration / item.CurrentWords.Length;
+            var startTime = item.StartTime;
+            for (int k = 0; k < item.CurrentWords.Length; k++)
+            {
+                var word = new KaraokeWordInfo(item.CurrentWords[k].ToString(), startTime, duration);
+                startTime += duration;
+                splited.Add(word);
+            }
+        }
+        //将分割后的逐字信息与罗马字一一对应
+        int i = 0;
+        int j = 0;
+        foreach(var item in romajiInfo)
+        {
+            //item内有几个字符就加几个上去
+            TimeSpan duration = new();
+            var startTime = splited[j].StartTime;
+            for (; i < j + item.Item1.Length; i++)
+            {
+                duration += splited[i].Duration;
+                if (splited[i].CurrentWords is " ")//遇到空格，往前找一个(Kawazu转换会忽略空格)
+                {
+                    j += 1;
+                }
+            }
+            j += item.Item1.Length;
+            var word = new KaraokeWordInfo(item.Item2, startTime, duration);
+            result.Add(word);
+        }
+        return result;
+    }
     public static async Task ConvertRomaji(PureLyricInfo pureLyricInfo, List<SongLyric> lyrics)
     {
         switch (Common.Setting.LyricRomajiSource)

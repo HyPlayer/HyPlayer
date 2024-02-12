@@ -46,7 +46,10 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
         private float _canvasWidth;
         private float _canvasHeight;
         public bool IsSyllable = false;
+        public bool IsRomajiSyllable = false;
+
         public List<RenderingSyllable> Syllables { get; set; } = [];
+        public List<RenderingSyllable>? RomajiSyllables { get; set; } = [];
         public string? Transliteration { get; set; }
         public string? Translation { get; set; }
 
@@ -104,18 +107,28 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     //罗马字
                     var idleColor = FocusingColor;
                     idleColor.A = (byte)(idleColor.A * 0.6);
-                    if (tll != null)
+                    if (tll != null )
                     {
-                        actualTop += HiddenOnBlur ? 10 : 0;
-                        clds.DrawTextLayout(tll, (float)offset.X, actualTop, _isFocusing ? FocusingColor : idleColor);
+                        clds.DrawTextLayout(tll, (float)offset.X, actualTop, idleColor);
+                        if (_isFocusing)
+                        {
+                            var highlightGeometry = CreateHighlightGeometries(currentLyricTime, tll, session, RomajiSyllables);
+                            var textGeometry = CanvasGeometry.CreateText(tll);
+
+                            var highlightTextGeometry = highlightGeometry.geo1.CombineWith(textGeometry, Matrix3x2.Identity,
+                                CanvasGeometryCombine.Intersect);
+
+                            clds.FillGeometry(highlightTextGeometry, (float)offset.X, actualTop, FocusingColor);
+                        }
                         actualTop += (float)tll.LayoutBounds.Height;
                     }
+
                     //歌词
                     clds.DrawTextLayout(textLayout, (float)offset.X, actualTop, IdleColor);
                     var textTop = actualTop;
                     if (_isFocusing)
                     {
-                        var highlightGeometry = CreateHighlightGeometries(currentLyricTime, textLayout, session);
+                        var highlightGeometry = CreateHighlightGeometries(currentLyricTime, textLayout, session,Syllables);
                         var textGeometry = CanvasGeometry.CreateText(textLayout);
 
                         var highlightTextGeometry = highlightGeometry.geo1.CombineWith(textGeometry, Matrix3x2.Identity,
@@ -222,16 +235,16 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
         /// </summary>
         private (CanvasGeometry geo1, CanvasGeometry? geo2 ,double currentPrecentage)
             CreateHighlightGeometries(long currentTime, CanvasTextLayout textLayout,
-            CanvasDrawingSession drawingSession)
+            CanvasDrawingSession drawingSession,List<RenderingSyllable> syllables)
         {
             var geos = new HashSet<CanvasGeometry>();
             CanvasGeometry? geo2 = null;//渐变矩形
             var currentPercentage = 0.0;
-            if (IsSyllable && Syllables is not null)
+            if (IsSyllable && syllables is not null)
             {
-                if (Syllables.Count <= 0) return (CanvasGeometry.CreateGroup(drawingSession, geos.ToArray()), geo2 , currentPercentage);
-                var index = Syllables.FindLastIndex(t => t.EndTime <= currentTime);
-                var letterPosition = Syllables.GetRange(0, index + 1).Sum(p => p.Syllable.Length);
+                if (syllables.Count <= 0) return (CanvasGeometry.CreateGroup(drawingSession, geos.ToArray()), geo2 , currentPercentage);
+                var index = syllables.FindLastIndex(t => t.EndTime <= currentTime);
+                var letterPosition = syllables.GetRange(0, index + 1).Sum(p => p.Syllable.Length);
                 if (index >= 0)
                 {
                     // 获取高亮的字符区域集合
@@ -243,9 +256,9 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     }
                 }
 
-                if (index <= Syllables.Count - 2)
+                if (index <= syllables.Count - 2)
                 {
-                    var currentLyric = Syllables[index + 1];
+                    var currentLyric = syllables[index + 1];
 
                     if (currentLyric.StartTime <= currentTime)
                     {
