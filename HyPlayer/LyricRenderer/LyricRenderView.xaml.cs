@@ -281,7 +281,7 @@ namespace HyPlayer.LyricRenderer
                 }
 
                 _renderOffsets[currentLine.Id].Y = renderedBeforeStartPosition;
-                _renderOffsets[currentLine.Id].X = 0;
+                _renderOffsets[currentLine.Id].X = 4;
                 if (renderedBeforeStartPosition + currentLine.RenderingHeight >= 0)
                     _itemsToBeRender.Add(currentLine);
                 if (i <= 0) continue;
