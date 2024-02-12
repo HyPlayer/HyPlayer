@@ -11,9 +11,7 @@ public abstract class RenderingLyricLine
 
     public double RenderingHeight { get; set; }
     public double RenderingWidth { get; set; }
-
     public Color IdleColor { get; set; } = Colors.Gray;
-
     public Color FocusingColor { get; set; } = Colors.Yellow;
 
     public double LyricFontSize { get; set; } = 48;

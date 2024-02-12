@@ -125,16 +125,18 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     }
 
                     actualTop += (float)textLayout.LayoutBounds.Height;
+                    var idleColor = FocusingColor;
+                    idleColor.A =(byte)(idleColor.A * 0.6);
                     if (tll != null)
                     {
                         actualTop += HiddenOnBlur ? 10 : 0;
-                        clds.DrawTextLayout(tll, (float)offset.X, actualTop, _isFocusing ? FocusingColor : IdleColor);
+                        clds.DrawTextLayout(tll, (float)offset.X, actualTop,_isFocusing? FocusingColor: idleColor);
                         actualTop += (float)tll.LayoutBounds.Height;
                     }
 
                     if (tl != null)
                     {
-                        clds.DrawTextLayout(tl, (float)offset.X, actualTop, _isFocusing ? FocusingColor : IdleColor);
+                        clds.DrawTextLayout(tl, (float)offset.X, actualTop, _isFocusing ? FocusingColor : idleColor);
                     }
                 }
 
@@ -183,14 +185,19 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     progress = (float)EaseFunction.Ease(Math.Clamp((currentLyricTime - _lastNoneGapTime) * 1.0f / ScaleAnimationDuration, 0, 1));
                 }
 
-                var scaling = 0.8F + progress * 0.2f;
+                var scaling = 0.8F + progress * 0.2F;
                 var transformEffect = new Transform2DEffect
                 {
                     Source = totalCommand,
                     TransformMatrix = GetCenterMatrix(0, 0, _scalingCenterX,
                         (float)textLayout.LayoutBounds.Height / 2, scaling, scaling),
                 };
-                session.DrawImage(transformEffect, (float)offset.X, drawingTop);
+                var opacityEffect = new Microsoft.Graphics.Canvas.Effects.OpacityEffect
+                {
+                    Source = transformEffect,
+                    Opacity = 0.5f + progress*0.5f ,
+                };
+                session.DrawImage(opacityEffect, (float)offset.X, drawingTop);
             }
 
             return true;
