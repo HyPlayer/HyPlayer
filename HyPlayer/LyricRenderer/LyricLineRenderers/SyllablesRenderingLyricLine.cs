@@ -18,6 +18,8 @@ using Windows.Foundation;
 using Windows.UI.Xaml;
 using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.Toolkit.Uwp.UI.Media;
+using HyPlayer.Classes;
+using Windows.UI.Xaml.Media.Animation;
 
 namespace HyPlayer.LyricRenderer.LyricLineRenderers
 {
@@ -38,6 +40,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
 
         private CanvasTextLayout? tl;
         private CanvasTextLayout? tll;
+        public EaseFunctionBase EaseFunction { get; set; } = new CustomCircleEase { EasingMode = EasingMode.EaseOut };
 
         private bool _isFocusing;
         private float _canvasWidth;
@@ -55,7 +58,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
 
         private const long ReactionDurationTick = 2000000;
 
-        private const long ScaleAnimationDuration = 200;
+        private const long ScaleAnimationDuration = 500;
 
         public override bool Render(CanvasDrawingSession session, LineRenderOffset offset, long currentLyricTime,
             long renderingTick, int gap)
@@ -177,10 +180,10 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 var progress = 1.0f;
                 if (currentLyricTime - _lastNoneGapTime <= ScaleAnimationDuration)
                 {
-                    progress = Math.Clamp((currentLyricTime - _lastNoneGapTime) * 1.0f / ScaleAnimationDuration, 0, 1);
+                    progress = (float)EaseFunction.Ease(Math.Clamp((currentLyricTime - _lastNoneGapTime) * 1.0f / ScaleAnimationDuration, 0, 1));
                 }
 
-                var scaling = 0.9F + progress * 0.1f;
+                var scaling = 0.8F + progress * 0.2f;
                 var transformEffect = new Transform2DEffect
                 {
                     Source = totalCommand,
@@ -350,7 +353,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 WordWrapping = CanvasWordWrapping.Wrap,
                 Direction = CanvasTextDirection.LeftToRightThenTopToBottom,
                 FontFamily = "Microsoft YaHei UI",
-                FontWeight = HiddenOnBlur ? FontWeights.Normal : FontWeights.Bold
+                FontWeight = HiddenOnBlur ? FontWeights.Normal : FontWeights.SemiBold
             };
 
 
@@ -439,7 +442,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 _ => throw new ArgumentOutOfRangeException()
             });
             _unfocusMatrix = GetCenterMatrix(0, 0, _scalingCenterX,
-                (float)textLayout.LayoutBounds.Height / 2, 0.9F, 0.9F);
+                (float)textLayout.LayoutBounds.Height / 2, 0.8F, 0.8F);
             RenderingHeight = textLayout.LayoutBounds.Height + (HiddenOnBlur ? 10 : 30) + add;
             RenderingWidth = textLayout.LayoutBounds.Width + 10;
         }
