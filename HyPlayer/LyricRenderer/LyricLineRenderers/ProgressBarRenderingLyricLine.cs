@@ -43,27 +43,23 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
         if (currentLyricTime <= EndTime && currentLyricTime >= StartTime)
         {          
             var geometry = CanvasGeometry.CreateRoundedRectangle(session, new Rect(0, 0, Width, Height), 4, 4);
-            session.FillGeometry(geometry, 0, (float)offset.Y + MaxRadius, Color.FromArgb(64, 255, 255, 255));
+            session.FillGeometry(geometry, (float)offset.X + 4, (float)offset.Y + MaxRadius, Color.FromArgb(64, 255, 255, 255));
 
             var value = (double)(currentLyricTime - StartTime) / (EndTime - StartTime);
 
-            if (value > 0.92)//结束动画
+            if ((EndTime - currentLyricTime)< 1000)//结束动画
             {
-                var surplus = (value - 0.92) / 0.08;
+                var surplus = (double)(1000 - (EndTime - currentLyricTime)) / 1000;
                 var progress = EaseFunction.Ease(Math.Clamp(surplus, 0, 1));
                 var geometryFill = CanvasGeometry.CreateRoundedRectangle(session, new Rect(Width * progress, 0, Width - Width * progress, Height), 4, 4);
-                session.FillGeometry(geometryFill, 0, (float)offset.Y + MaxRadius, Colors.White);
+                session.FillGeometry(geometryFill, (float)offset.X + 4, (float)offset.Y + MaxRadius, Colors.White);
             }
             else
             {
-                var progress = EaseFunction.Ease(Math.Clamp(value * 1.1, 0, 1));
+                var progress = EaseFunction.Ease(Math.Clamp(value, 0, 1));
                 var geometryFill = CanvasGeometry.CreateRoundedRectangle(session, new Rect(0, 0, Width * progress, Height), 4, 4);
-                session.FillGeometry(geometryFill, 0, (float)offset.Y + MaxRadius, Colors.White);
+                session.FillGeometry(geometryFill, (float)offset.X + 4, (float)offset.Y + MaxRadius, Colors.White);
             }
-        }
-        else
-        {
-            session.FillCircle((float)actualX, (float)offset.Y + MaxRadius, MinRadius, Colors.Gray);
         }
 
         return true;
