@@ -103,11 +103,22 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     var textTop = actualTop;
                     if (_isFocusing)
                     {
-                        var highlightGeometry = CreateHighlightGeometry(currentLyricTime, textLayout, session);
+                        var highlightGeometry = CreateHighlightGeometries(currentLyricTime, textLayout, session);
                         var textGeometry = CanvasGeometry.CreateText(textLayout);
-                        var highlightTextGeometry = highlightGeometry.CombineWith(textGeometry, Matrix3x2.Identity,
+
+                        var highlightTextGeometry = highlightGeometry.geo1.CombineWith(textGeometry, Matrix3x2.Identity,
                             CanvasGeometryCombine.Intersect);
+                        if (highlightGeometry.geo2 is not null)//填充渐变矩形
+                        {
+                            var color = FocusingColor;
+                            color.A = (byte)(128 * highlightGeometry.currentPrecentage);
+                            var highlightTextGeometry2 = highlightGeometry.geo2.CombineWith(textGeometry, Matrix3x2.Identity,
+                                CanvasGeometryCombine.Intersect);
+                            clds.FillGeometry(highlightTextGeometry2, (float)offset.X, textTop, color);
+                        }
+
                         clds.FillGeometry(highlightTextGeometry, (float)offset.X, textTop, FocusingColor);
+
                     }
 
                     actualTop += (float)textLayout.LayoutBounds.Height;
@@ -195,13 +206,19 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                    * Matrix3x2.CreateTranslation(XCenter, YCenter);
         }
 
-        private CanvasGeometry CreateHighlightGeometry(long currentTime, CanvasTextLayout textLayout,
+        /// <summary>
+        /// 创建高亮矩形
+        /// </summary>
+        private (CanvasGeometry geo1, CanvasGeometry? geo2 ,double currentPrecentage)
+            CreateHighlightGeometries(long currentTime, CanvasTextLayout textLayout,
             CanvasDrawingSession drawingSession)
         {
             var geos = new HashSet<CanvasGeometry>();
+            CanvasGeometry? geo2 = null;//渐变矩形
+            var currentPercentage = 0.0;
             if (IsSyllable && Syllables is not null)
             {
-                if (Syllables.Count <= 0) return CanvasGeometry.CreateGroup(drawingSession, geos.ToArray());
+                if (Syllables.Count <= 0) return (CanvasGeometry.CreateGroup(drawingSession, geos.ToArray()), geo2 , currentPercentage);
                 var index = Syllables.FindLastIndex(t => t.EndTime <= currentTime);
                 var letterPosition = Syllables.GetRange(0, index + 1).Sum(p => p.Syllable.Length);
                 if (index >= 0)
@@ -228,7 +245,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                         {
                             // 加个保险措施
                             // 计算当前字符的进度
-                            var currentPercentage = (currentTime - currentLyric.StartTime) * 1.0 /
+                            currentPercentage = (currentTime - currentLyric.StartTime) * 1.0 /
                                                     (currentLyric.EndTime - currentLyric.StartTime);
                             // 创建矩形
                             var lastRect = CanvasGeometry.CreateRectangle(
@@ -236,6 +253,13 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                                 (float)currentRegions[0].LayoutBounds.Top,
                                 (float)(currentRegions.Sum(t => t.LayoutBounds.Width) * currentPercentage),
                                 (float)currentRegions.Sum(t => t.LayoutBounds.Height));
+
+                            geo2 = CanvasGeometry.CreateRectangle(
+                                drawingSession, (float)currentRegions[0].LayoutBounds.Left,
+                                (float)currentRegions[0].LayoutBounds.Top,
+                                (float)(currentRegions.Sum(t => t.LayoutBounds.Width)),
+                                (float)currentRegions.Sum(t => t.LayoutBounds.Height));
+                          
                             geos.Add(lastRect);
                         }
                     }
@@ -271,7 +295,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             }
 
             // 拼合所有矩形
-            return CanvasGeometry.CreateGroup(drawingSession, geos.ToArray());
+            return (CanvasGeometry.CreateGroup(drawingSession, geos.ToArray()),geo2,currentPercentage);
         }
 
         public override void OnKeyFrame(CanvasDrawingSession session, long time)
