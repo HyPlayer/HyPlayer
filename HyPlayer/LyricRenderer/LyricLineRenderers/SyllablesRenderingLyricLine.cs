@@ -112,13 +112,17 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                         clds.DrawTextLayout(tll, (float)offset.X, actualTop, idleColor);
                         if (_isFocusing)
                         {
-                            var highlightGeometry = CreateHighlightGeometries(currentLyricTime, tll, session, RomajiSyllables);
-                            var textGeometry = CanvasGeometry.CreateText(tll);
+                            if(RomajiSyllables is not null)
+                            {
+                                var highlightGeometry = CreateHighlightGeometries(currentLyricTime, tll, session, RomajiSyllables);
+                                var textGeometry = CanvasGeometry.CreateText(tll);
 
-                            var highlightTextGeometry = highlightGeometry.geo1.CombineWith(textGeometry, Matrix3x2.Identity,
-                                CanvasGeometryCombine.Intersect);
+                                var highlightTextGeometry = highlightGeometry.geo1.CombineWith(textGeometry, Matrix3x2.Identity,
+                                    CanvasGeometryCombine.Intersect);
 
-                            clds.FillGeometry(highlightTextGeometry, (float)offset.X, actualTop, FocusingColor);
+                                clds.FillGeometry(highlightTextGeometry, (float)offset.X, actualTop, FocusingColor);
+                            }
+
                         }
                         actualTop += (float)tll.LayoutBounds.Height;
                     }

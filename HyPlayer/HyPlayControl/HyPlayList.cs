@@ -2589,10 +2589,10 @@ public static class Utils
         {
             if (!string.IsNullOrWhiteSpace(lyricItem.LyricLine.CurrentLyric))
             {
-                if (!Utilities.HasKana(lyricItem.LyricLine.CurrentLyric)) return;
+                if (!Utilities.HasKana(lyricItem.LyricLine.CurrentLyric)) continue;
                 lyricItem.Romaji =
                     await Common.KawazuConv.Convert(lyricItem.LyricLine.CurrentLyric, To.Romaji, Mode.Separated);
-                if (lyricItem.LyricLine is not KaraokeLyricsLine klyric) return;
+                if (lyricItem.LyricLine is not KaraokeLyricsLine klyric) continue;
                 var list = await Common.KawazuConv.ConvertToList(lyricItem.LyricLine.CurrentLyric, To.Romaji, Mode.Separated);
                 klyric.RomajiWordInfos = GetRomajiKaraoke(list, klyric.WordInfos);
             }
