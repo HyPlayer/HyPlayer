@@ -12,7 +12,7 @@
     <AssemblyName>HyPlayer</AssemblyName>
     <DefaultLanguage>zh-cn</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
-    <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.20348.0</TargetPlatformVersion>
+    <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.22621.0</TargetPlatformVersion>
     <TargetPlatformMinVersion>10.0.18362.0</TargetPlatformMinVersion>
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
@@ -156,8 +156,9 @@
     <Compile Include="Controls\LyricControl\LyricControl.xaml.cs">
       <DependentUpon>LyricControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="LyricRenderer\Abstraction\RenderContext.cs" />
+    <Compile Include="LyricRenderer\Abstraction\RenderTypography.cs" />
     <Compile Include="LyricRenderer\Abstraction\Render\LineRenderOffset.cs" />
-    <Compile Include="LyricRenderer\Abstraction\Render\LineRenderOption.cs" />
     <Compile Include="LyricRenderer\Abstraction\Render\LineRollingCalculator.cs" />
     <Compile Include="LyricRenderer\Abstraction\Render\RenderingLyricLine.cs" />
     <Compile Include="LyricRenderer\Converters\LrcConverter.cs" />

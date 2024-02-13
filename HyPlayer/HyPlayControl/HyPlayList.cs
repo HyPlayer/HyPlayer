@@ -2593,12 +2593,13 @@ public static class Utils
                 lyricItem.Romaji =
                     await Common.KawazuConv.Convert(lyricItem.LyricLine.CurrentLyric, To.Romaji, Mode.Separated);
                 if (lyricItem.LyricLine is not KaraokeLyricsLine klyric) continue;
-                var list = await Common.KawazuConv.ConvertToList(lyricItem.LyricLine.CurrentLyric, To.Romaji, Mode.Separated);
+                var list = await Common.KawazuConv.GetDivisions(lyricItem.LyricLine.CurrentLyric, To.Romaji, Mode.Separated);
+                
                 klyric.RomajiWordInfos = GetRomajiKaraoke(list, klyric.WordInfos);
             }
         }
     }
-    public static List<KaraokeWordInfo> GetRomajiKaraoke(IEnumerable<(string,string)> romajiInfo,IEnumerable<KaraokeWordInfo> wordInfo)
+    public static List<KaraokeWordInfo> GetRomajiKaraoke(List<Division> romajiInfo,IEnumerable<KaraokeWordInfo> wordInfo)
     {
         var result = new List<KaraokeWordInfo>();
         //将原始逐字数据完全分割为单字
@@ -2627,7 +2628,7 @@ public static class Utils
             //item内有几个字符就加几个上去
             TimeSpan duration = new();
             var startTime = splited[j].StartTime;
-            for (; i < j + item.Item1.Length; i++)
+            for (; i < j + item.Surface.Length; i++)
             {
                 duration += splited[i].Duration;
                 if (splited[i].CurrentWords is " ")//遇到空格，往前找一个(Kawazu转换会忽略空格)
@@ -2635,8 +2636,8 @@ public static class Utils
                     j += 1;
                 }
             }
-            j += item.Item1.Length;
-            var word = new KaraokeWordInfo(item.Item2, startTime, duration);
+            j += item.Surface.Length;
+            var word = new KaraokeWordInfo(item.RomaReadingSeparated, startTime, duration);
             result.Add(word);
         }
         return result;

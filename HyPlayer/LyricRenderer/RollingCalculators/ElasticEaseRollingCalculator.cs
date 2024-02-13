@@ -4,6 +4,7 @@ using HyPlayer.LyricRenderer.Abstraction.Render;
 using Windows.UI.Composition;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media.Animation;
+using HyPlayer.LyricRenderer.Abstraction;
 
 namespace HyPlayer.LyricRenderer.RollingCalculators;
 
@@ -16,14 +17,15 @@ public class ElasticEaseRollingCalculator : LineRollingCalculator
     private double springiness = 3;
     private double oscillations = 0;
 
-    public override double CalculateCurrentY(double fromY, double targetY, int gap, long startTime, long currentTime)
+    public override double CalculateCurrentY(double fromY, double targetY, RenderingLyricLine currentLine, RenderContext context)
     {
         double progress = 1;
+        var gap = currentLine.Id - context.CurrentLyricLineIndex;
         if (gap > -3)
             if (!(fromY < targetY) && gap >= 0)
             {
                 var theoryTime = AnimationDuration * (Math.Log10(Math.Max(gap, 0.9)) + 1);
-                progress = Math.Clamp((currentTime - startTime) / theoryTime, 0, 1);
+                progress = Math.Clamp((context.CurrentLyricTime - context.CurrentKeyframe) / theoryTime, 0, 1);
                 progress = 1 - progress;
                 progress = EaseInCore(progress);
                 progress = 1 - progress;
@@ -36,7 +38,7 @@ public class ElasticEaseRollingCalculator : LineRollingCalculator
             }
             else
             {
-                progress = Math.Clamp((currentTime - startTime) * 1.0 / AnimationDuration * (Math.Log10(-gap + 15) + 1), 0, 1);
+                progress = Math.Clamp((context.CurrentLyricTime - context.CurrentKeyframe) * 1.0 / AnimationDuration * (Math.Log10(-gap + 15) + 1), 0, 1);
             }
         return fromY + (targetY - fromY) * progress;
 

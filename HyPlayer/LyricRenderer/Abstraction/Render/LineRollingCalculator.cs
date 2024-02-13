@@ -2,5 +2,5 @@
 
 public abstract class LineRollingCalculator
 {
-    public abstract double CalculateCurrentY(double fromY, double targetY, int gap, long startTime, long currentTime);
+    public abstract double CalculateCurrentY(double fromY, double targetY, RenderingLyricLine currentLine, RenderContext context);
 }

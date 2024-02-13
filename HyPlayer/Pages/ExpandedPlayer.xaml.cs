@@ -105,12 +105,12 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         HyPlayList.OnTimerTicked += HyPlayList_OnTimerTicked;
         Common.OnEnterForegroundFromBackground += OnEnteringForeground;
         Common.OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;
-        LyricBox.LineRollingEaseCalculator = new ElasticEaseRollingCalculator();
+        LyricBox.Context.LineRollingEaseCalculator = new ElasticEaseRollingCalculator();
         LyricBox.OnBeforeRender += LyricBox_OnBeforeRender;
         LyricBox.OnRequestSeek += LyricBoxOnOnRequestSeek;
-        LyricBox.LyricWidthRatio = 1;
-        LyricBox.LyricPaddingTopRatio = 0.1;
-        LyricBox.CurrentLyricTime = 0;
+        LyricBox.Context.LyricWidthRatio = 1;
+        LyricBox.Context.LyricPaddingTopRatio = 0.1;
+        LyricBox.Context.CurrentLyricTime = 0;
     }
 
     private void LyricBoxOnOnRequestSeek(long time)
@@ -120,14 +120,14 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void LyricBox_OnBeforeRender(LyricRenderer.LyricRenderView view)
     {
-        if (HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds < view.CurrentLyricTime)
+        if (HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds < view.Context.CurrentLyricTime)
         {
-            view.CurrentLyricTime = (long)HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
+            view.Context.CurrentLyricTime = (long)HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
             LyricBox.ReflowTime(0);
         }
         else
         {
-            view.CurrentLyricTime = (long)HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
+            view.Context.CurrentLyricTime = (long)HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
         }
 
     }
@@ -553,22 +553,20 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         _ = Common.Invoke(() =>
         {
             _lyricIsReadyToGo = true;
-            if (!_lyricIsCleaning)
+            if (_lyricIsCleaning) return;
+            LyricBox.SetLyricLines(LrcConverter.Convert(HyPlayList.Lyrics));
+            LyricBox.ChangeAlignment(Common.Setting.lyricAlignment  switch
             {
-                LyricBox.RenderingLyricLines = LrcConverter.Convert(HyPlayList.Lyrics);
-                LyricBox.ChangeAlignment(Common.Setting.lyricAlignment  switch
-                {
-                    1 => TextAlignment.Center,
-                    2 => TextAlignment.Right,
-                    _ => TextAlignment.Left
-                });
-                LyricBox.ReflowTime(0);
-                lastlrcid = HyPlayList.NowPlayingHashCode;
-                if (HyPlayList.NowPlayingItem == null) return;
-                LyricBox.Width = LyricWidth;
-                LyricBox.ChangeRenderColor(GetIdleBrush().Color, GetAccentBrush().Color);
-                LyricBox.ChangeRenderFontSize(showsize, (Common.Setting.translationSize > 0 ) ? Common.Setting.translationSize : showsize / 2, Common.Setting.romajiSize);
-            }
+                1 => TextAlignment.Center,
+                2 => TextAlignment.Right,
+                _ => TextAlignment.Left
+            });
+            LyricBox.ReflowTime(0);
+            lastlrcid = HyPlayList.NowPlayingHashCode;
+            if (HyPlayList.NowPlayingItem == null) return;
+            LyricBox.Width = LyricWidth;
+            LyricBox.ChangeRenderColor(GetIdleBrush().Color, GetAccentBrush().Color);
+            LyricBox.ChangeRenderFontSize(showsize, (Common.Setting.translationSize > 0 ) ? Common.Setting.translationSize : showsize / 2, Common.Setting.romajiSize);
         });
     }
 

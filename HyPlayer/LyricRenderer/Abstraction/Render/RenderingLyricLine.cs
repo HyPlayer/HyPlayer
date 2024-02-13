@@ -11,14 +11,6 @@ public abstract class RenderingLyricLine
 
     public double RenderingHeight { get; set; }
     public double RenderingWidth { get; set; }
-    public Color IdleColor { get; set; } = Colors.Gray;
-    public Color FocusingColor { get; set; } = Colors.Yellow;
-
-    public double LyricFontSize { get; set; } = 48;
-
-    public double TranslationFontSize { get; set; } = 24;
-    
-    public double TransliterationFontSize { get; set; } = 24;
 
     public bool Hidden { get; set; }
 
@@ -26,13 +18,12 @@ public abstract class RenderingLyricLine
 
     public long StartTime { get; set; }
     public long EndTime { get; set; }
-    public TextAlignment TextAlignment { get; set; } = TextAlignment.Left;
 
-    public abstract void GoToReactionState(ReactionState state, long time);
-    public abstract bool Render(CanvasDrawingSession session, LineRenderOffset offset, long currentLyricTime, long renderingTick, int gap);
-    public abstract void OnKeyFrame(CanvasDrawingSession session,long time);
-    public abstract void OnRenderSizeChanged(CanvasDrawingSession session, double width, double height, long time);
-    public abstract void OnTypographyChanged(CanvasDrawingSession session);
+    public abstract void GoToReactionState(ReactionState state, RenderContext context);
+    public abstract bool Render(CanvasDrawingSession session, LineRenderOffset offset, RenderContext context);
+    public abstract void OnKeyFrame(CanvasDrawingSession session, RenderContext context);
+    public abstract void OnRenderSizeChanged(CanvasDrawingSession session, RenderContext context);
+    public abstract void OnTypographyChanged(CanvasDrawingSession session, RenderContext context);
 }
 
 public enum ReactionState
