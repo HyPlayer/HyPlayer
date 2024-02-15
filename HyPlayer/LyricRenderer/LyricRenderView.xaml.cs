@@ -181,7 +181,7 @@ namespace HyPlayer.LyricRenderer
                 var currentLine = Context.LyricLines[i];
                 if (currentLine.Hidden)
                 {
-                    Context.RenderOffsets[currentLine.Id].Y = renderedAfterStartPosition;
+                    Context.RenderOffsets[currentLine.Id].Y = theoryRenderStartPosition;
                     continue;
                 }
 
@@ -191,13 +191,14 @@ namespace HyPlayer.LyricRenderer
                         Epsilon)
                     {
                         renderedAfterStartPosition = Context.LineRollingEaseCalculator.CalculateCurrentY(
-                            Context.SnapshotRenderOffsets[currentLine.Id].Y, renderedAfterStartPosition,
+                            Context.SnapshotRenderOffsets[currentLine.Id].Y, theoryRenderStartPosition,
                             currentLine, Context);
                         _needRecalculate = true; // 滚动中, 下一帧继续渲染
                     }
 
                 Context.RenderOffsets[currentLine.Id].Y = renderedAfterStartPosition;
                 if (renderedAfterStartPosition <= Context.ViewHeight) Context.RenderingLyricLines.Add(currentLine);
+                theoryRenderStartPosition += currentLine.RenderingHeight;
                 renderedAfterStartPosition += currentLine.RenderingHeight;
             }
 
