@@ -1264,6 +1264,9 @@
 
                                 <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.IsOldThemeEnabled, Mode=TwoWay}" />
                             </controls3:SettingsCard>
+                            <controls3:SettingsCard Header="歌词控件Debug模式">
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.LyricRendererDebugMode, Mode=TwoWay}" />
+                            </controls3:SettingsCard>
                             <controls3:SettingsCard Click="ClearTileCache_Click" IsClickEnabled="True">
                                 <controls3:SettingsCard.Header>
                                     <TextBlock x:Name="ClearTileCache" Text="清除磁贴背景缓存" />
@@ -1284,6 +1287,7 @@
                                     <TextBlock x:Name="BtnXboxReserve" Text="Xbox 进后台模式" />
                                 </controls3:SettingsCard.Header>
                             </controls3:SettingsCard>
+
                         </StackPanel>
                     </ScrollViewer>
                 </PivotItem>

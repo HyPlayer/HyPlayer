@@ -1579,6 +1579,17 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+
+        public bool LyricRendererDebugMode
+        {
+            get => GetSettings(nameof(LyricRendererDebugMode), false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(LyricRendererDebugMode)] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool LastFMLogined => LastFMManager.LastfmLogined;
         public bool SaveCookies()
         {

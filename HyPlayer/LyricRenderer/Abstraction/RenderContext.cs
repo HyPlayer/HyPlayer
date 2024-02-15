@@ -9,7 +9,7 @@ public class RenderContext
     /// 是否显示调试信息
     /// 请合理使用
     /// </summary>
-    public bool Debug { get; set; } = true;
+    public bool Debug { get; set; } = Common.Setting.LyricRendererDebugMode;
     
     /// <summary>
     /// 所有歌词
