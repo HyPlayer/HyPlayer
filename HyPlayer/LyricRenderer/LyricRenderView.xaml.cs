@@ -172,27 +172,28 @@ namespace HyPlayer.LyricRenderer
             if (Context.CurrentLyricLineIndex < 0) Context.CurrentLyricLineIndex = Context.LyricLines.Count - 1;
             Context.CurrentLyricLine = Context.LyricLines[Context.CurrentLyricLineIndex];
             Context.RenderingLyricLines.Clear();
-            var theoryRenderStartPosition = Context.LyricPaddingTopRatio * Context.ViewHeight + Context.ScrollingDelta;
-            var renderedAfterStartPosition = theoryRenderStartPosition;
-            var renderedBeforeStartPosition = theoryRenderStartPosition;
+            var theoryRenderAfterPosition = Context.LyricPaddingTopRatio * Context.ViewHeight + Context.ScrollingDelta;
+            var theoryRenderBeforePosition = theoryRenderAfterPosition;
+            var renderedAfterStartPosition = theoryRenderAfterPosition;
+            var renderedBeforeStartPosition = theoryRenderAfterPosition;
 
             for (var i = Context.CurrentLyricLineIndex; i < Context.LyricLines.Count; i++)
             {
                 var currentLine = Context.LyricLines[i];
                 if (currentLine.Hidden)
                 {
-                    Context.RenderOffsets[currentLine.Id].Y = theoryRenderStartPosition;
+                    Context.RenderOffsets[currentLine.Id].Y = theoryRenderAfterPosition;
                     continue;
                 }
 
                 if (renderedAfterStartPosition <= Context.ViewHeight) // 在可视区域, 需要缓动
                     if (Context.SnapshotRenderOffsets.ContainsKey(currentLine.Id) &&
-                        Math.Abs(theoryRenderStartPosition - Context.RenderOffsets[currentLine.Id].Y) >
+                        Math.Abs(theoryRenderAfterPosition - Context.RenderOffsets[currentLine.Id].Y) >
                         Epsilon)
                     {
 
                         renderedAfterStartPosition = Context.LineRollingEaseCalculator.CalculateCurrentY(
-                            Context.SnapshotRenderOffsets[currentLine.Id].Y, theoryRenderStartPosition,
+                            Context.SnapshotRenderOffsets[currentLine.Id].Y, theoryRenderAfterPosition,
                             currentLine, Context);
                         if (Context.Debug)
                         {
@@ -203,7 +204,7 @@ namespace HyPlayer.LyricRenderer
 
                 Context.RenderOffsets[currentLine.Id].Y = renderedAfterStartPosition;
                 if (renderedAfterStartPosition <= Context.ViewHeight) Context.RenderingLyricLines.Add(currentLine);
-                theoryRenderStartPosition += currentLine.RenderingHeight;
+                theoryRenderAfterPosition += currentLine.RenderingHeight;
                 renderedAfterStartPosition += currentLine.RenderingHeight;
             }
 
@@ -211,19 +212,21 @@ namespace HyPlayer.LyricRenderer
             for (var i = Context.CurrentLyricLineIndex - 1; i >= 0; i--)
             {
                 var currentLine = Context.LyricLines[i];
-                if (currentLine.Hidden) continue;
-                // 行前也要算一下
-                renderedBeforeStartPosition -= currentLine.RenderingHeight;
-                theoryRenderStartPosition -= currentLine.RenderingHeight;
+                if (!currentLine.Hidden)
+                {
+                    // 行前也要算一下
+                    renderedBeforeStartPosition -= currentLine.RenderingHeight;
+                    theoryRenderBeforePosition -= currentLine.RenderingHeight;
+                }
 
                 if (renderedBeforeStartPosition + currentLine.RenderingHeight > 0) // 可见区域, 需要判断缓动
                 {
                     if (Context.SnapshotRenderOffsets.ContainsKey(currentLine.Id) &&
-                        Math.Abs(Context.SnapshotRenderOffsets[currentLine.Id].Y - theoryRenderStartPosition) >
+                        Math.Abs(Context.RenderOffsets[currentLine.Id].Y - theoryRenderBeforePosition) >
                         Epsilon)
                     {
                         renderedBeforeStartPosition = Context.LineRollingEaseCalculator.CalculateCurrentY(
-                            Context.SnapshotRenderOffsets[currentLine.Id].Y, theoryRenderStartPosition,
+                            Context.SnapshotRenderOffsets[currentLine.Id].Y, theoryRenderBeforePosition,
                             currentLine, Context);
 
                         _needRecalculate = true; // 滚动中, 下一帧继续渲染
