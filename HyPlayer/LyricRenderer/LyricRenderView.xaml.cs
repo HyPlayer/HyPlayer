@@ -187,12 +187,17 @@ namespace HyPlayer.LyricRenderer
 
                 if (renderedAfterStartPosition <= Context.ViewHeight) // 在可视区域, 需要缓动
                     if (Context.SnapshotRenderOffsets.ContainsKey(currentLine.Id) &&
-                        Math.Abs(Context.SnapshotRenderOffsets[currentLine.Id].Y - renderedAfterStartPosition) >
+                        Math.Abs(theoryRenderStartPosition - Context.RenderOffsets[currentLine.Id].Y) >
                         Epsilon)
                     {
+
                         renderedAfterStartPosition = Context.LineRollingEaseCalculator.CalculateCurrentY(
                             Context.SnapshotRenderOffsets[currentLine.Id].Y, theoryRenderStartPosition,
                             currentLine, Context);
+                        if (Context.Debug)
+                        {
+                            session.DrawText(renderedAfterStartPosition.ToString(), 0, (float)renderedAfterStartPosition, Colors.Green);
+                        }
                         _needRecalculate = true; // 滚动中, 下一帧继续渲染
                     }
 

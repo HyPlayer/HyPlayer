@@ -111,6 +111,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         LyricBox.Context.LyricWidthRatio = 1;
         LyricBox.Context.LyricPaddingTopRatio = 0.1;
         LyricBox.Context.CurrentLyricTime = 0;
+        LyricBox.Context.Debug = Common.Setting.LyricRendererDebugMode;
     }
 
     private void LyricBoxOnOnRequestSeek(long time)
