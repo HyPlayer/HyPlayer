@@ -214,28 +214,26 @@ namespace HyPlayer.LyricRenderer
                 if (currentLine.Hidden) continue;
                 // 行前也要算一下
                 renderedBeforeStartPosition -= currentLine.RenderingHeight;
+                theoryRenderStartPosition -= currentLine.RenderingHeight;
 
                 if (renderedBeforeStartPosition + currentLine.RenderingHeight > 0) // 可见区域, 需要判断缓动
                 {
                     if (Context.SnapshotRenderOffsets.ContainsKey(currentLine.Id) &&
-                        Math.Abs(Context.SnapshotRenderOffsets[currentLine.Id].Y - renderedBeforeStartPosition) >
+                        Math.Abs(Context.SnapshotRenderOffsets[currentLine.Id].Y - theoryRenderStartPosition) >
                         Epsilon)
                     {
                         renderedBeforeStartPosition = Context.LineRollingEaseCalculator.CalculateCurrentY(
-                            Context.SnapshotRenderOffsets[currentLine.Id].Y, renderedBeforeStartPosition,
+                            Context.SnapshotRenderOffsets[currentLine.Id].Y, theoryRenderStartPosition,
                             currentLine, Context);
 
                         _needRecalculate = true; // 滚动中, 下一帧继续渲染
                     }
+                    if (renderedBeforeStartPosition + currentLine.RenderingHeight >= 0)
+                        Context.RenderingLyricLines.Add(currentLine);
                 }
 
                 Context.RenderOffsets[currentLine.Id].Y = renderedBeforeStartPosition;
                 Context.RenderOffsets[currentLine.Id].X = 4;
-                if (renderedBeforeStartPosition + currentLine.RenderingHeight >= 0)
-                    Context.RenderingLyricLines.Add(currentLine);
-                if (i <= 0) continue;
-                if (renderedBeforeStartPosition + Context.LyricLines[i - 1].RenderingHeight < 0)
-                    break;
             }
         }
 
