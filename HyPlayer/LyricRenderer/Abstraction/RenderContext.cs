@@ -108,4 +108,6 @@ public class RenderContext
     /// 歌词的宽度比例
     /// </summary>
     public float LyricWidthRatio { get; set; }
+    
+    public RenderEffects Effects { get; set; } = new();
 }
