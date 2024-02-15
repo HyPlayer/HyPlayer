@@ -19,14 +19,14 @@ public class RenderContext
     /// <summary>
     /// 视图宽度
     /// </summary>
-    public double ViewWidth { get; set; }
+    public float ViewWidth { get; set; }
     
     /// <summary>
     /// 视图高度
     /// </summary>
-    public double ViewHeight { get; set; }
+    public float ViewHeight { get; set; }
 
-    public double ItemWidth { get; set; }
+    public float ItemWidth { get; set; }
     
     /// <summary>
     /// 播放时间 单位毫秒
@@ -97,15 +97,15 @@ public class RenderContext
     /// <summary>
     /// 歌曲 BPM
     /// </summary>
-    public double BeatPerMinute { get; set; }
+    public float BeatPerMinute { get; set; }
 
     /// <summary>
     /// 歌词距离顶部的距离比例
     /// </summary>
-    public double LyricPaddingTopRatio { get; set; }
+    public float LyricPaddingTopRatio { get; set; }
 
     /// <summary>
     /// 歌词的宽度比例
     /// </summary>
-    public double LyricWidthRatio { get; set; }
+    public float LyricWidthRatio { get; set; }
 }

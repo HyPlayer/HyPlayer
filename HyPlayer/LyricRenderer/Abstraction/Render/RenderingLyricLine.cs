@@ -9,8 +9,8 @@ public abstract class RenderingLyricLine
 {
     public int Id { get; set; }
 
-    public double RenderingHeight { get; set; }
-    public double RenderingWidth { get; set; }
+    public float RenderingHeight { get; set; }
+    public float RenderingWidth { get; set; }
 
     public bool Hidden { get; set; }
 

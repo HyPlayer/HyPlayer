@@ -30,7 +30,7 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
 
     public override bool Render(CanvasDrawingSession session, LineRenderOffset offset, RenderContext context)
     {
-        float actualX = (float)offset.X;
+        float actualX = offset.X;
         switch (context.PreferTypography.Alignment)
         {
             case TextAlignment.Left:
@@ -40,7 +40,7 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
                 actualX += (float)(RenderingWidth / 2 - Width / 2.0);
                 break;
             case TextAlignment.Right:
-                actualX += (float)(RenderingWidth - Width);
+                actualX += RenderingWidth - Width;
                 actualX -= 12;
                 break;
         }
@@ -49,36 +49,36 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
 
         //画个底
         var geometry = CanvasGeometry.CreateRoundedRectangle(session, new Rect(0, 0, Width, Height), 4, 4);
-        session.FillGeometry(geometry, actualX, (float)offset.Y+Height, Color.FromArgb(64, 255, 255, 255));
+        session.FillGeometry(geometry, actualX, offset.Y+Height, Color.FromArgb(64, 255, 255, 255));
 
         //画进度
         CanvasGeometry geometryFill;
         var remain = EndTime - context.CurrentLyricTime;
         if (remain < AnimationDuration)//结束动画
         {
-            var surplus = (double)(AnimationDuration - remain) / AnimationDuration;
+            var surplus = (AnimationDuration - remain) * 1.0f / AnimationDuration;
             var leaveProgress = LeavingEaseFunction.Ease(Math.Clamp(surplus, 0, 1));
             geometryFill = CanvasGeometry.CreateRoundedRectangle(session, new Rect(Width * leaveProgress, 0, Width - Width * leaveProgress, Height), 4, 4);
         }
         else
         {
-            var progress = Math.Clamp((double)(context.CurrentLyricTime - StartTime) / (EndTime - StartTime - AnimationDuration - ShineDuration), 0, 1);
+            var progress = Math.Clamp((context.CurrentLyricTime - StartTime) * 1.0f / (EndTime - StartTime - AnimationDuration - ShineDuration), 0, 1);
             geometryFill = CanvasGeometry.CreateRoundedRectangle(session, new Rect(0, 0, Width * progress, Height), 4, 4);
         }
 
         var cl = new CanvasCommandList(session);
         using (var clds = cl.CreateDrawingSession())
         {
-            clds.FillGeometry(geometryFill, actualX, (float)offset.Y + Height, Colors.White);
+            clds.FillGeometry(geometryFill, actualX, offset.Y + Height, Colors.White);
         }
 
         //发光效果
         if (remain < AnimationDuration + ShineDuration)
         {
-            var surplus = ShiningEaseFunction.Ease(Math.Clamp((double)(AnimationDuration + ShineDuration - remain) / AnimationDuration,0,1));
+            var surplus = ShiningEaseFunction.Ease(Math.Clamp(1.0f * (AnimationDuration + ShineDuration - remain) / AnimationDuration,0,1));
             if (remain < AnimationDuration)//结束动画
             {
-                surplus = Math.Clamp(1-(double)(AnimationDuration - remain) / AnimationDuration,0,1);
+                surplus = Math.Clamp(1-(AnimationDuration - remain) * 1.0f / AnimationDuration,0,1);
             }
             var blur = new GaussianBlurEffect
             {

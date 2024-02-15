@@ -109,7 +109,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         LyricBox.OnBeforeRender += LyricBox_OnBeforeRender;
         LyricBox.OnRequestSeek += LyricBoxOnOnRequestSeek;
         LyricBox.Context.LyricWidthRatio = 1;
-        LyricBox.Context.LyricPaddingTopRatio = 0.1;
+        LyricBox.Context.LyricPaddingTopRatio = 0.1f;
         LyricBox.Context.CurrentLyricTime = 0;
         LyricBox.Context.Debug = Common.Setting.LyricRendererDebugMode;
     }
@@ -394,7 +394,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         }
 
         LyricBox.Width = LyricWidth;
-        LyricBox.ChangeRenderFontSize(showsize, (Common.Setting.translationSize > 0) ? Common.Setting.translationSize : showsize / 2, Common.Setting.romajiSize);
+        LyricBox.ChangeRenderFontSize((float)showsize, (Common.Setting.translationSize > 0) ? (float)Common.Setting.translationSize : (float)showsize / 2, Common.Setting.romajiSize);
 
         ImageRotateTransform.CenterX = ImageAlbum.ActualSize.X / 2;
         ImageRotateTransform.CenterY = ImageAlbum.ActualSize.Y / 2;
@@ -543,7 +543,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     bpmAniStoryboard.Children.Add(animationY);
                     bpmAniStoryboard.Begin();
                     luminousColorsRotateAnimation.Duration = TimeSpan.FromSeconds(3200 / bpm);
-                    LyricBox.ChangeBeatPerMinute(bpm);
+                    LyricBox.ChangeBeatPerMinute((float)bpm);
                 }
             }
         }
@@ -567,7 +567,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             if (HyPlayList.NowPlayingItem == null) return;
             LyricBox.Width = LyricWidth;
             LyricBox.ChangeRenderColor(GetIdleBrush().Color, GetAccentBrush().Color);
-            LyricBox.ChangeRenderFontSize(showsize, (Common.Setting.translationSize > 0 ) ? Common.Setting.translationSize : showsize / 2, Common.Setting.romajiSize);
+            LyricBox.ChangeRenderFontSize((float)showsize, (Common.Setting.translationSize > 0 ) ? Common.Setting.translationSize : (float)showsize / 2, Common.Setting.romajiSize);
         });
     }
 

@@ -37,21 +37,21 @@ namespace HyPlayer.LyricRenderer.RollingCalculators
         }
 
 
-        public override double CalculateCurrentY(double fromY, double targetY, RenderingLyricLine currentLine, RenderContext context)
+        public override float CalculateCurrentY(float fromY, float targetY, RenderingLyricLine currentLine, RenderContext context)
         {
-            var progress = 1.0;
+            var progress = 1.0f;
             var gap = currentLine.Id - context.CurrentLyricLineIndex;
             if (!(fromY < targetY) && gap >= 0)
             {
-                var theoryDuration = (duration /* * (Math.Log10(Math.Max(gap, 0.9)) + 1)*/);
+                var theoryDuration = ((float)duration /* * (Math.Log10(Math.Max(gap, 0.9)) + 1)*/);
                 progress = Math.Clamp((context.CurrentLyricTime - context.CurrentKeyframe) / theoryDuration, 0, 1);
                 progress = 1 - progress;
-                progress = f(progress);
+                progress = (float)f(progress);
                 progress = 1 - progress;
             }
             else
             {
-                progress = Math.Clamp((context.CurrentLyricTime - context.CurrentKeyframe)*1.0 / 300, 0, 1);
+                progress = Math.Clamp((context.CurrentLyricTime - context.CurrentKeyframe)*1.0f / 300, 0, 1);
             }
             return fromY + (targetY - fromY) * progress;
         }

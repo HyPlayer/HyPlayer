@@ -7,9 +7,9 @@ namespace HyPlayer.LyricRenderer.RollingCalculators;
 
 public class SyncRollingCalculator : LineRollingCalculator
 {
-    public const double Duration = 500;
-    
-    public override double CalculateCurrentY(double fromY, double targetY, RenderingLyricLine currentLine, RenderContext context)
+    public const float Duration = 200;
+
+    public override float CalculateCurrentY(float fromY, float targetY, RenderingLyricLine currentLine, RenderContext context)
     {
         var gap = currentLine.Id - context.CurrentLyricLineIndex;
         if (gap < -3)

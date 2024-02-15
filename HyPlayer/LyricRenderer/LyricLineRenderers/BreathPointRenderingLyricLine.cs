@@ -9,7 +9,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers;
 
 public class BreathPointRenderingLyricLine : RenderingLyricLine
 {
-    public double BeatPerMinute { get; set; }
+    public float BeatPerMinute { get; set; }
 
     private const float MinRadius = 5f;
     private const float MaxRadius = 30f;
@@ -21,17 +21,17 @@ public class BreathPointRenderingLyricLine : RenderingLyricLine
 
     public override bool Render(CanvasDrawingSession session, LineRenderOffset offset, RenderContext context)
     {
-        float actualX = (float)offset.X;
+        float actualX = offset.X;
         switch(context.PreferTypography.Alignment)
         {
             case TextAlignment.Left:
                 actualX += MaxRadius / 2;
                 break;
             case TextAlignment.Center:
-                actualX += (float)(RenderingWidth / 2 - MaxRadius);
+                actualX += RenderingWidth / 2 - MaxRadius;
                 break;
             case TextAlignment.Right:
-                actualX += (float)(RenderingWidth - MaxRadius * 2);
+                actualX += RenderingWidth - MaxRadius * 2;
                 break;
         }   
         if (context.CurrentLyricTime <= EndTime && context.CurrentLyricTime >= StartTime)
@@ -40,12 +40,12 @@ public class BreathPointRenderingLyricLine : RenderingLyricLine
             var duration = 60 / BeatPerMinute * 1000; // ms
             var progress = Math.Abs(Math.Sin(Math.PI / duration * (EndTime - context.CurrentLyricTime)));
 
-            session.FillCircle(actualX + 15, (float)offset.Y + MaxRadius + 15,
+            session.FillCircle(actualX + 15, offset.Y + MaxRadius + 15,
                 MinRadius + (MaxRadius - MinRadius) * (float)progress, Colors.White);
         }
         else
         {
-            session.FillCircle((float)actualX, (float)offset.Y + MaxRadius, MinRadius, Colors.Gray);
+            session.FillCircle(actualX, offset.Y + MaxRadius, MinRadius, Colors.Gray);
         }
 
         return true;

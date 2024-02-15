@@ -431,6 +431,15 @@
                         </ToggleMenuFlyoutItem>
                         <MenuFlyoutSeparator />
                         <MenuFlyoutItem
+                            Click="BtnCopyLyricClicked"
+                            HorizontalContentAlignment="Left"
+                            Text="复制歌词" />
+                        <MenuFlyoutItem
+                            Click="BtnLoadLocalLyric"
+                            HorizontalContentAlignment="Left"
+                            Text="加载本地歌词" />
+                        <MenuFlyoutSeparator />
+                        <MenuFlyoutItem
                             HorizontalContentAlignment="Left"
                             IsEnabled="False"
                             Text="播放速度" />
