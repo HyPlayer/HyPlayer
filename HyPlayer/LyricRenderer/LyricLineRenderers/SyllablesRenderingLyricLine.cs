@@ -506,7 +506,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             });
             _unfocusMatrix = GetCenterMatrix(0, 0, _scalingCenterX,
                 (float)textLayout.LayoutBounds.Height / 2, 0.8F, 0.8F);
-            RenderingHeight = (float)(textLayout.LayoutBounds.Height + (HiddenOnBlur ? 10 : 30) + add);
+            RenderingHeight = (float)(textLayout.LayoutBounds.Height + (HiddenOnBlur ? context.PreferTypography.LyricFontSize / 2 : context.PreferTypography.LyricFontSize) / 8 + add);
             RenderingWidth = _canvasWidth - 4;
         }
     }
