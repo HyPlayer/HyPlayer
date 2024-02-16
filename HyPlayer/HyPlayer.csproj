@@ -160,7 +160,13 @@
     <Compile Include="LyricRenderer\Abstraction\RenderTypography.cs" />
     <Compile Include="LyricRenderer\Abstraction\Render\LineRenderOffset.cs" />
     <Compile Include="LyricRenderer\Abstraction\Render\LineRollingCalculator.cs" />
+    <Compile Include="LyricRenderer\Abstraction\Render\RenderEffect.cs" />
     <Compile Include="LyricRenderer\Abstraction\Render\RenderingLyricLine.cs" />
+    <Compile Include="LyricRenderer\Animator\EaseFunctionBase.cs" />
+    <Compile Include="LyricRenderer\Animator\EaseFunctions\CustomCircleEase.cs" />
+    <Compile Include="LyricRenderer\Animator\EaseFunctions\CustomElasticEase.cs" />
+    <Compile Include="LyricRenderer\Animator\EaseFunctions\CustomExponentialEase.cs" />
+    <Compile Include="LyricRenderer\Animator\EaseFunctions\CustomSineEase.cs" />
     <Compile Include="LyricRenderer\Converters\LrcConverter.cs" />
     <Compile Include="LyricRenderer\LyricLineRenderers\BreathPointRenderingLyricLine.cs" />
     <Compile Include="LyricRenderer\LyricLineRenderers\ProgressBarRenderingLyricLine.cs" />
@@ -169,6 +175,7 @@
     <Compile Include="LyricRenderer\RollingCalculators\ElasticEaseRollingCalculator.cs" />
     <Compile Include="LyricRenderer\RollingCalculators\LyricifyRollingCalculator.cs" />
     <Compile Include="LyricRenderer\RollingCalculators\SinRollingCalculator.cs" />
+    <Compile Include="LyricRenderer\RollingCalculators\SyncRollingCalculator.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -603,7 +610,6 @@
       <Name>NeteaseCloudMusicApi</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>

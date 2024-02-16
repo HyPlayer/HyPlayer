@@ -1,18 +1,17 @@
 ﻿using System;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.Abstraction;
+using HyPlayer.LyricRenderer.Animator.EaseFunctions;
 
 namespace HyPlayer.LyricRenderer.RollingCalculators;
 
 public class ElasticEaseRollingCalculator : LineRollingCalculator
 {
-    public ElasticEaseRollingCalculator()
-    {
-    }
 
+    private readonly CustomElasticEase _ease = new();
+    
     public const long AnimationDuration = 630;
-    private float springiness = 3;
-    private float oscillations = 0;
+
 
     public override float CalculateCurrentY(float fromY, float targetY, RenderingLyricLine currentLine,
         RenderContext context)
@@ -26,7 +25,7 @@ public class ElasticEaseRollingCalculator : LineRollingCalculator
                 var theoryTime = AnimationDuration * ((float)Math.Log10(Math.Max(gap, 0.9)) + 1);
                 progress = Math.Clamp((context.CurrentLyricTime - context.CurrentKeyframe) / theoryTime, 0, 1);
                 progress = 1 - progress;
-                progress = (float)EaseInCore(progress);
+                progress = (float)_ease.Ease(progress);
                 progress = 1 - progress;
                 /*
 
@@ -43,15 +42,5 @@ public class ElasticEaseRollingCalculator : LineRollingCalculator
         }
 
         return fromY + (targetY - fromY) * progress;
-    }
-
-    protected double EaseInCore(float normalizedTime)
-    {
-        double expo;
-
-        expo = (Math.Exp(springiness * normalizedTime) - 1.0) / (Math.Exp(springiness) - 1.0);
-
-
-        return expo * (Math.Sin((Math.PI * 2.0 * oscillations + Math.PI * 0.5) * normalizedTime));
     }
 }
