@@ -32,7 +32,7 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
     public override bool Render(CanvasDrawingSession session, LineRenderOffset offset, RenderContext context)
     {
         float actualX = offset.X;
-        switch (context.PreferTypography.Alignment)
+        switch (TypographySelector(t=>t?.Alignment, context)!.Value)
         {
             case TextAlignment.Left:
                 actualX += 8;

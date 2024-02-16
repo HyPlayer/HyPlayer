@@ -34,9 +34,14 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
+using ALRC.Abstraction;
 using HyPlayer.LyricRenderer;
+using HyPlayer.LyricRenderer.LyricLineRenderers;
+using LyricParser.Abstraction;
 using Buffer = Windows.Storage.Streams.Buffer;
 using Color = System.Drawing.Color;
+using ALRC.Converters;
+using LrcConverter = HyPlayer.LyricRenderer.Converters.LrcConverter;
 
 #endregion
 
@@ -555,7 +560,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         {
             _lyricIsReadyToGo = true;
             if (_lyricIsCleaning) return;
-            LyricBox.SetLyricLines(LrcConverter.Convert(HyPlayList.Lyrics));
+            LyricBox.SetLyricLines(LrcConverter.Convert(ConvertToALRC(HyPlayList.Lyrics)));
             LyricBox.ChangeAlignment(Common.Setting.lyricAlignment  switch
             {
                 1 => TextAlignment.Center,
@@ -571,6 +576,62 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         });
     }
 
+    public static ALRCFile ConvertToALRC(List<SongLyric> lyric)
+    {
+        var lines = new List<ALRCLine>();
+        var alrc = new ALRCFile
+        {
+            Schema = "https://github.com/kengwang/ALRC/blob/main/schemas/v1.json",
+            LyricInfo = null,
+            SongInfo = null,
+            Header = null,
+            Lines = lines
+        };
+        var lastLine = new ALRCLine();
+        foreach (var songLyric in lyric)
+        {
+            var line = new ALRCLine
+            {
+                Start = (long)songLyric.LyricLine.StartTime.TotalMilliseconds,
+                LineStyle = null,
+                RawText = songLyric.LyricLine.CurrentLyric,
+                Transliteration = songLyric.Romaji,
+                LineTranslations = !string.IsNullOrWhiteSpace(songLyric.Translation) ? new Dictionary<string, string?>()
+                {
+                    {"zh-CN" , songLyric.Translation}
+                } : null,
+            };
+            lastLine.End = line.Start;
+            lastLine = line;
+            if (songLyric.LyricLine is KaraokeLyricsLine lrcLyricsLine)
+            {
+                line.Words = lrcLyricsLine.WordInfos.Select(s => new ALRCWord
+                {
+                    Start = (long)s.StartTime.TotalMilliseconds,
+                    End = (long)(s.StartTime + s.Duration).TotalMilliseconds,
+                    Word = s.CurrentWords
+                }).ToList();
+                if (!string.IsNullOrWhiteSpace(songLyric.Romaji) && lrcLyricsLine.RomajiWordInfos is { Count: > 0})
+                {
+                    try
+                    {
+                        for (var i = 0; i < lrcLyricsLine.RomajiWordInfos.Count; i++)
+                        {
+                            line.Words[i].Transliteration = lrcLyricsLine.RomajiWordInfos[i].CurrentWords;
+                        }
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
+                }
+            }
+            lines.Add(line);
+        }
+
+        return alrc;
+    }
+    
     private Windows.UI.Color GetKaraokAccentBrush()
     {
         if (Common.Setting.karaokLyricFocusingColor is not null)
@@ -874,15 +935,24 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private async void BtnLoadLocalLyric(object sender, RoutedEventArgs e)
     {
-        var fop = new FileOpenPicker();
-        fop.FileTypeFilter.Add(".lrc");
-        // register provider - by default encoding is not supported 
-        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-        var lrcFile = await fop.PickSingleFileAsync();
-        if (lrcFile is null) return;
-        var lrcText = await FileIO.ReadTextAsync(lrcFile);
-        HyPlayList.Lyrics = Utils.ConvertPureLyric(lrcText, true);
-        LoadLyricsBox();
+        FileOpenPicker picker = new FileOpenPicker();
+        picker.FileTypeFilter.Add(".qrc");
+        picker.FileTypeFilter.Add(".lrc");
+        picker.FileTypeFilter.Add(".yrc");
+        picker.FileTypeFilter.Add(".alrc");
+        var sf = await picker.PickSingleFileAsync();
+        var qrc = await FileIO.ReadTextAsync(sf);
+        ILyricConverter<string> converter = sf.FileType switch
+        {
+            ".qrc" => new QQLyricConverter(),
+            ".yrc" => new NeteaseYrcConverter(),
+            ".lrc" => new ALRC.Converters.LrcConverter(),
+            ".alrc" => new ALRCConverter(),
+            ".ttml" => new AppleSyllableConverter(),
+            _ => new LyricifySyllableConverter()
+        };
+        var lrcs = LyricRenderer.Converters.LrcConverter.Convert(converter.Convert(qrc));
+        LyricBox.SetLyricLines(lrcs);
     }
 
     private void ImageAlbum_Tapped(object sender, TappedRoutedEventArgs e)

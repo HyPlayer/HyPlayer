@@ -119,6 +119,7 @@ namespace HyPlayer.LyricRenderer
             {
                 Context.RenderOffsets[renderingLyricLine.Id] = new LineRenderOffset
                 {
+                    X = 4,
                     Y = topleftPosition
                 };
                 Context.SnapshotRenderOffsets[renderingLyricLine.Id] = new LineRenderOffset();
@@ -247,7 +248,6 @@ namespace HyPlayer.LyricRenderer
                 
 
                 Context.RenderOffsets[currentLine.Id].Y = renderedBeforeStartPosition;
-                Context.RenderOffsets[currentLine.Id].X = 4;
             }
         }
 

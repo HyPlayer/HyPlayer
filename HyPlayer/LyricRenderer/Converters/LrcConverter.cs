@@ -1,128 +1,101 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
-using HyPlayer.Classes;
+using Windows.UI;
+using Windows.UI.Text;
+using Windows.UI.Xaml;
+using ALRC.Abstraction;
+using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.LyricLineRenderers;
-using LyricParser.Abstraction;
+using Color = System.Drawing.Color;
 
 namespace HyPlayer.LyricRenderer.Converters;
 
 public static class LrcConverter
 {
-    public static List<RenderingLyricLine> Convert(List<SongLyric> lines)
+    private static readonly ColorConverter ColorConverter = new();
+    
+    public static List<RenderingLyricLine> Convert(ALRCFile alrc)
     {
         var result = new List<RenderingLyricLine>();
-        for (var index = 0; index < lines.Count; index++)
+        foreach (var alrcLine in alrc.Lines)
         {
-            var line = lines[index];
-            var lyricLine = line.LyricLine;
-            long endTime = -1;
-            if (lyricLine is KaraokeLyricsLine karaokeLyricsLine)
-                endTime = (long)(karaokeLyricsLine.StartTime.TotalMilliseconds +
-                                 karaokeLyricsLine.Duration.TotalMilliseconds);
-            
-            if (endTime is -1) endTime = lines.Count > index + 1 ? (long)lines[index + 1].LyricLine.StartTime.TotalMilliseconds : int.MaxValue;
-            long startTime = (long)line.LyricLine.StartTime.TotalMilliseconds;
-            if (lyricLine is KaraokeLyricsLine syllableLineInfo)
+            if (string.IsNullOrWhiteSpace(alrcLine.RawText) && alrcLine.Words is not { Count: > 0 })
             {
-                var syllables = syllableLineInfo.WordInfos.Select(t => new RenderingSyllable
-                {
-                    Syllable = t.CurrentWords,
-                    StartTime = (long)t.StartTime.TotalMilliseconds,
-                    EndTime = (long)t.StartTime.TotalMilliseconds + (long)t.Duration.TotalMilliseconds,
-                }).ToList();
-
-
-                if (syllables.Count > 0 && !syllables.All(t=>string.IsNullOrWhiteSpace(t.Syllable)))
-                {
-                    var lyric = new SyllablesRenderingLyricLine
-                    {
-                        IsSyllable = true,
-                        Id = index,
-                        HiddenOnBlur = false,
-                        KeyFrames =
-                        [
-                            startTime,
-                            endTime
-                        ],
-                        StartTime = startTime,
-                        EndTime = endTime,
-                        Syllables = syllables,
-                        Transliteration = line.HaveRomaji ? line.Romaji : null,
-                        Translation = line.HaveTranslation ? line.Translation : null
-                    };
-                    if(line.Romaji is not null or "")
-                    {
-                        try
-                        {
-                            var romajiSyllables = syllableLineInfo.RomajiWordInfos.Select(t => new RenderingSyllable
-                            {
-                                Syllable = t.CurrentWords,
-                                StartTime = (long)t.StartTime.TotalMilliseconds,
-                                EndTime = (long)t.StartTime.TotalMilliseconds + (long)t.Duration.TotalMilliseconds,
-                            }).ToList();
-                            lyric.RomajiSyllables = romajiSyllables;
-                        }
-                        catch
-                        {
-
-                        }
-                    }
-                    result.Add(lyric);
-                }
-                else
-                    result.Add(new ProgressBarRenderingLyricLine
-                    {
-                        Id = index,
-                        KeyFrames =
-                        [
-                            startTime,
-                            endTime
-                        ],
-                        StartTime = startTime,
-                        EndTime = endTime,
-                        HiddenOnBlur = true,
-                    });
-                
-                continue;
-            }
-
-            
-            if (!string.IsNullOrWhiteSpace(line.LyricLine.CurrentLyric))
-            {
-                
-                result.Add(new SyllablesRenderingLyricLine()
-                {
-                    IsSyllable = false,
-                    Id = index,
-                    KeyFrames =
-                    [
-                        startTime,
-                        endTime
-                    ],
-                    StartTime = startTime,
-                    EndTime = endTime,
-                    Text = line.LyricLine.CurrentLyric,
-                    Transliteration = line.HaveRomaji ? line.Romaji : null,
-                    Translation = line.HaveTranslation ? line.Translation : null
-                });
-            }
-            else
+                // Empty Line
                 result.Add(new ProgressBarRenderingLyricLine
                 {
-                    Id = index,
                     KeyFrames =
                     [
-                        startTime,
-                        endTime
+                        alrcLine.Start ?? 0,
+                        alrcLine.End ?? 0
                     ],
-                    StartTime = startTime,
-                    EndTime = endTime,
-                    HiddenOnBlur = true,
+                    StartTime = alrcLine.Start ?? 0,
+                    EndTime = alrcLine.End ?? 0,
+                    HiddenOnBlur = true
                 });
-        }
+                continue;
+            }
+            
+            
+            var line = new SyllablesRenderingLyricLine
+            {
+                KeyFrames =
+                [
+                    alrcLine.Start ?? 0,
+                    alrcLine.End ?? 0
+                ],
+                StartTime = alrcLine.Start ?? 0,
+                EndTime = alrcLine.End ?? 0,
+                Text = alrcLine.RawText,
+                Transliteration = alrcLine.Transliteration,
+                Translation = alrcLine.LineTranslations?.FirstOrDefault().Value,
+            };
+            if (alrcLine.Words is { Count: > 0 })
+            {
+                line.IsSyllable = true;
+                line.Syllables = alrcLine.Words.Select(w => new RenderingSyllable()
+                {
+                    StartTime = w.Start,
+                    EndTime = w.End,
+                    Syllable = w.Word,
+                    Transliteration = w.Transliteration
+                }).ToList();
+            }
 
+            if (alrc.Header?.Styles?.FirstOrDefault(t => t.Id == alrcLine.LineStyle) is { } style)
+            {
+                line.Typography = new RenderTypography
+                {
+                    Alignment = style.Position switch
+                    {
+                        ALRCStylePosition.Left => TextAlignment.Left,
+                        ALRCStylePosition.Center => TextAlignment.Center,
+                        ALRCStylePosition.Right => TextAlignment.Right,
+                        _ => null
+                    },
+                    FontWeight = style.Type == ALRCStyleAccent.Emphasise ? FontWeights.Bold : FontWeights.Normal,
+                };
+                line.HiddenOnBlur = style.HiddenOnBlur || style.Type == ALRCStyleAccent.Background;
+                if (style.Color is not null)
+                {
+                    var colorRet = ColorConverter.ConvertFromString(style.Color);
+                    if (colorRet is Color color)
+                    {
+                        line.Typography.FocusingColor = new Windows.UI.Color()
+                        {
+                            A = color.A,
+                            R = color.R,
+                            G = color.G,
+                            B = color.B
+                        };
+                    }
+                }
+            }
+            result.Add(line);
+        }
         return result;
     }
 }

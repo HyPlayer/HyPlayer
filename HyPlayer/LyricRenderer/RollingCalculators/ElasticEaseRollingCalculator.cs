@@ -2,13 +2,14 @@
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Animator.EaseFunctions;
+using Windows.UI.Xaml.Media.Animation;
 
 namespace HyPlayer.LyricRenderer.RollingCalculators;
 
 public class ElasticEaseRollingCalculator : LineRollingCalculator
 {
 
-    private readonly CustomElasticEase _ease = new();
+    private readonly CustomElasticEase _ease = new() { EasingMode = EasingMode.EaseOut };
     
     public const long AnimationDuration = 630;
 
@@ -24,9 +25,7 @@ public class ElasticEaseRollingCalculator : LineRollingCalculator
             {
                 var theoryTime = AnimationDuration * ((float)Math.Log10(Math.Max(gap, 0.9)) + 1);
                 progress = Math.Clamp((context.CurrentLyricTime - context.CurrentKeyframe) / theoryTime, 0, 1);
-                progress = 1 - progress;
                 progress = (float)_ease.Ease(progress);
-                progress = 1 - progress;
                 /*
 
                 var expo = (Math.Exp(springiness * progress) - 1.0) / (Math.Exp(springiness) - 1.0);
