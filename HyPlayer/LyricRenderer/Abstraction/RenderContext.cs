@@ -5,6 +5,7 @@ namespace HyPlayer.LyricRenderer.Abstraction;
 
 public class RenderContext
 {
+    public bool IsPlaying { get; set; }
     /// <summary>
     /// 是否显示调试信息
     /// 请合理使用

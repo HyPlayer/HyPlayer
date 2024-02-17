@@ -11,6 +11,8 @@ using System.Diagnostics;
 using Windows.UI.Xaml.Input;
 using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.LyricLineRenderers;
+using HyPlayer.LyricRenderer.Animator.EaseFunctions;
+using Windows.UI.Xaml.Media.Animation;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -31,6 +33,8 @@ namespace HyPlayer.LyricRenderer
         public delegate void RequestSeekDelegate(long time);
 
         public event RequestSeekDelegate OnRequestSeek;
+
+        private readonly CustomCircleEase _circleEase = new() { EasingMode = EasingMode.EaseOut };
 
         public LyricRenderView()
         {
@@ -246,7 +250,6 @@ namespace HyPlayer.LyricRenderer
                 }
 
                 
-
                 Context.RenderOffsets[currentLine.Id].Y = renderedBeforeStartPosition;
             }
         }
@@ -259,13 +262,13 @@ namespace HyPlayer.LyricRenderer
             if (_initializing) return;
             OnBeforeRender?.Invoke(this);
             // 鼠标滚轮时间 5 s 清零
-            if (Context.ScrollingDelta != 0 && Context.RenderTick - _lastWheelTime > 50000000)
+            if (Context.ScrollingDelta != 0 && Context.RenderTick - _lastWheelTime > 50000000&&Context.IsPlaying)
             {
                 // 缓动来一下吧
                 // 0.5 秒缓动到 0
                 Context.IsScrolling = false;
                 var progress = Math.Clamp((Context.RenderTick - _lastWheelTime - 50000000) / 5000000.0, 0, 1);
-                Context.ScrollingDelta = (int)(Context.ScrollingDelta * (1 - progress));
+                Context.ScrollingDelta = (int)(Context.ScrollingDelta * _circleEase.Ease(1 - progress));
                 if (Math.Abs(progress - 1) < Epsilon)
                 {
                     _lastWheelTime = 0;
@@ -286,7 +289,7 @@ namespace HyPlayer.LyricRenderer
 
             foreach (var key in _keyFrameRendered.Keys.ToArray())
             {
-                if (_keyFrameRendered[key] == true) continue;
+                if (_keyFrameRendered[key]) continue;
                 if (key >= Context.CurrentLyricTime && key != 0) continue;
                 // 该 KeyFrame 尚未渲染
                 _keyFrameRendered[key] = true;

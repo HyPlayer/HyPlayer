@@ -126,6 +126,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void LyricBox_OnBeforeRender(LyricRenderer.LyricRenderView view)
     {
+        view.Context.IsPlaying = HyPlayList.Player.PlaybackSession.PlaybackState == Windows.Media.Playback.MediaPlaybackState.Playing;
         if (HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds < view.Context.CurrentLyricTime)
         {
             view.Context.CurrentLyricTime = (long)HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
