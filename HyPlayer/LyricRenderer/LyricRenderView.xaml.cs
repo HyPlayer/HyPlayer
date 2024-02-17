@@ -273,7 +273,7 @@ namespace HyPlayer.LyricRenderer
                 {
                     _lastWheelTime = 0;
                     Context.ScrollingDelta = 0;                    
-                }
+            }
 
                 _needRecalculate = true;
             }
@@ -355,11 +355,14 @@ namespace HyPlayer.LyricRenderer
             _sizeChangedHeight = (float)e.NewSize.Height;
         }
 
-        private long _lastWheelTime = 0;
+        private long _lastWheelTime;
 
         private void LyricView_OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
         {
-            Context.ScrollingDelta += e.GetCurrentPoint(this).Properties.MouseWheelDelta;
+            var delta = e.GetCurrentPoint(this).Properties.MouseWheelDelta;
+            var min = -(long)Context.LyricLines.Where(p => p.StartTime > Context.CurrentLyricTime).Sum(p => p.RenderingHeight);
+            var max = (long)Context.LyricLines.Where(p => p.EndTime < Context.CurrentLyricTime).Sum(p => p.RenderingHeight);
+            Context.ScrollingDelta = Math.Clamp(Context.ScrollingDelta + delta, min, max);//限制滚动范围
             Context.IsScrolling = true;
             _lastWheelTime = Context.RenderTick;
             _needRecalculate = true;
