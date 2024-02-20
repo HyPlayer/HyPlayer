@@ -786,6 +786,57 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        
+        public bool lyricRenderFocusHighlighting
+        {
+            get => GetSettings(nameof(lyricRenderFocusHighlighting), true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderFocusHighlighting)] = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        public bool lyricRenderTransliterationScanning
+        {
+            get => GetSettings(nameof(lyricRenderTransliterationScanning), true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderTransliterationScanning)] = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        public bool lyricRenderSimpleLineScanning
+        {
+            get => GetSettings(nameof(lyricRenderSimpleLineScanning), true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderSimpleLineScanning)] = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        public bool lyricRenderScaleWhenFocusing
+        {
+            get => GetSettings(nameof(lyricRenderScaleWhenFocusing), true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderScaleWhenFocusing)] = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        public bool lyricRenderBlur
+        {
+            get => GetSettings(nameof(lyricRenderBlur), true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderBlur)] = value;
+                OnPropertyChanged();
+            }
+        }
+        
 #nullable enable
         public Color? pureLyricIdleColor
         {

@@ -137,7 +137,8 @@
                                             ValueChanged="LyricSize_OnValueChanged"
                                             Value="{x:Bind hyplayer:Common.Setting.translationSize, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="罗马字大小">
+                                    <controls3:SettingsCard
+                                        Header="罗马字大小">
                                         <controls:NumberBox
                                             x:Name="RomajiSize"
                                             MinWidth="100"
@@ -149,18 +150,7 @@
                                             ValueChanged="LyricSize_OnValueChanged"
                                             Value="{x:Bind hyplayer:Common.Setting.romajiSize, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="焦点歌词放大大小">
-                                        <controls:NumberBox
-                                            x:Name="LyricScaleSize"
-                                            MinWidth="100"
-                                            HorizontalAlignment="Right"
-                                            LargeChange="5"
-                                            Minimum="0"
-                                            SmallChange="1"
-                                            SpinButtonPlacementMode="Compact"
-                                            ValueChanged="LyricSize_OnValueChanged"
-                                            Value="{x:Bind hyplayer:Common.Setting.lyricScaleSize, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
+                                    
                                 </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>
 
@@ -183,14 +173,6 @@
                                 </controls3:SettingsExpander.Transitions>
 
                                 <controls3:SettingsExpander.Items>
-                                    <controls3:SettingsCard Header="歌词特效等级">
-                                        <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.PerformanceMode, Mode=TwoWay}">
-                                            <ComboBoxItem Content="全部关闭" />
-                                            <ComboBoxItem Content="部分开启" />
-                                            <ComboBoxItem Content="特效全开" />
-                                        </ComboBox>
-                                    </controls3:SettingsCard>
-
                                     <controls3:SettingsCard Header="使用逐字歌词 (试验性功能)">
                                         <ToggleSwitch
                                             MinWidth="10"
@@ -322,6 +304,53 @@
                                             IsOn="{x:Bind hyplayer:Common.Setting.MigrateLyrics, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
+                            </controls3:SettingsExpander>
+                            <controls3:SettingsExpander
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch"
+                                Header="歌词特效"
+                                IsExpanded="True">
+                                <controls3:SettingsExpander.Transitions>
+                                    <TransitionCollection>
+                                        <RepositionThemeTransition />
+                                    </TransitionCollection>
+                                </controls3:SettingsExpander.Transitions>
+                                <controls3:SettingsExpander.HeaderIcon>
+                                    <FontIcon Glyph="&#xE794;" />
+                                </controls3:SettingsExpander.HeaderIcon>
+                                <controls3:SettingsExpander.Items>
+                                    <controls3:SettingsCard Header="高亮焦点歌词">
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.lyricRenderFocusHighlighting, Mode=TwoWay}" />
+                                    </controls3:SettingsCard>
+                                    <controls3:SettingsCard Header="音译扫词">
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.lyricRenderTransliterationScanning, Mode=TwoWay}" />
+                                    </controls3:SettingsCard>
+                                    <controls3:SettingsCard Header="非逐字行扫词">
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.lyricRenderSimpleLineScanning, Mode=TwoWay}" />
+                                    </controls3:SettingsCard>
+                                    <controls3:SettingsCard Header="焦点歌词行放大">
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.lyricRenderScaleWhenFocusing, Mode=TwoWay}" />
+                                    </controls3:SettingsCard>
+                                    <controls3:SettingsCard Header="模糊非聚焦行">
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.lyricRenderBlur, Mode=TwoWay}" />
+                                    </controls3:SettingsCard>
+                                </controls3:SettingsExpander.Items>
+                                
                             </controls3:SettingsExpander>
                         </StackPanel>
                     </ScrollViewer>

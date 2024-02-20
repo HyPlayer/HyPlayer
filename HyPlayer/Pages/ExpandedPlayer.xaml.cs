@@ -117,6 +117,11 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         LyricBox.Context.LyricPaddingTopRatio = 0.1f;
         LyricBox.Context.CurrentLyricTime = 0;
         LyricBox.Context.Debug = Common.Setting.LyricRendererDebugMode;
+        LyricBox.Context.Effects.Blur = Common.Setting.lyricRenderBlur;
+        LyricBox.Context.Effects.ScaleWhenFocusing = Common.Setting.lyricRenderScaleWhenFocusing;
+        LyricBox.Context.Effects.FocusHighlighting = Common.Setting.lyricRenderFocusHighlighting;
+        LyricBox.Context.Effects.TransliterationScanning = Common.Setting.lyricRenderTransliterationScanning;
+        LyricBox.Context.Effects.SimpleLineScanning = Common.Setting.lyricRenderSimpleLineScanning;
     }
 
     private void LyricBoxOnOnRequestSeek(long time)
