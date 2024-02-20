@@ -596,7 +596,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 Start = (long)songLyric.LyricLine.StartTime.TotalMilliseconds,
                 LineStyle = null,
                 RawText = songLyric.LyricLine.CurrentLyric,
-                Transliteration = songLyric.Romaji,
+                Transliteration = songLyric.Romaji?.Trim(),
                 LineTranslations = !string.IsNullOrWhiteSpace(songLyric.Translation) ? new Dictionary<string, string?>()
                 {
                     {"zh-CN" , songLyric.Translation}
@@ -610,26 +610,13 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 {
                     Start = (long)s.StartTime.TotalMilliseconds,
                     End = (long)(s.StartTime + s.Duration).TotalMilliseconds,
-                    Word = s.CurrentWords
+                    Word = s.CurrentWords,
+                    Transliteration = string.IsNullOrWhiteSpace(s.Transliteration) ? null : s.Transliteration
                 }).ToList();
-                if (!string.IsNullOrWhiteSpace(songLyric.Romaji) && lrcLyricsLine.RomajiWordInfos is { Count: > 0})
-                {
-                    try
-                    {
-                        for (var i = 0; i < lrcLyricsLine.RomajiWordInfos.Count; i++)
-                        {
-                            line.Words[i].Transliteration = lrcLyricsLine.RomajiWordInfos[i].CurrentWords;
-                        }
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
-                }
             }
             lines.Add(line);
         }
-
+        new ALRCConverter().ConvertBack(alrc);
         return alrc;
     }
     

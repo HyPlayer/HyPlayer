@@ -16,6 +16,7 @@ using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.Graphics.Canvas.Geometry;
 using Microsoft.Graphics.Canvas.Text;
+using System.Diagnostics;
 
 namespace HyPlayer.LyricRenderer.LyricLineRenderers
 {
@@ -434,6 +435,8 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
         private List<Rect> _lineRectangle = [];
         private float _theoryFlatLineWidth;
         private float _drawingOffsetY;
+        private bool _isInitialized = false;
+        private string? _transliterationActual;
 
         public override void OnTypographyChanged(CanvasDrawingSession session, RenderContext context)
         {
@@ -456,9 +459,9 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 FontFamily = TypographySelector(t => t?.Font, context),
                 FontWeight = HiddenOnBlur ? FontWeights.Normal : FontWeights.SemiBold
             };
-
-
-            if (!string.IsNullOrWhiteSpace(Transliteration) || !string.IsNullOrWhiteSpace(Translation))
+            if (!_isInitialized)
+                _isRomajiSyllable = Syllables?.Any(t => t.Transliteration is not null) ?? false;
+            if (!string.IsNullOrWhiteSpace(Transliteration) || !string.IsNullOrWhiteSpace(Translation) || _isRomajiSyllable)
             {
                 if (!string.IsNullOrWhiteSpace(Transliteration))
                 {
@@ -479,10 +482,13 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                         FontFamily = TypographySelector(t => t?.Font, context),
                         FontWeight = FontWeights.Normal
                     };
-                    tll = new CanvasTextLayout(session, Transliteration, transliterationFormat,
+                    if (!_isInitialized)
+                        _transliterationActual = _isRomajiSyllable
+                            ? string.Join("", Syllables!.Select(s => s.Transliteration))
+                            : Transliteration;
+                    tll = new CanvasTextLayout(session, _transliterationActual, transliterationFormat,
                         Math.Clamp(_canvasWidth - 4, 0, int.MaxValue),
                         _canvasHeight);
-                    _isRomajiSyllable = Syllables?.Any(t => t.Transliteration is not null) ?? false;
                     add += 10;
                 }
 
@@ -557,6 +563,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     : TypographySelector(t => t?.LyricFontSize, context)!.Value) / 8f;
             RenderingHeight = (float)textLayout.LayoutBounds.Height + _drawingOffsetY + add;
             RenderingWidth = _canvasWidth - 4;
+            _isInitialized = true;
         }
     }
 }

@@ -328,8 +328,12 @@ namespace HyPlayer.LyricRenderer
 
             foreach (var renderingLyricLine in Context.RenderingLyricLines)
             {
-                var doRender = renderingLyricLine.Render(args.DrawingSession, Context.RenderOffsets[renderingLyricLine.Id], Context);
-                if (doRender == false) break;
+                if (Context.RenderOffsets.GetValueOrDefault(renderingLyricLine.Id) is { } offset)
+                {
+                    var doRender = renderingLyricLine.Render(args.DrawingSession, offset, Context);
+                    if (doRender == false) break;
+                }
+
             }
 
             if (Context.Debug)
