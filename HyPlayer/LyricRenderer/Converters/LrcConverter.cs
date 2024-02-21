@@ -51,7 +51,7 @@ public static class LrcConverter
                 EndTime = alrcLine.End ?? 0,
                 Text = alrcLine.RawText,
                 Transliteration = alrcLine.Transliteration,
-                Translation = alrcLine.LineTranslations?.FirstOrDefault().Value,
+                Translation = alrcLine.Translation
             };
             if (alrcLine.Words is { Count: > 0 })
             {

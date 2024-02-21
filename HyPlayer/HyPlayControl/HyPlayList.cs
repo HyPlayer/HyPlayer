@@ -2619,12 +2619,12 @@ parseOneChar:
                 }
                 break;
             }
-            if (curElement.Contains(wordInfo[i + delta].CurrentWords))
+            if (curElement.Contains(wordInfo[i + delta].CurrentWords.Trim()))
             {
                 wordInfo[i + delta].Transliteration = Utilities.ToRawRomaji(curHiraNotation, RomajiSystem.Hepburn, true);
-                curElement = curElement.Replace(wordInfo[i + delta].CurrentWords, string.Empty);
+                curElement = curElement.Replace(wordInfo[i + delta].CurrentWords.Trim(), string.Empty);
                 
-                if (curElement.Length > 0)
+                if (curElement.Trim().Length > 0)
                 {
                     wordInfo[i + delta].Transliteration = Utilities.ToRawRomaji(curHiraNotation.Substring(0,1), RomajiSystem.Hepburn, true);
                     curHiraNotation = curHiraNotation.Substring(1);
