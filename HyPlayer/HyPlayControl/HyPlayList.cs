@@ -2622,7 +2622,8 @@ parseOneChar:
             if (curElement.Contains(wordInfo[i + delta].CurrentWords.Trim()))
             {
                 wordInfo[i + delta].Transliteration = Utilities.ToRawRomaji(curHiraNotation, RomajiSystem.Hepburn, true);
-                curElement = curElement.Replace(wordInfo[i + delta].CurrentWords.Trim(), string.Empty);
+                if (!string.IsNullOrWhiteSpace(wordInfo[i + delta].CurrentWords))
+                    curElement = curElement.Replace(wordInfo[i + delta].CurrentWords.Trim(), string.Empty);
                 
                 if (curElement.Trim().Length > 0)
                 {

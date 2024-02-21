@@ -618,7 +618,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             }
             lines.Add(line);
         }
-        new ALRCConverter().ConvertBack(alrc);
+
+        if (lines.LastOrDefault() is { End: null or <= 0 } last) last.End = (long)HyPlayList.Player.PlaybackSession.NaturalDuration.TotalMilliseconds;
         return alrc;
     }
     

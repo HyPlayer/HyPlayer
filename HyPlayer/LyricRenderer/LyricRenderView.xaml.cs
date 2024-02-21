@@ -432,6 +432,8 @@ namespace HyPlayer.LyricRenderer
                     break;
                 }
             }
+
+            Context.ScrollingDelta = 0;
         }
     }
 }
