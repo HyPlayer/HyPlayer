@@ -1,5 +1,5 @@
 ﻿<ResourceDictionary
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls">
 
@@ -7,15 +7,14 @@
     <Thickness x:Key="NavigationViewContentMargin">0,48,0,0</Thickness>
     <Thickness x:Key="NavigationViewContentGridBorderThickness">1,1,0,0</Thickness>
     <CornerRadius x:Key="NavigationViewContentGridCornerRadius">8,0,0,0</CornerRadius>
-    <SolidColorBrush x:Key="NavigationViewTopPaneBackground" Color="Transparent"/>
+    <SolidColorBrush x:Key="NavigationViewTopPaneBackground" Color="Transparent" />
 
-    <Style x:Key="LeftNavViewDefaultStyle" 
-           TargetType="muxc:NavigationView">
+    <Style x:Key="LeftNavViewDefaultStyle" TargetType="muxc:NavigationView">
         <Style.Setters>
-            <Setter Property="IsPaneOpen" Value="True"/>
-            <Setter Property="PaneDisplayMode" Value="LeftCompact"/>
-            <Setter Property="IsPaneToggleButtonVisible" Value="True"/>
-            <Setter Property="OpenPaneLength" Value="270"/>
+            <Setter Property="IsPaneOpen" Value="True" />
+            <Setter Property="PaneDisplayMode" Value="LeftCompact" />
+            <Setter Property="IsPaneToggleButtonVisible" Value="True" />
+            <Setter Property="OpenPaneLength" Value="270" />
         </Style.Setters>
     </Style>
 </ResourceDictionary>

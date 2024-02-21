@@ -360,6 +360,16 @@ namespace HyPlayer
             }
         }
 
+        public int translationSize
+        {
+            get => GetSettings(nameof(translationSize), 0);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(translationSize)] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool gentleBPMAnimation
         {
             get => GetSettings(nameof(gentleBPMAnimation), false);
@@ -757,9 +767,9 @@ namespace HyPlayer
             set => ApplicationData.Current.LocalSettings.Values[nameof(noImage)] = value;
         }
 
-        public bool lyricAlignment
+        public int lyricAlignment
         {
-            get => GetSettings(nameof(lyricAlignment), false);
+            get => GetSettings(nameof(lyricAlignment), 0);
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(lyricAlignment)] = value;
@@ -776,6 +786,57 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        
+        public bool lyricRenderFocusHighlighting
+        {
+            get => GetSettings(nameof(lyricRenderFocusHighlighting), true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderFocusHighlighting)] = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        public bool lyricRenderTransliterationScanning
+        {
+            get => GetSettings(nameof(lyricRenderTransliterationScanning), true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderTransliterationScanning)] = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        public bool lyricRenderSimpleLineScanning
+        {
+            get => GetSettings(nameof(lyricRenderSimpleLineScanning), true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderSimpleLineScanning)] = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        public bool lyricRenderScaleWhenFocusing
+        {
+            get => GetSettings(nameof(lyricRenderScaleWhenFocusing), true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderScaleWhenFocusing)] = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        public bool lyricRenderBlur
+        {
+            get => GetSettings(nameof(lyricRenderBlur), true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderBlur)] = value;
+                OnPropertyChanged();
+            }
+        }
+        
 #nullable enable
         public Color? pureLyricIdleColor
         {
@@ -1569,6 +1630,17 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+
+        public bool LyricRendererDebugMode
+        {
+            get => GetSettings(nameof(LyricRendererDebugMode), false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(LyricRendererDebugMode)] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool LastFMLogined => LastFMManager.LastfmLogined;
         public bool SaveCookies()
         {

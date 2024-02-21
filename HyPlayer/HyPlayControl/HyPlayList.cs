@@ -2589,13 +2589,53 @@ public static class Utils
         {
             if (!string.IsNullOrWhiteSpace(lyricItem.LyricLine.CurrentLyric))
             {
-                if (Utilities.HasKana(lyricItem.LyricLine.CurrentLyric))
-                    lyricItem.Romaji =
-                        await Common.KawazuConv.Convert(lyricItem.LyricLine.CurrentLyric, To.Romaji, Mode.Separated);
+                if (!Utilities.HasKana(lyricItem.LyricLine.CurrentLyric)) continue;
+                lyricItem.Romaji =
+                    await Common.KawazuConv.Convert(lyricItem.LyricLine.CurrentLyric, To.Romaji, Mode.Separated);
+                if (lyricItem.LyricLine is not KaraokeLyricsLine klyric) continue;
+                var list = await Common.KawazuConv.GetDivisions(lyricItem.LyricLine.CurrentLyric, To.Romaji, Mode.Separated);
+                SetRomajiKaraoke(list, klyric.WordInfos.ToList());
             }
         }
     }
-
+    public static void SetRomajiKaraoke(List<Division> romajiInfo, List<KaraokeWordInfo> wordInfo)
+    {
+        var elements = new List<JapaneseElement>();
+        foreach (var division in romajiInfo)
+        {
+            elements.AddRange(division);
+        }
+        int delta = 0;
+        for (var i = 0; i < elements.Count; i++)
+        {
+            var curElement = elements[i].Element;
+            var curHiraNotation = elements[i].HiraNotation;
+parseOneChar:
+            if (i + delta >= wordInfo.Count)
+            {
+                if (!string.IsNullOrWhiteSpace(curHiraNotation))
+                {
+                    wordInfo[wordInfo.Count - 1].Transliteration += Utilities.ToRawRomaji(curHiraNotation, RomajiSystem.Hepburn, true);
+                }
+                break;
+            }
+            if (curElement.Contains(wordInfo[i + delta].CurrentWords.Trim()))
+            {
+                wordInfo[i + delta].Transliteration = Utilities.ToRawRomaji(curHiraNotation, RomajiSystem.Hepburn, true);
+                if (!string.IsNullOrWhiteSpace(wordInfo[i + delta].CurrentWords))
+                    curElement = curElement.Replace(wordInfo[i + delta].CurrentWords.Trim(), string.Empty);
+                
+                if (curElement.Trim().Length > 0)
+                {
+                    wordInfo[i + delta].Transliteration = Utilities.ToRawRomaji(curHiraNotation.Substring(0,1), RomajiSystem.Hepburn, true);
+                    curHiraNotation = curHiraNotation.Substring(1);
+                    delta++;
+                    goto parseOneChar;
+                }
+            }
+            
+        }
+    }
     public static async Task ConvertRomaji(PureLyricInfo pureLyricInfo, List<SongLyric> lyrics)
     {
         switch (Common.Setting.LyricRomajiSource)

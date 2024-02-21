@@ -12,7 +12,7 @@
     <AssemblyName>HyPlayer</AssemblyName>
     <DefaultLanguage>zh-cn</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
-    <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.20348.0</TargetPlatformVersion>
+    <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.22621.0</TargetPlatformVersion>
     <TargetPlatformMinVersion>10.0.18362.0</TargetPlatformMinVersion>
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
@@ -156,6 +156,26 @@
     <Compile Include="Controls\LyricControl\LyricControl.xaml.cs">
       <DependentUpon>LyricControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="LyricRenderer\Abstraction\RenderContext.cs" />
+    <Compile Include="LyricRenderer\Abstraction\RenderTypography.cs" />
+    <Compile Include="LyricRenderer\Abstraction\Render\LineRenderOffset.cs" />
+    <Compile Include="LyricRenderer\Abstraction\Render\LineRollingCalculator.cs" />
+    <Compile Include="LyricRenderer\Abstraction\Render\RenderEffect.cs" />
+    <Compile Include="LyricRenderer\Abstraction\Render\RenderingLyricLine.cs" />
+    <Compile Include="LyricRenderer\Animator\EaseFunctionBase.cs" />
+    <Compile Include="LyricRenderer\Animator\EaseFunctions\CustomCircleEase.cs" />
+    <Compile Include="LyricRenderer\Animator\EaseFunctions\CustomElasticEase.cs" />
+    <Compile Include="LyricRenderer\Animator\EaseFunctions\CustomExponentialEase.cs" />
+    <Compile Include="LyricRenderer\Animator\EaseFunctions\CustomSineEase.cs" />
+    <Compile Include="LyricRenderer\Converters\LrcConverter.cs" />
+    <Compile Include="LyricRenderer\LyricLineRenderers\BreathPointRenderingLyricLine.cs" />
+    <Compile Include="LyricRenderer\LyricLineRenderers\ProgressBarRenderingLyricLine.cs" />
+    <Compile Include="LyricRenderer\LyricLineRenderers\SyllablesRenderingLyricLine.cs" />
+    <Compile Include="LyricRenderer\LyricRenderView.xaml.cs" />
+    <Compile Include="LyricRenderer\RollingCalculators\ElasticEaseRollingCalculator.cs" />
+    <Compile Include="LyricRenderer\RollingCalculators\LyricifyRollingCalculator.cs" />
+    <Compile Include="LyricRenderer\RollingCalculators\SinRollingCalculator.cs" />
+    <Compile Include="LyricRenderer\RollingCalculators\SyncRollingCalculator.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -384,6 +404,9 @@
     <Page Include="Controls\SongListSelect.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="LyricRenderer\LyricRenderView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Content Include="Resources\Dark.xaml" />
     <Content Include="Resources\Light.xaml" />
     <None Include="HyPlayer_TemporaryKey.pfx" />
@@ -526,6 +549,12 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="ALRC.Abstraction">
+      <Version>1.0.3</Version>
+    </PackageReference>
+    <PackageReference Include="ALRC.Converters">
+      <Version>1.0.3</Version>
+    </PackageReference>
     <PackageReference Include="CommunityToolkit.Uwp.Controls.SettingsControls">
       <Version>8.0.240109</Version>
     </PackageReference>
@@ -587,7 +616,6 @@
       <Name>NeteaseCloudMusicApi</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
