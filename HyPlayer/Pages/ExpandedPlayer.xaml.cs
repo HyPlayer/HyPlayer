@@ -602,10 +602,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 LineStyle = null,
                 RawText = songLyric.LyricLine.CurrentLyric,
                 Transliteration = songLyric.Romaji?.Trim(),
-                LineTranslations = !string.IsNullOrWhiteSpace(songLyric.Translation) ? new Dictionary<string, string?>()
-                {
-                    {"zh-CN" , songLyric.Translation}
-                } : null,
+                Translation = songLyric.Translation?.Trim()
             };
             lastLine.End = line.Start;
             lastLine = line;

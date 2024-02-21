@@ -550,10 +550,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="ALRC.Abstraction">
-      <Version>1.0.1</Version>
+      <Version>1.0.3</Version>
     </PackageReference>
     <PackageReference Include="ALRC.Converters">
-      <Version>1.0.2</Version>
+      <Version>1.0.3</Version>
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Uwp.Controls.SettingsControls">
       <Version>8.0.240109</Version>
