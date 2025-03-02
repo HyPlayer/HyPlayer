@@ -145,13 +145,13 @@ public sealed partial class SongListDetail : Page, IDisposable
         try
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            var json = await Common.NeteaseAPI?.RequestAsync(NeteaseApis.RecommendSongsApi, _cancellationToken);
+            var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.RecommendSongsApi, _cancellationToken);
             if (json.IsError)
             {
                 Common.AddToTeachingTipLists("加载日推出错", json.Error.Message);
                 return;
             }
-            if (json.Value.Data?.DailySongs?.FirstOrDefault()?.RecommendReason == "birthDaySong")
+            if (json.Value?.Data?.DailySongs?.FirstOrDefault()?.RecommendReason == "birthDaySong")
             {
                 // 诶呀,没想到还过生了,吼吼
                 DescriptionTextBlock.Text = "生日快乐~ 今天也要开心哦!";
@@ -168,6 +168,7 @@ public sealed partial class SongListDetail : Page, IDisposable
                 ncSong.Order = idx++;
                 Songs.Add(ncSong);
             }
+            NextPage.Visibility = Visibility.Collapsed;
         }
         catch (Exception ex)
         {
@@ -184,7 +185,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         try
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaylistTracksGetApi,
+            var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.PlaylistTracksGetApi,
                 new PlaylistTracksGetRequest()
                 {
                     Id = playList.plid
