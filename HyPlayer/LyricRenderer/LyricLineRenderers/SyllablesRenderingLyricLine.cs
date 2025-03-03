@@ -20,20 +20,12 @@ using Windows.UI.Xaml.Media.Animation;
 
 namespace HyPlayer.LyricRenderer.LyricLineRenderers
 {
-    public class RenderingSyllable
+    public class RenderingSyllable(string syllable, long startTime, long endTime, string? transliteration)
     {
-        public string Syllable { get; set; }
-        public long StartTime { get; set; }
-        public long EndTime { get; set; }
-        public string? Transliteration { get; set; }
-        public RenderingSyllable(string syllable, long startTime, long endTime, string? transliteration)
-        {
-            Syllable = syllable;
-            StartTime = startTime;
-            EndTime = endTime;
-            Transliteration = transliteration;
-        }
-
+        public string Syllable { get; set; } = syllable;
+        public long StartTime { get; set; } = startTime;
+        public long EndTime { get; set; } = endTime;
+        public string? Transliteration { get; set; } = transliteration;
     }
 
     public class SyllablesRenderingLyricLine : RenderingLyricLine

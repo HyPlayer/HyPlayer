@@ -162,13 +162,13 @@ DoubleAnimation verticalAnimation;
         };
         if (HyPlayList.NowPlayingItem.PlayItem == null) return;
         data.Values["Title"] = HyPlayList.NowPlayingItem.PlayItem.Name;
-        data.Values["PureLyric"] = HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.CurrentLyric;
+        data.Values["PureLyric"] = HyPlayList.LyricInfo.Lyrics[HyPlayList.LyricPos].LyricLine.CurrentLyric;
         // TODO 此处有点冒险的报错,请注意测试
-        data.Values["Translation"] = HyPlayList.Lyrics[HyPlayList.LyricPos].Translation is null
-            ? HyPlayList.Lyrics.Count > HyPlayList.LyricPos + 1
-                ? HyPlayList.Lyrics[HyPlayList.LyricPos + 1].LyricLine.CurrentLyric
+        data.Values["Translation"] = HyPlayList.LyricInfo.Lyrics[HyPlayList.LyricPos].Translation is null
+            ? HyPlayList.LyricInfo.Lyrics.Count > HyPlayList.LyricPos + 1
+                ? HyPlayList.LyricInfo.Lyrics[HyPlayList.LyricPos + 1].LyricLine.CurrentLyric
                 : ""
-            : HyPlayList.Lyrics[HyPlayList.LyricPos].Translation;
+            : HyPlayList.LyricInfo.Lyrics[HyPlayList.LyricPos].Translation;
         data.Values["TotalValueString"] =
             TimeSpan.FromMilliseconds(HyPlayList.NowPlayingItem.PlayItem.LengthInMilliseconds)
                 .ToString(@"hh\:mm\:ss");

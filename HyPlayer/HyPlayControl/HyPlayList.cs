@@ -31,8 +31,10 @@ using Windows.Storage.Streams;
 using Windows.UI;
 using Windows.UI.Notifications;
 using Windows.UI.Xaml.Media;
+using ALRC.Converters;
 using Buffer = Windows.Storage.Streams.Buffer;
 using File = TagLib.File;
+using LrcConverter = ALRC.Converters.LrcConverter;
 
 #endregion
 
@@ -85,7 +87,7 @@ public static class HyPlayList
     public static readonly List<HyPlayItem> List = new();
     public static readonly List<int> ShuffleList = new();
     public static int ShufflingIndex = -1;
-    public static List<SongLyric> Lyrics = new();
+    public static LyricInfo LyricInfo = new();
     public static TimeSpan LyricOffset = TimeSpan.Zero;
     public static PropertySet AudioEffectsProperties = new PropertySet();
 
@@ -1721,22 +1723,22 @@ public static class HyPlayList
 
     private static void LoadLyricChange()
     {
-        if (Lyrics.Count == 0) return;
-        if (LyricPos >= Lyrics.Count || LyricPos < 0) LyricPos = 0;
+        if (LyricInfo.Lyrics.Count == 0) return;
+        if (LyricPos >= LyricInfo.Lyrics.Count || LyricPos < 0) LyricPos = 0;
         var changed = false;
         var realPos = Player.PlaybackSession.Position - LyricOffset;
-        if (Lyrics[LyricPos].LyricLine.StartTime > realPos) //当感知到进度回溯时执行
+        if (LyricInfo.Lyrics[LyricPos].LyricLine.StartTime > realPos) //当感知到进度回溯时执行
         {
-            LyricPos = Lyrics.FindLastIndex(t => t.LyricLine.StartTime <= realPos) - 1;
+            LyricPos = LyricInfo.Lyrics.FindLastIndex(t => t.LyricLine.StartTime <= realPos) - 1;
             if (LyricPos == -2) LyricPos = -1;
             changed = true;
         }
 
         try
         {
-            if (LyricPos == 0 && Lyrics.Count != 1) changed = false;
-            while (Lyrics.Count > LyricPos + 1 &&
-                   Lyrics[LyricPos + 1].LyricLine.StartTime <= realPos) //正常的滚歌词
+            if (LyricPos == 0 && LyricInfo.Lyrics.Count != 1) changed = false;
+            while (LyricInfo.Lyrics.Count > LyricPos + 1 &&
+                   LyricInfo.Lyrics[LyricPos + 1].LyricLine.StartTime <= realPos) //正常的滚歌词
             {
                 LyricPos++;
                 changed = true;
@@ -1804,38 +1806,94 @@ public static class HyPlayList
         //先进行歌词转换以免被搞
         if (pureLyricInfo is not KaraokLyricInfo || !Common.Setting.karaokLyric)
         {
-            Lyrics = Utils.ConvertPureLyric(pureLyricInfo.PureLyrics, unionTranslation);
+            LyricInfo.Lyrics = Utils.ConvertPureLyric(pureLyricInfo.PureLyrics, unionTranslation);
         }
         else
         {
-            Lyrics = Utils.ConvertKaraok(pureLyricInfo);
+            LyricInfo.Lyrics = Utils.ConvertKaraok(pureLyricInfo);
         }
 
-        if (Lyrics.Count == 0)
+        if (LyricInfo.Lyrics.Count == 0)
         {
             if (Common.Setting.showComposerInLyric)
-                Lyrics.Add(new SongLyric
+                LyricInfo.Lyrics.Add(new SongLyric
                 {
                     LyricLine = new LrcLyricsLine(pureLyricInfo.PureLyrics, TimeSpan.Zero)
                 });
         }
         else
         {
-            if (pureLyricInfo is not KaraokLyricInfo karaoke) Utils.ConvertTranslation(pureLyricInfo.TrLyrics, Lyrics);
-            else Utils.ConvertYrcTranslation(karaoke, Lyrics);
-            await Utils.ConvertRomaji(pureLyricInfo, Lyrics);
+            if (pureLyricInfo is not KaraokLyricInfo karaoke) Utils.ConvertTranslation(pureLyricInfo.TrLyrics, LyricInfo.Lyrics);
+            else Utils.ConvertYrcTranslation(karaoke, LyricInfo.Lyrics);
+            await Utils.ConvertRomaji(pureLyricInfo, LyricInfo.Lyrics);
 
-            if (Lyrics.Count != 0 && Lyrics[0].LyricLine.StartTime != TimeSpan.Zero)
-                Lyrics.Insert(0,
+            if (LyricInfo.Lyrics.Count != 0 && LyricInfo.Lyrics[0].LyricLine.StartTime != TimeSpan.Zero)
+                LyricInfo.Lyrics.Insert(0,
                     new SongLyric { LyricLine = new LrcLyricsLine(string.Empty, TimeSpan.Zero) });
         }
-
+        
+        LyricInfo.LyricMetadata = pureLyricInfo.LyricMetadata;
+        LyricInfo.SongMetadata = pureLyricInfo.SongMetadata;
+        LyricInfo.PureLyricInfo = pureLyricInfo;
+        
         LyricPos = 0;
 
         OnLyricLoaded?.Invoke();
         OnLyricChange?.Invoke();
-    }
 
+        try
+        {
+            if (Common.Setting.enableAmllTtmlDb && hpi.ItemType == HyPlayItemType.Netease)
+            {
+                var ttml = await Common.HttpClient!.GetStringAsync(
+                    $"https://gcore.jsdelivr.net/gh/Steve-xmh/amll-ttml-db@main/ncm-lyrics/{hpi.PlayItem.Id}.ttml");
+                var ttmlConverter = new AppleSyllableConverter();
+                var lrcConverter = new LrcConverter();
+                var lrcTranslationConverter = new LrcTranslationEnhancer();
+                var alrc = ttmlConverter.Convert(ttml);
+                var lrc = lrcConverter.ConvertBack(alrc);
+                var trLrc = lrcTranslationConverter.Enhance(alrc);
+                ALRCLyricInfo ttmlLyric = new ALRCLyricInfo()
+                {
+                    PureLyrics = lrc,
+                    TrLyrics = trLrc,
+                    alrc = alrc,
+                    LyricMetadata = [
+                        new LyricInfoMetadata
+                    {
+                        Key = "lyric_user",
+                        Value = alrc.LyricInfo?.Author,
+                        DisplayName = "歌词作者",
+                        ActionUri = $"https://github.com/{alrc.LyricInfo?.Author}"
+                    },
+                    new LyricInfoMetadata
+                    {
+                        Key = "source",
+                        Value = "amll-ttml-db",
+                        DisplayName = "歌词来源",
+                        ActionUri = $"https://github.com/Steve-xmh/amll-ttml-db/blob/main/ncm-lyrics/{hpi.PlayItem.Id}.ttml"
+                    }                    
+                    ],
+                    SongMetadata = []
+                };
+
+                LyricInfo.Lyrics = Utils.ConvertPureLyric(ttmlLyric.PureLyrics, true);
+                Utils.ConvertTranslation(ttmlLyric.TrLyrics, LyricInfo.Lyrics);
+                LyricInfo.LyricMetadata = ttmlLyric.LyricMetadata;
+                LyricInfo.SongMetadata = ttmlLyric.SongMetadata;
+                LyricInfo.PureLyricInfo = ttmlLyric;
+                
+                OnLyricLoaded?.Invoke();
+                OnLyricChange?.Invoke();
+            }
+        }
+        catch (Exception e)
+        {
+            // ignore
+        }
+    }
+    
+    
 
     private static async Task<PureLyricInfo> LoadNcLyric(HyPlayItem ncp)
     {
@@ -1850,9 +1908,9 @@ public static class HyPlayList
                 };
             try
             {
-
+                PureLyricInfo res = new PureLyricInfo();
                 var lyricRequest = new LyricRequest() { Id = ncp.PlayItem.Id };
-                var lyricResult = await Common.NeteaseAPI.RequestAsync(NeteaseApis.LyricApi, lyricRequest);
+                var lyricResult = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.LyricApi, lyricRequest);
                 string lrc, romaji, karaoklrc, translrc, yrromaji, yrtranslrc;
                 if (lyricResult.IsError)
                 {
@@ -1879,13 +1937,14 @@ public static class HyPlayList
                         text.Split("\n")
                         .Where(t => !t.StartsWith("{")).ToArray());
                 }
+                
 
                 if (lyricResult.Value?.YunLyric?.Lyric is null)
                 {
                     lrc = CleanLrc(lyricResult.Value?.Lyric?.Lyric);
                     romaji = lyricResult.Value?.RomajiLyric?.Lyric;
                     translrc = lyricResult.Value?.TranslationLyric?.Lyric;
-                    return new PureLyricInfo()
+                    res = new PureLyricInfo()
                     {
                         PureLyrics = lrc,
                         TrLyrics = translrc,
@@ -1900,7 +1959,7 @@ public static class HyPlayList
                     yrtranslrc = lyricResult.Value?.YunTranslationLyric?.Lyric;
                     romaji = lyricResult.Value?.RomajiLyric?.Lyric;
                     translrc = lyricResult.Value?.TranslationLyric?.Lyric;
-                    return new KaraokLyricInfo()
+                    res = new KaraokLyricInfo()
                     {
                         PureLyrics = lrc,
                         TrLyrics = translrc,
@@ -1910,6 +1969,32 @@ public static class HyPlayList
                         KaraokLyric = karaoklrc
                     };
                 }
+                
+                // add metadata
+                // 添加翻译作词信息
+                if (lyricResult.Value?.LyricUser?.UserId is not null)
+                {
+                    res.LyricMetadata.Add(new LyricInfoMetadata()
+                    {
+                        Key = "lyric_user",
+                        Value = lyricResult.Value.LyricUser.Nickname,
+                        ActionUri = $"hyplayer://us{lyricResult.Value.LyricUser.UserId}",
+                        DisplayName = "歌词贡献者"
+                    });
+                }
+                
+                if (lyricResult.Value?.TranslationUser?.UserId is not null)
+                {
+                    res.LyricMetadata.Add(new LyricInfoMetadata()
+                    {
+                        Key = "translation_user",
+                        Value = lyricResult.Value.TranslationUser.Nickname,
+                        ActionUri = $"hyplayer://us{lyricResult.Value.TranslationUser.UserId}",
+                        DisplayName = "翻译贡献者"
+                    });
+                }
+
+                return res;
             }
             catch (Exception ex)
             {

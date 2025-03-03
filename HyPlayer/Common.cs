@@ -353,6 +353,16 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        
+        public bool enableAmllTtmlDb
+        {
+            get => GetSettings(nameof(enableAmllTtmlDb), false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(enableAmllTtmlDb)] = value;
+                OnPropertyChanged();
+            }
+        }
 
         public int lyricPaddingTopRatio
         {

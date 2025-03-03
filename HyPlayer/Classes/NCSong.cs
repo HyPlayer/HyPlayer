@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TagLib;
 using Windows.Storage;
+using ALRC.Abstraction;
 
 #endregion
 
@@ -54,11 +55,18 @@ public class KaraokLyricInfo : PureLyricInfo
     public string YrNeteaseRomaji;
 }
 
+public class ALRCLyricInfo : PureLyricInfo
+{
+    public ALRCFile alrc;
+}
+
 public class PureLyricInfo
 {
     public string PureLyrics;
     public string TrLyrics;
     public string NeteaseRomaji;
+    public List<LyricInfoMetadata> SongMetadata = [];
+    public List<LyricInfoMetadata> LyricMetadata = [];
 }
 
 public class SongLyric

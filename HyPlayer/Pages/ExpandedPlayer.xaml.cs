@@ -39,9 +39,12 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.LyricRenderer.Abstraction.Render;
+using HyPlayer.LyricRenderer.LyricLineRenderers;
+using ALRCLyricInfo = HyPlayer.Classes.ALRCLyricInfo;
 using Buffer = Windows.Storage.Streams.Buffer;
 using Color = System.Drawing.Color;
-using LrcConverter = HyPlayer.LyricRenderer.Converters.LrcConverter;
+using LrcConverter = HyPlayer.Classes.LrcConverter;
 
 #endregion
 
@@ -108,7 +111,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         Common.OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;
         LyricBox.Context.LineRollingEaseCalculator = new ElasticEaseRollingCalculator();
         LyricBox.OnBeforeRender += LyricBox_OnBeforeRender;
-        LyricBox.OnRequestSeek += LyricBoxOnOnRequestSeek;
+        LyricBox.OnLyricLineClicked += LyricBoxOnOnRequestSeek;
         LyricBox.Context.LyricWidthRatio = Common.Setting.lyricRenderWidthRatio / 100f;
         LyricBox.Context.LyricPaddingTopRatio = Common.Setting.lyricPaddingTopRatio / 100f;
         LyricBox.Context.CurrentLyricTime = 0;
@@ -135,10 +138,27 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         _positionChangedBySeeking = true;
     }
 
-    private void LyricBoxOnOnRequestSeek(long time)
+    private void LyricBoxOnOnRequestSeek(RenderingLyricLine line)
     {
         jumpedLyrics = true;
-        HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(time);
+        if (line is ActionLyricLine actionLyricLine)
+        {
+            var action = actionLyricLine.ActionUri;
+            if (action.StartsWith("hyplayer://"))
+            {
+                var resourceId = action.Substring(11);
+                _ = Common.NavigatePageResource(resourceId);
+                _ = Common.BarPlayBar!.CollapseExpandedPlayer();
+            }
+            else
+            {
+                Windows.System.Launcher.LaunchUriAsync(new Uri(action));
+            }
+        }
+        else
+        {
+            HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(line.StartTime);
+        }
     }
 
     private void LyricBox_OnBeforeRender(LyricRenderer.LyricRenderView view)
@@ -573,7 +593,14 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         {
             _lyricIsReadyToGo = true;
             if (_lyricIsCleaning) return;
-            LyricBox.SetLyricLines(LrcConverter.Convert(ConvertToALRC(HyPlayList.Lyrics)));
+            if (HyPlayList.LyricInfo.PureLyricInfo is not ALRCLyricInfo alrcLyricInfo)
+            {
+                LyricBox.SetLyricLines(LrcConverter.Convert(ConvertToALRC(HyPlayList.LyricInfo.Lyrics), HyPlayList.LyricInfo.LyricMetadata, HyPlayList.LyricInfo.SongMetadata));
+            }
+            else
+            {
+                LyricBox.SetLyricLines(LrcConverter.Convert(alrcLyricInfo.alrc,alrcLyricInfo.LyricMetadata, alrcLyricInfo.SongMetadata ));
+            }
             LyricBox.ChangeAlignment(Common.Setting.lyricAlignment switch
             {
                 1 => TextAlignment.Center,
@@ -627,6 +654,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         }
 
         if (lines.LastOrDefault() is { End: null or <= 0 } last) last.End = (long)HyPlayList.Player.PlaybackSession.NaturalDuration.TotalMilliseconds;
+        
         return alrc;
     }
 
@@ -1092,7 +1120,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void BtnCopyLyricClicked(object sender, RoutedEventArgs e)
     {
-        _ = new LyricShareDialog { Lyrics = HyPlayList.Lyrics }.ShowAsync();
+        _ = new LyricShareDialog { Lyrics = HyPlayList.LyricInfo.Lyrics }.ShowAsync();
     }
 
     private async void BtnToggleTinyModeClick(object sender, RoutedEventArgs e)

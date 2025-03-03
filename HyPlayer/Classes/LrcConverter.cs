@@ -1,26 +1,28 @@
-﻿using ALRC.Abstraction;
-using HyPlayer.LyricRenderer.Abstraction;
-using HyPlayer.LyricRenderer.Abstraction.Render;
-using HyPlayer.LyricRenderer.LyricLineRenderers;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
+using ALRC.Abstraction;
+using HyPlayer.LyricRenderer.Abstraction;
+using HyPlayer.LyricRenderer.Abstraction.Render;
+using HyPlayer.LyricRenderer.LyricLineRenderers;
 using Color = System.Drawing.Color;
 
-namespace HyPlayer.LyricRenderer.Converters;
+namespace HyPlayer.Classes;
 
 public static class LrcConverter
 {
     private static readonly ColorConverter ColorConverter = new();
 
-    public static List<RenderingLyricLine> Convert(ALRCFile alrc)
+    public static List<RenderingLyricLine> Convert(ALRCFile alrc, List<LyricInfoMetadata> lyricMetadata = null,
+        List<LyricInfoMetadata> songMetadata = null)
     {
         var result = new List<RenderingLyricLine>();
         foreach (var alrcLine in alrc.Lines)
         {
-            if (string.IsNullOrWhiteSpace(alrcLine.RawText) && alrcLine.Words is not { Count: > 0 } && alrcLine.End - alrcLine.Start >= 1500)
+            if (string.IsNullOrWhiteSpace(alrcLine.RawText) && alrcLine.Words is not { Count: > 0 } &&
+                alrcLine.End - alrcLine.Start >= 1500)
             {
                 // Empty Line
                 result.Add(new ProgressBarRenderingLyricLine
@@ -54,7 +56,8 @@ public static class LrcConverter
             if (alrcLine.Words is { Count: > 0 })
             {
                 line.IsSyllable = true;
-                line.Syllables = alrcLine.Words.Select(w => new RenderingSyllable(w.Word, w.Start, w.End, w.Transliteration)).ToList();
+                line.Syllables = alrcLine.Words
+                    .Select(w => new RenderingSyllable(w.Word, w.Start, w.End, w.Transliteration)).ToList();
             }
 
             if (alrc.Header?.Styles?.FirstOrDefault(t => t.Id == alrcLine.LineStyle) is { } style)
@@ -86,8 +89,22 @@ public static class LrcConverter
                     }
                 }
             }
+
             result.Add(line);
         }
+
+        if (lyricMetadata is { Count: > 0 })
+        {
+            foreach (var lyricInfoMetadata in lyricMetadata)
+            {
+                result.Add(new ActionLyricLine()
+                {
+                    Text = $"{lyricInfoMetadata.DisplayName}: {lyricInfoMetadata.Value}",
+                    ActionUri = lyricInfoMetadata.ActionUri
+                });
+            }
+        }
+
         return result;
     }
 }

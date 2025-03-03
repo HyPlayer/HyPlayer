@@ -171,6 +171,12 @@
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.karaokLyric, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
+                                    <controls3:SettingsCard Header="使用 AMLL TTML Database">
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.enableAmllTtmlDb, Mode=TwoWay}" />
+                                    </controls3:SettingsCard>
 
                                     <controls3:SettingsCard Header="歌词主色调">
                                         <ComboBox HorizontalAlignment="Right" SelectedIndex="{x:Bind hyplayer:Common.Setting.lyricColor, Mode=TwoWay}">

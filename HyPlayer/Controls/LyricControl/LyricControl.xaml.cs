@@ -36,7 +36,7 @@ namespace HyPlayer.Controls.LyricControl
         private void CanvasControl_Draw(Microsoft.Graphics.Canvas.UI.Xaml.ICanvasAnimatedControl sender,
                                         Microsoft.Graphics.Canvas.UI.Xaml.CanvasAnimatedDrawEventArgs args)
         {
-            if (HyPlayList.LyricPos < 0 || HyPlayList.LyricPos >= HyPlayList.Lyrics.Count)
+            if (HyPlayList.LyricPos < 0 || HyPlayList.LyricPos >= HyPlayList.LyricInfo.Lyrics.Count)
                 return;
             LyricRenderOption ??= new LyricRenderOption
             {
@@ -54,7 +54,7 @@ namespace HyPlayer.Controls.LyricControl
 
             };
             LyricRenderComposer.RenderOnDrawingSession(args.DrawingSession,
-                                                       HyPlayList.Lyrics[HyPlayList.LyricPos],
+                                                       HyPlayList.LyricInfo.Lyrics[HyPlayList.LyricPos],
                                                        HyPlayList.Player.PlaybackSession.Position, LyricRenderOption.GetValueOrDefault(),
                                                        sender.Size, QuickRenderMode);
         }

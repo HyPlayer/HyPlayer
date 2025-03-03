@@ -1,6 +1,5 @@
 ﻿using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
-using HyPlayer.LyricRenderer.Converters;
 using HyPlayer.LyricRenderer.RollingCalculators;
 using Microsoft.Gaming.XboxGameBar;
 using Microsoft.Gaming.XboxGameBar.Input;
@@ -15,6 +14,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.LyricRenderer.Abstraction.Render;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
@@ -210,7 +210,7 @@ public sealed partial class WidgetPage : Page
     {
         LyricView.Context.LineRollingEaseCalculator = new ElasticEaseRollingCalculator();
         LyricView.OnBeforeRender += LyricView_OnBeforeRender;
-        LyricView.OnRequestSeek += LyricView_OnRequestSeek;
+        LyricView.OnLyricLineClicked += LyricView_OnRequestSeek;
         LyricView.Context.LyricPaddingTopRatio = Common.Setting.lyricPaddingTopRatio / 100f;
         LyricView.Context.Debug = Common.Setting.LyricRendererDebugMode;
         LyricView.Context.Effects.Blur = Common.Setting.lyricRenderBlur;
@@ -258,9 +258,9 @@ public sealed partial class WidgetPage : Page
         });
     }
 
-    private void LyricView_OnRequestSeek(long time)
+    private void LyricView_OnRequestSeek(RenderingLyricLine line)
     {
-        HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(time);
+        HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(line.StartTime);
     }
 
     private void LyricView_OnBeforeRender(LyricRenderer.LyricRenderView view)
@@ -281,7 +281,7 @@ public sealed partial class WidgetPage : Page
     {
         //_lyricIsReadyToGo = true;
         //if (_lyricIsCleaning) return;
-        LyricView.SetLyricLines(LrcConverter.Convert(ExpandedPlayer.ConvertToALRC(HyPlayList.Lyrics)));
+        LyricView.SetLyricLines(LrcConverter.Convert(ExpandedPlayer.ConvertToALRC(HyPlayList.LyricInfo.Lyrics)));
         LyricView.ReflowTime(0);
         //lastlrcid = HyPlayList.NowPlayingHashCode;
 

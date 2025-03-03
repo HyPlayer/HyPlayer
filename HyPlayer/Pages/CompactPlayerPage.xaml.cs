@@ -221,8 +221,8 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
     private void OnLyricChanged()
     {
         if (HyPlayList.LyricPos == -1) return;
-        if (HyPlayList.Lyrics.Count <= HyPlayList.LyricPos) return;
-        if (HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine is KaraokeLyricsLine kara)
+        if (HyPlayList.LyricInfo.Lyrics.Count <= HyPlayList.LyricPos) return;
+        if (HyPlayList.LyricInfo.Lyrics[HyPlayList.LyricPos].LyricLine is KaraokeLyricsLine kara)
         {
             LyricControl.QuickRenderMode = false;
             if (kara.Duration.TotalSeconds > 1)
@@ -231,9 +231,9 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
                 return;
             }
         }
-        else if (HyPlayList.LyricPos < HyPlayList.Lyrics.Count - 1 && HyPlayList.Lyrics[HyPlayList.LyricPos + 1].LyricLine is LrcLyricsLine lrcLine)
+        else if (HyPlayList.LyricPos < HyPlayList.LyricInfo.Lyrics.Count - 1 && HyPlayList.LyricInfo.Lyrics[HyPlayList.LyricPos + 1].LyricLine is LrcLyricsLine lrcLine)
         {
-            if (lrcLine.StartTime.TotalSeconds - HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.StartTime.TotalSeconds > 1)
+            if (lrcLine.StartTime.TotalSeconds - HyPlayList.LyricInfo.Lyrics[HyPlayList.LyricPos].LyricLine.StartTime.TotalSeconds > 1)
             {
                 LyricControl.QuickRenderMode = false;
                 _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { ChangeLyric(); });
@@ -253,8 +253,8 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
 
         _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
         {
-            LyricText = HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.CurrentLyric;
-            LyricControl.Lyric = HyPlayList.Lyrics[HyPlayList.LyricPos];
+            LyricText = HyPlayList.LyricInfo.Lyrics[HyPlayList.LyricPos].LyricLine.CurrentLyric;
+            LyricControl.Lyric = HyPlayList.LyricInfo.Lyrics[HyPlayList.LyricPos];
         });
 
     }
@@ -291,7 +291,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
 
         _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
         {
-            LyricControl.CurrentTime = HyPlayList.Player.PlaybackSession.Position - HyPlayList.Lyrics[HyPlayList.LyricPos].LyricLine.StartTime;
+            LyricControl.CurrentTime = HyPlayList.Player.PlaybackSession.Position - HyPlayList.LyricInfo.Lyrics[HyPlayList.LyricPos].LyricLine.StartTime;
             var playedWords =
                 ((KaraokeLyricsLine)Lrc.LyricLine).WordInfos.Where(word => word.StartTime <= position).ToList();
             var playedBlocks = WordTextBlocks.GetRange(0, playedWords.Count).ToList();

@@ -98,6 +98,8 @@
     <Compile Include="Classes\Extensions.cs" />
     <Compile Include="Classes\ImageDecoder.cs" />
     <Compile Include="Classes\LastFMManager.cs" />
+    <Compile Include="Classes\LrcConverter.cs" />
+    <Compile Include="Classes\LyricInfo.cs" />
     <Compile Include="Classes\LyricRenderComposer.cs" />
     <Compile Include="Classes\Mapper.cs" />
     <Compile Include="Classes\MIMEHelper.cs" />
@@ -174,7 +176,7 @@
     <Compile Include="LyricRenderer\Animator\EaseFunctions\CustomElasticEase.cs" />
     <Compile Include="LyricRenderer\Animator\EaseFunctions\CustomExponentialEase.cs" />
     <Compile Include="LyricRenderer\Animator\EaseFunctions\CustomSineEase.cs" />
-    <Compile Include="LyricRenderer\Converters\LrcConverter.cs" />
+    <Compile Include="LyricRenderer\LyricLineRenderers\ActionLyricLine.cs" />
     <Compile Include="LyricRenderer\LyricLineRenderers\BreathPointRenderingLyricLine.cs" />
     <Compile Include="LyricRenderer\LyricLineRenderers\ProgressBarRenderingLyricLine.cs" />
     <Compile Include="LyricRenderer\LyricLineRenderers\SyllablesRenderingLyricLine.cs" />
@@ -578,10 +580,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="ALRC.Abstraction">
-      <Version>1.0.3</Version>
+      <Version>1.1.0</Version>
     </PackageReference>
     <PackageReference Include="ALRC.Converters">
-      <Version>1.0.6</Version>
+      <Version>1.1.1</Version>
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Uwp.Animations">
       <Version>8.1.240916</Version>
@@ -632,7 +634,7 @@
       <Version>4.3.2</Version>
     </PackageReference>
     <PackageReference Include="System.Text.Json">
-      <Version>9.0.1</Version>
+      <Version>9.0.2</Version>
     </PackageReference>
     <PackageReference Include="TagLibSharp">
       <Version>2.3.0</Version>
@@ -664,7 +666,6 @@
       <Name>LyricParser</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
