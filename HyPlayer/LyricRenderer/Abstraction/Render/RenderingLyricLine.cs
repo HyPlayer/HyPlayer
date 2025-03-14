@@ -11,6 +11,7 @@ public abstract class RenderingLyricLine
     public RenderTypography? Typography { get; set; }
     public float RenderingHeight { get; set; }
     public float RenderingWidth { get; set; }
+    public bool Rendering { get; set; } = false;
 
     public bool Hidden { get; set; }
 
