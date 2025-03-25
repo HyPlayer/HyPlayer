@@ -2,6 +2,7 @@
 
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
+using HyPlayer.NeteaseApi.Extensions;
 using System;
 using System.IO;
 using System.Linq;
@@ -10,9 +11,11 @@ using System.Net.Http.Headers;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TagLib;
 using Windows.Storage;
+using Windows.Storage.Streams;
 using File = TagLib.File;
 
 #endregion
@@ -101,17 +104,12 @@ internal class CloudUpload
                 lb = loadBalancerRes.Value!.Upload?.FirstOrDefault() ?? lb;
             }
 
-            var targetLink = $"{lb}/jd-musicrep-privatecloud-audio-public/{objkey}?offset=0&complete=true&version=1.0";
+            var targetLink = $"{lb}/jd-musicrep-privatecloud-audio-public/{objkey}?version=1.0";
             using var request = new HttpRequestMessage(HttpMethod.Post,
                 new Uri(targetLink));
             using var fileStream = await file.OpenAsync(FileAccessMode.Read);
             using var stream = fileStream.AsStream();
-            using var content = new StreamContent(stream);
-            content.Headers.Add("Content-MD5", md5);
-            request.Headers.Add("x-nos-token", tokenRes.Value.Data.Token);
-            content.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
-            request.Content = content;
-            await Common.HttpClient!.SendAsync(request);
+            await UploadToNos(targetLink, stream, md5, tokenRes.Value.Data.Token, file.ContentType);
             var title = string.IsNullOrEmpty(name)
                 ? Path.GetFileNameWithoutExtension(file.Path)
                 : name;
@@ -138,7 +136,7 @@ internal class CloudUpload
                 var imglb = "http://45.127.129.8";
                 var imgloadBalancerReq = new NeteaseUploadLoadBalancerGetRequest()
                 {
-                    Bucket = "yyimg"
+                    Bucket = "yyimgs"
                 };
                 var imgloadBalancerRes = await Common.NeteaseAPI.RequestAsync(NeteaseApis.NeteaseUploadLoadBalancerGetApi,
                     imgloadBalancerReq);
@@ -146,16 +144,9 @@ internal class CloudUpload
                 {
                     imglb = imgloadBalancerRes.Value!.Upload?.FirstOrDefault() ?? lb;
                 }
-                targetLink = $"{imglb}/yyimg/{coverAllocRes.Value?.Result?.ObjectKey}?offset=0&complete=true&version=1.0";
-
-                using var imgReq = new HttpRequestMessage(HttpMethod.Post,
-                    new Uri(targetLink));
-                using var imgContent = new ByteArrayContent(coverBytes);
-                imgContent.Headers.Add("Content-MD5", md5);
-                imgReq.Headers.Add("x-nos-token", coverAllocRes.Value?.Result?.Token);
-                imgContent.Headers.ContentType = new MediaTypeHeaderValue("image/png");
-                imgReq.Content = imgContent;
-                await Common.HttpClient.SendAsync(imgReq);
+                targetLink = $"{imglb}/yyimgs/{coverAllocRes.Value?.Result?.ObjectKey}?version=1.0";
+                using var imgStream = new MemoryStream(coverBytes);
+                await UploadToNos(targetLink, imgStream, imgmd5, coverAllocRes.Value?.Result?.Token, "image/png");
             }
 
 
@@ -193,5 +184,70 @@ internal class CloudUpload
             }
         }
     }
+
+
+    public static async Task UploadToNos(string targetLink, Stream stream, string md5, string token, string contentType, int chunkSize = 1048576, CancellationToken cancellationToken = default)
+    {
+        if (stream == null) throw new ArgumentNullException(nameof(stream));
+        if (!stream.CanRead) throw new ArgumentException("Stream must be readable", nameof(stream));
+
+        try
+        {
+            // seek to beginning if possible
+            if (stream.CanSeek)
+            {
+                stream.Seek(0, SeekOrigin.Begin);
+            }
+
+            string? context = null;
+            
+            var isEnd = false;
+            int offset = 0;
+
+            while (!isEnd && !cancellationToken.IsCancellationRequested)
+            {
+                // Read chunk
+                var buffer = new byte[chunkSize];
+                var bytesRead = await stream.ReadAsync(buffer, 0, chunkSize, cancellationToken);
+                isEnd = bytesRead < chunkSize;
+
+                if (bytesRead == 0) break;
+
+                // Create request
+                using var req = new HttpRequestMessage(
+                    HttpMethod.Post,
+                    new Uri($"{targetLink}&offset={offset * chunkSize}&complete={isEnd.ToString().ToLower()}&context={context}"));
+
+                using var content = new ByteArrayContent(buffer, 0, bytesRead);
+                content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+                content.Headers.Add("Content-MD5", md5); // Consider calculating MD5 per chunk instead
+                req.Headers.Add("x-nos-token", token);
+                req.Content = content;
+
+                // Send request
+                using var resp = await Common.HttpClient!.SendAsync(req, cancellationToken);
+
+                if (!resp.IsSuccessStatusCode)
+                {
+                    var errorContent = await resp.Content.ReadAsStringAsync();
+                    throw new HttpRequestException($"Upload failed with status {resp.StatusCode}: {errorContent}");
+                }
+
+                var rs = await resp.Content.ReadAsStringAsync();
+                // get context in "context":"", using regex
+                var match = System.Text.RegularExpressions.Regex.Match(rs, "\"context\"\\s*:\\s*\"([^\"]*)\"");
+                if (match.Success)
+                {
+                    context = match.Groups[1].Value;
+                }
+                offset++;
+            }
+        }
+        catch (Exception ex) when (!(ex is OperationCanceledException))
+        {
+            throw new HttpRequestException("Upload failed", ex);
+        }
+    }
+
 #nullable restore
 }
