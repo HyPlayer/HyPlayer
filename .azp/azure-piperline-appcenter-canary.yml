@@ -101,23 +101,69 @@ steps:
       assets: '$(BUNDLEPATH)'
       addChangeLog: false
 
-  - task: AppCenterDistribute@3
-    displayName: 'Deploy App Center'
-    inputs:
-      serverEndpoint: HyPlayer/AppCenter
-      appSlug: kengwang/HyPlayer
-      appFile: '$(BUNDLEPATH)'
-      buildVersion: '$(VERSION)'
-      symbolsOption: UWP
-      appxsymPath: '$(Agent.HomeDirectory)/$(Build.BuildId).SYMS.zip'
-      releaseNotesOption: file
-      releaseNotesFile: CHANGELOG.md
-      distributionGroupId: '19bc0109-9e15-4776-b691-f007850cf08a'
-      isSilent: false
-    condition: succeededOrFailed()
+  # - task: AppCenterDistribute@3
+  #   displayName: 'Deploy App Center'
+  #   inputs:
+  #     serverEndpoint: HyPlayer/AppCenter
+  #     appSlug: kengwang/HyPlayer
+  #     appFile: '$(BUNDLEPATH)'
+  #     buildVersion: '$(VERSION)'
+  #     symbolsOption: UWP
+  #     appxsymPath: '$(Agent.HomeDirectory)/$(Build.BuildId).SYMS.zip'
+  #     releaseNotesOption: file
+  #     releaseNotesFile: CHANGELOG.md
+  #     distributionGroupId: '19bc0109-9e15-4776-b691-f007850cf08a'
+  #     isSilent: false
+  #   condition: succeededOrFailed()
+  - powershell: |
+      $alistServer = "https://hyplayer-file.kengwang.com.cn"
+      $loginData = @{
+          "username" = "admin"
+          "password" = $alist_token
+      } | ConvertTo-Json
 
-  - task: PowerShell@2
-    inputs:
-      targetType: 'inline'
-      script: |
-        Invoke-WebRequest 'https://hyplayer.kengwang.com.cn/channel/2/broadcastUpdate/$(hyplayerAPI.secretKey)'
+      # 发送 POST 请求登录
+      $response = Invoke-WebRequest -Uri "$alistServer/api/auth/login" `
+          -Method POST `
+          -Body $loginData `
+          -ContentType "application/json"
+
+      # 解析返回的 JSON，提取 token
+      $token = ($response.Content | ConvertFrom-Json).data.token
+
+      $localFilePath = "$BUNDLEPATH"
+      $remoteFilePath = "/hyplayer/release/$VERSION.msixbundle"
+
+      $headers = @{
+          "Authorization" = "$token"
+          "Content-Type" = "application/octet-stream"
+          "File-Path" = $remoteFilePath
+      }
+
+      Invoke-WebRequest -Uri "$alistServer/api/fs/put" `
+          -Method Put `
+          -Headers $headers `
+          -InFile $localFilePath
+
+      $headers=@{}
+      $headers.Add("Content-Type", "application/json")
+      $response = Invoke-WebRequest -Uri 'http://hyplayer.kengwang.com.cn/releases' -Method PUT -Headers $headers -ContentType 'application/json' -Body '{
+        "channels": [
+          2
+        ],
+        "version": $VERSION,
+        "authKey": "$hyplayerAPI.secretKey)"
+        "date": ([System.DateTimeOffset]::Now.ToString()),
+        "note": (Get-Content CHANGELOG.md),
+        "url": "https://hyplayer-file.kengwang.com.cn/hyplayer/release$remoteFilePath"
+      }'
+
+
+
+
+
+  # - task: PowerShell@2
+  #   inputs:
+  #     targetType: 'inline'
+  #     script: |
+  #       Invoke-WebRequest 'https://hyplayer.kengwang.com.cn/channel/2/broadcastUpdate/$(hyplayerAPI.secretKey)'
