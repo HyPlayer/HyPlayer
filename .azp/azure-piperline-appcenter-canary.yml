@@ -123,7 +123,7 @@ steps:
       $alistServer = "https://hyplayer-file.kengwang.com.cn"
       $loginData = @{
           "username" = "admin"
-          "password" = $alist_token
+          "password" = $(alist_token)
       } | ConvertTo-Json
 
       # 发送 POST 请求登录
@@ -139,7 +139,7 @@ steps:
       $remoteFilePath = "/hyplayer/release/$VERSION.msixbundle"
 
       $headers = @{
-          "Authorization" = "$token"
+          "Authorization" = $token
           "Content-Type" = "application/octet-stream"
           "File-Path" = $remoteFilePath
       }
@@ -151,12 +151,12 @@ steps:
 
       $headers=@{}
       $headers.Add("Content-Type", "application/json")
-      $response = Invoke-WebRequest -Uri 'http://hyplayer.kengwang.com.cn/releases' -Method PUT -Headers $headers -ContentType 'application/json' -Body '{
+      $response = Invoke-WebRequest -Uri 'https://hyplayer.kengwang.com.cn/releases' -Method PUT -Headers $headers -ContentType 'application/json' -Body '{
         "channels": [
           2
         ],
         "version": $VERSION,
-        "authKey": "$hyplayerAPI.secretKey"
+        "authKey": "$(hyplayerAPI.secretKey)"
         "date": ([System.DateTimeOffset]::Now.ToString()),
         "note": (Get-Content CHANGELOG.md),
         "url": "https://hyplayer-file.kengwang.com.cn/hyplayer/release$remoteFilePath"
