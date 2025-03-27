@@ -119,7 +119,7 @@ steps:
       $BUNDLEPATH = (Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)/AppxPackages/" -Include *.msixbundle -Recurse) | Foreach-Object {$_.FullName}
       $MANIFEST = [xml](Get-Content **\Package.appxmanifest)
       $MAINVERSION = $MANIFEST.Package.Identity.Version -replace ".{1}$"
-      $VERSION = $MAINVERSION + "$(Build.BuildId)""
+      $VERSION = $MAINVERSION + "$(Build.BuildId)"
       $alistServer = "https://hyplayer-file.kengwang.com.cn"
       $loginData = @{
           "username" = "admin"
