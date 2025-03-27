@@ -88,18 +88,18 @@ steps:
       archiveFile: '$(Agent.HomeDirectory)/$(Build.BuildId).SYMS.zip'
       verbose: true
 
-  - task: GitHubRelease@1
-    inputs:
-      gitHubConnection: 'github connection 1'
-      repositoryName: 'HyPlayer/HyPlayer'
-      action: 'create'
-      target: '$(Build.SourceVersion)'
-      tagSource: 'userSpecifiedTag'
-      tag: '$(VERSION)'
-      title: 'V$(VERSION)'
-      releaseNotesFilePath: 'CHANGELOG.md'
-      assets: '$(BUNDLEPATH)'
-      addChangeLog: false
+  # - task: GitHubRelease@1
+  #   inputs:
+  #     gitHubConnection: 'github connection 1'
+  #     repositoryName: 'HyPlayer/HyPlayer'
+  #     action: 'create'
+  #     target: '$(Build.SourceVersion)'
+  #     tagSource: 'userSpecifiedTag'
+  #     tag: '$(VERSION)'
+  #     title: 'V$(VERSION)'
+  #     releaseNotesFilePath: 'CHANGELOG.md'
+  #     assets: '$(BUNDLEPATH)'
+  #     addChangeLog: false
 
   # - task: AppCenterDistribute@3
   #   displayName: 'Deploy App Center'
@@ -116,6 +116,10 @@ steps:
   #     isSilent: false
   #   condition: succeededOrFailed()
   - powershell: |
+      $BUNDLEPATH = (Get-ChildItem -Include *.msixbundle -Recurse) | Foreach-Object {$_.FullName}
+      $MANIFEST = [xml](Get-Content **\Package.appxmanifest)
+      $MAINVERSION = $MANIFEST.Package.Identity.Version -replace ".{1}$"
+      $VERSION = $MAINVERSION + $(Build.BuildId)
       $alistServer = "https://hyplayer-file.kengwang.com.cn"
       $loginData = @{
           "username" = "admin"
@@ -152,7 +156,7 @@ steps:
           2
         ],
         "version": $VERSION,
-        "authKey": "$hyplayerAPI.secretKey)"
+        "authKey": "$hyplayerAPI.secretKey"
         "date": ([System.DateTimeOffset]::Now.ToString()),
         "note": (Get-Content CHANGELOG.md),
         "url": "https://hyplayer-file.kengwang.com.cn/hyplayer/release$remoteFilePath"
