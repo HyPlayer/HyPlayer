@@ -116,7 +116,7 @@ steps:
   #     isSilent: false
   #   condition: succeededOrFailed()
   - powershell: |
-      $BUNDLEPATH = (Get-ChildItem -Include *.msixbundle -Recurse) | Foreach-Object {$_.FullName}
+      $BUNDLEPATH = (Get-ChildItem -Path ($(Build.ArtifactStagingDirectory)/AppxPackages/) -Include *.msixbundle -Recurse) | Foreach-Object {$_.FullName}
       $MANIFEST = [xml](Get-Content **\Package.appxmanifest)
       $MAINVERSION = $MANIFEST.Package.Identity.Version -replace ".{1}$"
       $VERSION = $MAINVERSION + $(Build.BuildId)
@@ -135,7 +135,7 @@ steps:
       # 解析返回的 JSON，提取 token
       $token = ($response.Content | ConvertFrom-Json).data.token
 
-      $localFilePath = "$BUNDLEPATH"
+      $localFilePath = $BUNDLEPATH
       $remoteFilePath = "/hyplayer/release/$VERSION.msixbundle"
 
       $headers = @{
