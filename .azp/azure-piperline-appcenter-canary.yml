@@ -149,18 +149,16 @@ steps:
           -Headers $headers `
           -InFile $localFilePath
 
-      $headers=@{}
-      $headers.Add("Content-Type", "application/json")
-      $response = Invoke-WebRequest -Uri 'https://hyplayer.kengwang.com.cn/releases' -Method PUT -Headers $headers -ContentType 'application/json' -Body '{
-        "channels": [
-          2
-        ],
-        "version": $VERSION,
-        "authKey": "$(hyplayerAPI.secretKey)"
-        "date": ([System.DateTimeOffset]::Now.ToString()),
-        "note": (Get-Content CHANGELOG.md),
-        "url": "https://hyplayer-file.kengwang.com.cn/hyplayer/release$remoteFilePath"
-      }'
+      $bodyObject = @{
+        channels = @(2)
+        version  = $VERSION
+        authKey  = "$(hyplayerAPI.secretKey)"
+        date     = (Get-Date -Format o)
+        note     = (Get-Content CHANGELOG.md -Raw)
+        url      = "https://hyplayer-file.kengwang.com.cn/hyplayer/release$remoteFilePath"
+      }
+      $body = $bodyObject | ConvertTo-Json -Compress
+      $response = Invoke-WebRequest -Uri 'https://hyplayer.kengwang.com.cn/releases' -Method PUT -Headers $headers -ContentType 'application/json' -Body $body
 
 
 
