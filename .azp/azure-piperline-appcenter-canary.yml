@@ -126,13 +126,11 @@ steps:
           "password" = "$(alist_token)"
       } | ConvertTo-Json
 
-      # 发送 POST 请求登录
       $response = Invoke-WebRequest -Uri "$alistServer/api/auth/login" `
           -Method POST `
           -Body $loginData `
           -ContentType "application/json"
 
-      # 解析返回的 JSON，提取 token
       $token = ($response.Content | ConvertFrom-Json).data.token
 
       $localFilePath = $BUNDLEPATH
@@ -155,10 +153,10 @@ steps:
         authKey  = "$(hyplayerAPI.secretKey)"
         date     = (Get-Date -Format o)
         note     = (Get-Content CHANGELOG.md -Raw)
-        url      = "https://hyplayer-file.kengwang.com.cn/hyplayer/release$remoteFilePath"
+        url      = "https://hyplayer-file.kengwang.com.cn$remoteFilePath"
       }
       $body = $bodyObject | ConvertTo-Json -Compress
-      $response = Invoke-WebRequest -Uri 'https://hyplayer.kengwang.com.cn/releases' -Method PUT -Headers $headers -ContentType 'application/json' -Body $body
+      $response = Invoke-WebRequest -Uri 'https://hyplayer.kengwang.com.cn/releases' -Method PUT -ContentType 'application/json' -Body $body
 
 
 
