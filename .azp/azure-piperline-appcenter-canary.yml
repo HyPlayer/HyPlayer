@@ -118,8 +118,8 @@ steps:
   - powershell: |
       $BUNDLEPATH = (Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)/AppxPackages/" -Include *.msixbundle -Recurse) | Foreach-Object {$_.FullName}
       $MANIFEST = [xml](Get-Content **\Package.appxmanifest)
-      $MAINVERSION = $MANIFEST.Package.Identity.Version -replace ".{1}$"
-      $VERSION = $MAINVERSION + "$(Build.BuildId)"
+      $MAINVERSION = $MANIFEST.Package.Identity.Version
+      $VERSION = $MAINVERSION
       $alistServer = "https://hyplayer-file.kengwang.com.cn"
       $loginData = @{
           "username" = "admin"
@@ -146,13 +146,14 @@ steps:
           -Method Put `
           -Headers $headers `
           -InFile $localFilePath
-
+      $changelog = Get-Content CHANGELOG.md -Raw
+      Write-Host $changelog
       $bodyObject = @{
         channels = @(2)
         version  = $VERSION
         authKey  = "$(hyplayerAPI.secretKey)"
         date     = (Get-Date -Format o)
-        note     = (Get-Content CHANGELOG.md -Raw)
+        note     = $changelog
         url      = "https://hyplayer-file.kengwang.com.cn$remoteFilePath"
       }
       $body = $bodyObject | ConvertTo-Json -Compress
