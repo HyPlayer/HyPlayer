@@ -88,33 +88,19 @@ steps:
       archiveFile: '$(Agent.HomeDirectory)/$(Build.BuildId).SYMS.zip'
       verbose: true
 
-  # - task: GitHubRelease@1
-  #   inputs:
-  #     gitHubConnection: 'github connection 1'
-  #     repositoryName: 'HyPlayer/HyPlayer'
-  #     action: 'create'
-  #     target: '$(Build.SourceVersion)'
-  #     tagSource: 'userSpecifiedTag'
-  #     tag: '$(VERSION)'
-  #     title: 'V$(VERSION)'
-  #     releaseNotesFilePath: 'CHANGELOG.md'
-  #     assets: '$(BUNDLEPATH)'
-  #     addChangeLog: false
+  - task: GitHubRelease@1
+    inputs:
+      gitHubConnection: 'github connection 1'
+      repositoryName: 'HyPlayer/HyPlayer'
+      action: 'create'
+      target: '$(Build.SourceVersion)'
+      tagSource: 'userSpecifiedTag'
+      tag: '$(VERSION)'
+      title: 'V$(VERSION)'
+      releaseNotesFilePath: 'CHANGELOG.md'
+      assets: '$(BUNDLEPATH)'
+      addChangeLog: false
 
-  # - task: AppCenterDistribute@3
-  #   displayName: 'Deploy App Center'
-  #   inputs:
-  #     serverEndpoint: HyPlayer/AppCenter
-  #     appSlug: kengwang/HyPlayer
-  #     appFile: '$(BUNDLEPATH)'
-  #     buildVersion: '$(VERSION)'
-  #     symbolsOption: UWP
-  #     appxsymPath: '$(Agent.HomeDirectory)/$(Build.BuildId).SYMS.zip'
-  #     releaseNotesOption: file
-  #     releaseNotesFile: CHANGELOG.md
-  #     distributionGroupId: '19bc0109-9e15-4776-b691-f007850cf08a'
-  #     isSilent: false
-  #   condition: succeededOrFailed()
   - powershell: |
       $BUNDLEPATH = (Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)/AppxPackages/" -Include *.msixbundle -Recurse) | Foreach-Object {$_.FullName}
       $MANIFEST = [xml](Get-Content **\Package.appxmanifest)
@@ -163,8 +149,8 @@ steps:
 
 
 
-  # - task: PowerShell@2
-  #   inputs:
-  #     targetType: 'inline'
-  #     script: |
-  #       Invoke-WebRequest 'https://hyplayer.kengwang.com.cn/channel/2/broadcastUpdate/$(hyplayerAPI.secretKey)'
+  - task: PowerShell@2
+    inputs:
+      targetType: 'inline'
+      script: |
+        Invoke-WebRequest 'https://hyplayer.kengwang.com.cn/channel/2/broadcastUpdate/$(hyplayerAPI.secretKey)'
