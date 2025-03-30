@@ -146,7 +146,7 @@ steps:
           -Method Put `
           -Headers $headers `
           -InFile $localFilePath
-      $changelog = Get-Content CHANGELOG.md -Raw | Out-String
+      $changelog = Get-Content CHANGELOG.md -Raw -Encoding UTF8 | Out-String
       Write-Host $changelog
       $bodyObject = @{
         channels = @(2)
