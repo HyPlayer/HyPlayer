@@ -153,7 +153,7 @@ steps:
         version  = $VERSION
         authKey  = "$(hyplayerAPI.secretKey)"
         date     = (Get-Date -Format o)
-        note     = $changelog.value
+        note     = $changelog
         url      = "https://hyplayer-file.kengwang.com.cn$remoteFilePath"
       }
       $body = $bodyObject | ConvertTo-Json -Compress
