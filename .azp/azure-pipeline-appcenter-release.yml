@@ -55,51 +55,51 @@ steps:
     inputs:
       secureFile: '$(signingCert.secureFilePath)'
 
-  - task: VSBuild@1
-    displayName: 'Build solution HyPlayer.sln'
-    inputs:
-      solution: '$(solution)'
-      msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)" /p:AppxPackageDir="$(Build.ArtifactStagingDirectory)\AppxPackages\\" /p:AppxBundle=Always /p:PackageCertificateThumbprint=""  /p:UapAppxPackageBuildMode=SideloadOnly  /p:AppxPackageSigningEnabled=true  /p:PackageCertificateKeyFile="$(certificate.secureFilePath)" /p:PackageCertificatePassword="$(signingCert.password)"'
-      platform: x64
-      configuration: '$(buildConfiguration)'
-      clean: true
-      msbuildArchitecture: x64
+  # - task: VSBuild@1
+  #   displayName: 'Build solution HyPlayer.sln'
+  #   inputs:
+  #     solution: '$(solution)'
+  #     msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)" /p:AppxPackageDir="$(Build.ArtifactStagingDirectory)\AppxPackages\\" /p:AppxBundle=Always /p:PackageCertificateThumbprint=""  /p:UapAppxPackageBuildMode=SideloadOnly  /p:AppxPackageSigningEnabled=true  /p:PackageCertificateKeyFile="$(certificate.secureFilePath)" /p:PackageCertificatePassword="$(signingCert.password)"'
+  #     platform: x64
+  #     configuration: '$(buildConfiguration)'
+  #     clean: true
+  #     msbuildArchitecture: x64
 
-  - powershell: |
-      cd "$(Build.ArtifactStagingDirectory)\AppxPackages\"
-      $SYMPATH = (Get-ChildItem -Include *.appxsym -Recurse) | Foreach-Object {$_.FullName}
-      New-Item -ItemType Directory $(Agent.HomeDirectory)/SYMS
-      Move-Item $SYMPATH $(Agent.HomeDirectory)/SYMS
-      $BUNDLEPATH = (Get-ChildItem -Include *.msixbundle -Recurse) | Foreach-Object {$_.FullName}
-      Write-Host("##vso[task.setvariable variable=BUNDLEPATH]$BUNDLEPATH")
-    displayName: 'Move Symbol Files and write publish file location'
+  # - powershell: |
+  #     cd "$(Build.ArtifactStagingDirectory)\AppxPackages\"
+  #     $SYMPATH = (Get-ChildItem -Include *.appxsym -Recurse) | Foreach-Object {$_.FullName}
+  #     New-Item -ItemType Directory $(Agent.HomeDirectory)/SYMS
+  #     Move-Item $SYMPATH $(Agent.HomeDirectory)/SYMS
+  #     $BUNDLEPATH = (Get-ChildItem -Include *.msixbundle -Recurse) | Foreach-Object {$_.FullName}
+  #     Write-Host("##vso[task.setvariable variable=BUNDLEPATH]$BUNDLEPATH")
+  #   displayName: 'Move Symbol Files and write publish file location'
 
-  - task: PublishBuildArtifacts@1
-    displayName: 'Publish artifact: drop'
-    inputs:
-      PathtoPublish: '$(Build.ArtifactStagingDirectory)\AppxPackages'
-      ArtifactName: 'azure-$(VERSION)'
-    condition: succeededOrFailed()
+  # - task: PublishBuildArtifacts@1
+  #   displayName: 'Publish artifact: drop'
+  #   inputs:
+  #     PathtoPublish: '$(Build.ArtifactStagingDirectory)\AppxPackages'
+  #     ArtifactName: 'azure-$(VERSION)'
+  #   condition: succeededOrFailed()
 
-  - task: ArchiveFiles@2
-    displayName: 'Archive Symbol Files'
-    inputs:
-      rootFolderOrFile: '$(Agent.HomeDirectory)/SYMS'
-      archiveFile: '$(Agent.HomeDirectory)/$(Build.BuildId).SYMS.zip'
-      verbose: true
+  # - task: ArchiveFiles@2
+  #   displayName: 'Archive Symbol Files'
+  #   inputs:
+  #     rootFolderOrFile: '$(Agent.HomeDirectory)/SYMS'
+  #     archiveFile: '$(Agent.HomeDirectory)/$(Build.BuildId).SYMS.zip'
+  #     verbose: true
 
-  - task: GitHubRelease@1
-    inputs:
-      gitHubConnection: 'github connection 1'
-      repositoryName: 'HyPlayer/HyPlayer'
-      action: 'create'
-      target: '$(Build.SourceVersion)'
-      tagSource: 'userSpecifiedTag'
-      tag: '$(VERSION)'
-      title: 'V$(VERSION)'
-      releaseNotesFilePath: 'CHANGELOG_RELEASE.md'
-      assets: '$(BUNDLEPATH)'
-      addChangeLog: false
+  # - task: GitHubRelease@1
+  #   inputs:
+  #     gitHubConnection: 'github connection 1'
+  #     repositoryName: 'HyPlayer/HyPlayer'
+  #     action: 'create'
+  #     target: '$(Build.SourceVersion)'
+  #     tagSource: 'userSpecifiedTag'
+  #     tag: '$(VERSION)'
+  #     title: 'V$(VERSION)'
+  #     releaseNotesFilePath: 'CHANGELOG_RELEASE.md'
+  #     assets: '$(BUNDLEPATH)'
+  #     addChangeLog: false
 
   - powershell: |
       $BUNDLEPATH = (Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)/AppxPackages/" -Include *.msixbundle -Recurse) | Foreach-Object {$_.FullName}
@@ -132,7 +132,7 @@ steps:
           -Method Put `
           -Headers $headers `
           -InFile $localFilePath
-      $changelog = Get-Content CHANGELOG_RELEASE.md -Raw -Encoding UTF8 | Out-String
+      $changelog = Get-Content CHANGELOG_RELEASE.md -Raw | Out-String
       Write-Host $changelog
       $bodyObject = @{
         channels = @(5,6)
@@ -149,9 +149,9 @@ steps:
 
 
 
-  - task: PowerShell@2
-    inputs:
-      targetType: 'inline'
-      script: |
-        Invoke-WebRequest 'https://hyplayer.kengwang.com.cn/channel/5/broadcastUpdate/$(hyplayerAPI.secretKey)'
-        Invoke-WebRequest 'https://hyplayer.kengwang.com.cn/channel/6/broadcastUpdate/$(hyplayerAPI.secretKey)'
+  # - task: PowerShell@2
+  #   inputs:
+  #     targetType: 'inline'
+  #     script: |
+  #       Invoke-WebRequest 'https://hyplayer.kengwang.com.cn/channel/5/broadcastUpdate/$(hyplayerAPI.secretKey)'
+  #       Invoke-WebRequest 'https://hyplayer.kengwang.com.cn/channel/6/broadcastUpdate/$(hyplayerAPI.secretKey)'
