@@ -101,49 +101,52 @@ steps:
       assets: '$(BUNDLEPATH)'
       addChangeLog: false
 
-  - powershell: |
-      $BUNDLEPATH = (Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)/AppxPackages/" -Include *.msixbundle -Recurse) | Foreach-Object {$_.FullName}
-      $MANIFEST = [xml](Get-Content **\Package.appxmanifest)
-      $MAINVERSION = $MANIFEST.Package.Identity.Version
-      $VERSION = $MAINVERSION
-      $alistServer = "https://hyplayer-file.kengwang.com.cn"
-      $loginData = @{
-          "username" = "admin"
-          "password" = "$(alist_token)"
-      } | ConvertTo-Json
+  - task: PowerShell@2
+    inputs:
+      targetType: 'inline'
+      script: |
+        $BUNDLEPATH = (Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)/AppxPackages/" -Include *.msixbundle -Recurse) | Foreach-Object {$_.FullName}
+        $MANIFEST = [xml](Get-Content **\Package.appxmanifest)
+        $MAINVERSION = $MANIFEST.Package.Identity.Version
+        $VERSION = $MAINVERSION
+        $alistServer = "https://hyplayer-file.kengwang.com.cn"
+        $loginData = @{
+            "username" = "admin"
+            "password" = "$(alist_token)"
+        } | ConvertTo-Json
 
-      $response = Invoke-WebRequest -Uri "$alistServer/api/auth/login" `
-          -Method POST `
-          -Body $loginData `
-          -ContentType "application/json"
+        $response = Invoke-WebRequest -Uri "$alistServer/api/auth/login" `
+            -Method POST `
+            -Body $loginData `
+            -ContentType "application/json"
 
-      $token = ($response.Content | ConvertFrom-Json).data.token
+        $token = ($response.Content | ConvertFrom-Json).data.token
 
-      $localFilePath = $BUNDLEPATH
-      $remoteFilePath = "/hyplayer/release/$VERSION.msixbundle"
+        $localFilePath = $BUNDLEPATH
+        $remoteFilePath = "/hyplayer/release/$VERSION.msixbundle"
 
-      $headers = @{
-          "Authorization" = $token
-          "Content-Type" = "application/octet-stream"
-          "File-Path" = $remoteFilePath
-      }
+        $headers = @{
+            "Authorization" = $token
+            "Content-Type" = "application/octet-stream"
+            "File-Path" = $remoteFilePath
+        }
 
-      Invoke-WebRequest -Uri "$alistServer/api/fs/put" `
-          -Method Put `
-          -Headers $headers `
-          -InFile $localFilePath
-      $changelog = Get-Content CHANGELOG_RELEASE.md -Raw -Encoding UTF8 | Out-String
-      Write-Host $changelog
-      $bodyObject = @{
-        channels = @(5,6)
-        version  = $VERSION
-        authKey  = "$(hyplayerAPI.secretKey)"
-        date     = (Get-Date -Format o)
-        note     = $changelog
-        url      = "https://hyplayer-file.kengwang.com.cn$remoteFilePath"
-      }
-      $body = $bodyObject | ConvertTo-Json -Compress
-      $response = Invoke-WebRequest -Uri 'https://hyplayer.kengwang.com.cn/releases' -Method PUT -ContentType 'application/json' -Body $body
+        Invoke-WebRequest -Uri "$alistServer/api/fs/put" `
+            -Method Put `
+            -Headers $headers `
+            -InFile $localFilePath
+        $changelog = Get-Content CHANGELOG_RELEASE.md -Raw -Encoding UTF8 | Out-String
+        Write-Host $changelog
+        $bodyObject = @{
+          channels = @(5,6)
+          version  = $VERSION
+          authKey  = "$(hyplayerAPI.secretKey)"
+          date     = (Get-Date -Format o)
+          note     = $changelog
+          url      = "https://hyplayer-file.kengwang.com.cn$remoteFilePath"
+        }
+        $body = $bodyObject | ConvertTo-Json -Compress -EscapeHandling EscapeNonAscii
+        $response = Invoke-WebRequest -Uri 'https://hyplayer.kengwang.com.cn/releases' -Method PUT -ContentType 'application/json' -Body $body
 
 
 
