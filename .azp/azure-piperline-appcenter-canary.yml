@@ -142,7 +142,7 @@ steps:
         note     = $changelog
         url      = "https://hyplayer-file.kengwang.com.cn$remoteFilePath"
       }
-      $body = $bodyObject | ConvertTo-Json -Compress -EscapeHandling EscapeNonAscii
+      $body = $bodyObject | ConvertTo-Json -Compress
       $response = Invoke-WebRequest -Uri 'https://hyplayer.kengwang.com.cn/releases' -Method PUT -ContentType 'application/json' -Body $body
 
 
