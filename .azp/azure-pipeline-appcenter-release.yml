@@ -23,19 +23,19 @@ steps:
   - checkout: self
     submodules: true
 
-  - task: UseDotNet@2
-    displayName: 'Use .NET 6'
-    inputs:
-      version: 6.0.x
+  # - task: UseDotNet@2
+  #   displayName: 'Use .NET 6'
+  #   inputs:
+  #     version: 6.0.x
 
-  - task: NuGetToolInstaller@1
+  # - task: NuGetToolInstaller@1
   
-  - task: NuGetCommand@2
-    inputs:
-      command: 'restore'
-      restoreSolution: '$(solution)'
-      feedsToUse: 'config'
-      nugetConfigPath: 'nuget.config'
+  # - task: NuGetCommand@2
+  #   inputs:
+  #     command: 'restore'
+  #     restoreSolution: '$(solution)'
+  #     feedsToUse: 'config'
+  #     nugetConfigPath: 'nuget.config'
 
 
   - powershell: |
@@ -106,32 +106,32 @@ steps:
       $MANIFEST = [xml](Get-Content **\Package.appxmanifest)
       $MAINVERSION = $MANIFEST.Package.Identity.Version
       $VERSION = $MAINVERSION
-      $alistServer = "https://hyplayer-file.kengwang.com.cn"
-      $loginData = @{
-          "username" = "admin"
-          "password" = "$(alist_token)"
-      } | ConvertTo-Json
+      # $alistServer = "https://hyplayer-file.kengwang.com.cn"
+      # $loginData = @{
+      #     "username" = "admin"
+      #     "password" = "$(alist_token)"
+      # } | ConvertTo-Json
 
-      $response = Invoke-WebRequest -Uri "$alistServer/api/auth/login" `
-          -Method POST `
-          -Body $loginData `
-          -ContentType "application/json"
+      # $response = Invoke-WebRequest -Uri "$alistServer/api/auth/login" `
+      #     -Method POST `
+      #     -Body $loginData `
+      #     -ContentType "application/json"
 
-      $token = ($response.Content | ConvertFrom-Json).data.token
+      # $token = ($response.Content | ConvertFrom-Json).data.token
 
-      $localFilePath = $BUNDLEPATH
+      # $localFilePath = $BUNDLEPATH
       $remoteFilePath = "/hyplayer/release/$VERSION.msixbundle"
 
-      $headers = @{
-          "Authorization" = $token
-          "Content-Type" = "application/octet-stream"
-          "File-Path" = $remoteFilePath
-      }
+      # $headers = @{
+      #     "Authorization" = $token
+      #     "Content-Type" = "application/octet-stream"
+      #     "File-Path" = $remoteFilePath
+      # }
 
-      Invoke-WebRequest -Uri "$alistServer/api/fs/put" `
-          -Method Put `
-          -Headers $headers `
-          -InFile $localFilePath
+      # Invoke-WebRequest -Uri "$alistServer/api/fs/put" `
+      #     -Method Put `
+      #     -Headers $headers `
+      #     -InFile $localFilePath
       $changelog = Get-Content CHANGELOG_RELEASE.md -Raw | Out-String
       Write-Host $changelog
       $bodyObject = @{
