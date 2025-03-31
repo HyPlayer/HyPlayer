@@ -102,7 +102,7 @@ steps:
   #     addChangeLog: false
 
   - powershell: |
-      $BUNDLEPATH = (Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)/AppxPackages/" -Include *.msixbundle -Recurse) | Foreach-Object {$_.FullName}
+      # $BUNDLEPATH = (Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)/AppxPackages/" -Include *.msixbundle -Recurse) | Foreach-Object {$_.FullName}
       $MANIFEST = [xml](Get-Content **\Package.appxmanifest)
       $MAINVERSION = $MANIFEST.Package.Identity.Version
       $VERSION = $MAINVERSION
