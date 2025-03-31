@@ -23,11 +23,13 @@ steps:
   - checkout: self
     submodules: true
 
-  - task: NuGetToolInstaller@0
-    displayName: 'Use NuGet 4.4.1'
+  - task: UseDotNet@2
+    displayName: 'Use .NET 6'
     inputs:
-      checkLatest: true
+      version: 6.0.x
 
+  - task: NuGetToolInstaller@1
+  
   - task: NuGetCommand@2
     inputs:
       command: 'restore'
@@ -35,10 +37,6 @@ steps:
       feedsToUse: 'config'
       nugetConfigPath: 'nuget.config'
 
-  - task: UseDotNet@2
-    displayName: 'Use .NET 6'
-    inputs:
-      version: 6.0.x
 
   - powershell: |
       $MANIFEST = [xml](Get-Content **\Package.appxmanifest)
@@ -103,24 +101,57 @@ steps:
       assets: '$(BUNDLEPATH)'
       addChangeLog: false
 
-  - task: AppCenterDistribute@3
-    displayName: 'Deploy App Center'
-    inputs:
-      serverEndpoint: HyPlayer/AppCenter
-      appSlug: kengwang/HyPlayer
-      appFile: '$(BUNDLEPATH)'
-      buildVersion: '$(VERSION)'
-      symbolsOption: UWP
-      appxsymPath: '$(Agent.HomeDirectory)/$(Build.BuildId).SYMS.zip'
-      releaseNotesOption: file
-      releaseNotesFile: CHANGELOG_RELEASE.md
-      distributionGroupId: '19bc0109-9e15-4776-b691-f007850cf08a;e5e83d7f-28ae-45a5-b084-5d8ecd76e0b0'
-      isSilent: false
-    condition: succeededOrFailed()
+  - powershell: |
+      $BUNDLEPATH = (Get-ChildItem -Path "$(Build.ArtifactStagingDirectory)/AppxPackages/" -Include *.msixbundle -Recurse) | Foreach-Object {$_.FullName}
+      $MANIFEST = [xml](Get-Content **\Package.appxmanifest)
+      $MAINVERSION = $MANIFEST.Package.Identity.Version
+      $VERSION = $MAINVERSION
+      $alistServer = "https://hyplayer-file.kengwang.com.cn"
+      $loginData = @{
+          "username" = "admin"
+          "password" = "$(alist_token)"
+      } | ConvertTo-Json
+
+      $response = Invoke-WebRequest -Uri "$alistServer/api/auth/login" `
+          -Method POST `
+          -Body $loginData `
+          -ContentType "application/json"
+
+      $token = ($response.Content | ConvertFrom-Json).data.token
+
+      $localFilePath = $BUNDLEPATH
+      $remoteFilePath = "/hyplayer/release/$VERSION.msixbundle"
+
+      $headers = @{
+          "Authorization" = $token
+          "Content-Type" = "application/octet-stream"
+          "File-Path" = $remoteFilePath
+      }
+
+      Invoke-WebRequest -Uri "$alistServer/api/fs/put" `
+          -Method Put `
+          -Headers $headers `
+          -InFile $localFilePath
+      $changelog = Get-Content CHANGELOG_RELEASE.md -Raw -Encoding UTF8 | Out-String
+      Write-Host $changelog
+      $bodyObject = @{
+        channels = @(5,6)
+        version  = $VERSION
+        authKey  = "$(hyplayerAPI.secretKey)"
+        date     = (Get-Date -Format o)
+        note     = $changelog
+        url      = "https://hyplayer-file.kengwang.com.cn$remoteFilePath"
+      }
+      $body = $bodyObject | ConvertTo-Json -Compress -EscapeHandling EscapeNonAscii
+      $response = Invoke-WebRequest -Uri 'https://hyplayer.kengwang.com.cn/releases' -Method PUT -ContentType 'application/json' -Body $body
+
+
+
+
 
   - task: PowerShell@2
     inputs:
       targetType: 'inline'
       script: |
-        Invoke-WebRequest 'https://hyplayer.kengwang.com.cn/channel/3/broadcastUpdate/$(hyplayerAPI.secretKey)'      
-        Invoke-WebRequest 'https://hyplayer.kengwang.com.cn/channel/2/broadcastUpdate/$(hyplayerAPI.secretKey)'
+        Invoke-WebRequest 'https://hyplayer.kengwang.com.cn/channel/5/broadcastUpdate/$(hyplayerAPI.secretKey)'
+        Invoke-WebRequest 'https://hyplayer.kengwang.com.cn/channel/6/broadcastUpdate/$(hyplayerAPI.secretKey)'

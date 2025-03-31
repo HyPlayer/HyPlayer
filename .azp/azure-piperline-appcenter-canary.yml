@@ -135,7 +135,7 @@ steps:
       $changelog = Get-Content CHANGELOG.md -Raw -Encoding UTF8 | Out-String
       Write-Host $changelog
       $bodyObject = @{
-        channels = @(2)
+        channels = @(5)
         version  = $VERSION
         authKey  = "$(hyplayerAPI.secretKey)"
         date     = (Get-Date -Format o)
@@ -153,4 +153,4 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        Invoke-WebRequest 'https://hyplayer.kengwang.com.cn/channel/2/broadcastUpdate/$(hyplayerAPI.secretKey)'
+        Invoke-WebRequest 'https://hyplayer.kengwang.com.cn/channel/5/broadcastUpdate/$(hyplayerAPI.secretKey)'
