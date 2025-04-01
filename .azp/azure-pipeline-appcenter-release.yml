@@ -147,7 +147,7 @@ steps:
         }
         $body = $bodyObject | ConvertTo-Json -Compress -EscapeHandling EscapeNonAscii
         $response = Invoke-WebRequest -Uri 'https://hyplayer.kengwang.com.cn/releases' -Method PUT -ContentType 'application/json' -Body $body
-
+      pwsh: true
 
 
 
