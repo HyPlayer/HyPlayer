@@ -566,10 +566,7 @@ public sealed partial class BasePage : Page
         {
             case "SonglistCreate":
                 {
-                    if (Common.Setting.EnableSonglistCreate)
-                        await new CreateSonglistDialog().ShowAsync();
-                    else
-                        Common.AddToTeachingTipLists("歌单创建功能被禁用", "由于网易云音乐风控升级, 默认禁用歌单创建功能, 如需启用请至\"设置-实验室\"启用歌单创建功能");
+                    await new CreateSonglistDialog().ShowAsync();
                     break;
                 }
             case "PersonalFM":

@@ -1,11 +1,11 @@
-using System;
-using Windows.UI;
-using Windows.UI.Text;
-using Windows.UI.Xaml;
 using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
+using System;
+using Windows.UI;
+using Windows.UI.Text;
+using Windows.UI.Xaml;
 
 namespace HyPlayer.LyricRenderer.LyricLineRenderers;
 
@@ -21,8 +21,8 @@ public class ActionLyricLine : RenderingLyricLine
 
     public string Text { get; set; }
     public string ActionUri { get; set; }
-    
-    
+
+
     public override void GoToReactionState(ReactionState state, RenderContext context)
     {
         _lastReactionTime = context.CurrentLyricTime;

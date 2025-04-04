@@ -84,6 +84,7 @@ namespace HyPlayer
             HttpClient = new HttpClient(HttpClientHandler);
             NeteaseAPI = new NeteaseCloudMusicApiHandler(HttpClient);
             NeteaseAPI.Option.AdditionalParameters = Setting.ApiAdditionalParameters;
+            NeteaseAPI.Option.EnableCheckTokenApi = Setting.EnableCheckTokenApi;
         }
         public static bool isExpanded
         {
@@ -353,7 +354,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
         public bool enableAmllTtmlDb
         {
             get => GetSettings(nameof(enableAmllTtmlDb), false);
@@ -382,7 +383,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
 
         public AdditionalParameters ApiAdditionalParameters
         {
@@ -640,12 +641,13 @@ namespace HyPlayer
             }
         }
 
-        public bool EnableSonglistCreate
+        public bool EnableCheckTokenApi
         {
-            get => GetSettings(nameof(EnableSonglistCreate), false);
+            get => GetSettings(nameof(EnableCheckTokenApi), false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values[nameof(EnableSonglistCreate)] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(EnableCheckTokenApi)] = value;
+                if (Common.NeteaseAPI != null) Common.NeteaseAPI.Option.EnableCheckTokenApi = value;
                 OnPropertyChanged();
             }
         }
@@ -877,7 +879,7 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
-        
+
         public bool lyricRenderTransliterationScanning
         {
             get => GetSettings(nameof(lyricRenderTransliterationScanning), true);

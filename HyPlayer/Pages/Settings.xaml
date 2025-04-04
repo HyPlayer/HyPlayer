@@ -1387,8 +1387,8 @@
                             <controls3:SettingsCard Description="可能会提高内存占用" Header="启用安全本地文件访问">
                                 <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.safeFileAccess, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard Header="启用歌单创建">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.EnableSonglistCreate, Mode=TwoWay}" />
+                            <controls3:SettingsCard Header="启用 CheckToken 接口">
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.EnableCheckTokenApi, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Description="使用「热词」时需开启" Header="SMTC 更新进度条">
                                 <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.progressInSMTC, Mode=TwoWay}" />

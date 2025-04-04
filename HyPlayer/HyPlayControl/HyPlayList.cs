@@ -1,5 +1,6 @@
 ﻿#region
 
+using ALRC.Converters;
 using AudioEffectComponent;
 using HyPlayer.Classes;
 using HyPlayer.NeteaseApi.ApiContracts;
@@ -31,7 +32,6 @@ using Windows.Storage.Streams;
 using Windows.UI;
 using Windows.UI.Notifications;
 using Windows.UI.Xaml.Media;
-using ALRC.Converters;
 using Buffer = Windows.Storage.Streams.Buffer;
 using File = TagLib.File;
 using LrcConverter = ALRC.Converters.LrcConverter;
@@ -1831,11 +1831,11 @@ public static class HyPlayList
                 LyricInfo.Lyrics.Insert(0,
                     new SongLyric { LyricLine = new LrcLyricsLine(string.Empty, TimeSpan.Zero) });
         }
-        
+
         LyricInfo.LyricMetadata = pureLyricInfo.LyricMetadata;
         LyricInfo.SongMetadata = pureLyricInfo.SongMetadata;
         LyricInfo.PureLyricInfo = pureLyricInfo;
-        
+
         LyricPos = 0;
 
         OnLyricLoaded?.Invoke();
@@ -1872,7 +1872,7 @@ public static class HyPlayList
                         Value = "amll-ttml-db",
                         DisplayName = "歌词来源",
                         ActionUri = $"https://github.com/Steve-xmh/amll-ttml-db/blob/main/ncm-lyrics/{hpi.PlayItem.Id}.ttml"
-                    }                    
+                    }
                     ],
                     SongMetadata = []
                 };
@@ -1882,18 +1882,18 @@ public static class HyPlayList
                 LyricInfo.LyricMetadata = ttmlLyric.LyricMetadata;
                 LyricInfo.SongMetadata = ttmlLyric.SongMetadata;
                 LyricInfo.PureLyricInfo = ttmlLyric;
-                
+
                 OnLyricLoaded?.Invoke();
                 OnLyricChange?.Invoke();
             }
         }
-        catch (Exception e)
+        catch
         {
             // ignore
         }
     }
-    
-    
+
+
 
     private static async Task<PureLyricInfo> LoadNcLyric(HyPlayItem ncp)
     {
@@ -1937,7 +1937,7 @@ public static class HyPlayList
                         text.Split("\n")
                         .Where(t => !t.StartsWith("{")).ToArray());
                 }
-                
+
 
                 if (lyricResult.Value?.YunLyric?.Lyric is null)
                 {
@@ -1969,7 +1969,7 @@ public static class HyPlayList
                         KaraokLyric = karaoklrc
                     };
                 }
-                
+
                 // add metadata
                 // 添加翻译作词信息
                 if (lyricResult.Value?.LyricUser?.UserId is not null)
@@ -1982,7 +1982,7 @@ public static class HyPlayList
                         DisplayName = "歌词贡献者"
                     });
                 }
-                
+
                 if (lyricResult.Value?.TranslationUser?.UserId is not null)
                 {
                     res.LyricMetadata.Add(new LyricInfoMetadata()

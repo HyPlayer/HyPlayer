@@ -1,5 +1,6 @@
 ﻿using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
+using HyPlayer.NeteaseApi;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -10,7 +11,6 @@ using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.NeteaseApi;
 
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
@@ -122,7 +122,7 @@ public sealed partial class TestPage : Page
                 Content = ex.Message,
                 CloseButtonText = "OK"
             };
-            dialog.ShowAsync();
+            _ = dialog.ShowAsync();
         }
     }
 }

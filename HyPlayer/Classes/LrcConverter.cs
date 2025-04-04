@@ -1,12 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using ALRC.Abstraction;
+using HyPlayer.LyricRenderer.Abstraction;
+using HyPlayer.LyricRenderer.Abstraction.Render;
+using HyPlayer.LyricRenderer.LyricLineRenderers;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
-using ALRC.Abstraction;
-using HyPlayer.LyricRenderer.Abstraction;
-using HyPlayer.LyricRenderer.Abstraction.Render;
-using HyPlayer.LyricRenderer.LyricLineRenderers;
 using Color = System.Drawing.Color;
 
 namespace HyPlayer.Classes;

@@ -8,6 +8,8 @@ using CommunityToolkit.WinUI.Media;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
+using HyPlayer.LyricRenderer.Abstraction.Render;
+using HyPlayer.LyricRenderer.LyricLineRenderers;
 using HyPlayer.LyricRenderer.RollingCalculators;
 using Impressionist.Abstractions;
 using Impressionist.Implementations;
@@ -39,8 +41,6 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.LyricRenderer.Abstraction.Render;
-using HyPlayer.LyricRenderer.LyricLineRenderers;
 using ALRCLyricInfo = HyPlayer.Classes.ALRCLyricInfo;
 using Buffer = Windows.Storage.Streams.Buffer;
 using Color = System.Drawing.Color;
@@ -152,7 +152,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             }
             else
             {
-                Windows.System.Launcher.LaunchUriAsync(new Uri(action));
+                _ = Windows.System.Launcher.LaunchUriAsync(new Uri(action));
             }
         }
         else
@@ -300,13 +300,13 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private void ChangeWindowMode()
     {
         realclick = false;
-        
+
         if (WindowMode == ExpandedWindowMode.Both)
             LyricWidth = nowwidth * 0.5;
         else
             LyricWidth = nowwidth - 30;
         LyricWidth = Math.Max(LyricWidth, 0);
-        
+
         switch (WindowMode)
         {
             case ExpandedWindowMode.Both:
@@ -343,7 +343,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 LyricBox.Margin = new Thickness(15);
                 break;
         }
-        
+
         needRedesign++;
         realclick = true;
     }
@@ -599,7 +599,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             }
             else
             {
-                LyricBox.SetLyricLines(LrcConverter.Convert(alrcLyricInfo.alrc,alrcLyricInfo.LyricMetadata, alrcLyricInfo.SongMetadata ));
+                LyricBox.SetLyricLines(LrcConverter.Convert(alrcLyricInfo.alrc, alrcLyricInfo.LyricMetadata, alrcLyricInfo.SongMetadata));
             }
             LyricBox.ChangeAlignment(Common.Setting.lyricAlignment switch
             {
@@ -654,7 +654,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         }
 
         if (lines.LastOrDefault() is { End: null or <= 0 } last) last.End = (long)HyPlayList.Player.PlaybackSession.NaturalDuration.TotalMilliseconds;
-        
+
         return alrc;
     }
 

@@ -2,7 +2,6 @@
 
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.Extensions;
 using System;
 using System.IO;
 using System.Linq;
@@ -13,9 +12,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using TagLib;
 using Windows.Storage;
-using Windows.Storage.Streams;
 using File = TagLib.File;
 
 #endregion
@@ -55,7 +52,7 @@ internal class CloudUpload
         {
             //Ignore
         }
-        
+
         var bytes = await FileIO.ReadBufferAsync(file);
         //再获取上传所需要的信息
         var computedHash = new MD5CryptoServiceProvider().ComputeHash(bytes.ToArray());
@@ -186,10 +183,14 @@ internal class CloudUpload
     }
 
 
-    public static async Task UploadToNos(string targetLink, Stream stream, string md5, string token, string contentType, int chunkSize = 1048576, CancellationToken cancellationToken = default)
+    public static async Task UploadToNos(string targetLink, Stream stream, string md5, string? token, string contentType, int chunkSize = 1048576, CancellationToken cancellationToken = default)
     {
         if (stream == null) throw new ArgumentNullException(nameof(stream));
         if (!stream.CanRead) throw new ArgumentException("Stream must be readable", nameof(stream));
+        if (string.IsNullOrEmpty(token)) throw new ArgumentException("Token must not be null or empty");
+        {
+
+        }
 
         try
         {
@@ -200,7 +201,7 @@ internal class CloudUpload
             }
 
             string? context = null;
-            
+
             var isEnd = false;
             int offset = 0;
 
