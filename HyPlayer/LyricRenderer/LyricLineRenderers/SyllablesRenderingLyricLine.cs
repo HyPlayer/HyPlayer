@@ -226,7 +226,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
 
             var gap = _isFocusing ? 0 : Math.Clamp(Math.Abs(Id - context.CurrentLyricLineIndex), 1, 250);
             ICanvasImage finalEffect = totalCommand;
-            
+
             if (context.Effects.ScaleWhenFocusing && _isFocusing)
             {
                 // 计算 Progress

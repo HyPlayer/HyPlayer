@@ -247,7 +247,7 @@ namespace HyPlayer.LyricRenderer
                     currentLine.Rendering = false;
                     continue;
                 }
-                    
+
                 if (renderedAfterStartPosition <= Context.ViewHeight && (Context.IsPlaying || !Context.IsScrolling) &&
                     !Context.IsSeek) // 在可视区域, 需要缓动
                     if (Context.SnapshotRenderOffsets.ContainsKey(currentLine.Id) &&

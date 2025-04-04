@@ -15,7 +15,7 @@ internal class Api
     public static async Task<bool> LikeSong(string songid, bool like)
     {
         var requestResult = await Common.NeteaseAPI.RequestAsync(NeteaseApis.LikeApi,
-            new LikeRequest() { TrackId = songid, Like = like });
+            new LikeRequest() { TrackId = songid, Like = like, UserId = Common.LoginedUser.id });
         if (requestResult.IsSuccess)
         {
             return true;
