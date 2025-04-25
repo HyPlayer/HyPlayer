@@ -390,7 +390,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
             var urlRequest = new SongUrlRequest() { Id = ncsong.sid, Level = Common.Setting.downloadAudioRate };
             var urlResult = await Common.NeteaseAPI.RequestAsync(NeteaseApis.SongUrlApi, urlRequest);
 
-            if (urlResult.IsError)
+            if (urlResult.IsError || urlResult.Value?.SongUrls?[0] is null)
             {
                 Status = DownloadStatus.Error;
                 _ = Common.Invoke(() =>
@@ -403,7 +403,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                 return;
             }
 
-            if (!string.IsNullOrEmpty(urlResult.Value.SongUrls[0].FreeTrialInfo) && Common.Setting.jumpVipSongDownloading)
+            if (urlResult.Value.SongUrls[0].FreeTrialInfo is not null && Common.Setting.jumpVipSongDownloading)
             {
                 Status = DownloadStatus.Paused;
                 _ = Common.Invoke(() =>
@@ -415,7 +415,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                 return;
             }
 
-            FileName += "." + urlResult.Value.SongUrls[0].Type.ToLowerInvariant();
+            FileName += "." + urlResult.Value.SongUrls[0].Type?.ToLowerInvariant();
             DontUsePlayItem = new PlayItem
             {
                 Bitrate = Convert.ToInt32(urlResult.Value.SongUrls[0].BitRate),
