@@ -12,6 +12,7 @@ using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.NeteaseApi.ApiContracts.Cloud;
 
 #endregion
 

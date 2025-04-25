@@ -1,9 +1,9 @@
-using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.Models.ResponseModels;
 using System.Collections.Generic;
 using System.Linq;
-using static HyPlayer.NeteaseApi.ApiContracts.ArtistDetailResponse.ArtistDetailResponseData;
-using static HyPlayer.NeteaseApi.ApiContracts.RecommendResourceResponse;
+using HyPlayer.NeteaseApi.ApiContracts.Artist;
+using HyPlayer.NeteaseApi.ApiContracts.Recommend;
+using static HyPlayer.NeteaseApi.ApiContracts.Artist.ArtistDetailResponse.ArtistDetailResponseData;
 
 namespace HyPlayer.Classes;
 
@@ -254,7 +254,7 @@ public static class Mapper
         };
         return ncp;
     }
-    public static NCPlayList MapToNCPlayList(this RecommendResourceItem dto)
+    public static NCPlayList MapToNCPlayList(this RecommendResourceResponse.RecommendResourceItem dto)
     {
         var ncp = new NCPlayList
         {

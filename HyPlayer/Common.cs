@@ -36,6 +36,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Animation;
+using HyPlayer.NeteaseApi.ApiContracts.Song;
 using Color = Windows.UI.Color;
 using HttpClient = System.Net.Http.HttpClient;
 #if !DEBUG
@@ -84,7 +85,7 @@ namespace HyPlayer
             HttpClient = new HttpClient(HttpClientHandler);
             NeteaseAPI = new NeteaseCloudMusicApiHandler(HttpClient);
             NeteaseAPI.Option.AdditionalParameters = Setting.ApiAdditionalParameters;
-            NeteaseAPI.Option.EnableCheckTokenApi = Setting.EnableCheckTokenApi;
+            NeteaseAPI.Option.FakeCheckToken = Setting.EnableCheckTokenApi;
         }
         public static bool isExpanded
         {
@@ -647,7 +648,7 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(EnableCheckTokenApi)] = value;
-                if (Common.NeteaseAPI != null) Common.NeteaseAPI.Option.EnableCheckTokenApi = value;
+                if (Common.NeteaseAPI != null) Common.NeteaseAPI.Option.FakeCheckToken = value;
                 OnPropertyChanged();
             }
         }

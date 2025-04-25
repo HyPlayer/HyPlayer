@@ -4,6 +4,7 @@ using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
 using System;
 using System.Threading.Tasks;
+using HyPlayer.NeteaseApi.ApiContracts.PersonalFM;
 
 #endregion
 

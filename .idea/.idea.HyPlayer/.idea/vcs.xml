@@ -4,6 +4,9 @@
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/AudioEffectComponent" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/HyPlayer.Frieren" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/HyPlayer.NeteaseProvider" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Impressionist" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Kawazu" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/LyricParser" vcs="Git" />
   </component>
 </project>

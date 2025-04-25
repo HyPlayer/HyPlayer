@@ -5,6 +5,8 @@ using HyPlayer.NeteaseApi.ApiContracts;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using HyPlayer.NeteaseApi.ApiContracts.Playlist;
+using HyPlayer.NeteaseApi.ApiContracts.Song;
 
 #endregion
 

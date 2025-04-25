@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.NeteaseApi.ApiContracts.Album;
+using HyPlayer.NeteaseApi.ApiContracts.Artist;
 
 #endregion
 
