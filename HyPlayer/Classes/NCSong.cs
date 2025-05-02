@@ -286,6 +286,7 @@ public class PlayItem
     public List<NCArtist> Artist;
     public int Bitrate;
     public string CDName;
+    public string Translation;
     public Tag LocalFileTag;
     public StorageFile DontSetLocalStorageFile; //如非特殊原因请不要设置这个东西!
     public string Id;

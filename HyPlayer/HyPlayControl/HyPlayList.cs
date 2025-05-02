@@ -1058,9 +1058,9 @@ public static class HyPlayList
                 var songResult = await Common.NeteaseAPI.RequestAsync(NeteaseApis.SongUrlApi, songRequest);
                 if (songResult.IsSuccess)
                 {
-                    if (songResult.Value.SongUrls[0].Code == 200)
+                    if (songResult.Value?.SongUrls?[0].Code == 200)
                     {
-                        if (!string.IsNullOrEmpty(songResult.Value.SongUrls[0].FreeTrialInfo) && Common.Setting.jumpVipSongPlaying)
+                        if (songResult.Value.SongUrls[0].FreeTrialInfo is not null && Common.Setting.jumpVipSongPlaying)
                         {
                             throw new Exception("当前歌曲为 VIP 试听, 已自动跳过");
                         }
@@ -2105,6 +2105,7 @@ public static class HyPlayList
             Artist = ncSong.Artist,
             //SubExt = token["type"].ToString(),
             Id = ncSong.sid,
+            Translation = ncSong.transname,
             Name = ncSong.songname,
             TrackId = ncSong.TrackId,
             CDName = ncSong.CDName,

@@ -422,6 +422,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                 QualityTag = "下载",
                 InfoTag = "下载",
                 Album = ncsong.Album,
+                Translation = ncsong.transname,
                 Artist = ncsong.Artist,
                 SubExt = urlResult.Value.SongUrls[0].Type.ToLowerInvariant(),
                 Id = ncsong.sid,

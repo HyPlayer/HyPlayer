@@ -710,7 +710,14 @@
                                         <Border>
                                             <StackPanel Margin="0,5,0,5" Orientation="Horizontal">
                                                 <StackPanel Width="345" Orientation="Vertical">
-                                                    <TextBlock FontWeight="Bold" Text="{x:Bind Path=PlayItem.Name}" />
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock FontWeight="Bold" Text="{x:Bind Path=PlayItem.Name}" />
+                                                        <TextBlock Foreground="Gray" Visibility="{x:Bind Path=PlayItem.Translation, Converter={StaticResource EmptyStringToVisibilityConverter}}">
+                                                            <Run Text=" ("></Run>
+                                                            <Run Text="{x:Bind Path=PlayItem.Translation}" />
+                                                            <Run Text=")"></Run>
+                                                        </TextBlock>
+                                                    </StackPanel>
                                                     <TextBlock Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" Text="{x:Bind Path=PlayItem.ArtistString}" />
                                                 </StackPanel>
                                                 <Button
