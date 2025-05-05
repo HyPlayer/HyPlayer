@@ -76,8 +76,8 @@ public sealed partial class RadioPage : Page, IDisposable
                 page--;
                 throw new Exception($"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求");
             }
-            NextPage.Visibility = json.Value.More ? Visibility.Visible : Visibility.Collapsed;
-            foreach (var jToken in json.Value.Programs ?? [])
+            NextPage.Visibility = json.Value.Data.More ? Visibility.Visible : Visibility.Collapsed;
+            foreach (var jToken in json.Value.Data.Programs ?? [])
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 var song = jToken.MapToNCFmItem();
@@ -225,8 +225,8 @@ public sealed partial class RadioPage : Page, IDisposable
                             Offset = page * 100,
                             Asc = asc
                         });
-                    hasMore = json.Value?.More is true;
-                    foreach (var jToken in json.Value?.Programs ?? [])
+                    hasMore = json.Value?.Data?.More is true;
+                    foreach (var jToken in json.Value?.Data?.Programs ?? [])
                     {
                         _cancellationToken.ThrowIfCancellationRequested();
                         var song = jToken.MapToNCFmItem();

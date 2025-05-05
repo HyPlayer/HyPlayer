@@ -260,7 +260,7 @@ public sealed partial class WidgetPage : Page
 
     private void LyricView_OnRequestSeek(RenderingLyricLine line)
     {
-        HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(line.StartTime);
+        HyPlayList.Seek(TimeSpan.FromMilliseconds(line.StartTime));
     }
 
     private void LyricView_OnBeforeRender(LyricRenderer.LyricRenderView view)

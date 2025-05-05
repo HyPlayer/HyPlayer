@@ -39,6 +39,6 @@ public sealed partial class Welcome : Page
         var frame = Window.Current.Content as Frame;
         var mainpage = frame.Content as MainPage;
         var content = mainpage.MainFrame.Content as BasePage;
-        await content.DialogLogin.ShowAsync();
+        await content.DialogPreLoginHint.ShowAsync();
     }
 }

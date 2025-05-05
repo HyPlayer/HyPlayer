@@ -208,19 +208,20 @@ DoubleAnimation verticalAnimation;
                     TextBlockNowTime.Text =
                         HyPlayList.Player.PlaybackSession.Position.ToString(@"hh\:mm\:ss");
                 }
+
                 if (HyPlayList.FadeProcessStatus && !HyPlayList.AutoFadeProcessing)
                 {
                     PlayStateIcon.Glyph =
-                    HyPlayList.CurrentFadeInOutState == HyPlayList.FadeInOutState.FadeIn
-                        ? "\uF8AE"
-                        : "\uF5B0";
+                        HyPlayList.CurrentFadeInOutState == HyPlayList.FadeInOutState.FadeIn
+                            ? "\uF8AE"
+                            : "\uF5B0";
                 }
                 else
                 {
                     PlayStateIcon.Glyph =
-                    HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
-                        ? "\uF8AE"
-                        : "\uF5B0";
+                        HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
+                            ? "\uF8AE"
+                            : "\uF5B0";
                 }
             }
             catch
@@ -228,7 +229,6 @@ DoubleAnimation verticalAnimation;
                 //ignore
             }
         });
-
     }
 
     public void SetPlayBarIdleBackground(SolidColorBrush colorBrush)
@@ -244,7 +244,7 @@ DoubleAnimation verticalAnimation;
         try
         {
             _ = Common.Invoke(() => ApplicationView.GetForCurrentView().Title =
-                    $"{HyPlayList.NowPlayingItem.PlayItem.Name} - {HyPlayList.NowPlayingItem.PlayItem.ArtistString}");
+                $"{HyPlayList.NowPlayingItem.PlayItem.Name} - {HyPlayList.NowPlayingItem.PlayItem.ArtistString}");
         }
         catch (Exception)
         {
@@ -325,8 +325,8 @@ DoubleAnimation verticalAnimation;
                 HyPlayList.Player.PlaybackSession.Position.ToString(@"m\:ss");
             PlayStateIcon.Glyph =
                 HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
-                    ? "\uF8AE" :
-                    "\uF5B0";
+                    ? "\uF8AE"
+                    : "\uF5B0";
 
             TbSingerName.Content = HyPlayList.NowPlayingItem.PlayItem.ArtistString;
             TbSongName.Text = HyPlayList.NowPlayingItem.PlayItem.Name;
@@ -378,7 +378,7 @@ DoubleAnimation verticalAnimation;
         */
     }
 
-    public void RefreshSongList()
+    public void RefreshSongList(bool isShuffle = false)
     {
         try
         {
@@ -403,7 +403,7 @@ DoubleAnimation verticalAnimation;
             var vpos = -1;
             for (var b = 0; b < PlayItems.Count; b++)
                 if (!targetingList.Contains(PlayItems[b]))
-                    PlayItems.RemoveAt(b);           
+                    PlayItems.RemoveAt(b);
 
             foreach (var t in targetingList)
             {
@@ -467,8 +467,8 @@ DoubleAnimation verticalAnimation;
         if (Common.IsInFm)
             PersonalFM.ExitFm();
         else
-            await HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.UserNextFadeOut, HyPlayList.SongChangeType.Previous);
-
+            await HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.UserNextFadeOut,
+                HyPlayList.SongChangeType.Previous);
     }
 
     private async void BtnNextSong_OnClick(object sender, RoutedEventArgs e)
@@ -623,30 +623,34 @@ DoubleAnimation verticalAnimation;
     {
         if (!Common.IsInFm)
         {
+            bool needTrigger = false;
             switch (NowPlayType)
             {
                 case PlayMode.DefaultRoll:
                     //变成随机
-                    HyPlayList.NowPlayType = PlayMode.Shuffled;
+                    HyPlayList.ChangePlayMode(PlayMode.Shuffled);
                     NowPlayType = PlayMode.Shuffled;
                     IconPlayType.Glyph = "\uE14B";
                     FlyoutPlayRollType.Text = "随机播放";
+                    needTrigger = true;
                     break;
                 case PlayMode.Shuffled:
                     //变成单曲
                     IconPlayType.Glyph = "\uE1CC";
-                    HyPlayList.NowPlayType = PlayMode.SinglePlay;
+                    HyPlayList.ChangePlayMode(PlayMode.SinglePlay);
                     NowPlayType = PlayMode.SinglePlay;
                     FlyoutPlayRollType.Text = "单曲循环";
+                    needTrigger = true;
                     break;
                 case PlayMode.SinglePlay:
                     //变成顺序
-                    HyPlayList.NowPlayType = PlayMode.DefaultRoll;
+                    HyPlayList.ChangePlayMode(PlayMode.DefaultRoll);
                     NowPlayType = PlayMode.DefaultRoll;
                     IconPlayType.Glyph = "\uE169";
                     FlyoutPlayRollType.Text = "顺序播放";
                     break;
             }
+            
         }
         else
         {
@@ -867,11 +871,13 @@ DoubleAnimation verticalAnimation;
         FlyoutBtnPlayList.ContextFlyout?.ShowAt(BtnMore);
         ButtonPlayList_OnClick(sender, e);
     }
+
     private async Task OnEnteringForeground()
     {
         LoadPlayingFile(HyPlayList.NowPlayingItem);
         await RefreshPlayBarCover(HyPlayList.NowPlayingHashCode, HyPlayList.CoverBuffer);
     }
+
     private async void UserControl_Loaded(object sender, RoutedEventArgs e)
     {
         InitializedAni.Begin();
@@ -903,6 +909,7 @@ DoubleAnimation verticalAnimation;
         }
         else
             PlayBarBackgroundAni.Children.RemoveAt(2);
+
         if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
             ButtonDesktopLyrics.Visibility = Visibility.Collapsed;
         InitializeDesktopLyric();
@@ -959,6 +966,7 @@ DoubleAnimation verticalAnimation;
         TbSongNameScrollStoryBoard.Begin();
         */
     }
+
     public async Task RefreshPlayBarCover(int hashCode, IBuffer coverStream)
     {
         if (HyPlayList.CoverStream.Size == 0) return;
@@ -979,11 +987,9 @@ DoubleAnimation verticalAnimation;
                 }
                 catch
                 {
-
                 }
             }
         });
-
     }
 
     private void HyPlayList_OnSongLikeStatusChange(bool isLiked)
@@ -1015,6 +1021,7 @@ DoubleAnimation verticalAnimation;
                 HyPlayList.AppendNcSongs(list);
                 HyPlayList.NotifyPlayItemChanged(HyPlayList.NowPlayingItem);
             }
+
             list.Clear();
         }
         catch
@@ -1046,6 +1053,7 @@ DoubleAnimation verticalAnimation;
         {
             HyPlayList.Seek(value);
         }
+
         _isSliding = false;
     }
 
@@ -1079,8 +1087,8 @@ DoubleAnimation verticalAnimation;
                 if (TbAlbumName.Content == null) return;
                 package.SetText(TbAlbumName.Content.ToString());
                 break;
-
         }
+
         package.RequestedOperation = DataPackageOperation.Copy;
         Clipboard.SetContent(package);
     }

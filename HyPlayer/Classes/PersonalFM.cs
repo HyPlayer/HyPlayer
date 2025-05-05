@@ -16,7 +16,7 @@ internal static class PersonalFM
 
     public static void InitPersonalFM()
     {
-        HyPlayList.NowPlayType = PlayMode.DefaultRoll;
+        HyPlayList.ChangePlayMode(PlayMode.DefaultRoll);
         HyPlayList.OnSongMoveNext += HyPlayList_OnSongMoveNext;
         HyPlayList.OnMediaEnd += HyPlayList_OnMediaEnd;
         Common.IsInFm = true;

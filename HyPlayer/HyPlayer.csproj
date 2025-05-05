@@ -98,6 +98,7 @@
     <Compile Include="Classes\Extensions.cs" />
     <Compile Include="Classes\ImageDecoder.cs" />
     <Compile Include="Classes\LastFMManager.cs" />
+    <Compile Include="Classes\ListenTogetherManager.cs" />
     <Compile Include="Classes\LrcConverter.cs" />
     <Compile Include="Classes\LyricInfo.cs" />
     <Compile Include="Classes\LyricRenderComposer.cs" />
@@ -289,6 +290,7 @@
     <Content Include="Assets\BadgeLogo.scale-200.png" />
     <Content Include="Assets\BadgeLogo.scale-400.png" />
     <Content Include="Assets\cloud.png" />
+    <Content Include="Assets\deviceid.txt" />
     <Content Include="Assets\icon.png" />
     <Content Include="Assets\JumpListIcons\JumplistAccount.png" />
     <Content Include="Assets\JumpListIcons\JumplistLikedSongs.png" />

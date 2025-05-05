@@ -25,6 +25,7 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.NeteaseApi.ApiContracts.Category;
 using HyPlayer.NeteaseApi.ApiContracts.Login;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.NeteaseApi.ApiContracts.Recommend;
@@ -497,8 +498,8 @@ public sealed partial class BasePage : Page
 
         if (nowitem.Tag.ToString() == "PageMe" && !Common.Logined)
         {
-            Common.NeteaseAPI.Option.Cookies.Clear();//清一遍Cookie防止出错
-            await DialogLogin.ShowAsync();
+            Common.NeteaseAPI?.Option.Cookies.Clear();//清一遍Cookie防止出错
+            await DialogPreLoginHint.ShowAsync();
             return;
         }
 
@@ -923,5 +924,47 @@ public sealed partial class BasePage : Page
                 }
             }
         );
+    }
+
+    private void BtnApiAddParamClick(object sender, RoutedEventArgs e)
+    {
+        _ = Launcher.LaunchUriAsync(new Uri("https://github.com/HyPlayer/HyPlayer/wiki/%E5%85%B3%E4%BA%8E-%60ApiAdditionalParameter%60"));
+        Common.NavigatePage(typeof(TestPage));
+    }
+
+    private void ButtonPreLoginPrimary_Click(ContentDialog sender, ContentDialogButtonClickEventArgs args)
+    {
+        DialogPreLoginHint.Hide();
+        DialogLogin.ShowAsync();
+    }
+
+    private async void BtnRamdomDeviceIdClick(object sender, RoutedEventArgs e)
+    {
+        Common.NeteaseAPI!.Option.Cookies.Clear();
+        Common.NeteaseAPI.Option.AdditionalParameters.Headers.Clear();
+        Common.Setting.SaveCookies();
+        var uri = new System.Uri("ms-appx:///Assets/deviceid.txt");
+        var storagefile = await Windows.Storage.StorageFile.GetFileFromApplicationUriAsync(uri);
+        var lines = await Windows.Storage.FileIO.ReadLinesAsync(storagefile);
+        var idx = new Random().Next(lines.Count - 1);
+        var deviceId = lines[idx];
+        Common.NeteaseAPI.Option.AdditionalParameters.Headers["deviceId"] = deviceId;
+        Common.NeteaseAPI.Option.AdditionalParameters.Cookies["deviceId"] = deviceId;
+        Common.Setting.ApiAdditionalParameters = Common.NeteaseAPI.Option.AdditionalParameters;
+        var rst = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.RegisterAnounymousApi, new RegisterAnounymousRequest()
+        {
+            DeviceId = deviceId
+        });
+        if (rst.IsError)
+        {
+            Common.AddToTeachingTipLists("随机设备ID注册失败", "获取失败: " + rst.Error.Message);
+            return;
+        }
+        else
+        {
+            Common.AddToTeachingTipLists("随机设备ID可用", "当前设备ID: " + deviceId);
+        }
+
+        ButtonPreLoginPrimary_Click(null, null);
     }
 }

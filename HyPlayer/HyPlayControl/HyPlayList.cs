@@ -53,6 +53,8 @@ public static class HyPlayList
 
     public delegate void LyricColorChangeEvent();
 
+    public delegate void ManualSeekEvent(TimeSpan position);
+
     public delegate void LyricLoadedEvent();
 
     public delegate void MediaEndEvent(HyPlayItem hpi);
@@ -67,7 +69,9 @@ public static class HyPlayList
     /********        事件        ********/
     public delegate void PlayItemChangeEvent(HyPlayItem playItem);
 
-    public delegate void PlayListAddDoneEvent();
+    public delegate void PlayListAddDoneEvent(bool isShuffleTrigger = false);
+
+    public delegate void PlayModeChangedEvent(PlayMode mode);
 
     public delegate void PlayPositionChangeEvent(TimeSpan position);
 
@@ -104,6 +108,7 @@ public static class HyPlayList
     private static Dictionary<HyPlayItem, DownloadOperation> DownloadOperations = new();
     public static InMemoryRandomAccessStream CoverStream = new InMemoryRandomAccessStream();
     public static IBuffer CoverBuffer;
+
     public static RandomAccessStreamReference CoverStreamReference =
         RandomAccessStreamReference.CreateFromStream(CoverStream);
 
@@ -170,20 +175,17 @@ public static class HyPlayList
             VolumeChangeProcess();
         }
     }
+
     public static bool LockSeeking = false;
     public static bool PlaybackErrorHandling = false;
 
     /*********        基本       ********/
     public static PlayMode NowPlayType
     {
-        set
+        private set
         {
             Common.Setting.songRollType = (int)value;
-            // 新版随机创建随机表
-            if (value == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
-                CreateShufflePlayLists();
-            if (value != PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
-                OnPlayListAddDone?.Invoke();
+            OnPlayModeChanged?.Invoke(value);
         }
 
         get => (PlayMode)Common.Setting.songRollType;
@@ -220,11 +222,13 @@ public static class HyPlayList
     public static event VolumeChangeEvent OnVolumeChange;
 
     public static event PlayListAddDoneEvent OnPlayListAddDone;
+    public static event PlayModeChangedEvent OnPlayModeChanged;
 
     public static event LyricLoadedEvent OnLyricLoaded;
 
     public static event LyricChangeEvent OnLyricChange;
     public static event LyricColorChangeEvent OnLyricColorChange;
+    public static event ManualSeekEvent OnManualSeek;
 
     public static event MediaEndEvent OnMediaEnd;
 
@@ -276,6 +280,7 @@ public static class HyPlayList
             highTimer.Elapsed += (_, _) => { LoadLyricChange(); };
             highTimer.Start();
         }
+
         HistoryManagement.InitializeHistoryTrack();
         if (!Common.Setting.EnableAudioGain) AudioEffectsProperties["AudioGain_Disabled"] = true;
         Player.AddAudioEffect(typeof(AudioGainEffect).FullName, true, AudioEffectsProperties);
@@ -286,7 +291,9 @@ public static class HyPlayList
     {
         if (LockSeeking) return;
         Player.PlaybackSession.Position = targetTimeSpan;
+        OnManualSeek?.Invoke(targetTimeSpan);
     }
+
     public static void FireLyricColorChangeEvent()
     {
         OnLyricColorChange?.Invoke();
@@ -312,6 +319,29 @@ public static class HyPlayList
     }
 
 
+    public static void ChangePlayMode(PlayMode playMode)
+    {
+        NowPlayType = playMode;
+        if (playMode == PlayMode.Shuffled)
+        {
+            if (Common.Setting.shuffleNoRepeating)
+            {
+                CreateShufflePlayLists(NowPlayingItem.PlayItem.Id);
+            }
+            else
+            {
+                ShuffleList.Clear();
+                ShuffleList.AddRange(Enumerable.Range(0, List.Count));
+            }
+        }
+        else
+        {
+            ShuffleList.Clear();
+        }
+
+        OnPlayModeChanged?.Invoke(playMode);
+    }
+
     public static void LoginDoneCall()
     {
         _ = Common.Invoke(() => { OnLoginDone?.Invoke(); });
@@ -320,13 +350,11 @@ public static class HyPlayList
 
     private static void PlayerOnMediaFailed(string reason)
     {
-        //歌曲崩溃了的话就是这个
-        //SongMoveNext();
-
         Common.ErrorMessageList.Add($"歌曲播放失败: {NowPlayingItem.PlayItem.Name}\n{reason}");
         Common.AddToTeachingTipLists($"播放失败 切到下一曲 \n 歌曲: {NowPlayingItem.PlayItem.Name}\n{reason}");
         SongMoveNext();
     }
+
     private static async void PlayerOnMediaFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
     {
         if ((uint)args.ExtendedErrorCode.HResult == 0xC00D36FA)
@@ -334,6 +362,7 @@ public static class HyPlayList
             Common.AddToTeachingTipLists("播放失败", "无法创建媒体接收器，请检查设备是否有声音输出设备！");
             return;
         }
+
         if ((uint)args.ExtendedErrorCode.HResult == 0x80004004
             || (uint)args.ExtendedErrorCode.HResult == 0xC00D36BB
             || (uint)args.ExtendedErrorCode.HResult == 0x80004005)
@@ -353,8 +382,11 @@ public static class HyPlayList
             PlaybackErrorHandling = false;
             return;
         }
-        Common.ErrorMessageList.Add($"歌曲播放失败: {NowPlayingItem.PlayItem.Name}\n{args.ErrorMessage}\n{args.ExtendedErrorCode}");
-        Common.AddToTeachingTipLists($"播放失败 切到下一曲 \n 歌曲: {NowPlayingItem.PlayItem.Name}\n{args.ErrorMessage}\n{args.ExtendedErrorCode}");
+
+        Common.ErrorMessageList.Add(
+            $"歌曲播放失败: {NowPlayingItem.PlayItem.Name}\n{args.ErrorMessage}\n{args.ExtendedErrorCode}");
+        Common.AddToTeachingTipLists(
+            $"播放失败 切到下一曲 \n 歌曲: {NowPlayingItem.PlayItem.Name}\n{args.ErrorMessage}\n{args.ExtendedErrorCode}");
         SongMoveNext();
     }
 
@@ -429,7 +461,7 @@ public static class HyPlayList
                         }
                     };
                     hyitem.PlayItem.Artist = Info.artist.Select(t => new NCArtist
-                    { name = t[0].ToString(), id = t[1].ToString() })
+                            { name = t[0].ToString(), id = t[1].ToString() })
                         .ToList();
 
                     List.Add(hyitem);
@@ -603,19 +635,20 @@ public static class HyPlayList
         switch (NowPlayingItem.ItemType)
         {
             case HyPlayItemType.Netease:
+            {
+                bool res = await Api.LikeSong(NowPlayingItem.PlayItem.Id,
+                    !isLiked);
+                if (res)
                 {
-                    bool res = await Api.LikeSong(NowPlayingItem.PlayItem.Id,
-                        !isLiked);
-                    if (res)
-                    {
-                        if (isLiked)
-                            Common.LikedSongs.Remove(NowPlayingItem.PlayItem.Id);
-                        else
-                            Common.LikedSongs.Add(NowPlayingItem.PlayItem.Id);
-                        OnSongLikeStatusChange?.Invoke(!isLiked);
-                    }
-                    break;
+                    if (isLiked)
+                        Common.LikedSongs.Remove(NowPlayingItem.PlayItem.Id);
+                    else
+                        Common.LikedSongs.Add(NowPlayingItem.PlayItem.Id);
+                    OnSongLikeStatusChange?.Invoke(!isLiked);
                 }
+
+                break;
+            }
             case HyPlayItemType.Radio:
                 // TODO: 待实现电台红心
                 Common.AddToTeachingTipLists("暂不支持红心电台歌曲", "将在后续版本中支持");
@@ -1051,7 +1084,7 @@ public static class HyPlayList
         var playUrl = targetItem.PlayItem.Url;
         // 对了,先看看是否要刷新播放链接
         if ((string.IsNullOrEmpty(targetItem.PlayItem.Url) ||
-            Common.Setting.songUrlLazyGet) && targetItem.PlayItem.Id != "-1")
+             Common.Setting.songUrlLazyGet) && targetItem.PlayItem.Id != "-1")
             try
             {
                 var songRequest = new SongUrlRequest { Level = Common.Setting.audioRate, Id = targetItem.PlayItem.Id };
@@ -1074,17 +1107,17 @@ public static class HyPlayList
 
                         var tag = songResult.Value.SongUrls[0]?.Level
                             switch
-                        {
-                            "standard" => "标准",
-                            "higher" => "较高",
-                            "exhigh" => "极高",
-                            "lossless" => "无损",
-                            "hires" => "Hi-Res",
-                            "jyeffect" => "高清环绕声",
-                            "sky" => "沉浸环绕声",
-                            "jymaster" => "超清母带",
-                            _ => "在线"
-                        };
+                            {
+                                "standard" => "标准",
+                                "higher" => "较高",
+                                "exhigh" => "极高",
+                                "lossless" => "无损",
+                                "hires" => "Hi-Res",
+                                "jyeffect" => "高清环绕声",
+                                "sky" => "沉浸环绕声",
+                                "jymaster" => "超清母带",
+                                _ => "在线"
+                            };
                         targetItem.PlayItem.QualityTag = tag;
 
 
@@ -1098,12 +1131,16 @@ public static class HyPlayList
                                 backgroundbrush.StartPoint = new Windows.Foundation.Point(0, 0);
                                 backgroundbrush.EndPoint = new Windows.Foundation.Point(1, 1);
 
-                                backgroundbrush.GradientStops.Add(new GradientStop { Offset = 0, Color = Color.FromArgb(255, 251, 251, 206) });
-                                backgroundbrush.GradientStops.Add(new GradientStop { Offset = 1, Color = Color.FromArgb(255, 223, 155, 28) });
+                                backgroundbrush.GradientStops.Add(new GradientStop
+                                    { Offset = 0, Color = Color.FromArgb(255, 251, 251, 206) });
+                                backgroundbrush.GradientStops.Add(new GradientStop
+                                    { Offset = 1, Color = Color.FromArgb(255, 223, 155, 28) });
 
                                 Common.BarPlayBar.SongInfoTag.Background = backgroundbrush;
-                                Common.BarPlayBar.SongInfoTag.BorderBrush = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
-                                Common.BarPlayBar.TbSongTag.Foreground = new SolidColorBrush(Color.FromArgb(255, 0, 0, 0));
+                                Common.BarPlayBar.SongInfoTag.BorderBrush =
+                                    new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
+                                Common.BarPlayBar.TbSongTag.Foreground =
+                                    new SolidColorBrush(Color.FromArgb(255, 0, 0, 0));
                             }
                             else
                             {
@@ -1165,6 +1202,7 @@ public static class HyPlayList
             MoveSongPointer();
             return;
         }
+
         NowPlayingHashCode = 0;
         if (CoverStream.Size != 0)
         {
@@ -1241,7 +1279,7 @@ public static class HyPlayList
                                     if (playUrl != null)
                                     {
                                         var destinationFolder =
-                                                await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir);
+                                            await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir);
 
                                         if (!DownloadOperations.ContainsKey(targetItem))
                                         {
@@ -1249,9 +1287,11 @@ public static class HyPlayList
                                                 await destinationFolder.CreateFileAsync(
                                                     targetItem.PlayItem.Id +
                                                     ".cache", CreationCollisionOption.ReplaceExisting);
-                                            var downloadOperation = Downloader.CreateDownload(new Uri(playUrl), destinationFile);
+                                            var downloadOperation =
+                                                Downloader.CreateDownload(new Uri(playUrl), destinationFile);
                                             resultFile = await HandleDownloadAsync(downloadOperation, targetItem);
                                         }
+
                                         var exists = await destinationFolder.FileExistsAsync(resultFile.Name);
                                         if (resultFile != null && exists)
                                         {
@@ -1259,7 +1299,8 @@ public static class HyPlayList
                                         }
                                         else
                                         {
-                                            _mediaSource = MediaSource.CreateFromUri(new Uri(playUrl)); //如果你很急的话那先听在线的凑活下
+                                            _mediaSource =
+                                                MediaSource.CreateFromUri(new Uri(playUrl)); //如果你很急的话那先听在线的凑活下
                                         }
                                     }
                                 }
@@ -1828,7 +1869,8 @@ public static class HyPlayList
         }
         else
         {
-            if (pureLyricInfo is not KaraokLyricInfo karaoke) Utils.ConvertTranslation(pureLyricInfo.TrLyrics, LyricInfo.Lyrics);
+            if (pureLyricInfo is not KaraokLyricInfo karaoke)
+                Utils.ConvertTranslation(pureLyricInfo.TrLyrics, LyricInfo.Lyrics);
             else Utils.ConvertYrcTranslation(karaoke, LyricInfo.Lyrics);
             await Utils.ConvertRomaji(pureLyricInfo, LyricInfo.Lyrics);
 
@@ -1863,21 +1905,23 @@ public static class HyPlayList
                     PureLyrics = lrc,
                     TrLyrics = trLrc,
                     alrc = alrc,
-                    LyricMetadata = [
+                    LyricMetadata =
+                    [
                         new LyricInfoMetadata
-                    {
-                        Key = "lyric_user",
-                        Value = alrc.LyricInfo?.Author,
-                        DisplayName = "歌词作者",
-                        ActionUri = $"https://github.com/{alrc.LyricInfo?.Author}"
-                    },
-                    new LyricInfoMetadata
-                    {
-                        Key = "source",
-                        Value = "amll-ttml-db",
-                        DisplayName = "歌词来源",
-                        ActionUri = $"https://github.com/Steve-xmh/amll-ttml-db/blob/main/ncm-lyrics/{hpi.PlayItem.Id}.ttml"
-                    }
+                        {
+                            Key = "lyric_user",
+                            Value = alrc.LyricInfo?.Author,
+                            DisplayName = "歌词作者",
+                            ActionUri = $"https://github.com/{alrc.LyricInfo?.Author}"
+                        },
+                        new LyricInfoMetadata
+                        {
+                            Key = "source",
+                            Value = "amll-ttml-db",
+                            DisplayName = "歌词来源",
+                            ActionUri =
+                                $"https://github.com/Steve-xmh/amll-ttml-db/blob/main/ncm-lyrics/{hpi.PlayItem.Id}.ttml"
+                        }
                     ],
                     SongMetadata = []
                 };
@@ -1897,7 +1941,6 @@ public static class HyPlayList
             // ignore
         }
     }
-
 
 
     private static async Task<PureLyricInfo> LoadNcLyric(HyPlayItem ncp)
@@ -1940,7 +1983,7 @@ public static class HyPlayList
                 {
                     return string.Join('\n',
                         text.Split("\n")
-                        .Where(t => !t.StartsWith("{")).ToArray());
+                            .Where(t => !t.StartsWith("{")).ToArray());
                 }
 
 
@@ -2059,6 +2102,7 @@ public static class HyPlayList
                 return insertList;
             }
         }
+
         List.InsertRange(position, insertList);
         SongAppendDone();
         return insertList;
@@ -2174,8 +2218,10 @@ public static class HyPlayList
                             Common.AddToTeachingTipLists("获取歌曲信息失败", "歌曲信息为空");
                             return false;
                         }
+
                         AppendNcSong(result.Value.Songs?[0].MapToNcSong());
                     }
+
                     return true;
                 case "al":
                     await AppendAlbum(sourceId.Substring(2, sourceId.Length - 2));
@@ -2243,6 +2289,7 @@ public static class HyPlayList
                 Common.AddToTeachingTipLists("获取专辑信息失败", json.Error.Message);
                 return false;
             }
+
             AppendNcSongs(json.Value.Songs?.Select(t => t.MapToNcSong()).ToList(), false);
             return true;
         }
@@ -2277,10 +2324,10 @@ public static class HyPlayList
                         return false;
                     }
 
-                    hasMore = json.Value is { More: true };
-                    if (json.Value?.Programs is { Length: > 0 })
+                    hasMore = json.Value is { Data.More: true };
+                    if (json.Value?.Data?.Programs is { Length: > 0 })
                         AppendNcSongs(
-                            json.Value.Programs.Select(t => (NCSong)t.MapToNCFmItem()).ToList(),
+                            json.Value.Data.Programs.Select(t => (NCSong)t.MapToNCFmItem()).ToList(),
                             false);
                 }
                 catch (Exception ex)
@@ -2312,6 +2359,7 @@ public static class HyPlayList
                 Common.AddToTeachingTipLists("获取歌单失败", detailResponse.Error.Message);
                 return false;
             }
+
             var trackIds = detailResponse.Value.Playlist?.TrackIds?.Select(t => t.Id).ToList() ?? [];
             while (nowIndex * 500 < trackIds.Count)
             {
@@ -2320,11 +2368,12 @@ public static class HyPlayList
                 try
                 {
                     var songResponse = await Common.NeteaseAPI.RequestAsync(NeteaseApis.SongDetailApi,
-                         new SongDetailRequest() { IdList = nowIds });
+                        new SongDetailRequest() { IdList = nowIds });
                     if (songResponse.IsError)
                     {
                         Common.AddToTeachingTipLists("获取歌曲失败", songResponse.Error.Message);
                     }
+
                     nowIndex++;
                     var privileges = songResponse.Value?.Privileges ?? [];
                     var songs = songResponse.Value?.Songs ?? [];
@@ -2337,6 +2386,7 @@ public static class HyPlayList
                             result.Add(songs[i].MapToNcSong());
                         }
                     }
+
                     AppendNcSongs(result, false);
                 }
                 catch (Exception ex)
@@ -2345,6 +2395,7 @@ public static class HyPlayList
                         (ex.InnerException ?? new Exception()).Message);
                 }
             }
+
             return true;
         }
         catch (Exception ex)
@@ -2482,7 +2533,7 @@ public static class HyPlayList
         }
 
         // Call 一下来触发前端显示的播放列表更新
-        _ = Common.Invoke(() => OnPlayListAddDone?.Invoke());
+        _ = Common.Invoke(() => OnPlayListAddDone?.Invoke(true));
         return Task.CompletedTask;
     }
 
@@ -2522,7 +2573,7 @@ public static class Utils
     {
         using var parsedlyrics = LrcParser.ParseLrc(lyricAllText.AsSpan());
         return parsedlyrics.Lines.OrderBy(t => t.StartTime).Select(lyricsLine => new SongLyric
-        { LyricLine = lyricsLine, Translation = null })
+                { LyricLine = lyricsLine, Translation = null })
             .ToList();
     }
 
@@ -2530,13 +2581,14 @@ public static class Utils
     {
         using var parsedlyrics = LrcParser.ParseLrc(lyricAllText.AsSpan());
         foreach (var lyricsLine in parsedlyrics.Lines)
-            foreach (var songLyric in lyrics.Where(songLyric =>
-                         songLyric.LyricLine.StartTime == lyricsLine.StartTime))
-            {
-                songLyric.Translation = lyricsLine.CurrentLyric;
-                break;
-            }
+        foreach (var songLyric in lyrics.Where(songLyric =>
+                     songLyric.LyricLine.StartTime == lyricsLine.StartTime))
+        {
+            songLyric.Translation = lyricsLine.CurrentLyric;
+            break;
+        }
     }
+
     public static void ConvertYrcTranslation(KaraokLyricInfo lyricInfo, List<SongLyric> lyrics)
     {
         using var targetLyrics = LrcParser.ParseLrc(lyricInfo.YrTrLyrics.AsSpan());
@@ -2547,8 +2599,8 @@ public static class Utils
             foreach (var lyricsLine in migrated.Lines)
             {
                 foreach (var lyric in lyrics.Where(t =>
-                                     t.LyricLine.StartTime == lyricsLine.StartTime ||
-                                     t.LyricLine?.PossibleStartTime == lyricsLine.StartTime).ToList())
+                             t.LyricLine.StartTime == lyricsLine.StartTime ||
+                             t.LyricLine?.PossibleStartTime == lyricsLine.StartTime).ToList())
                 {
                     lyric.Translation = lyricsLine.CurrentLyric;
                     break;
@@ -2560,8 +2612,8 @@ public static class Utils
             foreach (var lyricsLine in targetLyrics.Lines)
             {
                 foreach (var lyric in lyrics.Where(t =>
-                                     t.LyricLine.StartTime == lyricsLine.StartTime ||
-                                     t.LyricLine?.PossibleStartTime == lyricsLine.StartTime).ToList())
+                             t.LyricLine.StartTime == lyricsLine.StartTime ||
+                             t.LyricLine?.PossibleStartTime == lyricsLine.StartTime).ToList())
                 {
                     lyric.Translation = lyricsLine.CurrentLyric;
                     break;
@@ -2569,19 +2621,21 @@ public static class Utils
             }
         }
     }
+
     public static void ConvertNeteaseRomaji(string lyricAllText, List<SongLyric> lyrics)
     {
         if (string.IsNullOrEmpty(lyricAllText)) return;
         using var parsedlyrics = LrcParser.ParseLrc(lyricAllText.AsSpan());
         foreach (var lyricsLine in parsedlyrics.Lines)
-            foreach (var songLyric in lyrics.Where(songLyric =>
-                         songLyric.LyricLine.StartTime == lyricsLine.StartTime ||
-                         songLyric.LyricLine?.PossibleStartTime == lyricsLine.StartTime))
-            {
-                songLyric.Romaji = lyricsLine.CurrentLyric;
-                break;
-            }
+        foreach (var songLyric in lyrics.Where(songLyric =>
+                     songLyric.LyricLine.StartTime == lyricsLine.StartTime ||
+                     songLyric.LyricLine?.PossibleStartTime == lyricsLine.StartTime))
+        {
+            songLyric.Romaji = lyricsLine.CurrentLyric;
+            break;
+        }
     }
+
     public static void ConvertYrcNeteaseRomaji(KaraokLyricInfo lyricInfo, List<SongLyric> lyrics)
     {
         if (string.IsNullOrEmpty(lyricInfo.NeteaseRomaji) && string.IsNullOrEmpty(lyricInfo.YrNeteaseRomaji)) return;
@@ -2593,8 +2647,8 @@ public static class Utils
             foreach (var lyricsLine in migrated.Lines)
             {
                 foreach (var lyric in lyrics.Where(t =>
-                                     t.LyricLine.StartTime == lyricsLine.StartTime ||
-                                     t.LyricLine?.PossibleStartTime == lyricsLine.StartTime).ToList())
+                             t.LyricLine.StartTime == lyricsLine.StartTime ||
+                             t.LyricLine?.PossibleStartTime == lyricsLine.StartTime).ToList())
                 {
                     lyric.Romaji = lyricsLine.CurrentLyric;
                     break;
@@ -2606,8 +2660,8 @@ public static class Utils
             foreach (var lyricsLine in targetLyrics.Lines)
             {
                 foreach (var lyric in lyrics.Where(t =>
-                                     t.LyricLine.StartTime == lyricsLine.StartTime ||
-                                     t.LyricLine?.PossibleStartTime == lyricsLine.StartTime).ToList())
+                             t.LyricLine.StartTime == lyricsLine.StartTime ||
+                             t.LyricLine?.PossibleStartTime == lyricsLine.StartTime).ToList())
                 {
                     lyric.Romaji = lyricsLine.CurrentLyric;
                     break;
@@ -2627,11 +2681,13 @@ public static class Utils
                 lyricItem.Romaji =
                     await Common.KawazuConv.Convert(lyricItem.LyricLine.CurrentLyric, To.Romaji, Mode.Separated);
                 if (lyricItem.LyricLine is not KaraokeLyricsLine klyric) continue;
-                var list = await Common.KawazuConv.GetDivisions(lyricItem.LyricLine.CurrentLyric, To.Romaji, Mode.Separated, RomajiSystem.Hepburn, "", "");
+                var list = await Common.KawazuConv.GetDivisions(lyricItem.LyricLine.CurrentLyric, To.Romaji,
+                    Mode.Separated, RomajiSystem.Hepburn, "", "");
                 SetRomajiKaraoke(list, klyric.WordInfos.ToList());
             }
         }
     }
+
     public static void SetRomajiKaraoke(List<Division> romajiInfo, List<KaraokeWordInfo> wordInfo)
     {
         var elements = new List<JapaneseElement>();
@@ -2639,23 +2695,28 @@ public static class Utils
         {
             elements.AddRange(division);
         }
+
         int delta = 0;
         for (var i = 0; i < elements.Count; i++)
         {
             var curElement = elements[i].Element;
             var curHiraNotation = elements[i].HiraNotation;
-        parseOneChar:
+            parseOneChar:
             if (i + delta >= wordInfo.Count)
             {
                 if (!string.IsNullOrWhiteSpace(curHiraNotation))
                 {
-                    wordInfo[wordInfo.Count - 1].Transliteration += Utilities.ToRawRomaji(curHiraNotation, RomajiSystem.Hepburn, true);
+                    wordInfo[wordInfo.Count - 1].Transliteration +=
+                        Utilities.ToRawRomaji(curHiraNotation, RomajiSystem.Hepburn, true);
                 }
+
                 break;
             }
+
             if (curElement.Contains(wordInfo[i + delta].CurrentWords.Trim()))
             {
-                wordInfo[i + delta].Transliteration = Utilities.ToRawRomaji(curHiraNotation, RomajiSystem.Hepburn, true);
+                wordInfo[i + delta].Transliteration =
+                    Utilities.ToRawRomaji(curHiraNotation, RomajiSystem.Hepburn, true);
                 if (!string.IsNullOrWhiteSpace(wordInfo[i + delta].CurrentWords))
                 {
                     var trimmedWord = wordInfo[i + delta].CurrentWords.Trim();
@@ -2666,15 +2727,16 @@ public static class Utils
 
                 if (curElement.Trim().Length > 0)
                 {
-                    wordInfo[i + delta].Transliteration = Utilities.ToRawRomaji(curHiraNotation.Substring(0, 1), RomajiSystem.Hepburn, true);
+                    wordInfo[i + delta].Transliteration =
+                        Utilities.ToRawRomaji(curHiraNotation.Substring(0, 1), RomajiSystem.Hepburn, true);
                     curHiraNotation = curHiraNotation.Substring(1);
                     delta++;
                     goto parseOneChar;
                 }
             }
-
         }
     }
+
     public static async Task ConvertRomaji(PureLyricInfo pureLyricInfo, List<SongLyric> lyrics)
     {
         switch (Common.Setting.LyricRomajiSource)
@@ -2683,14 +2745,16 @@ public static class Utils
                 break;
             case RomajiSource.AutoSelect:
                 if (!string.IsNullOrEmpty(pureLyricInfo.NeteaseRomaji))
-                    if (pureLyricInfo is KaraokLyricInfo karaokLyricInfo) ConvertYrcNeteaseRomaji(karaokLyricInfo, lyrics);
+                    if (pureLyricInfo is KaraokLyricInfo karaokLyricInfo)
+                        ConvertYrcNeteaseRomaji(karaokLyricInfo, lyrics);
                     else ConvertNeteaseRomaji(pureLyricInfo.NeteaseRomaji, lyrics);
                 else
                     await ConvertKawazuRomaji(lyrics);
                 break;
             case RomajiSource.NeteaseOnly:
                 if (!string.IsNullOrEmpty(pureLyricInfo.NeteaseRomaji))
-                    if (pureLyricInfo is KaraokLyricInfo karaokLyricInfo) ConvertYrcNeteaseRomaji(karaokLyricInfo, lyrics);
+                    if (pureLyricInfo is KaraokLyricInfo karaokLyricInfo)
+                        ConvertYrcNeteaseRomaji(karaokLyricInfo, lyrics);
                     else ConvertNeteaseRomaji(pureLyricInfo.NeteaseRomaji, lyrics);
                 break;
             case RomajiSource.KawazuOnly:
@@ -2710,6 +2774,7 @@ public static class Utils
                 var migrated = MigrationTool.Migrate(parsedLyrics, pureLyrics);
                 return migrated.Lines.OrderBy(t => t.StartTime).Select(t => new SongLyric() { LyricLine = t }).ToList();
             }
+
             return parsedLyrics.Lines.OrderBy(t => t.StartTime).Select(t => new SongLyric() { LyricLine = t }).ToList();
         }
 

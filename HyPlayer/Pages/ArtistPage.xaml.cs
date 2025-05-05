@@ -75,8 +75,8 @@ public sealed partial class ArtistPage : Page, IDisposable
                     return;
                 }
             }
-            artist = res.Value.Data.Artist.MapToNcArtist();
-            if (res.Value.Data.Artist.PicUrl.StartsWith("http"))
+            artist = res.Value?.Artist.MapToNcArtist();
+            if (res.Value?.Artist?.PicUrl?.StartsWith("http") is true)
             {
                 if (Common.Setting.noImage)
                 {
@@ -84,19 +84,19 @@ public sealed partial class ArtistPage : Page, IDisposable
                 }
                 BitmapImage image = new BitmapImage();
                 ImageRect.ImageSource = ImageRect1.ImageSource = image;
-                image.UriSource = new Uri(res.Value.Data.Artist.PicUrl + "?param=" +
+                image.UriSource = new Uri(res.Value.Artist.PicUrl + "?param=" +
                                                   StaticSource.PICSIZE_ARTIST_DETAIL_COVER);
             }
-            TextBoxArtistName.Text = res.Value.Data.Artist.Name;
-            if (res.Value.Data.Artist.TransNames != null)
+            TextBoxArtistName.Text = res.Value?.Artist?.Name ?? "未知歌手";
+            if (res.Value?.Artist?.TransNames != null)
                 TextboxArtistNameTranslated.Text =
-                    "译名: " + string.Join(",", res.Value.Data.Artist.TransNames);
+                    "译名: " + string.Join(",", res.Value.Artist.TransNames);
             else
                 TextboxArtistNameTranslated.Visibility = Visibility.Collapsed;
-            TextBlockDesc.Text = res.Value.Data.Artist.BriefDesc;
-            TextBlockInfo.Text = "歌曲数: " + res.Value.Data.Artist.MusicSize + " | 专辑数: " +
-                                 res.Value.Data.Artist.AlbumSize + " | 视频数: " +
-                                 res.Value.Data.Artist.MvSize;
+            TextBlockDesc.Text = res.Value.Artist.BriefDesc;
+            TextBlockInfo.Text = "歌曲数: " + res.Value.Artist.MusicSize + " | 专辑数: " +
+                                 res.Value.Artist.AlbumSize + " | 视频数: " +
+                                 res.Value.Artist.MvSize;
             HotSongContainer.ListSource = "sh" + artist.id;
             AllSongContainer.ListSource = "content";
             _hotSongsLoaderTask = LoadHotSongs();

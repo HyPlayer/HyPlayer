@@ -157,7 +157,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         }
         else
         {
-            HyPlayList.Player.PlaybackSession.Position = TimeSpan.FromMilliseconds(line.StartTime);
+            HyPlayList.Seek(TimeSpan.FromMilliseconds(line.StartTime));
         }
     }
 

@@ -132,7 +132,7 @@ namespace HyPlayer
         }
 
 #nullable enable
-        public static void AddToTeachingTipLists(string title, string subtitle = "")
+        public static void AddToTeachingTipLists(string title, string? subtitle = "")
         {
             TeachingTipList.Enqueue(new KeyValuePair<string, string?>(title, subtitle));
             _ = Invoke(() =>

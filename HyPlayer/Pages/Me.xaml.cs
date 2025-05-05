@@ -183,6 +183,7 @@ public sealed partial class Me : Page, IDisposable
                 container.Values.Clear();
             }
             Common.NeteaseAPI.Option.Cookies.Clear();
+            Common.Setting.SaveCookies();
             Common.PageMain.MainFrame.Navigate(typeof(BasePage));
             _ = ((App)Application.Current).InitializeJumpList();
         }

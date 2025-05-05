@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using HyPlayer.NeteaseApi.ApiContracts.Artist;
 using HyPlayer.NeteaseApi.ApiContracts.Recommend;
-using static HyPlayer.NeteaseApi.ApiContracts.Artist.ArtistDetailResponse.ArtistDetailResponseData;
 
 namespace HyPlayer.Classes;
 
@@ -163,7 +162,7 @@ public static class Mapper
         };
     }
 
-    public static NCArtist MapToNcArtist(this ArtistDetailDto artist)
+    public static NCArtist MapToNcArtist(this ArtistDetailResponse.ArtistDetailDto artist)
     {
         return new NCArtist
         {
