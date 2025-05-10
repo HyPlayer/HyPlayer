@@ -353,6 +353,14 @@
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.MigrateLyrics, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
+                                    <controls3:SettingsCard
+                                        Header="优化歌词时间轴"
+                                        Description="将会优化歌词时间轴效果, 可能会改变原本时间轴">
+                                        <ToggleSwitch
+                                            MinWidth="10"
+                                            HorizontalAlignment="Right"
+                                            IsOn="{x:Bind hyplayer:Common.Setting.OptimizeLyric, Mode=TwoWay}" />
+                                    </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>
                             <controls3:SettingsExpander

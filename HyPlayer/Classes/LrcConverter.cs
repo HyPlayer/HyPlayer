@@ -1,4 +1,5 @@
-﻿using ALRC.Abstraction;
+﻿using System;
+using ALRC.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.LyricLineRenderers;
@@ -7,6 +8,8 @@ using System.Drawing;
 using System.Linq;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
+using ALRC.Converters;
+using HyPlayer.Classes.LyricEnhancers;
 using Color = System.Drawing.Color;
 
 namespace HyPlayer.Classes;
@@ -14,11 +17,28 @@ namespace HyPlayer.Classes;
 public static class LrcConverter
 {
     private static readonly ColorConverter ColorConverter = new();
+    public static readonly List<ILyricEnhancer<bool>> LyricEnhancers = [
+        new BreathLineEnhancer(),
+        new NearbyLineAlignmentEnhancer(),
+        new SublineAlignmentEnhancer(),
+    ];
 
     public static List<RenderingLyricLine> Convert(ALRCFile alrc, List<LyricInfoMetadata> lyricMetadata = null,
         List<LyricInfoMetadata> songMetadata = null)
     {
         var result = new List<RenderingLyricLine>();
+        if (Common.Setting.OptimizeLyric)
+        foreach (var lyricEnhancer in LyricEnhancers)
+        {
+            try
+            {
+                alrc = lyricEnhancer.Enhance(true, alrc);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+        }
         foreach (var alrcLine in alrc.Lines)
         {
             if (string.IsNullOrWhiteSpace(alrcLine.RawText) && alrcLine.Words is not { Count: > 0 } &&

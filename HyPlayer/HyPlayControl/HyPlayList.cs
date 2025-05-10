@@ -32,6 +32,7 @@ using Windows.Storage.Streams;
 using Windows.UI;
 using Windows.UI.Notifications;
 using Windows.UI.Xaml.Media;
+using ALRC.Converters.Enhancers;
 using HyPlayer.NeteaseApi.ApiContracts.Album;
 using HyPlayer.NeteaseApi.ApiContracts.Artist;
 using HyPlayer.NeteaseApi.ApiContracts.DjChannel;
@@ -1899,7 +1900,7 @@ public static class HyPlayList
                 var lrcTranslationConverter = new LrcTranslationEnhancer();
                 var alrc = ttmlConverter.Convert(ttml);
                 var lrc = lrcConverter.ConvertBack(alrc);
-                var trLrc = lrcTranslationConverter.Enhance(alrc);
+                var trLrc = lrcTranslationConverter.Extract(alrc);
                 ALRCLyricInfo ttmlLyric = new ALRCLyricInfo()
                 {
                     PureLyrics = lrc,

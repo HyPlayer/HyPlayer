@@ -1736,6 +1736,16 @@ namespace HyPlayer
             }
         }
 
+        public bool OptimizeLyric
+        {
+            get => GetSettings(nameof(OptimizeLyric), false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(OptimizeLyric)] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool LyricRendererDebugMode
         {
             get => GetSettings(nameof(LyricRendererDebugMode), false);
