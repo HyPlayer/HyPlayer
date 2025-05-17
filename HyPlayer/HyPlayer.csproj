@@ -177,6 +177,7 @@
     <Compile Include="LyricRenderer\Animator\EaseFunctions\CustomElasticEase.cs" />
     <Compile Include="LyricRenderer\Animator\EaseFunctions\CustomExponentialEase.cs" />
     <Compile Include="LyricRenderer\Animator\EaseFunctions\CustomSineEase.cs" />
+    <Compile Include="LyricRenderer\Builder\CanvasImageBuilder.cs" />
     <Compile Include="LyricRenderer\LyricLineRenderers\ActionLyricLine.cs" />
     <Compile Include="LyricRenderer\LyricLineRenderers\BreathPointRenderingLyricLine.cs" />
     <Compile Include="LyricRenderer\LyricLineRenderers\ProgressBarRenderingLyricLine.cs" />
@@ -668,6 +669,7 @@
       <Name>LyricParser</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>

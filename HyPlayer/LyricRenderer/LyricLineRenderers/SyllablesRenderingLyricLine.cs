@@ -4,6 +4,7 @@ using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.Animator;
 using HyPlayer.LyricRenderer.Animator.EaseFunctions;
+using HyPlayer.LyricRenderer.Builder;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.Graphics.Canvas.Geometry;
@@ -201,31 +202,21 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                                 : idleColor);
                     }
                 }
-
                 if (_isFocusing && context.Effects.FocusHighlighting)
                 {
+                    var highlightEffectBuilder = new CanvasImageBuilder(cl);
                     //画发光效果
-                    var highlightOpacityEffect = new Microsoft.Graphics.Canvas.Effects.OpacityEffect
-                    {
-                        Source = new ShadowEffect
-                        {
-                            Source = cl,
-                            BlurAmount = 6,
-                            ShadowColor = context.PreferTypography.ShadowColor ?? context.PreferTypography.FocusingColor!.Value,
-                        },
-                        Opacity = 0.4f
-                    };
-                    targetDrawingSession.DrawImage(highlightOpacityEffect, actualOffsetX, 0);
-                    targetDrawingSession.DrawImage(cl, actualOffsetX, 0);
+                    highlightEffectBuilder
+                        .AddShadowEffect(6, context.PreferTypography.ShadowColor ?? context.PreferTypography.FocusingColor!.Value)
+                        .AddOpacityEffect(0.4f);
+                    targetDrawingSession.DrawImage(highlightEffectBuilder.Build(), actualOffsetX, 0);
                 }
-                else
-                {
-                    targetDrawingSession.DrawImage(cl, actualOffsetX, 0);
-                }
+
+                targetDrawingSession.DrawImage(cl, actualOffsetX, 0);
             }
 
             var gap = _isFocusing ? 0 : Math.Clamp(Math.Abs(Id - context.CurrentLyricLineIndex), 1, 250);
-            ICanvasImage finalEffect = totalCommand;
+            var finalEffectBuilder = new CanvasImageBuilder(totalCommand);
 
             if (context.Effects.ScaleWhenFocusing && _isFocusing)
             {
@@ -244,50 +235,26 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
 
 
                 var scaling = 0.8F + progress * 0.2F;
-                var transformEffect = new Transform2DEffect
-                {
-                    Source = totalCommand,
-                    TransformMatrix = GetCenterMatrix(0, 0, _scalingCenterX + offset.X,
-                        (float)textLayout.LayoutBounds.Height / 2, scaling, scaling),
-                };
-                finalEffect = new Microsoft.Graphics.Canvas.Effects.OpacityEffect
-                {
-                    Source = transformEffect,
-                    Opacity = 0.5f + progress * 0.5f,
-                };
+                finalEffectBuilder
+                    .AddTransform2DEffect(GetCenterMatrix(0, 0, _scalingCenterX + offset.X,(float)textLayout.LayoutBounds.Height / 2, scaling, scaling))
+                    .AddOpacityEffect(0.5f + progress * 0.5f);
             }
             else
             {
                 if (context.Effects.ScaleWhenFocusing)
                 {
-                    finalEffect = new Transform2DEffect
-                    {
-                        Source = totalCommand,
-                        TransformMatrix = _unfocusMatrix,
-                    };
+                    finalEffectBuilder.AddTransform2DEffect(_unfocusMatrix);
                 }
             }
-
-
-            var blurEffect = new GaussianBlurEffect
-            {
-                Source = finalEffect,
-                BlurAmount = 0,
-            };
-            var opacityEffect = new OpacityEffect
-            {
-                Source = blurEffect,
-                Opacity = 1,
-            };
             if (context.Effects.Blur && !_isFocusing && !context.IsScrolling)
             {
-                blurEffect.BlurAmount = Math.Clamp(Math.Abs(gap), 0, 250);
+                finalEffectBuilder.AddGaussianBlurEffect(Math.Clamp(gap, 0, 250));
             }
             if (Common.Setting.lyricRenderFade && !context.IsScrolling)
             {
-                opacityEffect.Opacity = 1 - Math.Clamp(Math.Abs(gap) / (10f - (Common.Setting.lyricFadingRatio / 10f)), 0, 0.9f);
+                finalEffectBuilder.AddOpacityEffect(1 - Math.Clamp(gap / (10f - (Common.Setting.lyricFadingRatio / 10f)), 0, 0.9f));
             }
-            session.DrawImage(opacityEffect, actualX, drawingTop);
+            session.DrawImage(finalEffectBuilder.Build(), actualX, drawingTop);
             _sizeChanged = false;
 
 
