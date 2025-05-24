@@ -173,6 +173,7 @@
     <Compile Include="LyricRenderer\Abstraction\Render\RenderEffect.cs" />
     <Compile Include="LyricRenderer\Abstraction\Render\RenderingLyricLine.cs" />
     <Compile Include="LyricRenderer\Animator\EaseFunctionBase.cs" />
+    <Compile Include="LyricRenderer\Animator\EaseFunctions\CustomBounceEase.cs" />
     <Compile Include="LyricRenderer\Animator\EaseFunctions\CustomCircleEase.cs" />
     <Compile Include="LyricRenderer\Animator\EaseFunctions\CustomElasticEase.cs" />
     <Compile Include="LyricRenderer\Animator\EaseFunctions\CustomExponentialEase.cs" />
@@ -183,6 +184,7 @@
     <Compile Include="LyricRenderer\LyricLineRenderers\ProgressBarRenderingLyricLine.cs" />
     <Compile Include="LyricRenderer\LyricLineRenderers\SyllablesRenderingLyricLine.cs" />
     <Compile Include="LyricRenderer\LyricRenderView.xaml.cs" />
+    <Compile Include="LyricRenderer\RollingCalculators\EaseRollingCalculator.cs" />
     <Compile Include="LyricRenderer\RollingCalculators\ElasticEaseRollingCalculator.cs" />
     <Compile Include="LyricRenderer\RollingCalculators\LyricifyRollingCalculator.cs" />
     <Compile Include="LyricRenderer\RollingCalculators\SinRollingCalculator.cs" />

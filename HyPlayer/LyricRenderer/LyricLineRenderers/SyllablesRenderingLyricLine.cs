@@ -218,16 +218,17 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             var gap = _isFocusing ? 0 : Math.Clamp(Math.Abs(Id - context.CurrentLyricLineIndex), 1, 250);
             var finalEffectBuilder = new CanvasImageBuilder(totalCommand);
 
-            if (context.Effects.ScaleWhenFocusing && _isFocusing)
+            if (context.Effects.ScaleWhenFocusing)
             {
                 // 计算 Progress
                 var progress = 0f;
-                if (context.CurrentLyricTime - EndTime >= 0 && context.CurrentLyricTime - EndTime <= ScaleAnimationDuration)
+                
+                if (context.CurrentLyricTime - EndTime >= 0 && context.CurrentLyricTime - EndTime  <= ScaleAnimationDuration)//缩小
                 {
                     progress = 1 - ((float)EaseFunction.Ease(Math.Clamp(
                         (context.CurrentLyricTime - EndTime) * 1.0f / ScaleAnimationDuration, 0, 1)));
                 }
-                else if (_isFocusing && context.CurrentLyricTime - StartTime >= 0)
+                else if (_isFocusing && context.CurrentLyricTime - StartTime >= 0)//放大
                 {
                     progress = (float)EaseFunction.Ease(Math.Clamp(
                         (context.CurrentLyricTime - StartTime) * 1.0f / ScaleAnimationDuration, 0, 1));
