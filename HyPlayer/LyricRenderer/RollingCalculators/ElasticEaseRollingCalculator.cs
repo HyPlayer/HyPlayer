@@ -11,6 +11,5 @@ public class ElasticEaseRollingCalculator : EaseRollingCalculator
 {
     protected override EaseFunctionBase EaseFunction { get; set; } = new CustomElasticEase() { EasingMode = EasingMode.EaseOut };
     protected override long AnimationDuration { get; set; } = 1300;
-
-    protected override double MaxEasingPercent { get; set; } = 1;
+    protected override double MaxEasingPercent { get; set; } = 0.9;
 }

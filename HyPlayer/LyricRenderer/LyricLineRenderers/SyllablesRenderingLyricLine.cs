@@ -42,6 +42,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
         private CanvasTextLayout? tl;
         private CanvasTextLayout? tll;
         public EaseFunctionBase EaseFunction { get; set; } = new CustomCircleEase { EasingMode = EasingMode.EaseOut };
+        private CustomElasticEase _elasticEase = new CustomElasticEase { Springiness = 6 };
 
         private bool _isFocusing;
         private float _canvasWidth;
@@ -230,15 +231,15 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 }
                 else if (_isFocusing && context.CurrentLyricTime - StartTime >= 0)//放大
                 {
-                    progress = (float)EaseFunction.Ease(Math.Clamp(
-                        (context.CurrentLyricTime - StartTime) * 1.0f / ScaleAnimationDuration, 0, 1));
+                    progress = (float)_elasticEase.Ease(Math.Clamp(
+                        (context.CurrentLyricTime - StartTime) * 1.0f / 1000, 0, 1));
                 }
 
 
                 var scaling = 0.8F + progress * 0.2F;
                 finalEffectBuilder
                     .AddTransform2DEffect(GetCenterMatrix(0, 0, _scalingCenterX + offset.X,(float)textLayout.LayoutBounds.Height / 2, scaling, scaling))
-                    .AddOpacityEffect(0.5f + progress * 0.5f);
+                    .AddOpacityEffect(Math.Clamp(0.5f + progress * 0.5f,0,1));
             }
             else
             {

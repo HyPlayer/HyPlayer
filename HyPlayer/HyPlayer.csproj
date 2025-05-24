@@ -184,6 +184,7 @@
     <Compile Include="LyricRenderer\LyricLineRenderers\ProgressBarRenderingLyricLine.cs" />
     <Compile Include="LyricRenderer\LyricLineRenderers\SyllablesRenderingLyricLine.cs" />
     <Compile Include="LyricRenderer\LyricRenderView.xaml.cs" />
+    <Compile Include="LyricRenderer\RollingCalculators\CircleEaseRollingCalculator.cs" />
     <Compile Include="LyricRenderer\RollingCalculators\EaseRollingCalculator.cs" />
     <Compile Include="LyricRenderer\RollingCalculators\ElasticEaseRollingCalculator.cs" />
     <Compile Include="LyricRenderer\RollingCalculators\LyricifyRollingCalculator.cs" />

@@ -412,6 +412,7 @@
                                             <ComboBoxItem Content="三角函数" />
                                             <ComboBoxItem Content="Lyricify 函数" />
                                             <ComboBoxItem Content="同步线性函数" />
+                                            <ComboBoxItem Content="CircleEase" />
                                         </ComboBox>
                                     </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>

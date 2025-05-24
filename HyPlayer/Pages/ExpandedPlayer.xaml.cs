@@ -122,6 +122,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             1 => new SinRollingCalculator(),
             2 => new LyricifyRollingCalculator(),
             3 => new SyncRollingCalculator(),
+            4 => new CircleEaseRollingCalculator(),
             _ => new ElasticEaseRollingCalculator()
         };
         LyricBox.Context.Effects.ScaleWhenFocusing = Common.Setting.lyricRenderScaleWhenFocusing;
