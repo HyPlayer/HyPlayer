@@ -117,6 +117,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         LyricBox.Context.CurrentLyricTime = 0;
         LyricBox.Context.Debug = Common.Setting.LyricRendererDebugMode;
         LyricBox.Context.Effects.Blur = Common.Setting.lyricRenderBlur;
+        LyricBox.Fps = Common.Setting.LyricRendererFPS;
         LyricBox.Context.LineRollingEaseCalculator = Common.Setting.LineRollingCalculator switch
         {
             1 => new SinRollingCalculator(),

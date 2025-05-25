@@ -1762,6 +1762,15 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        public int LyricRendererFPS
+        {
+            get => GetSettings(nameof(LyricRendererFPS), 60);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(LyricRendererFPS)] = value;
+                OnPropertyChanged();
+            }
+        }
         public float IsolationScale
         {
             get => GetSettings(nameof(IsolationScale), 1f);

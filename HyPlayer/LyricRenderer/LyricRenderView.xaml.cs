@@ -63,10 +63,12 @@ namespace HyPlayer.LyricRenderer
             get => _jumpedLyrics;
         }
 
+        public int Fps { get; set; } = 60;
+
         public LyricRenderView()
         {
             InitializeComponent();
-            this.Loaded += LyricRenderView_Loaded; ;
+            this.Loaded += LyricRenderView_Loaded;
         }
 
         private bool _isTypographyChanged = true;
@@ -560,6 +562,7 @@ namespace HyPlayer.LyricRenderer
         private void LyricRenderView_Loaded(object sender, RoutedEventArgs e)
         {
             Redesign((float)LyricView.Size.Width, (float)LyricView.Size.Height);
+            LyricView.TargetElapsedTime = TimeSpan.FromMilliseconds(16.6 * (60d / Fps));
         }
 
         private void LyricRenderView_OnUnloaded(object sender, RoutedEventArgs e)
