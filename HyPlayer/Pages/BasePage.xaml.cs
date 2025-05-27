@@ -4,6 +4,11 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
+using HyPlayer.NeteaseApi.ApiContracts.Category;
+using HyPlayer.NeteaseApi.ApiContracts.Login;
+using HyPlayer.NeteaseApi.ApiContracts.Playlist;
+using HyPlayer.NeteaseApi.ApiContracts.Recommend;
+using HyPlayer.NeteaseApi.ApiContracts.User;
 using Microsoft.UI.Xaml.Controls;
 using QRCoder;
 using System;
@@ -25,11 +30,6 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.NeteaseApi.ApiContracts.Category;
-using HyPlayer.NeteaseApi.ApiContracts.Login;
-using HyPlayer.NeteaseApi.ApiContracts.Playlist;
-using HyPlayer.NeteaseApi.ApiContracts.Recommend;
-using HyPlayer.NeteaseApi.ApiContracts.User;
 using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
 using NavigationViewBackButtonVisible = Microsoft.UI.Xaml.Controls.NavigationViewBackButtonVisible;
 using NavigationViewBackRequestedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewBackRequestedEventArgs;
@@ -62,8 +62,7 @@ public sealed partial class BasePage : Page
         Common.GlobalTip = TheTeachingTip;
         HyPlayList.OnTimerTicked += () => Common.RollTeachingTip();
         HyPlayList.OnTimerTicked += Common.ChangePlaybarVisibillity;
-        if (HyPlayList.Player == null)
-            HyPlayList.InitializeHyPlaylist();
+        HyPlayList.InitializeHyPlaylist();
         HyPlayList.OnPlayItemChange += OnChangePlayItem;
         HyPlayList.OnSongCoverChanged += HyPlayList_OnSongCoverChanged;
         if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Desktop" && Common.Setting.EnableTitleBarImmerse)
@@ -158,8 +157,8 @@ public sealed partial class BasePage : Page
 
         if (args.VirtualKey == VirtualKey.GamepadY)
             if (HyPlayList.IsPlaying)
-                HyPlayList.Player.Pause();
-            else if (!HyPlayList.IsPlaying) HyPlayList.Player.Play();
+                HyPlayList.Player.PauseAll();
+            else if (!HyPlayList.IsPlaying) HyPlayList.Player.PlayAll();
 
         if (args.VirtualKey == VirtualKey.Escape)
             if (Common.isExpanded)
@@ -935,7 +934,7 @@ public sealed partial class BasePage : Page
     private void ButtonPreLoginPrimary_Click(ContentDialog sender, ContentDialogButtonClickEventArgs args)
     {
         DialogPreLoginHint.Hide();
-        DialogLogin.ShowAsync();
+        _ = DialogLogin.ShowAsync();
     }
 
     private async void BtnRamdomDeviceIdClick(object sender, RoutedEventArgs e)

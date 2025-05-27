@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HyPlayer", "HyPlayer\HyPlay
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kawazu", "Kawazu\Kawazu\Kawazu.csproj", "{2DC18999-32F2-40D4-AD9B-C5A09514E087}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioEffectComponent", "AudioEffectComponent\AudioEffectComponent.csproj", "{3622FD12-CE05-4B0F-8CE2-FAE1ADD0BB4E}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LyricParser", "LyricParser\LyricParser\LyricParser.csproj", "{8CB63BD0-1A5E-4CA0-AAAD-4249D37E3A47}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Impressionist", "Impressionist\Impressionist\Impressionist.csproj", "{0F920821-8006-4512-ABCD-1396D1916FED}"
@@ -21,6 +19,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HyPlayer.Frieren", "HyPlayer.Frieren\HyPlayer.Frieren.csproj", "{8DB15C94-9CCA-4B40-91F4-5919BBC67ABB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HyPlayer.NeteaseApi", "HyPlayer.NeteaseProvider\HyPlayer.NeteaseApi\HyPlayer.NeteaseApi.csproj", "{A9FAC26E-7651-4EC5-9CA6-8B3CEF6412E9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HyPlayer.UWP.Chopin", "HyPlayer.UWP.Chopin\HyPlayer.UWP.Chopin.csproj", "{AE7AA571-E532-4F0C-9D51-043DFECF9924}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -50,14 +50,6 @@ Global
 		{2DC18999-32F2-40D4-AD9B-C5A09514E087}.Release|ARM64.Build.0 = Release|ARM64
 		{2DC18999-32F2-40D4-AD9B-C5A09514E087}.Release|x64.ActiveCfg = Release|x64
 		{2DC18999-32F2-40D4-AD9B-C5A09514E087}.Release|x64.Build.0 = Release|x64
-		{3622FD12-CE05-4B0F-8CE2-FAE1ADD0BB4E}.Debug|ARM64.ActiveCfg = Debug|ARM64
-		{3622FD12-CE05-4B0F-8CE2-FAE1ADD0BB4E}.Debug|ARM64.Build.0 = Debug|ARM64
-		{3622FD12-CE05-4B0F-8CE2-FAE1ADD0BB4E}.Debug|x64.ActiveCfg = Debug|x64
-		{3622FD12-CE05-4B0F-8CE2-FAE1ADD0BB4E}.Debug|x64.Build.0 = Debug|x64
-		{3622FD12-CE05-4B0F-8CE2-FAE1ADD0BB4E}.Release|ARM64.ActiveCfg = Release|ARM64
-		{3622FD12-CE05-4B0F-8CE2-FAE1ADD0BB4E}.Release|ARM64.Build.0 = Release|ARM64
-		{3622FD12-CE05-4B0F-8CE2-FAE1ADD0BB4E}.Release|x64.ActiveCfg = Release|x64
-		{3622FD12-CE05-4B0F-8CE2-FAE1ADD0BB4E}.Release|x64.Build.0 = Release|x64
 		{8CB63BD0-1A5E-4CA0-AAAD-4249D37E3A47}.Debug|ARM64.ActiveCfg = Debug|ARM64
 		{8CB63BD0-1A5E-4CA0-AAAD-4249D37E3A47}.Debug|ARM64.Build.0 = Debug|ARM64
 		{8CB63BD0-1A5E-4CA0-AAAD-4249D37E3A47}.Debug|x64.ActiveCfg = Debug|x64
@@ -90,6 +82,14 @@ Global
 		{A9FAC26E-7651-4EC5-9CA6-8B3CEF6412E9}.Release|ARM64.Build.0 = Release|Any CPU
 		{A9FAC26E-7651-4EC5-9CA6-8B3CEF6412E9}.Release|x64.ActiveCfg = Release|Any CPU
 		{A9FAC26E-7651-4EC5-9CA6-8B3CEF6412E9}.Release|x64.Build.0 = Release|Any CPU
+		{AE7AA571-E532-4F0C-9D51-043DFECF9924}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{AE7AA571-E532-4F0C-9D51-043DFECF9924}.Debug|ARM64.Build.0 = Debug|ARM64
+		{AE7AA571-E532-4F0C-9D51-043DFECF9924}.Debug|x64.ActiveCfg = Debug|x64
+		{AE7AA571-E532-4F0C-9D51-043DFECF9924}.Debug|x64.Build.0 = Debug|x64
+		{AE7AA571-E532-4F0C-9D51-043DFECF9924}.Release|ARM64.ActiveCfg = Release|ARM64
+		{AE7AA571-E532-4F0C-9D51-043DFECF9924}.Release|ARM64.Build.0 = Release|ARM64
+		{AE7AA571-E532-4F0C-9D51-043DFECF9924}.Release|x64.ActiveCfg = Release|x64
+		{AE7AA571-E532-4F0C-9D51-043DFECF9924}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

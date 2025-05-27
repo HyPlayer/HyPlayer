@@ -49,7 +49,6 @@ public sealed partial class MainPage
         InitializeComponent();
         UIElement PlayBarMarginRect = PlayBarMarginBackground as UIElement;
         SetPlayBarMarginBlurEffect(PlayBarMarginRect);
-        _ = HyPlayList.OnAudioRenderDeviceChangedOrInitialized();
         ActualThemeChanged += MainPage_ActualThemeChanged;
         Common.OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;
         if (Common.Setting.displayMaintain)

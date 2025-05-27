@@ -2,6 +2,7 @@
 
 using ALRC.Abstraction;
 using HyPlayer.NeteaseApi.Models;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
 using LyricParser.Abstraction;
 using Newtonsoft.Json.Linq;
 using System;
@@ -300,6 +301,8 @@ public class PlayItem
     public int TrackId;
     public HyPlayItemType Type;
     public string Url;
+    public double Gain;
+    public AudioGraphPlaybackSource AudioGraphPlaybackSource;
 
     public string ArtistString
     {

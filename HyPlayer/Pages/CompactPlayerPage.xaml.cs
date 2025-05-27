@@ -1,12 +1,11 @@
 ﻿using CommunityToolkit.WinUI.Media;
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
 using LyricParser.Abstraction;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Windows.Media.Playback;
 using Windows.Storage.Streams;
 using Windows.UI;
 using Windows.UI.ViewManagement;
@@ -112,20 +111,6 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
         {
             NowProgress = position.TotalMilliseconds;
-            if (HyPlayList.FadeProcessStatus && !HyPlayList.AutoFadeProcessing)
-            {
-                PlayStateIcon.Glyph =
-                HyPlayList.CurrentFadeInOutState == HyPlayList.FadeInOutState.FadeIn
-                    ? "\uF8AE"
-                    : "\uF5B0";
-            }
-            else
-            {
-                PlayStateIcon.Glyph =
-                HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
-                    ? "\uF8AE"
-                    : "\uF5B0";
-            }
         });
     }
     /*
@@ -266,7 +251,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
             NowPlayingName = item?.PlayItem?.Name;
             NowPlayingArtists = item?.PlayItem?.ArtistString;
             PlayStateIcon.Glyph =
-                HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
+                HyPlayList.Player.GlobalPlaybackStatus == PlaybackStatus.Playing
                     ? "\uF8AE" :
                     "\uF5B0";
         });
@@ -285,46 +270,21 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
             });
         }
     }
-    public void RefreshWordColor(TimeSpan position)
+
+    private void MovePrevious(object sender, RoutedEventArgs e)
     {
-        if (!_lyricIsKaraokeLyric) return;
-
-        _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-        {
-            LyricControl.CurrentTime = HyPlayList.Player.PlaybackSession.Position - HyPlayList.LyricInfo.Lyrics[HyPlayList.LyricPos].LyricLine.StartTime;
-            var playedWords =
-                ((KaraokeLyricsLine)Lrc.LyricLine).WordInfos.Where(word => word.StartTime <= position).ToList();
-            var playedBlocks = WordTextBlocks.GetRange(0, playedWords.Count).ToList();
-            if (playedBlocks.Count <= 0) return;
-            var playingBlock = playedBlocks.Last();
-            var storyboard = BlockToAnimation[playingBlock];
-            if (storyboard.GetCurrentTime().Ticks == 0)
-                BlockToAnimation[playingBlock].Begin();
-            foreach (var playedBlock in playedBlocks.GetRange(0, playedBlocks.Count - 1))
-            {
-                if (((SolidColorBrush)playedBlock.Foreground).Opacity <= 0.41)
-                    BlockToAnimation[playedBlock].Begin();
-                //((SolidColorBrush)playedBlock.Foreground).Opacity = 1;
-            }
-
-
-        });
+        HyPlayList.SongMovePrevious();
     }
 
-    private async void MovePrevious(object sender, RoutedEventArgs e)
+    private void MoveNext(object sender, RoutedEventArgs e)
     {
-        await HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.UserNextFadeOut, HyPlayList.SongChangeType.Previous);
+        HyPlayList.SongMoveNext();
     }
 
-    private async void MoveNext(object sender, RoutedEventArgs e)
+    private void ChangePlayState(object sender, RoutedEventArgs e)
     {
-        await HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.UserNextFadeOut, HyPlayList.SongChangeType.Next);
-    }
-
-    private async void ChangePlayState(object sender, RoutedEventArgs e)
-    {
-        if (HyPlayList.IsPlaying) await HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.PauseFadeOut);
-        else await HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.PlayFadeIn);
+        if (HyPlayList.IsPlaying) HyPlayList.Player.PauseAll();
+        else HyPlayList.Player.PlayAll();
         PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uF8AE" : "\uF5B0";
     }
 

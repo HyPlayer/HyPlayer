@@ -2,6 +2,7 @@
 
 using HyPlayer.Classes;
 using HyPlayer.NeteaseApi.ApiContracts;
+using HyPlayer.NeteaseApi.ApiContracts.User;
 using HyPlayer.NeteaseApi.Bases;
 using System;
 using System.Collections.ObjectModel;
@@ -9,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.NeteaseApi.ApiContracts.User;
 
 #endregion
 

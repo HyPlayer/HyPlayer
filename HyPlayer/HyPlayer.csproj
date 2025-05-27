@@ -646,10 +646,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AudioEffectComponent\AudioEffectComponent.csproj">
-      <Project>{3622fd12-ce05-4b0f-8ce2-fae1add0bb4e}</Project>
-      <Name>AudioEffectComponent</Name>
-    </ProjectReference>
     <ProjectReference Include="..\HyPlayer.Frieren\HyPlayer.Frieren.csproj">
       <Project>{8db15c94-9cca-4b40-91f4-5919bbc67abb}</Project>
       <Name>HyPlayer.Frieren</Name>
@@ -657,6 +653,10 @@
     <ProjectReference Include="..\HyPlayer.NeteaseProvider\HyPlayer.NeteaseApi\HyPlayer.NeteaseApi.csproj">
       <Project>{a9fac26e-7651-4ec5-9ca6-8b3cef6412e9}</Project>
       <Name>HyPlayer.NeteaseApi</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\HyPlayer.UWP.Chopin\HyPlayer.UWP.Chopin.csproj">
+      <Project>{ae7aa571-e532-4f0c-9d51-043dfecf9924}</Project>
+      <Name>HyPlayer.UWP.Chopin</Name>
     </ProjectReference>
     <ProjectReference Include="..\Impressionist\Impressionist\Impressionist.csproj">
       <Project>{0f920821-8006-4512-abcd-1396d1916fed}</Project>

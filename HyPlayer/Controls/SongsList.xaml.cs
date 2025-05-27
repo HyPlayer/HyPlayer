@@ -3,6 +3,7 @@
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
+using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.Pages;
 using System;
 using System.Collections.Generic;
@@ -17,7 +18,6 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
-using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 
 #endregion
 

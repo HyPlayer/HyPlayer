@@ -50,7 +50,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
             TextBoxPureLyric.Foreground = AccentBrush;
             TextBoxSound.Foreground = AccentBrush;
             TextBoxTranslation.Foreground = AccentBrush;
-            RefreshWordColor(HyPlayList.Player.PlaybackSession.Position);
+            RefreshWordColor(HyPlayList.Player.PrimaryAudioInputNode.Position);
         }
         else
         {
@@ -425,7 +425,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
 
     private void LyricItem_OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
-        HyPlayList.Seek(Lrc.LyricLine.StartTime);
+        _ = HyPlayList.Seek(Lrc.LyricLine.StartTime);
         if (Common.PageExpandedPlayer != null)
         {
             Common.PageExpandedPlayer.jumpedLyrics = true;

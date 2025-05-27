@@ -3,6 +3,7 @@
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
+using HyPlayer.NeteaseApi.ApiContracts.Video;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -11,7 +12,6 @@ using System.Threading.Tasks;
 using Windows.Media.Core;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.NeteaseApi.ApiContracts.Video;
 
 #endregion
 
@@ -59,7 +59,7 @@ public sealed partial class MVPage : Page, IDisposable
 
     private void LoadThings()
     {
-        HyPlayList.Player.Pause();
+        HyPlayList.Player.PauseAll();
         _videoLoaderTask = LoadVideo();
         _videoInfoLoaderTask = LoadVideoInfo();
         LoadComment();

@@ -11,6 +11,7 @@ using HyPlayer.HyPlayControl;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.LyricLineRenderers;
 using HyPlayer.LyricRenderer.RollingCalculators;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Impressionist.Abstractions;
 using Impressionist.Implementations;
 using LyricParser.Abstraction;
@@ -59,8 +60,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 {
     public static readonly DependencyProperty NowPlaybackSpeedProperty = DependencyProperty.Register(
         "NowPlaybackSpeed", typeof(string), typeof(ExpandedPlayer),
-        new PropertyMetadata("x" + HyPlayList.Player.PlaybackSession.PlaybackRate));
-
+        new PropertyMetadata("x"));
 
 
     public bool jumpedLyrics;
@@ -105,6 +105,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         HyPlayList.OnPlayItemChange += OnSongChange;
         HyPlayList.OnSongCoverChanged += RefreshAlbumCover;
         HyPlayList.OnLyricLoaded += HyPlayList_OnLyricLoaded;
+        HyPlayList.OnManualSeek += HyPlayList_OnManualSeek;
         Window.Current.SizeChanged += Current_SizeChanged;
         HyPlayList.OnTimerTicked += HyPlayList_OnTimerTicked;
         Common.OnEnterForegroundFromBackground += OnEnteringForeground;
@@ -130,10 +131,9 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         LyricBox.Context.Effects.SimpleLineScanning = Common.Setting.lyricRenderSimpleLineScanning;
         LyricBox.Context.PreferTypography.Font = Common.Setting.lyricFontFamily;
         LyricBox.Context.LineSpacing = Common.Setting.lyricLineSpacing;
-        HyPlayList.Player.PlaybackSession.SeekCompleted += Player_SeekCompleted;
     }
 
-    private void Player_SeekCompleted(MediaPlaybackSession mediaPlaybackSession, object args)
+    private void HyPlayList_OnManualSeek(TimeSpan position)
     {
         _positionChangedBySeeking = true;
     }
@@ -157,21 +157,22 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         }
         else
         {
-            HyPlayList.Seek(TimeSpan.FromMilliseconds(line.StartTime));
+            _ = HyPlayList.Seek(TimeSpan.FromMilliseconds(line.StartTime));
         }
     }
 
     private void LyricBox_OnBeforeRender(LyricRenderer.LyricRenderView view)
     {
-        view.Context.IsPlaying = HyPlayList.Player.PlaybackSession.PlaybackState == Windows.Media.Playback.MediaPlaybackState.Playing;
-        if (HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds < view.Context.CurrentLyricTime)
+        view.Context.IsPlaying = HyPlayList.Player.GlobalPlaybackStatus == PlaybackStatus.Playing;
+        if (HyPlayList.Player.PrimaryAudioInputNode == null) return;
+        if (HyPlayList.Player.PrimaryAudioInputNode.Position.TotalMilliseconds < view.Context.CurrentLyricTime)
         {
-            view.Context.CurrentLyricTime = (long)HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
+            view.Context.CurrentLyricTime = (long)HyPlayList.Player.PrimaryAudioInputNode.Position.TotalMilliseconds;
             LyricBox.ReflowTime(0);
         }
         else
         {
-            view.Context.CurrentLyricTime = (long)HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
+            view.Context.CurrentLyricTime = (long)HyPlayList.Player.PrimaryAudioInputNode.Position.TotalMilliseconds;
         }
         view.Context.IsSeek = _positionChangedBySeeking;
         _positionChangedBySeeking = false;
@@ -524,7 +525,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     Common.Setting.acrylicBackgroundStatus, null, null,
                     null);
 
-        NowPlaybackSpeed = "x" + HyPlayList.Player.PlaybackSession.PlaybackRate;
+        NowPlaybackSpeed = "x" + HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
         if (Common.Setting.pureLyricFocusingColor is not null)
         {
             _pureAccentBrushCache ??= Common.BrushManagement.AccentBrush;
@@ -653,7 +654,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             lines.Add(line);
         }
 
-        if (lines.LastOrDefault() is { End: null or <= 0 } last) last.End = (long)HyPlayList.Player.PlaybackSession.NaturalDuration.TotalMilliseconds;
+        if (lines.LastOrDefault() is { End: null or <= 0 } last) last.End = (long)(HyPlayList.Player.PrimaryAudioInputNode?.Duration.TotalMilliseconds ?? 0);
 
         return alrc;
     }
@@ -716,6 +717,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             needRedesign++;
             if (Common.Setting.animationAdaptBPM)
                 InitializeBPM();
+            NowPlaybackSpeed = "x" + HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
         });
     }
 
@@ -778,9 +780,9 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
     {
         if (HyPlayList.IsPlaying)
-            HyPlayList.Player.Pause();
+            HyPlayList.Player.PauseAll();
         else
-            HyPlayList.Player.Play();
+            HyPlayList.Player.PlayAll();
     }
 
     private void ToggleButtonTranslation_OnClick(object sender, RoutedEventArgs e)
@@ -1101,21 +1103,24 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void BtnSpeedMinusClick(object sender, RoutedEventArgs e)
     {
-        if (HyPlayList.Player.PlaybackSession.PlaybackRate <= 0.2) return;
-        HyPlayList.Player.PlaybackSession.PlaybackRate -= 0.1;
-        NowPlaybackSpeed = "x" + HyPlayList.Player.PlaybackSession.PlaybackRate;
+        if (HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource == null) return;
+        var currentSpeed = HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
+        HyPlayList.Player.SetPlaybackSourceSpeed(currentSpeed - 0.1, HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
+        NowPlaybackSpeed = "x" + HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
     }
 
     private void BtnSpeedPlusClick(object sender, RoutedEventArgs e)
     {
-        HyPlayList.Player.PlaybackSession.PlaybackRate += 0.1;
-        NowPlaybackSpeed = "x" + HyPlayList.Player.PlaybackSession.PlaybackRate;
+        if (HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource == null) return;
+        var currentSpeed = HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
+        HyPlayList.Player.SetPlaybackSourceSpeed(currentSpeed + 0.1, HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
+        NowPlaybackSpeed = "x" + HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
     }
 
     private void TbNowSpeed_OnTapped(object sender, RoutedEventArgs routedEventArgs)
     {
-        HyPlayList.Player.PlaybackSession.PlaybackRate = 1.0;
-        NowPlaybackSpeed = "x" + HyPlayList.Player.PlaybackSession.PlaybackRate;
+        HyPlayList.Player.SetPlaybackSourceSpeed(1, HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
+        NowPlaybackSpeed = "x" + HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
     }
 
     private void BtnCopyLyricClicked(object sender, RoutedEventArgs e)
@@ -1161,12 +1166,12 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)
     {
-        Common.Setting.ABStartPoint = HyPlayList.Player.PlaybackSession.Position;
+        Common.Setting.ABStartPoint = HyPlayList.Player.PrimaryAudioInputNode.Position;
     }
 
     private void SetABEndPointButton_Click(object sender, RoutedEventArgs e)
     {
-        Common.Setting.ABEndPoint = HyPlayList.Player.PlaybackSession.Position;
+        Common.Setting.ABEndPoint = HyPlayList.Player.PrimaryAudioInputNode.Position;
     }
 
     private void Page_Loaded(object sender, RoutedEventArgs e)
@@ -1241,7 +1246,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 manipulationDeltaRotateValue = e.Delta.Rotation;
                 if (manipulationDeltaRotateValue == 0) manipulationDeltaRotateValue = e.Delta.Translation.Y;
                 ImageRotateTransform.Angle += manipulationDeltaRotateValue;
-                HyPlayList.Seek(HyPlayList.Player.PlaybackSession.Position.Add(
+                _ = HyPlayList.Seek(HyPlayList.Player.PrimaryAudioInputNode.Position.Add(
                     TimeSpan.FromMilliseconds((int)manipulationDeltaRotateValue) * 100));
                 break;
             case 2:
@@ -1504,7 +1509,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             Common.OnEnterForegroundFromBackground -= OnEnteringForeground;
             HyPlayList.OnSongCoverChanged -= RefreshAlbumCover;
             Common.OnPlaybarVisibilityChanged -= OnPlaybarVisibilityChanged;
-            HyPlayList.Player.PlaybackSession.SeekCompleted -= Player_SeekCompleted;
+            //HyPlayList.Player.PlaybackSession.SeekCompleted -= Player_SeekCompleted;
             if (Window.Current != null)
                 Window.Current.SizeChanged -= Current_SizeChanged;
             if (Common.Setting.albumRotate)

@@ -2,6 +2,7 @@
 
 using HyPlayer.Classes;
 using HyPlayer.NeteaseApi.ApiContracts;
+using HyPlayer.NeteaseApi.ApiContracts.Comment;
 using HyPlayer.NeteaseApi.Models;
 using System;
 using System.Collections.ObjectModel;
@@ -13,7 +14,6 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.NeteaseApi.ApiContracts.Comment;
 using Point = Windows.Foundation.Point;
 
 #endregion

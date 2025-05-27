@@ -2,9 +2,9 @@
 
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
+using HyPlayer.NeteaseApi.ApiContracts.PersonalFM;
 using System;
 using System.Threading.Tasks;
-using HyPlayer.NeteaseApi.ApiContracts.PersonalFM;
 
 #endregion
 

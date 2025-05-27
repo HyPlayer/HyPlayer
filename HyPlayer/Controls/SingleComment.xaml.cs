@@ -2,6 +2,7 @@
 
 using HyPlayer.Classes;
 using HyPlayer.NeteaseApi.ApiContracts;
+using HyPlayer.NeteaseApi.ApiContracts.Comment;
 using HyPlayer.Pages;
 using System;
 using System.Collections.ObjectModel;
@@ -14,7 +15,6 @@ using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
-using HyPlayer.NeteaseApi.ApiContracts.Comment;
 
 #endregion
 

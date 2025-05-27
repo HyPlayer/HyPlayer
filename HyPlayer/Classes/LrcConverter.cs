@@ -1,15 +1,15 @@
-﻿using System;
-using ALRC.Abstraction;
+﻿using ALRC.Abstraction;
+using ALRC.Converters;
+using HyPlayer.Classes.LyricEnhancers;
 using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.LyricLineRenderers;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
-using ALRC.Converters;
-using HyPlayer.Classes.LyricEnhancers;
 using Color = System.Drawing.Color;
 
 namespace HyPlayer.Classes;
@@ -28,17 +28,17 @@ public static class LrcConverter
     {
         var result = new List<RenderingLyricLine>();
         if (Common.Setting.OptimizeLyric)
-        foreach (var lyricEnhancer in LyricEnhancers)
-        {
-            try
+            foreach (var lyricEnhancer in LyricEnhancers)
             {
-                alrc = lyricEnhancer.Enhance(true, alrc);
+                try
+                {
+                    alrc = lyricEnhancer.Enhance(true, alrc);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
             }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-        }
         foreach (var alrcLine in alrc.Lines)
         {
             if (string.IsNullOrWhiteSpace(alrcLine.RawText) && alrcLine.Words is not { Count: > 0 } &&

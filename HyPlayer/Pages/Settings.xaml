@@ -353,9 +353,7 @@
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.MigrateLyrics, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard
-                                        Header="优化歌词时间轴"
-                                        Description="将会优化歌词时间轴效果, 可能会改变原本时间轴">
+                                    <controls3:SettingsCard Description="将会优化歌词时间轴效果, 可能会改变原本时间轴" Header="优化歌词时间轴">
                                         <ToggleSwitch
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
@@ -494,56 +492,24 @@
                                     </TransitionCollection>
                                 </controls3:SettingsExpander.Transitions>
                                 <controls3:SettingsExpander.Items>
-                                    <controls3:SettingsCard Header="播放暂停时">
+                                    <controls3:SettingsCard Header="启用交叉淡化">
                                         <ToggleSwitch
                                             x:Name="FadePause"
                                             MinWidth="10"
                                             HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.fadePause, Mode=TwoWay}" />
+                                            IsOn="{x:Bind hyplayer:Common.Setting.CrossFade, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="播放暂停渐入渐出时间 单位: s" Visibility="{x:Bind hyplayer:Common.Setting.fadePause, Mode=OneWay}">
+                                    <controls3:SettingsCard Header="播放暂停渐入渐出时间 单位: s" Visibility="{x:Bind hyplayer:Common.Setting.CrossFade, Mode=OneWay}">
                                         <Slider
-                                            x:Name="FadePauseTime"
+                                            x:Name="CrossFadeTime"
                                             Width="256"
                                             HorizontalAlignment="Right"
-                                            IsEnabled="{x:Bind hyplayer:Common.Setting.fadePause, Mode=OneWay}"
+                                            IsEnabled="{x:Bind hyplayer:Common.Setting.CrossFade, Mode=OneWay}"
                                             Maximum="5"
                                             Minimum="0"
                                             StepFrequency="0.1"
-                                            ToolTipService.ToolTip="{x:Bind FadePauseTime.Value}"
-                                            Value="{x:Bind hyplayer:Common.Setting.fadePauseTime, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="切歌时">
-                                        <ToggleSwitch
-                                            x:Name="FadeNext"
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.fadeNext, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="切歌渐入渐出时间 单位: s" Visibility="{x:Bind hyplayer:Common.Setting.fadeNext, Mode=OneWay}">
-                                        <Slider
-                                            x:Name="FadeNextTime"
-                                            Width="256"
-                                            HorizontalAlignment="Right"
-                                            IsEnabled="{x:Bind hyplayer:Common.Setting.fadeNext, Mode=OneWay}"
-                                            Maximum="10"
-                                            Minimum="0"
-                                            StepFrequency="0.1"
-                                            ToolTipService.ToolTip="{x:Bind FadeNextTime.Value}"
-                                            Value="{x:Bind hyplayer:Common.Setting.fadeNextTime, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="使用基于播放进度切歌渐出方法" Visibility="{x:Bind hyplayer:Common.Setting.fadeNext, Mode=OneWay}">
-                                        <ToggleSwitch
-                                            x:Name="AdvFade"
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.advFade, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="手动切歌时不进行淡出" Visibility="{x:Bind hyplayer:Common.Setting.fadeNext, Mode=OneWay}">
-                                        <ToggleSwitch
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.disableFadeWhenChangingSongManually, Mode=TwoWay}" />
+                                            ToolTipService.ToolTip="{x:Bind CrossFadeTime.Value}"
+                                            Value="{x:Bind hyplayer:Common.Setting.CrossFadeTime, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>
@@ -1397,9 +1363,6 @@
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="尝试绕过 CheckToken 接口 (可能被检测)">
                                 <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.EnableCheckTokenApi, Mode=TwoWay}" />
-                            </controls3:SettingsCard>
-                            <controls3:SettingsCard Description="使用「热词」时需开启" Header="SMTC 更新进度条">
-                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.progressInSMTC, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="输出高清图片到SMTC">
                                 <CheckBox

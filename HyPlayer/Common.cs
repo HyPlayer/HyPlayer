@@ -6,6 +6,7 @@ using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi;
 using HyPlayer.NeteaseApi.ApiContracts;
+using HyPlayer.NeteaseApi.ApiContracts.Song;
 using HyPlayer.Pages;
 using Kawazu;
 using Microsoft.Gaming.XboxGameBar;
@@ -36,7 +37,6 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Animation;
-using HyPlayer.NeteaseApi.ApiContracts.Song;
 using Color = Windows.UI.Color;
 using HttpClient = System.Net.Http.HttpClient;
 #if !DEBUG
@@ -1145,43 +1145,12 @@ namespace HyPlayer
             }
         }
 
-        public bool fadePause
+        public bool CrossFade
         {
-            get => GetSettings("FadePause", false);
+            get => GetSettings("CrossFade", false);
             set
             {
-                ApplicationData.Current.LocalSettings.Values["FadePause"] = value;
-                OnPropertyChanged();
-                //if (!value) HyPlayList.AudioEffectsProperties["AudioFade_Disabled"] = true;
-                //else HyPlayList.AudioEffectsProperties.Remove("AudioFade_Disabled");
-            }
-        }
-
-        public bool fadeNext
-        {
-            get => GetSettings("FadeNext", false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values["FadeNext"] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool advFade
-        {
-            get => GetSettings("AdvFade", false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values["AdvFade"] = value;
-                OnPropertyChanged();
-            }
-        }
-        public bool disableFadeWhenChangingSongManually
-        {
-            get => GetSettings("disableFadeWhenChangingSongManually", true);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values["disableFadeWhenChangingSongManually"] = value;
+                ApplicationData.Current.LocalSettings.Values["CrossFade"] = value;
                 OnPropertyChanged();
             }
         }
@@ -1247,39 +1216,15 @@ namespace HyPlayer
             }
         }
 
-        public double fadePauseTime
+        public double CrossFadeTime
         {
             get
             {
                 try
                 {
-                    if (fadePause)
+                    if (CrossFade)
                     {
-                        return GetSettings(nameof(fadePauseTime), 3d);
-                    }
-                    else
-                    {
-                        return 0;
-                    }
-                }
-                catch
-                {
-                    return 3d;
-                }
-            }
-
-            set => ApplicationData.Current.LocalSettings.Values[nameof(fadePauseTime)] = value;
-        }
-
-        public double fadeNextTime
-        {
-            get
-            {
-                try
-                {
-                    if (fadeNext)
-                    {
-                        return GetSettings<double>(nameof(fadeNextTime), 3d);
+                        return GetSettings<double>(nameof(CrossFadeTime), 3d);
                     }
                     else
                     {
@@ -1292,7 +1237,7 @@ namespace HyPlayer
                 }
             }
 
-            set => ApplicationData.Current.LocalSettings.Values[nameof(fadeNextTime)] = value;
+            set => ApplicationData.Current.LocalSettings.Values[nameof(CrossFadeTime)] = value;
         }
 
         public bool playBarMargin
@@ -1381,29 +1326,6 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(highQualityCoverInSMTC)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool progressInSMTC
-        {
-            get => GetSettings(nameof(progressInSMTC), true);
-            set
-            {
-                if (value)
-                {
-                    HyPlayList.MediaSystemControls.PlaybackPositionChangeRequested +=
-                        HyPlayList.MediaSystemControls_PlaybackPositionChangeRequested;
-                    HyPlayList.Player.PlaybackSession.PositionChanged += HyPlayList.UpdateSmtcPosition;
-                }
-                else
-                {
-                    HyPlayList.MediaSystemControls.PlaybackPositionChangeRequested -=
-                        HyPlayList.MediaSystemControls_PlaybackPositionChangeRequested;
-                    HyPlayList.Player.PlaybackSession.PositionChanged -= HyPlayList.UpdateSmtcPosition;
-                }
-
-                ApplicationData.Current.LocalSettings.Values[nameof(progressInSMTC)] = value;
                 OnPropertyChanged();
             }
         }
@@ -1704,8 +1626,15 @@ namespace HyPlayer
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(EnableAudioGain)] = value;
                 OnPropertyChanged();
-                if (!value) HyPlayList.AudioEffectsProperties["AudioGain_Disabled"] = true;
-                else HyPlayList.AudioEffectsProperties.Remove("AudioGain_Disabled");
+                if (HyPlayList.Player.PrimaryPlaybackSource != null)
+                {
+                    if (value)
+                    {
+                        var result = HyPlayList.GetAudioGainMultiplier(HyPlayList.NowPlayingItem?.PlayItem.Gain ?? 0);
+                        HyPlayList.Player.SetPlaybackSourceOutputVolume(result, HyPlayList.Player.PrimaryPlaybackSource);
+                    }
+                    else HyPlayList.Player.SetPlaybackSourceOutputVolume(1, HyPlayList.Player.PrimaryPlaybackSource);
+                }
             }
         }
         public bool CompactPlayerPageBlurStatus

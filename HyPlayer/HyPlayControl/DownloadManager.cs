@@ -2,6 +2,7 @@
 
 using HyPlayer.Classes;
 using HyPlayer.NeteaseApi.ApiContracts;
+using HyPlayer.NeteaseApi.ApiContracts.Song;
 using Microsoft.Toolkit.Uwp.Helpers;
 using System;
 using System.Collections.Generic;
@@ -19,7 +20,6 @@ using Windows.Graphics.Imaging;
 using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
 using Windows.Storage.Streams;
-using HyPlayer.NeteaseApi.ApiContracts.Song;
 using File = TagLib.File;
 
 #endregion
