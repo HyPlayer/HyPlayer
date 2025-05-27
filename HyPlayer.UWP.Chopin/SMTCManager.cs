@@ -1,4 +1,5 @@
 ﻿using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
+using System;
 using Windows.Media;
 
 namespace HyPlayer.UWP.Chopin
@@ -22,7 +23,7 @@ namespace HyPlayer.UWP.Chopin
         }
         public SMTCManager(SystemMediaTransportControls SMTC)
         {
-            _smtc = SMTC;
+            _smtc = SMTC ?? throw new ArgumentNullException(nameof(SMTC)); ;
         }
     }
 }

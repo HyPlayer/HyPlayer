@@ -61,7 +61,7 @@ DoubleAnimation verticalAnimation;
 
     private void Player_OnGlobalPlaybackStatusChanged(PlaybackStatus status)
     {
-        _  = Common.Invoke(() =>
+        _ = Common.Invoke(() =>
         {
             PlayStateIcon.Glyph =
                         HyPlayList.Player.GlobalPlaybackStatus == PlaybackStatus.Playing
@@ -69,8 +69,6 @@ DoubleAnimation verticalAnimation;
                             : "\uF5B0";
         });
     }
-
-    public TimeSpan nowtime => HyPlayList.Player.PrimaryAudioInputNode.Position;
 
     private void HyPlayListOnOnSongRemoveAll()
     {

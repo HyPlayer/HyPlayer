@@ -206,7 +206,10 @@ public static class HyPlayList
 
     public static void InitializeHyPlaylist()
     {
-        _ = Player.InitializePlayer(new AudioGraphAudioSetting());
+        if (!Player.PlayerCreated)
+        {
+            _ = Player.InitializePlayer(new AudioGraphAudioSetting());
+        }
         MediaSystemControls = SystemMediaTransportControls.GetForCurrentView();
         Player.SMTCManager = new SMTCManager(MediaSystemControls);
         _controlsDisplayUpdater = MediaSystemControls.DisplayUpdater;
@@ -519,7 +522,7 @@ public static class HyPlayList
     public static void RemoveAllSong(bool resetPlaying = true)
     {
         if (List.Count == 0) return;
-        foreach(var item in List)
+        foreach (var item in List)
         {
             item.PlayItem.AudioGraphPlaybackSource?.Dispose();
         }
@@ -947,7 +950,10 @@ public static class HyPlayList
                     Player.SetPlaybackSourceOutputVolume(result, Player.PrimaryPlaybackSource);
 
                 }
-                else Player.SetPlaybackSourceOutputVolume(1, Player.PrimaryPlaybackSource);
+                else if (Player.PrimaryPlaybackSource != null)
+                {
+                    Player.SetPlaybackSourceOutputVolume(1, Player.PrimaryPlaybackSource);
+                }
             }
         }
         catch (Exception e)

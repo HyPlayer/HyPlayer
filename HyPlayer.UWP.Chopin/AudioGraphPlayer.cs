@@ -80,6 +80,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
         public async Task ChangePlayerServiceImplementation(IAudioSettings settings)
         {
+            ThrowExceptionIfDisposed();
             if (settings is AudioGraphAudioSetting audioGraphSetting)
             {
                 var oldPlayer = _defaultPlayer;
@@ -189,6 +190,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
         public void PauseAll()
         {
+            ThrowExceptionIfDisposed();
             if (_defaultPlayer == null) return;
             _defaultPlayer.Stop();
             GlobalPlaybackStatus = PlaybackStatus.Paused;
@@ -198,6 +200,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
         public void PausePlaybackSource(IPlaybackSource playbackSource)
         {
+            ThrowExceptionIfDisposed();
             var source = playbackSource as AudioGraphPlaybackSource;
             if (source != null)
             {
@@ -213,6 +216,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
         public void PlayAll()
         {
+            ThrowExceptionIfDisposed();
             if (_defaultPlayer == null) return;
             _defaultPlayer.Start();
             GlobalPlaybackStatus = PlaybackStatus.Playing;
@@ -222,6 +226,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
         public void PlayPlaybackSource(IPlaybackSource playbackSource)
         {
+            ThrowExceptionIfDisposed();
             var source = playbackSource as AudioGraphPlaybackSource;
             if (source != null)
             {
@@ -237,6 +242,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
         public async Task SeekPlaybackSourceAsync(TimeSpan target, IPlaybackSource playbackSource)
         {
+            ThrowExceptionIfDisposed();
             var source = playbackSource as AudioGraphPlaybackSource;
             if (source != null)
             {
@@ -251,6 +257,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
         public void SetOutputVolume(double volume)
         {
+            ThrowExceptionIfDisposed();
             if (_outputNode != null)
             {
                 _outputNode.OutgoingGain = volume;
@@ -260,6 +267,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
         public void SetPlaybackSourceOutputVolume(double volume, IPlaybackSource playbackSource)
         {
+            ThrowExceptionIfDisposed();
             var source = playbackSource as AudioGraphPlaybackSource;
             if (source != null)
             {
@@ -274,6 +282,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
         public void SetPlaybackSourceSpeed(double speed, IPlaybackSource playbackSource)
         {
+            ThrowExceptionIfDisposed();
             var source = playbackSource as AudioGraphPlaybackSource;
             if (source != null)
             {
@@ -287,6 +296,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         }
         public double GetPlaybackSourceSpeed(IPlaybackSource playbackSource)
         {
+            ThrowExceptionIfDisposed();
             var source = playbackSource as AudioGraphPlaybackSource;
             if (source != null)
             {
@@ -300,6 +310,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         }
         public async Task ConnectPlaybackSourceAsync(IPlaybackSource playbackSource, PlaybackOptions options = null)
         {
+            ThrowExceptionIfDisposed();
             if (options == null)
             {
                 options = new PlaybackOptions();
@@ -336,6 +347,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
         public void DisconnectPlaybackSource(IPlaybackSource playbackSource)
         {
+            ThrowExceptionIfDisposed();
             var source = playbackSource as AudioGraphPlaybackSource;
             if (source != null)
             {
@@ -351,30 +363,34 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
         public List<AudioGraphPlaybackSource> GetConnectedPlaybackSource()
         {
+            ThrowExceptionIfDisposed();
             return _audioInputNodes.Keys.ToList();
         }
 
         public MediaSourceAudioInputNode GetAudioInputNode(AudioGraphPlaybackSource playbackSource)
         {
+            ThrowExceptionIfDisposed();
             return _audioInputNodes[playbackSource];
         }
 
-        public void AddEffectToPlaybackSourceAsync(IAudioEffectDefinition definition, AudioGraphPlaybackSource playbackSource)
+        public void AddEffectToPlaybackSource(IAudioEffectDefinition definition, AudioGraphPlaybackSource playbackSource)
         {
+            ThrowExceptionIfDisposed();
             var node = _audioInputNodes[playbackSource];
             node.EnableEffectsByDefinition(definition);
         }
 
-        public Task RemoveEffectToPlaybackSourceAsync(IAudioEffectDefinition definition, AudioGraphPlaybackSource playbackSource)
+        public void RemoveEffectFromPlaybackSource(IAudioEffectDefinition definition, AudioGraphPlaybackSource playbackSource)
         {
+            ThrowExceptionIfDisposed();
             var node = _audioInputNodes[playbackSource];
             node.DisableEffectsByDefinition(definition);
-            return Task.CompletedTask;
         }
 
         public void RemoveAllPlaybackSource()
         {
-            foreach (var source in _audioInputNodes) 
+            ThrowExceptionIfDisposed();
+            foreach (var source in _audioInputNodes)
             {
                 source.Value.MediaSourceCompleted -= OnMediaSourceCompleted;
                 source.Value.RemoveOutgoingConnection(_outputNode);
@@ -399,8 +415,8 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                     item.RemoveOutgoingConnection(_outputNode);
                     item.Dispose();
                 }
-                _outputNode.Dispose();
-                _defaultPlayer.Dispose();
+                _outputNode?.Dispose();
+                _defaultPlayer?.Dispose();
                 disposedValue = true;
             }
         }
@@ -417,7 +433,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         }
         public void ThrowExceptionIfDisposed()
         {
-            if (disposedValue) throw new ObjectDisposedException(nameof(AudioGraphPlaybackSource));
+            if (disposedValue) throw new ObjectDisposedException(nameof(AudioGraphPlayer));
         }
     }
 }

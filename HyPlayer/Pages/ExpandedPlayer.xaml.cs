@@ -26,7 +26,6 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Devices.Input;
 using Windows.Graphics.Imaging;
-using Windows.Media.Playback;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Pickers;
@@ -60,7 +59,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 {
     public static readonly DependencyProperty NowPlaybackSpeedProperty = DependencyProperty.Register(
         "NowPlaybackSpeed", typeof(string), typeof(ExpandedPlayer),
-        new PropertyMetadata("x"));
+        new PropertyMetadata("x1"));
 
 
     public bool jumpedLyrics;
@@ -164,7 +163,11 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private void LyricBox_OnBeforeRender(LyricRenderer.LyricRenderView view)
     {
         view.Context.IsPlaying = HyPlayList.Player.GlobalPlaybackStatus == PlaybackStatus.Playing;
-        if (HyPlayList.Player.PrimaryAudioInputNode == null) return;
+        if (HyPlayList.Player.PrimaryAudioInputNode == null)
+        {
+            view.Context.CurrentLyricTime = 0;
+            return;
+        }
         if (HyPlayList.Player.PrimaryAudioInputNode.Position.TotalMilliseconds < view.Context.CurrentLyricTime)
         {
             view.Context.CurrentLyricTime = (long)HyPlayList.Player.PrimaryAudioInputNode.Position.TotalMilliseconds;
@@ -1105,7 +1108,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     {
         if (HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource == null) return;
         var currentSpeed = HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
-        HyPlayList.Player.SetPlaybackSourceSpeed(currentSpeed - 0.1, HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
+        var newSpeed = Math.Max(0.5, currentSpeed - 0.1);
+        HyPlayList.Player.SetPlaybackSourceSpeed(newSpeed, HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
         NowPlaybackSpeed = "x" + HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
     }
 
@@ -1113,7 +1117,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     {
         if (HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource == null) return;
         var currentSpeed = HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
-        HyPlayList.Player.SetPlaybackSourceSpeed(currentSpeed + 0.1, HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
+        var newSpeed = Math.Min(2.0, currentSpeed + 0.1);
+        HyPlayList.Player.SetPlaybackSourceSpeed(newSpeed, HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
         NowPlaybackSpeed = "x" + HyPlayList.Player.GetPlaybackSourceSpeed(HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource);
     }
 

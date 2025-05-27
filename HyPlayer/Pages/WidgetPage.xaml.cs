@@ -6,7 +6,6 @@ using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Microsoft.Gaming.XboxGameBar;
 using Microsoft.Gaming.XboxGameBar.Input;
 using System;
-using System.Threading.Tasks;
 using Windows.System;
 using Windows.UI;
 using Windows.UI.Core;

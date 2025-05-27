@@ -21,14 +21,14 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             ThrowExceptionIfDisposed();
             if (LocalStorageFile != null)
             {
-                CreatePlaybackSourceFormStorageFile();
+                CreatePlaybackSourceFromStorageFile();
             }
             else
             {
-                await CreatePlaybackSourceFormUriAsync();
+                await CreatePlaybackSourceFromUriAsync();
             }
         }
-        private async Task CreatePlaybackSourceFormUriAsync()
+        private async Task CreatePlaybackSourceFromUriAsync()
         {
             if (string.IsNullOrEmpty(Path.Host))
             {
@@ -42,22 +42,22 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 PlaybackSourceType = PlaybackSourceType.Online;
             }
         }
-        private void CreatePlaybackSourceFormStorageFile()
+        private void CreatePlaybackSourceFromStorageFile()
         {
             PlaybackSource = MediaSource.CreateFromStorageFile(LocalStorageFile);
             PlaybackSourceType = PlaybackSourceType.Local;
         }
         public AudioGraphPlaybackSource(Uri path)
         {
-            Path = path;
+            Path = path ?? throw new ArgumentNullException(nameof(path));
         }
         public AudioGraphPlaybackSource(StorageFile path)
         {
-            LocalStorageFile = path;
+            LocalStorageFile = path ?? throw new ArgumentNullException(nameof(path));
         }
         public AudioGraphPlaybackSource(MediaSource mediaSource)
         {
-            PlaybackSource = mediaSource;
+            PlaybackSource = mediaSource ?? throw new ArgumentNullException(nameof(mediaSource));
             PlaybackSourceType = PlaybackSourceType.MediaSource;
         }
 
