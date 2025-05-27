@@ -138,9 +138,9 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
         public async Task InitializePlayer(IAudioSettings settings)
         {
-            PositionTimer.Elapsed += PositionTimer_Elapsed;
             if (settings is AudioGraphAudioSetting audioGraphSetting)
             {
+                PositionTimer.Elapsed += PositionTimer_Elapsed;
                 var setting = await audioGraphSetting.GetAudioGraphSettingsAsync();
                 var newPlayerResult = await AudioGraph.CreateAsync(setting);
                 AudioGraph newPlayer;
@@ -157,7 +157,6 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 if (createResult.Status != AudioDeviceNodeCreationStatus.Success) throw createResult.ExtendedError;
                 _outputNode = createResult.DeviceOutputNode;
                 _outputNode.OutgoingGain = audioGraphSetting.OutputVolume;
-                _defaultPlayer.Start();
             }
             else
             {
