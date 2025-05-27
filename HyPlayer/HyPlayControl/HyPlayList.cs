@@ -115,8 +115,6 @@ public static class HyPlayList
     public static int NowPlayingHashCode = 0;
     private static InMemoryRandomAccessStream _ncmPlayableStream = new();
     private static string _ncmPlayableStreamMIMEType = string.Empty;
-    private static MediaSource _mediaSource;
-    private static AudioGraphPlaybackSource _playbackSource;
     private static Task _playerLoaderTask;
     private static HyPlayItem _requestedItem;
     private static int _songIsWaitingForLoadCount = 0;
@@ -161,9 +159,10 @@ public static class HyPlayList
     {
         get
         {
-            if (_mediaSource != null && _mediaSource.IsOpen)
+            var source = Player.PrimaryPlaybackSource as AudioGraphPlaybackSource;
+            if (source != null && source.PlaybackSource.IsOpen)
             {
-                return _mediaSource.CustomProperties["nowPlayingItem"] as HyPlayItem;
+                return source.PlaybackSource.CustomProperties["nowPlayingItem"] as HyPlayItem;
             }
 
             if (List.Count <= NowPlaying || NowPlaying == -1)
@@ -526,8 +525,6 @@ public static class HyPlayList
         }
         List.Clear();
         NowPlaying = -1;
-        _mediaSource = null;
-        _playbackSource = null;
         OnSongRemoveAll?.Invoke();
         Player.RemoveAllPlaybackSource();
         SongAppendDone();
@@ -789,13 +786,11 @@ public static class HyPlayList
 
         try
         {
-            if (_playbackSource != null)
+            if (Player.PrimaryPlaybackSource != null)
             {
-                Player.DisconnectPlaybackSource(_playbackSource);
-                _playbackSource.Dispose();
-                _mediaSource = null;
-                _playbackSource = null;
+                Player.DisconnectPlaybackSource(Player.PrimaryPlaybackSource);
             }
+            MediaSource mediaSource = null;
             switch (targetItem.ItemType)
             {
                 case HyPlayItemType.Netease:
@@ -808,12 +803,12 @@ public static class HyPlayList
                         if (targetItem.PlayItem.DontSetLocalStorageFile.FileType == ".ncm")
                         {
                             await LoadNCMFile(targetItem);
-                            _mediaSource = MediaSource.CreateFromStream(_ncmPlayableStream, _ncmPlayableStreamMIMEType);
+                            mediaSource = MediaSource.CreateFromStream(_ncmPlayableStream, _ncmPlayableStreamMIMEType);
                         }
                         else
                         {
                             await LoadLocalFile(targetItem);
-                            _mediaSource = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
+                            mediaSource = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
                         }
                     }
                     else
@@ -831,7 +826,7 @@ public static class HyPlayList
                                 if ((await sf.GetBasicPropertiesAsync()).Size.ToString() ==
                                     targetItem.PlayItem.Size || targetItem.PlayItem.Size == null)
                                 {
-                                    _mediaSource = MediaSource.CreateFromStorageFile(sf);
+                                    mediaSource = MediaSource.CreateFromStorageFile(sf);
                                 }
 
                                 else
@@ -866,11 +861,11 @@ public static class HyPlayList
                                         var exists = await destinationFolder.FileExistsAsync(resultFile.Name);
                                         if (resultFile != null && exists)
                                         {
-                                            _mediaSource = MediaSource.CreateFromStorageFile(resultFile);
+                                            mediaSource = MediaSource.CreateFromStorageFile(resultFile);
                                         }
                                         else
                                         {
-                                            _mediaSource =
+                                            mediaSource =
                                                 MediaSource.CreateFromUri(new Uri(playUrl)); //如果你很急的话那先听在线的凑活下
                                         }
                                     }
@@ -879,7 +874,7 @@ public static class HyPlayList
                                 {
                                     var playUrl = await GetNowPlayingUrl(targetItem);
                                     if (playUrl != null)
-                                        _mediaSource = MediaSource.CreateFromUri(new Uri(playUrl));
+                                        mediaSource = MediaSource.CreateFromUri(new Uri(playUrl));
                                 }
                             }
                         }
@@ -894,11 +889,11 @@ public static class HyPlayList
                                 await stream.ReadAsync(buffer, (uint)stream.Size, InputStreamOptions.None);
                                 _ncmPlayableStream = new InMemoryRandomAccessStream();
                                 await _ncmPlayableStream.WriteAsync(buffer);
-                                _mediaSource = MediaSource.CreateFromStream(_ncmPlayableStream, stream.ContentType);
+                                mediaSource = MediaSource.CreateFromStream(_ncmPlayableStream, stream.ContentType);
                             }
                             else
                             {
-                                _mediaSource = MediaSource.CreateFromUri(new Uri(playUrl));
+                                mediaSource = MediaSource.CreateFromUri(new Uri(playUrl));
                             }
                         }
                     }
@@ -915,25 +910,25 @@ public static class HyPlayList
                     if (targetItem.PlayItem.DontSetLocalStorageFile.FileType == ".ncm")
                     {
                         await LoadNCMFile(targetItem);
-                        _mediaSource = MediaSource.CreateFromStream(_ncmPlayableStream, _ncmPlayableStreamMIMEType);
+                        mediaSource = MediaSource.CreateFromStream(_ncmPlayableStream, _ncmPlayableStreamMIMEType);
                     }
                     else
                     {
                         await LoadLocalFile(targetItem);
-                        _mediaSource = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
+                        mediaSource = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
                     }
 
                     break;
                 default:
-                    _mediaSource = null;
+                    mediaSource = null;
                     break;
             }
 
-            _mediaSource?.CustomProperties.Add("nowPlayingItem", targetItem);
+            mediaSource?.CustomProperties.Add("nowPlayingItem", targetItem);
             NowPlayingHashCode = targetItem.GetHashCode();
             MediaSystemControls.IsEnabled = true;
-            await _mediaSource.OpenAsync();
-            var duration = _mediaSource.Duration?.TotalMilliseconds;
+            await mediaSource.OpenAsync();
+            var duration = mediaSource.Duration?.TotalMilliseconds;
             if (duration != null)
             {
                 if (targetItem.PlayItem.LengthInMilliseconds != duration.Value)
@@ -941,9 +936,8 @@ public static class HyPlayList
                     targetItem.PlayItem.LengthInMilliseconds = duration.Value;
                 }
             }
-            var playbackSource = new AudioGraphPlaybackSource(_mediaSource);
-            _playbackSource = playbackSource;
-            targetItem.PlayItem.AudioGraphPlaybackSource = _playbackSource;
+            var playbackSource = new AudioGraphPlaybackSource(mediaSource);
+            targetItem.PlayItem.AudioGraphPlaybackSource = playbackSource;
             await Player.ConnectPlaybackSourceAsync(playbackSource);
             if (Common.Setting.EnableAudioGain)
             {

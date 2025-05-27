@@ -61,7 +61,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 OnPrimaryPlaybackSourceChanged?.Invoke(source);
             }
         }
-        public AudioGraphPlaybackSource _primaryPlaybackSource;
+        private AudioGraphPlaybackSource _primaryPlaybackSource;
         public PlaybackStatus GlobalPlaybackStatus { get; protected set; } = PlaybackStatus.Paused;
         public MediaSourceAudioInputNode PrimaryAudioInputNode
         {
