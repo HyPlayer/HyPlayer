@@ -62,7 +62,10 @@ public sealed partial class BasePage : Page
         Common.GlobalTip = TheTeachingTip;
         HyPlayList.OnTimerTicked += () => Common.RollTeachingTip();
         HyPlayList.OnTimerTicked += Common.ChangePlaybarVisibillity;
-        HyPlayList.InitializeHyPlaylist();
+        if (!HyPlayList.Player.PlayerCreated)
+        {
+            HyPlayList.InitializeHyPlaylist();
+        }
         HyPlayList.OnPlayItemChange += OnChangePlayItem;
         HyPlayList.OnSongCoverChanged += HyPlayList_OnSongCoverChanged;
         if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Desktop" && Common.Setting.EnableTitleBarImmerse)

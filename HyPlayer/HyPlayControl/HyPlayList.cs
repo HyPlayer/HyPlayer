@@ -206,7 +206,12 @@ public static class HyPlayList
     {
         if (!Player.PlayerCreated)
         {
-            _ = Player.InitializePlayer(new AudioGraphAudioSetting());
+           _ = Player.InitializePlayer(new AudioGraphAudioSetting() 
+            { 
+                DefaultDeviceId = Common.Setting.AudioRenderDevice, 
+                OutputVolume = Common.Setting.Volume / 100d,
+                AutoFallback = true
+            });
         }
         MediaSystemControls = SystemMediaTransportControls.GetForCurrentView();
         Player.SMTCManager = new SMTCManager(MediaSystemControls);
@@ -1073,6 +1078,7 @@ public static class HyPlayList
                             var buffer = new Buffer((uint)thumbnail.Size);
                             await thumbnail.ReadAsync(buffer, (uint)thumbnail.Size, InputStreamOptions.None);
                             await CoverStream.WriteAsync(buffer);
+                            CoverBuffer = buffer;
                         }
                         else
                         {
@@ -1081,6 +1087,7 @@ public static class HyPlayList
                             var buffer = new Buffer((uint)thumbnail.Size);
                             await thumbnail.ReadAsync(buffer, (uint)thumbnail.Size, InputStreamOptions.None);
                             await CoverStream.WriteAsync(buffer);
+                            CoverBuffer = buffer;
                         }
                     }
                     else
@@ -1088,6 +1095,7 @@ public static class HyPlayList
                         var bufferByte = NowPlayingItem.PlayItem.LocalFileTag.Pictures[0].Data.Data;
                         var buffer = bufferByte.AsBuffer();
                         await CoverStream.WriteAsync(buffer);
+                        CoverBuffer = buffer;
                     }
                 }
             }

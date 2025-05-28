@@ -4,5 +4,6 @@
     {
         string DefaultDeviceId { get; set; }
         double OutputVolume { get; set; }
+        bool AutoFallback { get; set; }
     }
 }

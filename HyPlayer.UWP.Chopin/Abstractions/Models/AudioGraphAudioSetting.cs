@@ -11,6 +11,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
     {
         public string DefaultDeviceId { get; set; }
         public double OutputVolume { get; set; } = 1d;
+        public bool AutoFallback { get; set; } = false;
         private AudioGraphSettings _settings;
         public async Task<AudioGraphSettings> GetAudioGraphSettingsAsync()
         {
@@ -18,7 +19,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             {
                 return _settings;
             }
-            if (DefaultDeviceId == null)
+            if (string.IsNullOrEmpty(DefaultDeviceId))
             {
                 var result = new AudioGraphSettings(AudioRenderCategory.Media);
                 _settings = result;
@@ -27,11 +28,18 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             else
             {
                 var device = await DeviceInformation.CreateFromIdAsync(DefaultDeviceId);
-                var result = new AudioGraphSettings(AudioRenderCategory.Media)
+                AudioGraphSettings result = null;
+                if (device.IsEnabled || !AutoFallback) {
+                    result = new AudioGraphSettings(AudioRenderCategory.Media)
+                    {
+                        PrimaryRenderDevice = device,
+                    };
+                }
+                else
                 {
-                    PrimaryRenderDevice = device,
-                };
-                _settings = result;
+                    result = new AudioGraphSettings(AudioRenderCategory.Media);
+                }
+                    _settings = result;
                 return result;
             }
         }
