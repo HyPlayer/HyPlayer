@@ -113,8 +113,6 @@ public static class HyPlayList
         RandomAccessStreamReference.CreateFromStream(CoverStream);
 
     public static int NowPlayingHashCode = 0;
-    private static InMemoryRandomAccessStream _ncmPlayableStream = new();
-    private static string _ncmPlayableStreamMIMEType = string.Empty;
     private static Task _playerLoaderTask;
     private static HyPlayItem _requestedItem;
     private static int _songIsWaitingForLoadCount = 0;
@@ -426,9 +424,9 @@ public static class HyPlayList
             var songDataStream = new InMemoryRandomAccessStream();
             var targetSongDataStream = songDataStream.AsStream();
             encStream.CopyTo(targetSongDataStream);
-            _ncmPlayableStream = songDataStream;
+            targetItem.PlayItem.NcmPlayableStream = songDataStream;
             NowPlayingStorageFile = targetItem.PlayItem.DontSetLocalStorageFile;
-            _ncmPlayableStreamMIMEType = MIMEHelper.GetNCMFileMimeType(info.format);
+            targetItem.PlayItem.NcmPlayableStreamMIMEType = MIMEHelper.GetNCMFileMimeType(info.format);
         }
     }
 
@@ -776,22 +774,17 @@ public static class HyPlayList
             CoverStream.Seek(0);
         }
 
-        if (_ncmPlayableStream != null && _ncmPlayableStream.Size != 0)
-        {
-            _ncmPlayableStream.Dispose();
-            _ncmPlayableStream = null;
-        }
-
-        if (_ncmPlayableStreamMIMEType != string.Empty)
-        {
-            _ncmPlayableStreamMIMEType = string.Empty;
-        }
-
         try
         {
             if (Player.PrimaryPlaybackSource != null)
             {
+                var primaryPlaybackSource = Player.PrimaryPlaybackSource as AudioGraphPlaybackSource;
                 Player.DisconnectPlaybackSource(Player.PrimaryPlaybackSource);
+                if (primaryPlaybackSource != null)
+                {
+                    var item = primaryPlaybackSource.PlaybackSource.CustomProperties["nowPlayingItem"] as HyPlayItem;
+                    item?.PlayItem?.FreePlaybackResources();
+                }
             }
             MediaSource mediaSource = null;
             switch (targetItem.ItemType)
@@ -806,7 +799,7 @@ public static class HyPlayList
                         if (targetItem.PlayItem.DontSetLocalStorageFile.FileType == ".ncm")
                         {
                             await LoadNCMFile(targetItem);
-                            mediaSource = MediaSource.CreateFromStream(_ncmPlayableStream, _ncmPlayableStreamMIMEType);
+                            mediaSource = MediaSource.CreateFromStream(targetItem.PlayItem.NcmPlayableStream, targetItem.PlayItem.NcmPlayableStreamMIMEType);
                         }
                         else
                         {
@@ -890,9 +883,9 @@ public static class HyPlayList
                                 using var stream = await reference.OpenReadAsync();
                                 var buffer = new Buffer((uint)stream.Size);
                                 await stream.ReadAsync(buffer, (uint)stream.Size, InputStreamOptions.None);
-                                _ncmPlayableStream = new InMemoryRandomAccessStream();
-                                await _ncmPlayableStream.WriteAsync(buffer);
-                                mediaSource = MediaSource.CreateFromStream(_ncmPlayableStream, stream.ContentType);
+                                targetItem.PlayItem.NcmPlayableStream = new InMemoryRandomAccessStream();
+                                await targetItem.PlayItem.NcmPlayableStream.WriteAsync(buffer);
+                                mediaSource = MediaSource.CreateFromStream(targetItem.PlayItem.NcmPlayableStream, stream.ContentType);
                             }
                             else
                             {
@@ -913,7 +906,7 @@ public static class HyPlayList
                     if (targetItem.PlayItem.DontSetLocalStorageFile.FileType == ".ncm")
                     {
                         await LoadNCMFile(targetItem);
-                        mediaSource = MediaSource.CreateFromStream(_ncmPlayableStream, _ncmPlayableStreamMIMEType);
+                        mediaSource = MediaSource.CreateFromStream(targetItem.PlayItem.NcmPlayableStream, targetItem.PlayItem.NcmPlayableStreamMIMEType);
                     }
                     else
                     {

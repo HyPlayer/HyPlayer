@@ -103,7 +103,7 @@ public class ActionLyricLine : RenderingLyricLine
                 Math.Clamp(context.ItemWidth - 16, 0, int.MaxValue), _canvasHeight);
         }
 
-        RenderingHeight = (float)textLayout.LayoutBounds.Height;
-        RenderingWidth = (float)textLayout.LayoutBounds.Width;
+        RenderingHeight = (float)(textLayout?.LayoutBounds.Height ?? 0);
+        RenderingWidth = (float)(textLayout?.LayoutBounds.Width ?? 0);
     }
 }

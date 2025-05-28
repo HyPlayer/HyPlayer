@@ -13,7 +13,6 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
     public class AudioGraphPlayer : IPlayer, IDisposable
     {
         private Dictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode> _audioInputNodes = new Dictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode>();
-        private Dictionary<AudioGraphPlaybackSource, PlaybackStatus> _playbackStatus = new Dictionary<AudioGraphPlaybackSource, PlaybackStatus>();
         private AudioGraph _defaultPlayer;
         private AudioDeviceOutputNode _outputNode;
         private bool disposedValue;
@@ -120,7 +119,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                         {
                             outputNode.EnableEffectsByDefinition(effect);
                         }
-                        if (_playbackStatus[node.Key] == PlaybackStatus.Playing) outputNode.Start();
+                        if (node.Key.PlaybackStatus == PlaybackStatus.Playing) outputNode.Start();
                     }
                 }
                 _outputNode.OutgoingGain = oldOutputNode.OutgoingGain;
@@ -204,7 +203,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             if (source != null)
             {
                 _audioInputNodes[source].Stop();
-                _playbackStatus[source] = PlaybackStatus.Paused;
+                source.PlaybackStatus = PlaybackStatus.Paused;
                 OnPlaybackSourceStatusChanged?.Invoke(playbackSource, PlaybackStatus.Paused);
             }
             else
@@ -230,7 +229,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             if (source != null)
             {
                 _audioInputNodes[source].Start();
-                _playbackStatus[source] = PlaybackStatus.Playing;
+                source.PlaybackStatus = PlaybackStatus.Playing;
                 OnPlaybackSourceStatusChanged?.Invoke(playbackSource, PlaybackStatus.Playing);
             }
             else
@@ -325,7 +324,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 if (!options.AutoPlay)
                 {
                     nodeResult.Node.Stop();
-                    _playbackStatus[source] = PlaybackStatus.Paused;
+                    source.PlaybackStatus = PlaybackStatus.Paused;
                 }
                 nodeResult.Node.AddOutgoingConnection(_outputNode);
                 if (_audioInputNodes.Count == 1 || options.SetAsPrimarySource) PrimaryPlaybackSource = playbackSource;
@@ -355,7 +354,6 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 _audioInputNodes[source].RemoveOutgoingConnection(_outputNode);
                 _audioInputNodes[source].Dispose();
                 _audioInputNodes.Remove(source);
-                _playbackStatus.Remove(source);
             }
             else throw new ArgumentException("PlaybackSource is not AudioGraphPlaybackSource.");
         }
@@ -394,7 +392,6 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 source.Value.MediaSourceCompleted -= OnMediaSourceCompleted;
                 source.Value.RemoveOutgoingConnection(_outputNode);
                 source.Value.Dispose();
-                _playbackStatus.Remove(source.Key);
             }
             _audioInputNodes.Clear();
             _primaryPlaybackSource = null;

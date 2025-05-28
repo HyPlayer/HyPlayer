@@ -9,6 +9,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Interfaces
         string Name { get; set; }
         PlaybackSourceType PlaybackSourceType { get; }
         Uri Path { get; set; }
+        PlaybackStatus PlaybackStatus { get; }
         Task CreatePlaybackSource();
     }
 }

@@ -14,6 +14,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         public MediaSource PlaybackSource { get; internal set; }
         public StorageFile LocalStorageFile { get; internal set; }
         public PlaybackSourceType PlaybackSourceType { get; internal set; }
+        public PlaybackStatus PlaybackStatus { get; internal set; }
         public Uri Path { get; set; }
 
         public async Task CreatePlaybackSource()

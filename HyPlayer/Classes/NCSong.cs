@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TagLib;
 using Windows.Storage;
+using Windows.Storage.Streams;
 
 #endregion
 
@@ -303,6 +304,8 @@ public class PlayItem
     public string Url;
     public double Gain = 1d;
     public AudioGraphPlaybackSource AudioGraphPlaybackSource;
+    public InMemoryRandomAccessStream NcmPlayableStream;
+    public string NcmPlayableStreamMIMEType = string.Empty;
 
     public string ArtistString
     {
@@ -323,6 +326,14 @@ public class PlayItem
             songname = Name,
             TrackId = TrackId
         };
+    }
+    public void FreePlaybackResources()
+    {
+        AudioGraphPlaybackSource?.Dispose();
+        NcmPlayableStream?.Dispose();
+        NcmPlayableStreamMIMEType = null;
+        AudioGraphPlaybackSource = null;
+        NcmPlayableStream = null;
     }
 }
 
