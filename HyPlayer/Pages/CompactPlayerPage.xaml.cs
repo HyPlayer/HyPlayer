@@ -74,13 +74,23 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         HyPlayList.OnPlayPositionChange += HyPlayList_OnPlayPositionChange;
         HyPlayList.OnPlayItemChange += OnChangePlayItem;
         HyPlayList.OnLyricChange += OnLyricChanged;
+        HyPlayList.Player.OnGlobalPlaybackStatusChanged += Player_OnGlobalPlaybackStatusChanged;
         //LeaveAnimation.Completed += LeaveAnimation_Completed;
         HyPlayList.OnSongLikeStatusChange += HyPlayList_OnSongLikeStatusChange;
         Common.OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;
         //CompactPlayerAni.Begin();
     }
 
-
+    private void Player_OnGlobalPlaybackStatusChanged(PlaybackStatus status)
+    {
+        _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+        {
+            PlayStateIcon.Glyph =
+                HyPlayList.Player.GlobalPlaybackStatus == PlaybackStatus.Playing
+                    ? "\uF8AE" :
+                    "\uF5B0";
+        });
+    }
 
     private async Task HyPlayList_OnSongCoverChanged(int hashCode, IBuffer coverStream)
     {
@@ -250,10 +260,6 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         {
             NowPlayingName = item?.PlayItem?.Name;
             NowPlayingArtists = item?.PlayItem?.ArtistString;
-            PlayStateIcon.Glyph =
-                HyPlayList.Player.GlobalPlaybackStatus == PlaybackStatus.Playing
-                    ? "\uF8AE" :
-                    "\uF5B0";
         });
         if (item.ItemType is not HyPlayItemType.Local or HyPlayItemType.LocalProgressive)
         {
@@ -336,6 +342,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
             HyPlayList.OnLyricChange -= OnLyricChanged;
             HyPlayList.OnSongLikeStatusChange -= HyPlayList_OnSongLikeStatusChange;
             Common.OnPlaybarVisibilityChanged -= OnPlaybarVisibilityChanged;
+            HyPlayList.Player.OnGlobalPlaybackStatusChanged -= Player_OnGlobalPlaybackStatusChanged;
             disposedValue = true;
         }
     }

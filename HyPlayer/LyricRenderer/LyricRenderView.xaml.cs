@@ -94,6 +94,7 @@ namespace HyPlayer.LyricRenderer
         {
             Context.PreferTypography.Alignment = alignment;
             _isTypographyChanged = true;
+            _needRecalculateSize = true;
         }
 
         public void ChangeBeatPerMinute(float beatPerMinute)
@@ -204,6 +205,10 @@ namespace HyPlayer.LyricRenderer
                     {
                         Context.RenderOffsets[renderingLyricLine.Id].X =
                             (Context.ViewWidth - renderingLyricLine.RenderingWidth) / 2;
+                    }
+                    if (Context.PreferTypography?.Alignment is TextAlignment.Left)
+                    {
+                        Context.RenderOffsets[renderingLyricLine.Id].X = 0;
                     }
                 }
             }
@@ -385,6 +390,12 @@ namespace HyPlayer.LyricRenderer
                         {
                             Context.RenderOffsets[renderingLyricLine.Id].X =
                                 (Context.ViewWidth - renderingLyricLine.RenderingWidth) / 2;
+                        }
+
+                        if ((renderingLyricLine.Typography?.Alignment ?? Context.PreferTypography?.Alignment) is
+                            TextAlignment.Left)
+                        {
+                            Context.RenderOffsets[renderingLyricLine.Id].X = 0;
                         }
                     }
                 }

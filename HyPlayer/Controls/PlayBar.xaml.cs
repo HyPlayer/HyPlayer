@@ -231,6 +231,10 @@ DoubleAnimation verticalAnimation;
 
         _ = Common.Invoke(() =>
         {
+            PlayStateIcon.Glyph =
+            HyPlayList.Player.GlobalPlaybackStatus == PlaybackStatus.Playing
+                ? "\uF8AE"
+                : "\uF5B0";
             if (Common.IsInFm)
             {
                 IconPrevious.Glyph = "\uE7E8";
@@ -853,7 +857,6 @@ DoubleAnimation verticalAnimation;
         SliderAudioRate.Value = HyPlayList.PlayerOutgoingVolume * 100;
         HyPlayList.OnPlayItemChange += LoadPlayingFile;
         HyPlayList.OnPlayPositionChange += OnPlayPositionChange;
-        //HyPlayList.OnPlayPositionChange += UpdateMSTC;
         HyPlayList.OnPlayListAddDone += RefreshSongList;
         HyPlayList.OnSongRemoveAll += HyPlayListOnOnSongRemoveAll;
         HyPlayList.OnLoginDone += HyPlayListOnOnLoginDone;

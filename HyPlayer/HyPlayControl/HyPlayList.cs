@@ -644,7 +644,7 @@ public static class HyPlayList
     }
     public static double GetAudioGainMultiplier(double audioGainValue)
     {
-        var gainValue = Math.Pow(10, audioGainValue / 35);
+        var gainValue = Math.Pow(10, audioGainValue / 20);
         return gainValue;
     }
 

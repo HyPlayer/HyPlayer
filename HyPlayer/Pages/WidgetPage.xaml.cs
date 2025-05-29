@@ -83,6 +83,7 @@ public sealed partial class WidgetPage : Page
         MovePreviousButton.Click += MovePreviousButton_Click;
         TipContent.Visibility = Visibility.Collapsed;
         _widget.CloseRequested += Widget_CloseRequested;
+        LyricView.Context.Debug = Common.Setting.LyricRendererDebugMode;
     }
 
     private void RequestedThemeChanged(XboxGameBarWidget sender, object args)

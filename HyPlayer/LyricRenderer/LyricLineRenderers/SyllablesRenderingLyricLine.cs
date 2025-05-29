@@ -45,7 +45,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
         private bool _isFocusing;
         private float _canvasWidth;
         private float _canvasHeight;
-        private bool _sizeChangedWithourNextRender = true;
+        private bool _sizeChangedWithoutNextRender = true;
         public bool IsSyllable = false;
 
         public List<RenderingSyllable> Syllables { get; set; } = [];
@@ -84,14 +84,13 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
 
 
             float actualOffsetX = offset.X - (float)textLayout.LayoutBounds.Left;
-            if (_sizeChangedWithourNextRender)
+            if (_sizeChangedWithoutNextRender)
             {
                 _unfocusMatrix = GetCenterMatrix(0, 0, _scalingCenterX + offset.X,
                     (float)textLayout.LayoutBounds.Height / 2, 0.8F, 0.8F);
-                _sizeChangedWithourNextRender = false;
+                _sizeChangedWithoutNextRender = false;
 
             }
-            float actualX = 0;
             switch (TypographySelector(t => t?.Alignment, context)!.Value)
             {
                 case TextAlignment.Left:
@@ -101,7 +100,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     actualOffsetX += 6;
                     break;
                 case TextAlignment.Right:
-                    actualOffsetX -= 16;
+                    actualOffsetX += 4;
                     break;
             }
 
@@ -287,7 +286,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             {
                 opacityEffect.Opacity = 1 - Math.Clamp(Math.Abs(gap) / (10f - (Common.Setting.lyricFadingRatio / 10f)), 0, 0.9f);
             }
-            session.DrawImage(opacityEffect, actualX, drawingTop);
+            session.DrawImage(opacityEffect, 0, drawingTop);
             _sizeChanged = false;
 
 
@@ -608,7 +607,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             renderW = (float)Math.Max(textLayout.LayoutBounds.Width,
                 Math.Max(tll?.LayoutBounds.Width ?? 0, tl?.LayoutBounds.Width ?? 0));
             RenderingWidth = renderW + 16;
-            _sizeChangedWithourNextRender = true;
+            _sizeChangedWithoutNextRender = true;
             _isInitialized = true;
         }
     }
