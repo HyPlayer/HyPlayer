@@ -499,15 +499,16 @@
                                             HorizontalAlignment="Right"
                                             IsOn="{x:Bind hyplayer:Common.Setting.CrossFade, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="播放暂停渐入渐出时间 单位: s" Visibility="{x:Bind hyplayer:Common.Setting.CrossFade, Mode=OneWay}">
+                                    <controls3:SettingsCard Header="交叉淡化渐入渐出时间 单位: s" Visibility="{x:Bind hyplayer:Common.Setting.CrossFade, Mode=OneWay}">
                                         <Slider
                                             x:Name="CrossFadeTime"
                                             Width="256"
                                             HorizontalAlignment="Right"
                                             IsEnabled="{x:Bind hyplayer:Common.Setting.CrossFade, Mode=OneWay}"
-                                            Maximum="5"
-                                            Minimum="0"
-                                            StepFrequency="0.1"
+                                            Maximum="15"
+                                            Minimum="1"
+                                            StepFrequency="1"
+                                            TickFrequency="1"
                                             ToolTipService.ToolTip="{x:Bind CrossFadeTime.Value}"
                                             Value="{x:Bind hyplayer:Common.Setting.CrossFadeTime, Mode=TwoWay}" />
                                     </controls3:SettingsCard>

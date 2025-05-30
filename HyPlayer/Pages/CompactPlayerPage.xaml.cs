@@ -92,7 +92,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         });
     }
 
-    private async Task HyPlayList_OnSongCoverChanged(int hashCode, IBuffer coverStream)
+    private async void HyPlayList_OnSongCoverChanged(HyPlayItem playItem, IBuffer coverStream)
     {
         if (HyPlayList.CoverStream.Size == 0) return;
         await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
@@ -104,7 +104,7 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
             {
                 try
                 {
-                    if (hashCode != HyPlayList.NowPlayingHashCode) return;
+                    if (playItem != HyPlayList.NowPlayingItem) return;
                     await AlbumImageBrushSource.SetSourceAsync(stream);
                 }
                 catch
@@ -130,14 +130,13 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         ChangeLyric();
     }
     */
-    private Task OnPlaybarVisibilityChanged(bool isActivated)
+    private void OnPlaybarVisibilityChanged(bool isActivated)
     {
         if (isActivated)
         {
             PointerOutAni.SkipToFill();
             ControlHover = new BackdropBlurBrush { Amount = 10.0 };
             PointerInAni.Begin();
-            return Task.CompletedTask;
         }
         else
         {
@@ -145,7 +144,6 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
             if (!Common.Setting.CompactPlayerPageBlurStatus)
                 ControlHover = TransparentBrush;
             PointerOutAni.Begin();
-            return Task.CompletedTask;
         }
 
     }
@@ -294,11 +292,11 @@ public sealed partial class CompactPlayerPage : Page, IDisposable
         PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uF8AE" : "\uF5B0";
     }
 
-    protected override async void OnNavigatedTo(NavigationEventArgs e)
+    protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
         OnChangePlayItem(HyPlayList.NowPlayingItem);
-        await HyPlayList_OnSongCoverChanged(HyPlayList.NowPlayingHashCode, HyPlayList.CoverBuffer);
+        HyPlayList_OnSongCoverChanged(HyPlayList.NowPlayingItem, HyPlayList.CoverBuffer);
         PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uEDB4" : "\uEDB5";
         //Common.BarPlayBar.Visibility = Visibility.Collapsed;
         (e.Parameter as AppWindow).TitleBar.ExtendsContentIntoTitleBar = true;

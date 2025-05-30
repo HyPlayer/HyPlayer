@@ -48,8 +48,8 @@ namespace HyPlayer
 {
     internal static class Common
     {
-        public delegate Task EnterForegroundFromBackgroundEvent();
-        public delegate Task PlaybarVisibilityChangedEvent(bool isActivated);
+        public delegate void EnterForegroundFromBackgroundEvent();
+        public delegate void PlaybarVisibilityChangedEvent(bool isActivated);
 
         public static bool Logined = false;
         public static bool IsInFm = false;
@@ -1237,7 +1237,10 @@ namespace HyPlayer
                 }
             }
 
-            set => ApplicationData.Current.LocalSettings.Values[nameof(CrossFadeTime)] = value;
+            set 
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(CrossFadeTime)] = value;
+            }
         }
 
         public bool playBarMargin
@@ -1630,8 +1633,7 @@ namespace HyPlayer
                 {
                     if (value)
                     {
-                        var result = HyPlayList.GetAudioGainMultiplier(HyPlayList.NowPlayingItem?.PlayItem.Gain ?? 0);
-                        HyPlayList.Player.SetPlaybackSourceOutputVolume(result, HyPlayList.Player.PrimaryPlaybackSource);
+                        HyPlayList.Player.SetPlaybackSourceOutputVolume(HyPlayList.NowPlayingItem?.PlayItem.Volume ?? 1, HyPlayList.Player.PrimaryPlaybackSource);
                     }
                     else HyPlayList.Player.SetPlaybackSourceOutputVolume(1, HyPlayList.Player.PrimaryPlaybackSource);
                 }

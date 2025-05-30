@@ -29,7 +29,8 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             {
                 var device = await DeviceInformation.CreateFromIdAsync(DefaultDeviceId);
                 AudioGraphSettings result = null;
-                if (device.IsEnabled || !AutoFallback) {
+                if (device.IsEnabled || !AutoFallback)
+                {
                     result = new AudioGraphSettings(AudioRenderCategory.Media)
                     {
                         PrimaryRenderDevice = device,
@@ -39,7 +40,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 {
                     result = new AudioGraphSettings(AudioRenderCategory.Media);
                 }
-                    _settings = result;
+                _settings = result;
                 return result;
             }
         }

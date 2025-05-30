@@ -70,9 +70,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private bool _lyricIsCleaning = false;
     private bool _positionChangedBySeeking = false;
 
-    private int lastlrcid;
 
-    public PlayItem? lastSongForBrush;
+    public HyPlayItem? lastSong;
 
     private int lastwidth;
 
@@ -498,7 +497,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         try
         {
             OnSongChange(HyPlayList.List[HyPlayList.NowPlaying]);
-            await RefreshAlbumCover(HyPlayList.NowPlayingHashCode, HyPlayList.CoverBuffer);
+            RefreshAlbumCover(HyPlayList.NowPlayingItem, HyPlayList.CoverBuffer);
             ChangeWindowMode();
             needRedesign++;
         }
@@ -612,7 +611,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 _ => TextAlignment.Left
             });
             LyricBox.ReflowTime(0);
-            lastlrcid = HyPlayList.NowPlayingHashCode;
             if (HyPlayList.NowPlayingItem == null) return;
             LyricBox.Width = LyricWidth;
             LyricBox.ChangeRenderColor(Common.BrushManagement.IdleBrush.Color, Common.BrushManagement.AccentBrush.Color);
@@ -667,16 +665,16 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
 
 
-    public async Task OnEnteringForeground()
+    public void OnEnteringForeground()
     {
         OnSongChange(HyPlayList.NowPlayingItem);
-        await RefreshAlbumCover(HyPlayList.NowPlayingHashCode, HyPlayList.CoverBuffer);
+        RefreshAlbumCover(HyPlayList.NowPlayingItem, HyPlayList.CoverBuffer);
         if (!_lyricHasBeenLoaded) HyPlayList_OnLyricLoaded();
     }
 
     public void OnSongChange(HyPlayItem mpi)
     {
-        var lyricIsReady = lastlrcid == HyPlayList.NowPlayingItem.GetHashCode();
+        var lyricIsReady = lastSong == HyPlayList.NowPlayingItem;
         _lyricIsReadyToGo = lyricIsReady;
         _lyricHasBeenLoaded = lyricIsReady;
         _ = Common.Invoke(() =>
@@ -987,7 +985,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private async Task<bool> IsBrightAsync(IRandomAccessStream coverStream)
     {
-        using var stream = coverStream.CloneStream();
+		lastSong = HyPlayList.NowPlayingItem;
+		using var stream = coverStream.CloneStream();
         var finalResult = false; //在不手动指定背景类型为2至5时需要执行颜色采样
         var resultGenerated = false; //标志返回颜色已经生成
         if (Common.Setting.lyricColor != 0 && Common.Setting.lyricColor != 3)
@@ -1008,7 +1007,6 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             }
 
         if (HyPlayList.NowPlayingItem.PlayItem == null) return false;
-        lastSongForBrush = HyPlayList.NowPlayingItem.PlayItem;
         try
         {
             BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
@@ -1349,7 +1347,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     }
 
 
-    public async Task RefreshAlbumCover(int hashCode, IBuffer coverStream)
+    public async void RefreshAlbumCover(HyPlayItem playItem, IBuffer coverStream)
     {
         if (HyPlayList.CoverStream.Size == 0) return;
         await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
@@ -1361,7 +1359,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             {
                 try
                 {
-                    if (hashCode != HyPlayList.NowPlayingHashCode) return;
+                    if (playItem != HyPlayList.NowPlayingItem) return;
                     var isBright = await IsBrightAsync(stream);
                     await ImageAlbumSource.SetSourceAsync(stream);
                     if (Common.Setting.expandedPlayerBackgroundType == 0 && Background?.GetType() != typeof(ImageBrush))
@@ -1372,7 +1370,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                         brush.ImageSource = (ImageSource)ImageAlbum.Source;
                     }
 
-                    if (hashCode != HyPlayList.NowPlayingHashCode) return;
+                    if (playItem != HyPlayList.NowPlayingItem) return;
                     if (albumMainColor != null)
                     {
                         var coverColor = albumMainColor.Value;
@@ -1603,16 +1601,16 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         time.Stop();
     }
 
-    private async Task OnPlaybarVisibilityChanged(bool isActivated)
+    private void OnPlaybarVisibilityChanged(bool isActivated)
     {
         if (!Common.Setting.AutoHidePlaybar) return;
         if (isActivated)
         {
-            await Show();
+            Show();
         }
         else
         {
-            await Collapse();
+            _  = Collapse();
         }
     }
 

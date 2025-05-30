@@ -87,9 +87,9 @@ public sealed partial class BasePage : Page
         // Window.Current.CoreWindow.Dispatcher.AcceleratorKeyActivated += Dispatcher_AcceleratorKeyActivated;
     }
 
-    private async Task HyPlayList_OnSongCoverChanged(int hashCode, IBuffer coverStream)
+    private async void HyPlayList_OnSongCoverChanged(HyPlayItem playItem, IBuffer coverStream)
     {
-        await RefreshNavItemCover(hashCode, coverStream);
+        await RefreshNavItemCover(playItem, coverStream);
     }
 
     /*
@@ -866,7 +866,7 @@ public sealed partial class BasePage : Page
         });
     }
 
-    public async Task RefreshNavItemCover(int hashCode, IBuffer coverStream)
+    public async Task RefreshNavItemCover(HyPlayItem playItem, IBuffer coverStream)
     {
         if (HyPlayList.CoverStream.Size == 0) return;
         await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
@@ -878,7 +878,7 @@ public sealed partial class BasePage : Page
             {
                 try
                 {
-                    if (hashCode != HyPlayList.NowPlayingHashCode) return;
+                    if (playItem != HyPlayList.NowPlayingItem) return;
                     await NavItemImageSource.SetSourceAsync(stream);
                 }
                 catch
@@ -888,7 +888,7 @@ public sealed partial class BasePage : Page
         });
     }
 
-    public async Task RefreshNavItemCover(double collapseTime, int hashCode, IRandomAccessStream coverStream)
+    public async Task RefreshNavItemCover(double collapseTime, HyPlayItem playItem, IRandomAccessStream coverStream)
     {
         await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
         {
@@ -899,7 +899,7 @@ public sealed partial class BasePage : Page
             {
                 try
                 {
-                    if (hashCode != HyPlayList.NowPlayingHashCode) return;
+                    if (playItem != HyPlayList.NowPlayingItem) return;
                     await NavItemImageSource.SetSourceAsync(stream);
                 }
                 catch

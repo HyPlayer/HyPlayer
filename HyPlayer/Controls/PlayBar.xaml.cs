@@ -406,7 +406,7 @@ DoubleAnimation verticalAnimation;
     private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
     {
         if (HyPlayList.NowPlayingItem.PlayItem?.Name != null && (HyPlayList.Player.ConnectedPlaybackSourceCount == 0))
-            _ = HyPlayList.LoadPlayerSong(HyPlayList.List[HyPlayList.NowPlaying]);
+            _ = HyPlayList.LoadMediaSource(HyPlayList.List[HyPlayList.NowPlaying]);
         PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uF8AE" : "\uF5B0";
         if (HyPlayList.IsPlaying)
         {
@@ -564,7 +564,7 @@ DoubleAnimation verticalAnimation;
         Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
         Window.Current.SetTitleBar(Common.PageBase.AppTitleBar);
         Common.isExpanded = false;
-        await RefreshPlayBarCover(HyPlayList.NowPlayingHashCode, HyPlayList.CoverBuffer);
+        RefreshPlayBarCover(HyPlayList.NowPlayingItem, HyPlayList.CoverBuffer);
     }
 
     private void ButtonCleanAll_OnClick(object sender, RoutedEventArgs e)
@@ -843,10 +843,10 @@ DoubleAnimation verticalAnimation;
         ButtonPlayList_OnClick(sender, e);
     }
 
-    private async Task OnEnteringForeground()
+    private void OnEnteringForeground()
     {
         LoadPlayingFile(HyPlayList.NowPlayingItem);
-        await RefreshPlayBarCover(HyPlayList.NowPlayingHashCode, HyPlayList.CoverBuffer);
+        RefreshPlayBarCover(HyPlayList.NowPlayingItem, HyPlayList.CoverBuffer);
     }
 
     private async void UserControl_Loaded(object sender, RoutedEventArgs e)
@@ -937,7 +937,7 @@ DoubleAnimation verticalAnimation;
         */
     }
 
-    public async Task RefreshPlayBarCover(int hashCode, IBuffer coverStream)
+    public async void RefreshPlayBarCover(HyPlayItem playItem, IBuffer coverStream)
     {
         if (HyPlayList.CoverStream.Size == 0) return;
         await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
@@ -951,7 +951,7 @@ DoubleAnimation verticalAnimation;
                 {
                     if (stream.Size != 0)
                     {
-                        if (hashCode != HyPlayList.NowPlayingHashCode) return;
+                        if (playItem != HyPlayList.NowPlayingItem) return;
                         await AlbumImageSource.SetSourceAsync(stream);
                     }
                 }

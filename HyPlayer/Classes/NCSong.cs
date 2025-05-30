@@ -302,7 +302,7 @@ public class PlayItem
     public int TrackId;
     public HyPlayItemType Type;
     public string Url;
-    public double Gain = 1d;
+    public double Volume = 1d;
     public AudioGraphPlaybackSource AudioGraphPlaybackSource;
     public InMemoryRandomAccessStream NcmPlayableStream;
     public string NcmPlayableStreamMIMEType = string.Empty;
