@@ -510,12 +510,12 @@ DoubleAnimation verticalAnimation;
         ShowExpandedPlayer();
     }
 
-    public async void ButtonCollapse_OnClick(object sender, RoutedEventArgs e)
+    public void ButtonCollapse_OnClick(object sender, RoutedEventArgs e)
     {
-        await CollapseExpandedPlayer();
+        CollapseExpandedPlayer();
     }
 
-    public async Task CollapseExpandedPlayer()
+    public void CollapseExpandedPlayer()
     {
         Common.PageMain.IsExpandedPlayerInitialized = false;
         if (Common.PageExpandedPlayer == null) return;
@@ -709,7 +709,7 @@ DoubleAnimation verticalAnimation;
         }
     }
 
-    private async void Btn_Comment_OnClick(object sender, RoutedEventArgs e)
+    private void Btn_Comment_OnClick(object sender, RoutedEventArgs e)
     {
         if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
             Common.NavigatePage(typeof(Comments), "sg" + HyPlayList.NowPlayingItem.PlayItem.Id);
@@ -717,7 +717,7 @@ DoubleAnimation verticalAnimation;
             Common.NavigatePage(typeof(Comments), "fm" + HyPlayList.NowPlayingItem.PlayItem.Album.alias);
         if (Common.Setting.forceMemoryGarbage)
             Common.NavigatePage(typeof(BlankPage));
-        await CollapseExpandedPlayer();
+        CollapseExpandedPlayer();
     }
 
     private void Btn_Share_OnClick(object sender, RoutedEventArgs e)
@@ -1021,7 +1021,7 @@ DoubleAnimation verticalAnimation;
         var value = TimeSpan.FromMilliseconds(SliderProgress.Value);
         if (Math.Abs((value - StartingTimeSpan).TotalMilliseconds) > 250d)
         {
-            _ = HyPlayList.Seek(value);
+            HyPlayList.Seek(value);
         }
 
         _isSliding = false;
@@ -1037,7 +1037,7 @@ DoubleAnimation verticalAnimation;
     {
         var value = TimeSpan.FromMilliseconds(SliderProgress.Value);
         StartingTimeSpan = value;
-        _ = HyPlayList.Seek(value);
+        HyPlayList.Seek(value);
     }
 
     private void CopySongDetailFlyoutItem_Click(object sender, RoutedEventArgs e)

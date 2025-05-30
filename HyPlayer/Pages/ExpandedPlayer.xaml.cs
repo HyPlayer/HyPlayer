@@ -146,7 +146,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             {
                 var resourceId = action.Substring(11);
                 _ = Common.NavigatePageResource(resourceId);
-                _ = Common.BarPlayBar!.CollapseExpandedPlayer();
+                Common.BarPlayBar!.CollapseExpandedPlayer();
             }
             else
             {
@@ -155,7 +155,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         }
         else
         {
-            _ = HyPlayList.Seek(TimeSpan.FromMilliseconds(line.StartTime));
+            HyPlayList.Seek(TimeSpan.FromMilliseconds(line.StartTime));
         }
     }
 
@@ -479,7 +479,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private Storyboard luminousColorsRotateStoryBoard = new Storyboard();
     private DoubleAnimation luminousColorsRotateAnimation = new DoubleAnimation();
 
-    protected override async void OnNavigatedTo(NavigationEventArgs e)
+    protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
         Common.IsInBackground = false;
@@ -806,7 +806,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     }
 
-    private async void AlbumHyperlinkBtn_OnTapped(object sender, RoutedEventArgs e)
+    private void AlbumHyperlinkBtn_OnTapped(object sender, RoutedEventArgs e)
     {
         try
         {
@@ -820,7 +820,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
             if (Common.Setting.forceMemoryGarbage)
                 Common.NavigatePage(typeof(BlankPage));
-            await Common.BarPlayBar!.CollapseExpandedPlayer();
+            Common.BarPlayBar!.CollapseExpandedPlayer();
         }
         catch
         {
@@ -848,7 +848,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
             if (Common.Setting.forceMemoryGarbage)
                 Common.NavigatePage(typeof(BlankPage));
-            await Common.BarPlayBar!.CollapseExpandedPlayer();
+            Common.BarPlayBar!.CollapseExpandedPlayer();
         }
         catch
         {
@@ -1238,7 +1238,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         LoadLyricsBox();
     }
 
-    private async void ImageAlbum_OnManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
+    private void ImageAlbum_OnManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
     {
         if (e.PointerDeviceType == PointerDeviceType.Mouse || !Common.Setting.enableTouchGestureAction) return;
         double manipulationDeltaRotateValue = new double();
@@ -1249,7 +1249,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 manipulationDeltaRotateValue = e.Delta.Rotation;
                 if (manipulationDeltaRotateValue == 0) manipulationDeltaRotateValue = e.Delta.Translation.Y;
                 ImageRotateTransform.Angle += manipulationDeltaRotateValue;
-                _ = HyPlayList.Seek(HyPlayList.Player.PrimaryAudioInputNode.Position.Add(
+                HyPlayList.Seek(HyPlayList.Player.PrimaryAudioInputNode.Position.Add(
                     TimeSpan.FromMilliseconds((int)manipulationDeltaRotateValue) * 100));
                 break;
             case 2:
@@ -1275,7 +1275,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                     if (e.Cumulative.Translation.Y > 200)
                     {
                         e.Complete();
-                        await Common.BarPlayBar!.CollapseExpandedPlayer();
+                        Common.BarPlayBar!.CollapseExpandedPlayer();
                     }
 
                     break;

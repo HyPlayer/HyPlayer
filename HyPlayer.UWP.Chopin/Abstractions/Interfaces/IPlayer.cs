@@ -12,7 +12,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Interfaces
         void DisconnectPlaybackSource(IPlaybackSource playbackSource);
         void PlayAll();
         void PauseAll();
-        Task SeekPlaybackSourceAsync(TimeSpan target, IPlaybackSource playbackSource);
+        void SeekPlaybackSource(TimeSpan target, IPlaybackSource playbackSource);
         void PausePlaybackSource(IPlaybackSource playbackSource);
         void PlayPlaybackSource(IPlaybackSource playbackSource);
         void SetPlaybackSourceSpeed(double speed, IPlaybackSource playbackSource);

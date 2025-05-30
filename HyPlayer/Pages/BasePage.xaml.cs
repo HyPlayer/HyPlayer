@@ -138,21 +138,21 @@ public sealed partial class BasePage : Page
         args.Handled = true;
     }
     */
-    private async void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs args)
+    private void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs args)
     {
         if (args.CurrentPoint.Properties.IsXButton1Pressed)
             if (Common.isExpanded)
-                await Common.BarPlayBar.CollapseExpandedPlayer();
+                Common.BarPlayBar.CollapseExpandedPlayer();
             else
                 Common.NavigateBack();
     }
 
-    private async void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
+    private void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
     {
         if (args.VirtualKey == VirtualKey.GamepadB)
         {
             if (Common.isExpanded)
-                await Common.BarPlayBar.CollapseExpandedPlayer();
+                Common.BarPlayBar.CollapseExpandedPlayer();
             else
                 Common.NavigateBack();
             args.Handled = true;
@@ -165,7 +165,7 @@ public sealed partial class BasePage : Page
 
         if (args.VirtualKey == VirtualKey.Escape)
             if (Common.isExpanded)
-                await Common.BarPlayBar.CollapseExpandedPlayer();
+                Common.BarPlayBar.CollapseExpandedPlayer();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

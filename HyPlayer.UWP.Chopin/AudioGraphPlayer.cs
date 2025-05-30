@@ -238,14 +238,13 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             }
         }
 
-        public async Task SeekPlaybackSourceAsync(TimeSpan target, IPlaybackSource playbackSource)
+        public void SeekPlaybackSource(TimeSpan target, IPlaybackSource playbackSource)
         {
             ThrowExceptionIfDisposed();
             var source = playbackSource as AudioGraphPlaybackSource;
             if (source != null)
             {
                 _audioInputNodes[source].Seek(target);
-                await Task.Delay(250);
             }
             else
             {

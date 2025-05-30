@@ -240,12 +240,18 @@ public static class HyPlayList
         Common.IsInFm = false;
     }
 
-    public static async Task Seek(TimeSpan targetTimeSpan)
+    public static void Seek(TimeSpan targetTimeSpan)
     {
-        await _seekerSemaphoreSlim.WaitAsync(500);
-        await Player.SeekPlaybackSourceAsync(targetTimeSpan, Player.PrimaryPlaybackSource);
-        OnManualSeek?.Invoke(targetTimeSpan);
-        _seekerSemaphoreSlim.Release();
+        try
+        {
+            _seekerSemaphoreSlim.Wait();
+            Player.SeekPlaybackSource(targetTimeSpan, Player.PrimaryPlaybackSource);
+            OnManualSeek?.Invoke(targetTimeSpan);
+        }
+        finally
+        {
+            _seekerSemaphoreSlim.Release();
+        }
     }
 
     public static void FireLyricColorChangeEvent()
@@ -256,7 +262,7 @@ public static class HyPlayList
     public static void MediaSystemControls_PlaybackPositionChangeRequested(SystemMediaTransportControls sender,
         PlaybackPositionChangeRequestedEventArgs args)
     {
-        _ = Seek(args.RequestedPlaybackPosition);
+        Seek(args.RequestedPlaybackPosition);
     }
 
 
@@ -525,7 +531,7 @@ public static class HyPlayList
         if (List.Count == 0) return;
         foreach (var item in List)
         {
-            item.PlayItem.AudioGraphPlaybackSource?.Dispose();
+            item?.PlayItem.AudioGraphPlaybackSource?.Dispose();
         }
         List.Clear();
         NowPlaying = -1;
@@ -647,7 +653,7 @@ public static class HyPlayList
         }
         else if (NowPlayType == PlayMode.SinglePlay)
         {
-            _ = Seek(TimeSpan.Zero);
+            Seek(TimeSpan.Zero);
         }
     }
     public static double GetAudioGainMultiplier(double audioGainValue)
@@ -742,7 +748,7 @@ public static class HyPlayList
         return playUrl;
     }
 
-    public static async Task LoadMediaSource(HyPlayItem targetItem, bool setAsPrimary = false)
+    public static async Task LoadMediaSource(HyPlayItem targetItem, bool setAsPrimary = false, bool autoPlay = true)
     {
         await _loaderSemaphoreSlim.WaitAsync();
         if (targetItem.PlayItem?.Name == null)
@@ -917,7 +923,7 @@ public static class HyPlayList
             }
             var playbackSource = new AudioGraphPlaybackSource(mediaSource);
             targetItem.PlayItem.AudioGraphPlaybackSource = playbackSource;
-            var options = new PlaybackOptions() { SetAsPrimarySource = setAsPrimary };
+            var options = new PlaybackOptions() { SetAsPrimarySource = setAsPrimary , AutoPlay = autoPlay};
             await Player.ConnectPlaybackSourceAsync(playbackSource, options);
             if (Common.Setting.EnableAudioGain)
             {
@@ -2066,7 +2072,7 @@ public static class HyPlayList
     {
         if (currentTime >= Common.Setting.ABEndPoint && Common.Setting.ABEndPoint != TimeSpan.Zero &&
             Common.Setting.ABEndPoint > Common.Setting.ABStartPoint)
-            _ = Seek(Common.Setting.ABStartPoint);
+            Seek(Common.Setting.ABStartPoint);
     }
 
     public static async void UpdateLastFMNowPlayingAsync(HyPlayItem NowPlayingItem)
