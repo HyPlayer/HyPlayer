@@ -244,7 +244,7 @@ public static class HyPlayList
     {
         try
         {
-            _seekerSemaphoreSlim.Wait();
+            _seekerSemaphoreSlim.Wait(125);
             Player.SeekPlaybackSource(targetTimeSpan, Player.PrimaryPlaybackSource);
             OnManualSeek?.Invoke(targetTimeSpan);
         }

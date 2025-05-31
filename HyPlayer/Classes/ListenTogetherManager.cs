@@ -357,7 +357,7 @@ public static class ListenTogetherManager
 
 public class RoomInfo
 {
-    public string RoomId;
+    public required string RoomId;
     public int ClientSeq;
     public RoomInfoPlayMode PlayMode;
     public string[] DisplaySongList { get; set; } = [];
@@ -367,9 +367,9 @@ public class RoomInfo
 
     public class UserInfo
     {
-        public string UserId { get; set; }
-        public string Nickname { get; set; }
-        public string AvatarUrl { get; set; }
+        public required string UserId { get; set; }
+        public required string Nickname { get; set; }
+        public required string AvatarUrl { get; set; }
     }
 
     public enum RoomInfoPlayMode
