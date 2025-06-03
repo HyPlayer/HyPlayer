@@ -58,12 +58,13 @@ internal class Api
                 var playItem = HyPlayList.NCSongToPlayItem(ncSong);
                 playItem.InfoTag = item.Recommended ? "为你推荐" : "我的喜欢";
                 HyPlayList.AppendNcPlayItem(playItem);
-                HyPlayList.SongMoveTo(0);
+                
             }
 
             try
             {
                 HyPlayList.SongAppendDone();
+                HyPlayList.SongMoveTo(0);
             }
             catch (Exception ex)
             {

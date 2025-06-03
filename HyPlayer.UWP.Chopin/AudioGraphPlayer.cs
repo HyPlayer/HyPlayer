@@ -156,6 +156,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 if (createResult.Status != AudioDeviceNodeCreationStatus.Success) throw createResult.ExtendedError;
                 _outputNode = createResult.DeviceOutputNode;
                 _outputNode.OutgoingGain = audioGraphSetting.OutputVolume;
+                GlobalPlaybackStatus = PlaybackStatus.Closed;
             }
             else
             {
@@ -324,6 +325,13 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 {
                     nodeResult.Node.Stop();
                     source.PlaybackStatus = PlaybackStatus.Paused;
+                }
+                else
+                {
+                    if(GlobalPlaybackStatus == PlaybackStatus.Closed)
+                    {
+                        PlayAll();
+                    }
                 }
                 nodeResult.Node.AddOutgoingConnection(_outputNode);
                 if (_audioInputNodes.Count == 1 || options.SetAsPrimarySource) PrimaryPlaybackSource = playbackSource;

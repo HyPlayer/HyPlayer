@@ -61,7 +61,8 @@ namespace HyPlayer.Classes
             if (HyPlayList.Player.PrimaryAudioInputNode?.Duration.TotalSeconds - HyPlayList.Player?.PrimaryAudioInputNode?.Position.TotalSeconds <= Common.Setting.CrossFadeTime 
                 && _currentPlayItem == null 
                 && !_loading
-                && HyPlayList.NowPlayType != PlayMode.SinglePlay)
+                && HyPlayList.NowPlayType != PlayMode.SinglePlay
+                && HyPlayList.List.Count > 1)
             {
                 _loading = true;
                 FadeProcessing = true;

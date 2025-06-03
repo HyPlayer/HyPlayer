@@ -4,7 +4,6 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
     {
         Playing,
         Paused,
-        CrossFading,
-        Aborted
+        Closed
     }
 }

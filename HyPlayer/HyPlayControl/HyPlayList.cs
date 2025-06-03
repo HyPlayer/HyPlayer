@@ -19,6 +19,7 @@ using Microsoft.Toolkit.Uwp.Helpers;
 using Microsoft.Toolkit.Uwp.Notifications;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -240,17 +241,19 @@ public static class HyPlayList
         Common.IsInFm = false;
     }
 
-    public static void Seek(TimeSpan targetTimeSpan)
+    public static async void Seek(TimeSpan targetTimeSpan)
     {
+        var overdue = !await _seekerSemaphoreSlim.WaitAsync(0);
         try
         {
-            _seekerSemaphoreSlim.Wait(125);
+            if (overdue) return;
             Player.SeekPlaybackSource(targetTimeSpan, Player.PrimaryPlaybackSource);
+            await Task.Delay(250);
             OnManualSeek?.Invoke(targetTimeSpan);
         }
         finally
         {
-            _seekerSemaphoreSlim.Release();
+            if(!overdue)_seekerSemaphoreSlim.Release();
         }
     }
 
@@ -750,7 +753,8 @@ public static class HyPlayList
 
     public static async Task LoadMediaSource(HyPlayItem targetItem, bool setAsPrimary = false, bool autoPlay = true)
     {
-        await _loaderSemaphoreSlim.WaitAsync();
+        var overdue = !await _loaderSemaphoreSlim.WaitAsync(0);
+        if (overdue) return;
         if (targetItem.PlayItem?.Name == null)
         {
             MoveSongPointer();
