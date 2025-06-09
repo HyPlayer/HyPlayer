@@ -614,7 +614,9 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             if (HyPlayList.NowPlayingItem == null) return;
             LyricBox.Width = LyricWidth;
             LyricBox.ChangeRenderColor(Common.BrushManagement.IdleBrush.Color, Common.BrushManagement.AccentBrush.Color);
-            LyricBox.ChangeRenderFontSize((float)showsize, (Common.Setting.translationSize > 0) ? Common.Setting.translationSize : (float)showsize / 2, Common.Setting.romajiSize);
+            LyricBox.ChangeRenderFontSize((float)showsize, 
+                (Common.Setting.translationSize > 0) ? Common.Setting.translationSize : (float)showsize / 1.8F
+                , (Common.Setting.romajiSize > 0) ? Common.Setting.romajiSize : (float)showsize / 2);
         });
     }
 

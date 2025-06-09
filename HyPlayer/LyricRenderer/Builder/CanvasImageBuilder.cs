@@ -2,6 +2,7 @@
 using Microsoft.Graphics.Canvas.Effects;
 using System;
 using System.Numerics;
+using Windows.Foundation;
 using Windows.Graphics.Effects;
 using Windows.UI;
 using Windows.UI.Xaml.Media;
@@ -49,6 +50,29 @@ public class CanvasImageBuilder(ICanvasImage source)
             Source = _source,
             BlurAmount = blurAmount,
             ShadowColor = color,
+        };
+        return this;
+    }
+
+    public CanvasImageBuilder AddCropEffect(Rect sourceRectangle, EffectBorderMode borderMode = EffectBorderMode.Soft)
+    {
+        _source = new CropEffect
+        {
+            Source = _source,
+            SourceRectangle = sourceRectangle,
+            BorderMode = borderMode
+        };
+        return this;
+    }
+
+    public CanvasImageBuilder AddVignetteEffect(Color color, float amount, float curve = 1f)
+    {
+        _source = new VignetteEffect
+        {
+            Source = _source,
+            Amount = amount,
+            Curve = curve,
+            Color = color
         };
         return this;
     }

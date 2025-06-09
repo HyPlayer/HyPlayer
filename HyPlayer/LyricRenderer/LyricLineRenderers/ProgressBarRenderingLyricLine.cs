@@ -34,7 +34,7 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
         switch (TypographySelector(t => t?.Alignment, context)!.Value)
         {
             case TextAlignment.Left:
-                actualX += (context.PreferTypography.LyricFontSize! / 10).Value + 8;
+                actualX += (context.PreferTypography.LyricFontSize! / 10).Value;
                 break;
             case TextAlignment.Center:
                 actualX += (float)(RenderingWidth / 2 - Width / 2.0);
