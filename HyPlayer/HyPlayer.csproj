@@ -164,7 +164,7 @@
     <Compile Include="Controls\SongsList.xaml.cs">
       <DependentUpon>SongsList.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Extensions\RosylnExtensions.cs" />
+    <Compile Include="Classes\Extensions\RosylnExtensions.cs" />
     <Compile Include="HyPlayControl\DownloadManager.cs" />
     <Compile Include="HyPlayControl\HyPlayList.cs" />
     <Compile Include="Controls\LyricControl\LyricControl.Properties.cs" />
