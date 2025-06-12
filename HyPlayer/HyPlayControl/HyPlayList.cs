@@ -202,42 +202,49 @@ public static class HyPlayList
 
     public static event SongCoverChanged OnSongCoverChanged;
 
-    public static void InitializeHyPlaylist()
+    public static async void InitializeHyPlaylist()
     {
-        if (!Player.PlayerCreated)
+        try
         {
-            _ = Player.InitializePlayer(new AudioGraphAudioSetting()
+            if (!Player.PlayerCreated)
             {
-                DefaultDeviceId = Common.Setting.AudioRenderDevice,
-                OutputVolume = Common.Setting.Volume / 100d,
-                AutoFallback = true
-            });
-        }
-        MediaSystemControls = SystemMediaTransportControls.GetForCurrentView();
-        Player.SMTCManager = new SMTCManager(MediaSystemControls);
-        _controlsDisplayUpdater = MediaSystemControls.DisplayUpdater;
-        MediaSystemControls.IsPlayEnabled = true;
-        MediaSystemControls.IsPauseEnabled = true;
-        MediaSystemControls.IsNextEnabled = true;
-        MediaSystemControls.IsPreviousEnabled = true;
-        MediaSystemControls.IsEnabled = true;
-        MediaSystemControls.ButtonPressed += SystemControls_ButtonPressed;
-        MediaSystemControls.PlaybackStatus = MediaPlaybackStatus.Closed;
-        Player.OnTrackReachesEnd += Player_MediaEnded;
-        Player.OnGlobalPlaybackStatusChanged += Player_CurrentStateChanged;
-        Player.OnPositionChanged += PlaybackSession_PositionChanged;
+                await Player.InitializePlayer(new AudioGraphAudioSetting()
+                {
+                    DefaultDeviceId = Common.Setting.AudioRenderDevice,
+                    OutputVolume = Common.Setting.Volume / 100d,
+                    AutoFallback = true
+                });
+            }
+            MediaSystemControls = SystemMediaTransportControls.GetForCurrentView();
+            Player.SMTCManager = new SMTCManager(MediaSystemControls);
+            _controlsDisplayUpdater = MediaSystemControls.DisplayUpdater;
+            MediaSystemControls.IsPlayEnabled = true;
+            MediaSystemControls.IsPauseEnabled = true;
+            MediaSystemControls.IsNextEnabled = true;
+            MediaSystemControls.IsPreviousEnabled = true;
+            MediaSystemControls.IsEnabled = true;
+            MediaSystemControls.ButtonPressed += SystemControls_ButtonPressed;
+            MediaSystemControls.PlaybackStatus = MediaPlaybackStatus.Closed;
+            Player.OnTrackReachesEnd += Player_MediaEnded;
+            Player.OnGlobalPlaybackStatusChanged += Player_CurrentStateChanged;
+            Player.OnPositionChanged += PlaybackSession_PositionChanged;
 
-        Player.OnPrimaryPlaybackSourceChanged += Player_SourceChanged;
-        SecTimer.Elapsed += (sender, args) => _ = Common.Invoke(() => OnTimerTicked?.Invoke());
-        SecTimer.Start();
-        if (Common.Setting.highPreciseLyricTimer)
+            Player.OnPrimaryPlaybackSourceChanged += Player_SourceChanged;
+            SecTimer.Elapsed += (sender, args) => _ = Common.Invoke(() => OnTimerTicked?.Invoke());
+            SecTimer.Start();
+            if (Common.Setting.highPreciseLyricTimer)
+            {
+                highTimer.Elapsed += (_, _) => { LoadLyricChange(); };
+                highTimer.Start();
+            }
+
+            HistoryManagement.InitializeHistoryTrack();
+            Common.IsInFm = false;
+        }
+        catch(Exception e)
         {
-            highTimer.Elapsed += (_, _) => { LoadLyricChange(); };
-            highTimer.Start();
+            Common.AddToTeachingTipLists("初始化播放器失败", e.Message);
         }
-
-        HistoryManagement.InitializeHistoryTrack();
-        Common.IsInFm = false;
     }
 
     public static async void Seek(TimeSpan targetTimeSpan)
@@ -531,15 +538,15 @@ public static class HyPlayList
     public static void RemoveAllSong(bool resetPlaying = true)
     {
         if (List.Count == 0) return;
-        List.Clear();
-        NowPlaying = -1;
-        OnSongRemoveAll?.Invoke();
         if (resetPlaying)
         {
             Player.RemoveAllPlaybackSource();
             var songsToBeFree = List.Where(t => t.PlayItem.AudioGraphPlaybackSource != null).ToList();
             songsToBeFree.ForEach(t => t.PlayItem?.FreePlaybackResources());
         }
+        List.Clear();
+        NowPlaying = -1;
+        OnSongRemoveAll?.Invoke();
         SongAppendDone();
     }
 

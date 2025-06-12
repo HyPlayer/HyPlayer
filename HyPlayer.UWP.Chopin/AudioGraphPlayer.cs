@@ -1,5 +1,6 @@
 ﻿using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 {
     public class AudioGraphPlayer : IPlayer, IDisposable
     {
-        private Dictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode> _audioInputNodes = new Dictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode>();
+        private ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode> _audioInputNodes = new ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode>();
         private AudioGraph _defaultPlayer;
         private AudioDeviceOutputNode _outputNode;
         private bool disposedValue;
@@ -37,9 +38,10 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         private double _volume = 1;
         public bool IsMuted
         {
-            get => _outputNode.OutgoingGain == 0;
+            get => _outputNode?.OutgoingGain == 0;
             set
             {
+                if (_outputNode == null) return;
                 if (value == true)
                 {
                     _outputNode.OutgoingGain = 0;
@@ -61,7 +63,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             }
         }
         private AudioGraphPlaybackSource _primaryPlaybackSource;
-        public PlaybackStatus GlobalPlaybackStatus { get; protected set; } = PlaybackStatus.Paused;
+        public PlaybackStatus GlobalPlaybackStatus { get; protected set; } = PlaybackStatus.Closed;
         public MediaSourceAudioInputNode PrimaryAudioInputNode
         {
             get
@@ -100,7 +102,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 var deviceNodeCreateResult = await newPlayer.CreateDeviceOutputNodeAsync();
                 if (deviceNodeCreateResult.Status != AudioDeviceNodeCreationStatus.Success) throw deviceNodeCreateResult.ExtendedError;
                 _outputNode = deviceNodeCreateResult.DeviceOutputNode;
-                var newNodes = new Dictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode>();
+                var newNodes = new ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode>();
                 foreach (var node in oldNodes)
                 {
                     if (node.Key is AudioGraphPlaybackSource audioGraphPlaybackSource)
@@ -156,7 +158,6 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 if (createResult.Status != AudioDeviceNodeCreationStatus.Success) throw createResult.ExtendedError;
                 _outputNode = createResult.DeviceOutputNode;
                 _outputNode.OutgoingGain = audioGraphSetting.OutputVolume;
-                GlobalPlaybackStatus = PlaybackStatus.Closed;
             }
             else
             {
@@ -314,6 +315,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 options = new PlaybackOptions();
             }
             var source = playbackSource as AudioGraphPlaybackSource;
+            if (_audioInputNodes.ContainsKey(source)) throw new ArgumentException("PlaybackSource has been connected to the player.");
             if (source != null)
             {
                 if (_defaultPlayer == null) return;
@@ -357,11 +359,12 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             var source = playbackSource as AudioGraphPlaybackSource;
             if (source != null)
             {
+                if (!_audioInputNodes.ContainsKey(source)) return;
                 _audioInputNodes[source].MediaSourceCompleted -= OnMediaSourceCompleted;
                 if (PrimaryPlaybackSource == source) PrimaryPlaybackSource = null;
                 _audioInputNodes[source].RemoveOutgoingConnection(_outputNode);
                 _audioInputNodes[source].Dispose();
-                _audioInputNodes.Remove(source);
+                _audioInputNodes.TryRemove(source, out _);
             }
             else throw new ArgumentException("PlaybackSource is not AudioGraphPlaybackSource.");
         }

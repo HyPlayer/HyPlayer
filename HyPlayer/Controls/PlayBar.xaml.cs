@@ -67,6 +67,15 @@ DoubleAnimation verticalAnimation;
                         HyPlayList.Player.GlobalPlaybackStatus == PlaybackStatus.Playing
                             ? "\uF8AE"
                             : "\uF5B0";
+            if (status == PlaybackStatus.Playing)
+            {
+                if (Common.Setting.playbarBackgroundBreath)
+                    PlayBarBackgroundAni.Begin();
+            }
+            else
+            {
+                PlayBarBackgroundAni.Stop();
+            }
         });
     }
 
@@ -405,22 +414,15 @@ DoubleAnimation verticalAnimation;
 
     private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
     {
-        if (HyPlayList.NowPlayingItem.PlayItem?.Name != null && (HyPlayList.Player.ConnectedPlaybackSourceCount == 0))
+        if (HyPlayList.NowPlayingItem.PlayItem?.Name != null && HyPlayList.Player.GlobalPlaybackStatus == PlaybackStatus.Closed)
             _ = HyPlayList.LoadMediaSource(HyPlayList.List[HyPlayList.NowPlaying]);
-        PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uF8AE" : "\uF5B0";
         if (HyPlayList.IsPlaying)
         {
             HyPlayList.Player.PauseAll();
-
-            PlayBarBackgroundAni.Stop();
         }
         else
         {
-            //HyPlayList.Player.Play();
             HyPlayList.Player.PlayAll();
-
-            if (Common.Setting.playbarBackgroundBreath)
-                PlayBarBackgroundAni.Begin();
         }
     }
 
