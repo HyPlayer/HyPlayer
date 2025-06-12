@@ -247,8 +247,8 @@ public static class HyPlayList
         {
             if (overdue) return;
             Player.SeekPlaybackSource(targetTimeSpan, Player.PrimaryPlaybackSource);
-            await Task.Delay(250);
             OnManualSeek?.Invoke(targetTimeSpan);
+            await Task.Delay(250);
         }
         finally
         {
