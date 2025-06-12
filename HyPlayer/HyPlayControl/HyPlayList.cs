@@ -531,14 +531,15 @@ public static class HyPlayList
     public static void RemoveAllSong(bool resetPlaying = true)
     {
         if (List.Count == 0) return;
-        foreach (var item in List)
-        {
-            item?.PlayItem.AudioGraphPlaybackSource?.Dispose();
-        }
         List.Clear();
         NowPlaying = -1;
         OnSongRemoveAll?.Invoke();
-        Player.RemoveAllPlaybackSource();
+        if (resetPlaying)
+        {
+            Player.RemoveAllPlaybackSource();
+            var songsToBeFree = List.Where(t => t.PlayItem.AudioGraphPlaybackSource != null).ToList();
+            songsToBeFree.ForEach(t => t.PlayItem?.FreePlaybackResources());
+        }
         SongAppendDone();
     }
 
