@@ -950,8 +950,9 @@ public sealed partial class BasePage : Page
         var lines = await Windows.Storage.FileIO.ReadLinesAsync(storagefile);
         var idx = new Random().Next(lines.Count - 1);
         var deviceId = lines[idx];
-        Common.NeteaseAPI.Option.AdditionalParameters.Headers["deviceId"] = deviceId;
         Common.NeteaseAPI.Option.AdditionalParameters.Cookies["deviceId"] = deviceId;
+        Common.NeteaseAPI.Option.AdditionalParameters.Cookies["os"] = "pc";
+        Common.NeteaseAPI.Option.AdditionalParameters.Cookies["appver"] = "3.1.3.203419";
         Common.Setting.ApiAdditionalParameters = Common.NeteaseAPI.Option.AdditionalParameters;
         var rst = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.RegisterAnounymousApi, new RegisterAnounymousRequest()
         {

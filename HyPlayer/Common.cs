@@ -346,16 +346,6 @@ namespace HyPlayer
             }
         }
 
-        public bool EnablePreLoad
-        {
-            get => GetSettings(nameof(EnablePreLoad), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(EnablePreLoad)] = value;
-                OnPropertyChanged();
-            }
-        }
-
         public bool enableAmllTtmlDb
         {
             get => GetSettings(nameof(enableAmllTtmlDb), false);
@@ -588,16 +578,6 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(downloadTranslation)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool usingGBK
-        {
-            get => GetSettings(nameof(usingGBK), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(usingGBK)] = value;
                 OnPropertyChanged();
             }
         }
@@ -847,16 +827,6 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(lyricAlignment)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool ancientSMTC
-        {
-            get => GetSettings(nameof(ancientSMTC), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(ancientSMTC)] = value;
                 OnPropertyChanged();
             }
         }
@@ -1123,28 +1093,6 @@ namespace HyPlayer
             }
         }
 
-        public string cacheDir
-        {
-            get
-            {
-                try
-                {
-                    return GetSettings(nameof(cacheDir), ApplicationData.Current.LocalCacheFolder
-                        .CreateFolderAsync("songCache", CreationCollisionOption.OpenIfExists).AsTask().GetAwaiter()
-                        .GetResult().Path);
-                }
-                catch
-                {
-                    return ApplicationData.Current.LocalCacheFolder.Path;
-                }
-            }
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(cacheDir)] = value;
-                OnPropertyChanged();
-            }
-        }
-
         public bool CrossFade
         {
             get => GetSettings("CrossFade", false);
@@ -1309,16 +1257,6 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(songUrlLazyGet)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool enableCache
-        {
-            get => GetSettings(nameof(enableCache), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(enableCache)] = value;
                 OnPropertyChanged();
             }
         }

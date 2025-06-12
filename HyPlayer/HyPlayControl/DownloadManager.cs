@@ -268,11 +268,6 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                     .CreateFileAsync(
                         Path.GetFileName(Path.ChangeExtension(FullPath, "lrc")),
                         CreationCollisionOption.ReplaceExisting);
-                if (Common.Setting.usingGBK)
-                    await FileIO.WriteBytesAsync(sf,
-                        Encoding.Convert(Encoding.UTF8, Encoding.GetEncoding("GBK"),
-                            Encoding.UTF8.GetBytes(lrctxt)));
-                else
                     await FileIO.WriteTextAsync(sf, lrctxt);
             }
             else

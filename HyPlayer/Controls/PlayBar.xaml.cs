@@ -189,15 +189,15 @@ DoubleAnimation verticalAnimation;
                 {
                     if ((HyPlayList.Player.PrimaryAudioInputNode?.Position.Minutes ?? 0) < 10)
                         TextBlockNowTime.Text =
-                            HyPlayList.Player.PrimaryAudioInputNode?.Position.ToString(@"m\:ss");
+                            HyPlayList.Player.PrimaryAudioInputNode?.Position.ToString(@"m\:ss") ?? string.Empty;
                     else
                         TextBlockNowTime.Text =
-                            HyPlayList.Player.PrimaryAudioInputNode?.Position.ToString(@"mm\:ss");
+                            HyPlayList.Player.PrimaryAudioInputNode?.Position.ToString(@"mm\:ss") ?? string.Empty;
                 }
                 else
                 {
                     TextBlockNowTime.Text =
-                        HyPlayList.Player.PrimaryAudioInputNode?.Position.ToString(@"hh\:mm\:ss");
+                        HyPlayList.Player.PrimaryAudioInputNode?.Position.ToString(@"hh\:mm\:ss") ?? string.Empty;
                 }
             }
             catch

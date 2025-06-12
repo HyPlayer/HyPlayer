@@ -24,7 +24,7 @@ namespace HyPlayer.Classes
 
         private void HyPlayList_OnMediaEnd(HyPlayItem hpi)
         {
-            if (HyPlayList.NowPlayType == PlayMode.SinglePlay) return;
+            if (HyPlayList.NowPlayType == PlayMode.SinglePlay || hpi.PlayItem.AudioGraphPlaybackSource is null) return;
             HyPlayList.Player.DisconnectPlaybackSource(hpi.PlayItem.AudioGraphPlaybackSource);
             if (hpi.PlayItem.AudioGraphPlaybackSource != null)
             {
@@ -43,14 +43,25 @@ namespace HyPlayer.Classes
 
         private void HyPlayList_OnSongMoveNext()
         {
-            if(_currentPlayItem != null)
-            {
-                var keyItem = _currentPlayItem.Item1.PlaybackSource?.CustomProperties["nowPlayingItem"] as HyPlayItem;
-                var valueItem = _currentPlayItem.Item2.PlaybackSource?.CustomProperties["nowPlayingItem"] as HyPlayItem;
-                keyItem?.PlayItem?.FreePlaybackResources();
-                valueItem?.PlayItem?.FreePlaybackResources();
-            }
+            var currentPlayItem = _currentPlayItem;
             _currentPlayItem = null;
+            if (currentPlayItem != null)
+            {
+                var keyItem = currentPlayItem.Item1.PlaybackSource?.CustomProperties["nowPlayingItem"] as HyPlayItem;
+                var valueItem = currentPlayItem.Item2.PlaybackSource?.CustomProperties["nowPlayingItem"] as HyPlayItem;
+                if(keyItem?.PlayItem is not null)
+                {
+                    var keySource = keyItem?.PlayItem.AudioGraphPlaybackSource;
+                    HyPlayList.Player.DisconnectPlaybackSource(keySource);
+                    keyItem.PlayItem.FreePlaybackResources();
+                }
+                if (valueItem?.PlayItem is not null)
+                {
+                    var valueSource = valueItem?.PlayItem.AudioGraphPlaybackSource;
+                    HyPlayList.Player.DisconnectPlaybackSource(valueSource);
+                    keyItem.PlayItem.FreePlaybackResources();
+                }
+            }
             _currentNode = null;
             FadeProcessing = false;
             _initialVolume.Clear();

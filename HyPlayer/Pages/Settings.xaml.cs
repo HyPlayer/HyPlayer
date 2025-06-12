@@ -320,21 +320,6 @@ public sealed partial class Settings : Page, IDisposable
             Common.Setting.expandedCoverShadowDepth = Math.Max(0, size);
     }
 
-
-    private async void ButtonCacheSelect_OnClick(object sender, RoutedEventArgs e)
-    {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
-        var folderPicker = new FolderPicker();
-        folderPicker.SuggestedStartLocation = PickerLocationId.Desktop;
-        folderPicker.FileTypeFilter.Add("*");
-        var folder = await folderPicker.PickSingleFolderAsync();
-        if (folder != null)
-        {
-            StorageApplicationPermissions.FutureAccessList.AddOrReplace("cacheFolder", folder);
-            Common.Setting.cacheDir = folder.Path;
-        }
-    }
-
     private void StackPanel_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(Settings));

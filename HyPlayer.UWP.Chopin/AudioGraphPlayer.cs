@@ -321,6 +321,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 var nodeResult = await _defaultPlayer.CreateMediaSourceAudioInputNodeAsync(source.PlaybackSource);
                 if (nodeResult.Status != MediaSourceAudioInputNodeCreationStatus.Success) throw nodeResult.ExtendedError;
                 _audioInputNodes[source] = nodeResult.Node;
+                nodeResult.Node.OutgoingGain = options.Volume;
                 if (!options.AutoPlay)
                 {
                     nodeResult.Node.Stop();

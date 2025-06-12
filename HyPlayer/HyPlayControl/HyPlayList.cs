@@ -108,7 +108,6 @@ public static class HyPlayList
     public static FadeManager FadeManager = new FadeManager(Player);
     public static SystemMediaTransportControls MediaSystemControls;
     private static SystemMediaTransportControlsDisplayUpdater _controlsDisplayUpdater;
-    private static readonly BackgroundDownloader Downloader = new();
     private static Dictionary<HyPlayItem, DownloadOperation> DownloadOperations = new();
     public static InMemoryRandomAccessStream CoverStream = new InMemoryRandomAccessStream();
     public static IBuffer CoverBuffer;
@@ -803,89 +802,8 @@ public static class HyPlayList
                     }
                     else
                     {
-                        if (Common.Setting.enableCache)
-                        {
-                            //再检测是否已经缓存且大小正常
-                            try
-                            {
-                                // 加载本地缓存文件
-                                var sf =
-                                    await (await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir))
-                                        .GetFileAsync(targetItem.PlayItem.Id +
-                                                      ".cache");
-                                if ((await sf.GetBasicPropertiesAsync()).Size.ToString() ==
-                                    targetItem.PlayItem.Size || targetItem.PlayItem.Size == null)
-                                {
-                                    mediaSource = MediaSource.CreateFromStorageFile(sf);
-                                }
-
-                                else
-                                {
-                                    await sf.DeleteAsync();
-                                    throw new Exception("File Size Not Match");
-                                }
-                            }
-                            catch
-                            {
-                                try
-                                {
-                                    var playUrl = await GetNowPlayingUrl(targetItem);
-                                    IStorageFile resultFile = null;
-                                    //尝试从DownloadOperation下载
-                                    if (playUrl != null)
-                                    {
-                                        var destinationFolder =
-                                            await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir);
-
-                                        if (!DownloadOperations.ContainsKey(targetItem))
-                                        {
-                                            var destinationFile =
-                                                await destinationFolder.CreateFileAsync(
-                                                    targetItem.PlayItem.Id +
-                                                    ".cache", CreationCollisionOption.ReplaceExisting);
-                                            var downloadOperation =
-                                                Downloader.CreateDownload(new Uri(playUrl), destinationFile);
-                                            resultFile = await HandleDownloadAsync(downloadOperation, targetItem);
-                                        }
-
-                                        var exists = await destinationFolder.FileExistsAsync(resultFile.Name);
-                                        if (resultFile != null && exists)
-                                        {
-                                            mediaSource = MediaSource.CreateFromStorageFile(resultFile);
-                                        }
-                                        else
-                                        {
-                                            mediaSource =
-                                                MediaSource.CreateFromUri(new Uri(playUrl)); //如果你很急的话那先听在线的凑活下
-                                        }
-                                    }
-                                }
-                                catch
-                                {
-                                    var playUrl = await GetNowPlayingUrl(targetItem);
-                                    if (playUrl != null)
-                                        mediaSource = MediaSource.CreateFromUri(new Uri(playUrl));
-                                }
-                            }
-                        }
-                        else
-                        {
-                            var playUrl = await GetNowPlayingUrl(targetItem);
-                            if (Common.Setting.EnablePreLoad)
-                            {
-                                var reference = RandomAccessStreamReference.CreateFromUri(new Uri(playUrl));
-                                using var stream = await reference.OpenReadAsync();
-                                var buffer = new Buffer((uint)stream.Size);
-                                await stream.ReadAsync(buffer, (uint)stream.Size, InputStreamOptions.None);
-                                targetItem.PlayItem.NcmPlayableStream = new InMemoryRandomAccessStream();
-                                await targetItem.PlayItem.NcmPlayableStream.WriteAsync(buffer);
-                                mediaSource = MediaSource.CreateFromStream(targetItem.PlayItem.NcmPlayableStream, stream.ContentType);
-                            }
-                            else
-                            {
-                                mediaSource = MediaSource.CreateFromUri(new Uri(playUrl));
-                            }
-                        }
+                        var playUrl = await GetNowPlayingUrl(targetItem);
+                        mediaSource = MediaSource.CreateFromUri(new Uri(playUrl));
                     }
 
                     break;
@@ -927,15 +845,8 @@ public static class HyPlayList
             }
             var playbackSource = new AudioGraphPlaybackSource(mediaSource);
             targetItem.PlayItem.AudioGraphPlaybackSource = playbackSource;
-            var options = new PlaybackOptions() { SetAsPrimarySource = setAsPrimary , AutoPlay = autoPlay};
+            var options = new PlaybackOptions() { SetAsPrimarySource = setAsPrimary , AutoPlay = autoPlay, Volume = Common.Setting.EnableAudioGain ? targetItem.PlayItem.Volume : 1d};
             await Player.ConnectPlaybackSourceAsync(playbackSource, options);
-            if (Common.Setting.EnableAudioGain)
-            {
-                if (targetItem.PlayItem.AudioGraphPlaybackSource != null && !FadeManager.FadeProcessing)
-                {
-                    Player.SetPlaybackSourceOutputVolume(targetItem.PlayItem.Volume, targetItem.PlayItem.AudioGraphPlaybackSource);
-                }
-            }
         }
         catch (Exception e)
         {
