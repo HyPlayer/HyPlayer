@@ -18,11 +18,11 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers;
 public class ProgressBarRenderingLyricLine : RenderingLyricLine
 {
     public EaseFunctionBase LeavingEaseFunction { get; set; } = new CustomCircleEase { EasingMode = EasingMode.EaseOut };
-    public EaseFunctionBase ShiningEaseFunction { get; set; } = new CustomSineEase { EasingMode = EasingMode.EaseOut };
+    public EaseFunctionBase ShiningEaseFunction { get; set; } = new CustomCircleEase { EasingMode = EasingMode.EaseOut };
     public int Width { get; set; } = 200;
     public int Height { get; set; } = 8;
     public int AnimationDuration { get; set; } = 800;
-    public int ShineDuration { get; set; } = 1200;
+    public int ShineDuration { get; set; } = 400;
     public override void GoToReactionState(ReactionState state, RenderContext context)
     {
         // TODO

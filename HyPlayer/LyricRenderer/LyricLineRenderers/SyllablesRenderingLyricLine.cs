@@ -112,7 +112,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                             {
                                 clds.DrawTextLayout(tll, 0, actualTop, idleColor);
                                 var highlightGeometry = CreateHighlightGeometries(context.CurrentLyricTime, tll,
-                                    session, Syllables, false, true);
+                                    session, Syllables, true, true);
                                 var matrix = Matrix3x2.CreateTranslation(0, actualTop);
                                 using (clds.CreateLayer(1, highlightGeometry.geo1, matrix))
                                 {
@@ -263,7 +263,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             _sizeChanged = false;
 
             // 画背景
-            if (_reactionState == ReactionState.Enter)
+            if (_reactionState == ReactionState.Enter && !string.IsNullOrEmpty(_text))
             {
                 var color = new Color
                 {
