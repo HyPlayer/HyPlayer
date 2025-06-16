@@ -111,6 +111,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                             if (_isRomajiSyllable)
                             {
                                 clds.DrawTextLayout(tll, 0, actualTop, idleColor);
+
                                 var highlightGeometry = CreateHighlightGeometries(context.CurrentLyricTime, tll,
                                     session, Syllables, true, true);
                                 var matrix = Matrix3x2.CreateTranslation(0, actualTop);
@@ -341,17 +342,22 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     if (currentLyric.StartTime <= currentTime)
                     {
                         // 获取当前字符的 Bound
+                        var characterCount = isTransliteration
+                            ? currentLyric.Transliteration?.Length ?? 0
+                            : currentLyric.Syllable.Length;
                         var currentRegions =
-                            targetLayout.GetCharacterRegions(letterPosition,
-                                isTransliteration
-                                    ? currentLyric.Transliteration?.Length ?? 0
-                                    : currentLyric.Syllable.Length);
+                            targetLayout.GetCharacterRegions(letterPosition, characterCount);
+
                         if (currentRegions is { Length: > 0 })
                         {
                             // 加个保险措施
                             // 计算当前字符的进度
                             currentPercentage = (currentTime - currentLyric.StartTime) * 1.0f /
                                                 (currentLyric.EndTime - currentLyric.StartTime);
+
+                            var fs = targetLayout.DefaultFontSize;
+                            var es = currentLyric.EndTime - currentLyric.StartTime > 1000 ? new CustomElasticEase() { Springiness = 1} :EaseFunction;
+                            targetLayout.SetFontSize(letterPosition, characterCount, (float)(fs + es.Ease(currentPercentage) * 8));
                             // 创建矩形
                             if (isScan)
                             {
