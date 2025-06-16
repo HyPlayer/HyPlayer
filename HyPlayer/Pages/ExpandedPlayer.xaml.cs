@@ -985,8 +985,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private async Task<bool> IsBrightAsync(IRandomAccessStream coverStream)
     {
-		lastSong = HyPlayList.NowPlayingItem;
-		using var stream = coverStream.CloneStream();
+        lastSong = HyPlayList.NowPlayingItem;
+        using var stream = coverStream.CloneStream();
         var finalResult = false; //在不手动指定背景类型为2至5时需要执行颜色采样
         var resultGenerated = false; //标志返回颜色已经生成
         if (Common.Setting.lyricColor != 0 && Common.Setting.lyricColor != 3)
@@ -1610,7 +1610,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         }
         else
         {
-            _  = Collapse();
+            _ = Collapse();
         }
     }
 

@@ -11,7 +11,6 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Timers;
@@ -268,7 +267,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                     .CreateFileAsync(
                         Path.GetFileName(Path.ChangeExtension(FullPath, "lrc")),
                         CreationCollisionOption.ReplaceExisting);
-                    await FileIO.WriteTextAsync(sf, lrctxt);
+                await FileIO.WriteTextAsync(sf, lrctxt);
             }
             else
             {

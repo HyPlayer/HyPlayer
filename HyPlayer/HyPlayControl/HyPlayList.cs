@@ -19,13 +19,11 @@ using Microsoft.Toolkit.Uwp.Helpers;
 using Microsoft.Toolkit.Uwp.Notifications;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
 using Windows.Foundation.Collections;
 using Windows.Graphics.Imaging;
 using Windows.Media;
@@ -95,7 +93,7 @@ public static class HyPlayList
     public delegate void SongCoverChanged(HyPlayItem playItem, IBuffer coverStream);
 
     public static int NowPlaying;
-    private static readonly System.Timers.Timer SecTimer = new(1000); // 公用秒表
+    private static readonly Timer SecTimer = new(1000); // 公用秒表
     public static readonly List<HyPlayItem> List = new();
     public static readonly List<int> ShuffleList = new();
     public static int ShufflingIndex = -1;
@@ -106,17 +104,20 @@ public static class HyPlayList
     /********        API        ********/
     public static AudioGraphPlayer Player = new AudioGraphPlayer();
     public static FadeManager FadeManager = new FadeManager(Player);
+    public static BackgroundDownloader Downloader = new();
     public static SystemMediaTransportControls MediaSystemControls;
     private static SystemMediaTransportControlsDisplayUpdater _controlsDisplayUpdater;
     private static Dictionary<HyPlayItem, DownloadOperation> DownloadOperations = new();
+    private static Dictionary<DownloadOperation, HyPlayItem> DownloadOperationsReverseDirectory = new();
     public static InMemoryRandomAccessStream CoverStream = new InMemoryRandomAccessStream();
     public static IBuffer CoverBuffer;
 
     public static RandomAccessStreamReference CoverStreamReference =
         RandomAccessStreamReference.CreateFromStream(CoverStream);
 
-    private static SemaphoreSlim _loaderSemaphoreSlim = new SemaphoreSlim(1,1);
-    private static SemaphoreSlim _seekerSemaphoreSlim = new SemaphoreSlim(1,1);
+    private static SemaphoreSlim _loaderSemaphoreSlim = new SemaphoreSlim(1, 1);
+    private static SemaphoreSlim _seekerSemaphoreSlim = new SemaphoreSlim(1, 1);
+    private static readonly IProgress<DownloadOperation> DefaultProgressCallback = new Progress<DownloadOperation>(ProgressCallback);
 
     public static int LyricPos;
 
@@ -241,7 +242,7 @@ public static class HyPlayList
             HistoryManagement.InitializeHistoryTrack();
             Common.IsInFm = false;
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             Common.AddToTeachingTipLists("初始化播放器失败", e.Message);
         }
@@ -259,7 +260,7 @@ public static class HyPlayList
         }
         finally
         {
-            if(!overdue)_seekerSemaphoreSlim.Release();
+            if (!overdue) _seekerSemaphoreSlim.Release();
         }
     }
 
@@ -692,6 +693,7 @@ public static class HyPlayList
                         }
 
                         playUrl = songResult.Value.SongUrls[0].Url;
+                        targetItem.PlayItem.Size = songResult.Value.SongUrls[0].Size.ToString();
                         if (Common.Setting.UseHttpWhenGettingSongs && playUrl.Contains("https://"))
                         {
                             playUrl = playUrl.Replace("https://", "http://");
@@ -776,7 +778,7 @@ public static class HyPlayList
 
         try
         {
-            if(Player.PrimaryPlaybackSource != null && (!Common.Setting.CrossFade || (Common.Setting.CrossFade && !FadeManager.FadeProcessing)))
+            if (Player.PrimaryPlaybackSource != null && (!Common.Setting.CrossFade || (Common.Setting.CrossFade && !FadeManager.FadeProcessing)))
             {
                 var primaryPlaybackSource = Player.PrimaryPlaybackSource as AudioGraphPlaybackSource;
                 Player.PausePlaybackSource(primaryPlaybackSource);
@@ -792,9 +794,86 @@ public static class HyPlayList
             {
                 case HyPlayItemType.Netease:
                 case HyPlayItemType.Radio: //FM伪加载为普通歌曲
-                    //先看看是不是本地文件
-                    //本地文件的话尝试加载
-                    //cnm的NCM,我试试其他方式
+                                           //先看看是不是本地文件
+                                           //本地文件的话尝试加载
+                                           //cnm的NCM,我试试其他方式
+                    if (Common.Setting.enableCache)
+                    {
+                        var playUrl = await GetNowPlayingUrl(targetItem);
+                        //再检测是否已经缓存且大小正常
+                        try
+                        {
+                            // 加载本地缓存文件
+                            var sf =
+                                await (await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir))
+                                    .GetFileAsync(targetItem.PlayItem.Id +
+                                                  ".cache");
+                            if ((await sf.GetBasicPropertiesAsync()).Size.ToString() == targetItem.PlayItem.Size)
+                            {
+                                mediaSource = MediaSource.CreateFromStorageFile(sf);
+                                break;
+                            }
+                            else
+                            {
+                                await sf.DeleteAsync();
+                                throw new Exception("File Size Not Match");
+                            }
+                        }
+                        catch
+                        {
+                            DownloadOperation operation = null;
+                            
+                            var destinationFolder =
+                                        await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir);
+                            var destinationFile =
+                                            await destinationFolder.CreateFileAsync(
+                                                targetItem.PlayItem.Id +
+                                                ".cache", CreationCollisionOption.ReplaceExisting);
+                            try
+                            {
+                                //尝试从DownloadOperation下载
+                                if (playUrl != null)
+                                {
+                                    if (!DownloadOperations.ContainsKey(targetItem))
+                                    {
+                                        
+                                        operation =
+                                            Downloader.CreateDownload(new Uri(playUrl), destinationFile);
+                                        operation.IsRandomAccessRequired = true;
+                                        DownloadOperations[targetItem] = operation;
+                                        DownloadOperationsReverseDirectory[operation] = targetItem;
+                                        _ = operation.StartAsync().AsTask(DefaultProgressCallback);
+
+                                        mediaSource = MediaSource.CreateFromDownloadOperation(operation);
+                                        await mediaSource.OpenAsync();
+                                        break;
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                                mediaSource?.Dispose();
+                                mediaSource = null;
+                                if(operation.CurrentWebErrorStatus != null)
+                                {
+                                    var item = DownloadOperations[targetItem];
+                                    DownloadOperations.Remove(targetItem);
+                                    DownloadOperationsReverseDirectory.Remove(item);
+                                    destinationFile = await destinationFolder.CreateFileAsync(targetItem.PlayItem.Id + ".cache", CreationCollisionOption.ReplaceExisting);
+                                    operation =
+                                        Downloader.CreateDownload(new Uri(playUrl), destinationFile);
+                                    DownloadOperations[targetItem] = operation;
+                                    DownloadOperationsReverseDirectory[operation] = targetItem;
+                                    await operation.StartAsync().AsTask(DefaultProgressCallback);
+                                }
+                                if (playUrl != null)
+                                    mediaSource = MediaSource.CreateFromUri(new Uri(playUrl));
+                                await mediaSource?.OpenAsync();
+                                break;
+                            }
+                        }
+                    }
+
                     if (targetItem.PlayItem.IsLocalFile)
                     {
                         if (targetItem.PlayItem.DontSetLocalStorageFile.FileType == ".ncm")
@@ -813,7 +892,6 @@ public static class HyPlayList
                         var playUrl = await GetNowPlayingUrl(targetItem);
                         mediaSource = MediaSource.CreateFromUri(new Uri(playUrl));
                     }
-
                     break;
                 case HyPlayItemType.Local:
                 case HyPlayItemType.LocalProgressive:
@@ -842,7 +920,7 @@ public static class HyPlayList
 
             mediaSource?.CustomProperties.Add("nowPlayingItem", targetItem);
             MediaSystemControls.IsEnabled = true;
-            await mediaSource.OpenAsync();
+            if(!Common.Setting.enableCache) await mediaSource.OpenAsync();
             var duration = mediaSource.Duration?.TotalMilliseconds;
             if (duration != null)
             {
@@ -853,7 +931,7 @@ public static class HyPlayList
             }
             var playbackSource = new AudioGraphPlaybackSource(mediaSource);
             targetItem.PlayItem.AudioGraphPlaybackSource = playbackSource;
-            var options = new PlaybackOptions() { SetAsPrimarySource = setAsPrimary , AutoPlay = autoPlay, Volume = Common.Setting.EnableAudioGain ? targetItem.PlayItem.Volume : 1d};
+            var options = new PlaybackOptions() { SetAsPrimarySource = setAsPrimary, AutoPlay = autoPlay, Volume = Common.Setting.EnableAudioGain ? targetItem.PlayItem.Volume : 1d };
             await Player.ConnectPlaybackSourceAsync(playbackSource, options);
         }
         catch (Exception e)
@@ -865,34 +943,19 @@ public static class HyPlayList
             _loaderSemaphoreSlim.Release();
         }
     }
-
-    private static async Task<IStorageFile> HandleDownloadAsync(DownloadOperation dl, HyPlayItem item)
-    {
-        var process = new Progress<DownloadOperation>(ProgressCallback);
-        try
-        {
-            DownloadOperations.Add(item, dl);
-            await dl.StartAsync().AsTask(process);
-            DownloadOperations.Remove(item);
-            return dl.ResultFile;
-        }
-        catch (Exception E)
-        {
-            Common.AddToTeachingTipLists("下载错误 " + E.Message);
-            DownloadOperations.Remove(item);
-            return null;
-        }
-    }
-
     private static void ProgressCallback(DownloadOperation obj)
     {
-        if (obj.Progress.TotalBytesToReceive == 0)
+        if (obj.Progress.TotalBytesToReceive == obj.Progress.BytesReceived && obj.CurrentWebErrorStatus == null)
         {
-            Common.AddToTeachingTipLists("缓存文件下载错误", "下载错误 " + obj.CurrentWebErrorStatus);
+            var result = DownloadOperationsReverseDirectory.TryGetValue(obj, out var item);
+            if (result)
+            {
+                DownloadOperationsReverseDirectory.Remove(obj);
+                DownloadOperations.Remove(item);
+            }
             return;
         }
     }
-
     public static async void Player_SourceChanged(IPlaybackSource source)
     {
         if (List.Count <= NowPlaying) return;
@@ -1035,7 +1098,7 @@ public static class HyPlayList
                 }
             }
         }
-        catch 
+        catch
         {
             //ignore
         }

@@ -14,6 +14,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
     public class AudioGraphPlayer : IPlayer, IDisposable
     {
         private ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode> _audioInputNodes = new ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode>();
+        private ConcurrentDictionary<MediaSourceAudioInputNode, AudioGraphPlaybackSource> _audioInputNodesReverseDictionary = new ConcurrentDictionary<MediaSourceAudioInputNode,AudioGraphPlaybackSource>();
         private AudioGraph _defaultPlayer;
         private AudioDeviceOutputNode _outputNode;
         private bool disposedValue;
@@ -103,6 +104,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 if (deviceNodeCreateResult.Status != AudioDeviceNodeCreationStatus.Success) throw deviceNodeCreateResult.ExtendedError;
                 _outputNode = deviceNodeCreateResult.DeviceOutputNode;
                 var newNodes = new ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode>();
+                var newNodesReverse = new ConcurrentDictionary<MediaSourceAudioInputNode, AudioGraphPlaybackSource>();
                 foreach (var node in oldNodes)
                 {
                     if (node.Key is AudioGraphPlaybackSource audioGraphPlaybackSource)
@@ -113,6 +115,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                         if (createResult.Status != MediaSourceAudioInputNodeCreationStatus.Success) throw createResult.ExtendedError;
                         var outputNode = createResult.Node;
                         newNodes[node.Key] = outputNode;
+                        newNodesReverse[outputNode] = node.Key;
                         outputNode.Seek(node.Value.Position);
                         outputNode.PlaybackSpeedFactor = node.Value.PlaybackSpeedFactor;
                         outputNode.OutgoingGain = node.Value.OutgoingGain;
@@ -128,6 +131,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 _defaultPlayer = newPlayer;
                 newPlayer.Start();
                 _audioInputNodes = newNodes;
+                _audioInputNodesReverseDictionary = newNodesReverse;
                 oldOutputNode?.Dispose();
                 oldPlayer.Dispose();
             }
@@ -323,6 +327,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 var nodeResult = await _defaultPlayer.CreateMediaSourceAudioInputNodeAsync(source.PlaybackSource);
                 if (nodeResult.Status != MediaSourceAudioInputNodeCreationStatus.Success) throw nodeResult.ExtendedError;
                 _audioInputNodes[source] = nodeResult.Node;
+                _audioInputNodesReverseDictionary[nodeResult.Node] = source;
                 nodeResult.Node.OutgoingGain = options.Volume;
                 if (!options.AutoPlay)
                 {
@@ -331,7 +336,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 }
                 else
                 {
-                    if(GlobalPlaybackStatus == PlaybackStatus.Closed)
+                    if (GlobalPlaybackStatus == PlaybackStatus.Closed)
                     {
                         PlayAll();
                     }
@@ -349,7 +354,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
         private void OnMediaSourceCompleted(MediaSourceAudioInputNode sender, object args)
         {
-            var playbackSource = _audioInputNodes.Where(t => t.Value == sender).FirstOrDefault().Key;
+            var playbackSource = _audioInputNodesReverseDictionary[sender];
             OnTrackReachesEnd?.Invoke(playbackSource);
         }
 
@@ -360,11 +365,13 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             if (source != null)
             {
                 if (!_audioInputNodes.ContainsKey(source)) return;
+                var item = _audioInputNodes[source];
                 _audioInputNodes[source].MediaSourceCompleted -= OnMediaSourceCompleted;
                 if (PrimaryPlaybackSource == source) PrimaryPlaybackSource = null;
-                _audioInputNodes[source].RemoveOutgoingConnection(_outputNode);
-                _audioInputNodes[source].Dispose();
+                item.RemoveOutgoingConnection(_outputNode);
+                item.Dispose();
                 _audioInputNodes.TryRemove(source, out _);
+                _audioInputNodesReverseDictionary.TryRemove(item, out _);
             }
             else throw new ArgumentException("PlaybackSource is not AudioGraphPlaybackSource.");
         }
@@ -405,6 +412,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 source.Value.Dispose();
             }
             _audioInputNodes.Clear();
+            _audioInputNodesReverseDictionary.Clear();
             _primaryPlaybackSource = null;
         }
 

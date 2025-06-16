@@ -1081,6 +1081,23 @@
                                                 Content="选择" />
                                         </StackPanel>
                                     </controls3:SettingsCard>
+                                    <controls3:SettingsCard Header="缓存路径">
+                                        <StackPanel
+                                            HorizontalAlignment="Right"
+                                            Orientation="Horizontal"
+                                            Spacing="8">
+                                            <TextBox
+                                                x:Name="TextBoxCacheDir"
+                                                Width="256"
+                                                IsEnabled="{x:Bind hyplayer:Common.Setting.enableCache, Mode=OneWay}"
+                                                Text="{x:Bind hyplayer:Common.Setting.cacheDir, Mode=OneWay}" />
+                                            <Button
+                                                x:Name="ButtonCacheSelect"
+                                                Click="ButtonCacheSelect_OnClick"
+                                                Content="选择"
+                                                IsEnabled="{x:Bind hyplayer:Common.Setting.enableCache, Mode=OneWay}" />
+                                        </StackPanel>
+                                    </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>
 
@@ -1299,6 +1316,9 @@
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="开启高级音乐历史存储 (超过 100 首)">
                                 <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.advancedMusicHistoryStorage, Mode=TwoWay}" />
+                            </controls3:SettingsCard>
+                            <controls3:SettingsCard Header="开启播放缓存">
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.enableCache, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="本地文件扫描渐进式加载 (Progressive Loading)">
                                 <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.localProgressiveLoad, Mode=TwoWay}" />

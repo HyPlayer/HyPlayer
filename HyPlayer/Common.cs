@@ -1093,6 +1093,28 @@ namespace HyPlayer
             }
         }
 
+        public string cacheDir
+        {
+            get
+            {
+                try
+                {
+                    return GetSettings(nameof(cacheDir), ApplicationData.Current.LocalCacheFolder
+                        .CreateFolderAsync("songCache", CreationCollisionOption.OpenIfExists).AsTask().GetAwaiter()
+                        .GetResult().Path);
+                }
+                catch
+                {
+                    return ApplicationData.Current.LocalCacheFolder.Path;
+                }
+            }
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(cacheDir)] = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool CrossFade
         {
             get => GetSettings("CrossFade", false);
@@ -1185,7 +1207,7 @@ namespace HyPlayer
                 }
             }
 
-            set 
+            set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(CrossFadeTime)] = value;
             }
@@ -1257,6 +1279,16 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(songUrlLazyGet)] = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool enableCache
+        {
+            get => GetSettings(nameof(enableCache), false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(enableCache)] = value;
                 OnPropertyChanged();
             }
         }
