@@ -30,6 +30,7 @@ public sealed partial class Home : Page, IDisposable
         "用音乐开启新的一天吧",
         "戴上耳机 享受新的一天吧"
     };
+
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
     private Task _rankListLoaderTask;
@@ -78,6 +79,7 @@ public sealed partial class Home : Page, IDisposable
                 return;
             }
         }
+
         Dispose();
     }
 
@@ -91,28 +93,32 @@ public sealed partial class Home : Page, IDisposable
             LoginedContent.Visibility = Visibility.Visible;
             TbHelloUserName.Text = Common.LoginedUser?.name ?? string.Empty;
             UserImageRect.ImageSource = Common.Setting.noImage
-    ? null
-    : new BitmapImage(new Uri(Common.LoginedUser?.avatar, UriKind.RelativeOrAbsolute));
-
+                ? null
+                : new BitmapImage(new Uri(Common.LoginedUser?.avatar, UriKind.RelativeOrAbsolute));
         });
         //我们直接Batch吧
         try
         {
-            var ret = await Common.NeteaseAPI.RequestAsync(NeteaseApis.ToplistApi, _cancellationToken);
-            if (ret.IsError)
+            var ret = await SimpleCacher.GetOrCreateCacheAsync("toplist", "ranklist", async () =>
             {
-                Common.AddToTeachingTipLists("加载榜单出错", ret.Error.Message);
-            }
-            else
-            {
-                _ = Common.Invoke(() =>
+                var resp = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ToplistApi, _cancellationToken);
+                if (resp.IsError)
                 {
-                    _cancellationToken.ThrowIfCancellationRequested();
-                    RankPlayList.Children.Clear();
-                    foreach (var bditem in ret.Value?.List ?? [])
-                        RankPlayList.Children.Add(new PlaylistItem(bditem.MapToNCPlayList()));
-                });
-            }
+                    Common.AddToTeachingTipLists("加载榜单出错", resp.Error?.Message);
+                }
+
+                return resp.Value;
+            });
+
+
+            _ = Common.Invoke(() =>
+            {
+                _cancellationToken.ThrowIfCancellationRequested();
+                RankPlayList.Children.Clear();
+                foreach (var bditem in ret?.List ?? [])
+                    RankPlayList.Children.Add(new PlaylistItem(bditem.MapToNCPlayList()));
+            });
+
 
             //推荐歌单加载部分 - 优先级稍微靠后下
             try
@@ -152,13 +158,18 @@ public sealed partial class Home : Page, IDisposable
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.ToplistApi, _cancellationToken);
-            if (json.IsError)
+            var json = await SimpleCacher.GetOrCreateCacheAsync("toplist", "ranklist", async () =>
             {
-                Common.AddToTeachingTipLists("加载榜单出错", json.Error.Message);
-                return;
-            }
-            foreach (var PlaylistItemJson in json.Value.List ?? [])
+                var resp = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ToplistApi, _cancellationToken);
+                if (resp.IsError)
+                {
+                    Common.AddToTeachingTipLists("加载榜单出错", resp.Error?.Message);
+                }
+
+                return resp.Value;
+            });
+
+            foreach (var PlaylistItemJson in json.List ?? [])
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 var ncp = PlaylistItemJson.MapToNCPlayList();
@@ -234,6 +245,7 @@ public sealed partial class Home : Page, IDisposable
                 RankPlayList.Children.Clear();
                 _cancellationTokenSource.Dispose();
             }
+
             HyPlayList.OnLoginDone -= LoadLoginedContent;
             disposedValue = true;
         }

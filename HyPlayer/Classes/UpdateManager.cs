@@ -124,36 +124,43 @@ public static class UpdateManager
         };
     }
 
-    public static async Task PopupVersionCheck(bool isStartup = false)
+    public static Task PopupVersionCheck(bool isStartup = false)
     {
-        var remoteResult = await GetRemoteVersion((UpdateSource)Common.Setting.UpdateSource);
-        var localVersion = new Version(Package.Current.Id.Version.Major, Package.Current.Id.Version.Minor,
-            Package.Current.Id.Version.Build, Package.Current.Id.Version.Revision);
-        var title = "发现新版本";
-        if (remoteResult.Version == null || remoteResult.Version <= localVersion)
+        return Task.Run(async () =>
         {
-            if (isStartup) return;
-            title = "你已是最新版";
-        }
+            var remoteResult = await GetRemoteVersion((UpdateSource)Common.Setting.UpdateSource);
+            var localVersion = new Version(Package.Current.Id.Version.Major, Package.Current.Id.Version.Minor,
+                Package.Current.Id.Version.Build, Package.Current.Id.Version.Revision);
+            var title = "发现新版本";
+            if (remoteResult.Version == null || remoteResult.Version <= localVersion)
+            {
+                if (isStartup) return;
+                title = "你已是最新版";
+            }
 
-        var message = remoteResult.UpdateLog + "\r\n最新版本: " + remoteResult.Version + "\r\n当前版本: " +
-                      localVersion + (remoteResult.IsMandatory ? "\r\n此版本为重要更新, 建议更新" : "");
-        if (isStartup)
-        {
-            Common.AddToTeachingTipLists(title, message);
-        }
-        else
-        {
-            ContentDialog contentDialog = new ContentDialog();
-            contentDialog.Title = title;
-            contentDialog.Content = message;
-            contentDialog.PrimaryButtonText = "更新";
-            contentDialog.PrimaryButtonClick += async (_, _) =>
-                await Windows.System.Launcher.LaunchUriAsync(
-                    new Uri(remoteResult.DownloadLink));
-            contentDialog.CloseButtonText = "取消";
-            await contentDialog.ShowAsync();
-        }
+            var message = remoteResult.UpdateLog + "\r\n最新版本: " + remoteResult.Version + "\r\n当前版本: " +
+                          localVersion + (remoteResult.IsMandatory ? "\r\n此版本为重要更新, 建议更新" : "");
+            if (isStartup)
+            {
+                Common.AddToTeachingTipLists(title, message);
+            }
+            else
+            {
+                Common.Invoke(async () =>
+                {
+                    ContentDialog contentDialog = new ContentDialog();
+                    contentDialog.Title = title;
+                    contentDialog.Content = message;
+                    contentDialog.PrimaryButtonText = "更新";
+                    contentDialog.PrimaryButtonClick += async (_, _) =>
+                        await Windows.System.Launcher.LaunchUriAsync(
+                            new Uri(remoteResult.DownloadLink));
+                    contentDialog.CloseButtonText = "取消";
+                    await contentDialog.ShowAsync();
+                });
+            }
+        });
+        
     }
 
     public static async Task GetUserCanaryChannelAvailability(string userEmail)

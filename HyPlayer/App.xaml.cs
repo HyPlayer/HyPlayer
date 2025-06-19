@@ -93,6 +93,7 @@ sealed partial class App : Application
         {
             var sf = await ApplicationData.Current.LocalCacheFolder.TryGetItemAsync("Romaji");
             if (sf != null) Common.KawazuConv = new KawazuConverter(sf.Path);
+            await SimpleCacher.InitializeAsync();
         }
         catch
         {

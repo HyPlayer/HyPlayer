@@ -1122,13 +1122,11 @@
                                             <TextBox
                                                 x:Name="TextBoxCacheDir"
                                                 Width="256"
-                                                IsEnabled="{x:Bind hyplayer:Common.Setting.enableCache, Mode=OneWay}"
                                                 Text="{x:Bind hyplayer:Common.Setting.cacheDir, Mode=OneWay}" />
                                             <Button
                                                 x:Name="ButtonCacheSelect"
                                                 Click="ButtonCacheSelect_OnClick"
-                                                Content="选择"
-                                                IsEnabled="{x:Bind hyplayer:Common.Setting.enableCache, Mode=OneWay}" />
+                                                Content="选择" />
                                         </StackPanel>
                                     </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
@@ -1356,7 +1354,10 @@
                             <controls3:SettingsCard Header="开启高级音乐历史存储 (超过 100 首)">
                                 <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.advancedMusicHistoryStorage, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard Description="可能造成无法播放, 请勿轻易开启" Header="开启播放缓存">
+                            <controls3:SettingsCard Description="将会在第二次请求时加速请求, 离线时从本地缓存获取" Header="开启请求数据缓存">
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.enableApiCache, Mode=TwoWay}" />
+                            </controls3:SettingsCard>
+                            <controls3:SettingsCard Description="可能造成无法播放, 请勿轻易开启" Header="开启播放音频缓存">
                                 <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.enableCache, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Description="提前将曲目加载至内存, 在网络环境较差情况下可能需要较长时间加载" Header="开启播放预加载">

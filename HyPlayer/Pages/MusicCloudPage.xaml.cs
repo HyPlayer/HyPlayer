@@ -45,22 +45,29 @@ public sealed partial class MusicCloudPage : Page, IDisposable
         try
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.UserCloudApi,
-                new UserCloudRequest()
-                {
-                    Limit = 200,
-                    Offset = page * 200
-                });
-
-            if (json.IsError && json.Error.ErrorCode == 405)
+            var jv = await SimpleCacher.GetOrCreateCacheAsync("userCloud", page.ToString(), async () =>
             {
-                treashold = ++cooldownTime * 10;
-                page--;
-                Common.AddToTeachingTipLists("贪婪加载被风控", $"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求");
-            }
+                var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.UserCloudApi,
+                    new UserCloudRequest()
+                    {
+                        Limit = 749,
+                        Offset = page * 749
+                    }, _cancellationToken);
+                if (json is { IsError: true, Error.ErrorCode: 405 })
+                {
+                    treashold = ++cooldownTime * 10;
+                    page--;
+                    Common.AddToTeachingTipLists("贪婪加载被风控", $"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求");
+                }
+
+                return json.Value;
+            });
+            
+
+            
 
             var idx = page * 200;
-            foreach (var jToken in json.Value.Songs ?? [])
+            foreach (var jToken in jv.Songs ?? [])
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 try
@@ -86,7 +93,7 @@ public sealed partial class MusicCloudPage : Page, IDisposable
                     //ignore
                 }
 
-                NextPage.Visibility = json.Value.HasMore ? Visibility.Visible : Visibility.Collapsed;
+                NextPage.Visibility = jv.HasMore ? Visibility.Visible : Visibility.Collapsed;
             }
         }
         catch (Exception ex)

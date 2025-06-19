@@ -27,16 +27,17 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
     public static readonly DependencyProperty AvatarSourceProperty =
         DependencyProperty.Register("AvatarSource", typeof(BitmapImage), typeof(SingleComment),
             new PropertyMetadata(null));
+
     public static readonly DependencyProperty MainCommentProperty =
-    DependencyProperty.Register("MainComment", typeof(Comment), typeof(SingleComment),
-        new PropertyMetadata(null));//主评论
+        DependencyProperty.Register("MainComment", typeof(Comment), typeof(SingleComment),
+            new PropertyMetadata(null)); //主评论
 
     public event PropertyChangedEventHandler PropertyChanged;
 
     public async void OnPropertyChanged([CallerMemberName] string propertyName = "")
     {
         await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                () => { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); });
+            () => { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); });
     }
 
 
@@ -50,7 +51,8 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         floorComments.CollectionChanged += FloorComments_CollectionChanged;
     }
 
-    private void FloorComments_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    private void FloorComments_CollectionChanged(object sender,
+        System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         OnPropertyChanged(nameof(floorComments));
     }
@@ -60,6 +62,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         get => (BitmapImage)GetValue(AvatarSourceProperty);
         set => SetValue(AvatarSourceProperty, value);
     }
+
     public Comment MainComment
     {
         get => (Comment)GetValue(MainCommentProperty);
@@ -76,21 +79,29 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         try
         {
             if (!IsLoadMoreComments) floorComments.Clear();
-            var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.CommentFloorApi,
-                new CommentFloorRequest()
-                {
-                    ParentCommentId = MainComment.cid,
-                    ResourceId = MainComment.resourceId,
-                    ResourceType = MainComment.resourceType,
-                    Time = !IsLoadMoreComments ? 0 : long.Parse(time ?? "0")
-                }
-                );
-            if (result.IsError)
+            var result = await SimpleCacher.GetOrCreateCacheAsync("comments",  MainComment.cid, async () =>
             {
-                Common.AddToTeachingTipLists("加载楼层评论错误", result.Error?.Message ?? "未知错误");
+                var rst = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.CommentFloorApi,
+                    new CommentFloorRequest()
+                    {
+                        ParentCommentId = MainComment.cid,
+                        ResourceId = MainComment.resourceId,
+                        ResourceType = MainComment.resourceType,
+                        Time = !IsLoadMoreComments ? 0 : long.Parse(time ?? "0")
+                    }
+                );
+                if (rst.IsError)
+                {
+                    Common.AddToTeachingTipLists("加载楼层评论错误", rst.Error?.Message ?? "未知错误");
+                    return null;
+                }
+                return rst.Value;
+            }, TimeSpan.FromMinutes(5));
+            if (result == null)
+            {
                 return;
             }
-            foreach (var floorcomment in result.Value?.Data?.Comments ?? [])
+            foreach (var floorcomment in result.Data?.Comments ?? [])
             {
                 var floorComment = floorcomment.MapToComment();
                 floorComment.resourceId = MainComment.resourceId;
@@ -98,8 +109,9 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
                 floorComment.IsMainComment = false;
                 floorComments.Add(floorComment);
             }
-            time = result.Value?.Data?.Time.ToString();
-            LoadMore.Visibility = result.Value?.Data?.HasMore is true ? Visibility.Visible : Visibility.Collapsed;
+
+            time = result?.Data?.Time.ToString();
+            LoadMore.Visibility = result?.Data?.HasMore is true ? Visibility.Visible : Visibility.Collapsed;
         }
         catch (Exception ex)
         {
@@ -121,6 +133,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
             Common.AddToTeachingTipLists("点赞失败", result.Error?.Message ?? "未知错误");
             return;
         }
+
         MainComment.likedCount += MainComment.HasLiked ? -1 : 1;
         MainComment.HasLiked = !MainComment.HasLiked;
         LikeCountTB.Text = MainComment.likedCount.ToString();
@@ -147,7 +160,6 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
                 ReplyText.Text = string.Empty;
                 await Task.Delay(1000);
                 _ = LoadFloorComments(false);
-
             }
             catch (Exception ex)
             {
@@ -181,12 +193,14 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         Bindings.Update();
     }
 
-    private void FloorCommentsExpander_Expanding(Microsoft.UI.Xaml.Controls.Expander sender, Microsoft.UI.Xaml.Controls.ExpanderExpandingEventArgs args)
+    private void FloorCommentsExpander_Expanding(Microsoft.UI.Xaml.Controls.Expander sender,
+        Microsoft.UI.Xaml.Controls.ExpanderExpandingEventArgs args)
     {
         _ = LoadFloorComments(false);
     }
 
-    private void FloorCommentsExpander_Collapsed(Microsoft.UI.Xaml.Controls.Expander sender, Microsoft.UI.Xaml.Controls.ExpanderCollapsedEventArgs args)
+    private void FloorCommentsExpander_Collapsed(Microsoft.UI.Xaml.Controls.Expander sender,
+        Microsoft.UI.Xaml.Controls.ExpanderCollapsedEventArgs args)
     {
         floorComments.Clear();
     }

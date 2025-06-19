@@ -200,7 +200,6 @@ public sealed partial class BasePage : Page
             {
                 try
                 {
-                    await Common.NeteaseAPI.RequestAsync(NeteaseApis.LoginStatusApi);
                     await LoginDone();
                 }
                 catch
@@ -315,13 +314,21 @@ public sealed partial class BasePage : Page
         LoginStatusResponse LoginStatus;
         try
         {
-            var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.LoginStatusApi);
-            if (result.IsError)
+            var result = await SimpleCacher.GetOrCreateCacheAsync("login", "userStatus", async () =>
             {
-                Common.AddToTeachingTipLists("登录失败", result.Error.Message);
+                var result = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.LoginStatusApi);
+                if (result.IsError)
+                {
+                    Common.AddToTeachingTipLists("登录失败", result.Error?.Message);
+                    return null;
+                }
+                return result.Value;
+            });
+
+            if (result is null)
                 return false;
-            }
-            LoginStatus = result.Value;
+            
+            LoginStatus = result;
         }
         catch (Exception e)
         {
@@ -390,13 +397,19 @@ public sealed partial class BasePage : Page
     {
         try
         {
-            var js = await Common.NeteaseAPI.RequestAsync(NeteaseApis.LikelistApi, new LikelistRequest() { Uid = Common.LoginedUser.id });
-            if (js.IsError)
+            var ids = await SimpleCacher.GetOrCreateCacheAsync("login", "likedSongs", async () =>
             {
-                Common.AddToTeachingTipLists("获取喜欢列表失败", js.Error.Message);
-                return;
-            }
-            Common.LikedSongs = js.Value.TrackIds.ToList();
+                var js = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.LikelistApi, new LikelistRequest() { Uid = Common.LoginedUser!.id });
+                if (js.IsError)
+                {
+                    Common.AddToTeachingTipLists("获取喜欢列表失败", js.Error?.Message);
+                    return null;
+                }
+
+                return js.Value;
+            });
+            
+            Common.LikedSongs = ids.TrackIds?.ToList() ?? [];
         }
         catch (Exception ex)
         {
@@ -410,13 +423,18 @@ public sealed partial class BasePage : Page
         var nowitem = NavItemsMyList;
         try
         {
-            var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.UserPlaylistApi,
-                                                        new UserPlaylistRequest() { Uid = Common.LoginedUser.id });
-            if (json.IsError)
+            var jv = await SimpleCacher.GetOrCreateCacheAsync("login", "mySongList", async () =>
             {
-                Common.AddToTeachingTipLists("获取歌单列表失败", json.Error.Message);
-                return;
-            }
+                var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.UserPlaylistApi,
+                    new UserPlaylistRequest() { Uid = Common.LoginedUser!.id });
+                if (json.IsError)
+                {
+                    Common.AddToTeachingTipLists("获取歌单失败", json.Error?.Message);
+                    return null;
+                }
+
+                return json.Value;
+            });
 
             NavItemsLikeList.MenuItems.Clear();
             NavItemsMyList.MenuItems.Clear();
@@ -426,7 +444,7 @@ public sealed partial class BasePage : Page
             NavItemsMyLovedPlaylist.Visibility = Visibility.Visible;
             Common.MySongLists.Clear();
             var isliked = false;
-            foreach (var jToken in json.Value.Playlists)
+            foreach (var jToken in jv.Playlists ?? [])
                 if (jToken.Subscribed)
                 {
                     var item = new NavigationViewItem

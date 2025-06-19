@@ -110,6 +110,7 @@
     <Compile Include="Classes\NCMFile.cs" />
     <Compile Include="Classes\NCSong.cs" />
     <Compile Include="Classes\PersonalFM.cs" />
+    <Compile Include="Classes\SimpleCacher.cs" />
     <Compile Include="Classes\StaticSource.cs" />
     <Compile Include="Classes\The163KeyHelper.cs" />
     <Compile Include="Classes\UpdateManager.cs" />

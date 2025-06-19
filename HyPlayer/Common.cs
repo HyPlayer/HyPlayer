@@ -1129,9 +1129,7 @@ namespace HyPlayer
             {
                 try
                 {
-                    return GetSettings(nameof(cacheDir), ApplicationData.Current.LocalCacheFolder
-                        .CreateFolderAsync("songCache", CreationCollisionOption.OpenIfExists).AsTask().GetAwaiter()
-                        .GetResult().Path);
+                    return GetSettings(nameof(cacheDir), ApplicationData.Current.LocalCacheFolder.Path);
                 }
                 catch
                 {
@@ -1371,6 +1369,16 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(enableCache)] = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool enableApiCache
+        {
+            get => GetSettings(nameof(enableApiCache), true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(enableApiCache)] = value;
                 OnPropertyChanged();
             }
         }

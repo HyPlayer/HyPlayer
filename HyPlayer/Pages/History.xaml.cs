@@ -128,8 +128,8 @@ public sealed partial class History : Page, IDisposable
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var ret2 = await Common.NeteaseAPI.RequestAsync<UserRecordWeekResponse, UserRecordRequest, UserRecordResponse, ErrorResultBase, UserRecordActualRequest>(NeteaseApis.UserRecordApi,
-                new UserRecordRequest() { UserId = Common.LoginedUser.id, RecordType = UserRecordType.WeekData });
+            var ret2 = await Common.NeteaseAPI!.RequestAsync<UserRecordWeekResponse, UserRecordRequest, UserRecordResponse, ErrorResultBase, UserRecordActualRequest>(NeteaseApis.UserRecordApi,
+                new UserRecordRequest() { UserId = Common.LoginedUser.id, RecordType = UserRecordType.WeekData }, _cancellationToken);
             if (ret2.IsError)
             {
                 Common.AddToTeachingTipLists("获取播放记录失败", ret2.Error.Message);
