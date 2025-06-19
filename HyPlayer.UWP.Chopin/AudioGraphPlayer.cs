@@ -250,7 +250,8 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             var source = playbackSource as AudioGraphPlaybackSource;
             if (source != null)
             {
-                _audioInputNodes[source].Seek(target);
+                var value = Math.Min(target.TotalMilliseconds, source.PlaybackSource.Duration?.TotalMilliseconds ?? 0d);
+                _audioInputNodes[source].Seek(TimeSpan.FromMilliseconds(value));
             }
             else
             {

@@ -79,7 +79,7 @@ namespace HyPlayer.Classes
         private async void ShouldStartFade()
         {
             if (HyPlayList.Player.PrimaryAudioInputNode?.Duration.TotalSeconds - HyPlayList.Player?.PrimaryAudioInputNode?.Position.TotalSeconds <= Common.Setting.CrossFadeTime
-                && HyPlayList.Player.PrimaryAudioInputNode?.Duration != HyPlayList.Player.PrimaryAudioInputNode?.Position
+                && ((HyPlayList.Player.PrimaryAudioInputNode?.Duration - HyPlayList.Player.PrimaryAudioInputNode?.Position)?.TotalSeconds ?? 0) > 0.5
                 && _currentPlayItem == null
                 && !_loading
                 && HyPlayList.NowPlayType != PlayMode.SinglePlay
