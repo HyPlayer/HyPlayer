@@ -13,7 +13,6 @@ using HyPlayer.LyricRenderer.LyricLineRenderers;
 using HyPlayer.LyricRenderer.RollingCalculators;
 using Impressionist.Abstractions;
 using Impressionist.Implementations;
-using LyricParser.Abstraction;
 using Microsoft.Graphics.Canvas.Effects;
 using System;
 using System.Collections.Generic;
@@ -41,6 +40,8 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
+using ALRC.Converters.Enhancers;
+using HyPlayer.Classes.LyricParser.Abstraction;
 using ALRCLyricInfo = HyPlayer.Classes.ALRCLyricInfo;
 using Buffer = Windows.Storage.Streams.Buffer;
 using Color = System.Drawing.Color;
@@ -599,7 +600,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             }
             else
             {
-                LyricBox.SetLyricLines(LrcConverter.Convert(alrcLyricInfo.alrc, alrcLyricInfo.LyricMetadata, alrcLyricInfo.SongMetadata));
+                LyricBox.SetLyricLines(LrcConverter.Convert(alrcLyricInfo.ALRC, alrcLyricInfo.LyricMetadata, alrcLyricInfo.SongMetadata));
             }
             LyricBox.ChangeAlignment(Common.Setting.lyricAlignment switch
             {
@@ -955,7 +956,38 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 ".lys" => new LyricifySyllableConverter(),
                 _ => throw new ArgumentOutOfRangeException()
             };
-            var lrcs = LrcConverter.Convert(converter.Convert(qrc));
+
+            var lrcConverter = new ALRC.Converters.LrcConverter();
+            var lrcTranslationConverter = new LrcTranslationEnhancer();
+            var alrc = converter.Convert(qrc);
+            var lrc = lrcConverter.ConvertBack(alrc);
+            var trLrc = lrcTranslationConverter.Extract(alrc);
+            
+            ALRCLyricInfo ttmlLyric = new ALRCLyricInfo()
+            {
+                PureLyrics = lrc,
+                TrLyrics = trLrc,
+                ALRC = alrc,
+                LyricMetadata =
+                [
+                    new LyricInfoMetadata
+                    {
+                        Key = "lyric_source",
+                        Value = "本地歌词",
+                        DisplayName = "歌词来源",
+                        ActionUri = sf.Path
+                    }
+                ],
+                SongMetadata = []
+            };
+            if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
+            {
+                _ = SimpleCacher.GetOrCreateCacheAsync("lyricInfo", HyPlayList.NowPlayingItem.PlayItem.Id,
+                    () => Task.FromResult(ttmlLyric)!);
+            }
+         
+            
+            var lrcs = LrcConverter.Convert(alrc);
             LyricBox.SetLyricLines(lrcs);
         }
     }

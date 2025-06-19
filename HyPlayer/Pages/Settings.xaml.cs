@@ -3,7 +3,6 @@
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using Kawazu;
-using LyricParser.Abstraction;
 using Microsoft.Graphics.Canvas.Text;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
@@ -30,6 +29,7 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.Classes.LyricParser.Abstraction;
 using Point = Windows.Foundation.Point;
 
 #endregion

@@ -45,7 +45,16 @@ public static class SimpleCacher
                 using var stream = await cacheFile.OpenStreamForReadAsync();
                 using var reader = new StreamReader(stream);
                 var content = await reader.ReadToEndAsync();
-                return System.Text.Json.JsonSerializer.Deserialize<T>(content);
+                try
+                {
+                    var rst = System.Text.Json.JsonSerializer.Deserialize<T>(content);
+                    return rst;
+                }
+                catch (Exception e)
+                {
+
+                }
+                
             }
         }
         
@@ -68,13 +77,23 @@ public static class SimpleCacher
         {
             return default;
         }
-        var json = System.Text.Json.JsonSerializer.Serialize(data);
-        
-        using (var stream = await dir.OpenStreamForWriteAsync(fileName, CreationCollisionOption.ReplaceExisting))
+
+        try
         {
-            using var writer = new StreamWriter(stream);
-            await writer.WriteAsync(json);
+            var json = System.Text.Json.JsonSerializer.Serialize(data);
+            using (var stream = await dir.OpenStreamForWriteAsync(fileName, CreationCollisionOption.ReplaceExisting))
+            {
+                using var writer = new StreamWriter(stream);
+                await writer.WriteAsync(json);
+            }
         }
+        catch (Exception e)
+        {
+            //ignore
+        }
+        
+        
+        
         
         return data;
     }

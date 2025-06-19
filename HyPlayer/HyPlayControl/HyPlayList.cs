@@ -5,8 +5,6 @@ using AudioEffectComponent;
 using HyPlayer.Classes;
 using HyPlayer.NeteaseApi.ApiContracts;
 using Kawazu;
-using LyricParser.Abstraction;
-using LyricParser.Implementation;
 using Microsoft.Toolkit.Uwp.Helpers;
 using Microsoft.Toolkit.Uwp.Notifications;
 using System;
@@ -33,6 +31,8 @@ using Windows.UI;
 using Windows.UI.Notifications;
 using Windows.UI.Xaml.Media;
 using ALRC.Converters.Enhancers;
+using HyPlayer.Classes.LyricParser.Abstraction;
+using HyPlayer.Classes.LyricParser.Implementation;
 using HyPlayer.NeteaseApi.ApiContracts.Album;
 using HyPlayer.NeteaseApi.ApiContracts.Artist;
 using HyPlayer.NeteaseApi.ApiContracts.DjChannel;
@@ -1099,7 +1099,7 @@ public static class HyPlayList
                     }
 
                     return songRes.Value;
-                });
+                }, TimeSpan.FromHours(1));
                 if (songResult is not null)
                 {
                     if (songResult?.SongUrls?[0].Code == 200)
@@ -1833,6 +1833,14 @@ public static class HyPlayList
 
     private static async Task LoadLyrics(HyPlayItem hpi)
     {
+        var cache = await SimpleCacher.GetOrCreateCacheAsync("lyricInfo", hpi.PlayItem.Id, () => Task.FromResult<LyricInfo?>(null));
+        if (cache is not null)
+        {
+            LyricInfo = cache;
+            OnLyricLoaded?.Invoke();
+            OnLyricChange?.Invoke();
+            return;
+        }
         var pureLyricInfo = new PureLyricInfo();
         var unionTranslation = false;
         switch (hpi.ItemType)
@@ -1900,6 +1908,10 @@ public static class HyPlayList
 
         OnLyricLoaded?.Invoke();
         OnLyricChange?.Invoke();
+        if (hpi.ItemType == HyPlayItemType.Netease)
+        {
+            _ = SimpleCacher.GetOrCreateCacheAsync("lyricInfo", hpi.PlayItem.Id, () => Task.FromResult(LyricInfo));
+        }
 
         try
         {
@@ -1917,7 +1929,7 @@ public static class HyPlayList
                 {
                     PureLyrics = lrc,
                     TrLyrics = trLrc,
-                    alrc = alrc,
+                    ALRC = alrc,
                     LyricMetadata =
                     [
                         new LyricInfoMetadata
@@ -1947,6 +1959,7 @@ public static class HyPlayList
 
                 OnLyricLoaded?.Invoke();
                 OnLyricChange?.Invoke();
+                _ = SimpleCacher.GetOrCreateCacheAsync("lyricInfo", hpi.PlayItem.Id, () => Task.FromResult(LyricInfo));
             }
         }
         catch

@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.WinUI.Media;
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
-using LyricParser.Abstraction;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +17,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.Classes.LyricParser.Abstraction;
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
 
