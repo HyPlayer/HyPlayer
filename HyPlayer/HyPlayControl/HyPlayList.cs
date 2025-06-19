@@ -1099,7 +1099,7 @@ public static class HyPlayList
                     }
 
                     return songRes.Value;
-                }, TimeSpan.FromHours(1));
+                }, TimeSpan.FromMinutes(20));
                 if (songResult is not null)
                 {
                     if (songResult?.SongUrls?[0].Code == 200)

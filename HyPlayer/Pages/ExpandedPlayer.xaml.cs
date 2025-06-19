@@ -980,10 +980,17 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 ],
                 SongMetadata = []
             };
+
+            HyPlayList.LyricInfo = new LyricInfo();
+            HyPlayList.LyricInfo.LyricMetadata = ttmlLyric.LyricMetadata;
+            HyPlayList.LyricInfo.PureLyricInfo = ttmlLyric;
+            HyPlayList.LyricInfo.SongMetadata = ttmlLyric.SongMetadata;
+            HyPlayList.LyricInfo.Lyrics = Utils.ConvertPureLyric(ttmlLyric.PureLyrics, true);
+            Utils.ConvertTranslation(ttmlLyric.TrLyrics, HyPlayList.LyricInfo.Lyrics);
             if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
             {
                 _ = SimpleCacher.GetOrCreateCacheAsync("lyricInfo", HyPlayList.NowPlayingItem.PlayItem.Id,
-                    () => Task.FromResult(ttmlLyric)!);
+                    () => Task.FromResult(HyPlayList.LyricInfo)!);
             }
          
             
