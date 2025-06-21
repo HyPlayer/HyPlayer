@@ -409,7 +409,7 @@ public sealed partial class BasePage : Page
                 return js.Value;
             });
             
-            Common.LikedSongs = ids.TrackIds?.ToList() ?? [];
+            Common.LikedSongs = ids?.TrackIds?.ToList() ?? [];
         }
         catch (Exception ex)
         {

@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.IO;
+using Newtonsoft.Json;
 using System.Threading.Tasks;
 using Windows.Storage;
 
@@ -9,6 +10,7 @@ namespace HyPlayer.Classes;
 public static class SimpleCacher
 {
     private static StorageFolder cacheFolder;
+
     
     public static async Task InitializeAsync()
     {
@@ -47,12 +49,13 @@ public static class SimpleCacher
                 var content = await reader.ReadToEndAsync();
                 try
                 {
-                    var rst = System.Text.Json.JsonSerializer.Deserialize<T>(content);
+                    var rst = JsonConvert.DeserializeObject<T>(content);
                     return rst;
                 }
                 catch (Exception e)
                 {
-
+                    if (forceUseCache)
+                        return default;
                 }
                 
             }
@@ -80,12 +83,9 @@ public static class SimpleCacher
 
         try
         {
-            var json = System.Text.Json.JsonSerializer.Serialize(data);
-            using (var stream = await dir.OpenStreamForWriteAsync(fileName, CreationCollisionOption.ReplaceExisting))
-            {
-                using var writer = new StreamWriter(stream);
-                await writer.WriteAsync(json);
-            }
+            var json = JsonConvert.SerializeObject(data);
+            var file = await dir.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
+            await FileIO.WriteTextAsync(file, json);
         }
         catch (Exception e)
         {
