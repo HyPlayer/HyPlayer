@@ -1985,11 +1985,20 @@ public static class HyPlayList
                 PureLyricInfo res = new PureLyricInfo();
                 var lyricRequest = new LyricRequest() { Id = ncp.PlayItem.Id };
                 var lyricResult = await SimpleCacher.GetOrCreateCacheAsync("lyricapi", ncp.PlayItem.Id,
-                    async () => await Common.NeteaseAPI!.RequestAsync(NeteaseApis.LyricApi, lyricRequest));
+                    async () =>
+                    {
+                        var resp = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.LyricApi, lyricRequest);
+                        if (resp.IsError)
+                        {
+                            Common.AddToTeachingTipLists("获取歌词失败", resp.Error?.Message);
+                            return null;
+                        }
+
+                        return resp.Value;
+                    });
                 string lrc, romaji, karaoklrc, translrc, yrromaji, yrtranslrc;
-                if (lyricResult.IsError)
+                if (lyricResult is null)
                 {
-                    Common.AddToTeachingTipLists("获取歌词失败", lyricResult.Error.Message);
                     return new PureLyricInfo
                     {
                         PureLyrics = "[00:00.000] 歌词获取失败",
@@ -1997,7 +2006,7 @@ public static class HyPlayList
                     };
                 }
 
-                if (lyricResult.Value?.Lyric is null && lyricResult.Value?.YunLyric is null)
+                if (lyricResult?.Lyric is null && lyricResult?.YunLyric is null)
                 {
                     return new PureLyricInfo
                     {
@@ -2014,11 +2023,11 @@ public static class HyPlayList
                 }
 
 
-                if (lyricResult.Value?.YunLyric?.Lyric is null)
+                if (lyricResult?.YunLyric?.Lyric is null)
                 {
-                    lrc = CleanLrc(lyricResult.Value?.Lyric?.Lyric);
-                    romaji = lyricResult.Value?.RomajiLyric?.Lyric;
-                    translrc = lyricResult.Value?.TranslationLyric?.Lyric;
+                    lrc = CleanLrc(lyricResult?.Lyric?.Lyric);
+                    romaji = lyricResult?.RomajiLyric?.Lyric;
+                    translrc = lyricResult?.TranslationLyric?.Lyric;
                     res = new PureLyricInfo()
                     {
                         PureLyrics = lrc,
@@ -2028,12 +2037,12 @@ public static class HyPlayList
                 }
                 else
                 {
-                    lrc = CleanLrc(lyricResult.Value?.Lyric?.Lyric);
-                    karaoklrc = CleanLrc(lyricResult.Value?.YunLyric?.Lyric);
-                    yrromaji = lyricResult.Value?.YunRomajiLyric?.Lyric;
-                    yrtranslrc = lyricResult.Value?.YunTranslationLyric?.Lyric;
-                    romaji = lyricResult.Value?.RomajiLyric?.Lyric;
-                    translrc = lyricResult.Value?.TranslationLyric?.Lyric;
+                    lrc = CleanLrc(lyricResult?.Lyric?.Lyric);
+                    karaoklrc = CleanLrc(lyricResult?.YunLyric?.Lyric);
+                    yrromaji = lyricResult?.YunRomajiLyric?.Lyric;
+                    yrtranslrc = lyricResult?.YunTranslationLyric?.Lyric;
+                    romaji = lyricResult?.RomajiLyric?.Lyric;
+                    translrc = lyricResult?.TranslationLyric?.Lyric;
                     res = new KaraokLyricInfo()
                     {
                         PureLyrics = lrc,
@@ -2047,24 +2056,24 @@ public static class HyPlayList
 
                 // add metadata
                 // 添加翻译作词信息
-                if (lyricResult.Value?.LyricUser?.UserId is not null)
+                if (lyricResult?.LyricUser?.UserId is not null)
                 {
                     res.LyricMetadata.Add(new LyricInfoMetadata()
                     {
                         Key = "lyric_user",
-                        Value = lyricResult.Value.LyricUser.Nickname,
-                        ActionUri = $"hyplayer://us{lyricResult.Value.LyricUser.UserId}",
+                        Value = lyricResult.LyricUser.Nickname,
+                        ActionUri = $"hyplayer://us{lyricResult.LyricUser.UserId}",
                         DisplayName = "歌词贡献者"
                     });
                 }
 
-                if (lyricResult.Value?.TranslationUser?.UserId is not null)
+                if (lyricResult?.TranslationUser?.UserId is not null)
                 {
                     res.LyricMetadata.Add(new LyricInfoMetadata()
                     {
                         Key = "translation_user",
-                        Value = lyricResult.Value.TranslationUser.Nickname,
-                        ActionUri = $"hyplayer://us{lyricResult.Value.TranslationUser.UserId}",
+                        Value = lyricResult.TranslationUser.Nickname,
+                        ActionUri = $"hyplayer://us{lyricResult.TranslationUser.UserId}",
                         DisplayName = "翻译贡献者"
                     });
                 }

@@ -990,7 +990,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
             {
                 _ = SimpleCacher.GetOrCreateCacheAsync("lyricInfo", HyPlayList.NowPlayingItem.PlayItem.Id,
-                    () => Task.FromResult(HyPlayList.LyricInfo)!);
+                    () => Task.FromResult(HyPlayList.LyricInfo)!, forceRefresh: true);
             }
          
             

@@ -59,34 +59,36 @@ public sealed partial class ArtistPage : Page, IDisposable
         {
             if (disposedValue) throw new ObjectDisposedException(nameof(ArtistPage));
             var artistId = e.Parameter as string;
+            if (artistId is null)
+            {
+                Common.AddToTeachingTipLists("艺人ID为空", "请检查传入的参数是否正确");
+                return;
+            }
             var res = await SimpleCacher.GetOrCreateCacheAsync("artist_detail", artistId, async () =>
             {
                 var resp = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ArtistDetailApi,
                     new ArtistDetailRequest() { ArtistId = artistId }, _cancellationToken);
-                return resp;
+                if (resp.IsError && resp.Error?.ErrorCode.ToString() == "404")
+                {
+                    Common.AddToTeachingTipLists("艺人不存在", null);
+                    return null;
+                }
+                if (resp.IsError)
+                {
+                    Common.AddToTeachingTipLists("获取艺人信息失败", resp.Error?.Message);
+                    return null;
+                }
+                
+                return resp.Value;
             });
 
-
-            if (res.IsError)
+            if (res is null)
             {
-                if (res.Error.ErrorCode.ToString() == "404")
-                {
-                    TextBoxArtistName.Text = "未知艺人";
-                    TextboxArtistNameTranslated.Visibility = Visibility.Collapsed;
-                    TextBlockDesc.Text = "艺人不存在";
-                    TextBlockInfo.Text = "无信息";
-                    Common.AddToTeachingTipLists("艺人不存在", null);
-                    return;
-                }
-                else
-                {
-                    Common.AddToTeachingTipLists("获取艺人信息出错", res.Error.Message);
-                    return;
-                }
+                return;
             }
 
-            artist = res.Value?.Artist.MapToNcArtist();
-            if (res.Value?.Artist?.PicUrl?.StartsWith("http") is true)
+            artist = res?.Artist.MapToNcArtist();
+            if (res?.Artist?.PicUrl?.StartsWith("http") is true)
             {
                 if (Common.Setting.noImage)
                 {
@@ -95,20 +97,20 @@ public sealed partial class ArtistPage : Page, IDisposable
 
                 BitmapImage image = new BitmapImage();
                 ImageRect.ImageSource = ImageRect1.ImageSource = image;
-                image.UriSource = new Uri(res.Value.Artist.PicUrl + "?param=" +
+                image.UriSource = new Uri(res.Artist.PicUrl + "?param=" +
                                           StaticSource.PICSIZE_ARTIST_DETAIL_COVER);
             }
 
-            TextBoxArtistName.Text = res.Value?.Artist?.Name ?? "未知歌手";
-            if (res.Value?.Artist?.TransNames != null)
+            TextBoxArtistName.Text = res?.Artist?.Name ?? "未知歌手";
+            if (res?.Artist?.TransNames != null)
                 TextboxArtistNameTranslated.Text =
-                    "译名: " + string.Join(",", res.Value.Artist.TransNames);
+                    "译名: " + string.Join(",", res.Artist.TransNames);
             else
                 TextboxArtistNameTranslated.Visibility = Visibility.Collapsed;
-            TextBlockDesc.Text = res.Value.Artist.BriefDesc;
-            TextBlockInfo.Text = "歌曲数: " + res.Value.Artist.MusicSize + " | 专辑数: " +
-                                 res.Value.Artist.AlbumSize + " | 视频数: " +
-                                 res.Value.Artist.MvSize;
+            TextBlockDesc.Text = res.Artist.BriefDesc;
+            TextBlockInfo.Text = "歌曲数: " + res.Artist.MusicSize + " | 专辑数: " +
+                                 res.Artist.AlbumSize + " | 视频数: " +
+                                 res.Artist.MvSize;
             HotSongContainer.ListSource = "sh" + artist.id;
             AllSongContainer.ListSource = "content";
             _hotSongsLoaderTask = LoadHotSongs();

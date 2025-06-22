@@ -18,7 +18,7 @@ public static class SimpleCacher
         // cacheFolder = await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("cache", CreationCollisionOption.OpenIfExists);
     }
 
-    public static async Task<T?> GetOrCreateCacheAsync<T>(string type, string id, Func<Task<T?>> creator, TimeSpan? expiration = null, bool forceRefresh = false)
+    public static async Task<T?> GetOrCreateCacheAsync<T>(string type, string id, Func<Task<T?>> creator, TimeSpan? expiration = null, bool forceRefresh = false, bool forceUseCache = false) where T : class
     {
         if (!Common.Setting.enableApiCache)
         {
@@ -35,7 +35,6 @@ public static class SimpleCacher
         restart:
         var fileName = $"{id}.cache";
         bool hasCache = false;
-        bool forceUseCache = false;
         if (await dir.TryGetItemAsync(fileName) is StorageFile cacheFile && !forceRefresh)
         {
             hasCache = true;
