@@ -18,7 +18,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         private AudioGraph _defaultPlayer;
         private AudioDeviceOutputNode _outputNode;
         private bool disposedValue;
-        private Timer PositionTimer = new Timer() { AutoReset = true, Enabled = true, Interval = 100 };
+        private Timer PositionTimer = new Timer() { AutoReset = true, Interval = 100 };
         private TimeSpan _lastPosition = TimeSpan.Zero;
 
 
@@ -162,6 +162,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 if (createResult.Status != AudioDeviceNodeCreationStatus.Success) throw createResult.ExtendedError;
                 _outputNode = createResult.DeviceOutputNode;
                 _outputNode.OutgoingGain = audioGraphSetting.OutputVolume;
+                PositionTimer.Start();
             }
             else
             {
@@ -433,6 +434,8 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 }
                 _outputNode?.Dispose();
                 _defaultPlayer?.Dispose();
+                PositionTimer?.Stop();
+                PositionTimer?.Dispose();
                 disposedValue = true;
             }
         }

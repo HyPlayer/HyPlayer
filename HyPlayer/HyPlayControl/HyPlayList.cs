@@ -763,21 +763,22 @@ public static class HyPlayList
     public static async Task LoadMediaSource(HyPlayItem targetItem, bool setAsPrimary = false, bool autoPlay = true)
     {
         var overdue = !await _loaderSemaphoreSlim.WaitAsync(0);
-        if (overdue) return;
-        if (targetItem.PlayItem?.Name == null)
-        {
-            MoveSongPointer();
-            return;
-        }
-
-        if (CoverStream.Size != 0)
-        {
-            CoverStream.Size = 0;
-            CoverStream.Seek(0);
-        }
-
         try
         {
+            if (overdue) return;
+            if (targetItem.PlayItem?.Name == null)
+            {
+                MoveSongPointer();
+                return;
+            }
+
+            if (CoverStream.Size != 0)
+            {
+                CoverStream.Size = 0;
+                CoverStream.Seek(0);
+            }
+
+
             if (Player.PrimaryPlaybackSource != null && (!Common.Setting.CrossFade || (Common.Setting.CrossFade && !FadeManager.FadeProcessing)))
             {
                 var primaryPlaybackSource = Player.PrimaryPlaybackSource as AudioGraphPlaybackSource;
@@ -822,7 +823,7 @@ public static class HyPlayList
                         catch
                         {
                             DownloadOperation operation = null;
-                            
+
                             var destinationFolder =
                                         await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir);
                             var destinationFile =
@@ -836,7 +837,7 @@ public static class HyPlayList
                                 {
                                     if (!DownloadOperations.ContainsKey(targetItem))
                                     {
-                                        
+
                                         operation =
                                             Downloader.CreateDownload(new Uri(playUrl), destinationFile);
                                         operation.IsRandomAccessRequired = true;
@@ -854,7 +855,7 @@ public static class HyPlayList
                             {
                                 mediaSource?.Dispose();
                                 mediaSource = null;
-                                if(operation.CurrentWebErrorStatus != null)
+                                if (operation.CurrentWebErrorStatus != null)
                                 {
                                     var item = DownloadOperations[targetItem];
                                     DownloadOperations.Remove(targetItem);
@@ -920,7 +921,7 @@ public static class HyPlayList
 
             mediaSource?.CustomProperties.Add("nowPlayingItem", targetItem);
             MediaSystemControls.IsEnabled = true;
-            if(!Common.Setting.enableCache) await mediaSource.OpenAsync();
+            if (!Common.Setting.enableCache) await mediaSource.OpenAsync();
             var duration = mediaSource.Duration?.TotalMilliseconds;
             if (duration != null)
             {

@@ -68,7 +68,7 @@ namespace HyPlayer.Classes
                 {
                     var valueSource = valueItem?.PlayItem.AudioGraphPlaybackSource;
                     HyPlayList.Player.DisconnectPlaybackSource(valueSource);
-                    keyItem.PlayItem.FreePlaybackResources();
+                    valueItem.PlayItem.FreePlaybackResources();
                 }
             }
             _currentNode = null;
@@ -103,7 +103,7 @@ namespace HyPlayer.Classes
         }
         private void ProcessFade()
         {
-            if (HyPlayList.Player.PrimaryPlaybackSource == _currentPlayItem?.Item1 && _currentPlayItem?.Item2 != null & _currentPlayItem?.Item1 != null)
+            if (HyPlayList.Player.PrimaryPlaybackSource == _currentPlayItem?.Item1 && _currentPlayItem?.Item2 != null && _currentPlayItem?.Item1 != null)
             {
                 HyPlayList.Player.PrimaryPlaybackSource = _currentPlayItem?.Item2;
                 HyPlayList.Player?.PlayPlaybackSource(_currentPlayItem?.Item2);

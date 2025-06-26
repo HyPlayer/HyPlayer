@@ -478,24 +478,24 @@
             </Grid>
 
         </ContentDialog>
-        <!-- 登录提示弹窗 -->
+        <!--  登录提示弹窗  -->
         <ContentDialog
             x:Name="DialogPreLoginHint"
             x:FieldModifier="public"
-            PrimaryButtonClick="ButtonPreLoginPrimary_Click"
             CloseButtonText="取消"
+            PrimaryButtonClick="ButtonPreLoginPrimary_Click"
             PrimaryButtonStyle="{StaticResource AccentButtonStyle}"
             PrimaryButtonText="继续登录">
-            
+
             <StackPanel Orientation="Vertical">
                 <TextBlock>由于网易云音乐登录风控加强, 现无法通过正常途径登录</TextBlock>
                 <TextBlock>我们提供以下手段缓解:</TextBlock>
                 <controls:DockPanel LastChildFill="True">
                     <HyperlinkButton controls:DockPanel.Dock="Right" Click="BtnApiAddParamClick">查看教程</HyperlinkButton>
-                    <TextBlock >抓取官方客户端登录信息 (稳定)</TextBlock>
+                    <TextBlock>抓取官方客户端登录信息 (稳定)</TextBlock>
                 </controls:DockPanel>
                 <controls:DockPanel LastChildFill="True">
-                    <HyperlinkButton controls:DockPanel.Dock="Right"  Click="BtnRamdomDeviceIdClick">立即生成</HyperlinkButton>
+                    <HyperlinkButton controls:DockPanel.Dock="Right" Click="BtnRamdomDeviceIdClick">立即生成</HyperlinkButton>
                     <TextBlock>生成随机设备信息 (快捷)</TextBlock>
                 </controls:DockPanel>
                 <TextBlock>请在缓解后后使用扫码登录</TextBlock>
