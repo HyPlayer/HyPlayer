@@ -88,7 +88,7 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
 
         if (remain < LeaveAnimationDuration*1.2)//结束动画
         {
-            var surplus = (LeaveAnimationDuration * 1.2 - remain) * 1.0f / LeaveAnimationDuration * 1.2;
+            var surplus = (LeaveAnimationDuration * 1.2 - remain) * 1.0f / (LeaveAnimationDuration * 1.2);
             progress = AnimationEaseFunction.Ease(Math.Clamp(surplus, 0, 1));
             focusingColor.A = (byte)(160 - 160  * progress);
             geometryFill = CanvasGeometry.CreateRoundedRectangle(session, new Rect(Width * progress, 0, Width - Width * progress, Height), 4, 4);

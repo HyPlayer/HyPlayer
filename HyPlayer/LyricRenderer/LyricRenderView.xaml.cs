@@ -453,7 +453,7 @@ namespace HyPlayer.LyricRenderer
         private void LyricView_OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
             // 每0.5s重新算一下布局，避免重复算占用过高
-            if (Context.RenderTick - _lastRedesignedTime > 5000000)
+            if (_lastRedesignedTime == 0 || Context.RenderTick - _lastRedesignedTime > 5000000)
             {
                 Redesign((float)e.NewSize.Width, (float)e.NewSize.Height);
             }
