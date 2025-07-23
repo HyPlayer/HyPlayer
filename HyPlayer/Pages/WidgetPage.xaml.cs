@@ -250,7 +250,7 @@ public sealed partial class WidgetPage : Page
             ? Math.Max(_widget.WindowBounds.Width / 20, 40)
             : _settings.LyricSize;
         var translationSize = (_settings.TranslationSize > 0) ? _settings.TranslationSize : lyricSize / 1.8;
-        var romajiSize = (_settings.RomajiSize > 0) ? _settings.TranslationSize : lyricSize / 2;
+        var romajiSize = (_settings.RomajiSize > 0) ? _settings.RomajiSize : lyricSize / 2;
         LyricView.ChangeRenderFontSize((float)lyricSize, (float)translationSize, (float)romajiSize);
         LyricView.ChangeAlignment(_settings.LyricAlignment switch
         {
