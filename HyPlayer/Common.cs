@@ -1668,7 +1668,6 @@ namespace HyPlayer
 
         public int LineRollingCalculator
         {
-            //  0 - 不进行转换  1 - 自动选择  2 - 网易云优先  3 - Kawazu 转换优先
             get => GetSettings(nameof(LineRollingCalculator), 0);
             set
             {
@@ -1770,6 +1769,15 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(IsolationFPS)] = value;
+                OnPropertyChanged();
+            }
+        }
+        public int LyricRendererFPS
+        {
+            get => GetSettings(nameof(LyricRendererFPS), 60);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(LyricRendererFPS)] = value;
                 OnPropertyChanged();
             }
         }

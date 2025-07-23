@@ -106,7 +106,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
         TextBoxPureLyric.FontSize = _lyricIsOnShow ? actualsize + Common.Setting.lyricScaleSize : actualsize;
         WordLyricContainer.FontSize = _lyricIsOnShow ? actualsize + Common.Setting.lyricScaleSize : actualsize;
         TextBoxTranslation.FontSize = _lyricIsOnShow ? actualsize + Common.Setting.lyricScaleSize : actualsize;
-        TextBoxSound.FontSize = Common.Setting.romajiSize;
+        TextBoxSound.FontSize = _lyricIsOnShow ? actualsize + Common.Setting.lyricScaleSize : actualsize;
     }
 
     public void RefreshWordColor(TimeSpan position)

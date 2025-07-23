@@ -117,11 +117,13 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         LyricBox.Context.CurrentLyricTime = 0;
         LyricBox.Context.Debug = Common.Setting.LyricRendererDebugMode;
         LyricBox.Context.Effects.Blur = Common.Setting.lyricRenderBlur;
+        LyricBox.Fps = Common.Setting.LyricRendererFPS;
         LyricBox.Context.LineRollingEaseCalculator = Common.Setting.LineRollingCalculator switch
         {
             1 => new SinRollingCalculator(),
             2 => new LyricifyRollingCalculator(),
             3 => new SyncRollingCalculator(),
+            4 => new CircleEaseRollingCalculator(),
             _ => new ElasticEaseRollingCalculator()
         };
         LyricBox.Context.Effects.ScaleWhenFocusing = Common.Setting.lyricRenderScaleWhenFocusing;
@@ -612,7 +614,9 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             if (HyPlayList.NowPlayingItem == null) return;
             LyricBox.Width = LyricWidth;
             LyricBox.ChangeRenderColor(Common.BrushManagement.IdleBrush.Color, Common.BrushManagement.AccentBrush.Color);
-            LyricBox.ChangeRenderFontSize((float)showsize, (Common.Setting.translationSize > 0) ? Common.Setting.translationSize : (float)showsize / 2, Common.Setting.romajiSize);
+            LyricBox.ChangeRenderFontSize((float)showsize, 
+                (Common.Setting.translationSize > 0) ? Common.Setting.translationSize : (float)showsize / 1.8F
+                , (Common.Setting.romajiSize > 0) ? Common.Setting.romajiSize : (float)showsize / 2);
         });
     }
 

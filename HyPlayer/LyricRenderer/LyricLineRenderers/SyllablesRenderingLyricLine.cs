@@ -4,6 +4,7 @@ using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.Animator;
 using HyPlayer.LyricRenderer.Animator.EaseFunctions;
+using HyPlayer.LyricRenderer.Builder;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.Graphics.Canvas.Geometry;
@@ -41,6 +42,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
         private CanvasTextLayout? tl;
         private CanvasTextLayout? tll;
         public EaseFunctionBase EaseFunction { get; set; } = new CustomCircleEase { EasingMode = EasingMode.EaseOut };
+        private CustomElasticEase _elasticEase = new CustomElasticEase { Springiness = 6 };
 
         private bool _isFocusing;
         private float _canvasWidth;
@@ -67,21 +69,6 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             if (textLayout is null) return true;
 
             var drawingTop = offset.Y + _drawingOffsetY;
-            // 画背景
-            if (_reactionState == ReactionState.Enter)
-            {
-                var color = new Color
-                {
-                    A = 40,
-                    R = 0,
-                    G = 0,
-                    B = 0
-                };
-                session.FillRoundedRectangle(offset.X, offset.Y,
-                    RenderingWidth + 2, RenderingHeight + 8, 6, 6, color);
-            }
-
-
 
             float actualOffsetX = offset.X - (float)textLayout.LayoutBounds.Left;
             if (_sizeChangedWithourNextRender)
@@ -110,6 +97,8 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             using (CanvasDrawingSession targetDrawingSession = totalCommand.CreateDrawingSession())
             {
                 var cl = new CanvasCommandList(targetDrawingSession);
+                CanvasGeometry? highlightGeometry1 = null;
+                CanvasGeometry? highlightGeometry2 = null;
                 using (var clds = cl.CreateDrawingSession())
                 {
                     //罗马字
@@ -123,7 +112,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                             {
                                 clds.DrawTextLayout(tll, 0, actualTop, idleColor);
                                 var highlightGeometry = CreateHighlightGeometries(context.CurrentLyricTime, tll,
-                                    session, Syllables, false, true);
+                                    session, Syllables, true, true);
                                 var matrix = Matrix3x2.CreateTranslation(0, actualTop);
                                 using (clds.CreateLayer(1, highlightGeometry.geo1, matrix))
                                 {
@@ -159,25 +148,27 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     clds.DrawTextLayout(textLayout, 0, actualTop,
                         TypographySelector(t => t?.IdleColor, context)!.Value);
                     var textTop = actualTop;
+
                     if (_isFocusing)
                     {
                         if (IsSyllable || context.Effects.SimpleLineScanning)
                         {
-                            var highlightGeometry = CreateHighlightGeometries(context.CurrentLyricTime, textLayout,
+                            (highlightGeometry1, highlightGeometry2,var currentPercentage) = CreateHighlightGeometries(context.CurrentLyricTime, textLayout,
                                 session, Syllables);
                             var matrix = Matrix3x2.CreateTranslation(0, textTop);
-                            using (clds.CreateLayer(1, highlightGeometry.geo1, matrix))
+                            using (clds.CreateLayer(1, highlightGeometry1, matrix))
                             {
                                 clds.DrawTextLayout(textLayout, 0, textTop,
                                     TypographySelector(t => t?.FocusingColor, context)!.Value);
+
                             }
-                            if (highlightGeometry.geo2 is not null) //填充渐变矩形
+                            if (highlightGeometry2 is not null) //填充渐变矩形
                             {
-                                using (clds.CreateLayer(1, highlightGeometry.geo2, matrix))
+                                using (clds.CreateLayer(1, highlightGeometry2, matrix))
                                 {
 
                                     var color = TypographySelector(t => t?.FocusingColor, context)!.Value;
-                                    color.A = (byte)(128 * highlightGeometry.currentPrecentage);
+                                    color.A = (byte)(128 * currentPercentage);
                                     clds.DrawTextLayout(textLayout, 0, textTop, color);
                                 }
                             }
@@ -200,96 +191,90 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                                 ? TypographySelector(t => t?.FocusingColor, context)!.Value
                                 : idleColor);
                     }
+
                 }
 
                 if (_isFocusing && context.Effects.FocusHighlighting)
                 {
+                    var highlightEffectBuilder = new CanvasImageBuilder(cl);
                     //画发光效果
-                    var highlightOpacityEffect = new Microsoft.Graphics.Canvas.Effects.OpacityEffect
-                    {
-                        Source = new ShadowEffect
-                        {
-                            Source = cl,
-                            BlurAmount = 6,
-                            ShadowColor = context.PreferTypography.ShadowColor ?? context.PreferTypography.FocusingColor!.Value,
-                        },
-                        Opacity = 0.4f
-                    };
-                    targetDrawingSession.DrawImage(highlightOpacityEffect, actualOffsetX, 0);
-                    targetDrawingSession.DrawImage(cl, actualOffsetX, 0);
+                    highlightEffectBuilder
+                        .AddShadowEffect(6, context.PreferTypography.ShadowColor ?? context.PreferTypography.FocusingColor!.Value)
+                        .AddOpacityEffect(0.4f);
+                    targetDrawingSession.DrawImage(highlightEffectBuilder.Build(), actualOffsetX, 0);
                 }
-                else
-                {
-                    targetDrawingSession.DrawImage(cl, actualOffsetX, 0);
-                }
+                //结束时的扫词动画
+                //if (context.CurrentLyricTime - EndTime >= 0 && context.CurrentLyricTime - EndTime <= ScaleAnimationDuration)
+                //{
+                //    using (targetDrawingSession.CreateLayer(1, highlightGeometry1))
+                //    {
+                //        var progress = (EaseFunction.Ease(Math.Clamp(
+                //            (context.CurrentLyricTime - EndTime) * 1.0f / ScaleAnimationDuration, 0, 1)));
+
+                //        var effectBuilder = new CanvasImageBuilder(cl);
+                //        effectBuilder.AddCropEffect(new Rect(RenderingWidth * progress, 0, RenderingWidth * (1 - progress), RenderingHeight));
+                //        targetDrawingSession.DrawImage(effectBuilder.Build(), actualOffsetX, 0);
+                //    }
+                //}
+                targetDrawingSession.DrawImage(cl, actualOffsetX, 0);
             }
 
             var gap = _isFocusing ? 0 : Math.Clamp(Math.Abs(Id - context.CurrentLyricLineIndex), 1, 250);
-            ICanvasImage finalEffect = totalCommand;
+            var finalEffectBuilder = new CanvasImageBuilder(totalCommand);
 
-            if (context.Effects.ScaleWhenFocusing && _isFocusing)
+            if (context.Effects.ScaleWhenFocusing)
             {
                 // 计算 Progress
                 var progress = 0f;
-                if (context.CurrentLyricTime - EndTime >= 0 && context.CurrentLyricTime - EndTime <= ScaleAnimationDuration)
+                
+                if (context.CurrentLyricTime - EndTime >= 0 && context.CurrentLyricTime - EndTime  <= ScaleAnimationDuration)//缩小
                 {
                     progress = 1 - ((float)EaseFunction.Ease(Math.Clamp(
                         (context.CurrentLyricTime - EndTime) * 1.0f / ScaleAnimationDuration, 0, 1)));
                 }
-                else if (_isFocusing && context.CurrentLyricTime - StartTime >= 0)
+                else if (_isFocusing && context.CurrentLyricTime - StartTime >= 0)//放大
                 {
-                    progress = (float)EaseFunction.Ease(Math.Clamp(
-                        (context.CurrentLyricTime - StartTime) * 1.0f / ScaleAnimationDuration, 0, 1));
+                    progress = (float)_elasticEase.Ease(Math.Clamp(
+                        (context.CurrentLyricTime - StartTime) * 1.0f / 1000, 0, 1));
                 }
 
 
                 var scaling = 0.8F + progress * 0.2F;
-                var transformEffect = new Transform2DEffect
-                {
-                    Source = totalCommand,
-                    TransformMatrix = GetCenterMatrix(0, 0, _scalingCenterX + offset.X,
-                        (float)textLayout.LayoutBounds.Height / 2, scaling, scaling),
-                };
-                finalEffect = new Microsoft.Graphics.Canvas.Effects.OpacityEffect
-                {
-                    Source = transformEffect,
-                    Opacity = 0.5f + progress * 0.5f,
-                };
+                finalEffectBuilder
+                    .AddTransform2DEffect(GetCenterMatrix(0, 0, _scalingCenterX + offset.X, (float)textLayout.LayoutBounds.Height / 2, scaling, scaling))
+                    .AddOpacityEffect(Math.Clamp(0.5f + progress * 0.5f,0,1));
             }
             else
             {
                 if (context.Effects.ScaleWhenFocusing)
                 {
-                    finalEffect = new Transform2DEffect
-                    {
-                        Source = totalCommand,
-                        TransformMatrix = _unfocusMatrix,
-                    };
+                    finalEffectBuilder.AddTransform2DEffect(_unfocusMatrix);
                 }
             }
-
-
-            var blurEffect = new GaussianBlurEffect
-            {
-                Source = finalEffect,
-                BlurAmount = 0,
-            };
-            var opacityEffect = new OpacityEffect
-            {
-                Source = blurEffect,
-                Opacity = 1,
-            };
             if (context.Effects.Blur && !_isFocusing && !context.IsScrolling)
             {
-                blurEffect.BlurAmount = Math.Clamp(Math.Abs(gap), 0, 250);
+                finalEffectBuilder.AddGaussianBlurEffect(Math.Clamp(gap, 0, 250));
             }
             if (Common.Setting.lyricRenderFade && !context.IsScrolling)
             {
-                opacityEffect.Opacity = 1 - Math.Clamp(Math.Abs(gap) / (10f - (Common.Setting.lyricFadingRatio / 10f)), 0, 0.9f);
+                finalEffectBuilder.AddOpacityEffect(1 - Math.Clamp(gap / (10f - (Common.Setting.lyricFadingRatio / 10f)), 0, 0.9f));
             }
-            session.DrawImage(opacityEffect, actualX, drawingTop);
+            session.DrawImage(finalEffectBuilder.Build(), actualX, drawingTop);
             _sizeChanged = false;
 
+            // 画背景
+            if (_reactionState == ReactionState.Enter && !string.IsNullOrEmpty(_text))
+            {
+                var color = new Color
+                {
+                    A = 10,
+                    R = 255,
+                    G = 255,
+                    B = 255
+                };
+                session.FillRoundedRectangle(offset.X, offset.Y,
+                    RenderingWidth + 2, RenderingHeight + 8, 6, 6, color);
+            }
 
             if (context.Debug)
             {
@@ -297,6 +282,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 session.DrawText(Id.ToString(), offset.X, drawingTop + 15, Colors.Red);
                 session.DrawRectangle(offset.X, drawingTop, RenderingWidth, RenderingHeight, Colors.Yellow);
             }
+
 
             return true;
         }
