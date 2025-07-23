@@ -204,18 +204,18 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     targetDrawingSession.DrawImage(highlightEffectBuilder.Build(), actualOffsetX, 0);
                 }
                 //结束时的扫词动画
-                if (context.CurrentLyricTime - EndTime >= 0 && context.CurrentLyricTime - EndTime <= ScaleAnimationDuration)
-                {
-                    using (targetDrawingSession.CreateLayer(1, highlightGeometry1))
-                    {
-                        var progress = (EaseFunction.Ease(Math.Clamp(
-                            (context.CurrentLyricTime - EndTime) * 1.0f / ScaleAnimationDuration, 0, 1)));
+                //if (context.CurrentLyricTime - EndTime >= 0 && context.CurrentLyricTime - EndTime <= ScaleAnimationDuration)
+                //{
+                //    using (targetDrawingSession.CreateLayer(1, highlightGeometry1))
+                //    {
+                //        var progress = (EaseFunction.Ease(Math.Clamp(
+                //            (context.CurrentLyricTime - EndTime) * 1.0f / ScaleAnimationDuration, 0, 1)));
 
-                        var effectBuilder = new CanvasImageBuilder(cl);
-                        effectBuilder.AddCropEffect(new Rect(RenderingWidth * progress, 0, RenderingWidth * (1 - progress), RenderingHeight));
-                        targetDrawingSession.DrawImage(effectBuilder.Build(), actualOffsetX, 0);
-                    }
-                }
+                //        var effectBuilder = new CanvasImageBuilder(cl);
+                //        effectBuilder.AddCropEffect(new Rect(RenderingWidth * progress, 0, RenderingWidth * (1 - progress), RenderingHeight));
+                //        targetDrawingSession.DrawImage(effectBuilder.Build(), actualOffsetX, 0);
+                //    }
+                //}
                 targetDrawingSession.DrawImage(cl, actualOffsetX, 0);
             }
 
