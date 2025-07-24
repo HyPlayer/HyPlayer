@@ -9,12 +9,12 @@ namespace HyPlayer.Classes;
 
 public static class SimpleCacher
 {
-    private static StorageFolder cacheFolder;
+    private static StorageFolder? cacheFolder;
 
     
     public static async Task InitializeAsync()
     {
-        cacheFolder = await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir);
+        cacheFolder ??= await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir);
         // cacheFolder = await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("cache", CreationCollisionOption.OpenIfExists);
     }
 
@@ -27,11 +27,11 @@ public static class SimpleCacher
 
         if (cacheFolder == null)
         {
-            throw new InvalidOperationException("Cache folder is not initialized. Call InitializeAsync first.");
+            await InitializeAsync();
         }
         
         // create new type dir
-        var dir = await cacheFolder.CreateFolderAsync(type, CreationCollisionOption.OpenIfExists);
+        var dir = await cacheFolder!.CreateFolderAsync(type, CreationCollisionOption.OpenIfExists);
         restart:
         var fileName = $"{id}.cache";
         bool hasCache = false;
