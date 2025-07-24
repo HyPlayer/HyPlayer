@@ -375,7 +375,15 @@ public sealed partial class BasePage : Page
 
         HyPlayList.LoginDoneCall();
         _ = ((App)Application.Current).InitializeJumpList();
-        NavMain.SelectedItem = NavItemLogin;
+        if (Common.Setting.noImage)
+        {
+            Common.NavigatePage(typeof(Welcome));
+        }
+        else
+        {
+            NavMain.SelectedItem = NavItemLogin;
+        }
+        
         return true;
     }
 
