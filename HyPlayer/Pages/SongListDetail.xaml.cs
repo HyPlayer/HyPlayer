@@ -500,15 +500,22 @@ public sealed partial class SongListDetail : Page, IDisposable
         Common.NavigatePage(typeof(Comments), "pl" + playList.plid);
     }
 
-    private void BtnRefreshCache_Clicked(object sender, RoutedEventArgs e)
+    private async void BtnRefreshCache_Clicked(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
-        _ = SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracks, playList.plid);
-        _ = SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracksDetail, playList.plid, true);
-        _ = SimpleCacher.ResetCacheAsync(CacheType.PlaylistDetail, playList.plid);
-        Common.AddToTeachingTipLists("清除缓存成功", "已清除当前歌单的缓存");
-        SongsList.Songs.Clear();
-        page = 0;
-        _ = LoadPageData(playList.plid, true);
+        try
+        {
+            if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
+            await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracks, playList.plid);
+            await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracksDetail, playList.plid, true);
+            await SimpleCacher.ResetCacheAsync(CacheType.PlaylistDetail, playList.plid);
+            Common.AddToTeachingTipLists("清除缓存成功", "已清除当前歌单的缓存");
+            SongsList.Songs.Clear();
+            page = 0;
+            _ = LoadPageData(playList.plid, true);
+        }
+        catch (Exception ex)
+        {
+            // ignore
+        }
     }
 }

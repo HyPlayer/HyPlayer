@@ -11,27 +11,28 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <Button
-            x:Name="BtnUpload"
-            Margin="0,-5,30,0"
-            HorizontalAlignment="Right"
-            Click="BtnUpload_Click"
-            Content="上传本地" />
-        <Button
-            x:Name="BtnRefresh"
-            Margin="0,-5,30,0"
-            HorizontalAlignment="Right"
-            Click="BtnRefresh_OnClick"
-            Content="刷新列表" />
+        <TextBlock
+            Margin="30,30,35,0"
+            FontSize="40"
+            FontWeight="Bold"
+            Text="我的云盘"
+            TextWrapping="Wrap" />
+        <StackPanel Orientation="Horizontal">
+            <Button
+                x:Name="BtnUpload"
+                Margin="0,-5,30,0"
+                HorizontalAlignment="Right"
+                Click="BtnUpload_Click"
+                Content="上传本地" />
+            <Button
+                x:Name="BtnRefresh"
+                Margin="0,-5,30,0"
+                HorizontalAlignment="Right"
+                Click="BtnRefresh_OnClick"
+                Content="刷新列表" />
 
-        <StackPanel Orientation="Horizontal" Spacing="20">
-            <TextBlock
-                Margin="30,30,0,0"
-                FontSize="40"
-                FontWeight="Bold"
-                Text="我的云盘"
-                TextWrapping="Wrap" />
         </StackPanel>
+            
         <controls1:SongsList
             x:Name="SongContainer"
             Grid.Row="1"
