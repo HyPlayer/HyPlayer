@@ -25,11 +25,11 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.NeteaseApi.ApiContracts.Category;
 using HyPlayer.NeteaseApi.ApiContracts.Login;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.NeteaseApi.ApiContracts.Recommend;
 using HyPlayer.NeteaseApi.ApiContracts.User;
+using HyPlayer.NeteaseApi.ApiContracts.Utils;
 using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
 using NavigationViewBackButtonVisible = Microsoft.UI.Xaml.Controls.NavigationViewBackButtonVisible;
 using NavigationViewBackRequestedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewBackRequestedEventArgs;
@@ -969,7 +969,7 @@ public sealed partial class BasePage : Page
         Common.NeteaseAPI.Option.AdditionalParameters.Headers["deviceId"] = deviceId;
         Common.NeteaseAPI.Option.AdditionalParameters.Cookies["deviceId"] = deviceId;
         Common.Setting.ApiAdditionalParameters = Common.NeteaseAPI.Option.AdditionalParameters;
-        var rst = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.RegisterAnounymousApi, new RegisterAnounymousRequest()
+        var rst = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.RegisterAnonymousApi, new RegisterAnonymousRequest()
         {
             DeviceId = deviceId
         });
