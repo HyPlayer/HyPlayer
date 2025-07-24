@@ -989,7 +989,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             Utils.ConvertTranslation(ttmlLyric.TrLyrics, HyPlayList.LyricInfo.Lyrics);
             if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
             {
-                _ = SimpleCacher.GetOrCreateCacheAsync("lyricInfo", HyPlayList.NowPlayingItem.PlayItem.Id,
+                _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricInfo, HyPlayList.NowPlayingItem.PlayItem.Id,
                     () => Task.FromResult(HyPlayList.LyricInfo)!, forceRefresh: true);
             }
          

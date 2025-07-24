@@ -94,7 +94,7 @@ public sealed partial class PageFavorite : Page, IDisposable
         if (disposedValue) throw new ObjectDisposedException(nameof(PageFavorite));
         try
         {
-            var jv = await SimpleCacher.GetOrCreateCacheAsync("login", "djchannel_subscribed",
+            var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "djchannel_subscribed",
                 async () =>
                 {
                     var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.DjChannelSubscribedApi, _cancellationToken);
@@ -138,7 +138,7 @@ public sealed partial class PageFavorite : Page, IDisposable
         if (disposedValue) throw new ObjectDisposedException(nameof(PageFavorite));
         try
         {
-            var jv = await SimpleCacher.GetOrCreateCacheAsync("login", "artist_sublist",
+            var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "artist_sublist",
                 async () =>
                 {
                     var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.ArtistSublistApi,
@@ -184,7 +184,7 @@ public sealed partial class PageFavorite : Page, IDisposable
         if (disposedValue) throw new ObjectDisposedException(nameof(PageFavorite));
         try
         {
-            var json = await SimpleCacher.GetOrCreateCacheAsync("login", "album_sublist",
+            var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "album_sublist",
                 async () =>
                 {
                     var jv = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.AlbumSublistApi,

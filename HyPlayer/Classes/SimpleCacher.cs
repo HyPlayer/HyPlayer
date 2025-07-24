@@ -4,6 +4,7 @@ using System.IO;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
 using Windows.Storage;
+using FastEnumUtility;
 
 namespace HyPlayer.Classes;
 
@@ -18,7 +19,7 @@ public static class SimpleCacher
         // cacheFolder = await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("cache", CreationCollisionOption.OpenIfExists);
     }
 
-    public static async Task<T?> GetOrCreateCacheAsync<T>(string type, string id, Func<Task<T?>> creator, TimeSpan? expiration = null, bool forceRefresh = false, bool forceUseCache = false) where T : class
+    public static async Task<T?> GetOrCreateCacheAsync<T>(CacheType cacheType, string id, Func<Task<T?>> creator, TimeSpan? expiration = null, bool forceRefresh = false, bool forceUseCache = false) where T : class
     {
         if (!Common.Setting.enableApiCache)
         {
@@ -29,6 +30,7 @@ public static class SimpleCacher
         {
             await InitializeAsync();
         }
+        var type = FastEnum.GetName(cacheType);
         
         // create new type dir
         var dir = await cacheFolder!.CreateFolderAsync(type, CreationCollisionOption.OpenIfExists);
@@ -127,4 +129,29 @@ public static class SimpleCacher
             await file.DeleteAsync();
         }
     }
+}
+
+public enum CacheType
+{
+    Unspecified,
+    Comments,
+    SongUrl,
+    LyricInfo,
+    LyricApi,
+    SongDetail,
+    AlbumInfo,
+    PlaylistTracks,
+    PlaylistDetail,
+    PlaylistTracksDetail,
+    AlbumDynamic,
+    ArtistDetail,
+    ArtistTopSongsDetail,
+    ArtistAlbumsList,
+    Login,
+    Toplist,
+    UserDetail,
+    UserPlaylist,
+    RadioPrograms,
+    RadioInfo,
+    
 }

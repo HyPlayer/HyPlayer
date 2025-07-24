@@ -99,7 +99,7 @@ public sealed partial class Home : Page, IDisposable
         //我们直接Batch吧
         try
         {
-            var ret = await SimpleCacher.GetOrCreateCacheAsync("toplist", "ranklist", async () =>
+            var ret = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Toplist, "ranklist", async () =>
             {
                 var resp = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ToplistApi, _cancellationToken);
                 if (resp.IsError)
@@ -158,7 +158,7 @@ public sealed partial class Home : Page, IDisposable
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var json = await SimpleCacher.GetOrCreateCacheAsync("toplist", "ranklist", async () =>
+            var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Toplist, "ranklist", async () =>
             {
                 var resp = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ToplistApi, _cancellationToken);
                 if (resp.IsError)

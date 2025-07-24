@@ -146,7 +146,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         try
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            var items = await SimpleCacher.GetOrCreateCacheAsync("login", "recommendSongs", async () =>
+            var items = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "recommendSongs", async () =>
             {
                 // 每天推荐歌曲
                 var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.RecommendSongsApi, _cancellationToken);
@@ -192,7 +192,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         try
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            var json = await SimpleCacher.GetOrCreateCacheAsync("playlist_tracks", playList.plid, async () =>
+            var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistTracks, playList.plid, async () =>
             {
                 // 歌单详情
                 var rst = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.PlaylistTracksGetApi,
@@ -239,7 +239,7 @@ public sealed partial class SongListDetail : Page, IDisposable
 
         try
         {
-            var rst = await SimpleCacher.GetOrCreateCacheAsync("songlist_songs", playList.plid + "_" + page, async () =>
+            var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistTracksDetail, playList.plid + "_" + page, async () =>
             {
                 // 歌单歌曲详情
                 var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.SongDetailApi,
@@ -312,7 +312,7 @@ public sealed partial class SongListDetail : Page, IDisposable
 
                 try
                 {
-                    var rst = await SimpleCacher.GetOrCreateCacheAsync("playlist_detail", pid, async () =>
+                    var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistDetail, pid, async () =>
                     {
                         // 歌单详情
                         var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.PlaylistDetailApi,

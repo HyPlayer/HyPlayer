@@ -1088,7 +1088,7 @@ public static class HyPlayList
              Common.Setting.songUrlLazyGet) && targetItem.PlayItem.Id != "-1")
             try
             {
-                var songResult = await SimpleCacher.GetOrCreateCacheAsync("songUrl", targetItem.PlayItem.Id+"_"+Common.Setting.audioRate, async () =>
+                var songResult = await SimpleCacher.GetOrCreateCacheAsync(CacheType.SongUrl, targetItem.PlayItem.Id+"_"+Common.Setting.audioRate, async () =>
                 {
                     var songRequest = new SongUrlRequest
                         { Level = Common.Setting.audioRate, Id = targetItem.PlayItem.Id };
@@ -1833,7 +1833,7 @@ public static class HyPlayList
 
     private static async Task LoadLyrics(HyPlayItem hpi)
     {
-        var cache = await SimpleCacher.GetOrCreateCacheAsync("lyricInfo", hpi.PlayItem.Id, () => Task.FromResult<LyricInfo?>(null));
+        var cache = await SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricInfo, hpi.PlayItem.Id, () => Task.FromResult<LyricInfo?>(null));
         if (cache is not null)
         {
             LyricInfo = cache;
@@ -1910,7 +1910,7 @@ public static class HyPlayList
         OnLyricChange?.Invoke();
         if (hpi.ItemType == HyPlayItemType.Netease)
         {
-            _ = SimpleCacher.GetOrCreateCacheAsync("lyricInfo", hpi.PlayItem.Id, () => Task.FromResult(LyricInfo));
+            _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricInfo, hpi.PlayItem.Id, () => Task.FromResult(LyricInfo));
         }
 
         try
@@ -1959,7 +1959,7 @@ public static class HyPlayList
 
                 OnLyricLoaded?.Invoke();
                 OnLyricChange?.Invoke();
-                _ = SimpleCacher.GetOrCreateCacheAsync("lyricInfo", hpi.PlayItem.Id, () => Task.FromResult(LyricInfo));
+                _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricInfo, hpi.PlayItem.Id, () => Task.FromResult(LyricInfo));
             }
         }
         catch
@@ -1984,7 +1984,7 @@ public static class HyPlayList
             {
                 PureLyricInfo res = new PureLyricInfo();
                 var lyricRequest = new LyricRequest() { Id = ncp.PlayItem.Id };
-                var lyricResult = await SimpleCacher.GetOrCreateCacheAsync("lyricapi", ncp.PlayItem.Id,
+                var lyricResult = await SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricApi, ncp.PlayItem.Id,
                     async () =>
                     {
                         var resp = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.LyricApi, lyricRequest);
@@ -2237,7 +2237,7 @@ public static class HyPlayList
                     await AppendPlayList(sourceId.Substring(2, sourceId.Length - 2));
                     return true;
                 case "ns":
-                    var rst = await SimpleCacher.GetOrCreateCacheAsync("song",
+                    var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.SongDetail,
                         "ncm" + sourceId.Substring(2, sourceId.Length - 2),
                         async () =>
                         {
@@ -2292,7 +2292,7 @@ public static class HyPlayList
     {
         try
         {
-            var rst = await SimpleCacher.GetOrCreateCacheAsync("singerHot", id, async () =>
+            var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, id, async () =>
             {
                 var j1 = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ArtistTopSongApi,
                     new ArtistTopSongRequest
@@ -2323,7 +2323,7 @@ public static class HyPlayList
     {
         try
         {
-            var rst = await SimpleCacher.GetOrCreateCacheAsync("albumInfo", albumId, async () =>
+            var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.AlbumInfo, albumId, async () =>
             {
                 var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.AlbumApi,
                     new AlbumRequest()
@@ -2406,7 +2406,7 @@ public static class HyPlayList
     {
         try
         {
-            var resp = await SimpleCacher.GetOrCreateCacheAsync("playlist_trackIds", playlistId, async () =>
+            var resp = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistTracks, playlistId, async () =>
             {
                 var detailResponse = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.PlaylistTracksGetApi,
                     new PlaylistTracksGetRequest() { Id = playlistId });
@@ -2429,7 +2429,7 @@ public static class HyPlayList
                     Math.Min(500, trackIds.Count - nowIndex * 500));
                 try
                 {
-                    var songDetailResp = await SimpleCacher.GetOrCreateCacheAsync("songlist_songDetail", playlistId + "_" + nowIndex, async () =>
+                    var songDetailResp = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistTracksDetail, playlistId + "_" + nowIndex, async () =>
                     {
                         var songResponse = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.SongDetailApi,
                             new SongDetailRequest() { IdList = nowIds });

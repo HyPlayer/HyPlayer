@@ -45,7 +45,7 @@ public sealed partial class MusicCloudPage : Page, IDisposable
         try
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            var jv = await SimpleCacher.GetOrCreateCacheAsync("userCloud", page.ToString(), async () =>
+            var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "userCloud_" + page, async () =>
             {
                 var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.UserCloudApi,
                     new UserCloudRequest()

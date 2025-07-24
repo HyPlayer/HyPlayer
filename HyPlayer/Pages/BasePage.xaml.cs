@@ -314,7 +314,7 @@ public sealed partial class BasePage : Page
         LoginStatusResponse LoginStatus;
         try
         {
-            var result = await SimpleCacher.GetOrCreateCacheAsync("login", "userStatus", async () =>
+            var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "userStatus", async () =>
             {
                 var result = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.LoginStatusApi);
                 if (result.IsError)
@@ -397,7 +397,7 @@ public sealed partial class BasePage : Page
     {
         try
         {
-            var ids = await SimpleCacher.GetOrCreateCacheAsync("login", "likedSongs", async () =>
+            var ids = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "likedSongs", async () =>
             {
                 var js = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.LikelistApi, new LikelistRequest() { Uid = Common.LoginedUser!.id });
                 if (js.IsError)
@@ -423,7 +423,7 @@ public sealed partial class BasePage : Page
         var nowitem = NavItemsMyList;
         try
         {
-            var jv = await SimpleCacher.GetOrCreateCacheAsync("login", "mySongList", async () =>
+            var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "mySongList", async () =>
             {
                 var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.UserPlaylistApi,
                     new UserPlaylistRequest() { Uid = Common.LoginedUser!.id });

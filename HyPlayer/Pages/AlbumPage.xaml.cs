@@ -97,7 +97,7 @@ public sealed partial class AlbumPage : Page, IDisposable
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(AlbumPage));
         _cancellationToken.ThrowIfCancellationRequested();
-        var js = await SimpleCacher.GetOrCreateCacheAsync("album_dynamic", albumid, async () =>
+        var js = await SimpleCacher.GetOrCreateCacheAsync(CacheType.AlbumDynamic, albumid, async () =>
         {
             var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.AlbumDetailDynamicApi,
                 new AlbumDetailDynamicRequest() { Id = albumid }, _cancellationToken);
@@ -120,7 +120,7 @@ public sealed partial class AlbumPage : Page, IDisposable
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var rst = await SimpleCacher.GetOrCreateCacheAsync("album_info", albumid, async () =>
+            var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.AlbumInfo, albumid, async () =>
             {
                 var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.AlbumApi,
                     new AlbumRequest() { Id = albumid }, _cancellationToken);

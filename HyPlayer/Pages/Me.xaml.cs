@@ -84,7 +84,7 @@ public sealed partial class Me : Page, IDisposable
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var resp = await SimpleCacher.GetOrCreateCacheAsync("userDetail", uid, async () =>
+            var resp = await SimpleCacher.GetOrCreateCacheAsync(CacheType.UserDetail, uid, async () =>
             {
                 var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.UserDetailApi,
                     new UserDetailRequest()
@@ -118,7 +118,7 @@ public sealed partial class Me : Page, IDisposable
         try
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            var val = await SimpleCacher.GetOrCreateCacheAsync("userPlaylist", uid, async () =>
+            var val = await SimpleCacher.GetOrCreateCacheAsync(CacheType.UserPlaylist, uid, async () =>
             {
                 var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.UserPlaylistApi,
                     new UserPlaylistRequest()

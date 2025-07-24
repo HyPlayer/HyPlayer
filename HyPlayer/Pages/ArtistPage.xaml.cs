@@ -64,7 +64,7 @@ public sealed partial class ArtistPage : Page, IDisposable
                 Common.AddToTeachingTipLists("艺人ID为空", "请检查传入的参数是否正确");
                 return;
             }
-            var res = await SimpleCacher.GetOrCreateCacheAsync("artist_detail", artistId, async () =>
+            var res = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistDetail, artistId, async () =>
             {
                 var resp = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ArtistDetailApi,
                     new ArtistDetailRequest() { ArtistId = artistId }, _cancellationToken);
@@ -169,7 +169,7 @@ public sealed partial class ArtistPage : Page, IDisposable
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var j1 = await SimpleCacher.GetOrCreateCacheAsync("artist_topsong_list", artist.id, async () =>
+            var j1 = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, artist.id, async () =>
             {
                 var j1res = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ArtistTopSongApi,
                     new ArtistTopSongRequest() { ArtistId = artist.id }, _cancellationToken);
@@ -179,15 +179,15 @@ public sealed partial class ArtistPage : Page, IDisposable
                     return null;
                 }
 
-                return j1res.Value;
+                return j1res.Value?.Songs;
             });
 
             hotSongs.Clear();
             var idx = 0;
-            var jv = await SimpleCacher.GetOrCreateCacheAsync("artist_topsong_detail", artist.id, async () =>
+            var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, artist.id, async () =>
             {
                 var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.SongDetailApi,
-                    new SongDetailRequest() { IdList = j1.Songs?.Select(t => t.Id).ToList() }, _cancellationToken);
+                    new SongDetailRequest() { IdList = j1?.Select(t => t.Id).ToList() }, _cancellationToken);
                 if (json.IsError)
                 {
                     Common.AddToTeachingTipLists("获取歌手热门歌曲失败", json.Error.Message);
@@ -224,7 +224,7 @@ public sealed partial class ArtistPage : Page, IDisposable
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var j1 = await SimpleCacher.GetOrCreateCacheAsync("artist_songs_list", artist.id + "_" + page,
+            var j1 = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, artist.id + "_" + page,
                 async () =>
                 {
                     var resp = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ArtistSongsApi,
@@ -243,7 +243,7 @@ public sealed partial class ArtistPage : Page, IDisposable
 
             try
             {
-                var jv = await SimpleCacher.GetOrCreateCacheAsync("artist_songs_detail", artist.id + "_" + page,
+                var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, artist.id + "_" + page,
                     async () =>
                     {
                         var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.SongDetailApi,
@@ -318,7 +318,7 @@ public sealed partial class ArtistPage : Page, IDisposable
         {
             _cancellationToken.ThrowIfCancellationRequested();
             
-            var jv = await SimpleCacher.GetOrCreateCacheAsync("artist_album_list", artist.id + "_" + page,
+            var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistAlbumsList, artist.id + "_" + page,
                 async () =>
                 {
                     var resp = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ArtistAlbumsApi,

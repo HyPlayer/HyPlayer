@@ -63,7 +63,7 @@ public sealed partial class RadioPage : Page, IDisposable
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var json = await SimpleCacher.GetOrCreateCacheAsync("radio_program", Radio.id + "_" + page + asc,
+            var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.RadioPrograms, Radio.id + "_" + page + asc,
                 async () =>
                 {
                     var rest = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.DjChannelProgramsApi,
@@ -114,7 +114,7 @@ public sealed partial class RadioPage : Page, IDisposable
         if (e.Parameter is string rid)
             try
             {
-                var json1 = await SimpleCacher.GetOrCreateCacheAsync("radio_info", rid, async () =>
+                var json1 = await SimpleCacher.GetOrCreateCacheAsync(CacheType.RadioInfo, rid, async () =>
                 {
                     var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.DjChannelDetailApi,
                         new DjChannelDetailRequest() { Id = rid }, _cancellationToken);
@@ -237,7 +237,7 @@ public sealed partial class RadioPage : Page, IDisposable
             while (hasMore is true)
                 try
                 {
-                    var json = await SimpleCacher.GetOrCreateCacheAsync("radio_program", Radio.id + "_" + page + asc,
+                    var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.RadioPrograms, Radio.id + "_" + page + asc,
                         async () =>
                         {
                             var rest = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.DjChannelProgramsApi,
