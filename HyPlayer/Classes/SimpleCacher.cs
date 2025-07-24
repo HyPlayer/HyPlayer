@@ -99,14 +99,14 @@ public static class SimpleCacher
         return data;
     }
     
-    public static async Task ResetCacheAsync(string type, string id)
+    public static async Task ResetCacheAsync(CacheType type, string id)
     {
         if (cacheFolder == null)
         {
             throw new InvalidOperationException("Cache folder is not initialized. Call InitializeAsync first.");
         }
 
-        var dir = await cacheFolder.CreateFolderAsync(type, CreationCollisionOption.OpenIfExists);
+        var dir = await cacheFolder.CreateFolderAsync(FastEnum.GetName(type)!, CreationCollisionOption.OpenIfExists);
 
         var fileName = $"{id}.cache";
 
@@ -123,7 +123,7 @@ public static class SimpleCacher
             throw new InvalidOperationException("Cache folder is not initialized. Call InitializeAsync first.");
         }
         
-        var files = await cacheFolder.GetFilesAsync();
+        var files = await cacheFolder.GetFoldersAsync();
         foreach (var file in files)
         {
             await file.DeleteAsync();
