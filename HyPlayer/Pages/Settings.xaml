@@ -1129,6 +1129,16 @@
                                                 Content="选择" />
                                         </StackPanel>
                                     </controls3:SettingsCard>
+                                    <controls3:SettingsCard Header="清理所有缓存">
+                                        <StackPanel
+                                            HorizontalAlignment="Right"
+                                            Orientation="Horizontal"
+                                            Spacing="8">
+                                            <Button
+                                                Click="BtnClearCache_Click"
+                                                Content="清理" />
+                                        </StackPanel>
+                                    </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>
 

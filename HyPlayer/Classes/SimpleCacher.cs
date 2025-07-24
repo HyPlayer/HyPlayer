@@ -99,7 +99,7 @@ public static class SimpleCacher
         return data;
     }
     
-    public static async Task ResetCacheAsync(CacheType type, string id)
+    public static async Task ResetCacheAsync(CacheType type, string id, bool isPrefix = false)
     {
         if (cacheFolder == null)
         {
@@ -107,16 +107,36 @@ public static class SimpleCacher
         }
 
         var dir = await cacheFolder.CreateFolderAsync(FastEnum.GetName(type)!, CreationCollisionOption.OpenIfExists);
+        var files = await dir.GetFilesAsync();
+        foreach (var file in files)
+        {
+            if (isPrefix && file.Name.StartsWith(id))
+            {
+                await file.DeleteAsync();
+            }
+            else if (!isPrefix && file.Name == $"{id}.cache")
+            {
+                await file.DeleteAsync();
+            }
+        }
+    }
 
-        var fileName = $"{id}.cache";
-
-        if (await dir.TryGetItemAsync(fileName) is StorageFile file)
+    public static async Task ClearCacheAsync(CacheType type)
+    {
+        if (cacheFolder == null)
+        {
+            throw new InvalidOperationException("Cache folder is not initialized. Call InitializeAsync first.");
+        }
+        
+        var dir = await cacheFolder.CreateFolderAsync(FastEnum.GetName(type)!, CreationCollisionOption.OpenIfExists);
+        var files = await dir.GetFilesAsync();
+        foreach (var file in files)
         {
             await file.DeleteAsync();
         }
     }
     
-    public static async Task ClearCacheAsync()
+    public static async Task ClearAllCacheAsync()
     {
         if (cacheFolder == null)
         {

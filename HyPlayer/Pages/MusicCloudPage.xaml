@@ -17,6 +17,12 @@
             HorizontalAlignment="Right"
             Click="BtnUpload_Click"
             Content="上传本地" />
+        <Button
+            x:Name="BtnRefresh"
+            Margin="0,-5,30,0"
+            HorizontalAlignment="Right"
+            Click="BtnRefresh_OnClick"
+            Content="刷新列表" />
 
         <StackPanel Orientation="Horizontal" Spacing="20">
             <TextBlock

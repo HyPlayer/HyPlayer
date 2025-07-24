@@ -1867,8 +1867,15 @@ namespace HyPlayer
 #nullable restore
         public async void OnPropertyChanged([CallerMemberName] string propertyName = "")
         {
-            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                () => { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); });
+            try
+            {
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                    () => { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); });
+            }
+            catch (Exception e)
+            {
+                // ignore
+            }
         }
 
         public static T GetSettings<T>(string propertyName, T defaultValue)

@@ -91,9 +91,9 @@ sealed partial class App : Application
     {
         try
         {
+            await SimpleCacher.InitializeAsync();
             var sf = await ApplicationData.Current.LocalCacheFolder.TryGetItemAsync("Romaji");
             if (sf != null) Common.KawazuConv = new KawazuConverter(sf.Path);
-            await SimpleCacher.InitializeAsync();
         }
         catch
         {
@@ -209,7 +209,7 @@ sealed partial class App : Application
         Window.Current.Closed -= WidgetWindowClosed;
     }
 
-    private async void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+    private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
 #if RELEASE
             Crashes.TrackError((Exception)e.ExceptionObject);
@@ -221,7 +221,7 @@ sealed partial class App : Application
             Content = e.ExceptionObject.ToString(),
             PrimaryButtonText = "退出"
         };
-        var result = await Dialog.ShowAsync();
+        _ = Dialog.ShowAsync();
     }
 
     private void App_UnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)

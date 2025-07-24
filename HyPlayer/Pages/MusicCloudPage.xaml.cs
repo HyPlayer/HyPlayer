@@ -229,4 +229,10 @@ public sealed partial class MusicCloudPage : Page, IDisposable
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
+
+    private async void BtnRefresh_OnClick(object sender, RoutedEventArgs e)
+    {
+        await SimpleCacher.ResetCacheAsync(CacheType.Login, "userCloud_", true);
+        _loadResultTask = LoadMusicCloudItem();
+    }
 }

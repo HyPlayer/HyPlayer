@@ -296,6 +296,41 @@ public sealed partial class SongListDetail : Page, IDisposable
         Dispose();
     }
 
+    protected async Task LoadPageData(string plid, bool loadPlaylist = false)
+    {
+        try
+        {
+            if (loadPlaylist)
+            {
+                var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistDetail, plid, async () =>
+                {
+                    // 歌单详情
+                    var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.PlaylistDetailApi,
+                        new PlaylistDetailRequest()
+                        {
+                            Id = plid
+                        }, _cancellationToken);
+                    if (json.IsError)
+                    {
+                        Common.AddToTeachingTipLists("加载歌单出错", json.Error?.Message ?? "未��错误");
+                        return null;
+                    }
+
+                    return json.Value;
+                });
+
+                playList = rst?.Playlists?.FirstOrDefault().MapToNCPlayList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+        }
+        SongsList.ListSource = "pl" + playList?.plid;
+        LoadSongListDetail();
+        _songListLoaderTask = LoadSongListItem();
+    }
+    
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
@@ -305,41 +340,15 @@ public sealed partial class SongListDetail : Page, IDisposable
             if (e.Parameter is NCPlayList)
             {
                 playList = (NCPlayList)e.Parameter;
+                await LoadPageData(playList.plid, false);
             }
             else
             {
                 var pid = e.Parameter.ToString();
-
-                try
-                {
-                    var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistDetail, pid, async () =>
-                    {
-                        // 歌单详情
-                        var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.PlaylistDetailApi,
-                            new PlaylistDetailRequest()
-                            {
-                                Id = pid
-                            }, _cancellationToken);
-                        if (json.IsError)
-                        {
-                            Common.AddToTeachingTipLists("加载歌单出错", json.Error?.Message ?? "未��错误");
-                            return null;
-                        }
-                        return json.Value;
-                    });
-                    
-                    playList = rst?.Playlists?.FirstOrDefault().MapToNCPlayList();
-                }
-                catch (Exception ex)
-                {
-                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-                }
+                await LoadPageData(pid, true);
             }
         }
-
-        SongsList.ListSource = "pl" + playList?.plid;
-        LoadSongListDetail();
-        _songListLoaderTask = LoadSongListItem();
+        
         if (Common.Setting.greedlyLoadPlayContainerItems)
             HyPlayList.OnTimerTicked += GreedlyLoad;
     }
@@ -489,5 +498,15 @@ public sealed partial class SongListDetail : Page, IDisposable
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
         Common.NavigatePage(typeof(Comments), "pl" + playList.plid);
+    }
+
+    private void BtnRefreshCache_Clicked(object sender, RoutedEventArgs e)
+    {
+        if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
+        _ = SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracks, playList.plid);
+        _ = SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracksDetail, playList.plid, true);
+        _ = SimpleCacher.ResetCacheAsync(CacheType.PlaylistDetail, playList.plid);
+        Common.AddToTeachingTipLists("清除缓存成功", "已清除当前歌单的缓存");
+        _ = LoadPageData(playList.plid, true);
     }
 }

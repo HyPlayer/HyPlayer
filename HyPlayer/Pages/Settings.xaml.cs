@@ -563,4 +563,9 @@ public sealed partial class Settings : Page, IDisposable
     {
         Common.DisplayRequest.RequestRelease();
     }
+
+    private async void BtnClearCache_Click(object sender, RoutedEventArgs e)
+    {
+        await SimpleCacher.ClearAllCacheAsync();
+    }
 }

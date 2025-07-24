@@ -195,6 +195,7 @@ public sealed partial class Me : Page, IDisposable
             Common.NeteaseAPI.Option.Cookies.Clear();
             Common.Setting.SaveCookies();
             Common.PageMain.MainFrame.Navigate(typeof(BasePage));
+            _ = SimpleCacher.ClearCacheAsync(CacheType.Login);
             _ = ((App)Application.Current).InitializeJumpList();
         }
         catch
