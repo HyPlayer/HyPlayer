@@ -70,7 +70,6 @@ public sealed partial class ThirdPartyLogin : Page, IDisposable
         {
             LoadingRingContainer.Visibility = Visibility.Visible;
             var cookies = await sender.CoreWebView2.CookieManager.GetCookiesAsync("https://music.163.com");
-            var cookiestring = string.Empty;
             foreach (var cookie in cookies)
             {
                 Common.NeteaseAPI.Option.Cookies.Add(cookie.Name, cookie.Value);

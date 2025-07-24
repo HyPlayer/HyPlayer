@@ -1,5 +1,4 @@
 #nullable enable
-using LyricParser.Abstraction;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.Graphics.Canvas.Geometry;
@@ -11,6 +10,7 @@ using System.Numerics;
 using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml.Media.Animation;
+using HyPlayer.Classes.LyricParser.Abstraction;
 using FontStyle = Windows.UI.Text.FontStyle;
 using Size = Windows.Foundation.Size;
 

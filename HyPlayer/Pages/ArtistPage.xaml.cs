@@ -45,6 +45,7 @@ public sealed partial class ArtistPage : Page, IDisposable
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
     }
+
     public bool SongHasMore
     {
         get => (bool)GetValue(SongHasMoreProperty);
@@ -56,47 +57,60 @@ public sealed partial class ArtistPage : Page, IDisposable
         base.OnNavigatedTo(e);
         try
         {
-            var res = await Common.NeteaseAPI.RequestAsync(NeteaseApis.ArtistDetailApi,
-                new ArtistDetailRequest() { ArtistId = (string)e.Parameter });
-            if (res.IsError)
+            if (disposedValue) throw new ObjectDisposedException(nameof(ArtistPage));
+            var artistId = e.Parameter as string;
+            if (artistId is null)
             {
-                if (res.Error.ErrorCode.ToString() == "404")
-                {
-                    TextBoxArtistName.Text = "未知艺人";
-                    TextboxArtistNameTranslated.Visibility = Visibility.Collapsed;
-                    TextBlockDesc.Text = "艺人不存在";
-                    TextBlockInfo.Text = "无信息";
-                    Common.AddToTeachingTipLists("艺人不存在", null);
-                    return;
-                }
-                else
-                {
-                    Common.AddToTeachingTipLists("获取艺人信息出错", res.Error.Message);
-                    return;
-                }
+                Common.AddToTeachingTipLists("艺人ID为空", "请检查传入的参数是否正确");
+                return;
             }
-            artist = res.Value?.Artist.MapToNcArtist();
-            if (res.Value?.Artist?.PicUrl?.StartsWith("http") is true)
+            var res = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistDetail, artistId, async () =>
+            {
+                var resp = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ArtistDetailApi,
+                    new ArtistDetailRequest() { ArtistId = artistId }, _cancellationToken);
+                if (resp.IsError && resp.Error?.ErrorCode.ToString() == "404")
+                {
+                    Common.AddToTeachingTipLists("艺人不存在", null);
+                    return null;
+                }
+                if (resp.IsError)
+                {
+                    Common.AddToTeachingTipLists("获取艺人信息失败", resp.Error?.Message);
+                    return null;
+                }
+                
+                return resp.Value;
+            });
+
+            if (res is null)
+            {
+                return;
+            }
+
+            artist = res?.Artist.MapToNcArtist();
+            if (res?.Artist?.PicUrl?.StartsWith("http") is true)
             {
                 if (Common.Setting.noImage)
                 {
                     ImageRect.ImageSource = ImageRect1.ImageSource = null;
                 }
+
                 BitmapImage image = new BitmapImage();
                 ImageRect.ImageSource = ImageRect1.ImageSource = image;
-                image.UriSource = new Uri(res.Value.Artist.PicUrl + "?param=" +
-                                                  StaticSource.PICSIZE_ARTIST_DETAIL_COVER);
+                image.UriSource = new Uri(res.Artist.PicUrl + "?param=" +
+                                          StaticSource.PICSIZE_ARTIST_DETAIL_COVER);
             }
-            TextBoxArtistName.Text = res.Value?.Artist?.Name ?? "未知歌手";
-            if (res.Value?.Artist?.TransNames != null)
+
+            TextBoxArtistName.Text = res?.Artist?.Name ?? "未知歌手";
+            if (res?.Artist?.TransNames != null)
                 TextboxArtistNameTranslated.Text =
-                    "译名: " + string.Join(",", res.Value.Artist.TransNames);
+                    "译名: " + string.Join(",", res.Artist.TransNames);
             else
                 TextboxArtistNameTranslated.Visibility = Visibility.Collapsed;
-            TextBlockDesc.Text = res.Value.Artist.BriefDesc;
-            TextBlockInfo.Text = "歌曲数: " + res.Value.Artist.MusicSize + " | 专辑数: " +
-                                 res.Value.Artist.AlbumSize + " | 视频数: " +
-                                 res.Value.Artist.MvSize;
+            TextBlockDesc.Text = res.Artist.BriefDesc;
+            TextBlockInfo.Text = "歌曲数: " + res.Artist.MusicSize + " | 专辑数: " +
+                                 res.Artist.AlbumSize + " | 视频数: " +
+                                 res.Artist.MvSize;
             HotSongContainer.ListSource = "sh" + artist.id;
             AllSongContainer.ListSource = "content";
             _hotSongsLoaderTask = LoadHotSongs();
@@ -123,6 +137,7 @@ public sealed partial class ArtistPage : Page, IDisposable
             {
             }
         }
+
         if (_songsLoaderTask != null && !_songsLoaderTask.IsCompleted)
         {
             try
@@ -134,6 +149,7 @@ public sealed partial class ArtistPage : Page, IDisposable
             {
             }
         }
+
         if (_hotSongsLoaderTask != null && !_hotSongsLoaderTask.IsCompleted)
         {
             try
@@ -153,24 +169,44 @@ public sealed partial class ArtistPage : Page, IDisposable
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var j1 = await Common.NeteaseAPI.RequestAsync(NeteaseApis.ArtistTopSongApi,
-                new ArtistTopSongRequest() { ArtistId = artist.id });
+            var j1 = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, artist.id, async () =>
+            {
+                var j1res = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ArtistTopSongApi,
+                    new ArtistTopSongRequest() { ArtistId = artist.id }, _cancellationToken);
+                if (j1res.IsError)
+                {
+                    Common.AddToTeachingTipLists("获取歌手热门歌曲失败", j1res.Error?.Message);
+                    return null;
+                }
+
+                return j1res.Value?.Songs;
+            });
 
             hotSongs.Clear();
             var idx = 0;
-            var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.SongDetailApi,
-                new SongDetailRequest() { IdList = j1.Value.Songs.Select(t => t.Id).ToList() });
-            if (json.IsError)
+            var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, artist.id, async () =>
             {
-                Common.AddToTeachingTipLists("获取歌手热门歌曲失败", json.Error.Message);
+                var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.SongDetailApi,
+                    new SongDetailRequest() { IdList = j1?.Select(t => t.Id).ToList() }, _cancellationToken);
+                if (json.IsError)
+                {
+                    Common.AddToTeachingTipLists("获取歌手热门歌曲失败", json.Error.Message);
+                    return null;
+                }
+
+                return json.Value;
+            });
+            if (jv is null)
+            {
                 return;
             }
-            foreach (var item in json.Value.Songs)
+
+            foreach (var item in jv?.Songs ?? [])
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 var ncSong = item.MapToNcSong();
                 ncSong.IsAvailable =
-                    json.Value.Privileges[idx].St == 0;
+                    jv!.Privileges?[idx].St == 0;
                 ncSong.Order = idx++;
                 hotSongs.Add(ncSong);
             }
@@ -188,31 +224,55 @@ public sealed partial class ArtistPage : Page, IDisposable
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var j1 = await Common.NeteaseAPI.RequestAsync(NeteaseApis.ArtistSongsApi, new ArtistSongsRequest() { ArtistId = artist.id, Limit = 50, Offset = page * 50 });
+            var j1 = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, artist.id + "_" + page,
+                async () =>
+                {
+                    var resp = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ArtistSongsApi,
+                        new ArtistSongsRequest() { ArtistId = artist.id, Limit = 50, Offset = page * 50 },
+                        _cancellationToken);
+                    if (resp.IsError)
+                    {
+                        Common.AddToTeachingTipLists("获取歌手热门歌曲失败", resp.Error?.Message);
+                        return null;
+                    }
+
+                    return resp.Value;
+                });
             var idx = 0;
-            if (j1.IsError)
-            {
-                Common.AddToTeachingTipLists("获取歌手热门歌曲失败", j1.Error.Message);
-            }
+
+
             try
             {
-                var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.SongDetailApi,
-                    new SongDetailRequest() { IdList = j1.Value.Songs.Select(t => t.Id).ToList() });
-                if (json.IsError)
+                var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, artist.id + "_" + page,
+                    async () =>
+                    {
+                        var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.SongDetailApi,
+                            new SongDetailRequest() { IdList = j1.Songs?.Select(t => t.Id).ToList() },
+                            _cancellationToken);
+                        if (json.IsError)
+                        {
+                            Common.AddToTeachingTipLists("获取歌手热门歌曲失败", json.Error!.Message);
+                            return null;
+                        }
+
+                        return json.Value;
+                    });
+                if (jv is null)
                 {
-                    Common.AddToTeachingTipLists("获取歌手热门歌曲失败", json.Error.Message);
                     return;
                 }
-                foreach (var item in json.Value.Songs)
+
+                foreach (var item in jv.Songs)
                 {
                     _cancellationToken.ThrowIfCancellationRequested();
                     var ncSong = item.MapToNcSong();
                     ncSong.IsAvailable =
-                        json.Value.Privileges[idx].St == 0;
+                        jv.Privileges[idx].St == 0;
                     ncSong.Order = page * 50 + idx++;
                     allSongs.Add(ncSong);
                 }
-                SongHasMore = j1.Value.HasMore;
+
+                SongHasMore = j1.HasMore;
             }
             catch (Exception ex)
             {
@@ -257,21 +317,30 @@ public sealed partial class ArtistPage : Page, IDisposable
         try
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            var j1 = await Common.NeteaseAPI.RequestAsync(NeteaseApis.ArtistAlbumsApi, new ArtistAlbumsRequest() { ArtistId = artist.id, Limit = 50, Start = page * 50 }, _cancellationToken);
-            if (j1.IsError)
-            {
-                Common.AddToTeachingTipLists("获取歌手专辑失败", j1.Error.Message);
-                return;
-            }
+            
+            var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistAlbumsList, artist.id + "_" + page,
+                async () =>
+                {
+                    var resp = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ArtistAlbumsApi,
+                        new ArtistAlbumsRequest() { ArtistId = artist.id, Limit = 50, Start = page * 50 }, _cancellationToken);
+                    if (resp.IsError)
+                    {
+                        Common.AddToTeachingTipLists("获取歌手专辑失败", resp.Error?.Message);
+                        return null;
+                    }
+
+                    return resp.Value;
+                });
+
             AlbumContainer.ListItems.Clear();
             var i = 0;
-            foreach (var album in j1.Value?.Albums ?? [])
+            foreach (var album in jv?.Albums ?? [])
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 AlbumContainer.ListItems.Add(new SimpleListItem
                 {
                     Title = album.Name,
-                    LineOne = string.Join("/", album.Artists?.Select(t => t.Name)),
+                    LineOne = string.Join("/", album.Artists?.Select(t => t.Name) ?? []),
                     LineTwo = album.Alias != null
                         ? string.Join(" / ", album.Alias)
                         : "",
@@ -282,7 +351,8 @@ public sealed partial class ArtistPage : Page, IDisposable
                     CanPlay = true
                 });
             }
-            if (j1.Value.HasMore)
+
+            if (jv?.HasMore is true)
                 NextPage.Visibility = Visibility.Visible;
             else
                 NextPage.Visibility = Visibility.Collapsed;

@@ -1010,24 +1010,28 @@ DoubleAnimation verticalAnimation;
 
     private async void HyPlayListOnOnLoginDone()
     {
-        if (HyPlayList.PlaySourceId == "local") return;
-        try
+        _ = Task.Run(async () =>
         {
-            var list = await HistoryManagement.GetcurPlayingListHistory();
-            if (list.Count > 0)
+            if (HyPlayList.PlaySourceId == "local") return;
+            try
             {
-                int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"].ToString(),
-                    out HyPlayList.NowPlaying);
-                HyPlayList.AppendNcSongs(list);
-                HyPlayList.NotifyPlayItemChanged(HyPlayList.NowPlayingItem);
-            }
+                var list = await HistoryManagement.GetcurPlayingListHistory();
+                if (list.Count > 0)
+                {
+                    int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"].ToString(),
+                        out HyPlayList.NowPlaying);
+                    HyPlayList.AppendNcSongs(list);
+                    HyPlayList.NotifyPlayItemChanged(HyPlayList.NowPlayingItem);
+                }
 
-            list.Clear();
-        }
-        catch
-        {
-            // ignored
-        }
+                list.Clear();
+            }
+            catch
+            {
+                // ignored
+            }
+        });
+        
     }
 
     private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)

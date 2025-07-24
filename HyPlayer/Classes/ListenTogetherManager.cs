@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Category;
+using HyPlayer.NeteaseApi.ApiContracts.ListenTogether;
 using HyPlayer.NeteaseApi.ApiContracts.ListenTogether.Dual;
 
 namespace HyPlayer.Classes;

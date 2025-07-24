@@ -1129,9 +1129,7 @@ namespace HyPlayer
             {
                 try
                 {
-                    return GetSettings(nameof(cacheDir), ApplicationData.Current.LocalCacheFolder
-                        .CreateFolderAsync("songCache", CreationCollisionOption.OpenIfExists).AsTask().GetAwaiter()
-                        .GetResult().Path);
+                    return GetSettings(nameof(cacheDir), ApplicationData.Current.LocalCacheFolder.Path);
                 }
                 catch
                 {
@@ -1371,6 +1369,16 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(enableCache)] = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool enableApiCache
+        {
+            get => GetSettings(nameof(enableApiCache), true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(enableApiCache)] = value;
                 OnPropertyChanged();
             }
         }
@@ -1867,8 +1875,15 @@ namespace HyPlayer
 #nullable restore
         public async void OnPropertyChanged([CallerMemberName] string propertyName = "")
         {
-            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                () => { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); });
+            try
+            {
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                    () => { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); });
+            }
+            catch (Exception e)
+            {
+                // ignore
+            }
         }
 
         public static T GetSettings<T>(string propertyName, T defaultValue)

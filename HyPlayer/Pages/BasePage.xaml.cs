@@ -25,11 +25,11 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.NeteaseApi.ApiContracts.Category;
 using HyPlayer.NeteaseApi.ApiContracts.Login;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.NeteaseApi.ApiContracts.Recommend;
 using HyPlayer.NeteaseApi.ApiContracts.User;
+using HyPlayer.NeteaseApi.ApiContracts.Utils;
 using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
 using NavigationViewBackButtonVisible = Microsoft.UI.Xaml.Controls.NavigationViewBackButtonVisible;
 using NavigationViewBackRequestedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewBackRequestedEventArgs;
@@ -200,7 +200,6 @@ public sealed partial class BasePage : Page
             {
                 try
                 {
-                    await Common.NeteaseAPI.RequestAsync(NeteaseApis.LoginStatusApi);
                     await LoginDone();
                 }
                 catch
@@ -315,13 +314,21 @@ public sealed partial class BasePage : Page
         LoginStatusResponse LoginStatus;
         try
         {
-            var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.LoginStatusApi);
-            if (result.IsError)
+            var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "userStatus", async () =>
             {
-                Common.AddToTeachingTipLists("登录失败", result.Error.Message);
+                var result = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.LoginStatusApi);
+                if (result.IsError)
+                {
+                    Common.AddToTeachingTipLists("登录失败", result.Error?.Message);
+                    return null;
+                }
+                return result.Value;
+            });
+
+            if (result is null)
                 return false;
-            }
-            LoginStatus = result.Value;
+            
+            LoginStatus = result;
         }
         catch (Exception e)
         {
@@ -368,7 +375,15 @@ public sealed partial class BasePage : Page
 
         HyPlayList.LoginDoneCall();
         _ = ((App)Application.Current).InitializeJumpList();
-        NavMain.SelectedItem = NavItemLogin;
+        if (Common.Setting.noImage)
+        {
+            Common.NavigatePage(typeof(Welcome));
+        }
+        else
+        {
+            NavMain.SelectedItem = NavItemLogin;
+        }
+        
         return true;
     }
 
@@ -390,13 +405,19 @@ public sealed partial class BasePage : Page
     {
         try
         {
-            var js = await Common.NeteaseAPI.RequestAsync(NeteaseApis.LikelistApi, new LikelistRequest() { Uid = Common.LoginedUser.id });
-            if (js.IsError)
+            var ids = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "likedSongs", async () =>
             {
-                Common.AddToTeachingTipLists("获取喜欢列表失败", js.Error.Message);
-                return;
-            }
-            Common.LikedSongs = js.Value.TrackIds.ToList();
+                var js = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.LikelistApi, new LikelistRequest() { Uid = Common.LoginedUser!.id });
+                if (js.IsError)
+                {
+                    Common.AddToTeachingTipLists("获取喜欢列表失败", js.Error?.Message);
+                    return null;
+                }
+
+                return js.Value;
+            });
+            
+            Common.LikedSongs = ids?.TrackIds?.ToList() ?? [];
         }
         catch (Exception ex)
         {
@@ -410,13 +431,18 @@ public sealed partial class BasePage : Page
         var nowitem = NavItemsMyList;
         try
         {
-            var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.UserPlaylistApi,
-                                                        new UserPlaylistRequest() { Uid = Common.LoginedUser.id });
-            if (json.IsError)
+            var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "mySongList", async () =>
             {
-                Common.AddToTeachingTipLists("获取歌单列表失败", json.Error.Message);
-                return;
-            }
+                var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.UserPlaylistApi,
+                    new UserPlaylistRequest() { Uid = Common.LoginedUser!.id });
+                if (json.IsError)
+                {
+                    Common.AddToTeachingTipLists("获取歌单失败", json.Error?.Message);
+                    return null;
+                }
+
+                return json.Value;
+            });
 
             NavItemsLikeList.MenuItems.Clear();
             NavItemsMyList.MenuItems.Clear();
@@ -426,7 +452,7 @@ public sealed partial class BasePage : Page
             NavItemsMyLovedPlaylist.Visibility = Visibility.Visible;
             Common.MySongLists.Clear();
             var isliked = false;
-            foreach (var jToken in json.Value.Playlists)
+            foreach (var jToken in jv.Playlists ?? [])
                 if (jToken.Subscribed)
                 {
                     var item = new NavigationViewItem
@@ -951,7 +977,7 @@ public sealed partial class BasePage : Page
         Common.NeteaseAPI.Option.AdditionalParameters.Headers["deviceId"] = deviceId;
         Common.NeteaseAPI.Option.AdditionalParameters.Cookies["deviceId"] = deviceId;
         Common.Setting.ApiAdditionalParameters = Common.NeteaseAPI.Option.AdditionalParameters;
-        var rst = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.RegisterAnounymousApi, new RegisterAnounymousRequest()
+        var rst = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.RegisterAnonymousApi, new RegisterAnonymousRequest()
         {
             DeviceId = deviceId
         });

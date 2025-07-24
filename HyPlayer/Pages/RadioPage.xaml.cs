@@ -53,6 +53,7 @@ public sealed partial class RadioPage : Page, IDisposable
                 return;
             }
         }
+
         Dispose();
     }
 
@@ -62,22 +63,36 @@ public sealed partial class RadioPage : Page, IDisposable
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var json = await Common.NeteaseAPI?.RequestAsync(NeteaseApis.DjChannelProgramsApi,
-                new DjChannelProgramsRequest()
+            var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.RadioPrograms, Radio.id + "_" + page + asc,
+                async () =>
                 {
-                    RadioId = Radio.id,
-                    Limit = 100,
-                    Offset = page * 100,
-                    Asc = asc
+                    var rest = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.DjChannelProgramsApi,
+                        new DjChannelProgramsRequest()
+                        {
+                            RadioId = Radio.id,
+                            Limit = 100,
+                            Offset = page * 100,
+                            Asc = asc
+                        }, _cancellationToken);
+                    if (rest.IsError && rest.Error?.ErrorCode == 405)
+                    {
+                        treashold = ++cooldownTime * 10;
+                        page--;
+                        Common.AddToTeachingTipLists("贪婪加载冷却", $"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求");
+                        return null;
+                    }
+                    else if (rest.IsError)
+                    {
+                        Common.AddToTeachingTipLists("加载电台节目错误", rest.Error?.Message ?? "未知错误");
+                        return null;
+                    }
+
+                    return rest.Value;
                 });
-            if (json.IsError && json.Error.ErrorCode == 405)
-            {
-                treashold = ++cooldownTime * 10;
-                page--;
-                throw new Exception($"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求");
-            }
-            NextPage.Visibility = json.Value.Data.More ? Visibility.Visible : Visibility.Collapsed;
-            foreach (var jToken in json.Value.Data.Programs ?? [])
+
+
+            NextPage.Visibility = json.Data?.More is true ? Visibility.Visible : Visibility.Collapsed;
+            foreach (var jToken in json.Data?.Programs ?? [])
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 var song = jToken.MapToNCFmItem();
@@ -99,17 +114,20 @@ public sealed partial class RadioPage : Page, IDisposable
         if (e.Parameter is string rid)
             try
             {
-                var json1 = await Common.NeteaseAPI?.RequestAsync(NeteaseApis.DjChannelDetailApi,
-                    new DjChannelDetailRequest()
-                    {
-                        Id = rid
-                    });
-                if (json1.IsError)
+                var json1 = await SimpleCacher.GetOrCreateCacheAsync(CacheType.RadioInfo, rid, async () =>
                 {
-                    Common.AddToTeachingTipLists("加载电台信息错误", json1.Error.Message);
-                    return;
-                }
-                Radio = json1.Value.RadioData.MapToNCRadio();
+                    var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.DjChannelDetailApi,
+                        new DjChannelDetailRequest() { Id = rid }, _cancellationToken);
+                    if (json.IsError)
+                    {
+                        Common.AddToTeachingTipLists("获取电台信息失败", json.Error?.Message ?? "未知错误");
+                        return null;
+                    }
+
+                    return json.Value;
+                });
+
+                Radio = json1.RadioData.MapToNCRadio();
             }
             catch (Exception ex)
             {
@@ -131,6 +149,7 @@ public sealed partial class RadioPage : Page, IDisposable
             ImageRect.ImageSource = img;
             img.UriSource = new Uri(Radio.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER);
         }
+
         Songs.Clear();
         SongContainer.ListSource = "rd" + Radio.id;
         _programLoaderTask = LoadProgram();
@@ -150,6 +169,7 @@ public sealed partial class RadioPage : Page, IDisposable
                 treashold--;
                 return;
             }
+
             if (Songs.Count > 0 && NextPage.Visibility == Visibility.Visible && treashold-- <= 0 && !disposedValue)
             {
                 NextPage_OnClickPage_OnClick(null, null);
@@ -217,16 +237,27 @@ public sealed partial class RadioPage : Page, IDisposable
             while (hasMore is true)
                 try
                 {
-                    var json = await Common.NeteaseAPI?.RequestAsync(NeteaseApis.DjChannelProgramsApi,
-                        new DjChannelProgramsRequest()
+                    var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.RadioPrograms, Radio.id + "_" + page + asc,
+                        async () =>
                         {
-                            RadioId = Radio.id,
-                            Limit = 100,
-                            Offset = page * 100,
-                            Asc = asc
+                            var rest = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.DjChannelProgramsApi,
+                                new DjChannelProgramsRequest()
+                                {
+                                    RadioId = Radio.id,
+                                    Limit = 100,
+                                    Offset = page * 100,
+                                    Asc = asc
+                                }, _cancellationToken);
+                            if (rest.IsError)
+                            {
+                                Common.AddToTeachingTipLists("加载电台节目错误", rest.Error?.Message ?? "未知错误");
+                                return null;
+                            }
+
+                            return rest.Value;
                         });
-                    hasMore = json.Value?.Data?.More is true;
-                    foreach (var jToken in json.Value?.Data?.Programs ?? [])
+                    hasMore = json?.Data?.More is true;
+                    foreach (var jToken in json?.Data?.Programs ?? [])
                     {
                         _cancellationToken.ThrowIfCancellationRequested();
                         var song = jToken.MapToNCFmItem();
@@ -234,6 +265,7 @@ public sealed partial class RadioPage : Page, IDisposable
                         song.TrackId = i;
                         result.Add(song);
                     }
+
                     page++;
                 }
                 catch (Exception ex)
@@ -246,6 +278,7 @@ public sealed partial class RadioPage : Page, IDisposable
         {
             Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
+
         DownloadManager.AddDownload(result);
     }
 

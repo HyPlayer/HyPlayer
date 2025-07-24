@@ -84,17 +84,22 @@ public sealed partial class Me : Page, IDisposable
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var json = await Common.NeteaseAPI?.RequestAsync(NeteaseApis.UserDetailApi,
+            var resp = await SimpleCacher.GetOrCreateCacheAsync(CacheType.UserDetail, uid, async () =>
+            {
+                var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.UserDetailApi,
                     new UserDetailRequest()
                     {
                         UserId = uid
-                    });
-            if (json.IsError)
-            {
-                Common.AddToTeachingTipLists("用户信息获取失败", json.Error.Message);
-                return;
-            }
-            NCUser currentUser = json.Value.Profile.MapToNcUser();
+                    }, _cancellationToken);
+                if (json.IsError)
+                {
+                    Common.AddToTeachingTipLists("用户信息获取失败", json.Error?.Message);
+                    return null;
+                }
+
+                return json.Value;
+            });
+            NCUser currentUser = resp.Profile.MapToNcUser();
             userDisplay = new(currentUser);
         }
         catch (Exception ex)
@@ -113,20 +118,25 @@ public sealed partial class Me : Page, IDisposable
         try
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            var json = await Common.NeteaseAPI?.RequestAsync(NeteaseApis.UserPlaylistApi,
-                new UserPlaylistRequest()
-                {
-                    Uid = uid,
-                    Limit = 1000 // 为什么这么大, 官方客户端也是这么大
-                }, _cancellationToken);
-            if (json.IsError)
+            var val = await SimpleCacher.GetOrCreateCacheAsync(CacheType.UserPlaylist, uid, async () =>
             {
-                Common.AddToTeachingTipLists("用户歌单获取失败", json.Error.Message);
-                return;
-            }
+                var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.UserPlaylistApi,
+                    new UserPlaylistRequest()
+                    {
+                        Uid = uid,
+                        Limit = 1000 // 为什么这么大, 官方客户端也是这么大
+                    }, _cancellationToken);
+                if (json.IsError)
+                {
+                    Common.AddToTeachingTipLists("用户歌单获取失败", json.Error?.Message);
+                    return null;
+                }
+
+                return json.Value;
+            });
 
             var subListIdx = 0;
-            foreach (var valuePlaylist in json.Value.Playlists ?? [])
+            foreach (var valuePlaylist in val.Playlists ?? [])
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 var playList = valuePlaylist.MapToNCPlayList();
@@ -185,6 +195,7 @@ public sealed partial class Me : Page, IDisposable
             Common.NeteaseAPI.Option.Cookies.Clear();
             Common.Setting.SaveCookies();
             Common.PageMain.MainFrame.Navigate(typeof(BasePage));
+            _ = SimpleCacher.ClearCacheAsync(CacheType.Login);
             _ = ((App)Application.Current).InitializeJumpList();
         }
         catch
