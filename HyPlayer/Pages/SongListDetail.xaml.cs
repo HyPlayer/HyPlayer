@@ -507,6 +507,8 @@ public sealed partial class SongListDetail : Page, IDisposable
         _ = SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracksDetail, playList.plid, true);
         _ = SimpleCacher.ResetCacheAsync(CacheType.PlaylistDetail, playList.plid);
         Common.AddToTeachingTipLists("清除缓存成功", "已清除当前歌单的缓存");
+        SongsList.Songs.Clear();
+        page = 0;
         _ = LoadPageData(playList.plid, true);
     }
 }

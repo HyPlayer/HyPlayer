@@ -233,6 +233,8 @@ public sealed partial class MusicCloudPage : Page, IDisposable
     private async void BtnRefresh_OnClick(object sender, RoutedEventArgs e)
     {
         await SimpleCacher.ResetCacheAsync(CacheType.Login, "userCloud_", true);
+        SongContainer.Songs.Clear();
+        page = 0;
         _loadResultTask = LoadMusicCloudItem();
     }
 }
