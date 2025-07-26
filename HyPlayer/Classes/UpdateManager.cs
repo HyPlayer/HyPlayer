@@ -17,7 +17,10 @@ public static class UpdateManager
         MicrosoftStore,
         AppCenter,
         AppCenterCanary,
-        GitHub
+        GitHub,
+        Release,
+        Canary,
+        Dogfood
     }
 
     public class RemoteVersionResult
@@ -80,6 +83,33 @@ public static class UpdateManager
             UpdateLog = versionResp?.UpdateLog ?? ""
         };
     }
+
+    public static async Task<RemoteVersionResult> GetVersionFromSelfhost(UpdateSource source)
+    {
+        using var versionsResponse = await Common.HttpClient.GetAsync(
+            new Uri($"https://hyplayer.kengwang.com.cn/Channel/{(source switch {
+                UpdateSource.Canary => 5,
+                UpdateSource.Release => 4,
+                UpdateSource.Dogfood => 6,
+            })}/latest"));
+        if (!versionsResponse.IsSuccessStatusCode)
+        {
+            Common.AddToTeachingTipLists("获取更新失败", $"HTTP状态码:{versionsResponse.StatusCode}");
+            throw new Exception("获取更新失败");
+        }
+
+        var versionResp =
+            JsonConvert.DeserializeObject<LatestApplicationUpdate>(await versionsResponse.Content.ReadAsStringAsync());
+        return new RemoteVersionResult
+        {
+            UpdateSource = source,
+            IsMandatory = versionResp?.Mandatory ?? false,
+            Version = Version.Parse(versionResp?.Version ?? ""),
+            DownloadLink = versionResp?.DownloadUrl,
+            UpdateLog = versionResp?.UpdateLog ?? ""
+        };
+    }
+
     public static async Task<RemoteVersionResult> GetVersionFromGitHub()
     {
         using HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Get, new Uri("https://api.github.com/repos/HyPlayer/HyPlayer/releases/latest"));
@@ -120,7 +150,7 @@ public static class UpdateManager
             UpdateSource.AppCenter => await GetVersionFromAppCenter(false),
             UpdateSource.AppCenterCanary => await GetVersionFromAppCenter(true),
             UpdateSource.GitHub => await GetVersionFromGitHub(),
-            _ => throw new ArgumentOutOfRangeException(nameof(updateSource), updateSource, null)
+            _ => await GetVersionFromSelfhost(updateSource)
         };
     }
 

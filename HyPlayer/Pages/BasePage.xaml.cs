@@ -12,6 +12,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
+using Windows.Security.ExchangeActiveSyncProvisioning;
 using Windows.Storage.Streams;
 using Windows.System;
 using Windows.System.Profile;
@@ -459,17 +460,10 @@ public sealed partial class BasePage : Page
                     {
                         Content = jToken.Name,
                         Tag = "Playlist" + jToken.Id,
-                        IsRightTapEnabled = true,
                         Icon = new FontIcon
                         {
                             Glyph = "\uE142"
                         }
-                    };
-                    item.RightTapped += (_, __) =>
-                    {
-                        nowplid = jToken.Id;
-                        ItemPublicPlayList.Visibility = Visibility.Collapsed;
-                        PlaylistFlyout.ShowAt((FrameworkElement)_);
                     };
                     NavItemsLikeList.MenuItems.Add(item);
                 }
@@ -490,19 +484,10 @@ public sealed partial class BasePage : Page
                         },
                         Content = jToken.Name,
                         Tag = "Playlist" + jToken.Id,
-                        IsRightTapEnabled = true
                     };
                     if (jToken.Privacy == 0)
                         item.Icon.Foreground = new SolidColorBrush(Color.FromArgb(255, 211, 39, 100));
 
-                    item.RightTapped += (_, __) =>
-                    {
-                        nowplid = jToken.Id.ToString();
-                        ItemPublicPlayList.Visibility = jToken.Privacy == 0
-                            ? Visibility.Collapsed
-                            : Visibility.Visible;
-                        PlaylistFlyout.ShowAt((FrameworkElement)_);
-                    };
                     NavItemsMyList.MenuItems.Add(item);
                 }
 
@@ -992,5 +977,36 @@ public sealed partial class BasePage : Page
         }
 
         ButtonPreLoginPrimary_Click(null, null);
+    }
+
+    private async void BtnCurrentDeviceIdClick(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            // get current device guid
+            var deviceInfo = new EasClientDeviceInformation();
+            var deviceId = deviceInfo.Id;
+            var androidId = deviceId.ToString("N").Substring(0, 16);
+            var imei = deviceId.ToString("N").Substring(16);
+            var rst = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.LoginAnnounceDeviceApi, new LoginAnnounceDeviceRequest
+            {
+                Imei = imei,
+                AndroidId = androidId,
+                LocalId = null,
+                DeviceName = deviceInfo.FriendlyName,
+            });
+            if (rst.IsError)
+            {
+                Common.AddToTeachingTipLists("设备ID注册失败, 请尝试其他方案", "获取失败: " + rst.Error.Message);
+                return;
+            }
+            Common.AddToTeachingTipLists("设备ID注册成功", "临时用户 ID: " + rst.Value.Data?.Id);
+            ButtonPreLoginPrimary_Click(null, null);
+        }
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists("设备ID注册失败, 请尝试其他方案", "错误: " + ex.Message);
+            return;
+        }
     }
 }
