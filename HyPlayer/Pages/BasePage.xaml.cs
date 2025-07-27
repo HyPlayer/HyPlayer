@@ -268,6 +268,7 @@ public sealed partial class BasePage : Page
                 }
                 else
                 {
+                    await SimpleCacher.ClearCacheAsync(CacheType.Login);
                     await LoginDone();
                 }
             }
@@ -286,6 +287,7 @@ public sealed partial class BasePage : Page
                 }
                 else
                 {
+                    await SimpleCacher.ClearCacheAsync(CacheType.Login);
                     await LoginDone();
                 }
             }
@@ -682,6 +684,7 @@ public sealed partial class BasePage : Page
 
                     InfoBarLoginHint.Title = "登录成功";
                     DialogLogin.PrimaryButtonText = "登录成功";
+                    await SimpleCacher.ClearCacheAsync(CacheType.Login);
                     await LoginDone();
                     break;
                 }
