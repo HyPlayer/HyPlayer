@@ -43,7 +43,8 @@
         <controls1:PivotView Grid.Row="1" FontFamily="Black">
             <controls1:PivotEx>
                 <PivotItem FontFamily="Thick" Header="歌词设置">
-                    <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
+                    <Grid>
+                        <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
                         <StackPanel
                             x:Name="StackPanelLyricSet"
                             Margin="20,0,20,150"
@@ -437,9 +438,11 @@
                             </controls3:SettingsExpander>
                         </StackPanel>
                     </ScrollViewer>
+                    </Grid>
                 </PivotItem>
                 <PivotItem FontFamily="Thick" Header="播放设置">
-                    <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
+                    <Grid>
+                        <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
                         <StackPanel
                             Margin="20,0,20,150"
                             Orientation="Vertical"
@@ -710,9 +713,11 @@
                             </controls3:SettingsExpander>
                         </StackPanel>
                     </ScrollViewer>
+                    </Grid>
                 </PivotItem>
                 <PivotItem FontFamily="Thick" Header="显示设置">
-                    <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
+                    <Grid>
+                        <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
 
                         <StackPanel Margin="20,0,20,160" Spacing="20">
                             <controls3:SettingsExpander
@@ -1070,11 +1075,12 @@
                             </controls3:SettingsExpander>
                         </StackPanel>
                     </ScrollViewer>
+                    </Grid>
                 </PivotItem>
                 <PivotItem FontFamily="Thick" Header="存储设置">
                     <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
-
-                        <StackPanel
+                        <Grid>
+                            <StackPanel
                             Margin="20,0,20,150"
                             Orientation="Vertical"
                             Spacing="20">
@@ -1277,10 +1283,12 @@
 
 
                         </StackPanel>
+                        </Grid>
                     </ScrollViewer>
                 </PivotItem>
                 <PivotItem FontFamily="Thick" Header="实验室🧪">
-                    <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
+                    <Grid>
+                        <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
                         <StackPanel
                             Margin="20,0,20,150"
                             Orientation="Vertical"
@@ -1481,9 +1489,11 @@
 
                         </StackPanel>
                     </ScrollViewer>
+                    </Grid>
                 </PivotItem>
                 <PivotItem FontFamily="Thick" Header="关于">
-                    <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
+                    <Grid>
+                        <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
                         <Grid Margin="0,0,0,150">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -2022,8 +2032,7 @@
                         </Grid>
 
                     </ScrollViewer>
-
-
+                    </Grid>
                 </PivotItem>
             </controls1:PivotEx>
         </controls1:PivotView>
