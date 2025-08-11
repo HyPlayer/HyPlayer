@@ -267,7 +267,7 @@ public sealed partial class ArtistPage : Page, IDisposable
                     _cancellationToken.ThrowIfCancellationRequested();
                     var ncSong = item.MapToNcSong();
                     ncSong.IsAvailable =
-                        jv.Privileges[idx].St == 0;
+                        jv.Privileges?[idx].St == 0;
                     ncSong.Order = page * 50 + idx++;
                     allSongs.Add(ncSong);
                 }
