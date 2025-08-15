@@ -351,15 +351,12 @@ DoubleAnimation verticalAnimation;
         {
             _ = Common.Invoke(() =>
             {
-                IconLiked.Foreground = isLiked
-                    ? new SolidColorBrush(Colors.Red)
-                    : new SolidColorBrush(Colors.Transparent);
+                IconLiked.Visibility = isLiked
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
                 FlyoutLiked.Foreground = isLiked
                     ? new SolidColorBrush(Colors.Red)
                     : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-                IconLiked.Glyph = isLiked
-                    ? "\uE00B"
-                    : "\uE006";
                 FlyoutLiked.Glyph = isLiked
                     ? "\uE00B"
                     : "\uE006";
@@ -994,15 +991,12 @@ DoubleAnimation verticalAnimation;
 
     private void HyPlayList_OnSongLikeStatusChange(bool isLiked)
     {
-        IconLiked.Foreground = isLiked
-            ? new SolidColorBrush(Colors.Red)
-            : new SolidColorBrush(Colors.Transparent);
+        IconLiked.Visibility = isLiked
+            ? Visibility.Visible
+            : Visibility.Collapsed;
         FlyoutLiked.Foreground = isLiked
             ? new SolidColorBrush(Colors.Red)
             : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-        IconLiked.Glyph = isLiked
-            ? "\uE00B"
-            : "\uE006";
         FlyoutLiked.Glyph = isLiked
             ? "\uE00B"
             : "\uE006";

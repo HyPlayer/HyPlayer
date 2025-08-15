@@ -1396,6 +1396,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 {
                     if (hashCode != HyPlayList.NowPlayingHashCode) return;
                     var isBright = await IsBrightAsync(stream);
+                    Common.BrushManagement.IsBright = isBright;
                     await ImageAlbumSource.SetSourceAsync(stream);
                     if (Common.Setting.expandedPlayerBackgroundType == 0 && Background?.GetType() != typeof(ImageBrush))
                     {
