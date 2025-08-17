@@ -127,6 +127,8 @@
     <Compile Include="Classes\UpdateManager.cs" />
     <Compile Include="Classes\UserDisplay.cs" />
     <Compile Include="Common.cs" />
+    <Compile Include="Controls\AlignableWrapPanel\AlignableWrapPanel.cs" />
+    <Compile Include="Controls\AlignableWrapPanel\AlignableWrapPanel.Data.cs" />
     <Compile Include="Controls\ArtistSelectDialog.xaml.cs">
       <DependentUpon>ArtistSelectDialog.xaml</DependentUpon>
     </Compile>
@@ -689,9 +691,7 @@
       <Name>Kawazu</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Classes\LyricParser\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

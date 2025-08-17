@@ -407,17 +407,24 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                            <StackPanel x:Name="SongInfoContainer">
+                            <StackPanel x:Name="SongInfoContainer" Spacing="12">
                                 <TextBlock
                                     x:Name="TextBlockSongTitle"
+                                    HorizontalAlignment="Center"
                                     FontSize="46"
                                     FontWeight="Bold"
                                     Foreground="{x:Bind hyplayer:Common.BrushManagement.AccentBrush, Mode=OneWay}"
+                                    HorizontalTextAlignment="Center"
                                     IsTextSelectionEnabled="True"
                                     TextWrapping="Wrap" />
 
 
-                                <controls:WrapPanel Orientation="Horizontal" HorizontalSpacing="12" VerticalSpacing="-6">
+                                <controls1:AlignableWrapPanel
+                                    HorizontalContentAlignment="Center"
+                                    HorizontalSpacing="12"
+                                    Orientation="Horizontal"
+                                    StretchChild="None"
+                                    VerticalSpacing="-6">
 
                                     <HyperlinkButton
                                         Name="SingerHyperlinkBtn"
@@ -443,7 +450,7 @@
 
                                     </HyperlinkButton>
 
-                                </controls:WrapPanel>
+                                </controls1:AlignableWrapPanel>
 
                             </StackPanel>
                             <!--<controls1:SelectableTextBox
