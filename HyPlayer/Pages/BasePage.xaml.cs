@@ -545,7 +545,7 @@ public sealed partial class BasePage : Page
                 Common.NavigatePage(typeof(Search), null, new EntranceNavigationTransitionInfo());
                 break;
             case "PageHome":
-                Common.NavigatePage(typeof(Home), null, new EntranceNavigationTransitionInfo());
+                Common.NavigatePage(typeof(HomePage), null, new EntranceNavigationTransitionInfo());
                 break;
             case "PageSettings":
                 Common.NavigatePage(typeof(Settings), null, new EntranceNavigationTransitionInfo());

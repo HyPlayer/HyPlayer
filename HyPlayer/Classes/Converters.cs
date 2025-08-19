@@ -358,7 +358,7 @@ namespace HyPlayer.Classes
                 return Common.PageBase?.NavItemBlank;
             }
             Type pageType = value.GetType();
-            if (pageType == typeof(Home))
+            if (pageType == typeof(HomePage))
                 pageNavigationViewItem = Common.PageBase?.NavItemPageHome;
             else if (pageType == typeof(SongListDetail))
             {

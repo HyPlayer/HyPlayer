@@ -84,6 +84,8 @@ namespace HyPlayer
             HttpClientHandler.UseProxy = Setting.EnableProxy;
             HttpClient = new HttpClient(HttpClientHandler);
             NeteaseAPI = new NeteaseCloudMusicApiHandler(HttpClient);
+            NeteaseAPI = Locator.Instance.GetService<NeteaseCloudMusicApiHandler>();
+            NeteaseAPI.HttpClient = HttpClient;
             NeteaseAPI.Option.AdditionalParameters = Setting.ApiAdditionalParameters;
             NeteaseAPI.Option.FakeCheckToken = Setting.EnableCheckTokenApi;
         }

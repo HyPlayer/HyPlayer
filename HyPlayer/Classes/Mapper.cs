@@ -270,4 +270,17 @@ public static class Mapper
         };
         return ncp;
     }
+    public static NCPlayList MapToNCPlayList(this RecommendPlaylistDto dto)
+    {
+        var ncp = new NCPlayList
+        {
+            cover = dto.CoverUrl,
+            creater = dto.Creator?.MapToNcUser() ?? new(),
+            name = dto.Name,
+            plid = dto.Id,
+            playCount = dto.PlayCount,
+            trackCount = dto.TrackCount
+        };
+        return ncp;
+    }
 }

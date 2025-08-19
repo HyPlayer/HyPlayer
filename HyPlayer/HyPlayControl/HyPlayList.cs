@@ -102,7 +102,7 @@ public static class HyPlayList
     public static PropertySet AudioEffectsProperties = new PropertySet();
 
     /********        API        ********/
-    public static AudioGraphPlayer Player = new AudioGraphPlayer();
+    public static AudioGraphPlayer Player = Locator.Instance.GetService<AudioGraphPlayer>();
     public static FadeManager FadeManager = new FadeManager(Player);
     public static BackgroundDownloader Downloader = new();
     public static SystemMediaTransportControls MediaSystemControls;
