@@ -119,7 +119,8 @@
                     Click="ItemDelPlayList_Click"
                     Foreground="Red"
                     Icon="Delete"
-                    Text="删除此歌单" />
+                    Text="删除此歌单"
+                    />
             </MenuFlyout>
         </Grid.ContextFlyout>
     </Grid>

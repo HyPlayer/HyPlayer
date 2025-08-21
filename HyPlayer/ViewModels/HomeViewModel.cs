@@ -4,6 +4,8 @@ using HyPlayer.Classes;
 using HyPlayer.Contracts.Services;
 using HyPlayer.Contracts.ViewModels;
 using HyPlayer.HyPlayControl;
+using HyPlayer.NeteaseApi.ApiContracts;
+using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.Pages;
 using System.Collections.Generic;
 using System.Linq;
@@ -61,6 +63,15 @@ namespace HyPlayer.ViewModels
         private void OnPersonalFmClicked()
         {
             PersonalFM.InitPersonalFM();
+        }
+
+        [RelayCommand]
+        private void OnPlayAllRecommendedSongsClicked()
+        {
+            HyPlayList.RemoveAllSong();
+            HyPlayList.AppendNcSongs(RecommendedSongs);
+            HyPlayList.NowPlaying = -1;
+            HyPlayList.SongMoveNext();
         }
     }
 }

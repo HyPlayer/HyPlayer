@@ -29,20 +29,19 @@
                 Width="256"
                 Height="128"
                 Margin="2,10"
-                CornerRadius="8"
-                RightTapped="{x:Bind hyplayer:Common.UIElement_RightTapped}"
-                Click="Card_Click"
-                CommandParameter="{x:Bind }"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1"
-                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                Click="Card_Click"
+                CommandParameter="{x:Bind}"
+                CornerRadius="8">
                 <ui:Effects.Shadow>
                     <media:AttachedCardShadow
                         BlurRadius="0"
                         CornerRadius="0"
                         Opacity="0.4" />
                 </ui:Effects.Shadow>
-                <Grid HorizontalAlignment="Left">
+                <Grid HorizontalAlignment="Left" RightTapped="{x:Bind hyplayer:Common.UIElement_RightTapped}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="100" />
                         <ColumnDefinition Width="*" />
@@ -80,6 +79,29 @@
                             TextTrimming="CharacterEllipsis"
                             ToolTipService.ToolTip="{x:Bind creater.name}" />
                     </Grid>
+
+                    <Grid.ContextFlyout>
+                        <MenuFlyout>
+                            <MenuFlyoutItem
+                                Click="MenuFlyoutItem_Click"
+                                CommandParameter="{x:Bind}"
+                                Icon="Play"
+                                Text="播放全部" />
+                            <MenuFlyoutItem
+                                x:Name="ItemPublicPlayList"
+                                Click="ItemPublicPlayList_Click"
+                                CommandParameter="{x:Bind}"
+                                Icon="People"
+                                Text="公开此歌单" />
+                            <MenuFlyoutItem
+                                x:Name="ItemDelPlayList"
+                                Click="ItemDelPlayList_Click"
+                                CommandParameter="{x:Bind}"
+                                Foreground="Red"
+                                Icon="Delete"
+                                Text="删除此歌单" />
+                        </MenuFlyout>
+                    </Grid.ContextFlyout>
                 </Grid>
             </Button>
         </DataTemplate>
@@ -90,12 +112,12 @@
                 Width="256"
                 Height="128"
                 Margin="2,10"
-                CornerRadius="8"
-                Click="Card_Click"
-                CommandParameter="{x:Bind }"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1"
-                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                Click="Card_Click"
+                CommandParameter="{x:Bind}"
+                CornerRadius="8">
                 <ui:Effects.Shadow>
                     <media:AttachedCardShadow
                         BlurRadius="0"
@@ -140,6 +162,28 @@
                             TextTrimming="CharacterEllipsis"
                             ToolTipService.ToolTip="{x:Bind desc}" />
                     </Grid>
+                    <Grid.ContextFlyout>
+                        <MenuFlyout>
+                            <MenuFlyoutItem
+                                Click="MenuFlyoutItem_Click"
+                                CommandParameter="{x:Bind}"
+                                Icon="Play"
+                                Text="播放全部" />
+                            <MenuFlyoutItem
+                                x:Name="ItemPublicPlayList"
+                                Click="ItemPublicPlayList_Click"
+                                CommandParameter="{x:Bind}"
+                                Icon="People"
+                                Text="公开此歌单" />
+                            <MenuFlyoutItem
+                                x:Name="ItemDelPlayList"
+                                Click="ItemDelPlayList_Click"
+                                CommandParameter="{x:Bind}"
+                                Foreground="Red"
+                                Icon="Delete"
+                                Text="删除此歌单" />
+                        </MenuFlyout>
+                    </Grid.ContextFlyout>
                 </Grid>
             </Button>
         </DataTemplate>
@@ -150,12 +194,12 @@
                 Height="352"
                 Margin="2,10"
                 HorizontalAlignment="Center"
-                CornerRadius="8"
-                Click="SongCard_Click"
-                CommandParameter="{x:Bind }"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1"
-                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                Click="SongCard_Click"
+                CommandParameter="{x:Bind}"
+                CornerRadius="8">
                 <ui:Effects.Shadow>
                     <media:AttachedCardShadow
                         BlurRadius="0"
@@ -237,57 +281,59 @@
                     x:Name="Toolbar"
                     Grid.Row="1"
                     HorizontalAlignment="Right">
-                    <StackPanel
-                        x:Name="ActionPanel"
-                        Margin="0,40,20,0"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Bottom"
-                        Canvas.ZIndex="1"
-                        Orientation="Horizontal"
-                        Spacing="12">
-                        <Button
-                            Width="125"
-                            Height="60"
-                            Padding="16"
-                            CornerRadius="6"
-                            Command="{x:Bind ViewModel.HeartBeatModeClickedCommand, Mode=OneWay}">
-                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                <FontIcon FontSize="22" Glyph="&#xE006;" />
-                                <TextBlock
-                                    x:Uid="HomePage_Btn_MyLike"
-                                    FontSize="14"
-                                    Text="心动模式" />
-                            </StackPanel>
-                        </Button>
-                        <Button
-                            Width="125"
-                            Height="60"
-                            Padding="16"
-                            CornerRadius="6"
-                            Command="{x:Bind ViewModel.LikedClickedCommand, Mode=OneWay}">
-                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                <FontIcon FontSize="22" Glyph="&#xE163;" />
-                                <TextBlock
-                                    x:Uid="HomePage_Btn_DailyRcmd"
-                                    FontSize="14"
-                                    Text="每日推荐" />
-                            </StackPanel>
-                        </Button>
-                        <Button
-                            Width="125"
-                            Height="60"
-                            Padding="16"
-                            CornerRadius="6"
-                            Command="{x:Bind ViewModel.PersonalFmClickedCommand, Mode=OneWay}">
-                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                <FontIcon FontSize="22" Glyph="&#xEFA9;" />
-                                <TextBlock
-                                    x:Uid="HomePage_Btn_PersonalFm"
-                                    FontSize="14"
-                                    Text="私人电台" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
+                    <ScrollViewer>
+                        <StackPanel
+                            x:Name="ActionPanel"
+                            Margin="0,40,20,0"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom"
+                            Canvas.ZIndex="1"
+                            Orientation="Horizontal"
+                            Spacing="12">
+                            <Button
+                                Width="125"
+                                Height="60"
+                                Padding="16"
+                                Command="{x:Bind ViewModel.HeartBeatModeClickedCommand, Mode=OneWay}"
+                                CornerRadius="6">
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <FontIcon FontSize="22" Glyph="&#xE006;" />
+                                    <TextBlock
+                                        x:Uid="HomePage_Btn_MyLike"
+                                        FontSize="14"
+                                        Text="心动模式" />
+                                </StackPanel>
+                            </Button>
+                            <Button
+                                Width="125"
+                                Height="60"
+                                Padding="16"
+                                Command="{x:Bind ViewModel.LikedClickedCommand, Mode=OneWay}"
+                                CornerRadius="6">
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <FontIcon FontSize="22" Glyph="&#xE163;" />
+                                    <TextBlock
+                                        x:Uid="HomePage_Btn_DailyRcmd"
+                                        FontSize="14"
+                                        Text="每日推荐" />
+                                </StackPanel>
+                            </Button>
+                            <Button
+                                Width="125"
+                                Height="60"
+                                Padding="16"
+                                Command="{x:Bind ViewModel.PersonalFmClickedCommand, Mode=OneWay}"
+                                CornerRadius="6">
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <FontIcon FontSize="22" Glyph="&#xEFA9;" />
+                                    <TextBlock
+                                        x:Uid="HomePage_Btn_PersonalFm"
+                                        FontSize="14"
+                                        Text="私人电台" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </ScrollViewer>
                 </Grid>
                 <Grid
                     x:Name="Content"
@@ -312,7 +358,10 @@
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
-                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                <StackPanel
+                                    Margin="0,4"
+                                    Orientation="Horizontal"
+                                    Spacing="12">
                                     <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xEB50;" />
                                     <TextBlock
                                         FontWeight="SemiBold"
@@ -337,7 +386,10 @@
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
-                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                <StackPanel
+                                    Margin="0,4"
+                                    Orientation="Horizontal"
+                                    Spacing="12">
                                     <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE71D;" />
                                     <TextBlock
                                         FontWeight="SemiBold"
@@ -368,13 +420,43 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xEC4F;" />
-                                <TextBlock
-                                    FontWeight="SemiBold"
-                                    Style="{ThemeResource SubtitleTextBlockStyle}"
-                                    Text="推荐单曲" />
-                            </StackPanel>
+                            <Grid Margin="12,0">
+                                <StackPanel
+                                    HorizontalAlignment="Left"
+                                    Orientation="Horizontal"
+                                    Spacing="12">
+                                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xEC4F;" />
+                                    <TextBlock
+                                        FontWeight="SemiBold"
+                                        Style="{ThemeResource SubtitleTextBlockStyle}"
+                                        Text="推荐单曲" />
+                                </StackPanel>
+                                <Button
+                                    x:Name="PlayAllButton"
+                                    CommandParameter="{x:Bind ViewModel.RecommendedSongs}"
+                                    Command="{x:Bind ViewModel.PlayAllRecommendedSongsClickedCommand}"
+                                    Margin="4"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    HorizontalContentAlignment="Center"
+                                    VerticalContentAlignment="Center"
+                                    CornerRadius="14"
+                                    Style="{ThemeResource AccentButtonStyle}">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <FontIcon
+                                            FontFamily="Segoe Fluent Icons"
+                                            FontSize="10"
+                                            Glyph="&#xF5B0;" />
+                                        <TextBlock
+                                            x:Uid="HomePage_Btn_PlayAll"
+                                            VerticalAlignment="Center"
+                                            FontSize="12"
+                                            Text="全部播放" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+
+
                             <StackPanel Grid.Row="1">
                                 <FlipView
                                     x:Name="RecommendedSongsFlipView"
@@ -395,7 +477,10 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <StackPanel Orientation="Horizontal" Spacing="12">
+                        <StackPanel
+                            Margin="0,4"
+                            Orientation="Horizontal"
+                            Spacing="12">
                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE734;" />
                             <TextBlock
                                 FontWeight="SemiBold"
