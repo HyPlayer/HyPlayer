@@ -43,6 +43,10 @@
         </ResourceDictionary>
     </Page.Resources>
     <Grid x:Name="MainGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="48" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
         <FlyoutBase.AttachedFlyout>
             <MenuFlyout x:Name="PlaylistFlyout">
                 <MenuFlyoutItem
@@ -64,55 +68,40 @@
             CloseButtonClick="TheTeachingTip_OnCloseButtonClick"
             IsLightDismissEnabled="False"
             PreferredPlacement="TopRight" />
-        <Border
+        <controls:TitleBar
             x:Name="AppTitleBar"
-            Height="40"
-            Margin="48,0,0,0"
-            Padding="0,8,0,0"
+            Grid.Row="0"
+            Title="HyPlayer"
+            Height="48"
             VerticalAlignment="Top"
             x:FieldModifier="public"
-            Background="Transparent"
-            Canvas.ZIndex="1"
-            IsHitTestVisible="True">
-            <Grid VerticalAlignment="Center">
-                <StackPanel
-                    Grid.Column="0"
-                    VerticalAlignment="Center"
-                    Orientation="Horizontal">
-                    <Image
-                        x:Name="AppFontIcon"
-                        Width="16"
-                        Height="16"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Top"
-                        Source="/Assets/icon.png"
-                        Stretch="Fill" />
-                    <TextBlock
-                        x:Name="AppTitle"
-                        Margin="12,0,0,0"
-                        VerticalAlignment="Top"
-                        Style="{StaticResource CaptionTextBlockStyle}"
-                        Text="HyPlayer" />
-                    <TextBlock
-                        x:Name="IsPreviewIndicator"
-                        Margin="6,0,0,0"
-                        VerticalAlignment="Top"
-                        Foreground="Gray"
-                        Style="{StaticResource CaptionTextBlockStyle}"
-                        Text="预览"
-                        Visibility="{x:Bind SetVisiblePreview(local:Common.Setting.UpdateSource)}" />
-                </StackPanel>
-            </Grid>
-
-        </Border>
+            BackButtonClick="AppTitleBar_BackButtonClick"
+            DisplayMode="Tall"
+            IsBackButtonVisible="{x:Bind BaseFrame.CanGoBack, Mode=OneWay}"
+            Subtitle="预览">
+            <controls:TitleBar.Icon>
+                <BitmapIcon ShowAsMonochrome="False" UriSource="/Assets/icon.png" />
+            </controls:TitleBar.Icon>
+            <controls:TitleBar.Content>
+                <AutoSuggestBox
+                    x:Name="SearchAutoSuggestBox"
+                    VerticalContentAlignment="Center"
+                    LostFocus="SearchAutoSuggestBox_LostFocus"
+                    PlaceholderText="搜索..."
+                    QueryIcon="Find"
+                    QuerySubmitted="AutoSuggestBox_QuerySubmitted"
+                    SuggestionChosen="SearchAutoSuggestBox_OnSuggestionChosen"
+                    TextChanged="SearchAutoSuggestBox_TextChanged" />
+            </controls:TitleBar.Content>
+        </controls:TitleBar>
         <muxc:NavigationView
             x:Name="NavMain"
             x:FieldModifier="public"
-            BackRequested="OnNavigateBack"
+            Grid.Row="1"
             Canvas.ZIndex="0"
             DisplayModeChanged="NavMain_DisplayModeChanged"
             FlowDirection="LeftToRight"
-            IsBackButtonVisible="Visible"
+            IsBackButtonVisible="Collapsed"
             IsBackEnabled="True"
             IsSettingsVisible="False"
             IsTabStop="False"
@@ -122,19 +111,6 @@
             SelectedItem="{x:Bind BaseFrame.Content, Converter={StaticResource PageToNavigationViewIndicatorConverter}}"
             SelectionChanged="NavMain_OnSelectionChanged"
             Style="{StaticResource LeftNavViewDefaultStyle}">
-            <muxc:NavigationView.AutoSuggestBox>
-                <AutoSuggestBox
-                    x:Name="SearchAutoSuggestBox"
-                    Height="36"
-                    Margin="-3,0,0,0"
-                    VerticalContentAlignment="Center"
-                    LostFocus="SearchAutoSuggestBox_LostFocus"
-                    PlaceholderText="搜索..."
-                    QueryIcon="Find"
-                    QuerySubmitted="AutoSuggestBox_QuerySubmitted"
-                    SuggestionChosen="SearchAutoSuggestBox_OnSuggestionChosen"
-                    TextChanged="SearchAutoSuggestBox_TextChanged" />
-            </muxc:NavigationView.AutoSuggestBox>
             <muxc:NavigationView.MenuItems>
                 <muxc:NavigationViewItemHeader Margin="0,3,3,3" Content="发现" />
                 <muxc:NavigationViewItem

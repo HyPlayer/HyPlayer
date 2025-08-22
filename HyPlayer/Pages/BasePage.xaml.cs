@@ -592,18 +592,6 @@ public sealed partial class BasePage : Page
         await Api.EnterIntelligencePlay();
     }
 
-    private void OnNavigateBack(NavigationView sender, NavigationViewBackRequestedEventArgs args)
-    {
-        try
-        {
-            NavViewBack();
-        }
-        catch (Exception)
-        {
-            //ignore
-        }
-    }
-
     private void TextBoxAccount_OnKeyDown(object sender, KeyRoutedEventArgs e)
     {
         if (e.Key == VirtualKey.Enter) TextBoxPassword.Focus(FocusState.Keyboard);
@@ -969,5 +957,17 @@ public sealed partial class BasePage : Page
         }
 
         ButtonPreLoginPrimary_Click(null, null);
+    }
+
+    private void AppTitleBar_BackButtonClick(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            NavViewBack();
+        }
+        catch (Exception)
+        {
+            //ignore
+        }
     }
 }

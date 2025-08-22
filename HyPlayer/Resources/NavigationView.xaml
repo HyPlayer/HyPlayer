@@ -4,9 +4,9 @@
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls">
 
     <Thickness x:Key="NavigationViewHeaderMargin">0,0,0,0</Thickness>
-    <Thickness x:Key="NavigationViewContentMargin">0,48,0,0</Thickness>
+    <Thickness x:Key="NavigationViewContentMargin">0,0,0,0</Thickness>
     <Thickness x:Key="NavigationViewContentGridBorderThickness">1,1,0,0</Thickness>
-    <CornerRadius x:Key="NavigationViewContentGridCornerRadius">8,0,0,0</CornerRadius>
+    <CornerRadius x:Key="NavigationViewContentGridCornerRadius">8</CornerRadius>
     <SolidColorBrush x:Key="NavigationViewTopPaneBackground" Color="Transparent" />
 
     <Style x:Key="LeftNavViewDefaultStyle" TargetType="muxc:NavigationView">
@@ -14,7 +14,7 @@
             <Setter Property="IsPaneOpen" Value="True" />
             <Setter Property="PaneDisplayMode" Value="LeftCompact" />
             <Setter Property="IsPaneToggleButtonVisible" Value="True" />
-            <Setter Property="OpenPaneLength" Value="270" />
+            <Setter Property="OpenPaneLength" Value="256" />
         </Style.Setters>
     </Style>
 </ResourceDictionary>
