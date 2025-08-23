@@ -206,6 +206,7 @@ public sealed partial class WidgetPage : Page
             1 => new SinRollingCalculator(),
             2 => new LyricifyRollingCalculator(),
             3 => new SyncRollingCalculator(),
+            4 => new CircleEaseRollingCalculator(),
             _ => new ElasticEaseRollingCalculator()
         };
         LyricView.Context.Effects.ScaleWhenFocusing = Common.Setting.lyricRenderScaleWhenFocusing;
@@ -236,7 +237,8 @@ public sealed partial class WidgetPage : Page
             ? Math.Max(_widget.WindowBounds.Width / 20, 40)
             : _settings.LyricSize;
         var translationSize = (_settings.TranslationSize > 0) ? _settings.TranslationSize : lyricSize / 1.8;
-        LyricView.ChangeRenderFontSize((float)lyricSize, (float)translationSize, _settings.RomajiSize);
+        var romajiSize = (_settings.RomajiSize > 0) ? _settings.RomajiSize : lyricSize / 2;
+        LyricView.ChangeRenderFontSize((float)lyricSize, (float)translationSize, (float)romajiSize);
         LyricView.ChangeAlignment(_settings.LyricAlignment switch
         {
             1 => TextAlignment.Center,

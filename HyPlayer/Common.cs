@@ -1099,9 +1099,7 @@ namespace HyPlayer
             {
                 try
                 {
-                    return GetSettings(nameof(cacheDir), ApplicationData.Current.LocalCacheFolder
-                        .CreateFolderAsync("songCache", CreationCollisionOption.OpenIfExists).AsTask().GetAwaiter()
-                        .GetResult().Path);
+                    return GetSettings(nameof(cacheDir), ApplicationData.Current.LocalCacheFolder.Path);
                 }
                 catch
                 {
@@ -1289,6 +1287,16 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(enableCache)] = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool enableApiCache
+        {
+            get => GetSettings(nameof(enableApiCache), true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(enableApiCache)] = value;
                 OnPropertyChanged();
             }
         }
@@ -1563,7 +1571,6 @@ namespace HyPlayer
 
         public int LineRollingCalculator
         {
-            //  0 - 不进行转换  1 - 自动选择  2 - 网易云优先  3 - Kawazu 转换优先
             get => GetSettings(nameof(LineRollingCalculator), 0);
             set
             {
@@ -1674,6 +1681,15 @@ namespace HyPlayer
                 OnPropertyChanged();
             }
         }
+        public int LyricRendererFPS
+        {
+            get => GetSettings(nameof(LyricRendererFPS), 60);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(LyricRendererFPS)] = value;
+                OnPropertyChanged();
+            }
+        }
         public float IsolationScale
         {
             get => GetSettings(nameof(IsolationScale), 1f);
@@ -1760,8 +1776,15 @@ namespace HyPlayer
 #nullable restore
         public async void OnPropertyChanged([CallerMemberName] string propertyName = "")
         {
-            await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                () => { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); });
+            try
+            {
+                await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                    () => { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); });
+            }
+            catch (Exception e)
+            {
+                // ignore
+            }
         }
 
         public static T GetSettings<T>(string propertyName, T defaultValue)

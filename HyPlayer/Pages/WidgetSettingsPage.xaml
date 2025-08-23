@@ -44,13 +44,13 @@
                     SpinButtonPlacementMode="Inline"
                     Value="{x:Bind _settings.TranslationSize, Mode=TwoWay}" />
             </controls:SettingsCard>
-            <controls:SettingsCard Header="罗马字大小">
+            <controls:SettingsCard  Description="0为自动" Header="罗马字大小">
                 <controls1:NumberBox
                     x:Name="RomajiSize"
                     MinWidth="100"
                     HorizontalAlignment="Right"
                     LargeChange="5"
-                    Minimum="1"
+                    Minimum="0"
                     SmallChange="1"
                     SpinButtonPlacementMode="Inline"
                     Value="{x:Bind _settings.RomajiSize, Mode=TwoWay}" />

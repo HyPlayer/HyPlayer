@@ -195,6 +195,10 @@
                                             Click="BtnShare_Clicked"
                                             Icon="Share"
                                             Text="分享" />
+                                        <MenuFlyoutItem
+                                            Click="BtnRefreshCache_Clicked"
+                                            Icon="Refresh"
+                                            Text="刷新缓存" />
 
                                     </MenuFlyout>
                                 </Button.Flyout>

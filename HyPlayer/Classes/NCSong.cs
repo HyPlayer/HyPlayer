@@ -2,14 +2,15 @@
 
 using ALRC.Abstraction;
 using HyPlayer.NeteaseApi.Models;
-using HyPlayer.UWP.Chopin.Abstractions.Models;
-using LyricParser.Abstraction;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using TagLib;
 using Windows.Storage;
+using HyPlayer.Classes.LyricParser.Abstraction;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Windows.Storage.Streams;
 
 #endregion
@@ -52,23 +53,25 @@ public enum HyPlayItemType
 
 public class KaraokLyricInfo : PureLyricInfo
 {
-    public string KaraokLyric;
-    public string YrTrLyrics;
-    public string YrNeteaseRomaji;
+    public string KaraokLyric { get; set; }
+    public string YrTrLyrics { get; set; }
+    public string YrNeteaseRomaji { get; set; }
 }
 
 public class ALRCLyricInfo : PureLyricInfo
 {
-    public ALRCFile alrc;
+    public ALRCFile ALRC  { get; set; }
 }
 
+[JsonDerivedType(typeof(ALRCLyricInfo), "ALRC")]
+[JsonDerivedType(typeof(KaraokLyricInfo), "Karaok")]
 public class PureLyricInfo
 {
-    public string PureLyrics;
-    public string TrLyrics;
-    public string NeteaseRomaji;
-    public List<LyricInfoMetadata> SongMetadata = [];
-    public List<LyricInfoMetadata> LyricMetadata = [];
+    public string PureLyrics { get; set; }
+    public string TrLyrics { get; set; }
+    public string NeteaseRomaji { get; set; }
+    public List<LyricInfoMetadata> SongMetadata  { get; set; } = [];
+    public List<LyricInfoMetadata> LyricMetadata  { get; set; } = [];
 }
 
 public class SongLyric
@@ -82,13 +85,12 @@ public class SongLyric
     public static SongLyric LoadingLyric = new()
     { LyricLine = new LrcLyricsLine("加载歌词中...", TimeSpan.Zero) };
 
-    public ILyricLine LyricLine;
-    public string Translation;
-    public string Romaji;
+    public LyricLine LyricLine { get; set; }
+    public string Translation { get; set; }
+    public string Romaji { get; set; }
 
     public bool HaveTranslation => !string.IsNullOrEmpty(Translation);
     public bool HaveRomaji => !string.IsNullOrEmpty(Romaji);
-    public Type LyricType => LyricLine.GetType();
 }
 
 public class NCRadio

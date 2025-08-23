@@ -70,7 +70,7 @@ public sealed partial class SongListDetail : Page, IDisposable
     public async Task LoadAlbumImage()
     {
         _cancellationToken.ThrowIfCancellationRequested();
-        using var result = await Common.HttpClient.GetAsync(new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER));
+        using var result = await Common.HttpClient!.GetAsync(new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER), _cancellationToken);
         if (result.IsSuccessStatusCode)
         {
             using var stream = await result.Content.ReadAsStreamAsync();
@@ -94,7 +94,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         else
         {
             AlbumImageSource.UriSource = new Uri(playList.cover + "?param=" + StaticSource.PICSIZE_SONGLIST_DETAIL_COVER);
-            _songListColorLoaderTask = LoadAlbumImage();
+            _ = Task.Run(LoadAlbumImage);
         }
 
         TextBoxPLName.Text = playList.name;
@@ -146,13 +146,19 @@ public sealed partial class SongListDetail : Page, IDisposable
         try
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.RecommendSongsApi, _cancellationToken);
-            if (json.IsError)
+            var items = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "recommendSongs", async () =>
             {
-                Common.AddToTeachingTipLists("加载日推出错", json.Error.Message);
-                return;
-            }
-            if (json.Value?.Data?.DailySongs?.FirstOrDefault()?.RecommendReason == "birthDaySong")
+                // 每天推荐歌曲
+                var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.RecommendSongsApi, _cancellationToken);
+                if (json.IsError)
+                {
+                    Common.AddToTeachingTipLists("加载日推出错", json.Error?.Message);
+                    return null;
+                }
+                return json.Value;
+            }, TimeSpan.FromDays(1));
+            
+            if (items?.Data?.DailySongs?.FirstOrDefault()?.RecommendReason == "birthDaySong")
             {
                 // 诶呀,没想到还过生了,吼吼
                 DescriptionTextBlock.Text = "生日快乐~ 今天也要开心哦!";
@@ -161,7 +167,7 @@ public sealed partial class SongListDetail : Page, IDisposable
             }
 
             var idx = 0;
-            foreach (var song in json.Value?.Data?.DailySongs ?? [])
+            foreach (var song in items?.Data?.DailySongs ?? [])
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 var ncSong = song.MapNcSong();
@@ -186,26 +192,33 @@ public sealed partial class SongListDetail : Page, IDisposable
         try
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.PlaylistTracksGetApi,
-                new PlaylistTracksGetRequest()
-                {
-                    Id = playList.plid
-                }, _cancellationToken);
-
-            if (json.IsError)
+            var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistTracks, playList.plid, async () =>
             {
-                Common.AddToTeachingTipLists("加载歌单出错", json.Error?.Message ?? "未知错误");
-                return;
-            }
+                // 歌单详情
+                var rst = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.PlaylistTracksGetApi,
+                    new PlaylistTracksGetRequest()
+                    {
+                        Id = playList.plid
+                    }, _cancellationToken);
+                if (rst.IsError)
+                {
+                    Common.AddToTeachingTipLists("加载歌单出错", rst.Error?.Message ?? "未知错误");
+                    return null;
+                }
+                return rst.Value;
+            });
 
-            var playlistDetail = json.Value?.Playlist?.TrackIds;
+
+            
+
+            var playlistDetail = json?.Playlist?.TrackIds;
             if (playlistDetail is null)
             {
                 Common.AddToTeachingTipLists("加载歌单出错", "未找到歌单信息");
                 return;
             }
-            if (json.Value.Playlist.SpecialType == 5 &&
-                json.Value.Playlist.Creator?.UserId == Common.LoginedUser?.id)
+            if (json.Playlist.SpecialType == 5 &&
+                json.Playlist.Creator?.UserId == Common.LoginedUser?.id)
             {
                 ButtonIntel.Visibility = Visibility.Visible;
                 SongsList.IsMySongList = true;
@@ -226,22 +239,37 @@ public sealed partial class SongListDetail : Page, IDisposable
 
         try
         {
-            var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.SongDetailApi,
-                new SongDetailRequest()
-                {
-                    IdList = trackIds
-                }, _cancellationToken);
-            if (json is { IsError: true, Error.ErrorCode: 405 })
+            var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistTracksDetail, playList.plid + "_" + page, async () =>
             {
-                treashold = ++cooldownTime * 10;
-                page--;
-                Common.AddToTeachingTipLists("贪婪加载被风控", $"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求");
+                // 歌单歌曲详情
+                var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.SongDetailApi,
+                    new SongDetailRequest()
+                    {
+                        IdList = trackIds
+                    }, _cancellationToken);
+                if (json is { IsError: true, Error.ErrorCode: 405 })
+                {
+                    treashold = ++cooldownTime * 10;
+                    page--;
+                    Common.AddToTeachingTipLists("贪婪加载被风控", $"渐进加载速度过于快, 将在 {cooldownTime * 10} 秒后尝试继续加载, 正在清洗请求");
+                    return null;
+                }
+                if (json.IsError)
+                {
+                    Common.AddToTeachingTipLists("加载歌单歌曲出错", json.Error?.Message ?? "未知错误");
+                    return null;
+                }
+                return json.Value;
+            });
+            
+            if (rst is null)
+            {
                 return;
             }
-            var privileges = json.Value?.Privileges;
+            var privileges = rst.Privileges;
             var idx = page * 500;
             var i = 0;
-            foreach (var jToken in json.Value?.Songs ?? [])
+            foreach (var jToken in rst.Songs ?? [])
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 var ncSong = jToken.MapToNcSong();
@@ -264,31 +292,45 @@ public sealed partial class SongListDetail : Page, IDisposable
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
-        if (_songListLoaderTask != null && !_songListLoaderTask.IsCompleted)
-        {
-            try
-            {
-                _cancellationTokenSource.Cancel();
-                await _songListLoaderTask;
-            }
-            catch
-            {
-            }
-        }
-        if (_songListColorLoaderTask != null && !_songListColorLoaderTask.IsCompleted)
-        {
-            try
-            {
-                _cancellationTokenSource.Cancel();
-                await _songListColorLoaderTask;
-            }
-            catch
-            {
-            }
-        }
+        _cancellationTokenSource.Cancel();
         Dispose();
     }
 
+    protected async Task LoadPageData(string plid, bool loadPlaylist = false)
+    {
+        try
+        {
+            if (loadPlaylist)
+            {
+                var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistDetail, plid, async () =>
+                {
+                    // 歌单详情
+                    var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.PlaylistDetailApi,
+                        new PlaylistDetailRequest()
+                        {
+                            Id = plid
+                        }, _cancellationToken);
+                    if (json.IsError)
+                    {
+                        Common.AddToTeachingTipLists("加载歌单出错", json.Error?.Message ?? "未��错误");
+                        return null;
+                    }
+
+                    return json.Value;
+                });
+
+                playList = rst?.Playlists?.FirstOrDefault().MapToNCPlayList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
+        }
+        SongsList.ListSource = "pl" + playList?.plid;
+        LoadSongListDetail();
+        _songListLoaderTask = LoadSongListItem();
+    }
+    
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
@@ -298,35 +340,15 @@ public sealed partial class SongListDetail : Page, IDisposable
             if (e.Parameter is NCPlayList)
             {
                 playList = (NCPlayList)e.Parameter;
+                await LoadPageData(playList.plid, false);
             }
             else
             {
                 var pid = e.Parameter.ToString();
-
-                try
-                {
-                    var json = await Common.NeteaseAPI?.RequestAsync(NeteaseApis.PlaylistDetailApi,
-                       new PlaylistDetailRequest()
-                       {
-                           Id = pid
-                       }, _cancellationToken);
-                    if (json.IsError)
-                    {
-                        Common.AddToTeachingTipLists("加载歌单出错", json.Error?.Message ?? "未知错误");
-                        return;
-                    }
-                    playList = json.Value?.Playlists?.FirstOrDefault().MapToNCPlayList();
-                }
-                catch (Exception ex)
-                {
-                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-                }
+                await LoadPageData(pid, true);
             }
         }
-
-        SongsList.ListSource = "pl" + playList?.plid;
-        LoadSongListDetail();
-        _songListLoaderTask = LoadSongListItem();
+        
         if (Common.Setting.greedlyLoadPlayContainerItems)
             HyPlayList.OnTimerTicked += GreedlyLoad;
     }
@@ -405,7 +427,7 @@ public sealed partial class SongListDetail : Page, IDisposable
     private async void LikeBtnClick(object sender, RoutedEventArgs e)
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
-        var result = await Common.NeteaseAPI?.RequestAsync(NeteaseApis.PlaylistSubscribeApi,
+        var result = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.PlaylistSubscribeApi,
             new PlaylistSubscribeRequest()
             {
                 PlaylistId = playList.plid,
@@ -476,5 +498,24 @@ public sealed partial class SongListDetail : Page, IDisposable
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
         Common.NavigatePage(typeof(Comments), "pl" + playList.plid);
+    }
+
+    private async void BtnRefreshCache_Clicked(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
+            await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracks, playList.plid);
+            await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracksDetail, playList.plid, true);
+            await SimpleCacher.ResetCacheAsync(CacheType.PlaylistDetail, playList.plid);
+            Common.AddToTeachingTipLists("清除缓存成功", "已清除当前歌单的缓存");
+            SongsList.Songs.Clear();
+            page = 0;
+            _ = LoadPageData(playList.plid, true);
+        }
+        catch (Exception ex)
+        {
+            // ignore
+        }
     }
 }

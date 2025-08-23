@@ -222,7 +222,7 @@ def request(flow: http.HTTPFlow) -> None:
         # get all headers
         headers = flow.request.headers
         # make it a dict
-        headers = {key: str(value) for key, value in headers.items()  if "sec-" not in key and "content-length" != key and "content-type" != key and "x-anticheattoken" != key and "cookie" != key}
+        headers = {key: str(value) for key, value in headers.items()  if "sec-" not in key.lower() and "content-length" != key.lower() and "content-type" != key.lower() and "x-anticheattoken" != key.lower() and "cookie" != key.lower() and "host" != key.lower()}
         if headers:
             result["Headers"] = headers
 

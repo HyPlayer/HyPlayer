@@ -44,6 +44,7 @@ public sealed partial class AlbumPage : Page, IDisposable
         InitializeComponent();
         _cancellationToken = _cancellationTokenSource.Token;
     }
+
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
@@ -57,6 +58,7 @@ public sealed partial class AlbumPage : Page, IDisposable
                 albumid = e.Parameter.ToString();
                 break;
         }
+
         _albumInfoLoaderTask = LoadAlbumInfo();
         _albumDynamicLoaderTask = LoadAlbumDynamic();
     }
@@ -75,6 +77,7 @@ public sealed partial class AlbumPage : Page, IDisposable
             {
             }
         }
+
         if (_albumDynamicLoaderTask != null && !_albumDynamicLoaderTask.IsCompleted)
         {
             try
@@ -86,6 +89,7 @@ public sealed partial class AlbumPage : Page, IDisposable
             {
             }
         }
+
         Dispose();
     }
 
@@ -93,14 +97,21 @@ public sealed partial class AlbumPage : Page, IDisposable
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(AlbumPage));
         _cancellationToken.ThrowIfCancellationRequested();
-        var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.AlbumDetailDynamicApi,
-            new AlbumDetailDynamicRequest() { Id = albumid });
-        if (json.IsError)
+        var js = await SimpleCacher.GetOrCreateCacheAsync(CacheType.AlbumDynamic, albumid, async () =>
         {
-            Common.AddToTeachingTipLists("获取专辑动态失败", json.Error.Message);
-            return;
-        }
-        BtnSub.IsChecked = json.Value.IsSub;
+            var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.AlbumDetailDynamicApi,
+                new AlbumDetailDynamicRequest() { Id = albumid }, _cancellationToken);
+            if (json.IsError)
+            {
+                Common.AddToTeachingTipLists("获取专辑动态失败", json.Error?.Message);
+                return null;
+            }
+
+            return json.Value;
+        });
+
+
+        BtnSub.IsChecked = js.IsSub;
     }
 
     private async Task LoadAlbumInfo()
@@ -109,14 +120,24 @@ public sealed partial class AlbumPage : Page, IDisposable
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.AlbumApi,
-            new AlbumRequest() { Id = albumid });
-            if (json.IsError)
+            var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.AlbumInfo, albumid, async () =>
             {
-                Common.AddToTeachingTipLists("获取专辑信息失败", json.Error.Message);
+                var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.AlbumApi,
+                    new AlbumRequest() { Id = albumid }, _cancellationToken);
+                if (json.IsError)
+                {
+                    Common.AddToTeachingTipLists("获取专辑信息失败", json.Error?.Message);
+                    return null;
+                }
+
+                return json.Value;
+            });
+            if (rst?.Album is null)
+            {
                 return;
             }
-            Album = json.Value.Album.MapToNcAlbum();
+
+            Album = rst.Album.MapToNcAlbum();
             if (Common.Setting.noImage) ImageRect.ImageSource = null;
             else
             {
@@ -124,41 +145,43 @@ public sealed partial class AlbumPage : Page, IDisposable
                 ImageRect.ImageSource = image;
                 image.UriSource = new Uri(Album.cover + "?param=" + StaticSource.PICSIZE_PLAYLIST_ITEM_COVER);
             }
+
             TextBoxAlbumName.Text = Album.name;
 
-            TextBoxAlbumName.Text = json.Value.Album.Name.ToString();
-            artists = json.Value.Album.Artists.Select(t => t.MapToNcArtist()).ToList();
-            TextBoxAuthor.Content = string.Join(" / ", artists.Select(t => t.name));
+            artists = rst.Album.Artists?.Select(t => t.MapToNcArtist()).ToList();
+            TextBoxAuthor.Content = string.Join(" / ", artists?.Select(t => t.name) ?? []);
             var converter = new DateConverter();
-            TextBlockPublishTime.Text = converter.Convert(json.Value.Album.PublishTime, null, null, null).ToString();
-            TextBlockDesc.Text = (string.Join(" / ", json.Value.Album.Alias)) + json.Value.Album.Alias != null ? "\r\n" : string.Empty + json.Value.Album.Description;
+            TextBlockPublishTime.Text = converter.Convert(rst.Album.PublishTime, null, null, null).ToString();
+            TextBlockDesc.Text = (string.Join(" / ", rst.Album.Alias) + rst.Album.Alias != null
+                ? "\r\n"
+                : string.Empty) + rst.Album.Description;
             var idx = 0;
             SongContainer.ListSource = "al" + Album.id;
 
-            AlbumSongsViewSource.Source = json.Value.Songs.Select(song =>
-            {
-                return new NCAlbumSong
+            AlbumSongsViewSource.Source = rst.Songs?.Select(song =>
                 {
-                    Album = song.Album.MapToNcAlbum(),
-                    alias = song.Alias is not null ? string.Join(",", song.Alias) : null,
-                    Artist = song.Artists?.Select(artist => artist.MapToNcArtist())
-                         .ToList() ??
-                     [],
-                    DiscName = song.CdName,
-                    CDName = song.CdName,
-                    IsCloud = song.Sid is not "0",
-                    IsVip = song.Fee is 1,
-                    LengthInMilliseconds = song.Duration,
-                    mvid = song.MvId,
-                    sid = song.Id,
-                    Order = ++idx,
-                    songname = song.Name,
-                    TrackId = song.TrackNumber,
-                    transname = song.Translations is not null ? string.Join(",", song.Translations) : null,
-                    IsAvailable = true,
-                    Type = HyPlayItemType.Netease,
-                };
-            }).GroupBy(t => t.DiscName).OrderBy(t => t.Key)
+                    return new NCAlbumSong
+                    {
+                        Album = song.Album.MapToNcAlbum(),
+                        alias = song.Alias is not null ? string.Join(",", song.Alias) : null,
+                        Artist = song.Artists?.Select(artist => artist.MapToNcArtist())
+                                     .ToList() ??
+                                 [],
+                        DiscName = song.CdName,
+                        CDName = song.CdName,
+                        IsCloud = song.Sid is not "0",
+                        IsVip = song.Fee is 1,
+                        LengthInMilliseconds = song.Duration,
+                        mvid = song.MvId,
+                        sid = song.Id,
+                        Order = ++idx,
+                        songname = song.Name,
+                        TrackId = song.TrackNumber,
+                        transname = song.Translations is not null ? string.Join(",", song.Translations) : null,
+                        IsAvailable = true,
+                        Type = HyPlayItemType.Netease,
+                    };
+                }).GroupBy(t => t.DiscName).OrderBy(t => t.Key)
                 .Select(t => new DiscSongs(t) { Key = t.Key }).ToList();
         }
         catch (Exception ex)
@@ -237,6 +260,7 @@ public sealed partial class AlbumPage : Page, IDisposable
                 ImageRect.ImageSource = null;
                 _cancellationTokenSource.Dispose();
             }
+
             disposedValue = true;
         }
     }
