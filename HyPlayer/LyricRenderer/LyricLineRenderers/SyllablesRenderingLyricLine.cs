@@ -6,7 +6,6 @@ using HyPlayer.LyricRenderer.Animator;
 using HyPlayer.LyricRenderer.Animator.EaseFunctions;
 using HyPlayer.LyricRenderer.Builder;
 using Microsoft.Graphics.Canvas;
-using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.Graphics.Canvas.Geometry;
 using Microsoft.Graphics.Canvas.Text;
 using System;
@@ -152,7 +151,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     {
                         if (IsSyllable || context.Effects.SimpleLineScanning)
                         {
-                            (highlightGeometry1, highlightGeometry2,var currentPercentage) = CreateHighlightGeometries(context.CurrentLyricTime, textLayout,
+                            (highlightGeometry1, highlightGeometry2, var currentPercentage) = CreateHighlightGeometries(context.CurrentLyricTime, textLayout,
                                 session, Syllables);
                             var matrix = Matrix3x2.CreateTranslation(0, textTop);
                             using (clds.CreateLayer(1, highlightGeometry1, matrix))
@@ -225,8 +224,8 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             {
                 // 计算 Progress
                 var progress = 0f;
-                
-                if (context.CurrentLyricTime - EndTime >= 0 && context.CurrentLyricTime - EndTime  <= ScaleAnimationDuration)//缩小
+
+                if (context.CurrentLyricTime - EndTime >= 0 && context.CurrentLyricTime - EndTime <= ScaleAnimationDuration)//缩小
                 {
                     progress = 1 - ((float)EaseFunction.Ease(Math.Clamp(
                         (context.CurrentLyricTime - EndTime) * 1.0f / ScaleAnimationDuration, 0, 1)));
@@ -241,7 +240,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 var scaling = 0.8F + progress * 0.2F;
                 finalEffectBuilder
                     .AddTransform2DEffect(GetCenterMatrix(0, 0, _scalingCenterX + offset.X, (float)textLayout.LayoutBounds.Height / 2, scaling, scaling))
-                    .AddOpacityEffect(Math.Clamp(0.5f + progress * 0.5f,0,1));
+                    .AddOpacityEffect(Math.Clamp(0.5f + progress * 0.5f, 0, 1));
             }
             else
             {

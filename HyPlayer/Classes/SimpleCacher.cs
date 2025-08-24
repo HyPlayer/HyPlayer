@@ -1,10 +1,10 @@
 #nullable enable
+using FastEnumUtility;
+using Newtonsoft.Json;
 using System;
 using System.IO;
-using Newtonsoft.Json;
 using System.Threading.Tasks;
 using Windows.Storage;
-using FastEnumUtility;
 
 namespace HyPlayer.Classes;
 
@@ -12,7 +12,7 @@ public static class SimpleCacher
 {
     private static StorageFolder? cacheFolder;
 
-    
+
     public static async Task InitializeAsync()
     {
         cacheFolder ??= await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir);
@@ -31,10 +31,10 @@ public static class SimpleCacher
             await InitializeAsync();
         }
         var type = FastEnum.GetName(cacheType);
-        
+
         // create new type dir
         var dir = await cacheFolder!.CreateFolderAsync(type, CreationCollisionOption.OpenIfExists);
-        restart:
+    restart:
         var fileName = $"{id}.cache";
         bool hasCache = false;
         if (await dir.TryGetItemAsync(fileName) is StorageFile cacheFile && !forceRefresh)
@@ -58,10 +58,10 @@ public static class SimpleCacher
                     if (forceUseCache)
                         return default;
                 }
-                
+
             }
         }
-        
+
         // Cache is either not found or expired, create a new one
         T? data = default;
         try
@@ -92,13 +92,13 @@ public static class SimpleCacher
         {
             //ignore
         }
-        
-        
-        
-        
+
+
+
+
         return data;
     }
-    
+
     public static async Task ResetCacheAsync(CacheType type, string id, bool isPrefix = false)
     {
         if (cacheFolder == null)
@@ -127,7 +127,7 @@ public static class SimpleCacher
         {
             throw new InvalidOperationException("Cache folder is not initialized. Call InitializeAsync first.");
         }
-        
+
         var dir = await cacheFolder.CreateFolderAsync(FastEnum.GetName(type)!, CreationCollisionOption.OpenIfExists);
         var files = await dir.GetFilesAsync();
         foreach (var file in files)
@@ -135,14 +135,14 @@ public static class SimpleCacher
             await file.DeleteAsync();
         }
     }
-    
+
     public static async Task ClearAllCacheAsync()
     {
         if (cacheFolder == null)
         {
             throw new InvalidOperationException("Cache folder is not initialized. Call InitializeAsync first.");
         }
-        
+
         var files = await cacheFolder.GetFoldersAsync();
         foreach (var file in files)
         {
@@ -173,5 +173,5 @@ public enum CacheType
     UserPlaylist,
     RadioPrograms,
     RadioInfo,
-    
+
 }

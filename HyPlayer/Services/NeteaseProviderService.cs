@@ -31,7 +31,7 @@ namespace HyPlayer.Services
                 return (await _apiHandler.RequestAsync(NeteaseApis.RecommendPlaylistsApi, token))
                     .Match(success => success.Recommends?.Select(
                         t => (ProvidableItemBase)
-                            t.MapToNCPlayList()).ToList() ,
+                            t.MapToNCPlayList()).ToList(),
                             error => throw new Exception(error.Message));
             }
             if (typeId == NeteaseTypeIds.SingleSong) // 推荐单曲

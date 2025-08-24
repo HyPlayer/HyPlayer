@@ -5,7 +5,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media;
 
 namespace HyPlayer.Classes
-{  
+{
     public class BrushManagement : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -37,9 +37,10 @@ namespace HyPlayer.Classes
 
         public ElementTheme AccentTheme => IsBright ? ElementTheme.Light : ElementTheme.Dark;
 
-        public bool IsBright {
+        public bool IsBright
+        {
             get => isBright;
-            set 
+            set
             {
                 isBright = value;
                 NotifyPropertyChanged();

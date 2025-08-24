@@ -79,7 +79,7 @@ public sealed partial class SingleComment : UserControl, INotifyPropertyChanged
         try
         {
             if (!IsLoadMoreComments) floorComments.Clear();
-            var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Comments,  $"{MainComment.resourceType}_{MainComment.resourceId}_{MainComment.cid}", async () =>
+            var result = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Comments, $"{MainComment.resourceType}_{MainComment.resourceId}_{MainComment.cid}", async () =>
             {
                 var rst = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.CommentFloorApi,
                     new CommentFloorRequest()

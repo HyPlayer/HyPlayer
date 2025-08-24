@@ -1,6 +1,7 @@
 ﻿#region
 
 using ALRC.Abstraction;
+using HyPlayer.Classes.LyricParser.Abstraction;
 using HyPlayer.NeteaseApi.Models;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Newtonsoft.Json.Linq;
@@ -11,7 +12,6 @@ using System.Text.Json.Serialization;
 using TagLib;
 using Windows.Storage;
 using Windows.Storage.Streams;
-using HyPlayer.Classes.LyricParser.Abstraction;
 
 #endregion
 
@@ -21,8 +21,8 @@ namespace HyPlayer.Classes;
 /// 等价于HyPlayer.PlayCore的同名类. 
 /// </summary>
 public class ProvidableItemBase
-{ 
-    
+{
+
 }
 
 /// <summary>
@@ -155,7 +155,7 @@ public class KaraokLyricInfo : PureLyricInfo
 
 public class ALRCLyricInfo : PureLyricInfo
 {
-    public ALRCFile ALRC  { get; set; }
+    public ALRCFile ALRC { get; set; }
 }
 
 [JsonDerivedType(typeof(ALRCLyricInfo), "ALRC")]
@@ -165,8 +165,8 @@ public class PureLyricInfo
     public string PureLyrics { get; set; }
     public string TrLyrics { get; set; }
     public string NeteaseRomaji { get; set; }
-    public List<LyricInfoMetadata> SongMetadata  { get; set; } = [];
-    public List<LyricInfoMetadata> LyricMetadata  { get; set; } = [];
+    public List<LyricInfoMetadata> SongMetadata { get; set; } = [];
+    public List<LyricInfoMetadata> LyricMetadata { get; set; } = [];
 }
 
 public class SongLyric

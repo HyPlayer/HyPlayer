@@ -3,12 +3,10 @@ using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.Animator;
 using HyPlayer.LyricRenderer.Animator.EaseFunctions;
 using Microsoft.Graphics.Canvas;
-using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.Graphics.Canvas.Geometry;
 using System;
 using Windows.Foundation;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 
 namespace HyPlayer.LyricRenderer.LyricLineRenderers;
@@ -51,7 +49,7 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
 
         if (context.CurrentLyricTime > EndTime || context.CurrentLyricTime < StartTime) return true;//未激活
         var remain = EndTime - context.CurrentLyricTime;
-        
+
 
         //画个底
         var baseColor = context.PreferTypography.IdleColor!.Value;
@@ -65,7 +63,7 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
             var geometry = CanvasGeometry.CreateRoundedRectangle(session, new Rect(Width * prog, 0, Width - Width * prog, Height), 4, 4);
             session.FillGeometry(geometry, actualX, offset.Y + Height, baseColor);
         }
-        else if(context.CurrentLyricTime - StartTime < EnterAnimationDuration)
+        else if (context.CurrentLyricTime - StartTime < EnterAnimationDuration)
         {
             var surplus = (float)(context.CurrentLyricTime - StartTime) / EnterAnimationDuration;
             var prog = AnimationEaseFunction.Ease(Math.Clamp(surplus, 0, 1));
@@ -86,11 +84,11 @@ public class ProgressBarRenderingLyricLine : RenderingLyricLine
         double progress;
         var focusingColor = context.PreferTypography.FocusingColor!.Value;
 
-        if (remain < LeaveAnimationDuration*1.2)//结束动画
+        if (remain < LeaveAnimationDuration * 1.2)//结束动画
         {
             var surplus = (LeaveAnimationDuration * 1.2 - remain) * 1.0f / (LeaveAnimationDuration * 1.2);
             progress = AnimationEaseFunction.Ease(Math.Clamp(surplus, 0, 1));
-            focusingColor.A = (byte)(160 - 160  * progress);
+            focusingColor.A = (byte)(160 - 160 * progress);
             geometryFill = CanvasGeometry.CreateRoundedRectangle(session, new Rect(Width * progress, 0, Width - Width * progress, Height), 4, 4);
         }
         else

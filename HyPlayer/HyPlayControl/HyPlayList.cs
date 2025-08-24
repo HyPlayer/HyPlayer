@@ -3,6 +3,8 @@
 using ALRC.Converters;
 using ALRC.Converters.Enhancers;
 using HyPlayer.Classes;
+using HyPlayer.Classes.LyricParser.Abstraction;
+using HyPlayer.Classes.LyricParser.Implementation;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Album;
 using HyPlayer.NeteaseApi.ApiContracts.Artist;
@@ -13,7 +15,6 @@ using HyPlayer.UWP.Chopin;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Kawazu;
-using Microsoft.Toolkit.Uwp.Helpers;
 using Microsoft.Toolkit.Uwp.Notifications;
 using System;
 using System.Collections.Generic;
@@ -35,14 +36,6 @@ using Windows.Storage.Streams;
 using Windows.UI;
 using Windows.UI.Notifications;
 using Windows.UI.Xaml.Media;
-using ALRC.Converters.Enhancers;
-using HyPlayer.Classes.LyricParser.Abstraction;
-using HyPlayer.Classes.LyricParser.Implementation;
-using HyPlayer.NeteaseApi.ApiContracts.Album;
-using HyPlayer.NeteaseApi.ApiContracts.Artist;
-using HyPlayer.NeteaseApi.ApiContracts.DjChannel;
-using HyPlayer.NeteaseApi.ApiContracts.Playlist;
-using HyPlayer.NeteaseApi.ApiContracts.Song;
 using Buffer = Windows.Storage.Streams.Buffer;
 using File = TagLib.File;
 using LrcConverter = ALRC.Converters.LrcConverter;
@@ -687,10 +680,10 @@ public static class HyPlayList
              Common.Setting.songUrlLazyGet) && targetItem.PlayItem.Id != "-1")
             try
             {
-                var songResult = await SimpleCacher.GetOrCreateCacheAsync(CacheType.SongUrl, targetItem.PlayItem.Id+"_"+Common.Setting.audioRate, async () =>
+                var songResult = await SimpleCacher.GetOrCreateCacheAsync(CacheType.SongUrl, targetItem.PlayItem.Id + "_" + Common.Setting.audioRate, async () =>
                 {
                     var songRequest = new SongUrlRequest
-                        { Level = Common.Setting.audioRate, Id = targetItem.PlayItem.Id };
+                    { Level = Common.Setting.audioRate, Id = targetItem.PlayItem.Id };
                     var songRes = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.SongUrlApi, songRequest);
                     if (songRes.IsError)
                     {
@@ -730,7 +723,7 @@ public static class HyPlayList
                         };
                         targetItem.PlayItem.QualityTag = tag;
 
-                        var volume = GetAudioGainMultiplier(songResult.Value.SongUrls[0]?.Gain ?? 0f);
+                        var volume = GetAudioGainMultiplier(songResult.SongUrls[0]?.Gain ?? 0f);
                         targetItem.PlayItem.Volume = volume;
                         _ = Common.Invoke(() =>
                         {
@@ -972,7 +965,7 @@ public static class HyPlayList
             return;
         }
     }
-    public static async void Player_SourceChanged(IPlaybackSource source)
+    public static void Player_SourceChanged(IPlaybackSource source)
     {
         if (List.Count <= NowPlaying) return;
         if (NowPlayingItem.PlayItem == null || source == null)
@@ -1008,24 +1001,24 @@ public static class HyPlayList
             // 图片加载放在之后
             if (CoverStream.Size == 0 && !Common.Setting.noImage && NowPlayingItem == playItemWhenRequested)
             {
-                _ = RefreshAlbumCover().ContinueWith(async (_) =>
+                _ = RefreshAlbumCover(playItemWhenRequested).ContinueWith(async (_) =>
                 {
                     if (CoverStream.Size != 0)
                     {
-                        if ((hashCodeWhenRequested == NowPlayingHashCode) && !Common.Setting.noImage)
+                        if ((playItemWhenRequested == NowPlayingItem) && !Common.Setting.noImage)
                         {
                             CoverStream.Seek(0);
-                            OnSongCoverChanged?.Invoke(hashCodeWhenRequested, CoverBuffer);
+                            OnSongCoverChanged?.Invoke(playItemWhenRequested, CoverBuffer);
                         }
                     }
                     //更新磁贴
-                    if (hashCodeWhenRequested == NowPlayingHashCode)
+                    if (playItemWhenRequested == NowPlayingItem)
                     {
                         CoverStream.Seek(0);
-                        await RefreshTile(hashCodeWhenRequested, playItemWhenRequested, CoverStream);
+                        await RefreshTile(playItemWhenRequested, playItemWhenRequested, CoverStream);
                     }
 
-                    if (hashCodeWhenRequested == NowPlayingHashCode)
+                    if (playItemWhenRequested == NowPlayingItem)
                     {
                         // RASR 罪大恶极，害的磁贴怨声载道
                         CoverStream.Seek(0);
@@ -1035,7 +1028,7 @@ public static class HyPlayList
                 });
             }
 
-            
+
 
             if (NowPlayingItem == playItemWhenRequested)
             {
@@ -1352,10 +1345,9 @@ public static class HyPlayList
         else if (status == PlaybackStatus.Paused)
             OnPause?.Invoke();
     }
-
     private static async Task LoadLyrics(HyPlayItem hpi)
     {
-        var cache = await SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricInfo, hpi.PlayItem.Id, () => Task.FromResult<LyricInfo?>(null));
+        var cache = await SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricInfo, hpi.PlayItem.Id, () => Task.FromResult<LyricInfo>(null));
         if (cache is not null)
         {
             LyricInfo = cache;
@@ -1940,10 +1932,10 @@ public static class HyPlayList
 
                 return detailResponse.Value?.Playlist?.TrackIds;
             });
-            
+
 
             var nowIndex = 0;
-            
+
             var trackIds = resp.Select(t => t.Id).ToList() ?? [];
             while (nowIndex * 500 < trackIds.Count)
             {
@@ -1962,12 +1954,12 @@ public static class HyPlayList
 
                         return songResponse.Value;
                     });
-                    
+
                     var songs = songDetailResp.Songs;
                     var privileges = songDetailResp.Privileges;
 
                     nowIndex++;
-                    
+
                     var result = new List<NCSong>();
                     if (privileges is null) return false;
                     for (var i = 0; i < privileges.Length; i++)

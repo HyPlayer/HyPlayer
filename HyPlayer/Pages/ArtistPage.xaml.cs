@@ -78,7 +78,7 @@ public sealed partial class ArtistPage : Page, IDisposable
                     Common.AddToTeachingTipLists("获取艺人信息失败", resp.Error?.Message);
                     return null;
                 }
-                
+
                 return resp.Value;
             });
 
@@ -317,7 +317,7 @@ public sealed partial class ArtistPage : Page, IDisposable
         try
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            
+
             var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistAlbumsList, artist.id + "_" + page,
                 async () =>
                 {

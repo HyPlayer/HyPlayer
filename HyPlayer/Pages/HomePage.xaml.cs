@@ -4,20 +4,9 @@ using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.ViewModels;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
 
@@ -65,7 +54,7 @@ namespace HyPlayer.Pages
 
         private async void MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
         {
-            var playList = (NCPlayList) (sender as MenuFlyoutItem)?.CommandParameter;
+            var playList = (NCPlayList)(sender as MenuFlyoutItem)?.CommandParameter;
             //²¥·ÅÈ«²¿¸èÇú
             HyPlayList.RemoveAllSong();
             await HyPlayList.AppendPlayList(playList.plid);
@@ -118,7 +107,7 @@ namespace HyPlayer.Pages
     {
         public HomePageBase()
         {
-           
+
         }
     }
 }

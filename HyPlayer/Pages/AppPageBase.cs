@@ -1,6 +1,6 @@
 ﻿using HyPlayer.Contracts.ViewModels;
-using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
 
 
 namespace HyPlayer.Pages

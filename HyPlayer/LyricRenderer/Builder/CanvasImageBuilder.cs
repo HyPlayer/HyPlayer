@@ -1,11 +1,8 @@
 ﻿using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Effects;
-using System;
 using System.Numerics;
 using Windows.Foundation;
-using Windows.Graphics.Effects;
 using Windows.UI;
-using Windows.UI.Xaml.Media;
 
 namespace HyPlayer.LyricRenderer.Builder;
 

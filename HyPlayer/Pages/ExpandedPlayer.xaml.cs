@@ -3,9 +3,11 @@
 #nullable enable
 using ALRC.Abstraction;
 using ALRC.Converters;
+using ALRC.Converters.Enhancers;
 using CommunityToolkit.WinUI.Animations;
 using CommunityToolkit.WinUI.Media;
 using HyPlayer.Classes;
+using HyPlayer.Classes.LyricParser.Abstraction;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using HyPlayer.LyricRenderer.Abstraction.Render;
@@ -40,8 +42,6 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
-using ALRC.Converters.Enhancers;
-using HyPlayer.Classes.LyricParser.Abstraction;
 using ALRCLyricInfo = HyPlayer.Classes.ALRCLyricInfo;
 using Buffer = Windows.Storage.Streams.Buffer;
 using Color = System.Drawing.Color;
@@ -617,7 +617,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             if (HyPlayList.NowPlayingItem == null) return;
             LyricBox.Width = LyricWidth;
             LyricBox.ChangeRenderColor(Common.BrushManagement.IdleBrush.Color, Common.BrushManagement.AccentBrush.Color);
-            LyricBox.ChangeRenderFontSize((float)showsize, 
+            LyricBox.ChangeRenderFontSize((float)showsize,
                 (Common.Setting.translationSize > 0) ? Common.Setting.translationSize : (float)showsize / 1.8F
                 , (Common.Setting.romajiSize > 0) ? Common.Setting.romajiSize : (float)showsize / 2);
         });
@@ -969,7 +969,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             var alrc = converter.Convert(qrc);
             var lrc = lrcConverter.ConvertBack(alrc);
             var trLrc = lrcTranslationConverter.Extract(alrc);
-            
+
             ALRCLyricInfo ttmlLyric = new ALRCLyricInfo()
             {
                 PureLyrics = lrc,
@@ -999,8 +999,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricInfo, HyPlayList.NowPlayingItem.PlayItem.Id,
                     () => Task.FromResult(HyPlayList.LyricInfo)!, forceRefresh: true);
             }
-         
-            
+
+
             var lrcs = LrcConverter.Convert(alrc);
             LyricBox.SetLyricLines(lrcs);
         }

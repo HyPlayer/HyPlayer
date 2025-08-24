@@ -4,11 +4,11 @@ using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
-using HyPlayer.NeteaseApi.ApiContracts.Category;
 using HyPlayer.NeteaseApi.ApiContracts.Login;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.NeteaseApi.ApiContracts.Recommend;
 using HyPlayer.NeteaseApi.ApiContracts.User;
+using HyPlayer.NeteaseApi.ApiContracts.Utils;
 using Microsoft.UI.Xaml.Controls;
 using QRCoder;
 using System;
@@ -31,14 +31,8 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.NeteaseApi.ApiContracts.Login;
-using HyPlayer.NeteaseApi.ApiContracts.Playlist;
-using HyPlayer.NeteaseApi.ApiContracts.Recommend;
-using HyPlayer.NeteaseApi.ApiContracts.User;
-using HyPlayer.NeteaseApi.ApiContracts.Utils;
 using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
 using NavigationViewBackButtonVisible = Microsoft.UI.Xaml.Controls.NavigationViewBackButtonVisible;
-using NavigationViewBackRequestedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewBackRequestedEventArgs;
 using NavigationViewDisplayMode = Microsoft.UI.Xaml.Controls.NavigationViewDisplayMode;
 using NavigationViewDisplayModeChangedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewDisplayModeChangedEventArgs;
 using NavigationViewItem = Microsoft.UI.Xaml.Controls.NavigationViewItem;
@@ -337,7 +331,7 @@ public sealed partial class BasePage : Page
 
             if (result is null)
                 return false;
-            
+
             LoginStatus = result;
         }
         catch (Exception e)
@@ -393,7 +387,7 @@ public sealed partial class BasePage : Page
         {
             NavMain.SelectedItem = NavItemLogin;
         }
-        
+
         return true;
     }
 
@@ -426,7 +420,7 @@ public sealed partial class BasePage : Page
 
                 return js.Value;
             });
-            
+
             Common.LikedSongs = ids?.TrackIds?.ToList() ?? [];
         }
         catch (Exception ex)
@@ -977,18 +971,6 @@ public sealed partial class BasePage : Page
 
         ButtonPreLoginPrimary_Click(null, null);
     }
-
-<<<<<<< HEAD
-    private void AppTitleBar_BackButtonClick(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            NavViewBack();
-        }
-        catch (Exception)
-        {
-            //ignore
-=======
     private async void BtnCurrentDeviceIdClick(object sender, RoutedEventArgs e)
     {
         try
@@ -1017,7 +999,17 @@ public sealed partial class BasePage : Page
         {
             Common.AddToTeachingTipLists("设备ID注册失败, 请尝试其他方案", "错误: " + ex.Message);
             return;
->>>>>>> c6b8dfe4c665fa8ec5a737ee9311113a1f2b2ef7
+        }
+    }
+    private void AppTitleBar_BackButtonClick(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            NavViewBack();
+        }
+        catch (Exception)
+        {
+            //ignore
         }
     }
 }

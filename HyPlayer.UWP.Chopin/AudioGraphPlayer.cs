@@ -14,7 +14,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
     public class AudioGraphPlayer : IPlayer, IDisposable
     {
         private ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode> _audioInputNodes = new ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode>();
-        private ConcurrentDictionary<MediaSourceAudioInputNode, AudioGraphPlaybackSource> _audioInputNodesReverseDictionary = new ConcurrentDictionary<MediaSourceAudioInputNode,AudioGraphPlaybackSource>();
+        private ConcurrentDictionary<MediaSourceAudioInputNode, AudioGraphPlaybackSource> _audioInputNodesReverseDictionary = new ConcurrentDictionary<MediaSourceAudioInputNode, AudioGraphPlaybackSource>();
         private AudioGraph _defaultPlayer;
         private AudioDeviceOutputNode _outputNode;
         private bool disposedValue;

@@ -157,7 +157,7 @@ public sealed partial class SongListDetail : Page, IDisposable
                 }
                 return json.Value;
             }, TimeSpan.FromDays(1));
-            
+
             if (items?.Data?.DailySongs?.FirstOrDefault()?.RecommendReason == "birthDaySong")
             {
                 // 诶呀,没想到还过生了,吼吼
@@ -209,7 +209,7 @@ public sealed partial class SongListDetail : Page, IDisposable
             });
 
 
-            
+
 
             var playlistDetail = json?.Playlist?.TrackIds;
             if (playlistDetail is null)
@@ -261,7 +261,7 @@ public sealed partial class SongListDetail : Page, IDisposable
                 }
                 return json.Value;
             });
-            
+
             if (rst is null)
             {
                 return;
@@ -330,7 +330,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         LoadSongListDetail();
         _songListLoaderTask = LoadSongListItem();
     }
-    
+
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
@@ -348,7 +348,7 @@ public sealed partial class SongListDetail : Page, IDisposable
                 await LoadPageData(pid, true);
             }
         }
-        
+
         if (Common.Setting.greedlyLoadPlayContainerItems)
             HyPlayList.OnTimerTicked += GreedlyLoad;
     }

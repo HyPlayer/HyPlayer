@@ -208,7 +208,7 @@ public static class ListenTogetherManager
                 {
                     RoomId = CurrentRoomInfo.RoomId,
                     CommandType = ListenTogetherPlayCommandRequest.ListenTogetherPlayCommandRequestCommandType.Progress,
-                    Progress = position.Milliseconds,
+                    Progress = (long)position.TotalMilliseconds,
                     PlayStatus = HyPlayList.IsPlaying
                         ? ListenTogetherHeartBeatRequest.ListenTogetherPlayStatus.Play
                         : ListenTogetherHeartBeatRequest.ListenTogetherPlayStatus.Pause,

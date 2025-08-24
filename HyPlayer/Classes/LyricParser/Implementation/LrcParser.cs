@@ -1,7 +1,7 @@
-﻿using System;
+﻿using HyPlayer.Classes.LyricParser.Abstraction;
+using System;
 using System.Buffers;
 using System.Collections.Generic;
-using HyPlayer.Classes.LyricParser.Abstraction;
 
 namespace HyPlayer.Classes.LyricParser.Implementation
 {
@@ -153,7 +153,8 @@ namespace HyPlayer.Classes.LyricParser.Implementation
                             attributeName = string.Empty;
                             state = CurrentState.None;
                             break;
-                        };
+                        }
+                        ;
                         if (attributeName == "offset")
                         {
                             timeCalculationCache = timeCalculationCache * 10 + curChar - '0';

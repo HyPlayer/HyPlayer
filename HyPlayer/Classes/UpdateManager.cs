@@ -87,7 +87,8 @@ public static class UpdateManager
     public static async Task<RemoteVersionResult> GetVersionFromSelfhost(UpdateSource source)
     {
         using var versionsResponse = await Common.HttpClient.GetAsync(
-            new Uri($"https://hyplayer.kengwang.com.cn/Channel/{(source switch {
+            new Uri($"https://hyplayer.kengwang.com.cn/Channel/{(source switch
+            {
                 UpdateSource.Canary => 5,
                 UpdateSource.Release => 4,
                 UpdateSource.Dogfood => 6,
@@ -190,7 +191,7 @@ public static class UpdateManager
                 });
             }
         });
-        
+
     }
 
     public static async Task GetUserCanaryChannelAvailability(string userEmail)

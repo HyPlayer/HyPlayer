@@ -2,6 +2,7 @@
 
 #nullable enable
 using HyPlayer.Classes;
+using HyPlayer.Classes.LyricParser.Abstraction;
 using HyPlayer.HyPlayControl;
 using System;
 using System.Collections.Generic;
@@ -13,7 +14,6 @@ using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
-using HyPlayer.Classes.LyricParser.Abstraction;
 using SineEase = Windows.UI.Xaml.Media.Animation.SineEase;
 
 #endregion

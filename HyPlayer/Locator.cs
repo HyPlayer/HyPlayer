@@ -5,7 +5,6 @@ using HyPlayer.UWP.Chopin.Abstractions.Models;
 using HyPlayer.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Net.Http;
 
 
 namespace HyPlayer;

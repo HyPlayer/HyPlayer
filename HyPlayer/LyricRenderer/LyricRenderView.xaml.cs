@@ -5,7 +5,6 @@ using Microsoft.Graphics.Canvas;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Timers;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;

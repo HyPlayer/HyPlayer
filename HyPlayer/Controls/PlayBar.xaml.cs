@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
@@ -973,7 +974,7 @@ DoubleAnimation verticalAnimation;
             : "\uE006";
     }
 
-    private async void HyPlayListOnOnLoginDone()
+    private void HyPlayListOnOnLoginDone()
     {
         _ = Task.Run(async () =>
         {
@@ -996,7 +997,7 @@ DoubleAnimation verticalAnimation;
                 // ignored
             }
         });
-        
+
     }
 
     private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)
