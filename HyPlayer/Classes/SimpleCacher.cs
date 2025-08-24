@@ -1,5 +1,4 @@
 #nullable enable
-using FastEnumUtility;
 using Newtonsoft.Json;
 using System;
 using System.IO;
@@ -30,7 +29,7 @@ public static class SimpleCacher
         {
             await InitializeAsync();
         }
-        var type = FastEnum.GetName(cacheType);
+        var type = cacheType.ToString();
 
         // create new type dir
         var dir = await cacheFolder!.CreateFolderAsync(type, CreationCollisionOption.OpenIfExists);
@@ -53,7 +52,7 @@ public static class SimpleCacher
                     var rst = JsonConvert.DeserializeObject<T>(content);
                     return rst;
                 }
-                catch (Exception e)
+                catch
                 {
                     if (forceUseCache)
                         return default;
@@ -88,7 +87,7 @@ public static class SimpleCacher
             var file = await dir.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
             await FileIO.WriteTextAsync(file, json);
         }
-        catch (Exception e)
+        catch
         {
             //ignore
         }
@@ -106,7 +105,7 @@ public static class SimpleCacher
             throw new InvalidOperationException("Cache folder is not initialized. Call InitializeAsync first.");
         }
 
-        var dir = await cacheFolder.CreateFolderAsync(FastEnum.GetName(type)!, CreationCollisionOption.OpenIfExists);
+        var dir = await cacheFolder.CreateFolderAsync(type.ToString()!, CreationCollisionOption.OpenIfExists);
         var files = await dir.GetFilesAsync();
         foreach (var file in files)
         {
@@ -128,7 +127,7 @@ public static class SimpleCacher
             throw new InvalidOperationException("Cache folder is not initialized. Call InitializeAsync first.");
         }
 
-        var dir = await cacheFolder.CreateFolderAsync(FastEnum.GetName(type)!, CreationCollisionOption.OpenIfExists);
+        var dir = await cacheFolder.CreateFolderAsync(type.ToString()!, CreationCollisionOption.OpenIfExists);
         var files = await dir.GetFilesAsync();
         foreach (var file in files)
         {

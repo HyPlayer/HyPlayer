@@ -92,6 +92,7 @@ public static class UpdateManager
                 UpdateSource.Canary => 5,
                 UpdateSource.Release => 4,
                 UpdateSource.Dogfood => 6,
+                _ =>  4,
             })}/latest"));
         if (!versionsResponse.IsSuccessStatusCode)
         {
@@ -177,7 +178,7 @@ public static class UpdateManager
             }
             else
             {
-                Common.Invoke(async () =>
+                _ = Common.Invoke(async () =>
                 {
                     ContentDialog contentDialog = new ContentDialog();
                     contentDialog.Title = title;

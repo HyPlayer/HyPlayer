@@ -1,5 +1,7 @@
 ﻿#region
 
+using CommunityToolkit.WinUI;
+using CommunityToolkit.WinUI.Controls;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
@@ -24,6 +26,7 @@ using Windows.System.Profile;
 using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.ViewManagement;
+using Windows.UI.WindowManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
@@ -68,16 +71,6 @@ public sealed partial class BasePage : Page
         }
         HyPlayList.OnPlayItemChange += OnChangePlayItem;
         HyPlayList.OnSongCoverChanged += HyPlayList_OnSongCoverChanged;
-        if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Desktop" && Common.Setting.EnableTitleBarImmerse)
-        {
-            CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
-            Window.Current.SetTitleBar(AppTitleBar);
-        }
-        else if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
-        {
-            var result = ApplicationViewScaling.TrySetDisableLayoutScaling(true);
-            ApplicationView.GetForCurrentView().SetDesiredBoundsMode(ApplicationViewBoundsMode.UseCoreWindow);
-        }
 
         ApplicationView.TerminateAppOnFinalViewClose = false;
         Common.BaseFrame = BaseFrame;

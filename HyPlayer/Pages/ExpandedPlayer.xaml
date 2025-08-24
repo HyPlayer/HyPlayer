@@ -430,7 +430,6 @@
                                         Name="SingerHyperlinkBtn"
                                         Click="TextBlockSinger_OnTapped"
                                         FontSize="20"
-                                        FontWeight="SemiBold"
                                         Foreground="{x:Bind hyplayer:Common.BrushManagement.AccentBrush, Mode=OneWay}"
                                         Style="{StaticResource TextBlockButtonStyle}">
                                         <controls1:AutoScrollView IsPlaying="True">
@@ -441,7 +440,6 @@
                                         Name="AlbumHyperlinkBtn"
                                         Click="AlbumHyperlinkBtn_OnTapped"
                                         FontSize="20"
-                                        FontWeight="SemiBold"
                                         Foreground="{x:Bind hyplayer:Common.BrushManagement.AccentBrush, Mode=OneWay}"
                                         Style="{StaticResource TextBlockButtonStyle}">
                                         <controls1:AutoScrollView IsPlaying="True">

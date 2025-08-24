@@ -876,9 +876,7 @@
             <Grid.RenderTransform>
                 <TranslateTransform x:Name="MainBtnScale" />
             </Grid.RenderTransform>
-            <Grid
-                x:Name="MainBtnsGrid"
-                Grid.Row="0">
+            <Grid x:Name="MainBtnsGrid" Grid.Row="0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
                     <ColumnDefinition />
@@ -1010,9 +1008,10 @@
                         Margin="-5,0,-5,0"
                         Foreground="{x:Bind hy:Common.BrushManagement.AccentBrush, Mode=OneWay}"
                         ManipulationCompleted="SliderProgress_ManipulationCompleted"
-                        ManipulationMode="TranslateX" RequestedTheme="{x:Bind hy:Common.BrushManagement.AccentTheme,Mode=OneWay}"
+                        ManipulationMode="TranslateX"
                         ManipulationStarted="SliderProgress_ManipulationStarted"
-                        ManipulationStarting="SliderProgress_OnManipulationStarting">
+                        ManipulationStarting="SliderProgress_OnManipulationStarting"
+                        RequestedTheme="{x:Bind hy:Common.BrushManagement.AccentTheme, Mode=OneWay}">
 
                         <Slider.ThumbToolTipValueConverter>
                             <classes:ThumbConverter SecondValue="{Binding SecondValue}" />
@@ -1022,9 +1021,10 @@
                 </Border>
                 <TextBlock
                     x:Name="TextBlockTotalTime"
-                    Grid.Column="3" FontSize="16"
+                    Grid.Column="3"
                     Margin="4,7,0,0"
                     controls:DockPanel.Dock="Right"
+                    FontSize="16"
                     Foreground="{x:Bind hy:Common.BrushManagement.AccentBrush, Mode=OneWay}" />
 
             </Grid>

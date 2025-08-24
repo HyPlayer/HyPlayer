@@ -1,5 +1,6 @@
 ﻿#region
 
+using CommunityToolkit.WinUI;
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
@@ -13,14 +14,17 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
+using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.System;
 using Windows.System.Profile;
 using Windows.UI;
+using Windows.UI.Core;
 using Windows.UI.Notifications;
 using Windows.UI.ViewManagement;
+using Windows.UI.WindowManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -411,6 +415,7 @@ DoubleAnimation verticalAnimation;
 
     private void BtnPlayStateChange_OnClick(object sender, RoutedEventArgs e)
     {
+        if (!HyPlayList.Player.PlayerCreated || HyPlayList.NowPlayingItem.PlayItem == null) return;
         if (HyPlayList.NowPlayingItem.PlayItem?.Name != null && HyPlayList.Player.GlobalPlaybackStatus == PlaybackStatus.Closed)
             _ = HyPlayList.LoadMediaSource(HyPlayList.List[HyPlayList.NowPlaying]);
         if (HyPlayList.IsPlaying)
@@ -473,6 +478,7 @@ DoubleAnimation verticalAnimation;
 
     public void ShowExpandedPlayer()
     {
+        if (!HyPlayList.Player.PlayerCreated || HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource == null) return;
         ButtonExpand.Visibility = Visibility.Collapsed;
         ButtonCollapse.Visibility = Visibility.Visible;
         PlayBarBackgroundFadeOut.Begin();
@@ -480,6 +486,7 @@ DoubleAnimation verticalAnimation;
         Common.PageMain.ExpandedPlayer.Visibility = Visibility.Visible;
         Common.PageMain.ExpandedPlayer.Navigate(typeof(ExpandedPlayer), null,
             new EntranceNavigationTransitionInfo());
+        Common.PageMain.GridPlayBar.BorderThickness = new Thickness(0);
         Common.PageMain.MainFrame.Visibility = Visibility.Collapsed;
         Common.PageMain.GridPlayBarMarginBlur.Visibility = Visibility.Collapsed;
         if (Common.Setting.expandAnimation && GridSongInfoContainer.Visibility == Visibility.Visible)
@@ -556,12 +563,14 @@ DoubleAnimation verticalAnimation;
         ButtonCollapse.Visibility = Visibility.Collapsed;
         Common.PageMain.GridPlayBarMarginBlur.Visibility = Visibility.Visible;
         Common.PageExpandedPlayer.Dispose();
+        Common.PageBase.AppTitleBar.ReleasePointerCaptures();
         Common.PageExpandedPlayer = null;
         Common.PageMain.ExpandedPlayer.Navigate(typeof(BlankPage));
-        //Common.PageMain.MainFrame.Visibility = Visibility.Visible;
+        Common.PageMain.GridPlayBar.BorderThickness = new Thickness(1);
         Common.PageMain.MainFrame.Visibility = Visibility.Visible;
         Common.PageMain.ExpandedPlayer.Visibility = Visibility.Collapsed;
-        Window.Current.SetTitleBar(Common.PageBase.AppTitleBar);
+        var region = Common.PageBase.AppTitleBar.FindDescendant("PART_DragRegion") as Grid;
+        Window.Current.SetTitleBar(region);
         Common.isExpanded = false;
         RefreshPlayBarCover(HyPlayList.NowPlayingItem, HyPlayList.CoverBuffer);
     }

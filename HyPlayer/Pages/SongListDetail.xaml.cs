@@ -38,8 +38,6 @@ public sealed partial class SongListDetail : Page, IDisposable
     public ObservableCollection<NCSong> Songs;
     private bool disposedValue = false;
     private DataTransferManager _dataTransferManager = DataTransferManager.GetForCurrentView();
-    private Task _songListLoaderTask;
-    private Task _songListColorLoaderTask;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
 
@@ -289,14 +287,14 @@ public sealed partial class SongListDetail : Page, IDisposable
         }
     }
 
-    protected override async void OnNavigatedFrom(NavigationEventArgs e)
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
         _cancellationTokenSource.Cancel();
         Dispose();
     }
 
-    protected async Task LoadPageData(string plid, bool loadPlaylist = false)
+    private async Task LoadPageData(string plid, bool loadPlaylist = false)
     {
         try
         {
@@ -328,7 +326,7 @@ public sealed partial class SongListDetail : Page, IDisposable
         }
         SongsList.ListSource = "pl" + playList?.plid;
         LoadSongListDetail();
-        _songListLoaderTask = LoadSongListItem();
+        _ = LoadSongListItem();
     }
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -403,7 +401,7 @@ public sealed partial class SongListDetail : Page, IDisposable
     {
         if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
         page++;
-        _songListLoaderTask = LoadPage();
+        _ = LoadPage();
     }
 
     private void ButtonComment_OnClick(object sender, RoutedEventArgs e)
@@ -513,7 +511,7 @@ public sealed partial class SongListDetail : Page, IDisposable
             page = 0;
             _ = LoadPageData(playList.plid, true);
         }
-        catch (Exception ex)
+        catch
         {
             // ignore
         }
