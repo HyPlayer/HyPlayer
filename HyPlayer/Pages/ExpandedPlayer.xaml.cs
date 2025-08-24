@@ -14,7 +14,6 @@ using HyPlayer.LyricRenderer.RollingCalculators;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Impressionist.Abstractions;
 using Impressionist.Implementations;
-using LyricParser.Abstraction;
 using Microsoft.Graphics.Canvas.Effects;
 using System;
 using System.Collections.Generic;
@@ -41,6 +40,8 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
+using ALRC.Converters.Enhancers;
+using HyPlayer.Classes.LyricParser.Abstraction;
 using ALRCLyricInfo = HyPlayer.Classes.ALRCLyricInfo;
 using Buffer = Windows.Storage.Streams.Buffer;
 using Color = System.Drawing.Color;
@@ -116,11 +117,13 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         LyricBox.Context.CurrentLyricTime = 0;
         LyricBox.Context.Debug = Common.Setting.LyricRendererDebugMode;
         LyricBox.Context.Effects.Blur = Common.Setting.lyricRenderBlur;
+        LyricBox.Fps = Common.Setting.LyricRendererFPS;
         LyricBox.Context.LineRollingEaseCalculator = Common.Setting.LineRollingCalculator switch
         {
             1 => new SinRollingCalculator(),
             2 => new LyricifyRollingCalculator(),
             3 => new SyncRollingCalculator(),
+            4 => new CircleEaseRollingCalculator(),
             _ => new ElasticEaseRollingCalculator()
         };
         LyricBox.Context.Effects.ScaleWhenFocusing = Common.Setting.lyricRenderScaleWhenFocusing;
@@ -602,7 +605,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             }
             else
             {
-                LyricBox.SetLyricLines(LrcConverter.Convert(alrcLyricInfo.alrc, alrcLyricInfo.LyricMetadata, alrcLyricInfo.SongMetadata));
+                LyricBox.SetLyricLines(LrcConverter.Convert(alrcLyricInfo.ALRC, alrcLyricInfo.LyricMetadata, alrcLyricInfo.SongMetadata));
             }
             LyricBox.ChangeAlignment(Common.Setting.lyricAlignment switch
             {
@@ -614,7 +617,9 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             if (HyPlayList.NowPlayingItem == null) return;
             LyricBox.Width = LyricWidth;
             LyricBox.ChangeRenderColor(Common.BrushManagement.IdleBrush.Color, Common.BrushManagement.AccentBrush.Color);
-            LyricBox.ChangeRenderFontSize((float)showsize, (Common.Setting.translationSize > 0) ? Common.Setting.translationSize : (float)showsize / 2, Common.Setting.romajiSize);
+            LyricBox.ChangeRenderFontSize((float)showsize, 
+                (Common.Setting.translationSize > 0) ? Common.Setting.translationSize : (float)showsize / 1.8F
+                , (Common.Setting.romajiSize > 0) ? Common.Setting.romajiSize : (float)showsize / 2);
         });
     }
 
@@ -958,7 +963,45 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 ".lys" => new LyricifySyllableConverter(),
                 _ => throw new ArgumentOutOfRangeException()
             };
-            var lrcs = LrcConverter.Convert(converter.Convert(qrc));
+
+            var lrcConverter = new ALRC.Converters.LrcConverter();
+            var lrcTranslationConverter = new LrcTranslationEnhancer();
+            var alrc = converter.Convert(qrc);
+            var lrc = lrcConverter.ConvertBack(alrc);
+            var trLrc = lrcTranslationConverter.Extract(alrc);
+            
+            ALRCLyricInfo ttmlLyric = new ALRCLyricInfo()
+            {
+                PureLyrics = lrc,
+                TrLyrics = trLrc,
+                ALRC = alrc,
+                LyricMetadata =
+                [
+                    new LyricInfoMetadata
+                    {
+                        Key = "lyric_source",
+                        Value = "本地歌词",
+                        DisplayName = "歌词来源",
+                        ActionUri = sf.Path
+                    }
+                ],
+                SongMetadata = []
+            };
+
+            HyPlayList.LyricInfo = new LyricInfo();
+            HyPlayList.LyricInfo.LyricMetadata = ttmlLyric.LyricMetadata;
+            HyPlayList.LyricInfo.PureLyricInfo = ttmlLyric;
+            HyPlayList.LyricInfo.SongMetadata = ttmlLyric.SongMetadata;
+            HyPlayList.LyricInfo.Lyrics = Utils.ConvertPureLyric(ttmlLyric.PureLyrics, true);
+            Utils.ConvertTranslation(ttmlLyric.TrLyrics, HyPlayList.LyricInfo.Lyrics);
+            if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
+            {
+                _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricInfo, HyPlayList.NowPlayingItem.PlayItem.Id,
+                    () => Task.FromResult(HyPlayList.LyricInfo)!, forceRefresh: true);
+            }
+         
+            
+            var lrcs = LrcConverter.Convert(alrc);
             LyricBox.SetLyricLines(lrcs);
         }
     }
@@ -1361,6 +1404,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 {
                     if (playItem != HyPlayList.NowPlayingItem) return;
                     var isBright = await IsBrightAsync(stream);
+                    Common.BrushManagement.IsBright = isBright;
                     await ImageAlbumSource.SetSourceAsync(stream);
                     if (Common.Setting.expandedPlayerBackgroundType == 0 && Background?.GetType() != typeof(ImageBrush))
                     {

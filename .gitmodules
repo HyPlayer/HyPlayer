@@ -1,9 +1,6 @@
 [submodule "Kawazu"]
 	path = Kawazu
 	url = https://github.com/HyPlayer/Kawazu.git
-[submodule "AudioEffectComponent"]
-	path = AudioEffectComponent
-	url = https://github.com/HyPlayer/AudioEffectComponent
 [submodule "LyricParser"]
 	path = LyricParser
 	url = https://github.com/HyPlayer/LyricParser

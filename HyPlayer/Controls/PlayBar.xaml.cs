@@ -335,15 +335,12 @@ DoubleAnimation verticalAnimation;
         {
             _ = Common.Invoke(() =>
             {
-                IconLiked.Foreground = isLiked
-                    ? new SolidColorBrush(Colors.Red)
-                    : new SolidColorBrush(Colors.Transparent);
+                IconLiked.Visibility = isLiked
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
                 FlyoutLiked.Foreground = isLiked
                     ? new SolidColorBrush(Colors.Red)
                     : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-                IconLiked.Glyph = isLiked
-                    ? "\uE00B"
-                    : "\uE006";
                 FlyoutLiked.Glyph = isLiked
                     ? "\uE00B"
                     : "\uE006";
@@ -965,15 +962,12 @@ DoubleAnimation verticalAnimation;
 
     private void HyPlayList_OnSongLikeStatusChange(bool isLiked)
     {
-        IconLiked.Foreground = isLiked
-            ? new SolidColorBrush(Colors.Red)
-            : new SolidColorBrush(Colors.Transparent);
+        IconLiked.Visibility = isLiked
+            ? Visibility.Visible
+            : Visibility.Collapsed;
         FlyoutLiked.Foreground = isLiked
             ? new SolidColorBrush(Colors.Red)
             : Application.Current.Resources["TextFillColorPrimaryBrush"] as Brush;
-        IconLiked.Glyph = isLiked
-            ? "\uE00B"
-            : "\uE006";
         FlyoutLiked.Glyph = isLiked
             ? "\uE00B"
             : "\uE006";
@@ -981,24 +975,28 @@ DoubleAnimation verticalAnimation;
 
     private async void HyPlayListOnOnLoginDone()
     {
-        if (HyPlayList.PlaySourceId == "local") return;
-        try
+        _ = Task.Run(async () =>
         {
-            var list = await HistoryManagement.GetcurPlayingListHistory();
-            if (list.Count > 0)
+            if (HyPlayList.PlaySourceId == "local") return;
+            try
             {
-                int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"].ToString(),
-                    out HyPlayList.NowPlaying);
-                HyPlayList.AppendNcSongs(list);
-                HyPlayList.NotifyPlayItemChanged(HyPlayList.NowPlayingItem);
-            }
+                var list = await HistoryManagement.GetcurPlayingListHistory();
+                if (list.Count > 0)
+                {
+                    int.TryParse(ApplicationData.Current.LocalSettings.Values["nowSongPointer"].ToString(),
+                        out HyPlayList.NowPlaying);
+                    HyPlayList.AppendNcSongs(list);
+                    HyPlayList.NotifyPlayItemChanged(HyPlayList.NowPlayingItem);
+                }
 
-            list.Clear();
-        }
-        catch
-        {
-            // ignored
-        }
+                list.Clear();
+            }
+            catch
+            {
+                // ignored
+            }
+        });
+        
     }
 
     private void SetABStartPointButton_Click(object sender, RoutedEventArgs e)

@@ -17,7 +17,10 @@ public static class UpdateManager
         MicrosoftStore,
         AppCenter,
         AppCenterCanary,
-        GitHub
+        GitHub,
+        Release,
+        Canary,
+        Dogfood
     }
 
     public class RemoteVersionResult
@@ -80,6 +83,33 @@ public static class UpdateManager
             UpdateLog = versionResp?.UpdateLog ?? ""
         };
     }
+
+    public static async Task<RemoteVersionResult> GetVersionFromSelfhost(UpdateSource source)
+    {
+        using var versionsResponse = await Common.HttpClient.GetAsync(
+            new Uri($"https://hyplayer.kengwang.com.cn/Channel/{(source switch {
+                UpdateSource.Canary => 5,
+                UpdateSource.Release => 4,
+                UpdateSource.Dogfood => 6,
+            })}/latest"));
+        if (!versionsResponse.IsSuccessStatusCode)
+        {
+            Common.AddToTeachingTipLists("获取更新失败", $"HTTP状态码:{versionsResponse.StatusCode}");
+            throw new Exception("获取更新失败");
+        }
+
+        var versionResp =
+            JsonConvert.DeserializeObject<LatestApplicationUpdate>(await versionsResponse.Content.ReadAsStringAsync());
+        return new RemoteVersionResult
+        {
+            UpdateSource = source,
+            IsMandatory = versionResp?.Mandatory ?? false,
+            Version = Version.Parse(versionResp?.Version ?? ""),
+            DownloadLink = versionResp?.DownloadUrl,
+            UpdateLog = versionResp?.UpdateLog ?? ""
+        };
+    }
+
     public static async Task<RemoteVersionResult> GetVersionFromGitHub()
     {
         using HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Get, new Uri("https://api.github.com/repos/HyPlayer/HyPlayer/releases/latest"));
@@ -120,40 +150,47 @@ public static class UpdateManager
             UpdateSource.AppCenter => await GetVersionFromAppCenter(false),
             UpdateSource.AppCenterCanary => await GetVersionFromAppCenter(true),
             UpdateSource.GitHub => await GetVersionFromGitHub(),
-            _ => throw new ArgumentOutOfRangeException(nameof(updateSource), updateSource, null)
+            _ => await GetVersionFromSelfhost(updateSource)
         };
     }
 
-    public static async Task PopupVersionCheck(bool isStartup = false)
+    public static Task PopupVersionCheck(bool isStartup = false)
     {
-        var remoteResult = await GetRemoteVersion((UpdateSource)Common.Setting.UpdateSource);
-        var localVersion = new Version(Package.Current.Id.Version.Major, Package.Current.Id.Version.Minor,
-            Package.Current.Id.Version.Build, Package.Current.Id.Version.Revision);
-        var title = "发现新版本";
-        if (remoteResult.Version == null || remoteResult.Version <= localVersion)
+        return Task.Run(async () =>
         {
-            if (isStartup) return;
-            title = "你已是最新版";
-        }
+            var remoteResult = await GetRemoteVersion((UpdateSource)Common.Setting.UpdateSource);
+            var localVersion = new Version(Package.Current.Id.Version.Major, Package.Current.Id.Version.Minor,
+                Package.Current.Id.Version.Build, Package.Current.Id.Version.Revision);
+            var title = "发现新版本";
+            if (remoteResult.Version == null || remoteResult.Version <= localVersion)
+            {
+                if (isStartup) return;
+                title = "你已是最新版";
+            }
 
-        var message = remoteResult.UpdateLog + "\r\n最新版本: " + remoteResult.Version + "\r\n当前版本: " +
-                      localVersion + (remoteResult.IsMandatory ? "\r\n此版本为重要更新, 建议更新" : "");
-        if (isStartup)
-        {
-            Common.AddToTeachingTipLists(title, message);
-        }
-        else
-        {
-            ContentDialog contentDialog = new ContentDialog();
-            contentDialog.Title = title;
-            contentDialog.Content = message;
-            contentDialog.PrimaryButtonText = "更新";
-            contentDialog.PrimaryButtonClick += async (_, _) =>
-                await Windows.System.Launcher.LaunchUriAsync(
-                    new Uri(remoteResult.DownloadLink));
-            contentDialog.CloseButtonText = "取消";
-            await contentDialog.ShowAsync();
-        }
+            var message = remoteResult.UpdateLog + "\r\n最新版本: " + remoteResult.Version + "\r\n当前版本: " +
+                          localVersion + (remoteResult.IsMandatory ? "\r\n此版本为重要更新, 建议更新" : "");
+            if (isStartup)
+            {
+                Common.AddToTeachingTipLists(title, message);
+            }
+            else
+            {
+                Common.Invoke(async () =>
+                {
+                    ContentDialog contentDialog = new ContentDialog();
+                    contentDialog.Title = title;
+                    contentDialog.Content = message;
+                    contentDialog.PrimaryButtonText = "更新";
+                    contentDialog.PrimaryButtonClick += async (_, _) =>
+                        await Windows.System.Launcher.LaunchUriAsync(
+                            new Uri(remoteResult.DownloadLink));
+                    contentDialog.CloseButtonText = "取消";
+                    await contentDialog.ShowAsync();
+                });
+            }
+        });
+        
     }
 
     public static async Task GetUserCanaryChannelAvailability(string userEmail)

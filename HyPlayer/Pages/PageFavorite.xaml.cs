@@ -94,15 +94,22 @@ public sealed partial class PageFavorite : Page, IDisposable
         if (disposedValue) throw new ObjectDisposedException(nameof(PageFavorite));
         try
         {
-            var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.DjChannelSubscribedApi, _cancellationToken);
-            if (json.IsError)
-            {
-                Common.AddToTeachingTipLists("加载订阅播客列表错误", json.Error.Message);
-                return;
-            }
+            var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "djchannel_subscribed",
+                async () =>
+                {
+                    var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.DjChannelSubscribedApi, _cancellationToken);
+                    if (json.IsError)
+                    {
+                        Common.AddToTeachingTipLists("加载订阅播客列表错误", json.Error.Message);
+                        return null;
+                    }
 
-            BtnLoadMore.Visibility = json.Value?.Data?.HasMore is true ? Visibility.Visible : Visibility.Collapsed;
-            foreach (var pljs in json.Value?.Data?.Data ?? [])
+                    return json.Value;
+                });
+            
+
+            BtnLoadMore.Visibility = jv.Data?.HasMore is true ? Visibility.Visible : Visibility.Collapsed;
+            foreach (var pljs in jv.Data?.Data ?? [])
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 ItemContainer.ListItems.Add(new SimpleListItem
@@ -131,21 +138,26 @@ public sealed partial class PageFavorite : Page, IDisposable
         if (disposedValue) throw new ObjectDisposedException(nameof(PageFavorite));
         try
         {
-            var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.ArtistSublistApi,
-                new ArtistSublistRequest()
+            var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "artist_sublist",
+                async () =>
                 {
-                    Limit = 25,
-                    Offset = page * 25
+                    var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.ArtistSublistApi,
+                        new ArtistSublistRequest()
+                        {
+                            Limit = 25,
+                            Offset = page * 25
+                        });
+                    if (json.IsError)
+                    {
+                        Common.AddToTeachingTipLists("加载关注歌手列表错误", json.Error.Message);
+                        return null;
+                    }
+
+                    return json.Value;
                 });
 
-            if (json.IsError)
-            {
-                Common.AddToTeachingTipLists("加载关注歌手列表错误", json.Error.Message);
-                return;
-            }
-
-            BtnLoadMore.Visibility = json.Value.HasMore ? Visibility.Visible : Visibility.Collapsed;
-            foreach (var singerjson in json.Value.Artists ?? [])
+            BtnLoadMore.Visibility = jv.HasMore ? Visibility.Visible : Visibility.Collapsed;
+            foreach (var singerjson in jv.Artists ?? [])
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 ItemContainer.ListItems.Add(new SimpleListItem
@@ -172,19 +184,26 @@ public sealed partial class PageFavorite : Page, IDisposable
         if (disposedValue) throw new ObjectDisposedException(nameof(PageFavorite));
         try
         {
-            var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.AlbumSublistApi,
-                new AlbumSublistRequest()
+            var json = await SimpleCacher.GetOrCreateCacheAsync(CacheType.Login, "album_sublist",
+                async () =>
                 {
-                    Limit = 25,
-                    Offset = page * 25
+                    var jv = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.AlbumSublistApi,
+                        new AlbumSublistRequest()
+                        {
+                            Limit = 25,
+                            Offset = page * 25
+                        }, _cancellationToken);
+                    if (jv.IsError)
+                    {
+                        Common.AddToTeachingTipLists("加载收藏专辑列表错误", jv.Error?.Message);
+                        return null;
+                    }
+
+                    return jv.Value;
                 });
-            if (json.IsError)
-            {
-                Common.AddToTeachingTipLists("加载关注专辑列表错误", json.Error.Message);
-                return;
-            }
-            BtnLoadMore.Visibility = json.Value?.HasMore is true ? Visibility.Visible : Visibility.Collapsed;
-            foreach (var albumjson in json.Value?.Data ?? [])
+            
+            BtnLoadMore.Visibility = json?.HasMore is true ? Visibility.Visible : Visibility.Collapsed;
+            foreach (var albumjson in json?.Data ?? [])
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 ItemContainer.ListItems.Add(new SimpleListItem

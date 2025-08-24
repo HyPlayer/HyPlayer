@@ -43,7 +43,8 @@
         <controls1:PivotView Grid.Row="1" FontFamily="Black">
             <controls1:PivotEx>
                 <PivotItem FontFamily="Thick" Header="歌词设置">
-                    <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
+                    <Grid>
+                        <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
                         <StackPanel
                             x:Name="StackPanelLyricSet"
                             Margin="20,0,20,150"
@@ -130,13 +131,13 @@
                                             ValueChanged="LyricSize_OnValueChanged"
                                             Value="{x:Bind hyplayer:Common.Setting.translationSize, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="罗马字大小">
+                                    <controls3:SettingsCard Description="0为自动" Header="罗马字大小">
                                         <controls:NumberBox
                                             x:Name="RomajiSize"
                                             MinWidth="100"
                                             HorizontalAlignment="Right"
                                             LargeChange="5"
-                                            Minimum="1"
+                                            Minimum="0"
                                             SmallChange="1"
                                             SpinButtonPlacementMode="Compact"
                                             ValueChanged="LyricSize_OnValueChanged"
@@ -328,6 +329,15 @@
                                             SpinButtonPlacementMode="Compact"
                                             Value="{x:Bind hyplayer:Common.Setting.lyricLineSpacing, Mode=TwoWay}" />
                                     </controls3:SettingsCard>
+                                    <controls3:SettingsCard Header="歌词帧率">
+                                        <controls:NumberBox
+                                            MinWidth="100"
+                                            HorizontalAlignment="Right"
+                                            LargeChange="5"
+                                            SmallChange="1"
+                                            SpinButtonPlacementMode="Compact"
+                                            Value="{x:Bind hyplayer:Common.Setting.LyricRendererFPS, Mode=TwoWay}" />
+                                    </controls3:SettingsCard>
                                     <controls3:SettingsCard Header="开启时启动热词">
                                         <ToggleSwitch
                                             MinWidth="10"
@@ -418,6 +428,7 @@
                                             <ComboBoxItem Content="三角函数" />
                                             <ComboBoxItem Content="Lyricify 函数" />
                                             <ComboBoxItem Content="同步线性函数" />
+                                            <ComboBoxItem Content="CircleEase" />
                                         </ComboBox>
                                     </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
@@ -425,9 +436,11 @@
                             </controls3:SettingsExpander>
                         </StackPanel>
                     </ScrollViewer>
+                    </Grid>
                 </PivotItem>
                 <PivotItem FontFamily="Thick" Header="播放设置">
-                    <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
+                    <Grid>
+                        <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
                         <StackPanel
                             Margin="20,0,20,150"
                             Orientation="Vertical"
@@ -667,9 +680,11 @@
                             </controls3:SettingsExpander>
                         </StackPanel>
                     </ScrollViewer>
+                    </Grid>
                 </PivotItem>
                 <PivotItem FontFamily="Thick" Header="显示设置">
-                    <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
+                    <Grid>
+                        <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
 
                         <StackPanel Margin="20,0,20,160" Spacing="20">
                             <controls3:SettingsExpander
@@ -1027,11 +1042,12 @@
                             </controls3:SettingsExpander>
                         </StackPanel>
                     </ScrollViewer>
+                    </Grid>
                 </PivotItem>
                 <PivotItem FontFamily="Thick" Header="存储设置">
                     <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
-
-                        <StackPanel
+                        <Grid>
+                            <StackPanel
                             Margin="20,0,20,150"
                             Orientation="Vertical"
                             Spacing="20">
@@ -1089,13 +1105,21 @@
                                             <TextBox
                                                 x:Name="TextBoxCacheDir"
                                                 Width="256"
-                                                IsEnabled="{x:Bind hyplayer:Common.Setting.enableCache, Mode=OneWay}"
                                                 Text="{x:Bind hyplayer:Common.Setting.cacheDir, Mode=OneWay}" />
                                             <Button
                                                 x:Name="ButtonCacheSelect"
                                                 Click="ButtonCacheSelect_OnClick"
-                                                Content="选择"
-                                                IsEnabled="{x:Bind hyplayer:Common.Setting.enableCache, Mode=OneWay}" />
+                                                Content="选择" />
+                                        </StackPanel>
+                                    </controls3:SettingsCard>
+                                    <controls3:SettingsCard Header="清理所有缓存">
+                                        <StackPanel
+                                            HorizontalAlignment="Right"
+                                            Orientation="Horizontal"
+                                            Spacing="8">
+                                            <Button
+                                                Click="BtnClearCache_Click"
+                                                Content="清理" />
                                         </StackPanel>
                                     </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
@@ -1220,10 +1244,12 @@
 
 
                         </StackPanel>
+                        </Grid>
                     </ScrollViewer>
                 </PivotItem>
                 <PivotItem FontFamily="Thick" Header="实验室🧪">
-                    <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
+                    <Grid>
+                        <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
                         <StackPanel
                             Margin="20,0,20,150"
                             Orientation="Vertical"
@@ -1317,7 +1343,10 @@
                             <controls3:SettingsCard Header="开启高级音乐历史存储 (超过 100 首)">
                                 <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.advancedMusicHistoryStorage, Mode=TwoWay}" />
                             </controls3:SettingsCard>
-                            <controls3:SettingsCard Header="开启播放缓存">
+                            <controls3:SettingsCard Description="将会在第二次请求时加速请求, 离线时从本地缓存获取" Header="开启请求数据缓存">
+                                <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.enableApiCache, Mode=TwoWay}" />
+                            </controls3:SettingsCard>
+                            <controls3:SettingsCard Description="可能造成无法播放, 请勿轻易开启" Header="开启播放音频缓存">
                                 <CheckBox Margin="0,0,-100,0" IsChecked="{x:Bind hyplayer:Common.Setting.enableCache, Mode=TwoWay}" />
                             </controls3:SettingsCard>
                             <controls3:SettingsCard Header="本地文件扫描渐进式加载 (Progressive Loading)">
@@ -1409,9 +1438,11 @@
 
                         </StackPanel>
                     </ScrollViewer>
+                    </Grid>
                 </PivotItem>
                 <PivotItem FontFamily="Thick" Header="关于">
-                    <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
+                    <Grid>
+                        <ScrollViewer Margin="0,48,0,0" VerticalScrollMode="Enabled">
                         <Grid Margin="0,0,0,150">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -1950,8 +1981,7 @@
                         </Grid>
 
                     </ScrollViewer>
-
-
+                    </Grid>
                 </PivotItem>
             </controls1:PivotEx>
         </controls1:PivotView>

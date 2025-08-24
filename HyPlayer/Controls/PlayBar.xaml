@@ -187,7 +187,424 @@
 
 
         </Storyboard>
-
+        <Style TargetType="Slider">
+            <Setter Property="Background" Value="{ThemeResource SystemControlBackgroundBaseLowRevealBorderBrush}" />
+            <Setter Property="BorderThickness" Value="{ThemeResource SliderBorderThemeThickness}" />
+            <Setter Property="Foreground" Value="{ThemeResource SystemControlBackgroundAccentRevealBorderBrush}" />
+            <Setter Property="BorderBrush" Value="{ThemeResource ApplicationPageBackgroundThemeBrush}" />
+            <Setter Property="FontFamily" Value="{ThemeResource ContentControlThemeFontFamily}" />
+            <Setter Property="FontSize" Value="{ThemeResource ControlContentThemeFontSize}" />
+            <Setter Property="ManipulationMode" Value="None" />
+            <Setter Property="UseSystemFocusVisuals" Value="True" />
+            <Setter Property="FocusVisualMargin" Value="0" />
+            <Setter Property="IsFocusEngagementEnabled" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid Margin="{TemplateBinding Padding}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <ContentPresenter
+                                x:Name="HeaderContentPresenter"
+                                Margin="{ThemeResource SliderHeaderThemeMargin}"
+                                x:DeferLoadStrategy="Lazy"
+                                Content="{TemplateBinding Header}"
+                                ContentTemplate="{TemplateBinding HeaderTemplate}"
+                                FontWeight="{ThemeResource SliderHeaderThemeFontWeight}"
+                                Foreground="{ThemeResource SliderHeaderForeground}"
+                                TextWrapping="Wrap"
+                                Visibility="Collapsed" />
+                            <Grid
+                                x:Name="SliderContainer"
+                                Grid.Row="1"
+                                Background="Transparent"
+                                Control.IsTemplateFocusTarget="True">
+                                <Grid x:Name="HorizontalTemplate" MinHeight="44">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="18" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="18" />
+                                    </Grid.RowDefinitions>
+                                    <Rectangle
+                                        x:Name="HorizontalTrackRect"
+                                        Grid.Row="1"
+                                        Grid.ColumnSpan="3"
+                                        Height="{ThemeResource SliderTrackThemeHeight}"
+                                        Margin="12,0"
+                                        Fill="{TemplateBinding Background}"
+                                        RadiusX="2"
+                                        RadiusY="2" />
+                                    <Rectangle
+                                        x:Name="HorizontalDecreaseRect"
+                                        Grid.Row="1"
+                                        Margin="12,0"
+                                        Fill="{TemplateBinding Foreground}"
+                                        Opacity="0.6"
+                                        RadiusX="2"
+                                        RadiusY="2" />
+                                    <TickBar
+                                        x:Name="TopTickBar"
+                                        Grid.ColumnSpan="3"
+                                        Height="{ThemeResource SliderOutsideTickBarThemeHeight}"
+                                        Margin="0,0,0,4"
+                                        VerticalAlignment="Bottom"
+                                        Fill="{ThemeResource SliderTickBarFill}"
+                                        Visibility="Collapsed" />
+                                    <TickBar
+                                        x:Name="HorizontalInlineTickBar"
+                                        Grid.Row="1"
+                                        Grid.ColumnSpan="3"
+                                        Height="{ThemeResource SliderTrackThemeHeight}"
+                                        Fill="{ThemeResource SliderInlineTickBarFill}"
+                                        Visibility="Collapsed" />
+                                    <TickBar
+                                        x:Name="BottomTickBar"
+                                        Grid.Row="2"
+                                        Grid.ColumnSpan="3"
+                                        Height="{ThemeResource SliderOutsideTickBarThemeHeight}"
+                                        Margin="0,4,0,0"
+                                        VerticalAlignment="Top"
+                                        Fill="{ThemeResource SliderTickBarFill}"
+                                        Visibility="Collapsed" />
+                                    <Thumb
+                                        x:Name="HorizontalThumb"
+                                        Grid.Row="0"
+                                        Grid.RowSpan="3"
+                                        Grid.Column="1"
+                                        Width="12"
+                                        Height="12"
+                                        Margin="-24,0,0,0"
+                                        AutomationProperties.AccessibilityView="Raw"
+                                        Background="{TemplateBinding BorderBrush}"
+                                        DataContext="{TemplateBinding Value}"
+                                        FocusVisualMargin="0"
+                                        Foreground="{TemplateBinding Foreground}"
+                                        RenderTransformOrigin="0.5,0.5"
+                                        Style="{StaticResource RoundThumbStyle}">
+                                        <Thumb.RenderTransform>
+                                            <ScaleTransform x:Name="HorizontalThumbScale" ScaleX="1" ScaleY="1" />
+                                        </Thumb.RenderTransform>
+                                    </Thumb>
+                                </Grid>
+                                <Grid
+                                    x:Name="VerticalTemplate"
+                                    MinWidth="44"
+                                    Visibility="Collapsed">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="18" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="18" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="*" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Rectangle
+                                        x:Name="VerticalTrackRect"
+                                        Grid.RowSpan="3"
+                                        Grid.Column="1"
+                                        Width="{ThemeResource SliderTrackThemeHeight}"
+                                        Margin="0,12"
+                                        Fill="{TemplateBinding Background}" />
+                                    <Rectangle
+                                        x:Name="VerticalDecreaseRect"
+                                        Grid.Row="2"
+                                        Grid.Column="1"
+                                        Margin="0,12"
+                                        Fill="{TemplateBinding Foreground}" />
+                                    <TickBar
+                                        x:Name="LeftTickBar"
+                                        Grid.RowSpan="3"
+                                        Width="{ThemeResource SliderOutsideTickBarThemeHeight}"
+                                        Margin="0,0,4,0"
+                                        HorizontalAlignment="Right"
+                                        Fill="{ThemeResource SliderTickBarFill}"
+                                        Visibility="Collapsed" />
+                                    <TickBar
+                                        x:Name="VerticalInlineTickBar"
+                                        Grid.RowSpan="3"
+                                        Grid.Column="1"
+                                        Width="{ThemeResource SliderTrackThemeHeight}"
+                                        Fill="{ThemeResource SliderInlineTickBarFill}"
+                                        Visibility="Collapsed" />
+                                    <TickBar
+                                        x:Name="RightTickBar"
+                                        Grid.RowSpan="3"
+                                        Grid.Column="2"
+                                        Width="{ThemeResource SliderOutsideTickBarThemeHeight}"
+                                        Margin="4,0,0,0"
+                                        HorizontalAlignment="Left"
+                                        Fill="{ThemeResource SliderTickBarFill}"
+                                        Visibility="Collapsed" />
+                                    <Thumb
+                                        x:Name="VerticalThumb"
+                                        Grid.Row="1"
+                                        Grid.Column="0"
+                                        Grid.ColumnSpan="3"
+                                        Width="24"
+                                        Height="24"
+                                        Margin="0,0,0,-24"
+                                        AutomationProperties.AccessibilityView="Raw"
+                                        Background="{TemplateBinding BorderBrush}"
+                                        DataContext="{TemplateBinding Value}"
+                                        FocusVisualMargin="0"
+                                        Foreground="{TemplateBinding Foreground}"
+                                        RenderTransformOrigin="0.5,0.5"
+                                        Style="{StaticResource RoundThumbStyle}">
+                                        <Thumb.RenderTransform>
+                                            <ScaleTransform x:Name="VerticalThumbScale" ScaleX="1" ScaleY="1" />
+                                        </Thumb.RenderTransform>
+                                    </Thumb>
+                                </Grid>
+                            </Grid>
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal">
+                                        <VisualState.Setters>
+                                            <Setter Target="HorizontalThumb.(RevealBrush.State)" Value="Normal" />
+                                            <Setter Target="VerticalThumb.(RevealBrush.State)" Value="Normal" />
+                                        </VisualState.Setters>
+                                        <Storyboard>
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="HorizontalThumbScale"
+                                                Storyboard.TargetProperty="ScaleX"
+                                                To="1">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CircleEase EasingMode="EaseOut" />
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="VerticalThumbScale"
+                                                Storyboard.TargetProperty="ScaleX"
+                                                To="1">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <QuinticEase />
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="HorizontalThumbScale"
+                                                Storyboard.TargetProperty="ScaleY"
+                                                To="1">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CircleEase EasingMode="EaseOut" />
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="VerticalThumbScale"
+                                                Storyboard.TargetProperty="ScaleY"
+                                                To="1">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CircleEase EasingMode="EaseOut" />
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation
+                                                EnableDependentAnimation="True"
+                                                Storyboard.TargetName="VerticalThumb"
+                                                Storyboard.TargetProperty="MinWidth"
+                                                To="2">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CircleEase EasingMode="EaseOut" />
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation
+                                                EnableDependentAnimation="True"
+                                                Storyboard.TargetName="HorizontalThumb"
+                                                Storyboard.TargetProperty="MinWidth"
+                                                To="2">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CircleEase EasingMode="EaseOut" />
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </VisualState>
+                                    <VisualState x:Name="Pressed">
+                                        <VisualState.Setters>
+                                            <Setter Target="HorizontalThumb.(RevealBrush.State)" Value="Pressed" />
+                                            <Setter Target="VerticalThumb.(RevealBrush.State)" Value="Pressed" />
+                                        </VisualState.Setters>
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="HorizontalThumbScale" Storyboard.TargetProperty="ScaleY">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="1.2" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="VerticalThumbScale" Storyboard.TargetProperty="ScaleY">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="1.2" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="HorizontalThumbScale" Storyboard.TargetProperty="ScaleX">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="1.2" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="VerticalThumbScale" Storyboard.TargetProperty="ScaleX">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="1.2" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="HorizontalDecreaseRect" Storyboard.TargetProperty="Opacity">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="0.8" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="VerticalDecreaseRect" Storyboard.TargetProperty="Opacity">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="0.8" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="HorizontalThumb" Storyboard.TargetProperty="MinWidth">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="0" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="VerticalThumb" Storyboard.TargetProperty="MinWidth">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="0" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+                                    <VisualState x:Name="Disabled">
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="HeaderContentPresenter" Storyboard.TargetProperty="Foreground">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SliderHeaderForegroundDisabled}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="HorizontalDecreaseRect" Storyboard.TargetProperty="Fill">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SliderTrackValueFillDisabled}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="HorizontalTrackRect" Storyboard.TargetProperty="Fill">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SliderTrackFillDisabled}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="VerticalDecreaseRect" Storyboard.TargetProperty="Fill">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SliderTrackValueFillDisabled}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="VerticalTrackRect" Storyboard.TargetProperty="Fill">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SliderTrackFillDisabled}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="HorizontalThumb" Storyboard.TargetProperty="Background">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ButtonRevealBackgroundDisabled}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="VerticalThumb" Storyboard.TargetProperty="Background">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource ButtonRevealBackgroundDisabled}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="TopTickBar" Storyboard.TargetProperty="Fill">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SliderTickBarFillDisabled}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="BottomTickBar" Storyboard.TargetProperty="Fill">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SliderTickBarFillDisabled}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="LeftTickBar" Storyboard.TargetProperty="Fill">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SliderTickBarFillDisabled}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="RightTickBar" Storyboard.TargetProperty="Fill">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SliderTickBarFillDisabled}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="SliderContainer" Storyboard.TargetProperty="Background">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="{ThemeResource SliderContainerBackgroundDisabled}" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+                                    <VisualState x:Name="PointerOver">
+                                        <VisualState.Setters>
+                                            <Setter Target="HorizontalThumb.(RevealBrush.State)" Value="PointerOver" />
+                                            <Setter Target="VerticalThumb.(RevealBrush.State)" Value="PointerOver" />
+                                        </VisualState.Setters>
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="HorizontalDecreaseRect" Storyboard.TargetProperty="Opacity">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="0.7" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="VerticalDecreaseRect" Storyboard.TargetProperty="Opacity">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="0.7" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="HorizontalThumbScale"
+                                                Storyboard.TargetProperty="ScaleX"
+                                                To="1.2">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CircleEase EasingMode="EaseOut" />
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="VerticalThumbScale"
+                                                Storyboard.TargetProperty="ScaleX"
+                                                To="1.2">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CircleEase EasingMode="EaseOut" />
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="HorizontalThumbScale"
+                                                Storyboard.TargetProperty="ScaleY"
+                                                To="1.2">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CircleEase EasingMode="EaseOut" />
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation
+                                                Storyboard.TargetName="VerticalThumbScale"
+                                                Storyboard.TargetProperty="ScaleY"
+                                                To="1.2">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CircleEase EasingMode="EaseOut" />
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation
+                                                EnableDependentAnimation="True"
+                                                Storyboard.TargetName="VerticalThumb"
+                                                Storyboard.TargetProperty="MinWidth"
+                                                To="0">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <QuinticEase />
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                            <DoubleAnimation
+                                                EnableDependentAnimation="True"
+                                                Storyboard.TargetName="HorizontalThumb"
+                                                Storyboard.TargetProperty="MinWidth"
+                                                To="0">
+                                                <DoubleAnimation.EasingFunction>
+                                                    <CircleEase EasingMode="EaseOut" />
+                                                </DoubleAnimation.EasingFunction>
+                                            </DoubleAnimation>
+                                        </Storyboard>
+                                    </VisualState>
+                                </VisualStateGroup>
+                                <VisualStateGroup x:Name="FocusEngagementStates">
+                                    <VisualState x:Name="FocusDisengaged" />
+                                    <VisualState x:Name="FocusEngagedHorizontal">
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="SliderContainer" Storyboard.TargetProperty="(Control.IsTemplateFocusTarget)">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="False" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="HorizontalThumb" Storyboard.TargetProperty="(Control.IsTemplateFocusTarget)">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="True" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+                                    <VisualState x:Name="FocusEngagedVertical">
+                                        <Storyboard>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="SliderContainer" Storyboard.TargetProperty="(Control.IsTemplateFocusTarget)">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="False" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                            <ObjectAnimationUsingKeyFrames Storyboard.TargetName="VerticalThumb" Storyboard.TargetProperty="(Control.IsTemplateFocusTarget)">
+                                                <DiscreteObjectKeyFrame KeyTime="0" Value="True" />
+                                            </ObjectAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="RoundThumbStyle" TargetType="Thumb">
+            <Setter Property="MinWidth" Value="4" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Thumb">
+                        <Ellipse
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            Fill="{TemplateBinding Foreground}"
+                            StrokeThickness="{TemplateBinding MinWidth}" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
     <Grid
         x:Name="GridThis"
@@ -453,7 +870,7 @@
             Margin="-200,0,-200,0"
             Canvas.ZIndex="0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="5*" />
+                <RowDefinition Height="3*" />
                 <RowDefinition Height="2*" />
             </Grid.RowDefinitions>
             <Grid.RenderTransform>
@@ -461,8 +878,7 @@
             </Grid.RenderTransform>
             <Grid
                 x:Name="MainBtnsGrid"
-                Grid.Row="0"
-                Margin="0,8,0,0">
+                Grid.Row="0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
                     <ColumnDefinition />
@@ -489,15 +905,15 @@
                     ToolTipService.ToolTip="{x:Bind FlyoutPlayRollType.Text, Mode=OneWay}">
                     <FontIcon
                         x:Name="IconPlayType"
-                        FontSize="13"
+                        FontSize="16"
                         Foreground="{x:Bind hy:Common.BrushManagement.AccentBrush, Mode=OneWay}"
                         Glyph="&#xE169;" />
                 </Button>
                 <Button
                     x:Name="BtnPreviousSong"
                     Grid.Column="3"
-                    Width="38"
-                    Height="38"
+                    Width="40"
+                    Height="40"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     Background="#22ffffff"
@@ -506,7 +922,7 @@
                     CornerRadius="30">
                     <FontIcon
                         x:Name="IconPrevious"
-                        FontSize="13"
+                        FontSize="15"
                         Foreground="{x:Bind hy:Common.BrushManagement.AccentBrush, Mode=OneWay}"
                         Glyph="&#xF8AC;" />
                 </Button>
@@ -526,7 +942,7 @@
                     Opacity="0.9">
                     <FontIcon
                         x:Name="PlayStateIcon"
-                        FontSize="18"
+                        FontSize="24"
                         Foreground="{x:Bind hy:Common.BrushManagement.AccentBrush, Mode=OneWay}"
                         Glyph="&#xF5B0;" />
                     <!--  EDB4  -->
@@ -543,7 +959,7 @@
                     Click="BtnNextSong_OnClick"
                     CornerRadius="30">
                     <FontIcon
-                        FontSize="13"
+                        FontSize="{x:Bind IconPrevious.FontSize}"
                         Foreground="{x:Bind hy:Common.BrushManagement.AccentBrush, Mode=OneWay}"
                         Glyph="&#xF8AD;" />
                 </Button>
@@ -563,11 +979,12 @@
                             x:Name="IconLikedBackground"
                             FontSize="14"
                             Foreground="{x:Bind hy:Common.BrushManagement.AccentBrush, Mode=OneWay}"
-                            Glyph="{x:Bind IconLiked.Glyph}" />
+                            Glyph="&#xEB51;" />
                         <FontIcon
                             x:Name="IconLiked"
                             FontSize="14"
-                            Glyph="&#xE00B;" />
+                            Foreground="{x:Bind hy:Common.BrushManagement.AccentBrush, Mode=OneWay}"
+                            Glyph="&#xEB52;" />
                     </Grid>
                 </Button>
             </Grid>
@@ -583,27 +1000,30 @@
                 <TextBlock
                     x:Name="TextBlockNowTime"
                     Grid.Column="0"
-                    Margin="0,5,5,0"
+                    Margin="0,7,4,0"
                     controls:DockPanel.Dock="Left"
+                    FontSize="16"
                     Foreground="{x:Bind hy:Common.BrushManagement.AccentBrush, Mode=OneWay}" />
-                <Border Grid.Column="1" Padding="5,0,5,0">
+                <Border Grid.Column="1">
                     <Slider
                         x:Name="SliderProgress"
                         Margin="-5,0,-5,0"
+                        Foreground="{x:Bind hy:Common.BrushManagement.AccentBrush, Mode=OneWay}"
                         ManipulationCompleted="SliderProgress_ManipulationCompleted"
-                        ManipulationMode="TranslateX"
+                        ManipulationMode="TranslateX" RequestedTheme="{x:Bind hy:Common.BrushManagement.AccentTheme,Mode=OneWay}"
                         ManipulationStarted="SliderProgress_ManipulationStarted"
                         ManipulationStarting="SliderProgress_OnManipulationStarting">
+
                         <Slider.ThumbToolTipValueConverter>
                             <classes:ThumbConverter SecondValue="{Binding SecondValue}" />
-
                         </Slider.ThumbToolTipValueConverter>
+
                     </Slider>
                 </Border>
                 <TextBlock
                     x:Name="TextBlockTotalTime"
-                    Grid.Column="3"
-                    Margin="5,5,0,0"
+                    Grid.Column="3" FontSize="16"
+                    Margin="4,7,0,0"
                     controls:DockPanel.Dock="Right"
                     Foreground="{x:Bind hy:Common.BrushManagement.AccentBrush, Mode=OneWay}" />
 
@@ -713,9 +1133,9 @@
                                                     <StackPanel Orientation="Horizontal">
                                                         <TextBlock FontWeight="Bold" Text="{x:Bind Path=PlayItem.Name}" />
                                                         <TextBlock Foreground="Gray" Visibility="{x:Bind Path=PlayItem.Translation, Converter={StaticResource EmptyStringToVisibilityConverter}}">
-                                                            <Run Text=" ("></Run>
+                                                            <Run Text=" (" />
                                                             <Run Text="{x:Bind Path=PlayItem.Translation}" />
-                                                            <Run Text=")"></Run>
+                                                            <Run Text=")" />
                                                         </TextBlock>
                                                     </StackPanel>
                                                     <TextBlock Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}" Text="{x:Bind Path=PlayItem.ArtistString}" />

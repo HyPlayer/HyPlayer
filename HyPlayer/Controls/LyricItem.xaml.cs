@@ -3,7 +3,6 @@
 #nullable enable
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
-using LyricParser.Abstraction;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +13,7 @@ using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
+using HyPlayer.Classes.LyricParser.Abstraction;
 using SineEase = Windows.UI.Xaml.Media.Animation.SineEase;
 
 #endregion
@@ -106,7 +106,7 @@ public sealed partial class LyricItem : UserControl, IDisposable
         TextBoxPureLyric.FontSize = _lyricIsOnShow ? actualsize + Common.Setting.lyricScaleSize : actualsize;
         WordLyricContainer.FontSize = _lyricIsOnShow ? actualsize + Common.Setting.lyricScaleSize : actualsize;
         TextBoxTranslation.FontSize = _lyricIsOnShow ? actualsize + Common.Setting.lyricScaleSize : actualsize;
-        TextBoxSound.FontSize = Common.Setting.romajiSize;
+        TextBoxSound.FontSize = _lyricIsOnShow ? actualsize + Common.Setting.lyricScaleSize : actualsize;
     }
 
     public void RefreshWordColor(TimeSpan position)

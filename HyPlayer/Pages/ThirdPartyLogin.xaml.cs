@@ -6,6 +6,8 @@ using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.Classes;
+
 #endregion
 
 // https://go.microsoft.com/fwlink/?LinkId=234238 上介绍了“空白页”项模板
@@ -70,12 +72,13 @@ public sealed partial class ThirdPartyLogin : Page, IDisposable
         {
             LoadingRingContainer.Visibility = Visibility.Visible;
             var cookies = await sender.CoreWebView2.CookieManager.GetCookiesAsync("https://music.163.com");
-            var cookiestring = string.Empty;
             foreach (var cookie in cookies)
             {
-                Common.NeteaseAPI.Option.Cookies.Add(cookie.Name, cookie.Value);
+                Common.NeteaseAPI!.Option.Cookies.Add(cookie.Name, cookie.Value);
             }
-            await Common.PageBase.LoginDone();
+
+            await SimpleCacher.ClearCacheAsync(CacheType.Login);
+            await Common.PageBase!.LoginDone();
         }
     }
 

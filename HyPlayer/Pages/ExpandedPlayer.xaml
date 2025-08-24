@@ -172,9 +172,10 @@
         <media:AttachedCardShadow
             x:Key="AlbumShadow"
             x:Name="AlbumCoverDropShadow"
-            CornerRadius="12"
+            BlurRadius="48"
+            CornerRadius="16"
             Opacity="{x:Bind hyplayer:Common.Setting.expandedCoverShadowDepth, Converter={StaticResource ShadowConverter}}"
-            Offset="0,4"
+            Offset="0, 4"
             Color="Black" />
     </Page.Resources>
     <!--  Grid Beam~  -->
@@ -309,9 +310,9 @@
                     HorizontalAlignment="Stretch"
                     Tapped="LeftPanel_Tapped">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="*" />
+                        <RowDefinition Height="4*" />
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="10*" />
+                        <RowDefinition Height="11*" />
                     </Grid.RowDefinitions>
                     <Border x:Name="ShadowTarget" Grid.Row="1" />
                     <frieren:ImageEx
@@ -327,7 +328,7 @@
                         x:FieldModifier="public"
                         BorderBrush="Black"
                         BorderThickness="80"
-                        CornerRadius="12"
+                        CornerRadius="16"
                         IsCacheEnabled="False"
                         ManipulationCompleted="ImageAlbum_OnManipulationCompleted"
                         ManipulationDelta="ImageAlbum_OnManipulationDelta"
@@ -379,7 +380,7 @@
                         VerticalAlignment="Top"
                         IsTapEnabled="True"
                         Orientation="Vertical"
-                        Spacing="5">
+                        Spacing="12">
                         <frieren:ImageEx
                             x:Name="ImageAlbumImerssive"
                             MaxWidth="250"
@@ -406,41 +407,50 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
-                            <StackPanel x:Name="SongInfoContainer">
+                            <StackPanel x:Name="SongInfoContainer" Spacing="12">
                                 <TextBlock
                                     x:Name="TextBlockSongTitle"
-                                    FontSize="40"
+                                    HorizontalAlignment="Center"
+                                    FontSize="46"
                                     FontWeight="Bold"
                                     Foreground="{x:Bind hyplayer:Common.BrushManagement.AccentBrush, Mode=OneWay}"
+                                    HorizontalTextAlignment="Center"
                                     IsTextSelectionEnabled="True"
                                     TextWrapping="Wrap" />
 
 
-                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                <controls1:AlignableWrapPanel
+                                    HorizontalContentAlignment="Center"
+                                    HorizontalSpacing="12"
+                                    Orientation="Horizontal"
+                                    StretchChild="None"
+                                    VerticalSpacing="-6">
 
                                     <HyperlinkButton
                                         Name="SingerHyperlinkBtn"
                                         Click="TextBlockSinger_OnTapped"
-                                        FontSize="18"
+                                        FontSize="20"
+                                        FontWeight="SemiBold"
                                         Foreground="{x:Bind hyplayer:Common.BrushManagement.AccentBrush, Mode=OneWay}"
                                         Style="{StaticResource TextBlockButtonStyle}">
-                                        <controls1:AutoScrollView MaxWidth="300" IsPlaying="True">
+                                        <controls1:AutoScrollView IsPlaying="True">
                                             <TextBlock Name="SingerTextBlock" />
                                         </controls1:AutoScrollView>
                                     </HyperlinkButton>
                                     <HyperlinkButton
                                         Name="AlbumHyperlinkBtn"
                                         Click="AlbumHyperlinkBtn_OnTapped"
-                                        FontSize="18"
+                                        FontSize="20"
+                                        FontWeight="SemiBold"
                                         Foreground="{x:Bind hyplayer:Common.BrushManagement.AccentBrush, Mode=OneWay}"
                                         Style="{StaticResource TextBlockButtonStyle}">
-                                        <controls1:AutoScrollView MaxWidth="250" IsPlaying="True">
+                                        <controls1:AutoScrollView IsPlaying="True">
                                             <TextBlock x:Name="AlbumTextBlock" />
                                         </controls1:AutoScrollView>
 
                                     </HyperlinkButton>
 
-                                </StackPanel>
+                                </controls1:AlignableWrapPanel>
 
                             </StackPanel>
                             <!--<controls1:SelectableTextBox

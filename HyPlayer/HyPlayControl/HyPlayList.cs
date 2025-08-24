@@ -13,8 +13,6 @@ using HyPlayer.UWP.Chopin;
 using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Kawazu;
-using LyricParser.Abstraction;
-using LyricParser.Implementation;
 using Microsoft.Toolkit.Uwp.Helpers;
 using Microsoft.Toolkit.Uwp.Notifications;
 using System;
@@ -37,6 +35,14 @@ using Windows.Storage.Streams;
 using Windows.UI;
 using Windows.UI.Notifications;
 using Windows.UI.Xaml.Media;
+using ALRC.Converters.Enhancers;
+using HyPlayer.Classes.LyricParser.Abstraction;
+using HyPlayer.Classes.LyricParser.Implementation;
+using HyPlayer.NeteaseApi.ApiContracts.Album;
+using HyPlayer.NeteaseApi.ApiContracts.Artist;
+using HyPlayer.NeteaseApi.ApiContracts.DjChannel;
+using HyPlayer.NeteaseApi.ApiContracts.Playlist;
+using HyPlayer.NeteaseApi.ApiContracts.Song;
 using Buffer = Windows.Storage.Streams.Buffer;
 using File = TagLib.File;
 using LrcConverter = ALRC.Converters.LrcConverter;
@@ -681,26 +687,35 @@ public static class HyPlayList
              Common.Setting.songUrlLazyGet) && targetItem.PlayItem.Id != "-1")
             try
             {
-                var songRequest = new SongUrlRequest { Level = Common.Setting.audioRate, Id = targetItem.PlayItem.Id };
-                var songResult = await Common.NeteaseAPI.RequestAsync(NeteaseApis.SongUrlApi, songRequest);
-                if (songResult.IsSuccess)
+                var songResult = await SimpleCacher.GetOrCreateCacheAsync(CacheType.SongUrl, targetItem.PlayItem.Id+"_"+Common.Setting.audioRate, async () =>
                 {
-                    if (songResult.Value?.SongUrls?[0].Code == 200)
+                    var songRequest = new SongUrlRequest
+                        { Level = Common.Setting.audioRate, Id = targetItem.PlayItem.Id };
+                    var songRes = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.SongUrlApi, songRequest);
+                    if (songRes.IsError)
                     {
-                        if (songResult.Value.SongUrls[0].FreeTrialInfo is not null && Common.Setting.jumpVipSongPlaying)
+                        return null;
+                    }
+
+                    return songRes.Value;
+                }, TimeSpan.FromMinutes(20));
+                if (songResult is not null)
+                {
+                    if (songResult?.SongUrls?[0].Code == 200)
+                    {
+                        if (songResult.SongUrls[0].FreeTrialInfo is not null && Common.Setting.jumpVipSongPlaying)
                         {
                             throw new Exception("当前歌曲为 VIP 试听, 已自动跳过");
                         }
 
-                        playUrl = songResult.Value.SongUrls[0].Url;
-                        targetItem.PlayItem.Size = songResult.Value.SongUrls[0].Size.ToString();
+                        playUrl = songResult.SongUrls[0].Url;
                         if (Common.Setting.UseHttpWhenGettingSongs && playUrl.Contains("https://"))
                         {
                             playUrl = playUrl.Replace("https://", "http://");
                         }
 
 
-                        var tag = songResult.Value.SongUrls[0]?.Level
+                        var tag = songResult.SongUrls[0]?.Level
                             switch
                         {
                             "standard" => "标准",
@@ -993,37 +1008,39 @@ public static class HyPlayList
             // 图片加载放在之后
             if (CoverStream.Size == 0 && !Common.Setting.noImage && NowPlayingItem == playItemWhenRequested)
             {
-                await RefreshAlbumCover(playItemWhenRequested);
+                _ = RefreshAlbumCover().ContinueWith(async (_) =>
+                {
+                    if (CoverStream.Size != 0)
+                    {
+                        if ((hashCodeWhenRequested == NowPlayingHashCode) && !Common.Setting.noImage)
+                        {
+                            CoverStream.Seek(0);
+                            OnSongCoverChanged?.Invoke(hashCodeWhenRequested, CoverBuffer);
+                        }
+                    }
+                    //更新磁贴
+                    if (hashCodeWhenRequested == NowPlayingHashCode)
+                    {
+                        CoverStream.Seek(0);
+                        await RefreshTile(hashCodeWhenRequested, playItemWhenRequested, CoverStream);
+                    }
+
+                    if (hashCodeWhenRequested == NowPlayingHashCode)
+                    {
+                        // RASR 罪大恶极，害的磁贴怨声载道
+                        CoverStream.Seek(0);
+                        _controlsDisplayUpdater.Thumbnail = CoverStreamReference;
+                        _controlsDisplayUpdater.Update();
+                    }
+                });
             }
 
-            if (CoverStream.Size != 0)
-            {
-                if ((NowPlayingItem == playItemWhenRequested) && !Common.Setting.noImage)
-                {
-                    CoverStream.Seek(0);
-                    OnSongCoverChanged?.Invoke(playItemWhenRequested, CoverBuffer);
-                }
-            }
+            
 
             if (NowPlayingItem == playItemWhenRequested)
             {
                 //加载歌词
                 _ = LoadLyrics(playItemWhenRequested);
-            }
-
-            //更新磁贴
-            if (NowPlayingItem == playItemWhenRequested)
-            {
-                CoverStream.Seek(0);
-                await RefreshTile(playItemWhenRequested, playItemWhenRequested, CoverStream);
-            }
-
-            if (NowPlayingItem == playItemWhenRequested)
-            {
-                // RASR 罪大恶极，害的磁贴怨声载道
-                CoverStream.Seek(0);
-                _controlsDisplayUpdater.Thumbnail = CoverStreamReference;
-                _controlsDisplayUpdater.Update();
             }
             //这里要判断这么多次的原因在于如果只判断一次的话，后面如果切歌是无法知晓的。所以只能用这个蠢方法
         }
@@ -1338,6 +1355,14 @@ public static class HyPlayList
 
     private static async Task LoadLyrics(HyPlayItem hpi)
     {
+        var cache = await SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricInfo, hpi.PlayItem.Id, () => Task.FromResult<LyricInfo?>(null));
+        if (cache is not null)
+        {
+            LyricInfo = cache;
+            OnLyricLoaded?.Invoke();
+            OnLyricChange?.Invoke();
+            return;
+        }
         var pureLyricInfo = new PureLyricInfo();
         var unionTranslation = false;
         switch (hpi.ItemType)
@@ -1405,6 +1430,10 @@ public static class HyPlayList
 
         OnLyricLoaded?.Invoke();
         OnLyricChange?.Invoke();
+        if (hpi.ItemType == HyPlayItemType.Netease)
+        {
+            _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricInfo, hpi.PlayItem.Id, () => Task.FromResult(LyricInfo));
+        }
 
         try
         {
@@ -1422,7 +1451,7 @@ public static class HyPlayList
                 {
                     PureLyrics = lrc,
                     TrLyrics = trLrc,
-                    alrc = alrc,
+                    ALRC = alrc,
                     LyricMetadata =
                     [
                         new LyricInfoMetadata
@@ -1452,6 +1481,7 @@ public static class HyPlayList
 
                 OnLyricLoaded?.Invoke();
                 OnLyricChange?.Invoke();
+                _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricInfo, hpi.PlayItem.Id, () => Task.FromResult(LyricInfo));
             }
         }
         catch
@@ -1476,11 +1506,21 @@ public static class HyPlayList
             {
                 PureLyricInfo res = new PureLyricInfo();
                 var lyricRequest = new LyricRequest() { Id = ncp.PlayItem.Id };
-                var lyricResult = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.LyricApi, lyricRequest);
+                var lyricResult = await SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricApi, ncp.PlayItem.Id,
+                    async () =>
+                    {
+                        var resp = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.LyricApi, lyricRequest);
+                        if (resp.IsError)
+                        {
+                            Common.AddToTeachingTipLists("获取歌词失败", resp.Error?.Message);
+                            return null;
+                        }
+
+                        return resp.Value;
+                    });
                 string lrc, romaji, karaoklrc, translrc, yrromaji, yrtranslrc;
-                if (lyricResult.IsError)
+                if (lyricResult is null)
                 {
-                    Common.AddToTeachingTipLists("获取歌词失败", lyricResult.Error.Message);
                     return new PureLyricInfo
                     {
                         PureLyrics = "[00:00.000] 歌词获取失败",
@@ -1488,7 +1528,7 @@ public static class HyPlayList
                     };
                 }
 
-                if (lyricResult.Value?.Lyric is null && lyricResult.Value?.YunLyric is null)
+                if (lyricResult?.Lyric is null && lyricResult?.YunLyric is null)
                 {
                     return new PureLyricInfo
                     {
@@ -1505,11 +1545,11 @@ public static class HyPlayList
                 }
 
 
-                if (lyricResult.Value?.YunLyric?.Lyric is null)
+                if (lyricResult?.YunLyric?.Lyric is null)
                 {
-                    lrc = CleanLrc(lyricResult.Value?.Lyric?.Lyric);
-                    romaji = lyricResult.Value?.RomajiLyric?.Lyric;
-                    translrc = lyricResult.Value?.TranslationLyric?.Lyric;
+                    lrc = CleanLrc(lyricResult?.Lyric?.Lyric);
+                    romaji = lyricResult?.RomajiLyric?.Lyric;
+                    translrc = lyricResult?.TranslationLyric?.Lyric;
                     res = new PureLyricInfo()
                     {
                         PureLyrics = lrc,
@@ -1519,12 +1559,12 @@ public static class HyPlayList
                 }
                 else
                 {
-                    lrc = CleanLrc(lyricResult.Value?.Lyric?.Lyric);
-                    karaoklrc = CleanLrc(lyricResult.Value?.YunLyric?.Lyric);
-                    yrromaji = lyricResult.Value?.YunRomajiLyric?.Lyric;
-                    yrtranslrc = lyricResult.Value?.YunTranslationLyric?.Lyric;
-                    romaji = lyricResult.Value?.RomajiLyric?.Lyric;
-                    translrc = lyricResult.Value?.TranslationLyric?.Lyric;
+                    lrc = CleanLrc(lyricResult?.Lyric?.Lyric);
+                    karaoklrc = CleanLrc(lyricResult?.YunLyric?.Lyric);
+                    yrromaji = lyricResult?.YunRomajiLyric?.Lyric;
+                    yrtranslrc = lyricResult?.YunTranslationLyric?.Lyric;
+                    romaji = lyricResult?.RomajiLyric?.Lyric;
+                    translrc = lyricResult?.TranslationLyric?.Lyric;
                     res = new KaraokLyricInfo()
                     {
                         PureLyrics = lrc,
@@ -1538,24 +1578,24 @@ public static class HyPlayList
 
                 // add metadata
                 // 添加翻译作词信息
-                if (lyricResult.Value?.LyricUser?.UserId is not null)
+                if (lyricResult?.LyricUser?.UserId is not null)
                 {
                     res.LyricMetadata.Add(new LyricInfoMetadata()
                     {
                         Key = "lyric_user",
-                        Value = lyricResult.Value.LyricUser.Nickname,
-                        ActionUri = $"hyplayer://us{lyricResult.Value.LyricUser.UserId}",
+                        Value = lyricResult.LyricUser.Nickname,
+                        ActionUri = $"hyplayer://us{lyricResult.LyricUser.UserId}",
                         DisplayName = "歌词贡献者"
                     });
                 }
 
-                if (lyricResult.Value?.TranslationUser?.UserId is not null)
+                if (lyricResult?.TranslationUser?.UserId is not null)
                 {
                     res.LyricMetadata.Add(new LyricInfoMetadata()
                     {
                         Key = "translation_user",
-                        Value = lyricResult.Value.TranslationUser.Nickname,
-                        ActionUri = $"hyplayer://us{lyricResult.Value.TranslationUser.UserId}",
+                        Value = lyricResult.TranslationUser.Nickname,
+                        ActionUri = $"hyplayer://us{lyricResult.TranslationUser.UserId}",
                         DisplayName = "翻译贡献者"
                     });
                 }
@@ -1719,27 +1759,33 @@ public static class HyPlayList
                     await AppendPlayList(sourceId.Substring(2, sourceId.Length - 2));
                     return true;
                 case "ns":
-                    var result = await Common.NeteaseAPI?.RequestAsync(NeteaseApis.SongDetailApi,
-                        new SongDetailRequest()
+                    var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.SongDetail,
+                        "ncm" + sourceId.Substring(2, sourceId.Length - 2),
+                        async () =>
                         {
-                            Id = sourceId.Substring(2, sourceId.Length - 2)
+                            var result = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.SongDetailApi,
+                                new SongDetailRequest()
+                                {
+                                    Id = sourceId.Substring(2, sourceId.Length - 2)
+                                });
+                            if (result.IsError)
+                            {
+                                Common.AddToTeachingTipLists("获取歌曲信息失败", result.Error?.Message);
+                                return null;
+                            }
+                            else
+                            {
+                                if (result.Value?.Songs is not { Length: > 0 })
+                                {
+                                    Common.AddToTeachingTipLists("获取歌曲信息失败", "歌曲信息为空");
+                                    return null;
+                                }
+
+                                return result.Value.Songs[0];
+                            }
                         });
-                    if (result.IsError)
-                    {
-                        Common.AddToTeachingTipLists("获取歌曲信息失败", result.Error.Message);
-                        return false;
-                    }
-                    else
-                    {
-                        if (result.Value?.Songs is not { Length: > 0 })
-                        {
-                            Common.AddToTeachingTipLists("获取歌曲信息失败", "歌曲信息为空");
-                            return false;
-                        }
-
-                        AppendNcSong(result.Value.Songs?[0].MapToNcSong());
-                    }
-
+                    if (rst is not null)
+                        AppendNcSong(rst.MapToNcSong());
                     return true;
                 case "al":
                     await AppendAlbum(sourceId.Substring(2, sourceId.Length - 2));
@@ -1768,19 +1814,23 @@ public static class HyPlayList
     {
         try
         {
-            var j1 = await Common.NeteaseAPI?.RequestAsync(NeteaseApis.ArtistTopSongApi,
-                new ArtistTopSongRequest
-                {
-                    ArtistId = id
-                });
-            if (j1.IsError)
+            var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, id, async () =>
             {
-                Common.AddToTeachingTipLists("获取歌手热门歌曲失败", j1.Error.Message);
-                return false;
-            }
+                var j1 = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ArtistTopSongApi,
+                    new ArtistTopSongRequest
+                    {
+                        ArtistId = id
+                    });
+                if (j1.IsError)
+                {
+                    Common.AddToTeachingTipLists("获取歌手热门歌曲失败", j1.Error?.Message);
+                    return null;
+                }
 
-            var list = j1.Value.Songs?.Select(t => t.MapToNcSong()).ToList();
-            AppendNcSongs(list, false);
+                return j1.Value?.Songs;
+            });
+
+            AppendNcSongs(rst.Select(t => t.MapNcSong()).ToList(), false);
             return true;
         }
         catch (Exception ex)
@@ -1795,20 +1845,30 @@ public static class HyPlayList
     {
         try
         {
-            var json = await Common.NeteaseAPI?.RequestAsync(NeteaseApis.AlbumApi,
-                new AlbumRequest()
-                {
-                    Id = albumId
-                });
-
-
-            if (json.IsError)
+            var rst = await SimpleCacher.GetOrCreateCacheAsync(CacheType.AlbumInfo, albumId, async () =>
             {
-                Common.AddToTeachingTipLists("获取专辑信息失败", json.Error.Message);
+                var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.AlbumApi,
+                    new AlbumRequest()
+                    {
+                        Id = albumId
+                    });
+                if (json.IsError)
+                {
+                    Common.AddToTeachingTipLists("获取专辑信息失败", json.Error?.Message);
+                    return null;
+                }
+
+                return json.Value;
+            });
+
+
+            if (rst is null)
+            {
                 return false;
             }
 
-            AppendNcSongs(json.Value.Songs?.Select(t => t.MapToNcSong()).ToList(), false);
+            AppendNcSongs(rst.Songs?.Select(t => t.MapToNcSong()).ToList(), false);
+
             return true;
         }
         catch (Exception ex)
@@ -1868,40 +1928,53 @@ public static class HyPlayList
     {
         try
         {
-            var detailResponse = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaylistTracksGetApi,
-                new PlaylistTracksGetRequest() { Id = playlistId });
+            var resp = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistTracks, playlistId, async () =>
+            {
+                var detailResponse = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.PlaylistTracksGetApi,
+                    new PlaylistTracksGetRequest() { Id = playlistId });
+                if (detailResponse.IsError)
+                {
+                    Common.AddToTeachingTipLists("获取歌单失败", detailResponse.Error.Message);
+                    return null;
+                }
+
+                return detailResponse.Value?.Playlist?.TrackIds;
+            });
+            
 
             var nowIndex = 0;
-            if (detailResponse.IsError)
-            {
-                Common.AddToTeachingTipLists("获取歌单失败", detailResponse.Error.Message);
-                return false;
-            }
-
-            var trackIds = detailResponse.Value.Playlist?.TrackIds?.Select(t => t.Id).ToList() ?? [];
+            
+            var trackIds = resp.Select(t => t.Id).ToList() ?? [];
             while (nowIndex * 500 < trackIds.Count)
             {
                 var nowIds = trackIds.GetRange(nowIndex * 500,
                     Math.Min(500, trackIds.Count - nowIndex * 500));
                 try
                 {
-                    var songResponse = await Common.NeteaseAPI.RequestAsync(NeteaseApis.SongDetailApi,
-                        new SongDetailRequest() { IdList = nowIds });
-                    if (songResponse.IsError)
+                    var songDetailResp = await SimpleCacher.GetOrCreateCacheAsync(CacheType.PlaylistTracksDetail, playlistId + "_" + nowIndex, async () =>
                     {
-                        Common.AddToTeachingTipLists("获取歌曲失败", songResponse.Error.Message);
-                    }
+                        var songResponse = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.SongDetailApi,
+                            new SongDetailRequest() { IdList = nowIds });
+                        if (songResponse.IsError)
+                        {
+                            Common.AddToTeachingTipLists("获取歌曲失败", songResponse.Error?.Message);
+                        }
+
+                        return songResponse.Value;
+                    });
+                    
+                    var songs = songDetailResp.Songs;
+                    var privileges = songDetailResp.Privileges;
 
                     nowIndex++;
-                    var privileges = songResponse.Value?.Privileges ?? [];
-                    var songs = songResponse.Value?.Songs ?? [];
+                    
                     var result = new List<NCSong>();
                     if (privileges is null) return false;
                     for (var i = 0; i < privileges.Length; i++)
                     {
                         if (privileges[i].St == 0)
                         {
-                            result.Add(songs[i].MapToNcSong());
+                            result.Add(songs![i].MapToNcSong());
                         }
                     }
 
