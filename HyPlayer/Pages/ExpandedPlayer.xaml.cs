@@ -456,7 +456,9 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         }
 
         LyricBox.Width = LyricWidth;
-        LyricBox.ChangeRenderFontSize((float)showsize, (Common.Setting.translationSize > 0) ? (float)Common.Setting.translationSize : (float)showsize / 2, Common.Setting.romajiSize);
+        LyricBox.ChangeRenderFontSize((float)showsize,
+            (Common.Setting.translationSize > 0) ? (float)Common.Setting.translationSize : (float)showsize / 2,
+            (Common.Setting.romajiSize > 0) ? (float)Common.Setting.romajiSize : (float)showsize / 2);
 
         ImageRotateTransform.CenterX = ImageAlbum.ActualSize.X / 2;
         ImageRotateTransform.CenterY = ImageAlbum.ActualSize.Y / 2;
@@ -617,7 +619,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             if (HyPlayList.NowPlayingItem == null) return;
             LyricBox.Width = LyricWidth;
             LyricBox.ChangeRenderColor(Common.BrushManagement.IdleBrush.Color, Common.BrushManagement.AccentBrush.Color);
-            LyricBox.ChangeRenderFontSize((float)showsize, (Common.Setting.translationSize > 0) ? Common.Setting.translationSize : (float)showsize / 2, Common.Setting.romajiSize);
+            Redesign();
         });
     }
 

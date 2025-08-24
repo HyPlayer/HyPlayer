@@ -450,23 +450,17 @@ namespace HyPlayer.LyricRenderer
             args.DrawingSession.Dispose();
         }
 
-        private long _lastRedesignedTime;
-
         public void Redesign(float width, float height)
         {
             Context.ViewWidth = width;
             Context.ViewHeight = height;
             _needRecalculateSize = true;
             _needRecalculate = true;
-            _lastRedesignedTime = Context.RenderTick;
         }
+
         private void LyricView_OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
-            // 每0.5s重新算一下布局，避免重复算占用过高
-            if (_lastRedesignedTime == 0 || Context.RenderTick - _lastRedesignedTime > 5000000)
-            {
-                Redesign((float)e.NewSize.Width, (float)e.NewSize.Height);
-            }
+            Redesign((float)e.NewSize.Width, (float)e.NewSize.Height);
         }
 
         private long _lastWheelTime;
