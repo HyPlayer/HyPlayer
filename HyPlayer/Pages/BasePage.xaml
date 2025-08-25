@@ -74,12 +74,13 @@
                 Title="HyPlayer"
                 Grid.Row="0"
                 Height="48"
-                Margin="-2, 0, 0, 0"
+                Margin="0"
                 VerticalAlignment="Top"
                 x:FieldModifier="public"
                 BackButtonClick="AppTitleBar_BackButtonClick"
                 DisplayMode="Tall"
                 IsBackButtonVisible="{x:Bind BaseFrame.CanGoBack, Mode=OneWay}"
+                IsPaneButtonVisible="False"
                 Subtitle="预览">
                 <controls:TitleBar.Icon>
                     <BitmapIcon ShowAsMonochrome="False" UriSource="/Assets/icon.png" />
@@ -306,7 +307,6 @@
                     <Frame
                         x:Name="BaseFrame"
                         Grid.Row="1"
-                        Margin="0,48,0,0"
                         Navigated="BaseFrame_Navigated" />
                 </Grid>
             </muxc:NavigationView>

@@ -749,7 +749,7 @@ public sealed partial class BasePage : Page
                                             NavigationViewDisplayModeChangedEventArgs args)
     {
         const int topIndent = 16;
-        const int expandedIndent = 48;
+        const int expandedIndent = 0;
         var minimalIndent = 104;
         if (NavMain.IsBackButtonVisible.Equals(NavigationViewBackButtonVisible
                                                    .Collapsed))
