@@ -14,7 +14,7 @@
         <Style.Setters>
             <Setter Property="IsPaneOpen" Value="True" />
             <Setter Property="PaneDisplayMode" Value="LeftCompact" />
-            <Setter Property="IsPaneToggleButtonVisible" Value="True" />
+            <Setter Property="IsPaneToggleButtonVisible" Value="False" />
             <Setter Property="OpenPaneLength" Value="256" />
         </Style.Setters>
     </Style>

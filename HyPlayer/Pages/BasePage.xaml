@@ -11,7 +11,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:ui="using:CommunityToolkit.WinUI"
-    xmlns:uiExtensions="using:CommunityToolkit.WinUI.Helpers"
+    xmlns:uiExtensions="using:CommunityToolkit.WinUI.Helpers" xmlns:animatedvisuals="using:Microsoft.UI.Xaml.Controls.AnimatedVisuals"
     frierenUI:TitleBarExtensions.BackgroundColor="Transparent"
     frierenUI:TitleBarExtensions.ButtonBackgroundColor="Transparent"
     frierenUI:TitleBarExtensions.ButtonForegroundColor="{StaticResource CaptionButtonForegroundColor}"
@@ -80,7 +80,8 @@
                 BackButtonClick="AppTitleBar_BackButtonClick"
                 DisplayMode="Tall"
                 IsBackButtonVisible="{x:Bind BaseFrame.CanGoBack, Mode=OneWay}"
-                IsPaneButtonVisible="False"
+                IsPaneButtonVisible="True"
+                PaneButtonClick="AppTitleBar_PaneButtonClick"
                 Subtitle="预览">
                 <controls:TitleBar.Icon>
                     <BitmapIcon ShowAsMonochrome="False" UriSource="/Assets/icon.png" />
@@ -122,7 +123,7 @@
                         Content="主页"
                         Tag="PageHome">
                         <muxc:NavigationViewItem.Icon>
-                            <FontIcon Glyph="&#xEA8A;" />
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE80F;" />
                         </muxc:NavigationViewItem.Icon>
                     </muxc:NavigationViewItem>
                     <muxc:NavigationViewItem
@@ -131,7 +132,7 @@
                         Content="每日推荐"
                         Tag="DailyRcmd">
                         <muxc:NavigationViewItem.Icon>
-                            <FontIcon Glyph="&#xEA89;" />
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE787;" />
                         </muxc:NavigationViewItem.Icon>
                     </muxc:NavigationViewItem>
                     <muxc:NavigationViewItem
@@ -139,7 +140,7 @@
                         SelectsOnInvoked="False"
                         Tag="PersonalFM">
                         <muxc:NavigationViewItem.Icon>
-                            <FontIcon Glyph="&#xF8B2;" />
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xF12E;" />
                         </muxc:NavigationViewItem.Icon>
                     </muxc:NavigationViewItem>
                     <muxc:NavigationViewItem
@@ -147,7 +148,7 @@
                         SelectsOnInvoked="False"
                         Tag="HeartBeat">
                         <muxc:NavigationViewItem.Icon>
-                            <FontIcon Glyph="&#xEB4F;" />
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xEB51;" />
                         </muxc:NavigationViewItem.Icon>
                     </muxc:NavigationViewItem>
                     <muxc:NavigationViewItem Content="发现音乐" Visibility="Collapsed">
@@ -163,7 +164,7 @@
                         Content="离线音乐"
                         Tag="PageLocal">
                         <muxc:NavigationViewItem.Icon>
-                            <FontIcon Glyph="&#xE188;" />
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xEC50;" />
                         </muxc:NavigationViewItem.Icon>
                     </muxc:NavigationViewItem>
                     <muxc:NavigationViewItem
@@ -172,7 +173,7 @@
                         Content="播放历史"
                         Tag="PageHistory">
                         <muxc:NavigationViewItem.Icon>
-                            <FontIcon Glyph="&#xEB49;" />
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE81C;" />
                         </muxc:NavigationViewItem.Icon>
                     </muxc:NavigationViewItem>
 
@@ -182,7 +183,7 @@
                         Content="我的收藏"
                         Tag="PageFavorite">
                         <muxc:NavigationViewItem.Icon>
-                            <FontIcon Glyph="&#xE00A;" />
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE728;" />
                         </muxc:NavigationViewItem.Icon>
                     </muxc:NavigationViewItem>
                     <muxc:NavigationViewItem
@@ -191,7 +192,7 @@
                         Content="我的云盘"
                         Tag="MusicCloud">
                         <muxc:NavigationViewItem.Icon>
-                            <FontIcon Glyph="&#xEB4E;" />
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE753;" />
                         </muxc:NavigationViewItem.Icon>
                     </muxc:NavigationViewItem>
                     <muxc:NavigationViewItemSeparator />
@@ -243,12 +244,19 @@
                         Tag="PageSettings"
                         Tapped="NavigationViewItem_Tapped">
                         <muxc:NavigationViewItem.Icon>
-                            <FontIcon Glyph="&#xF8B0;" />
+                            <muxc:AnimatedIcon x:Name="SearchAnimatedIcon">
+                                <muxc:AnimatedIcon.Source>
+                                    <animatedvisuals:AnimatedSettingsVisualSource/>
+                                </muxc:AnimatedIcon.Source>
+                                <muxc:AnimatedIcon.FallbackIconSource>
+                                    <muxc:FontIconSource FontFamily="Segoe Fluent Icons" Glyph="&#xE713;" />
+                                </muxc:AnimatedIcon.FallbackIconSource>
+                            </muxc:AnimatedIcon>
                         </muxc:NavigationViewItem.Icon>
                     </muxc:NavigationViewItem>
                     <muxc:NavigationViewItem
                         x:Name="NavItemBlank"
-                        Height="130"
+                        Height="134"
                         x:FieldModifier="public"
                         IsEnabled="False"
                         Opacity="0">

@@ -77,7 +77,6 @@ public sealed partial class BasePage : Page
         BaseFrame.IsNavigationStackEnabled = !Common.Setting.forceMemoryGarbage;
         Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
         Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
-        // Window.Current.CoreWindow.Dispatcher.AcceleratorKeyActivated += Dispatcher_AcceleratorKeyActivated;
     }
 
     private async void HyPlayList_OnSongCoverChanged(HyPlayItem playItem, IBuffer coverStream)
@@ -85,52 +84,7 @@ public sealed partial class BasePage : Page
         await RefreshNavItemCover(playItem, coverStream);
     }
 
-    /*
-    private void Dispatcher_AcceleratorKeyActivated(CoreDispatcher sender, AcceleratorKeyEventArgs args)
-    {
-        if(args.EventType== CoreAcceleratorKeyEventType.KeyDown)
-        {
-            if (Window.Current.CoreWindow.GetKeyState(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down))//判断ctrl是否按下
-            {
-                switch(args.VirtualKey)
-                {
-                    case VirtualKey.P:
-                        {
-
-                            if(HyPlayList.Player.PlaybackSession.PlaybackState==Windows.Media.Playback.MediaPlaybackState.Playing)
-                                HyPlayList.Player.Pause();
-                            else HyPlayList.Player.Play();
-                            break;
-                        }
-                    case VirtualKey.Left:
-                        {
-                            HyPlayList.SongMovePrevious();
-                            break;
-                        }
-                    case VirtualKey.Right:
-                        {
-
-                            HyPlayList.SongMoveNext();
-                            break;
-                        }
-                    case VirtualKey.M:
-                        {
-                            _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.CompactOverlay);
-                            Common.PageMain.ExpandedPlayer.Navigate(typeof(CompactPlayerPage));
-                            break;
-                        }
-                }
-            }
-            else if(args.VirtualKey==VirtualKey.Space)
-            {
-                if (HyPlayList.Player.PlaybackSession.PlaybackState == Windows.Media.Playback.MediaPlaybackState.Playing)
-                    HyPlayList.Player.Pause();
-                else HyPlayList.Player.Play();
-            }
-        }
-        args.Handled = true;
-    }
-    */
+    
     private void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs args)
     {
         if (args.CurrentPoint.Properties.IsXButton1Pressed)
@@ -1004,5 +958,13 @@ public sealed partial class BasePage : Page
         {
             //ignore
         }
+    }
+
+    private void AppTitleBar_PaneButtonClick(object sender, RoutedEventArgs e)
+    {
+        if (NavMain.IsPaneOpen)
+            NavMain.IsPaneOpen = false;
+        else
+            NavMain.IsPaneOpen = true;
     }
 }
