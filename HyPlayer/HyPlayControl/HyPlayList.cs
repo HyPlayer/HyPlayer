@@ -252,7 +252,7 @@ public static class HyPlayList
         var overdue = !await _seekerSemaphoreSlim.WaitAsync(0);
         try
         {
-            if (overdue) return;
+            if (overdue || Player.PrimaryPlaybackSource is null) return;
             Player.SeekPlaybackSource(targetTimeSpan, Player.PrimaryPlaybackSource);
             OnManualSeek?.Invoke(targetTimeSpan);
             await Task.Delay(250);
@@ -494,11 +494,11 @@ public static class HyPlayList
     public static void SongMoveTo(int index)
     {
         if (List.Count <= index) return;
+        OnSongMoveNext?.Invoke();
         NowPlaying = index;
         if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
             ShufflingIndex = ShuffleList.IndexOf(index);
         _ = LoadMediaSource(List[NowPlaying], true);
-        OnSongMoveNext?.Invoke();
     }
 
     public static void RemoveSong(int index)
@@ -722,6 +722,8 @@ public static class HyPlayList
                             _ => "在线"
                         };
                         targetItem.PlayItem.QualityTag = tag;
+                        targetItem.PlayItem.Size = songResult.SongUrls[0]?.Size.ToString();
+                        targetItem.PlayItem.SubExt = songResult.SongUrls[0]?.Type.ToLowerInvariant();
 
                         var volume = GetAudioGainMultiplier(songResult.SongUrls[0]?.Gain ?? 0f);
                         targetItem.PlayItem.Volume = volume;
@@ -815,8 +817,7 @@ public static class HyPlayList
                             // 加载本地缓存文件
                             var sf =
                                 await (await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir))
-                                    .GetFileAsync(targetItem.PlayItem.Id +
-                                                  ".cache");
+                                    .GetFileAsync($"{targetItem.PlayItem.Id}.{targetItem.PlayItem?.SubExt}");
                             if ((await sf.GetBasicPropertiesAsync()).Size.ToString() == targetItem.PlayItem.Size)
                             {
                                 mediaSource = MediaSource.CreateFromStorageFile(sf);
@@ -835,9 +836,7 @@ public static class HyPlayList
                             var destinationFolder =
                                         await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir);
                             var destinationFile =
-                                            await destinationFolder.CreateFileAsync(
-                                                targetItem.PlayItem.Id +
-                                                ".cache", CreationCollisionOption.ReplaceExisting);
+                                            await destinationFolder.CreateFileAsync($"{targetItem.PlayItem.Id}.{targetItem.PlayItem?.SubExt}", CreationCollisionOption.ReplaceExisting);
                             try
                             {
                                 //尝试从DownloadOperation下载
@@ -868,7 +867,7 @@ public static class HyPlayList
                                     var item = DownloadOperations[targetItem];
                                     DownloadOperations.Remove(targetItem);
                                     DownloadOperationsReverseDirectory.Remove(item);
-                                    destinationFile = await destinationFolder.CreateFileAsync(targetItem.PlayItem.Id + ".cache", CreationCollisionOption.ReplaceExisting);
+                                    destinationFile = await destinationFolder.CreateFileAsync($"{targetItem.PlayItem.Id}.{targetItem.PlayItem?.SubExt}", CreationCollisionOption.ReplaceExisting);
                                     operation =
                                         Downloader.CreateDownload(new Uri(playUrl), destinationFile);
                                     DownloadOperations[targetItem] = operation;
@@ -1702,7 +1701,6 @@ public static class HyPlayList
             InfoTag = ncSong.alias,
             Album = ncSong.Album,
             Artist = ncSong.Artist,
-            //SubExt = token["type"].ToString(),
             Id = ncSong.sid,
             Translation = ncSong.transname,
             Name = ncSong.songname,
