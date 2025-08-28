@@ -47,6 +47,10 @@ public static class SimpleCacher
                 using var stream = await cacheFile.OpenStreamForReadAsync();
                 using var reader = new StreamReader(stream);
                 var content = await reader.ReadToEndAsync();
+                if(content.Length == 0)
+                {
+                    return default;
+                }
                 try
                 {
                     var rst = JsonConvert.DeserializeObject<T>(content);

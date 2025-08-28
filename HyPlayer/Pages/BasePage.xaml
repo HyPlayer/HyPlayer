@@ -12,17 +12,6 @@
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:ui="using:CommunityToolkit.WinUI"
     xmlns:uiExtensions="using:CommunityToolkit.WinUI.Helpers"
-    frierenUI:TitleBarExtensions.BackgroundColor="Transparent"
-    frierenUI:TitleBarExtensions.ButtonBackgroundColor="Transparent"
-    frierenUI:TitleBarExtensions.ButtonForegroundColor="{StaticResource CaptionButtonForegroundColor}"
-    frierenUI:TitleBarExtensions.ButtonHoverBackgroundColor="{StaticResource CaptionButtonHoverColor}"
-    frierenUI:TitleBarExtensions.ButtonHoverForegroundColor="{StaticResource CaptionButtonForegroundColor}"
-    frierenUI:TitleBarExtensions.ButtonInactiveBackgroundColor="Transparent"
-    frierenUI:TitleBarExtensions.ButtonPressedBackgroundColor="{StaticResource CaptionButtonPressedColor}"
-    frierenUI:TitleBarExtensions.ButtonPressedForegroundColor="{StaticResource CaptionButtonForegroundColor}"
-    frierenUI:TitleBarExtensions.ForegroundColor="{StaticResource CaptionButtonForegroundColor}"
-    frierenUI:TitleBarExtensions.InactiveBackgroundColor="Transparent"
-    frierenUI:TitleBarExtensions.InactiveForegroundColor="LightGray"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="{x:Bind local:Common.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource ReversedBooleanConverter}}"
     Background="{x:Bind local:Common.Setting.acrylicBackgroundStatus, Mode=OneWay, Converter={StaticResource BooleanToWindowBrushesConverter}}"
     NavigationCacheMode="Disabled"
@@ -70,8 +59,8 @@
             PreferredPlacement="TopRight" />
         <controls:TitleBar
             x:Name="AppTitleBar"
-            Grid.Row="0"
             Title="HyPlayer"
+            Grid.Row="0"
             Height="48"
             VerticalAlignment="Top"
             x:FieldModifier="public"
@@ -96,8 +85,8 @@
         </controls:TitleBar>
         <muxc:NavigationView
             x:Name="NavMain"
-            x:FieldModifier="public"
             Grid.Row="1"
+            x:FieldModifier="public"
             Canvas.ZIndex="0"
             DisplayModeChanged="NavMain_DisplayModeChanged"
             FlowDirection="LeftToRight"
@@ -470,14 +459,14 @@
                 <TextBlock>我们提供以下手段缓解 (任选其一):</TextBlock>
                 <controls:DockPanel LastChildFill="True">
                     <HyperlinkButton controls:DockPanel.Dock="Right" Click="BtnApiAddParamClick">查看教程</HyperlinkButton>
-                    <TextBlock >抓取官方客户端登录信息 (稳定, 保存后重启)</TextBlock>
+                    <TextBlock>抓取官方客户端登录信息 (稳定, 保存后重启)</TextBlock>
                 </controls:DockPanel>
                 <controls:DockPanel LastChildFill="True">
-                    <HyperlinkButton controls:DockPanel.Dock="Right"  Click="BtnRamdomDeviceIdClick">立即生成</HyperlinkButton>
+                    <HyperlinkButton controls:DockPanel.Dock="Right" Click="BtnRamdomDeviceIdClick">立即生成</HyperlinkButton>
                     <TextBlock>使用已知设备 ID 伪造 (快捷, 存在风险)</TextBlock>
                 </controls:DockPanel>
                 <controls:DockPanel LastChildFill="True">
-                    <HyperlinkButton controls:DockPanel.Dock="Right"  Click="BtnCurrentDeviceIdClick">立即生成</HyperlinkButton>
+                    <HyperlinkButton controls:DockPanel.Dock="Right" Click="BtnCurrentDeviceIdClick">立即生成</HyperlinkButton>
                     <TextBlock>使用当前设备信息尝试伪造 (最新缓解)</TextBlock>
                 </controls:DockPanel>
                 <TextBlock>请在缓解后后使用扫码登录</TextBlock>

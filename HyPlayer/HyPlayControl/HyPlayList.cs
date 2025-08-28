@@ -940,7 +940,12 @@ public static class HyPlayList
             }
             var playbackSource = new AudioGraphPlaybackSource(mediaSource);
             targetItem.PlayItem.AudioGraphPlaybackSource = playbackSource;
-            var options = new PlaybackOptions() { SetAsPrimarySource = setAsPrimary, AutoPlay = autoPlay, Volume = Common.Setting.EnableAudioGain ? targetItem.PlayItem.Volume : 1d };
+            var targetVolume = Common.Setting.EnableAudioGain ? targetItem.PlayItem.Volume : 1d;
+            if (Common.Setting.CrossFade && FadeManager.FadeProcessing)
+            {
+                targetVolume = 0;
+            }
+            var options = new PlaybackOptions() { SetAsPrimarySource = setAsPrimary, AutoPlay = autoPlay, Volume = targetVolume };
             await Player.ConnectPlaybackSourceAsync(playbackSource, options);
         }
         catch (Exception e)
