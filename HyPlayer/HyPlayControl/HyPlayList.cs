@@ -954,7 +954,7 @@ public static class HyPlayList
         }
         finally
         {
-            _loaderSemaphoreSlim.Release();
+            if(!overdue) _loaderSemaphoreSlim.Release();
         }
     }
     private static void ProgressCallback(DownloadOperation obj)
