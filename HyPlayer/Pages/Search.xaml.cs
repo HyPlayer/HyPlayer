@@ -63,8 +63,8 @@ public sealed partial class Search : Page, IDisposable
     {
         if ((string)e.Parameter != null)
         {
-            SearchKeywordBox.Text = (string)e.Parameter;
-            SearchKeywordBox_QuerySubmitted(SearchKeywordBox, null);
+            searchText = (string) e.Parameter;
+            _loadResultTask = LoadResult();
         }
 
         //if (searchText != string.Empty) _ = LoadResult();
@@ -698,15 +698,8 @@ public sealed partial class Search : Page, IDisposable
         if (disposedValue) throw new ObjectDisposedException(nameof(Search));
         if ((sender as ComboBox) is not null)
         {
-            SearchKeywordBox.Text = (sender as ComboBox).SelectedItem as string; //将历史放上去
             _loadResultTask = LoadResult();
         }
-    }
-
-    private void SearchKeywordBox_OnSuggestionChosen(AutoSuggestBox sender,
-        AutoSuggestBoxSuggestionChosenEventArgs args)
-    {
-        sender.Text = (string)args.SelectedItem;
     }
 
     private void Dispose(bool disposing)

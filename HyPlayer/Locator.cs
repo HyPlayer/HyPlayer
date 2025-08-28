@@ -11,7 +11,7 @@ namespace HyPlayer;
 
 public class Locator
 {
-    public static Locator Instance => _Instance ?? (_Instance = new Locator());
+    public static Locator Instance => _Instance ??= new Locator();
     private static Locator _Instance;
 
     private IServiceProvider _services;

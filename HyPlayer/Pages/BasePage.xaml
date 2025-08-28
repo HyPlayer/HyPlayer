@@ -31,272 +31,307 @@
 
         </ResourceDictionary>
     </Page.Resources>
-    <Grid x:Name="MainGrid">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="48" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <FlyoutBase.AttachedFlyout>
-            <MenuFlyout x:Name="PlaylistFlyout">
-                <MenuFlyoutItem
-                    x:Name="ItemPublicPlayList"
-                    Click="ItemPublicPlayList_Click"
-                    Icon="People"
-                    Text="公开此歌单" />
-                <MenuFlyoutItem
-                    x:Name="ItemDelPlayList"
-                    Click="ItemDelPlayList_Click"
-                    Foreground="Red"
-                    Icon="Delete"
-                    Text="删除此歌单" />
-            </MenuFlyout>
-        </FlyoutBase.AttachedFlyout>
-        <muxc:TeachingTip
-            x:Name="TheTeachingTip"
-            Title="一个弹窗, 两个弹窗, 三个弹窗, 四个弹窗...zzzzzz"
-            CloseButtonClick="TheTeachingTip_OnCloseButtonClick"
-            IsLightDismissEnabled="False"
-            PreferredPlacement="TopRight" />
-        <controls:TitleBar
-            x:Name="AppTitleBar"
-            Title="HyPlayer"
-            Grid.Row="0"
-            Height="48"
-            VerticalAlignment="Top"
-            x:FieldModifier="public"
-            BackButtonClick="AppTitleBar_BackButtonClick"
-            DisplayMode="Tall"
-            IsBackButtonVisible="{x:Bind BaseFrame.CanGoBack, Mode=OneWay}"
-            Subtitle="预览">
-            <controls:TitleBar.Icon>
-                <BitmapIcon ShowAsMonochrome="False" UriSource="/Assets/icon.png" />
-            </controls:TitleBar.Icon>
-            <controls:TitleBar.Content>
-                <AutoSuggestBox
-                    x:Name="SearchAutoSuggestBox"
-                    VerticalContentAlignment="Center"
-                    LostFocus="SearchAutoSuggestBox_LostFocus"
-                    PlaceholderText="搜索..."
-                    QueryIcon="Find"
-                    QuerySubmitted="AutoSuggestBox_QuerySubmitted"
-                    SuggestionChosen="SearchAutoSuggestBox_OnSuggestionChosen"
-                    TextChanged="SearchAutoSuggestBox_TextChanged" />
-            </controls:TitleBar.Content>
-        </controls:TitleBar>
-        <muxc:NavigationView
-            x:Name="NavMain"
-            Grid.Row="1"
-            x:FieldModifier="public"
-            Canvas.ZIndex="0"
-            DisplayModeChanged="NavMain_DisplayModeChanged"
-            FlowDirection="LeftToRight"
-            IsBackButtonVisible="Collapsed"
-            IsBackEnabled="True"
-            IsSettingsVisible="False"
-            IsTabStop="False"
-            IsTitleBarAutoPaddingEnabled="False"
-            ItemInvoked="NavMain_ItemInvoked"
-            PaneDisplayMode="Auto"
-            SelectedItem="{x:Bind BaseFrame.Content, Converter={StaticResource PageToNavigationViewIndicatorConverter}}"
-            SelectionChanged="NavMain_OnSelectionChanged"
-            Style="{StaticResource LeftNavViewDefaultStyle}">
-            <muxc:NavigationView.MenuItems>
-                <muxc:NavigationViewItemHeader Margin="0,3,3,3" Content="发现" />
-                <muxc:NavigationViewItem
-                    x:Name="NavItemPageHome"
-                    x:FieldModifier="public"
-                    Content="主页"
-                    Tag="PageHome">
-                    <muxc:NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xEA8A;" />
-                    </muxc:NavigationViewItem.Icon>
-                </muxc:NavigationViewItem>
-                <muxc:NavigationViewItem
-                    x:Name="NavItemDailyRcmd"
-                    x:FieldModifier="public"
-                    Content="每日推荐"
-                    Tag="DailyRcmd">
-                    <muxc:NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xEA89;" />
-                    </muxc:NavigationViewItem.Icon>
-                </muxc:NavigationViewItem>
-                <muxc:NavigationViewItem
-                    Content="私人FM"
-                    SelectsOnInvoked="False"
-                    Tag="PersonalFM">
-                    <muxc:NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xF8B2;" />
-                    </muxc:NavigationViewItem.Icon>
-                </muxc:NavigationViewItem>
-                <muxc:NavigationViewItem
-                    Content="心动模式"
-                    SelectsOnInvoked="False"
-                    Tag="HeartBeat">
-                    <muxc:NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xEB4F;" />
-                    </muxc:NavigationViewItem.Icon>
-                </muxc:NavigationViewItem>
-                <muxc:NavigationViewItem Content="发现音乐" Visibility="Collapsed">
-                    <muxc:NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE12B;" />
-                    </muxc:NavigationViewItem.Icon>
-                </muxc:NavigationViewItem>
-                <muxc:NavigationViewItemSeparator />
-                <muxc:NavigationViewItemHeader Margin="0,3,3,3" Content="音乐" />
-                <muxc:NavigationViewItem
-                    x:Name="NavItemPageLocal"
-                    x:FieldModifier="public"
-                    Content="离线音乐"
-                    Tag="PageLocal">
-                    <muxc:NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE188;" />
-                    </muxc:NavigationViewItem.Icon>
-                </muxc:NavigationViewItem>
-                <muxc:NavigationViewItem
-                    x:Name="PageHistory"
-                    x:FieldModifier="public"
-                    Content="播放历史"
-                    Tag="PageHistory">
-                    <muxc:NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xEB49;" />
-                    </muxc:NavigationViewItem.Icon>
-                </muxc:NavigationViewItem>
+    <Grid>
+        <Grid x:Name="MainGrid">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="48" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <FlyoutBase.AttachedFlyout>
+                <MenuFlyout x:Name="PlaylistFlyout">
+                    <MenuFlyoutItem
+                        x:Name="ItemPublicPlayList"
+                        Click="ItemPublicPlayList_Click"
+                        Icon="People"
+                        Text="公开此歌单" />
+                    <MenuFlyoutItem
+                        x:Name="ItemDelPlayList"
+                        Click="ItemDelPlayList_Click"
+                        Foreground="Red"
+                        Icon="Delete"
+                        Text="删除此歌单" />
+                </MenuFlyout>
+            </FlyoutBase.AttachedFlyout>
+            <muxc:TeachingTip
+                x:Name="TheTeachingTip"
+                Title="一个弹窗, 两个弹窗, 三个弹窗, 四个弹窗...zzzzzz"
+                CloseButtonClick="TheTeachingTip_OnCloseButtonClick"
+                IsLightDismissEnabled="False"
+                PreferredPlacement="TopRight" />
+            <controls:TitleBar
+                x:Name="AppTitleBar"
+                Title="HyPlayer"
+                Grid.Row="0"
+                Height="48"
+                Margin="0"
+                VerticalAlignment="Top"
+                x:FieldModifier="public"
+                BackButtonClick="AppTitleBar_BackButtonClick"
+                DisplayMode="Tall"
+                IsBackButtonVisible="{x:Bind BaseFrame.CanGoBack, Mode=OneWay}"
+                IsPaneButtonVisible="True"
+                PaneButtonClick="AppTitleBar_PaneButtonClick"
+                Subtitle="预览">
+                <controls:TitleBar.Icon>
+                    <BitmapIcon ShowAsMonochrome="False" UriSource="/Assets/icon.png" />
+                </controls:TitleBar.Icon>
+                <controls:TitleBar.Content>
+                    <AutoSuggestBox
+                        x:Name="SearchAutoSuggestBox"
+                        VerticalContentAlignment="Center"
+                        LostFocus="SearchAutoSuggestBox_LostFocus"
+                        PlaceholderText="搜索..."
+                        QueryIcon="Find"
+                        QuerySubmitted="AutoSuggestBox_QuerySubmitted"
+                        SuggestionChosen="SearchAutoSuggestBox_OnSuggestionChosen"
+                        TextChanged="SearchAutoSuggestBox_TextChanged" />
+                </controls:TitleBar.Content>
+            </controls:TitleBar>
+            <muxc:NavigationView
+                x:Name="NavMain"
+                Grid.Row="1"
+                x:FieldModifier="public"
+                Canvas.ZIndex="0"
+                DisplayModeChanged="NavMain_DisplayModeChanged"
+                FlowDirection="LeftToRight"
+                IsBackButtonVisible="Collapsed"
+                IsBackEnabled="True"
+                IsSettingsVisible="False"
+                IsTabStop="False"
+                IsTitleBarAutoPaddingEnabled="False"
+                ItemInvoked="NavMain_ItemInvoked"
+                PaneDisplayMode="Auto"
+                SelectedItem="{x:Bind BaseFrame.Content, Converter={StaticResource PageToNavigationViewIndicatorConverter}}"
+                SelectionChanged="NavMain_OnSelectionChanged"
+                Style="{StaticResource LeftNavViewDefaultStyle}">
+                <muxc:NavigationView.MenuItems>
+                    <muxc:NavigationViewItemHeader Margin="0,3,3,3" Content="发现" />
+                    <muxc:NavigationViewItem
+                        x:Name="NavItemPageHome"
+                        x:FieldModifier="public"
+                        Content="主页"
+                        Tag="PageHome">
+                        <muxc:NavigationViewItem.Icon>
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE80F;" />
+                        </muxc:NavigationViewItem.Icon>
+                    </muxc:NavigationViewItem>
+                    <muxc:NavigationViewItem
+                        x:Name="NavItemDailyRcmd"
+                        x:FieldModifier="public"
+                        Content="每日推荐"
+                        Tag="DailyRcmd">
+                        <muxc:NavigationViewItem.Icon>
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE787;" />
+                        </muxc:NavigationViewItem.Icon>
+                    </muxc:NavigationViewItem>
+                    <muxc:NavigationViewItem
+                        Content="私人FM"
+                        SelectsOnInvoked="False"
+                        Tag="PersonalFM">
+                        <muxc:NavigationViewItem.Icon>
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xF12E;" />
+                        </muxc:NavigationViewItem.Icon>
+                    </muxc:NavigationViewItem>
+                    <muxc:NavigationViewItem
+                        Content="心动模式"
+                        SelectsOnInvoked="False"
+                        Tag="HeartBeat">
+                        <muxc:NavigationViewItem.Icon>
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xEB51;" />
+                        </muxc:NavigationViewItem.Icon>
+                    </muxc:NavigationViewItem>
+                    <muxc:NavigationViewItem Content="发现音乐" Visibility="Collapsed">
+                        <muxc:NavigationViewItem.Icon>
+                            <FontIcon Glyph="&#xE12B;" />
+                        </muxc:NavigationViewItem.Icon>
+                    </muxc:NavigationViewItem>
+                    <muxc:NavigationViewItemSeparator />
+                    <muxc:NavigationViewItemHeader Margin="0,3,3,3" Content="音乐" />
+                    <muxc:NavigationViewItem
+                        x:Name="NavItemPageLocal"
+                        x:FieldModifier="public"
+                        Content="离线音乐"
+                        Tag="PageLocal">
+                        <muxc:NavigationViewItem.Icon>
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xEC50;" />
+                        </muxc:NavigationViewItem.Icon>
+                    </muxc:NavigationViewItem>
+                    <muxc:NavigationViewItem
+                        x:Name="PageHistory"
+                        x:FieldModifier="public"
+                        Content="播放历史"
+                        Tag="PageHistory">
+                        <muxc:NavigationViewItem.Icon>
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE81C;" />
+                        </muxc:NavigationViewItem.Icon>
+                    </muxc:NavigationViewItem>
 
-                <muxc:NavigationViewItem
-                    x:Name="NavItemPageFavorite"
-                    x:FieldModifier="public"
-                    Content="我的收藏"
-                    Tag="PageFavorite">
-                    <muxc:NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE00A;" />
-                    </muxc:NavigationViewItem.Icon>
-                </muxc:NavigationViewItem>
-                <muxc:NavigationViewItem
-                    x:Name="NavItemMusicCloud"
-                    x:FieldModifier="public"
-                    Content="我的云盘"
-                    Tag="MusicCloud">
-                    <muxc:NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xEB4E;" />
-                    </muxc:NavigationViewItem.Icon>
-                </muxc:NavigationViewItem>
-                <muxc:NavigationViewItemSeparator />
-                <muxc:NavigationViewItemHeader Margin="0,3,3,3" Content="歌单" />
-                <muxc:NavigationViewItem
-                    x:Name="NavItemsAddPlaylist"
-                    Content="创建歌单"
-                    Icon="Add"
-                    SelectsOnInvoked="False"
-                    Tag="SonglistCreate"
-                    Visibility="Collapsed" />
-                <muxc:NavigationViewItem
-                    x:Name="NavItemsMyLovedPlaylist"
-                    x:FieldModifier="public"
-                    Content="我喜欢的音乐"
-                    Tag="SonglistMyLike"
-                    Visibility="Collapsed">
-                    <muxc:NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE006;" />
-                    </muxc:NavigationViewItem.Icon>
-                </muxc:NavigationViewItem>
-                <muxc:NavigationViewItem
-                    x:Name="NavItemsMyList"
-                    x:FieldModifier="public"
-                    Content="我创建的歌单"
-                    Icon="List"
-                    IsExpanded="True"
-                    Visibility="Collapsed" />
-                <muxc:NavigationViewItem
-                    x:Name="NavItemsLikeList"
-                    x:FieldModifier="public"
-                    Content="我收藏的歌单"
-                    Icon="List"
-                    IsExpanded="True"
-                    Visibility="Collapsed" />
-            </muxc:NavigationView.MenuItems>
-            <muxc:NavigationView.FooterMenuItems>
-                <muxc:NavigationViewItem
-                    x:Name="NavItemLogin"
-                    x:FieldModifier="public"
-                    Content="登录"
-                    Icon="Contact"
-                    Tag="PageMe"
-                    Tapped="NavigationViewItem_Tapped" />
-                <muxc:NavigationViewItem
-                    x:Name="NavItemPageSettings"
-                    x:FieldModifier="public"
-                    Content="设置"
-                    Tag="PageSettings"
-                    Tapped="NavigationViewItem_Tapped">
-                    <muxc:NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xF8B0;" />
-                    </muxc:NavigationViewItem.Icon>
-                </muxc:NavigationViewItem>
-                <muxc:NavigationViewItem
-                    x:Name="NavItemBlank"
-                    Height="130"
-                    x:FieldModifier="public"
-                    IsEnabled="False"
-                    Opacity="0">
-                    <Grid Margin="-5,5,-15,0">
-                        <Rectangle
-                            HorizontalAlignment="Stretch"
-                            VerticalAlignment="Stretch"
-                            RadiusX="12"
-                            RadiusY="12">
-                            <Rectangle.Fill>
-                                <ImageBrush ImageSource="{x:Bind NavItemImageSource}" />
-                            </Rectangle.Fill>
-                        </Rectangle>
-                        <Rectangle
-                            HorizontalAlignment="Stretch"
-                            Fill="{ThemeResource SystemControlAcrylicElementBrush}"
-                            RadiusX="10"
-                            RadiusY="10" />
-                        <StackPanel Orientation="Horizontal">
-                            <frieren:ImageEx
-                                x:Name="NavItemImage"
-                                Width="85"
-                                Height="85"
-                                Margin="10,10,0,10"
-                                CornerRadius="10"
-                                IsCacheEnabled="False"
-                                Stretch="UniformToFill">
-                                <frieren:ImageEx.Source>
-                                    <BitmapImage x:Name="NavItemImageSource" />
-                                </frieren:ImageEx.Source>
-                            </frieren:ImageEx>
-                            <StackPanel
-                                Margin="10,0,0,10"
-                                VerticalAlignment="Bottom"
-                                Orientation="Vertical">
-                                <TextBlock
-                                    x:Name="NavItemArtist"
-                                    MaxWidth="180"
-                                    Margin="0,0,15,0"
-                                    FontSize="12"
-                                    TextTrimming="CharacterEllipsis" />
-                                <TextBlock
-                                    x:Name="NavItemSongName"
-                                    MaxWidth="180"
-                                    Margin="0,0,15,5"
-                                    FontSize="22"
-                                    FontWeight="Bold"
-                                    TextAlignment="Left"
-                                    TextTrimming="CharacterEllipsis" />
+                    <muxc:NavigationViewItem
+                        x:Name="NavItemPageFavorite"
+                        x:FieldModifier="public"
+                        Content="我的收藏"
+                        Tag="PageFavorite">
+                        <muxc:NavigationViewItem.Icon>
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE728;" />
+                        </muxc:NavigationViewItem.Icon>
+                    </muxc:NavigationViewItem>
+                    <muxc:NavigationViewItem
+                        x:Name="NavItemMusicCloud"
+                        x:FieldModifier="public"
+                        Content="我的云盘"
+                        Tag="MusicCloud">
+                        <muxc:NavigationViewItem.Icon>
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE753;" />
+                        </muxc:NavigationViewItem.Icon>
+                    </muxc:NavigationViewItem>
+                    <muxc:NavigationViewItemSeparator />
+                    <muxc:NavigationViewItemHeader Margin="0,3,3,3" Content="歌单" />
+                    <muxc:NavigationViewItem
+                        x:Name="NavItemsAddPlaylist"
+                        Content="创建歌单"
+                        Icon="Add"
+                        SelectsOnInvoked="False"
+                        Tag="SonglistCreate"
+                        Visibility="Collapsed" />
+                    <muxc:NavigationViewItem
+                        x:Name="NavItemsMyLovedPlaylist"
+                        x:FieldModifier="public"
+                        Content="我喜欢的音乐"
+                        Tag="SonglistMyLike"
+                        Visibility="Collapsed">
+                        <muxc:NavigationViewItem.Icon>
+                            <FontIcon Glyph="&#xE006;" />
+                        </muxc:NavigationViewItem.Icon>
+                    </muxc:NavigationViewItem>
+                    <muxc:NavigationViewItem
+                        x:Name="NavItemsMyList"
+                        x:FieldModifier="public"
+                        Content="我创建的歌单"
+                        Icon="List"
+                        IsExpanded="True"
+                        Visibility="Collapsed" />
+                    <muxc:NavigationViewItem
+                        x:Name="NavItemsLikeList"
+                        x:FieldModifier="public"
+                        Content="我收藏的歌单"
+                        Icon="List"
+                        IsExpanded="True"
+                        Visibility="Collapsed" />
+                </muxc:NavigationView.MenuItems>
+                <muxc:NavigationView.FooterMenuItems>
+                    <muxc:NavigationViewItem
+                        x:Name="NavItemLogin"
+                        x:FieldModifier="public"
+                        Content="登录"
+                        Icon="Contact"
+                        Tag="PageMe"
+                        Tapped="NavigationViewItem_Tapped" />
+                    <muxc:NavigationViewItem
+                        x:Name="NavItemPageSettings"
+                        x:FieldModifier="public"
+                        Content="设置"
+                        Tag="PageSettings"
+                        Tapped="NavigationViewItem_Tapped">
+                        <muxc:NavigationViewItem.Icon>
+                            <muxc:AnimatedIcon x:Name="SearchAnimatedIcon">
+                                <muxc:AnimatedIcon.Source>
+                                    <animatedvisuals:AnimatedSettingsVisualSource/>
+                                </muxc:AnimatedIcon.Source>
+                                <muxc:AnimatedIcon.FallbackIconSource>
+                                    <muxc:FontIconSource FontFamily="Segoe Fluent Icons" Glyph="&#xE713;" />
+                                </muxc:AnimatedIcon.FallbackIconSource>
+                            </muxc:AnimatedIcon>
+                        </muxc:NavigationViewItem.Icon>
+                    </muxc:NavigationViewItem>
+                    <muxc:NavigationViewItem
+                        x:Name="NavItemBlank"
+                        Height="134"
+                        x:FieldModifier="public"
+                        IsEnabled="False"
+                        Opacity="0">
+                        <Grid Margin="-5,5,-15,0">
+                            <Rectangle
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
+                                RadiusX="12"
+                                RadiusY="12">
+                                <Rectangle.Fill>
+                                    <ImageBrush ImageSource="{x:Bind NavItemImageSource}" />
+                                </Rectangle.Fill>
+                            </Rectangle>
+                            <Rectangle
+                                HorizontalAlignment="Stretch"
+                                Fill="{ThemeResource SystemControlAcrylicElementBrush}"
+                                RadiusX="10"
+                                RadiusY="10" />
+                            <StackPanel Orientation="Horizontal">
+                                <frieren:ImageEx
+                                    x:Name="NavItemImage"
+                                    Width="85"
+                                    Height="85"
+                                    Margin="10,10,0,10"
+                                    CornerRadius="10"
+                                    IsCacheEnabled="False"
+                                    Stretch="UniformToFill">
+                                    <frieren:ImageEx.Source>
+                                        <BitmapImage x:Name="NavItemImageSource" />
+                                    </frieren:ImageEx.Source>
+                                </frieren:ImageEx>
+                                <StackPanel
+                                    Margin="10,0,0,10"
+                                    VerticalAlignment="Bottom"
+                                    Orientation="Vertical">
+                                    <TextBlock
+                                        x:Name="NavItemArtist"
+                                        MaxWidth="180"
+                                        Margin="0,0,15,0"
+                                        FontSize="12"
+                                        TextTrimming="CharacterEllipsis" />
+                                    <TextBlock
+                                        x:Name="NavItemSongName"
+                                        MaxWidth="180"
+                                        Margin="0,0,15,5"
+                                        FontSize="22"
+                                        FontWeight="Bold"
+                                        TextAlignment="Left"
+                                        TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
                             </StackPanel>
-                        </StackPanel>
-                    </Grid>
-                </muxc:NavigationViewItem>
-            </muxc:NavigationView.FooterMenuItems>
-            <Grid>
-                <Frame
-                    x:Name="BaseFrame"
-                    Grid.Row="1"
-                    Margin="0,48,0,0"
-                    Navigated="BaseFrame_Navigated" />
-            </Grid>
-        </muxc:NavigationView>
+                        </Grid>
+                    </muxc:NavigationViewItem>
+                </muxc:NavigationView.FooterMenuItems>
+                <Grid>
+                    <Frame
+                        x:Name="BaseFrame"
+                        Grid.Row="1"
+                        Navigated="BaseFrame_Navigated" />
+                </Grid>
+            </muxc:NavigationView>
+
+            <VisualStateManager.VisualStateGroups>
+                <VisualStateGroup>
+                    <VisualState>
+                        <VisualState.StateTriggers>
+                            <AdaptiveTrigger MinWindowWidth="641" />
+                        </VisualState.StateTriggers>
+                        <VisualState.Setters>
+                            <Setter Target="BaseFrame.Margin" Value="0" />
+                            <Setter Target="NavMain.IsPaneToggleButtonVisible" Value="True" />
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+                <VisualStateGroup>
+                    <VisualState>
+                        <VisualState.StateTriggers>
+                            <AdaptiveTrigger MinWindowWidth="1008" />
+                        </VisualState.StateTriggers>
+                        <VisualState.Setters>
+                            <Setter Target="NavMain.IsPaneToggleButtonVisible" Value="False" />
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateManager.VisualStateGroups>
+        </Grid>
         <!--  登录弹窗  -->
         <ContentDialog
             x:Name="DialogLogin"
@@ -472,28 +507,5 @@
                 <TextBlock>请在缓解后后使用扫码登录</TextBlock>
             </StackPanel>
         </ContentDialog>
-        <VisualStateManager.VisualStateGroups>
-            <VisualStateGroup>
-                <VisualState>
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="641" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="BaseFrame.Margin" Value="0" />
-                        <Setter Target="NavMain.IsPaneToggleButtonVisible" Value="True" />
-                    </VisualState.Setters>
-                </VisualState>
-            </VisualStateGroup>
-            <VisualStateGroup>
-                <VisualState>
-                    <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="1008" />
-                    </VisualState.StateTriggers>
-                    <VisualState.Setters>
-                        <Setter Target="NavMain.IsPaneToggleButtonVisible" Value="False" />
-                    </VisualState.Setters>
-                </VisualState>
-            </VisualStateGroup>
-        </VisualStateManager.VisualStateGroups>
     </Grid>
 </Page>
