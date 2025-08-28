@@ -478,7 +478,7 @@ DoubleAnimation verticalAnimation;
 
     public void ShowExpandedPlayer()
     {
-        if (!HyPlayList.Player.PlayerCreated || HyPlayList.NowPlayingItem.PlayItem.AudioGraphPlaybackSource == null) return;
+        if (!HyPlayList.Player.PlayerCreated || HyPlayList.NowPlayingItem?.PlayItem?.AudioGraphPlaybackSource == null) return;
         ButtonExpand.Visibility = Visibility.Collapsed;
         ButtonCollapse.Visibility = Visibility.Visible;
         PlayBarBackgroundFadeOut.Begin();

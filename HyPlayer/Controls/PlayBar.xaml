@@ -752,19 +752,23 @@
                             <FontIcon Glyph="&#xE70E;" />
                         </Border>
                         <Border
+                            MinWidth="100"
                             Margin="0"
                             Background="{ThemeResource LayerFillColorDefaultBrush}"
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                             BorderThickness="1"
-                            CornerRadius="6" MinWidth="100">
+                            CornerRadius="6">
                             <Grid>
-                                <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE90B;" FontSize="24" />
+                                <FontIcon
+                                    FontFamily="Segoe Fluent Icons"
+                                    FontSize="24"
+                                    Glyph="&#xE90B;" />
                                 <frieren:ImageEx
-                                x:Name="AlbumImage"
-                                EnableLazyLoading="True"
-                                IsCacheEnabled="False"
-                                PlaceholderStretch="Uniform"
-                                Stretch="UniformToFill">
+                                    x:Name="AlbumImage"
+                                    EnableLazyLoading="True"
+                                    IsCacheEnabled="False"
+                                    PlaceholderStretch="Uniform"
+                                    Stretch="UniformToFill">
                                     <frieren:ImageEx.Source>
                                         <BitmapImage x:Name="AlbumImageSource" />
                                     </frieren:ImageEx.Source>
@@ -776,8 +780,7 @@
                         x:Name="SongInfoText"
                         Grid.Column="1"
                         VerticalAlignment="Center"
-                        RowSpacing="2"
-                        Visibility="Collapsed">
+                        RowSpacing="2">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
@@ -794,7 +797,6 @@
                             FontWeight="Bold"
                             IsTextSelectionEnabled="True"
                             TextTrimming="CharacterEllipsis"
-                            Text="SONG_NAME"
                             ToolTipService.ToolTip="{x:Bind Mode=OneWay, Path=TbSongName.Text}">
                             <TextBlock.ContextFlyout>
                                 <MenuFlyout>

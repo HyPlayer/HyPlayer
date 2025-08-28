@@ -61,13 +61,19 @@ namespace HyPlayer.Classes
                 if (keyItem?.PlayItem is not null)
                 {
                     var keySource = keyItem?.PlayItem.AudioGraphPlaybackSource;
-                    HyPlayList.Player.DisconnectPlaybackSource(keySource);
+                    if (keySource != null) 
+                    {
+                        HyPlayList.Player.DisconnectPlaybackSource(keySource);
+                    }
                     keyItem.PlayItem.FreePlaybackResources();
                 }
                 if (valueItem?.PlayItem is not null)
                 {
                     var valueSource = valueItem?.PlayItem.AudioGraphPlaybackSource;
-                    HyPlayList.Player.DisconnectPlaybackSource(valueSource);
+                    if(valueSource != null)
+                    {
+                        HyPlayList.Player.DisconnectPlaybackSource(valueSource);
+                    }
                     valueItem.PlayItem.FreePlaybackResources();
                 }
             }
@@ -103,21 +109,28 @@ namespace HyPlayer.Classes
         }
         private void ProcessFade()
         {
-            if (HyPlayList.Player.PrimaryPlaybackSource == _currentPlayItem?.Item1 && _currentPlayItem?.Item2 != null && _currentPlayItem?.Item1 != null)
+            try
             {
-                HyPlayList.Player.PrimaryPlaybackSource = _currentPlayItem?.Item2;
-                HyPlayList.Player?.PlayPlaybackSource(_currentPlayItem?.Item2);
-            }
-            else if (_currentPlayItem?.Item1 != null && _currentPlayItem?.Item2 != null)
-            {
+                if (HyPlayList.Player.PrimaryPlaybackSource == _currentPlayItem?.Item1 && _currentPlayItem?.Item2 != null && _currentPlayItem?.Item1 != null)
+                {
+                    HyPlayList.Player.PrimaryPlaybackSource = _currentPlayItem?.Item2;
+                    HyPlayList.Player?.PlayPlaybackSource(_currentPlayItem?.Item2);
+                }
+                else if (_currentPlayItem?.Item1 != null && _currentPlayItem?.Item2 != null)
+                {
 
-                var time1 = Common.Setting.CrossFadeTime - (_currentNode.Item1.Duration - _currentNode.Item1.Position).TotalSeconds;
-                var time2 = _currentNode.Item2.Duration.TotalSeconds;
-                var time = Math.Min(time1, time2);
-                var mainMultiplier = Math.Min(1, 1 - (time / Common.Setting.CrossFadeTime));
-                var subMultiplier = Math.Max(time / Common.Setting.CrossFadeTime, 0);
-                HyPlayList.Player.SetPlaybackSourceOutputVolume((Common.Setting.EnableAudioGain ? _initialVolume[_currentPlayItem?.Item1] : 1) * mainMultiplier, _currentPlayItem?.Item1);
-                HyPlayList.Player.SetPlaybackSourceOutputVolume((Common.Setting.EnableAudioGain ? _initialVolume[_currentPlayItem?.Item2] : 1) * subMultiplier, _currentPlayItem?.Item2);
+                    var time1 = Common.Setting.CrossFadeTime - (_currentNode.Item1.Duration - _currentNode.Item1.Position).TotalSeconds;
+                    var time2 = _currentNode.Item2.Duration.TotalSeconds;
+                    var time = Math.Min(time1, time2);
+                    var mainMultiplier = Math.Min(1, 1 - (time / Common.Setting.CrossFadeTime));
+                    var subMultiplier = Math.Max(time / Common.Setting.CrossFadeTime, 0);
+                    HyPlayList.Player.SetPlaybackSourceOutputVolume((Common.Setting.EnableAudioGain ? _initialVolume[_currentPlayItem?.Item1] : 1) * mainMultiplier, _currentPlayItem?.Item1);
+                    HyPlayList.Player.SetPlaybackSourceOutputVolume((Common.Setting.EnableAudioGain ? _initialVolume[_currentPlayItem?.Item2] : 1) * subMultiplier, _currentPlayItem?.Item2);
+                }
+            }
+            catch
+            {
+                //Ignore
             }
         }
 
