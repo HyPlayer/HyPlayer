@@ -94,70 +94,11 @@ DoubleAnimation verticalAnimation;
 
     public void InitializeDesktopLyric()
     {
-        if (Common.Setting.toastLyric)
-        {
-            var desktopLyricsToast = new ToastContentBuilder();
-            desktopLyricsToast.SetToastScenario(ToastScenario.IncomingCall);
-            desktopLyricsToast.AddAudio(new ToastAudio { Silent = true });
-            desktopLyricsToast.AddVisualChild(new AdaptiveText
-            {
-                Text = new BindableString("Title"),
-                HintStyle = AdaptiveTextStyle.Header
-            });
-            desktopLyricsToast.AddVisualChild(new AdaptiveText
-            {
-                Text = new BindableString("PureLyric")
-            });
-            desktopLyricsToast.AddVisualChild(new AdaptiveText
-            {
-                Text = new BindableString("Translation")
-            });
-            desktopLyricsToast.AddVisualChild(new AdaptiveProgressBar
-            {
-                ValueStringOverride = new BindableString("TotalValueString"),
-
-                Status = new BindableString("CurrentValueString"),
-
-                Value = new BindableProgressBarValue("CurrentValue")
-            });
-            var toast = new ToastNotification(desktopLyricsToast.GetXml())
-            {
-                Tag = "HyPlayerDesktopLyrics",
-                Data = new NotificationData()
-            };
-            toast.Data.Values["Title"] = "当前无音乐播放";
-            toast.Data.Values["PureLyric"] = "当前无歌词";
-            toast.Data.Values["TotalValueString"] = "0:00:00";
-            toast.Data.Values["CurrentValueString"] = "0:00:00";
-            toast.Data.Values["CurrentValue"] = "0";
-
-            toast.Data.SequenceNumber = 0;
-            toast.ExpirationTime = DateTimeOffset.Now.AddMinutes(60);
-            var notifier = ToastNotificationManager.CreateToastNotifier();
-            notifier.Show(toast);
-            toast.Dismissed += Toast_Dismissed;
-            HyPlayList.OnPlayPositionChange += FreshDesktopLyric;
-        }
-        else
-        {
-            HyPlayList.OnPlayPositionChange -= FreshDesktopLyric;
-            var notifier = ToastNotificationManager.CreateToastNotifier();
-            ToastNotificationManagerCompat.History.Clear();
-        }
+        HyPlayList.OnPlayPositionChange -= FreshDesktopLyric;
+        var notifier = ToastNotificationManager.CreateToastNotifier();
+        ToastNotificationManagerCompat.History.Clear();
     }
 
-    private void Toast_Dismissed(ToastNotification sender, ToastDismissedEventArgs args)
-    {
-        if (args.Reason == ToastDismissalReason.TimedOut)
-        {
-            var notifier = ToastNotificationManager.CreateToastNotifier();
-            notifier.Show(sender);
-        }
-        else if (Common.Setting.toastLyric)
-        {
-            Common.Setting.toastLyric = false;
-        }
-    }
 
     private void FreshDesktopLyric(TimeSpan ts)
     {
@@ -754,20 +695,7 @@ DoubleAnimation verticalAnimation;
 
     private async void ToggleButton_Click(object sender, RoutedEventArgs e)
     {
-        if (Common.Setting.toastLyric)
-        {
-            Common.Setting.toastLyric = false;
-            InitializeDesktopLyric();
-            return;
-        }
-
-        if (Common.Setting.noUseHotLyric)
-        {
-            Common.Setting.toastLyric = true;
-            InitializeDesktopLyric();
-            return;
-        }
-
+        InitializeDesktopLyric();
         // 当前未打开歌词
         Bindings.Update();
         var uri = new Uri($"hot-lyric:///?from={Package.Current.Id.FamilyName}");
@@ -778,7 +706,7 @@ DoubleAnimation verticalAnimation;
             {
                 Title = "关于桌面歌词",
                 Content =
-                    "目前 HyPlayer 已经适配「热词」，我们推荐使用「热词」来获得真正的桌面歌词体验。\r\n同时我们仍然保留了旧的 Toast 歌词\r\n如想使用 Toast 歌词请点击否。\r\n或者可以前往 Microsoft 商店安装 「热词」",
+                    "目前 HyPlayer 已经适配「热词」，我们推荐使用「热词」来获得真正的桌面歌词体验，可以前往 Microsoft 商店安装 「热词」",
                 CloseButtonText = "否",
                 PrimaryButtonText = "安装 「热词」"
             };
@@ -790,8 +718,6 @@ DoubleAnimation verticalAnimation;
                 return;
             }
 
-            Common.Setting.toastLyric = true;
-            InitializeDesktopLyric();
             return;
         }
 
@@ -801,11 +727,11 @@ DoubleAnimation verticalAnimation;
             {
                 FallbackUri = new Uri("ms-windows-store://pdp?productId=9MXFFHVQVBV9")
             });
-            Common.Setting.toastLyric = false;
             Bindings.Update();
         }
         catch
         {
+
         }
     }
 
@@ -926,23 +852,6 @@ DoubleAnimation verticalAnimation;
             PointerExited += (o, args) => { GridThis.Background = new SolidColorBrush(Colors.Transparent); };
         }
 
-        /*
-        verticalAnimation = new DoubleAnimation();
-
-        verticalAnimation.From = 0;
-        verticalAnimation.To = 0;
-        verticalAnimation.SpeedRatio = 0.1;
-        verticalAnimation.Duration = new Duration(TimeSpan.FromSeconds(4));
-        verticalAnimation.AutoReverse = true;
-        verticalAnimation.RepeatBehavior = RepeatBehavior.Forever;
-        verticalAnimation.EnableDependentAnimation = true;
-
-        TbSongNameScrollStoryBoard = new Storyboard();
-        TbSongNameScrollStoryBoard.Children.Add(verticalAnimation);
-        Storyboard.SetTarget(verticalAnimation, TbSongName);
-        Storyboard.SetTargetProperty(verticalAnimation, "Horizontalofset");
-        TbSongNameScrollStoryBoard.Begin();
-        */
     }
 
     public async void RefreshPlayBarCover(HyPlayItem playItem, IBuffer coverStream)
