@@ -81,7 +81,7 @@
                         x:Name="SearchAutoSuggestBox"
                         VerticalContentAlignment="Center"
                         LostFocus="SearchAutoSuggestBox_LostFocus"
-                        PlaceholderText="搜索..."
+                        PlaceholderText="搜索音乐、创作者与音乐视频"
                         QueryIcon="Find"
                         QuerySubmitted="AutoSuggestBox_QuerySubmitted"
                         SuggestionChosen="SearchAutoSuggestBox_OnSuggestionChosen"
