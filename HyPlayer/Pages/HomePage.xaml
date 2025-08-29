@@ -248,27 +248,27 @@
             </Button>
         </DataTemplate>
     </local:HomePageBase.Resources>
-
-    <ScrollViewer>
-        <Grid x:Name="ContentArea" Margin="0,0,0,96">
-            <Grid x:Name="BackgroundLayer">
-                <Grid.RowDefinitions>
-                    <RowDefinition
+    <muxc:RefreshContainer RefreshRequested="RefreshRequested">
+        <ScrollViewer>
+            <Grid x:Name="ContentArea" Margin="0,0,0,96">
+                <Grid x:Name="BackgroundLayer">
+                    <Grid.RowDefinitions>
+                        <RowDefinition
                         Height="350"
                         MinHeight="400"
                         MaxHeight="600" />
-                    <RowDefinition Height="100" />
-                </Grid.RowDefinitions>
-                <controls:HomePageHeaderImage />
-            </Grid>
-            <Grid x:Name="ContentLayer" Margin="36,12">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="300" />
-                    <RowDefinition Height="100" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-                <Grid x:Name="Header">
-                    <TextBlock
+                        <RowDefinition Height="100" />
+                    </Grid.RowDefinitions>
+                    <controls:HomePageHeaderImage />
+                </Grid>
+                <Grid x:Name="ContentLayer" Margin="36,12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="300" />
+                        <RowDefinition Height="100" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid x:Name="Header">
+                        <TextBlock
                         x:Name="HeaderText"
                         Margin="0,36,0,40"
                         HorizontalAlignment="Left"
@@ -276,13 +276,13 @@
                         Foreground="White"
                         Style="{ThemeResource TitleTextBlockStyle}"
                         Text="主页" />
-                </Grid>
-                <Grid
+                    </Grid>
+                    <Grid
                     x:Name="Toolbar"
                     Grid.Row="1"
                     HorizontalAlignment="Right">
-                    <ScrollViewer>
-                        <StackPanel
+                        <ScrollViewer>
+                            <StackPanel
                             x:Name="ActionPanel"
                             Margin="0,40,20,0"
                             HorizontalAlignment="Right"
@@ -290,148 +290,148 @@
                             Canvas.ZIndex="1"
                             Orientation="Horizontal"
                             Spacing="12">
-                            <Button
+                                <Button
                                 Width="125"
                                 Height="60"
                                 Padding="16"
                                 Command="{x:Bind ViewModel.HeartBeatModeClickedCommand, Mode=OneWay}"
                                 CornerRadius="6">
-                                <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <FontIcon FontSize="22" Glyph="&#xE006;" />
-                                    <TextBlock
+                                    <StackPanel Orientation="Horizontal" Spacing="12">
+                                        <FontIcon FontSize="22" Glyph="&#xE006;" />
+                                        <TextBlock
                                         x:Uid="HomePage_Btn_MyLike"
                                         FontSize="14"
                                         Text="心动模式" />
-                                </StackPanel>
-                            </Button>
-                            <Button
+                                    </StackPanel>
+                                </Button>
+                                <Button
                                 Width="125"
                                 Height="60"
                                 Padding="16"
                                 Command="{x:Bind ViewModel.LikedClickedCommand, Mode=OneWay}"
                                 CornerRadius="6">
-                                <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <FontIcon FontSize="22" Glyph="&#xE163;" />
-                                    <TextBlock
+                                    <StackPanel Orientation="Horizontal" Spacing="12">
+                                        <FontIcon FontSize="22" Glyph="&#xE163;" />
+                                        <TextBlock
                                         x:Uid="HomePage_Btn_DailyRcmd"
                                         FontSize="14"
                                         Text="每日推荐" />
-                                </StackPanel>
-                            </Button>
-                            <Button
+                                    </StackPanel>
+                                </Button>
+                                <Button
                                 Width="125"
                                 Height="60"
                                 Padding="16"
                                 Command="{x:Bind ViewModel.PersonalFmClickedCommand, Mode=OneWay}"
                                 CornerRadius="6">
-                                <StackPanel Orientation="Horizontal" Spacing="12">
-                                    <FontIcon FontSize="22" Glyph="&#xEFA9;" />
-                                    <TextBlock
+                                    <StackPanel Orientation="Horizontal" Spacing="12">
+                                        <FontIcon FontSize="22" Glyph="&#xEFA9;" />
+                                        <TextBlock
                                         x:Uid="HomePage_Btn_PersonalFm"
                                         FontSize="14"
                                         Text="私人电台" />
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
-                    </ScrollViewer>
-                </Grid>
-                <Grid
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+                    <Grid
                     x:Name="Content"
                     Grid.Row="2"
                     Margin="12,12">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Grid x:Name="SignInedDataArea">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="305" />
-                        </Grid.ColumnDefinitions>
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <Grid Grid.Row="0" Margin="8,16">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid x:Name="SignInedDataArea">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="305" />
+                            </Grid.ColumnDefinitions>
+                            <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
-                                <StackPanel
+                                <Grid Grid.Row="0" Margin="8,16">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <StackPanel
                                     Margin="0,4"
                                     Orientation="Horizontal"
                                     Spacing="12">
-                                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xEB50;" />
-                                    <TextBlock
+                                        <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xEB50;" />
+                                        <TextBlock
                                         FontWeight="SemiBold"
                                         Style="{ThemeResource SubtitleTextBlockStyle}"
                                         Text="官方歌单" />
-                                </StackPanel>
-                                <ScrollViewer
+                                    </StackPanel>
+                                    <ScrollViewer
                                     Grid.Row="1"
                                     HorizontalScrollBarVisibility="Visible"
                                     HorizontalScrollMode="Enabled"
                                     VerticalScrollMode="Disabled"
                                     ZoomMode="Disabled">
-                                    <muxc:ItemsRepeater
+                                        <muxc:ItemsRepeater
                                         x:Name="CategryItemsRepeater"
                                         ItemTemplate="{StaticResource ToplistCardTemplate}"
                                         ItemsSource="{x:Bind ViewModel.OfficialPlaylists, Mode=OneWay}"
                                         Layout="{StaticResource CardListDefaultLayout}" />
-                                </ScrollViewer>
-                            </Grid>
-                            <Grid Grid.Row="1" Margin="8,16">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-                                <StackPanel
+                                    </ScrollViewer>
+                                </Grid>
+                                <Grid Grid.Row="1" Margin="8,16">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <StackPanel
                                     Margin="0,4"
                                     Orientation="Horizontal"
                                     Spacing="12">
-                                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE71D;" />
-                                    <TextBlock
+                                        <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE71D;" />
+                                        <TextBlock
                                         FontWeight="SemiBold"
                                         Style="{ThemeResource SubtitleTextBlockStyle}"
                                         Text="推荐歌单" />
-                                </StackPanel>
-                                <ScrollViewer
+                                    </StackPanel>
+                                    <ScrollViewer
                                     Grid.Row="1"
                                     HorizontalScrollBarVisibility="Visible"
                                     HorizontalScrollMode="Enabled"
                                     VerticalScrollMode="Disabled"
                                     ZoomMode="Disabled">
-                                    <muxc:ItemsRepeater
+                                        <muxc:ItemsRepeater
                                         x:Name="RecommendedItemsRepeater"
                                         ItemTemplate="{StaticResource RecommendedCardTemplate}"
                                         ItemsSource="{x:Bind ViewModel.RecommendedPlaylist, Mode=OneWay}"
                                         Layout="{StaticResource CardListDefaultLayout}" />
 
-                                </ScrollViewer>
+                                    </ScrollViewer>
+                                </Grid>
                             </Grid>
-                        </Grid>
 
-                        <Grid
+                            <Grid
                             Grid.Row="0"
                             Grid.Column="1"
                             Margin="8,16">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <Grid Margin="12,0">
-                                <StackPanel
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid Margin="12,0">
+                                    <StackPanel
                                     HorizontalAlignment="Left"
                                     Orientation="Horizontal"
                                     Spacing="12">
-                                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xEC4F;" />
-                                    <TextBlock
+                                        <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xEC4F;" />
+                                        <TextBlock
                                         FontWeight="SemiBold"
                                         Style="{ThemeResource SubtitleTextBlockStyle}"
                                         Text="推荐单曲" />
-                                </StackPanel>
-                                <Button
+                                    </StackPanel>
+                                    <Button
                                     x:Name="PlayAllButton"
                                     CommandParameter="{x:Bind ViewModel.RecommendedSongs}"
                                     Command="{x:Bind ViewModel.PlayAllRecommendedSongsClickedCommand}"
@@ -442,66 +442,67 @@
                                     VerticalContentAlignment="Center"
                                     CornerRadius="14"
                                     Style="{ThemeResource AccentButtonStyle}">
-                                    <StackPanel Orientation="Horizontal" Spacing="4">
-                                        <FontIcon
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <FontIcon
                                             FontFamily="Segoe Fluent Icons"
                                             FontSize="10"
                                             Glyph="&#xF5B0;" />
-                                        <TextBlock
+                                            <TextBlock
                                             x:Uid="HomePage_Btn_PlayAll"
                                             VerticalAlignment="Center"
                                             FontSize="12"
                                             Text="全部播放" />
-                                    </StackPanel>
-                                </Button>
-                            </Grid>
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
 
 
-                            <StackPanel Grid.Row="1">
-                                <FlipView
+                                <StackPanel Grid.Row="1">
+                                    <FlipView
                                     x:Name="RecommendedSongsFlipView"
                                     Height="380"
                                     Background="Transparent"
                                     ItemTemplate="{StaticResource RecommendedSongCardTemplate}"
                                     ItemsSource="{x:Bind ViewModel.RecommendedSongs, Mode=OneWay}" />
-                                <muxc:PipsPager
+                                    <muxc:PipsPager
                                     HorizontalAlignment="Center"
                                     NumberOfPages="{x:Bind ViewModel.RecommendedSongs.Count, Mode=OneWay}"
                                     SelectedPageIndex="{x:Bind RecommendedSongsFlipView.SelectedIndex, Mode=OneWay}" />
 
-                            </StackPanel>
+                                </StackPanel>
+                            </Grid>
                         </Grid>
-                    </Grid>
-                    <Grid Grid.Row="2" Margin="8,16">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-                        <StackPanel
+                        <Grid Grid.Row="2" Margin="8,16">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <StackPanel
                             Margin="0,4"
                             Orientation="Horizontal"
                             Spacing="12">
-                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE734;" />
-                            <TextBlock
+                                <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE734;" />
+                                <TextBlock
                                 FontWeight="SemiBold"
                                 Style="{ThemeResource SubtitleTextBlockStyle}"
                                 Text="排行榜" />
-                        </StackPanel>
-                        <ScrollViewer
+                            </StackPanel>
+                            <ScrollViewer
                             Grid.Row="1"
                             HorizontalScrollBarVisibility="Visible"
                             HorizontalScrollMode="Enabled"
                             VerticalScrollMode="Disabled"
                             ZoomMode="Disabled">
-                            <muxc:ItemsRepeater
+                                <muxc:ItemsRepeater
                                 x:Name="ToplistItemsRepeater"
                                 ItemTemplate="{StaticResource ToplistCardTemplate}"
                                 ItemsSource="{x:Bind ViewModel.ToplistPlaylist, Mode=OneWay}"
                                 Layout="{StaticResource CardListDefaultLayout}" />
-                        </ScrollViewer>
+                            </ScrollViewer>
+                        </Grid>
                     </Grid>
                 </Grid>
             </Grid>
-        </Grid>
-    </ScrollViewer>
+        </ScrollViewer>
+    </muxc:RefreshContainer>
 </local:HomePageBase>

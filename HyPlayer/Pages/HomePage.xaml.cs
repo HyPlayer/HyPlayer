@@ -8,6 +8,8 @@ using System.Diagnostics;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using Microsoft.UI.Xaml.Controls;
+
 
 
 namespace HyPlayer.Pages
@@ -21,6 +23,12 @@ namespace HyPlayer.Pages
         {
             InitializeComponent();
 
+        }
+
+        private void RefreshRequested(Microsoft.UI.Xaml.Controls.RefreshContainer sender, Microsoft.UI.Xaml.Controls.RefreshRequestedEventArgs args)
+        {
+            var def = args.GetDeferral();
+            ViewModel.GetDataAsync().ContinueWith(t => def.Complete()).SafeFireAndForget();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
