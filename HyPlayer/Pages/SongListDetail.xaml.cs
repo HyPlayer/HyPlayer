@@ -310,7 +310,7 @@ public sealed partial class SongListDetail : Page, IDisposable
                         }, _cancellationToken);
                     if (json.IsError)
                     {
-                        Common.AddToTeachingTipLists("加载歌单出错", json.Error?.Message ?? "未��错误");
+                        Common.AddToTeachingTipLists("加载歌单出错", json.Error?.Message ?? "未知错误");
                         return null;
                     }
 

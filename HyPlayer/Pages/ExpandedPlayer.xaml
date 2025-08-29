@@ -74,100 +74,6 @@
         </Storyboard>
         <Storyboard x:Name="ShowAni" />
         <Storyboard x:Name="CollapseAni" />
-        <Storyboard x:Name="ImmersiveModeInAni">
-            <DoubleAnimation
-                Storyboard.TargetName="BlackCover"
-                Storyboard.TargetProperty="Opacity"
-                To="1">
-                <DoubleAnimation.EasingFunction>
-                    <PowerEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation
-                Storyboard.TargetName="AcrylicCover"
-                Storyboard.TargetProperty="Opacity"
-                To="0">
-                <DoubleAnimation.EasingFunction>
-                    <PowerEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation
-                Storyboard.TargetName="ImageAlbum"
-                Storyboard.TargetProperty="Opacity"
-                To="0">
-                <DoubleAnimation.EasingFunction>
-                    <PowerEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-
-        </Storyboard>
-        <Storyboard x:Name="ImmersiveModeInAniOtrMode">
-            <DoubleAnimation
-                Storyboard.TargetName="BlackCover"
-                Storyboard.TargetProperty="Opacity"
-                To="1">
-                <DoubleAnimation.EasingFunction>
-                    <PowerEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation
-                Storyboard.TargetName="ImageAlbum"
-                Storyboard.TargetProperty="Opacity"
-                To="0">
-                <DoubleAnimation.EasingFunction>
-                    <PowerEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-
-        </Storyboard>
-        <Storyboard x:Name="ImmersiveModeOutAni">
-            <DoubleAnimation
-                Storyboard.TargetName="BlackCover"
-                Storyboard.TargetProperty="Opacity"
-                To="0">
-                <DoubleAnimation.EasingFunction>
-                    <PowerEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation
-                Storyboard.TargetName="AcrylicCover"
-                Storyboard.TargetProperty="Opacity"
-                To="1">
-                <DoubleAnimation.EasingFunction>
-                    <PowerEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation
-                Storyboard.TargetName="ImageAlbum"
-                Storyboard.TargetProperty="Opacity"
-                To="1">
-                <DoubleAnimation.EasingFunction>
-                    <PowerEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-
-        </Storyboard>
-        <Storyboard x:Name="ImmersiveModeOutAniOtrMode">
-            <DoubleAnimation
-                Storyboard.TargetName="BlackCover"
-                Storyboard.TargetProperty="Opacity"
-                To="0">
-                <DoubleAnimation.EasingFunction>
-                    <PowerEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-            <DoubleAnimation
-                Storyboard.TargetName="ImageAlbum"
-                Storyboard.TargetProperty="Opacity"
-                To="1">
-                <DoubleAnimation.EasingFunction>
-                    <PowerEase EasingMode="EaseInOut" />
-                </DoubleAnimation.EasingFunction>
-            </DoubleAnimation>
-
-        </Storyboard>
-
-
 
         <media:AttachedCardShadow
             x:Key="AlbumShadow"
@@ -570,16 +476,6 @@
                             Text="小窗模式">
                             <ToggleMenuFlyoutItem.Icon>
                                 <FontIcon Glyph="&#xE2B3;" />
-                            </ToggleMenuFlyoutItem.Icon>
-                        </ToggleMenuFlyoutItem>
-                        <ToggleMenuFlyoutItem
-                            x:Name="BtnToggleImmersiveMode"
-                            HorizontalContentAlignment="Left"
-                            Background="Transparent"
-                            Click="BtnToggleImmersiveMode_OnClicked"
-                            Text="沉浸模式">
-                            <ToggleMenuFlyoutItem.Icon>
-                                <FontIcon Glyph="&#xE93C;" />
                             </ToggleMenuFlyoutItem.Icon>
                         </ToggleMenuFlyoutItem>
                         <MenuFlyoutSeparator />

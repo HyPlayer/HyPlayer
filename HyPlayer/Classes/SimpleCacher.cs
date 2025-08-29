@@ -1,7 +1,8 @@
 #nullable enable
-using Newtonsoft.Json;
 using System;
+using System.Diagnostics;
 using System.IO;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Windows.Storage;
 
@@ -53,7 +54,7 @@ public static class SimpleCacher
                 }
                 try
                 {
-                    var rst = JsonConvert.DeserializeObject<T>(content);
+                    var rst = JsonSerializer.Deserialize<T>(content);
                     return rst;
                 }
                 catch
@@ -87,7 +88,7 @@ public static class SimpleCacher
 
         try
         {
-            var json = JsonConvert.SerializeObject(data);
+            var json = JsonSerializer.Serialize(data);
             var file = await dir.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
             await FileIO.WriteTextAsync(file, json);
         }
@@ -168,6 +169,7 @@ public enum CacheType
     PlaylistTracksDetail,
     AlbumDynamic,
     ArtistDetail,
+    ArtistSongsDetial,
     ArtistTopSongsDetail,
     ArtistAlbumsList,
     Login,

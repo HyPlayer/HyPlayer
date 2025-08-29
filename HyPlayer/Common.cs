@@ -473,12 +473,12 @@ namespace HyPlayer
             }
         }
 
-        public int expandedPlayerBackgroundType
+        public BackgroundType expandedPlayerBackgroundType
         {
-            get => GetSettings(nameof(expandedPlayerBackgroundType), 0);
+            get => GetSettings(nameof(expandedPlayerBackgroundType), BackgroundType.CoverBlur);
             set
             {
-                ApplicationData.Current.LocalSettings.Values[nameof(expandedPlayerBackgroundType)] = value;
+                ApplicationData.Current.LocalSettings.Values[nameof(expandedPlayerBackgroundType)] = (int)value;
                 OnPropertyChanged();
             }
         }
@@ -1994,6 +1994,15 @@ namespace HyPlayer
         AutoSelect,
         NeteaseOnly,
         KawazuOnly
+    }
+
+    public enum BackgroundType : int
+    {
+        CoverBlur = 0,
+        CoverTheme = 1,
+        DesktopAcrylic = 5,
+        Animated = 6,
+        Isolation = 7
     }
 
     internal static class Extensions

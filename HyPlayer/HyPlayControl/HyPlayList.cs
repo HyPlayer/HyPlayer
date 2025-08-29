@@ -1933,13 +1933,13 @@ public static class HyPlayList
                     return null;
                 }
 
-                return detailResponse.Value?.Playlist?.TrackIds;
+                return detailResponse.Value;
             });
 
 
             var nowIndex = 0;
 
-            var trackIds = resp.Select(t => t.Id).ToList() ?? [];
+            var trackIds = resp?.Playlist?.TrackIds.Select(t => t.Id).ToList() ?? [];
             while (nowIndex * 500 < trackIds.Count)
             {
                 var nowIds = trackIds.GetRange(nowIndex * 500,

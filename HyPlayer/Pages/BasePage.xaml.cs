@@ -789,7 +789,7 @@ public sealed partial class BasePage : Page
                 Common.AddToTeachingTipLists("获取推荐词失败", json.Error.Message);
                 return;
             }
-            sender.ItemsSource = json.Value.Result.AllMatch.Select(t => t.Keyword).ToList();
+            sender.ItemsSource = json.Value.Result.AllMatch?.Select(t => t.Keyword).ToList();
         }
         catch (Exception ex)
         {
