@@ -188,7 +188,6 @@ sealed partial class App : Application
 
             rootFrame.Navigate(typeof(MainPage));
             Window.Current.Activate();
-            Common.BarPlayBar.InitializeDesktopLyric();
             if (Common.isExpanded) return;
             var animation = Common.Setting.expandAnimation;
             Common.Setting.expandAnimation = false;

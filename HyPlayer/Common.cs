@@ -1223,26 +1223,6 @@ namespace HyPlayer
             }
         }
 
-        public bool noUseHotLyric
-        {
-            get => GetSettings(nameof(noUseHotLyric), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(noUseHotLyric)] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool toastLyric
-        {
-            get => GetSettings(nameof(toastLyric), false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values[nameof(toastLyric)] = value;
-                OnPropertyChanged();
-            }
-        }
-
         public bool expandAnimation
         {
             get => GetSettings(nameof(expandAnimation), true);
