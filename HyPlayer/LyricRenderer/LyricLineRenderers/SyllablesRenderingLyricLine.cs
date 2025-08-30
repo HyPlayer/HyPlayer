@@ -6,7 +6,6 @@ using HyPlayer.LyricRenderer.Animator;
 using HyPlayer.LyricRenderer.Animator.EaseFunctions;
 using HyPlayer.LyricRenderer.Builder;
 using Microsoft.Graphics.Canvas;
-using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.Graphics.Canvas.Geometry;
 using Microsoft.Graphics.Canvas.Text;
 using System;
@@ -18,6 +17,8 @@ using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Media.Animation;
+using Microsoft.Graphics.Canvas.Brushes;
+using Microsoft.Graphics.Canvas.Effects;
 
 namespace HyPlayer.LyricRenderer.LyricLineRenderers
 {
@@ -38,7 +39,6 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
         private CanvasTextLayout? textLayout;
 
         private bool _isRomajiSyllable = false;
-
         private CanvasTextLayout? tl;
         private CanvasTextLayout? tll;
         public EaseFunctionBase EaseFunction { get; set; } = new CustomCircleEase { EasingMode = EasingMode.EaseOut };
@@ -47,8 +47,9 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
         private bool _isFocusing;
         private float _canvasWidth;
         private float _canvasHeight;
-        private bool _sizeChangedWithourNextRender = true;
+        private bool _sizeChangedWithoutNextRender = true;
         public bool IsSyllable = false;
+        private int _lastSyllableIndex = -1;
 
         public List<RenderingSyllable> Syllables { get; set; } = [];
         public string? Transliteration { get; set; }
@@ -71,14 +72,13 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             var drawingTop = offset.Y + _drawingOffsetY;
 
             float actualOffsetX = offset.X - (float)textLayout.LayoutBounds.Left;
-            if (_sizeChangedWithourNextRender)
+            if (_sizeChangedWithoutNextRender)
             {
                 _unfocusMatrix = GetCenterMatrix(0, 0, _scalingCenterX + offset.X,
                     (float)textLayout.LayoutBounds.Height / 2, 0.8F, 0.8F);
-                _sizeChangedWithourNextRender = false;
-
+                _sizeChangedWithoutNextRender = false;
             }
-            float actualX = 0;
+
             switch (TypographySelector(t => t?.Alignment, context)!.Value)
             {
                 case TextAlignment.Left:
@@ -88,7 +88,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     actualOffsetX += 6;
                     break;
                 case TextAlignment.Right:
-                    actualOffsetX -= 16;
+                    actualOffsetX += 4;
                     break;
             }
 
@@ -97,8 +97,6 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             using (CanvasDrawingSession targetDrawingSession = totalCommand.CreateDrawingSession())
             {
                 var cl = new CanvasCommandList(targetDrawingSession);
-                CanvasGeometry? highlightGeometry1 = null;
-                CanvasGeometry? highlightGeometry2 = null;
                 using (var clds = cl.CreateDrawingSession())
                 {
                     //罗马字
@@ -108,32 +106,8 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     {
                         if (_isFocusing && context.Effects.TransliterationScanning)
                         {
-                            if (_isRomajiSyllable)
-                            {
-                                clds.DrawTextLayout(tll, 0, actualTop, idleColor);
-                                var highlightGeometry = CreateHighlightGeometries(context.CurrentLyricTime, tll,
-                                    session, Syllables, true, true);
-                                var matrix = Matrix3x2.CreateTranslation(0, actualTop);
-                                using (clds.CreateLayer(1, highlightGeometry.geo1, matrix))
-                                {
-                                    clds.DrawTextLayout(tll, 0, actualTop,
-                                        TypographySelector(t => t?.FocusingColor, context)!.Value);
-                                }
-                                if (highlightGeometry.geo2 is not null) //填充渐变矩形
-                                {
-                                    using (clds.CreateLayer(highlightGeometry.currentPrecentage, highlightGeometry.geo2, matrix))
-                                    {
-                                        var color = TypographySelector(t => t?.FocusingColor, context)!.Value;
-                                        color.A = (byte)(255 * highlightGeometry.currentPrecentage);
-                                        clds.DrawTextLayout(tll, 0, actualTop, color);
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                clds.DrawTextLayout(tll, 0, actualTop,
-                                    TypographySelector(t => t?.FocusingColor, context)!.Value);
-                            }
+                            clds.DrawTextLayout(tll, 0, actualTop,
+                                TypographySelector(t => t?.FocusingColor, context)!.Value);
                         }
                         else
                         {
@@ -145,40 +119,130 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     }
 
                     //歌词
-                    clds.DrawTextLayout(textLayout, 0, actualTop,
-                        TypographySelector(t => t?.IdleColor, context)!.Value);
+                    // clds.DrawTextLayout(textLayout, 0, actualTop, TypographySelector(t => t?.IdleColor, context)!.Value);
                     var textTop = actualTop;
-
+                    const float lift = 6;
                     if (_isFocusing)
                     {
                         if (IsSyllable || context.Effects.SimpleLineScanning)
                         {
-                            (highlightGeometry1, highlightGeometry2,var currentPercentage) = CreateHighlightGeometries(context.CurrentLyricTime, textLayout,
-                                session, Syllables);
+                            var currentTime = context.CurrentLyricTime;
+                            var currentSyllableIndex = Syllables.FindLastIndex(t =>
+                                t.StartTime <= currentTime);
+                            if (currentSyllableIndex != _lastSyllableIndex)
+                            {
+                                CreateSimpleGeometries(session, currentSyllableIndex, Syllables);
+                                _lastSyllableIndex = currentSyllableIndex;
+                            }
+
                             var matrix = Matrix3x2.CreateTranslation(0, textTop);
-                            using (clds.CreateLayer(1, highlightGeometry1, matrix))
+
+                            // before
+                            var beforeCommandList = new CanvasCommandList(clds);
+                            using var beforeDrawingSession = beforeCommandList.CreateDrawingSession();
+                            using (beforeDrawingSession.CreateLayer(1, beforeCurrentSyllableGeometry, matrix))
                             {
-                                clds.DrawTextLayout(textLayout, 0, textTop,
+                                beforeDrawingSession.DrawTextLayout(textLayout, 0, textTop - lift,
                                     TypographySelector(t => t?.FocusingColor, context)!.Value);
-
+                                // Colors.Red);
                             }
-                            if (highlightGeometry2 is not null) //填充渐变矩形
+
+                            // after
+                            var afterCommandList = new CanvasCommandList(clds);
+                            using var afterDrawingSession = afterCommandList.CreateDrawingSession();
+                            using (afterDrawingSession.CreateLayer(1, afterCurrentSyllableGeometry, matrix))
                             {
-                                using (clds.CreateLayer(1, highlightGeometry2, matrix))
-                                {
-
-                                    var color = TypographySelector(t => t?.FocusingColor, context)!.Value;
-                                    color.A = (byte)(128 * currentPercentage);
-                                    clds.DrawTextLayout(textLayout, 0, textTop, color);
-                                }
+                                afterDrawingSession.DrawTextLayout(textLayout, 0, textTop,
+                                    TypographySelector(t => t?.IdleColor, context)!.Value);
+                                // Colors.Green);
                             }
 
+
+                            clds.DrawImage(beforeCommandList, 0, 0);
+                            clds.DrawImage(afterCommandList, 0, 0);
+
+                            // current
+                            if (currentSyllableIndex != -1)
+                            {
+                                var percentage = GetCurrentSyllableHighlightPercentage(currentTime, Syllables,
+                                    currentSyllableIndex);
+                                var currentHighlightGeometry =
+                                    CreateHighlightGeometry(session, percentage,
+                                        _syllableBound.ElementAtOrDefault(currentSyllableIndex) ?? []);
+                                var currentCommandList = new CanvasCommandList(clds);
+                                using var currentDrawingSession = currentCommandList.CreateDrawingSession();
+                                // 叠底
+                                using (currentDrawingSession.CreateLayer(1, currentSyllableGeometry, matrix))
+                                {
+                                    var color = TypographySelector(t => t?.FocusingColor, context)!.Value;
+                                    color.A = (byte)(128 * percentage);
+                                    currentDrawingSession.DrawTextLayout(textLayout, 0, textTop,
+                                        TypographySelector(t => t?.IdleColor, context)!.Value);
+                                }
+
+                                // 高亮
+                                using (currentDrawingSession.CreateLayer(1, currentHighlightGeometry, matrix))
+                                {
+                                    currentDrawingSession.DrawTextLayout(textLayout, 0, textTop,
+                                        TypographySelector(t => t?.FocusingColor, context)!.Value);
+                                }
+
+
+                                if (true)
+                                {
+                                    // 绘制 Displacement Map
+                                    var displacementMap = new CanvasCommandList(clds);
+                                    using (var displacementSession = displacementMap.CreateDrawingSession())
+                                    {
+                                        displacementSession.Clear(Colors.Black);
+                                        var gradientStops = new CanvasGradientStop[]
+                                        {
+                                            // 抬升开始点
+                                            new CanvasGradientStop
+                                                { Position = percentage - 0.5f, Color = Color.FromArgb(255, 0, 255, 0) },
+                                            // 抬升峰值
+                                            new CanvasGradientStop
+                                                { Position = percentage, Color = Color.FromArgb(255, 0, 255, 0) },
+                                            // 抬升结束点
+                                            new CanvasGradientStop
+                                                { Position = percentage + 0.5f, Color = Color.FromArgb(255, 0, 0, 0) }
+                                        };
+                                        using (var gradientBrush = new CanvasLinearGradientBrush(displacementSession, gradientStops))
+                                        {
+                                            // 创建一个从左到右的渐变
+                                            gradientBrush.StartPoint = new Vector2((float)currentSyllableSize.Left, 0);
+                                            gradientBrush.EndPoint = new Vector2((float)currentSyllableSize.Width + (float)currentSyllableSize.Left, 0);
+
+                                            // 将渐变绘制到位移图上
+                                            displacementSession.FillRectangle((float)currentSyllableSize.Left, 0, (float)currentSyllableSize.Width + lift, context.ViewHeight, gradientBrush);
+                                        }
+                                    }
+                                    var displacementEffect = new DisplacementMapEffect
+                                    {
+                                        Source = currentCommandList,
+                                        Displacement = displacementMap,
+                                        XChannelSelect = EffectChannelSelect.Red,
+                                        YChannelSelect = EffectChannelSelect.Green,
+                                        Amount = lift * 2
+                                    };
+                                    // 整体 x 轴偏移回去, 是不是我算反了
+                                    clds.DrawImage(displacementEffect, -lift, 0);
+                                }
+
+                                // else 分支应当绘制
+
+                            }
                         }
                         else
                         {
                             clds.DrawTextLayout(textLayout, 0, textTop,
                                 TypographySelector(t => t?.FocusingColor, context)!.Value);
                         }
+                    }
+                    else
+                    {
+                        clds.DrawTextLayout(textLayout, 0, actualTop,
+                            TypographySelector(t => t?.IdleColor, context)!.Value);
                     }
 
                     actualTop += (float)textLayout.LayoutBounds.Height;
@@ -191,7 +255,6 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                                 ? TypographySelector(t => t?.FocusingColor, context)!.Value
                                 : idleColor);
                     }
-
                 }
 
                 if (_isFocusing && context.Effects.FocusHighlighting)
@@ -199,7 +262,8 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     var highlightEffectBuilder = new CanvasImageBuilder(cl);
                     //画发光效果
                     highlightEffectBuilder
-                        .AddShadowEffect(6, context.PreferTypography.ShadowColor ?? context.PreferTypography.FocusingColor!.Value)
+                        .AddShadowEffect(6,
+                            context.PreferTypography.ShadowColor ?? context.PreferTypography.FocusingColor!.Value)
                         .AddOpacityEffect(0.4f);
                     targetDrawingSession.DrawImage(highlightEffectBuilder.Build(), actualOffsetX, 0);
                 }
@@ -226,13 +290,14 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             {
                 // 计算 Progress
                 var progress = 0f;
-                
-                if (context.CurrentLyricTime - EndTime >= 0 && context.CurrentLyricTime - EndTime  <= ScaleAnimationDuration)//缩小
+
+                if (context.CurrentLyricTime - EndTime >= 0 &&
+                    context.CurrentLyricTime - EndTime <= ScaleAnimationDuration) //缩小
                 {
                     progress = 1 - ((float)EaseFunction.Ease(Math.Clamp(
                         (context.CurrentLyricTime - EndTime) * 1.0f / ScaleAnimationDuration, 0, 1)));
                 }
-                else if (_isFocusing && context.CurrentLyricTime - StartTime >= 0)//放大
+                else if (_isFocusing && context.CurrentLyricTime - StartTime >= 0) //放大
                 {
                     progress = (float)_elasticEase.Ease(Math.Clamp(
                         (context.CurrentLyricTime - StartTime) * 1.0f / 1000, 0, 1));
@@ -241,8 +306,9 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
 
                 var scaling = 0.8F + progress * 0.2F;
                 finalEffectBuilder
-                    .AddTransform2DEffect(GetCenterMatrix(0, 0, _scalingCenterX + offset.X, (float)textLayout.LayoutBounds.Height / 2, scaling, scaling))
-                    .AddOpacityEffect(Math.Clamp(0.5f + progress * 0.5f,0,1));
+                    .AddTransform2DEffect(GetCenterMatrix(0, 0, _scalingCenterX + offset.X,
+                        (float)textLayout.LayoutBounds.Height / 2, scaling, scaling))
+                    .AddOpacityEffect(Math.Clamp(0.5f + progress * 0.5f, 0, 1));
             }
             else
             {
@@ -251,15 +317,20 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     finalEffectBuilder.AddTransform2DEffect(_unfocusMatrix);
                 }
             }
+
             if (context.Effects.Blur && !_isFocusing && !context.IsScrolling)
             {
                 finalEffectBuilder.AddGaussianBlurEffect(Math.Clamp(gap, 0, 250));
             }
+
             if (Common.Setting.lyricRenderFade && !context.IsScrolling)
             {
-                finalEffectBuilder.AddOpacityEffect(1 - Math.Clamp(gap / (10f - (Common.Setting.lyricFadingRatio / 10f)), 0, 0.9f));
+                finalEffectBuilder.AddOpacityEffect(1 -
+                                                    Math.Clamp(gap / (10f - (Common.Setting.lyricFadingRatio / 10f)), 0,
+                                                        0.9f));
             }
-            session.DrawImage(finalEffectBuilder.Build(), actualX, drawingTop);
+
+            session.DrawImage(finalEffectBuilder.Build(), 0, drawingTop);
             _sizeChanged = false;
 
             // 画背景
@@ -298,113 +369,112 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                    * Matrix3x2.CreateTranslation(XCenter, YCenter);
         }
 
+        private CanvasGeometry beforeCurrentSyllableGeometry;
+        private CanvasGeometry currentSyllableGeometry;
+        private Rect currentSyllableSize;
+        private CanvasGeometry afterCurrentSyllableGeometry;
+
         /// <summary>
-        /// 获取高亮矩形
+        /// 获取基础矩形
         /// </summary>
-        /// <param name="currentTime">当前时间</param>
-        /// <param name="targetLayout"></param>
-        /// <param name="resourceCreator"></param>
+        /// <param name="creator"></param>
+        /// <param name="index"></param>
         /// <param name="syllables">目标歌词</param>
-        /// <param name="isScan">是否为扫描式（否则为渐变）</param>
-        /// <param name="isTransliteration">是否选择音译</param>
         /// <returns></returns>
-        private (CanvasGeometry geo1, CanvasGeometry? geo2, float currentPrecentage)
-            CreateHighlightGeometries(long currentTime, CanvasTextLayout targetLayout,
-                ICanvasResourceCreator resourceCreator, List<RenderingSyllable>? syllables, bool isScan = true,
-                bool isTransliteration = false)
+        private void CreateSimpleGeometries(ICanvasResourceCreator creator, int index,
+            List<RenderingSyllable>? syllables)
         {
-            var geos = new HashSet<CanvasGeometry>();
-            CanvasGeometry? geo2 = null; //渐变矩形
-            var currentPercentage = 0.0f;
+            List<CanvasGeometry> beforeCurrentSyllable = [];
+            List<CanvasGeometry> afterCurrentSyllable = [];
+            List<CanvasGeometry> currentSyllable = [];
             if (IsSyllable && syllables is not null)
             {
-                if (syllables.Count <= 0)
-                    return (CanvasGeometry.CreateGroup(resourceCreator, geos.ToArray()), geo2, currentPercentage);
-                var index = syllables.FindLastIndex(t => t.EndTime <= currentTime);
-                var letterPosition = syllables.GetRange(0, index + 1).Sum(p =>
-                    isTransliteration ? p.Transliteration?.Length ?? 0 : p.Syllable.Length);
-                if (index >= 0)
+                // 空行快速返回
+                if (syllables.Count <= 0) return;
+                // join before
+                foreach (var rect in _syllableBound.Take(index))
                 {
-                    // 获取高亮的字符区域集合
-                    var regions = targetLayout.GetCharacterRegions(0, letterPosition);
-                    foreach (var region in regions)
+                    foreach (var rect1 in rect)
                     {
-                        // 对每个字符创建矩形, 并加入到 geos
-                        geos.Add(CanvasGeometry.CreateRectangle(resourceCreator, region.LayoutBounds));
+                        beforeCurrentSyllable.Add(CanvasGeometry.CreateRectangle(creator, rect1));
                     }
                 }
 
-                if (index <= syllables.Count - 2)
+                // join after
+                foreach (var rect in _syllableBound.Skip(index + 1))
                 {
-                    var currentLyric = syllables[index + 1];
-
-                    if (currentLyric.StartTime <= currentTime)
+                    foreach (var rect1 in rect)
                     {
-                        // 获取当前字符的 Bound
-                        var currentRegions =
-                            targetLayout.GetCharacterRegions(letterPosition,
-                                isTransliteration
-                                    ? currentLyric.Transliteration?.Length ?? 0
-                                    : currentLyric.Syllable.Length);
-                        if (currentRegions is { Length: > 0 })
-                        {
-                            // 加个保险措施
-                            // 计算当前字符的进度
-                            currentPercentage = (currentTime - currentLyric.StartTime) * 1.0f /
-                                                (currentLyric.EndTime - currentLyric.StartTime);
-                            // 创建矩形
-                            if (isScan)
-                            {
-                                var lastRect = CanvasGeometry.CreateRectangle(
-                                    resourceCreator, (float)currentRegions[0].LayoutBounds.Left,
-                                    (float)currentRegions[0].LayoutBounds.Top,
-                                    (float)(currentRegions.Sum(t => t.LayoutBounds.Width) * currentPercentage),
-                                    (float)currentRegions.Sum(t => t.LayoutBounds.Height));
-                                geos.Add(lastRect);
-                            }
+                        afterCurrentSyllable.Add(CanvasGeometry.CreateRectangle(creator, rect1));
+                    }
+                }
+
+                // join current
+                foreach (var rect in _syllableBound.ElementAtOrDefault(index) ?? [])
+                {
+                    currentSyllable.Add(CanvasGeometry.CreateRectangle(creator, rect));
+                }
 
 
-                            // 高亮矩形
-                            geo2 = CanvasGeometry.CreateRectangle(
-                                resourceCreator, (float)currentRegions[0].LayoutBounds.Left,
-                                (float)currentRegions[0].LayoutBounds.Top,
-                                (float)(currentRegions.Sum(t => t.LayoutBounds.Width)),
-                                (float)currentRegions.Sum(t => t.LayoutBounds.Height));
-                        }
+                beforeCurrentSyllableGeometry = CanvasGeometry.CreateGroup(creator, beforeCurrentSyllable.ToArray());
+                afterCurrentSyllableGeometry = CanvasGeometry.CreateGroup(creator, afterCurrentSyllable.ToArray());
+                currentSyllableGeometry = CanvasGeometry.CreateGroup(creator, currentSyllable.ToArray());
+                currentSyllableSize = currentSyllableGeometry.ComputeBounds();
+            }
+        }
+
+        private float GetCurrentSyllableHighlightPercentage(long currentTime, List<RenderingSyllable>? syllables,
+            int index)
+        {
+            if (syllables is null || syllables.Count <= 0) return 0;
+            if (index == -1) return 0;
+            var currentSyllable = syllables[index];
+            var duration = currentSyllable.EndTime - currentSyllable.StartTime;
+            if (duration <= 0) return 1;
+            return Math.Clamp((currentTime - currentSyllable.StartTime) * 1.0f / duration, 0, 1);
+        }
+
+
+        private CanvasGeometry CreateHighlightGeometry(ICanvasResourceCreator creator, float percentage, Rect[] rects)
+        {
+            if (percentage <= 0 || rects.Length == 0) return CanvasGeometry.CreateGroup(creator, []);
+            // 首先获取完整宽度
+            var totalWidth = rects.Sum(t => t.Width);
+            var targetWidth = totalWidth * percentage;
+            var geos = new List<CanvasGeometry>();
+            // 然后依次添加矩形，直到达到目标宽度
+            if (rects.Length > 1)
+            {
+                foreach (var rect in rects)
+                {
+                    if (targetWidth <= 0) break;
+                    if (rect.Width <= targetWidth)
+                    {
+                        geos.Add(CanvasGeometry.CreateRectangle(creator, rect));
+                        targetWidth -= (float)rect.Width;
+                    }
+                    else
+                    {
+                        var partialRect = new Rect(rect.X, rect.Y, targetWidth, rect.Height);
+                        geos.Add(CanvasGeometry.CreateRectangle(creator, partialRect));
+                        targetWidth = 0;
                     }
                 }
             }
             else
             {
-                var progress = Math.Clamp((currentTime - StartTime) * 1.0 / (EndTime - StartTime), 0, 1);
-                var targetWidth = progress * _theoryFlatLineWidth;
-                var accumulatedWidth = 0.0;
-                var i = 0;
-                for (; i < _lineRectangle.Count; i++)
+                // 单个矩形, 直接按比例截取
+                if (rects.Length == 1 && rects[0].Width > 0)
                 {
-                    if (accumulatedWidth + _lineRectangle[i].Width < targetWidth)
-                    {
-                        geos.Add(CanvasGeometry.CreateRectangle(resourceCreator, _lineRectangle[i]));
-                        accumulatedWidth += _lineRectangle[i].Width;
-                    }
-                    else
-                        break;
-                }
-
-                // 扫描当前行
-                if (_lineRectangle.Count > i)
-                {
-                    var currentLineRect = _lineRectangle[i];
-                    var currentRect = CanvasGeometry.CreateRectangle(resourceCreator, (float)currentLineRect.Left,
-                        (float)currentLineRect.Top, (float)(targetWidth - accumulatedWidth),
-                        (float)currentLineRect.Height);
-                    geos.Add(currentRect);
+                    var rect = rects[0];
+                    var partialRect = new Rect(rect.X, rect.Y, rect.Width * Math.Clamp(percentage, 0, 1), rect.Height);
+                    return CanvasGeometry.CreateRectangle(creator, partialRect);
                 }
             }
 
-            // 拼合所有矩形
-            return (CanvasGeometry.CreateGroup(resourceCreator, geos.ToArray()), geo2, currentPercentage);
+            return CanvasGeometry.CreateGroup(creator, geos.ToArray());
         }
+
 
         public override void OnKeyFrame(CanvasDrawingSession session, RenderContext context)
         {
@@ -438,7 +508,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             OnTypographyChanged(session, context);
         }
 
-        private List<Rect> _lineRectangle = [];
+        private List<Rect[]> _syllableBound = [];
         private float _theoryFlatLineWidth;
         private float _drawingOffsetY;
         private bool _isInitialized = false;
@@ -505,6 +575,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     {
                         tll = null;
                     }
+
                     if (transliterationFormat != null)
                     {
                         transliterationFormat = null;
@@ -534,7 +605,6 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     tl = new CanvasTextLayout(session, trimmedText, translationFormat,
                         Math.Clamp(context.ItemWidth - 16, 10, int.MaxValue), _canvasHeight);
                     add += 0;
-
                 }
                 else
                 {
@@ -542,11 +612,13 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     {
                         tl = null;
                     }
+
                     if (translationFormat != null)
                     {
                         translationFormat = null;
                     }
                 }
+
                 add += (float)(tll?.LayoutBounds.Height ?? 0f);
                 add += (float)(tl?.LayoutBounds.Height ?? 0f);
             }
@@ -559,24 +631,29 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 textLayout = new CanvasTextLayout(session, _text, textFormat,
                     Math.Clamp(context.ItemWidth - 16, 0, int.MaxValue), _canvasHeight);
                 // 创建所有行矩形
-                if (!IsSyllable && Text is not null)
+                if (IsSyllable)
                 {
-                    _lineRectangle.Clear();
                     _theoryFlatLineWidth = 0;
-                    var regions = textLayout.GetCharacterRegions(0, Text.Length);
-                    if (regions is not null)
+                    // accumulate letter widths
+                    _syllableBound.Clear();
+                    var alreadyLetterCount = 0;
+                    foreach (var syllable in Syllables ?? [])
                     {
-                        foreach (var canvasTextLayoutRegion in regions)
+                        // get region
+                        var region = textLayout.GetCharacterRegions(alreadyLetterCount, syllable.Syllable.Length);
+                        if (region is { Length: > 0 })
                         {
-                            _lineRectangle.Add(new Rect(canvasTextLayoutRegion.LayoutBounds.Left,
-                                canvasTextLayoutRegion.LayoutBounds.Top,
-                                canvasTextLayoutRegion.LayoutBounds.Width,
-                                canvasTextLayoutRegion.LayoutBounds.Height));
-                            _theoryFlatLineWidth += (float)canvasTextLayoutRegion.LayoutBounds.Width;
+                            _syllableBound.Add(region.Select(t => t.LayoutBounds).ToArray());
+                            alreadyLetterCount += syllable.Syllable.Length;
+                        }
+                        else
+                        {
+                            _syllableBound.Add([]);
                         }
                     }
                 }
             }
+
             if (textLayout is null) return;
             _scalingCenterX = (float)(TypographySelector(t => t?.Alignment, context)!.Value switch
             {
@@ -594,7 +671,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             renderW = (float)Math.Max(textLayout.LayoutBounds.Width,
                 Math.Max(tll?.LayoutBounds.Width ?? 0, tl?.LayoutBounds.Width ?? 0));
             RenderingWidth = renderW + 16;
-            _sizeChangedWithourNextRender = true;
+            _sizeChangedWithoutNextRender = true;
             _isInitialized = true;
         }
     }
