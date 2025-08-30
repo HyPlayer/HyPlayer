@@ -1,8 +1,7 @@
 #nullable enable
 using System;
-using System.Diagnostics;
 using System.IO;
-using System.Text.Json;
+using Newtonsoft.Json;
 using System.Threading.Tasks;
 using Windows.Storage;
 
@@ -54,7 +53,7 @@ public static class SimpleCacher
                 }
                 try
                 {
-                    var rst = JsonSerializer.Deserialize<T>(content);
+                    var rst = JsonConvert.DeserializeObject<T>(content);
                     return rst;
                 }
                 catch
@@ -88,7 +87,7 @@ public static class SimpleCacher
 
         try
         {
-            var json = JsonSerializer.Serialize(data);
+            var json = JsonConvert.SerializeObject(data);
             var file = await dir.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
             await FileIO.WriteTextAsync(file, json);
         }

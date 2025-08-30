@@ -440,7 +440,7 @@ public sealed partial class SongsList : UserControl, IDisposable
         }*/
         else
         {
-            HyPlayList.AppendNcSongs(VisibleSongs, resetPlaying: shiftSong, currentSongId: ncSong.sid);
+            HyPlayList.AppendNcSongs(VisibleSongs, resetPlaying: !shiftSong, currentSongId: ncSong.sid);
         }
 
         if (ListSource == "content")

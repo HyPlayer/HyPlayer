@@ -1051,7 +1051,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 if (Common.Setting.ColorGeneratorType is 0)
                 {
                     palette = await PaletteGenerators.KMeansPaletteGenerator.CreatePalette(colors,
-                                                                                           Common.Setting.expandedPlayerBackgroundType is BackgroundType.Isolation ? 9 : 4,
+                                                                                           Common.Setting.expandedPlayerBackgroundType is BackgroundType.Animated ? 9 : 4,
                                                                                            Common.Setting.ImpressionistIgnoreWhite,
                                                                                            Common.Setting.ImpressionistLABSpace,
                                                                                            Common.Setting.ImpressionistUseKMeansPP);
@@ -1059,7 +1059,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 else
                 {
                     palette = await PaletteGenerators.OctTreePaletteGenerator.CreatePalette(colors,
-                                                                                           Common.Setting.expandedPlayerBackgroundType is BackgroundType.Isolation ? 9 : 4,
+                                                                                           Common.Setting.expandedPlayerBackgroundType is BackgroundType.Animated ? 9 : 4,
                                                                                            Common.Setting.ImpressionistIgnoreWhite);
                 }
                 themeColor = palette.ThemeColor;

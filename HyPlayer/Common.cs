@@ -1763,7 +1763,7 @@ namespace HyPlayer
                 await CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                     () => { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName)); });
             }
-            catch (Exception e)
+            catch
             {
                 // ignore
             }

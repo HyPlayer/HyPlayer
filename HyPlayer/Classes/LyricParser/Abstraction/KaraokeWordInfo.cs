@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
-
+using Newtonsoft.Json;
+#nullable enable
 namespace HyPlayer.Classes.LyricParser.Abstraction
 {
     [DebuggerDisplay("Word = {CurrentWords}, Transliteration = {Transliteration}")]
@@ -9,7 +10,8 @@ namespace HyPlayer.Classes.LyricParser.Abstraction
         public string CurrentWords { get; set; }
         public TimeSpan StartTime { get; set; }
         public TimeSpan Duration { get; set; }
-        public string? Transliteration;
+        public string? Transliteration { get; set; }
+
         public KaraokeWordInfo(string currentWords, TimeSpan startTime, TimeSpan duration)
         {
             CurrentWords = currentWords;
@@ -17,6 +19,13 @@ namespace HyPlayer.Classes.LyricParser.Abstraction
             Duration = duration;
         }
 
-
+        [JsonConstructor]
+        public KaraokeWordInfo(string CurrentWords, TimeSpan StartTime, TimeSpan Duration, string? Transliteration)
+        {
+            this.CurrentWords = CurrentWords;
+            this.StartTime = StartTime;
+            this.Duration = Duration;
+            this.Transliteration = Transliteration;
+        }
     }
 }

@@ -55,7 +55,6 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class BasePage : Page
 {
-    private string nowplid;
     private string nowqrkey;
 
     public BasePage()
@@ -718,8 +717,9 @@ public sealed partial class BasePage : Page
             AppTitleBar.Margin = new Thickness(expandedIndent, currMargin.Top, currMargin.Right, currMargin.Bottom);
     }
 
-    private async void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)
+    private void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)
     {
+        /*
         try
         {
             var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaylistPrivacyApi,
@@ -737,10 +737,12 @@ public sealed partial class BasePage : Page
         {
             Common.AddToTeachingTipLists("公开歌单失败", ex.Message);
         }
+        */
     }
 
-    private async void ItemDelPlayList_Click(object sender, RoutedEventArgs e)
+    private void ItemDelPlayList_Click(object sender, RoutedEventArgs e)
     {
+        /*
         try
         {
             var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaylistDeleteApi,
@@ -757,6 +759,7 @@ public sealed partial class BasePage : Page
         {
             Common.AddToTeachingTipLists("删除失败", ex.Message);
         }
+         */
     }
 
 

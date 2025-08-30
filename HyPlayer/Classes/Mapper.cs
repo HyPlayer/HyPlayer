@@ -18,7 +18,7 @@ public static class Mapper
                          .ToList() ??
                      [],
             CDName = song.CdName,
-            IsCloud = song.Sid is not "0",
+            IsCloud = song.Sid is not "0" and not null,
             IsVip = false,
             LengthInMilliseconds = song.Duration,
             mvid = song.MvId,
@@ -41,7 +41,7 @@ public static class Mapper
                          .ToList() ??
                      [],
             CDName = song.CdName,
-            IsCloud = song.Sid is not "0",
+            IsCloud = song.Sid is not "0" and not null,
             IsVip = song.Fee is 1,
             LengthInMilliseconds = song.Duration,
             mvid = song.MvId,
