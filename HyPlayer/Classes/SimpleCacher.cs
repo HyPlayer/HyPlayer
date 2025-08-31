@@ -10,6 +10,10 @@ namespace HyPlayer.Classes;
 public static class SimpleCacher
 {
     private static StorageFolder? cacheFolder;
+    private static readonly JsonSerializerSettings defaultSetting = new JsonSerializerSettings()
+    {
+        TypeNameHandling = TypeNameHandling.All,
+    };
 
 
     public static async Task InitializeAsync()
@@ -53,7 +57,7 @@ public static class SimpleCacher
                 }
                 try
                 {
-                    var rst = JsonConvert.DeserializeObject<T>(content);
+                    var rst = JsonConvert.DeserializeObject<T>(content, defaultSetting);
                     return rst;
                 }
                 catch
@@ -87,7 +91,7 @@ public static class SimpleCacher
 
         try
         {
-            var json = JsonConvert.SerializeObject(data);
+            var json = JsonConvert.SerializeObject(data, defaultSetting);
             var file = await dir.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
             await FileIO.WriteTextAsync(file, json);
         }
