@@ -641,18 +641,15 @@
                 x:FieldModifier="public"
                 Canvas.ZIndex="2"
                 CornerRadius="4,0,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1*" />
-                    <ColumnDefinition Width="2*" />
-                </Grid.ColumnDefinitions>
                 <Grid.RenderTransform>
                     <TranslateTransform x:Name="SongInfoScale" />
                 </Grid.RenderTransform>
-                <StackPanel
+                <controls:UniformGrid
                     x:Name="GridSongAdvancedOperation"
-                    Margin="25,0,0,0"
-                    Orientation="Horizontal"
-                    Spacing="15"
+                    Margin="0,0,50,0"
+                    ColumnSpacing="15"
+                    Columns="5"
+                    CornerRadius="20"
                     Visibility="Collapsed">
                     <Button
                         x:Name="Btn_Collapse"
@@ -718,7 +715,7 @@
                         Visibility="{x:Bind Btn_Share.IsEnabled, Mode=OneWay}">
                         <FontIcon Foreground="{x:Bind hy:Common.BrushManagement.AccentBrush, Mode=OneWay}" Glyph="&#xE72D;" />
                     </Button>
-                </StackPanel>
+                </controls:UniformGrid>
                 <Grid
                     x:Name="GridSongInfo"
                     Grid.Column="1"
