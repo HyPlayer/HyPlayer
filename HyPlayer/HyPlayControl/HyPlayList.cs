@@ -1615,6 +1615,7 @@ public static class HyPlayList
     {
         try
         {
+            FadeManager.PauseFadeProcessing();
             if (string.IsNullOrEmpty(Common.Setting.AudioRenderDevice)) await Player.ChangePlayerServiceImplementation(new AudioGraphAudioSetting() { OutputVolume = PlayerOutgoingVolume });
             else await Player.ChangePlayerServiceImplementation(new AudioGraphAudioSetting() { OutputVolume = PlayerOutgoingVolume, DefaultDeviceId = Common.Setting.AudioRenderDevice });
         }
@@ -1622,6 +1623,10 @@ public static class HyPlayList
         {
             Common.AddToTeachingTipLists("在切换输出设备时发生错误", ex.Message);
             await Player.ChangePlayerServiceImplementation(new AudioGraphAudioSetting() { OutputVolume = PlayerOutgoingVolume });
+        }
+        finally
+        {
+            FadeManager.ResumeFadeProcessing();
         }
     }
     /********        播放文件相关        ********/

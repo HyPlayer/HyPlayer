@@ -14,7 +14,8 @@ namespace HyPlayer.Classes
 #nullable restore
         private Dictionary<AudioGraphPlaybackSource, double> _initialVolume = new Dictionary<AudioGraphPlaybackSource, double>();
         private bool _loading = false;
-        public bool FadeProcessing = false;
+        public bool FadeProcessing { get; private set; } = false;
+        public bool PauseProcessing { get; private set; } = false;
         public FadeManager(AudioGraphPlayer player)
         {
             player.OnPositionChanged += Player_OnPositionChanged;
@@ -42,7 +43,11 @@ namespace HyPlayer.Classes
                 FadeProcessing = false;
                 _initialVolume.Clear();
             }
-            else if ((_currentPlayItem == null || _currentNode == null || _initialVolume.Count == 0) && !FadeProcessing)
+            else if ((
+                _currentPlayItem == null || 
+                _currentNode == null || 
+                _initialVolume.Count == 0 || 
+                _currentPlayItem.Item2 == HyPlayList.Player.PrimaryPlaybackSource) && !FadeProcessing)
             {
                 HyPlayList.MoveSongPointer();
                 var nextItem = HyPlayList.List[HyPlayList.NowPlaying];
@@ -89,7 +94,8 @@ namespace HyPlayer.Classes
                 && _currentPlayItem == null
                 && !_loading
                 && HyPlayList.NowPlayType != PlayMode.SinglePlay
-                && HyPlayList.List.Count > 1)
+                && HyPlayList.List.Count > 1
+                && !PauseProcessing)
             {
                 _loading = true;
                 FadeProcessing = true;
@@ -137,7 +143,7 @@ namespace HyPlayer.Classes
         private void Player_OnPositionChanged(TimeSpan position)
         {
             ShouldStartFade();
-            if (_currentPlayItem == null || _loading)
+            if (_currentPlayItem == null || _loading || PauseProcessing)
             {
                 return;
             }
@@ -145,6 +151,27 @@ namespace HyPlayer.Classes
             {
                 ProcessFade();
             }
+        }
+        public void PauseFadeProcessing()
+        {
+            if (!FadeProcessing)
+            {
+                return;
+            }
+            HyPlayList.Player.SetPlaybackSourceOutputVolume(Common.Setting.EnableAudioGain ? _initialVolume[_currentPlayItem?.Item1] : 1, _currentPlayItem?.Item1);
+            HyPlayList.Player.SetPlaybackSourceOutputVolume(Common.Setting.EnableAudioGain ? _initialVolume[_currentPlayItem?.Item2] : 1, _currentPlayItem?.Item2);
+            PauseProcessing = true;
+            HyPlayList.Player.DisconnectPlaybackSource(_currentPlayItem.Item1);
+            var keyItem = _currentPlayItem.Item1.PlaybackSource?.CustomProperties["nowPlayingItem"] as HyPlayItem;
+            keyItem.PlayItem.FreePlaybackResources();
+            _currentPlayItem = null;
+            _currentNode = null;
+            FadeProcessing = false;
+            _initialVolume.Clear();
+        }
+        public void ResumeFadeProcessing()
+        {
+            PauseProcessing = false;
         }
     }
 }

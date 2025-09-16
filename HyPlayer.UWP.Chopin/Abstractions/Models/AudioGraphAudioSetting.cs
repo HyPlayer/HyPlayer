@@ -9,7 +9,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 {
     public class AudioGraphAudioSetting : IAudioSettings
     {
-        public string DefaultDeviceId { get; set; }
+        public string DefaultDeviceId { get; set; } = string.Empty;
         public double OutputVolume { get; set; } = 1d;
         public bool AutoFallback { get; set; } = false;
         private AudioGraphSettings _settings;

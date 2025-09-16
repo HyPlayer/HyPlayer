@@ -20,6 +20,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         private bool disposedValue;
         private Timer PositionTimer = new Timer() { AutoReset = true, Interval = 100 };
         private TimeSpan _lastPosition = TimeSpan.Zero;
+        private string currentDeviceId = string.Empty;
 
 
         public bool PlayerCreated => _defaultPlayer != null;
@@ -83,8 +84,13 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         public async Task ChangePlayerServiceImplementation(IAudioSettings settings)
         {
             ThrowExceptionIfDisposed();
+            PositionTimer.Stop();
             if (settings is AudioGraphAudioSetting audioGraphSetting)
             {
+                if(currentDeviceId == audioGraphSetting.DefaultDeviceId)
+                {
+                    return;
+                }
                 var oldPlayer = _defaultPlayer;
                 var oldOutputNode = _outputNode;
                 var setting = await audioGraphSetting.GetAudioGraphSettingsAsync();
@@ -110,35 +116,43 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                     if (node.Key is AudioGraphPlaybackSource audioGraphPlaybackSource)
                     {
                         if (node.Key.PlaybackSource is null) await node.Key.CreatePlaybackSource();
+                        var position = node.Value.Position;
+                        var gain = node.Value.OutgoingGain;
+                        var factor = node.Value.PlaybackSpeedFactor;
+                        var effects = node.Value.EffectDefinitions.ToList();
+                        node.Value.Dispose();
                         node.Key.PlaybackSource.Reset();
+                        await node.Key.PlaybackSource.OpenAsync();
                         var createResult = await newPlayer.CreateMediaSourceAudioInputNodeAsync(node.Key.PlaybackSource);
                         if (createResult.Status != MediaSourceAudioInputNodeCreationStatus.Success) throw createResult.ExtendedError;
                         var outputNode = createResult.Node;
                         newNodes[node.Key] = outputNode;
                         newNodesReverse[outputNode] = node.Key;
-                        outputNode.Seek(node.Value.Position);
-                        outputNode.PlaybackSpeedFactor = node.Value.PlaybackSpeedFactor;
-                        outputNode.OutgoingGain = node.Value.OutgoingGain;
+                        outputNode.PlaybackSpeedFactor = factor;
+                        outputNode.OutgoingGain = gain;
                         outputNode.AddOutgoingConnection(_outputNode);
-                        foreach (var effect in node.Value.EffectDefinitions)
+                        foreach (var effect in effects)
                         {
                             outputNode.EnableEffectsByDefinition(effect);
                         }
-                        if (node.Key.PlaybackStatus == PlaybackStatus.Playing) outputNode.Start();
+                        await Task.Delay(250);
+                        outputNode.Seek(position);
+                        outputNode.Start();
                     }
                 }
                 _outputNode.OutgoingGain = oldOutputNode.OutgoingGain;
                 _defaultPlayer = newPlayer;
-                newPlayer.Start();
                 _audioInputNodes = newNodes;
                 _audioInputNodesReverseDictionary = newNodesReverse;
-                oldOutputNode?.Dispose();
+                currentDeviceId = audioGraphSetting.DefaultDeviceId;
                 oldPlayer.Dispose();
+                newPlayer.Start();
             }
             else
             {
                 throw new ArgumentException("Setting is not AudioGraphSetting");
             }
+            PositionTimer.Start();
         }
 
         public async Task InitializePlayer(IAudioSettings settings)
@@ -162,6 +176,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 if (createResult.Status != AudioDeviceNodeCreationStatus.Success) throw createResult.ExtendedError;
                 _outputNode = createResult.DeviceOutputNode;
                 _outputNode.OutgoingGain = audioGraphSetting.OutputVolume;
+                currentDeviceId = audioGraphSetting.DefaultDeviceId;
                 PositionTimer.Start();
             }
             else
@@ -276,8 +291,11 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             var source = playbackSource as AudioGraphPlaybackSource;
             if (source != null)
             {
-                var item = _audioInputNodes[source];
-                item.OutgoingGain = volume;
+                var success = _audioInputNodes.TryGetValue(source, out var item);
+                if (success)
+                {
+                    item.OutgoingGain = volume;
+                }
             }
             else
             {
@@ -432,7 +450,6 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                     item.RemoveOutgoingConnection(_outputNode);
                     item.Dispose();
                 }
-                _outputNode?.Dispose();
                 _defaultPlayer?.Dispose();
                 PositionTimer?.Stop();
                 PositionTimer?.Dispose();
