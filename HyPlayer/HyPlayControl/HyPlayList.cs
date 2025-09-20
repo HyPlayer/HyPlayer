@@ -661,7 +661,7 @@ public static class HyPlayList
                 _ = LoadMediaSource(List[NowPlaying]);
             }
         }
-        else if (NowPlayType == PlayMode.SinglePlay)
+        else if (NowPlayType == PlayMode.SinglePlay || List.Count <= 1)
         {
             Seek(TimeSpan.Zero);
         }

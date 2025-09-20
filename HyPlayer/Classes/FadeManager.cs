@@ -25,7 +25,7 @@ namespace HyPlayer.Classes
 
         private async void HyPlayList_OnMediaEnd(HyPlayItem hpi)
         {
-            if (HyPlayList.NowPlayType == PlayMode.SinglePlay) return;
+            if (HyPlayList.NowPlayType == PlayMode.SinglePlay || HyPlayList.List.Count <=1) return;
             if (FadeProcessing)
             {
                 if (hpi.PlayItem.AudioGraphPlaybackSource != null)
@@ -43,11 +43,7 @@ namespace HyPlayer.Classes
                 FadeProcessing = false;
                 _initialVolume.Clear();
             }
-            else if ((
-                _currentPlayItem == null || 
-                _currentNode == null || 
-                _initialVolume.Count == 0 || 
-                _currentPlayItem.Item2 == HyPlayList.Player.PrimaryPlaybackSource) && !FadeProcessing)
+            else if (_currentPlayItem == null || _currentNode == null || _initialVolume.Count == 0)
             {
                 HyPlayList.MoveSongPointer();
                 var nextItem = HyPlayList.List[HyPlayList.NowPlaying];
