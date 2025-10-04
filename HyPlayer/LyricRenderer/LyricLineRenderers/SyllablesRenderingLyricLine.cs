@@ -125,6 +125,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     //歌词
                     // clds.DrawTextLayout(textLayout, 0, actualTop, TypographySelector(t => t?.IdleColor, context)!.Value);
                     var textTop = actualTop;
+                    const float lift = 3;
                     if (_isFocusing)
                     {
                         if (IsSyllable || context.Effects.SimpleLineScanning)
@@ -145,7 +146,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                             using var textLayoutSession = textLayoutCommandList.CreateDrawingSession();
                             using (textLayoutSession.CreateLayer(1, beforeCurrentSyllableGeometry, matrix))
                             {
-                                textLayoutSession.DrawTextLayout(textLayout, 0, textTop,
+                                textLayoutSession.DrawTextLayout(textLayout, 0, textTop - lift,
                                     TypographySelector(t => t?.FocusingColor, context)!.Value);
                                 // Colors.Red);
                             }
@@ -164,19 +165,21 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                                 var currentHighlightGeometry =
                                     CreateHighlightGeometry(session, percentage,
                                         _syllableBound.ElementAtOrDefault(currentSyllableIndex) ?? []);
+                                var currentCommandList = new CanvasCommandList(clds);
+                                using var currentDrawingSession = currentCommandList.CreateDrawingSession();
                                 // 叠底
-                                using (textLayoutSession.CreateLayer(1, currentSyllableGeometry, matrix))
+                                using (currentDrawingSession.CreateLayer(1, currentSyllableGeometry, matrix))
                                 {
                                     var color = TypographySelector(t => t?.FocusingColor, context)!.Value;
                                     color.A = (byte)(128 * percentage);
-                                    textLayoutSession.DrawTextLayout(textLayout, 0, textTop,
+                                    currentDrawingSession.DrawTextLayout(textLayout, 0, textTop,
                                         TypographySelector(t => t?.IdleColor, context)!.Value);
                                 }
 
                                 // 高亮
-                                using (textLayoutSession.CreateLayer(1, currentHighlightGeometry, matrix))
+                                using (currentDrawingSession.CreateLayer(1, currentHighlightGeometry, matrix))
                                 {
-                                    textLayoutSession.DrawTextLayout(textLayout, 0, textTop,
+                                    currentDrawingSession.DrawTextLayout(textLayout, 0, textTop,
                                         TypographySelector(t => t?.FocusingColor, context)!.Value);
                                 }
 
@@ -186,35 +189,49 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                                     var displacementMap = new CanvasCommandList(clds);
                                     using (var displacementSession = displacementMap.CreateDrawingSession())
                                     {
-                                        displacementSession.Clear(Color.FromArgb(255, 128, 128, 0));
-                                        var gradientStops = GetCanvasGradientStop(percentage, (float)currentSyllableSize.Left, (float)currentSyllableSize.Right, (float)textLayout.LayoutBounds.Right).ToArray();
+                                        displacementSession.Clear(Colors.Black);
+                                        var gradientStops = new CanvasGradientStop[]
+                                        {
+                                            // 抬升开始点
+                                            new CanvasGradientStop
+                                                { Position = percentage - 0.5f, Color = Color.FromArgb(255, 0, 255, 0) },
+                                            // 抬升峰值
+                                            new CanvasGradientStop
+                                                { Position = percentage, Color = Color.FromArgb(255, 0, 255, 0) },
+                                            // 抬升结束点
+                                            new CanvasGradientStop
+                                                { Position = percentage + 0.5f, Color = Color.FromArgb(255, 0, 0, 0) }
+                                        };
                                         using (var gradientBrush = new CanvasLinearGradientBrush(displacementSession, gradientStops))
                                         {
                                             // 创建一个从左到右的渐变
-                                            gradientBrush.StartPoint = new Vector2(0, 0);
-                                            gradientBrush.EndPoint = new Vector2((float)textLayout.LayoutBounds.Width + (float)textLayout.LayoutBounds.Left, 0);
+                                            gradientBrush.StartPoint = new Vector2((float)currentSyllableSize.Left, 0);
+                                            gradientBrush.EndPoint = new Vector2((float)currentSyllableSize.Width + (float)currentSyllableSize.Left, 0);
 
                                             // 将渐变绘制到位移图上
-                                            displacementSession.FillRectangle((float)textLayout.LayoutBounds.Left, (float)currentSyllableSize.Top, (float)textLayout.LayoutBounds.Width, (float)currentSyllableSize.Height, gradientBrush);
+                                            displacementSession.FillRectangle((float)currentSyllableSize.Left, 0, (float)currentSyllableSize.Width + lift, context.ViewHeight, gradientBrush);
+                                            // clds.FillRectangle((float)currentSyllableSize.Left, 0, (float)currentSyllableSize.Width + lift, context.ViewHeight, gradientBrush);
                                         }
                                     }
+
                                     var displacementEffect = new DisplacementMapEffect
                                     {
-                                        Source = textLayoutCommandList,
+                                        Source = currentCommandList,
                                         Displacement = displacementMap,
-                                        YChannelSelect = EffectChannelSelect.Green,
                                         XChannelSelect = EffectChannelSelect.Red,
-                                        Amount = 8
+                                        YChannelSelect = EffectChannelSelect.Green,
+                                        Amount = lift * 2
                                     };
                                     // 整体 x 轴偏移回去, 是不是我算反了
-                                    clds.DrawImage(displacementEffect, 0, 0);
+                                    clds.DrawImage(displacementEffect, -lift, 0);
                                     //clds.DrawImage(textLayoutCommandList);
                                 }
                                 else
                                 {
-                                    clds.DrawImage(textLayoutCommandList,0,0);
+                                    var normalLift = -lift * 1.0f * (context.CurrentLyricTime - Syllables[currentSyllableIndex].StartTime) / Syllables[currentSyllableIndex].Duration;
+                                    clds.DrawImage(currentCommandList, 0, normalLift);
                                 }
-
+                                clds.DrawImage(textLayoutCommandList);
                             }
                         }
                         else
