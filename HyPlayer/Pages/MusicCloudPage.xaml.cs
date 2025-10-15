@@ -3,6 +3,7 @@
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
+using HyPlayer.NeteaseApi.ApiContracts.Cloud;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -12,7 +13,6 @@ using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.NeteaseApi.ApiContracts.Cloud;
 
 #endregion
 
@@ -62,9 +62,9 @@ public sealed partial class MusicCloudPage : Page, IDisposable
 
                 return json.Value;
             });
-            
 
-            
+
+
 
             var idx = page * 200;
             foreach (var jToken in jv.Songs ?? [])

@@ -6,7 +6,6 @@ using HyPlayer.LyricRenderer.Animator;
 using HyPlayer.LyricRenderer.Animator.EaseFunctions;
 using HyPlayer.LyricRenderer.Builder;
 using Microsoft.Graphics.Canvas;
-using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.Graphics.Canvas.Geometry;
 using Microsoft.Graphics.Canvas.Text;
 using System;
@@ -47,7 +46,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
         private bool _isFocusing;
         private float _canvasWidth;
         private float _canvasHeight;
-        private bool _sizeChangedWithourNextRender = true;
+        private bool _sizeChangedWithoutNextRender = true;
         public bool IsSyllable = false;
 
         public List<RenderingSyllable> Syllables { get; set; } = [];
@@ -71,14 +70,13 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             var drawingTop = offset.Y + _drawingOffsetY;
 
             float actualOffsetX = offset.X - (float)textLayout.LayoutBounds.Left;
-            if (_sizeChangedWithourNextRender)
+            if (_sizeChangedWithoutNextRender)
             {
                 _unfocusMatrix = GetCenterMatrix(0, 0, _scalingCenterX + offset.X,
                     (float)textLayout.LayoutBounds.Height / 2, 0.8F, 0.8F);
-                _sizeChangedWithourNextRender = false;
+                _sizeChangedWithoutNextRender = false;
 
             }
-            float actualX = 0;
             switch (TypographySelector(t => t?.Alignment, context)!.Value)
             {
                 case TextAlignment.Left:
@@ -88,7 +86,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     actualOffsetX += 6;
                     break;
                 case TextAlignment.Right:
-                    actualOffsetX -= 16;
+                    actualOffsetX += 4;
                     break;
             }
 
@@ -153,7 +151,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                     {
                         if (IsSyllable || context.Effects.SimpleLineScanning)
                         {
-                            (highlightGeometry1, highlightGeometry2,var currentPercentage) = CreateHighlightGeometries(context.CurrentLyricTime, textLayout,
+                            (highlightGeometry1, highlightGeometry2, var currentPercentage) = CreateHighlightGeometries(context.CurrentLyricTime, textLayout,
                                 session, Syllables);
                             var matrix = Matrix3x2.CreateTranslation(0, textTop);
                             using (clds.CreateLayer(1, highlightGeometry1, matrix))
@@ -226,8 +224,8 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             {
                 // 计算 Progress
                 var progress = 0f;
-                
-                if (context.CurrentLyricTime - EndTime >= 0 && context.CurrentLyricTime - EndTime  <= ScaleAnimationDuration)//缩小
+
+                if (context.CurrentLyricTime - EndTime >= 0 && context.CurrentLyricTime - EndTime <= ScaleAnimationDuration)//缩小
                 {
                     progress = 1 - ((float)EaseFunction.Ease(Math.Clamp(
                         (context.CurrentLyricTime - EndTime) * 1.0f / ScaleAnimationDuration, 0, 1)));
@@ -242,7 +240,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
                 var scaling = 0.8F + progress * 0.2F;
                 finalEffectBuilder
                     .AddTransform2DEffect(GetCenterMatrix(0, 0, _scalingCenterX + offset.X, (float)textLayout.LayoutBounds.Height / 2, scaling, scaling))
-                    .AddOpacityEffect(Math.Clamp(0.5f + progress * 0.5f,0,1));
+                    .AddOpacityEffect(Math.Clamp(0.5f + progress * 0.5f, 0, 1));
             }
             else
             {
@@ -259,7 +257,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             {
                 finalEffectBuilder.AddOpacityEffect(1 - Math.Clamp(gap / (10f - (Common.Setting.lyricFadingRatio / 10f)), 0, 0.9f));
             }
-            session.DrawImage(finalEffectBuilder.Build(), actualX, drawingTop);
+            session.DrawImage(finalEffectBuilder.Build(), 0, drawingTop);
             _sizeChanged = false;
 
             // 画背景
@@ -594,7 +592,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             renderW = (float)Math.Max(textLayout.LayoutBounds.Width,
                 Math.Max(tll?.LayoutBounds.Width ?? 0, tl?.LayoutBounds.Width ?? 0));
             RenderingWidth = renderW + 16;
-            _sizeChangedWithourNextRender = true;
+            _sizeChangedWithoutNextRender = true;
             _isInitialized = true;
         }
     }

@@ -1,7 +1,9 @@
 ﻿#region
 
 using ALRC.Abstraction;
+using HyPlayer.Classes.LyricParser.Abstraction;
 using HyPlayer.NeteaseApi.Models;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -9,11 +11,106 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using TagLib;
 using Windows.Storage;
-using HyPlayer.Classes.LyricParser.Abstraction;
+using Windows.Storage.Streams;
 
 #endregion
 
 namespace HyPlayer.Classes;
+
+/// <summary>
+/// 等价于HyPlayer.PlayCore的同名类. 
+/// </summary>
+public class ProvidableItemBase
+{
+
+}
+
+/// <summary>
+/// 资源类型ID定义类.（啊没错，又是从NeteaseProvider里抄来的）
+/// </summary>
+public static class NeteaseTypeIds
+{
+    /// <summary>
+    /// 单曲
+    /// </summary>
+    public const string SingleSong = "sg";
+
+    /// <summary>
+    /// 歌单
+    /// </summary>
+    public const string Playlist = "pl";
+
+    /// <summary>
+    /// 专辑
+    /// </summary>
+    public const string Artist = "ar";
+
+    /// <summary>
+    /// 歌手
+    /// </summary>
+    public const string Album = "al";
+
+    /// <summary>
+    /// 用户
+    /// </summary>
+    public const string User = "us";
+
+    /// <summary>
+    /// 电台节目
+    /// </summary>
+    public const string RadioProgram = "pr";
+
+    /// <summary>
+    /// 电台播客
+    /// </summary>
+    public const string RadioChannel = "dj";
+
+    /// <summary>
+    /// MV
+    /// </summary>
+    public const string Mv = "mv";
+
+    /// <summary>
+    /// MBlog
+    /// </summary>
+    public const string MBlog = "mb";
+
+    /// <summary>
+    /// 搜索结果
+    /// </summary>
+    public const string SearchResult = "sr";
+
+    /// <summary>
+    /// 方法歌曲容器
+    /// </summary>
+    public const string ActionGettableSongContainer = "ag";
+
+    /// <summary>
+    /// 排行榜
+    /// </summary>
+    public const string Chart = "ct";
+
+    /// <summary>
+    /// 动态
+    /// </summary>
+    public const string Dynamic = "dy";
+
+    /// <summary>
+    /// 歌单分类
+    /// </summary>
+    public const string PlaylistCategory = "PC";
+
+    /// <summary>
+    /// 歌词
+    /// </summary>
+    public const string Lyric = "lr";
+
+    /// <summary>
+    /// 私人 FM
+    /// </summary>
+    public const string PersonalFm = "fm";
+}
+
 
 public class HyPlayItem
 {
@@ -58,7 +155,7 @@ public class KaraokLyricInfo : PureLyricInfo
 
 public class ALRCLyricInfo : PureLyricInfo
 {
-    public ALRCFile ALRC  { get; set; }
+    public ALRCFile ALRC { get; set; }
 }
 
 [JsonDerivedType(typeof(ALRCLyricInfo), "ALRC")]
@@ -68,8 +165,8 @@ public class PureLyricInfo
     public string PureLyrics { get; set; }
     public string TrLyrics { get; set; }
     public string NeteaseRomaji { get; set; }
-    public List<LyricInfoMetadata> SongMetadata  { get; set; } = [];
-    public List<LyricInfoMetadata> LyricMetadata  { get; set; } = [];
+    public List<LyricInfoMetadata> SongMetadata { get; set; } = [];
+    public List<LyricInfoMetadata> LyricMetadata { get; set; } = [];
 }
 
 public class SongLyric
@@ -91,7 +188,7 @@ public class SongLyric
     public bool HaveRomaji => !string.IsNullOrEmpty(Romaji);
 }
 
-public class NCRadio
+public class NCRadio : ProvidableItemBase
 {
     public string cover;
     public string desc;
@@ -100,32 +197,6 @@ public class NCRadio
     public string lastProgramName;
     public string name;
     public bool subed;
-
-    public static NCRadio CreateFromJson(JToken json)
-    {
-        return new NCRadio
-        {
-            cover = json["picUrl"].ToString(),
-            desc = json["desc"].ToString(),
-            id = json["id"].ToString(),
-            name = json["name"].ToString(),
-            DJ = NCUser.CreateFromJson(json["dj"]),
-            lastProgramName = json["lastProgramName"].ToString()
-        };
-    }
-
-    public NCAlbum ConvertToNcAlbum()
-    {
-        return new NCAlbum
-        {
-            AlbumType = HyPlayItemType.Radio,
-            id = "-1",
-            name = name,
-            cover = cover,
-            alias = name,
-            description = desc
-        };
-    }
 }
 
 public class NCFmItem : NCSong
@@ -134,46 +205,9 @@ public class NCFmItem : NCSong
     public string fmId;
     public string RadioId;
     public string RadioName;
-
-    public new static NCFmItem CreateFromJson(JToken song)
-    {
-        return new NCFmItem
-        {
-            Type = HyPlayItemType.Radio,
-            sid = song["mainTrackId"].ToString(),
-            songname = song["name"].ToString(),
-            Artist = new List<NCArtist>
-            {
-                new()
-                {
-                    Type = HyPlayItemType.Radio,
-                    id = song["dj"]["userId"].ToString(),
-                    name = song["dj"]["nickname"].ToString(),
-                    avatar = song["dj"]["avatarUrl"].ToString()
-                }
-            },
-            Album = new NCAlbum
-            {
-                AlbumType = HyPlayItemType.Radio,
-                id = song["radio"]["id"].ToString(),
-                name = song["radio"]["name"].ToString(),
-                cover = song["coverUrl"].ToString(),
-                alias = song["id"].ToString(), //咱放在这个奇怪的位置
-                description = song["radio"]["desc"].ToString()
-            },
-            LengthInMilliseconds = song["duration"].ToObject<double>(),
-            mvid = "-1",
-            alias = null,
-            transname = null,
-            fmId = song["id"].ToString(),
-            description = song["description"].ToString(),
-            RadioId = song["radio"]["id"].ToString(),
-            RadioName = song["radio"]["name"].ToString()
-        };
-    }
 }
 
-public class NCSong
+public class NCSong : ProvidableItemBase
 {
     public NCAlbum Album;
     public string alias;
@@ -194,6 +228,7 @@ public class NCSong
     public HyPlayItemType Type;
     public int DspOrder => Order + 1;
 
+
     public Uri Cover =>
         Common.Setting.noImage
             ? null
@@ -201,52 +236,19 @@ public class NCSong
                        "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg") +
                       "?param=" +
                       StaticSource.PICSIZE_SINGLENCSONG_COVER);
+    public string CoverString =>
+        Common.Setting.noImage
+            ? null
+            : new Uri((Album.cover ??
+                       "http://p4.music.126.net/UeTuwE7pvjBpypWLudqukA==/3132508627578625.jpg") +
+                      "?param=" +
+                      StaticSource.PICSIZE_HOME_CARD_COVER).ToString();
 
     public string ArtistString
     {
         get { return string.Join(" / ", Artist.Select(t => t.name)); }
     }
 
-    public static NCSong CreateFromJson(JToken song)
-    {
-        if (song == null) return null;
-        var alpath = "album";
-        var arpath = "artists";
-        var dtpath = "duration";
-        if (song[alpath] == null)
-            alpath = "al";
-        if (song[arpath] == null)
-            arpath = "ar";
-        if (song[dtpath] == null)
-            dtpath = "dt";
-        var NCSong = new NCSong
-        {
-            IsVip = song["fee"]?.ToString() == "1",
-            IsCloud = song["s_id"]?.ToString() != "0",
-            Type = HyPlayItemType.Netease,
-            Album = NCAlbum.CreateFromJson(song[alpath]),
-            sid = song["id"].ToString(),
-            TrackId = song["no"]?.ToObject<int>() ?? -1,
-            songname = song["name"].ToString(),
-            CDName = song["cd"]?.ToString() ?? "01",
-            Artist = [],
-            LengthInMilliseconds = double.Parse(song[dtpath].ToString())
-        };
-        if (song[arpath].HasValues)
-            song[arpath].ToList().ForEach(t => { NCSong.Artist.Add(NCArtist.CreateFromJson(t)); });
-        else
-            NCSong.Artist.Add(new NCArtist());
-        if (song["mv"] != null) NCSong.mvid = song["mv"].ToObject<string>();
-
-        if (song["alia"] != null)
-            NCSong.alias = string.Join(" / ", song["alia"].ToArray().Select(t => t.ToString()));
-
-        if (song["tns"] != null)
-            NCSong.transname = string.Join(" / ", song["tns"].ToArray().Select(t => t.ToString()));
-        if (song["privilege"] != null)
-            NCSong.IsAvailable = song["privilege"]["st"].ToString() == "0";
-        return NCSong;
-    }
 
     public string ConvertTranslate(string source)
     {
@@ -302,6 +304,10 @@ public class PlayItem
     public int TrackId;
     public HyPlayItemType Type;
     public string Url;
+    public double Volume = 1d;
+    public AudioGraphPlaybackSource AudioGraphPlaybackSource;
+    public InMemoryRandomAccessStream NcmPlayableStream;
+    public string NcmPlayableStreamMIMEType = string.Empty;
 
     public string ArtistString
     {
@@ -323,9 +329,17 @@ public class PlayItem
             TrackId = TrackId
         };
     }
+    public void FreePlaybackResources()
+    {
+        AudioGraphPlaybackSource?.Dispose();
+        NcmPlayableStream?.Dispose();
+        NcmPlayableStreamMIMEType = null;
+        AudioGraphPlaybackSource = null;
+        NcmPlayableStream = null;
+    }
 }
 
-public class NCPlayList
+public class NCPlayList : ProvidableItemBase
 {
     public long bookCount;
     public string cover;
@@ -339,102 +353,26 @@ public class NCPlayList
     public DateTime createTime;
     public DateTime updateTime;
 
-    public static NCPlayList CreateFromJson(JToken json)
-    {
-        try
-        {
-            var picpath = "picUrl";
-            var descpath = "description";
-            var subcountpath = "subscribedCount";
-            var playcountpath = "playCount";
-            if (json[picpath] == null)
-                picpath = "coverImgUrl";
-            if (json[descpath] == null)
-                descpath = "copywriter";
-            if (json[subcountpath] == null)
-                subcountpath = "bookCount";
-            if (json[playcountpath] == null) playcountpath = "playcount";
-
-            var ncp = new NCPlayList
-            {
-                cover = json[picpath].ToString(),
-                creater = NCUser.CreateFromJson(json["creator"]),
-                desc = json[descpath].ToString(),
-                name = json["name"].ToString(),
-                plid = json["id"].ToString(),
-                subscribed = !(json["subscribed"] == null || json["subscribed"].ToString() == "False"),
-                playCount = json[playcountpath].ToObject<long>(),
-                trackCount = json["trackCount"].ToObject<long>(),
-            };
-            if (json["createTime"] != null)
-                ncp.createTime = DateConverter.GetDateTimeFromTimeStamp(json["createTime"].ToObject<long>());
-            if (json["updateTime"] != null)
-                ncp.updateTime = DateConverter.GetDateTimeFromTimeStamp(json["updateTime"].ToObject<long>());
-
-            if (json[subcountpath] != null) ncp.bookCount = json[subcountpath].ToObject<long>();
-
-            return ncp;
-        }
-        catch
-        {
-            return new NCPlayList();
-        }
-    }
 }
 
-public class NCUser
+public class NCUser : ProvidableItemBase
 {
     public string avatar;
     public string id;
     public string name;
     public string signature;
-
-    public static NCUser CreateFromJson(JToken user)
-    {
-        if (user != null && user.HasValues)
-        {
-            var ncuser = new NCUser();
-            if (user["avatarUrl"] != null)
-                ncuser.avatar = user["avatarUrl"].ToString();
-            if (user["signature"] != null) ncuser.signature = user["signature"].ToString();
-
-            ncuser.id = user["userId"].ToString();
-            ncuser.name = user["nickname"].ToString();
-            return ncuser;
-        }
-
-        return new NCUser
-        {
-            avatar = "https://p1.music.126.net/KxePid7qTvt6V2iYVy-rYQ==/109951165050882728.jpg",
-            id = "1",
-            name = "网易云音乐",
-            signature = "网易云音乐官方帐号"
-        };
-    }
 }
 
-public class NCMlog
+public class NCMlog : ProvidableItemBase
 {
     public string cover;
     public string description;
     public int duration;
     public string id;
     public string title;
-
-    public static NCMlog CreateFromJson(JToken json)
-    {
-        return new NCMlog
-        {
-            id = json["id"].ToString(),
-            title = json["text"].ToString(),
-            description = json["desc"].ToString(),
-            cover = json["coverUrl"].ToString(),
-            duration = json["duration"].ToObject<int>()
-        };
-    }
 }
 
-public class NCArtist
+public class NCArtist : ProvidableItemBase
 {
     public string alias;
     public string avatar;
@@ -460,7 +398,7 @@ public class NCArtist
     }
 }
 
-public class NCAlbum
+public class NCAlbum : ProvidableItemBase
 {
     public HyPlayItemType AlbumType;
     public string alias;
@@ -486,7 +424,7 @@ public class NCAlbum
     }
 }
 
-public class Comment
+public class Comment : ProvidableItemBase
 {
     public Comment thisComment => this; //绑定回去用
     public string cid;
@@ -500,23 +438,4 @@ public class Comment
     public DateTime SendTime;
     public NCUser CommentUser;
     public bool IsByMyself => CommentUser.id == Common.LoginedUser?.id;
-
-    public static Comment CreateFromJson(JToken comment, string resourceId, NeteaseResourceType resourceType)
-    {
-        var cmt = new Comment();
-        cmt.resourceId = resourceId;
-        cmt.resourceType = resourceType;
-        cmt.cid = comment["commentId"].ToString();
-        cmt.SendTime =
-            new DateTime(Convert.ToInt64(comment["time"].ToString()) * 10000 + 621355968000000000);
-        cmt.CommentUser = NCUser.CreateFromJson(comment["user"]);
-        cmt.content = comment["content"].ToString();
-        cmt.likedCount = comment["likedCount"].ToObject<int>();
-        if (comment["showFloorComment"].HasValues)
-            cmt.ReplyCount = comment["showFloorComment"]["replyCount"].ToObject<int>();
-        if (comment["liked"].ToString() == "False")
-            cmt.HasLiked = false;
-        else cmt.HasLiked = true;
-        return cmt;
-    }
 }

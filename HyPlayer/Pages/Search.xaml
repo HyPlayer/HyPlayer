@@ -28,18 +28,6 @@
             Grid.Row="1"
             Orientation="Vertical"
             Spacing="10">
-            <AutoSuggestBox
-                x:Name="SearchKeywordBox"
-                AutomationProperties.Name="Search"
-                LostFocus="SearchKeywordBox_LostFocus"
-                PlaceholderText="搜索歌曲......"
-                QueryIcon="Find"
-                QuerySubmitted="SearchKeywordBox_QuerySubmitted"
-                SuggestionChosen="SearchKeywordBox_OnSuggestionChosen"
-                Tag="PageSearch"
-                Text="{x:Bind searchText, Mode=TwoWay}"
-                TextChanged="SearchKeywordBox_TextChanged" />
-
             <ComboBox
                 x:Name="HistoryComboBox"
                 Margin="15,0,15,5"

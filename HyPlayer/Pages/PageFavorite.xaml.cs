@@ -2,6 +2,8 @@
 
 using HyPlayer.Classes;
 using HyPlayer.NeteaseApi.ApiContracts;
+using HyPlayer.NeteaseApi.ApiContracts.Album;
+using HyPlayer.NeteaseApi.ApiContracts.Artist;
 using System;
 using System.Linq;
 using System.Threading;
@@ -9,8 +11,6 @@ using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.NeteaseApi.ApiContracts.Album;
-using HyPlayer.NeteaseApi.ApiContracts.Artist;
 
 #endregion
 
@@ -106,7 +106,7 @@ public sealed partial class PageFavorite : Page, IDisposable
 
                     return json.Value;
                 });
-            
+
 
             BtnLoadMore.Visibility = jv.Data?.HasMore is true ? Visibility.Visible : Visibility.Collapsed;
             foreach (var pljs in jv.Data?.Data ?? [])
@@ -201,7 +201,7 @@ public sealed partial class PageFavorite : Page, IDisposable
 
                     return jv.Value;
                 });
-            
+
             BtnLoadMore.Visibility = json?.HasMore is true ? Visibility.Visible : Visibility.Collapsed;
             foreach (var albumjson in json?.Data ?? [])
             {

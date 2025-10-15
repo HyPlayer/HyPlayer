@@ -1,8 +1,8 @@
+using HyPlayer.NeteaseApi.ApiContracts.Artist;
+using HyPlayer.NeteaseApi.ApiContracts.Recommend;
 using HyPlayer.NeteaseApi.Models.ResponseModels;
 using System.Collections.Generic;
 using System.Linq;
-using HyPlayer.NeteaseApi.ApiContracts.Artist;
-using HyPlayer.NeteaseApi.ApiContracts.Recommend;
 
 namespace HyPlayer.Classes;
 
@@ -18,7 +18,7 @@ public static class Mapper
                          .ToList() ??
                      [],
             CDName = song.CdName,
-            IsCloud = song.Sid is not "0",
+            IsCloud = song.Sid is not "0" and not null,
             IsVip = false,
             LengthInMilliseconds = song.Duration,
             mvid = song.MvId,
@@ -41,7 +41,7 @@ public static class Mapper
                          .ToList() ??
                      [],
             CDName = song.CdName,
-            IsCloud = song.Sid is not "0",
+            IsCloud = song.Sid is not "0" and not null,
             IsVip = song.Fee is 1,
             LengthInMilliseconds = song.Duration,
             mvid = song.MvId,
@@ -267,6 +267,19 @@ public static class Mapper
             trackCount = dto.TrackCount,
             bookCount = dto.BookCount,
             updateTime = DateConverter.GetDateTimeFromTimeStamp(dto.UpdateTime)
+        };
+        return ncp;
+    }
+    public static NCPlayList MapToNCPlayList(this RecommendPlaylistDto dto)
+    {
+        var ncp = new NCPlayList
+        {
+            cover = dto.CoverUrl,
+            creater = dto.Creator?.MapToNcUser() ?? new(),
+            name = dto.Name,
+            plid = dto.Id,
+            playCount = dto.PlayCount,
+            trackCount = dto.TrackCount
         };
         return ncp;
     }

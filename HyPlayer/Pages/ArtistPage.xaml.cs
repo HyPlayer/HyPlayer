@@ -3,6 +3,8 @@
 using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
+using HyPlayer.NeteaseApi.ApiContracts.Artist;
+using HyPlayer.NeteaseApi.ApiContracts.Song;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -12,8 +14,6 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.NeteaseApi.ApiContracts.Artist;
-using HyPlayer.NeteaseApi.ApiContracts.Song;
 
 #endregion
 
@@ -78,7 +78,7 @@ public sealed partial class ArtistPage : Page, IDisposable
                     Common.AddToTeachingTipLists("获取艺人信息失败", resp.Error?.Message);
                     return null;
                 }
-                
+
                 return resp.Value;
             });
 
@@ -224,7 +224,7 @@ public sealed partial class ArtistPage : Page, IDisposable
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var j1 = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, artist.id + "_" + page,
+            var j1 = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistSongsDetial, artist.id + "_" + page,
                 async () =>
                 {
                     var resp = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.ArtistSongsApi,
@@ -232,53 +232,22 @@ public sealed partial class ArtistPage : Page, IDisposable
                         _cancellationToken);
                     if (resp.IsError)
                     {
-                        Common.AddToTeachingTipLists("获取歌手热门歌曲失败", resp.Error?.Message);
+                        Common.AddToTeachingTipLists("获取歌手歌曲失败", resp.Error?.Message);
                         return null;
                     }
 
                     return resp.Value;
                 });
             var idx = 0;
-
-
-            try
+            foreach (var item in j1.Songs)
             {
-                var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, artist.id + "_" + page,
-                    async () =>
-                    {
-                        var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.SongDetailApi,
-                            new SongDetailRequest() { IdList = j1.Songs?.Select(t => t.Id).ToList() },
-                            _cancellationToken);
-                        if (json.IsError)
-                        {
-                            Common.AddToTeachingTipLists("获取歌手热门歌曲失败", json.Error!.Message);
-                            return null;
-                        }
-
-                        return json.Value;
-                    });
-                if (jv is null)
-                {
-                    return;
-                }
-
-                foreach (var item in jv.Songs)
-                {
-                    _cancellationToken.ThrowIfCancellationRequested();
-                    var ncSong = item.MapToNcSong();
-                    ncSong.IsAvailable =
-                        jv.Privileges?[idx].St == 0;
-                    ncSong.Order = page * 50 + idx++;
-                    allSongs.Add(ncSong);
-                }
-
-                SongHasMore = j1.HasMore;
+                _cancellationToken.ThrowIfCancellationRequested();
+                var ncSong = item.MapToNcSong();
+                ncSong.IsAvailable = item.Privilege.St == 0;
+                ncSong.Order = page * 50 + idx++;
+                allSongs.Add(ncSong);
             }
-            catch (Exception ex)
-            {
-                if (ex.GetType() != typeof(TaskCanceledException) && ex.GetType() != typeof(OperationCanceledException))
-                    Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
-            }
+            SongHasMore = j1.HasMore;
         }
         catch (Exception ex)
         {
@@ -317,7 +286,7 @@ public sealed partial class ArtistPage : Page, IDisposable
         try
         {
             _cancellationToken.ThrowIfCancellationRequested();
-            
+
             var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistAlbumsList, artist.id + "_" + page,
                 async () =>
                 {

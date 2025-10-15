@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -16,6 +17,23 @@ namespace HyPlayer.Classes.LyricParser.Abstraction
             Duration = duration;
             LyricWithoutPunc = lyricWithoutPunc;
             CurrentLyric = string.Concat(WordInfos.Select(t => t.CurrentWords).ToArray());
+        }
+
+        [JsonConstructor]
+        public KaraokeLyricsLine(
+            List<KaraokeWordInfo> WordInfos,
+            TimeSpan Duration,
+            string CurrentLyric,
+            string LyricWithoutPunc, 
+            TimeSpan StartTime,
+            TimeSpan? PossibleStartTime)
+        {
+            this.WordInfos = WordInfos;
+            this.StartTime = StartTime;
+            this.PossibleStartTime = PossibleStartTime;
+            this.Duration = Duration;
+            this.LyricWithoutPunc = LyricWithoutPunc;
+            this.CurrentLyric = CurrentLyric;
         }
     }
 }

@@ -1,13 +1,11 @@
 ﻿using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
-using System;
-using Windows.UI.Xaml.Media.Animation;
 using HyPlayer.LyricRenderer.Animator;
-using HyPlayer.LyricRenderer.Animator.EaseFunctions;
+using System;
 
 namespace HyPlayer.LyricRenderer.RollingCalculators;
 
-public abstract class EaseRollingCalculator: LineRollingCalculator
+public abstract class EaseRollingCalculator : LineRollingCalculator
 {
     protected abstract EaseFunctionBase EaseFunction { get; set; }
 

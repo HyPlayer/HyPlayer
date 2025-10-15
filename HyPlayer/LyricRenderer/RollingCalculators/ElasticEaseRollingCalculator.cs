@@ -1,9 +1,6 @@
-﻿using HyPlayer.LyricRenderer.Abstraction;
-using HyPlayer.LyricRenderer.Abstraction.Render;
+﻿using HyPlayer.LyricRenderer.Animator;
 using HyPlayer.LyricRenderer.Animator.EaseFunctions;
-using System;
 using Windows.UI.Xaml.Media.Animation;
-using HyPlayer.LyricRenderer.Animator;
 
 namespace HyPlayer.LyricRenderer.RollingCalculators;
 

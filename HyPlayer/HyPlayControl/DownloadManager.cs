@@ -2,6 +2,7 @@
 
 using HyPlayer.Classes;
 using HyPlayer.NeteaseApi.ApiContracts;
+using HyPlayer.NeteaseApi.ApiContracts.Song;
 using Microsoft.Toolkit.Uwp.Helpers;
 using System;
 using System.Collections.Generic;
@@ -10,7 +11,6 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Timers;
@@ -19,7 +19,6 @@ using Windows.Graphics.Imaging;
 using Windows.Networking.BackgroundTransfer;
 using Windows.Storage;
 using Windows.Storage.Streams;
-using HyPlayer.NeteaseApi.ApiContracts.Song;
 using File = TagLib.File;
 
 #endregion
@@ -268,12 +267,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                     .CreateFileAsync(
                         Path.GetFileName(Path.ChangeExtension(FullPath, "lrc")),
                         CreationCollisionOption.ReplaceExisting);
-                if (Common.Setting.usingGBK)
-                    await FileIO.WriteBytesAsync(sf,
-                        Encoding.Convert(Encoding.UTF8, Encoding.GetEncoding("GBK"),
-                            Encoding.UTF8.GetBytes(lrctxt)));
-                else
-                    await FileIO.WriteTextAsync(sf, lrctxt);
+                await FileIO.WriteTextAsync(sf, lrctxt);
             }
             else
             {

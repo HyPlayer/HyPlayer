@@ -1,8 +1,8 @@
-﻿using System;
+﻿using F23.StringSimilarity;
+using HyPlayer.Classes.LyricParser.Abstraction;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using F23.StringSimilarity;
-using HyPlayer.Classes.LyricParser.Abstraction;
 
 namespace HyPlayer.Classes.LyricParser.Implementation
 {

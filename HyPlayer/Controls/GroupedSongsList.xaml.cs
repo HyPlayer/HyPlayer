@@ -117,19 +117,21 @@ public sealed partial class GroupedSongsList : IDisposable
         _ = Common.Invoke(() =>
         {
             if (playitem.PlayItem == null) return;
-            if (GroupedSongs.Source == null) return;
             foreach (var disc in GroupedSongs.Source as IEnumerable<DiscSongs>)
             {
+                if (GroupedSongs?.Source == null) return;
+                {
 
-                var nowPlayingItem = disc.Where(t => t.sid == playitem.PlayItem.Id).FirstOrDefault();
-                if (nowPlayingItem != null)
-                {
-                    SongContainer.SelectedItem = nowPlayingItem;
-                    break;
-                }
-                else if (SongContainer.SelectedItem != null)
-                {
-                    SongContainer.SelectedItem = null;
+                    var nowPlayingItem = disc.Where(t => t.sid == playitem.PlayItem.Id).FirstOrDefault();
+                    if (nowPlayingItem != null)
+                    {
+                        SongContainer.SelectedItem = nowPlayingItem;
+                        break;
+                    }
+                    else if (SongContainer.SelectedItem != null)
+                    {
+                        SongContainer.SelectedItem = null;
+                    }
                 }
             }
         });

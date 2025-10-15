@@ -16,4 +16,5 @@ internal static class StaticSource
     public static string PICSIZE_SINGLENCSINGER_COVER = "70y70";
     public static string PICSIZE_DOWNLOAD_ALBUMCOVER = "640y640";
     public static string PICSIZE_NAVITEM_USERAVATAR = "30y30";
+    public static string PICSIZE_HOME_CARD_COVER = "512y512";
 }

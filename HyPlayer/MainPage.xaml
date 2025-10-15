@@ -141,11 +141,13 @@
         </Grid>
         <Grid
             Name="GridPlayBar"
-            Height="110"
+            Height="120"
             Margin="{x:Bind hyplayer:Common.Setting.playBarMargin, Mode=OneWay, Converter={StaticResource PlayBarMarginConverter}}"
             VerticalAlignment="Bottom"
             x:FieldModifier="public"
             Background="{x:Bind hyplayer:Common.Setting.playbarBackgroundAcrylic, Mode=OneWay, Converter={StaticResource BooleanToGridPlayBarBrushesConverter}}"
+            BorderBrush="{ThemeResource CardBorderBrush}"
+            BorderThickness="1"
             CornerRadius="{x:Bind hyplayer:Common.Setting.playBarMargin, Mode=OneWay, Converter={StaticResource PlayBarCornerRadiusConverter}}"
             Opacity="1"
             Visibility="Visible">

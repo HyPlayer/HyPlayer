@@ -1,7 +1,7 @@
-﻿using System;
+﻿using HyPlayer.Classes.LyricParser.Abstraction;
+using System;
 using System.Collections.Generic;
 using System.Text;
-using HyPlayer.Classes.LyricParser.Abstraction;
 
 namespace HyPlayer.Classes.LyricParser.Implementation
 {

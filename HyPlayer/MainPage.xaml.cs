@@ -49,7 +49,6 @@ public sealed partial class MainPage
         InitializeComponent();
         UIElement PlayBarMarginRect = PlayBarMarginBackground as UIElement;
         SetPlayBarMarginBlurEffect(PlayBarMarginRect);
-        _ = HyPlayList.OnAudioRenderDeviceChangedOrInitialized();
         ActualThemeChanged += MainPage_ActualThemeChanged;
         Common.OnPlaybarVisibilityChanged += OnPlaybarVisibilityChanged;
         if (Common.Setting.displayMaintain)
@@ -88,20 +87,20 @@ public sealed partial class MainPage
                 break;
         }
     }
-    private async Task OnPlaybarVisibilityChanged(bool isActivated)
+    private void OnPlaybarVisibilityChanged(bool isActivated)
     {
         if (!Common.Setting.AutoHidePlaybar) return;
         if (isActivated)
         {
-            await ShowBar();
+            ShowBar();
         }
         else
         {
-            await CollapseBar(3);
+            _ = CollapseBar(3);
         }
     }
 
-    private async Task ShowBar()
+    private void ShowBar()
     {
         Common.PageBase.NavItemBlank.IsEnabled = false;
         if (IsPlaybarOnShow)
@@ -123,7 +122,7 @@ public sealed partial class MainPage
             //lyricstoryboard.Begin();
 
             PointerInAni.Begin();
-            await Common.BarPlayBar.RefreshPlayBarCover(HyPlayList.NowPlayingHashCode, HyPlayList.CoverBuffer);
+            Common.BarPlayBar.RefreshPlayBarCover(HyPlayList.NowPlayingItem, HyPlayList.CoverBuffer);
             var BlankAni = new DoubleAnimation
             {
                 To = 0,
@@ -201,7 +200,7 @@ public sealed partial class MainPage
         storyboard.Children.Add(BlankAni);
         storyboard.Begin();
         using var coverStream = HyPlayList.CoverStream.CloneStream();
-        await Common.PageBase.RefreshNavItemCover(3, HyPlayList.NowPlayingHashCode, coverStream);
+        await Common.PageBase.RefreshNavItemCover(3, HyPlayList.NowPlayingItem, coverStream);
 
     }
     private void Page_PointerEntered(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)

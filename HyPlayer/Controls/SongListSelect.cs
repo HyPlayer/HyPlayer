@@ -1,8 +1,8 @@
 #region
 
 using HyPlayer.NeteaseApi.ApiContracts;
-using Windows.UI.Xaml.Controls;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
+using Windows.UI.Xaml.Controls;
 
 #endregion
 

@@ -87,10 +87,12 @@ public static class UpdateManager
     public static async Task<RemoteVersionResult> GetVersionFromSelfhost(UpdateSource source)
     {
         using var versionsResponse = await Common.HttpClient.GetAsync(
-            new Uri($"https://hyplayer.kengwang.com.cn/Channel/{(source switch {
+            new Uri($"https://hyplayer.kengwang.com.cn/Channel/{(source switch
+            {
                 UpdateSource.Canary => 5,
                 UpdateSource.Release => 4,
                 UpdateSource.Dogfood => 6,
+                _ =>  4,
             })}/latest"));
         if (!versionsResponse.IsSuccessStatusCode)
         {
@@ -176,7 +178,7 @@ public static class UpdateManager
             }
             else
             {
-                Common.Invoke(async () =>
+                _ = Common.Invoke(async () =>
                 {
                     ContentDialog contentDialog = new ContentDialog();
                     contentDialog.Title = title;
@@ -190,7 +192,7 @@ public static class UpdateManager
                 });
             }
         });
-        
+
     }
 
     public static async Task GetUserCanaryChannelAvailability(string userEmail)

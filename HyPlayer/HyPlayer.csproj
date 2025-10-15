@@ -90,12 +90,14 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Behaviors\ButtonContentSnapBehavior.cs" />
     <Compile Include="Classes\Api.cs" />
     <Compile Include="Classes\BrushManagement.cs" />
     <Compile Include="Classes\CloudUpload.cs" />
     <Compile Include="Classes\ColorExtractor.cs" />
     <Compile Include="Classes\Converters.cs" />
     <Compile Include="Classes\Extensions.cs" />
+    <Compile Include="Classes\FadeManager.cs" />
     <Compile Include="Classes\ImageDecoder.cs" />
     <Compile Include="Classes\LastFMManager.cs" />
     <Compile Include="Classes\ListenTogetherManager.cs" />
@@ -127,12 +129,15 @@
     <Compile Include="Classes\UpdateManager.cs" />
     <Compile Include="Classes\UserDisplay.cs" />
     <Compile Include="Common.cs" />
+    <Compile Include="Contracts\Services\INeteaseProviderService.cs" />
+    <Compile Include="Contracts\ViewModels\IViewModel.cs" />
     <Compile Include="Controls\AlignableWrapPanel\AlignableWrapPanel.cs" />
     <Compile Include="Controls\AlignableWrapPanel\AlignableWrapPanel.Data.cs" />
     <Compile Include="Controls\ArtistSelectDialog.xaml.cs">
       <DependentUpon>ArtistSelectDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\AutoScrollView.cs" />
+    <Compile Include="Controls\CardButton\CardButton.cs" />
     <Compile Include="Controls\CommentsList.xaml.cs">
       <DependentUpon>CommentsList.xaml</DependentUpon>
     </Compile>
@@ -144,6 +149,9 @@
     </Compile>
     <Compile Include="Controls\GroupedSongsList.xaml.cs">
       <DependentUpon>GroupedSongsList.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\HomePageHeaderImage.xaml.cs">
+      <DependentUpon>HomePageHeaderImage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\LastFMLoginBox.xaml.cs">
       <DependentUpon>LastFMLoginBox.xaml</DependentUpon>
@@ -177,12 +185,14 @@
     <Compile Include="Controls\SongsList.xaml.cs">
       <DependentUpon>SongsList.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Classes\Extensions\RosylnExtensions.cs" />
     <Compile Include="HyPlayControl\DownloadManager.cs" />
     <Compile Include="HyPlayControl\HyPlayList.cs" />
     <Compile Include="Controls\LyricControl\LyricControl.Properties.cs" />
     <Compile Include="Controls\LyricControl\LyricControl.xaml.cs">
       <DependentUpon>LyricControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Locator.cs" />
     <Compile Include="LyricRenderer\Abstraction\RenderContext.cs" />
     <Compile Include="LyricRenderer\Abstraction\RenderTypography.cs" />
     <Compile Include="LyricRenderer\Abstraction\Render\LineRenderOffset.cs" />
@@ -213,6 +223,7 @@
     <Compile Include="Pages\AlbumPage.xaml.cs">
       <DependentUpon>AlbumPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Pages\AppPageBase.cs" />
     <Compile Include="Pages\ArtistPage.xaml.cs">
       <DependentUpon>ArtistPage.xaml</DependentUpon>
     </Compile>
@@ -237,11 +248,11 @@
     <Compile Include="Pages\History.xaml.cs">
       <DependentUpon>History.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\Home.xaml.cs">
-      <DependentUpon>Home.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Controls\PlayBar.xaml.cs">
       <DependentUpon>PlayBar.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\HomePage.xaml.cs">
+      <DependentUpon>HomePage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Pages\LocalMusicPage.xaml.cs">
       <DependentUpon>LocalMusicPage.xaml</DependentUpon>
@@ -298,6 +309,8 @@
     <Compile Include="Resources\Theme.xaml.cs">
       <DependentUpon>Theme.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Services\NeteaseProviderService.cs" />
+    <Compile Include="ViewModels\HomeViewModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
@@ -373,9 +386,17 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\CardButton\CardButton.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\CommentsList.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\HomePageHeaderImage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Controls\LastFMLoginBox.xaml">
       <SubType>Designer</SubType>
@@ -386,6 +407,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\Primitives\RedirectVisualView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Pages\HomePage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -540,10 +565,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Pages\Home.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Controls\PlayBar.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -608,6 +629,15 @@
     <PackageReference Include="ALRC.Converters">
       <Version>1.2.1</Version>
     </PackageReference>
+    <PackageReference Include="AsyncAwaitBestPractices">
+      <Version>9.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="CommunityToolkit.Labs.Uwp.TitleBar">
+      <Version>0.0.1-build.2173</Version>
+    </PackageReference>
+    <PackageReference Include="CommunityToolkit.Mvvm">
+      <Version>8.4.0</Version>
+    </PackageReference>
     <PackageReference Include="CommunityToolkit.Uwp.Animations">
       <Version>8.2.250402</Version>
     </PackageReference>
@@ -626,14 +656,14 @@
     <PackageReference Include="CommunityToolkit.Uwp.Converters">
       <Version>8.2.250402</Version>
     </PackageReference>
+    <PackageReference Include="CommunityToolkit.Uwp.Extensions">
+      <Version>8.2.250402</Version>
+    </PackageReference>
     <PackageReference Include="CommunityToolkit.Uwp.Media">
       <Version>8.2.250402</Version>
     </PackageReference>
     <PackageReference Include="F23.StringSimilarity">
       <Version>6.0.0</Version>
-    </PackageReference>
-    <PackageReference Include="FastEnum">
-      <Version>1.8.0</Version>
     </PackageReference>
     <PackageReference Include="HyPlayer.PlayCore.Abstraction">
       <Version>0.1.4</Version>
@@ -641,8 +671,11 @@
     <PackageReference Include="Inflatable.Lastfm">
       <Version>1.2.0</Version>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection">
+      <Version>9.0.8</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.Gaming.XboxGameBar">
-      <Version>7.2.241028002</Version>
+      <Version>7.3.2506120</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.2.14</Version>
@@ -652,6 +685,12 @@
     </PackageReference>
     <PackageReference Include="Microsoft.UI.Xaml">
       <Version>2.8.7</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Uwp.Managed">
+      <Version>3.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>13.0.3</Version>
     </PackageReference>
     <PackageReference Include="QRCoder">
       <Version>1.6.0</Version>
@@ -663,17 +702,13 @@
       <Version>4.3.2</Version>
     </PackageReference>
     <PackageReference Include="System.Text.Json">
-      <Version>9.0.3</Version>
+      <Version>9.0.8</Version>
     </PackageReference>
     <PackageReference Include="TagLibSharp">
       <Version>2.3.0</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AudioEffectComponent\AudioEffectComponent.csproj">
-      <Project>{3622fd12-ce05-4b0f-8ce2-fae1add0bb4e}</Project>
-      <Name>AudioEffectComponent</Name>
-    </ProjectReference>
     <ProjectReference Include="..\HyPlayer.Frieren\HyPlayer.Frieren.csproj">
       <Project>{8db15c94-9cca-4b40-91f4-5919bbc67abb}</Project>
       <Name>HyPlayer.Frieren</Name>
@@ -681,6 +716,10 @@
     <ProjectReference Include="..\HyPlayer.NeteaseProvider\HyPlayer.NeteaseApi\HyPlayer.NeteaseApi.csproj">
       <Project>{a9fac26e-7651-4ec5-9ca6-8b3cef6412e9}</Project>
       <Name>HyPlayer.NeteaseApi</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\HyPlayer.UWP.Chopin\HyPlayer.UWP.Chopin.csproj">
+      <Project>{ae7aa571-e532-4f0c-9d51-043dfecf9924}</Project>
+      <Name>HyPlayer.UWP.Chopin</Name>
     </ProjectReference>
     <ProjectReference Include="..\Impressionist\Impressionist\Impressionist.csproj">
       <Project>{0f920821-8006-4512-abcd-1396d1916fed}</Project>

@@ -188,7 +188,6 @@ sealed partial class App : Application
 
             rootFrame.Navigate(typeof(MainPage));
             Window.Current.Activate();
-            Common.BarPlayBar.InitializeDesktopLyric();
             if (Common.isExpanded) return;
             var animation = Common.Setting.expandAnimation;
             Common.Setting.expandAnimation = false;
@@ -310,9 +309,10 @@ sealed partial class App : Application
 
             NavigateToRootPage();
             Window.Current.Activate();
-
-            if (HyPlayList.Player == null)
+            if (!HyPlayList.Player.PlayerCreated)
+            {
                 HyPlayList.InitializeHyPlaylist();
+            }
             foreach (var storageItem in (args as FileActivatedEventArgs).Files)
             {
                 var file = (StorageFile)storageItem;
@@ -342,7 +342,7 @@ sealed partial class App : Application
 
     private void NavigateToRootPage(IActivatedEventArgs args = null)
     {
-        rootFrame.Navigate(typeof(MainPage), (args as LaunchActivatedEventArgs).Arguments);
+        rootFrame.Navigate(typeof(MainPage), (args as LaunchActivatedEventArgs)?.Arguments);
     }
 
     /// <summary>

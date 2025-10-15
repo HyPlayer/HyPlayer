@@ -1,7 +1,7 @@
-﻿using System;
-using System.Linq;
-using ALRC.Abstraction;
+﻿using ALRC.Abstraction;
 using ALRC.Converters;
+using System;
+using System.Linq;
 
 namespace HyPlayer.Classes.LyricEnhancers;
 
@@ -22,7 +22,7 @@ public class SublineAlignmentEnhancer : ILyricEnhancer<bool>
             if (!validLines.TryGetValue(line.ParentLineId, out var parentLine)) continue;
             var minStart = Math.Min(line.Start ?? 0, parentLine.Start ?? 0);
             var maxEnd = Math.Max(line.End ?? 0, parentLine.End ?? 0);
-            
+
             if (line.Words is { Count: 0 })
             {
                 line.Words =
@@ -35,7 +35,7 @@ public class SublineAlignmentEnhancer : ILyricEnhancer<bool>
                     }
                 ];
             }
-            
+
             if (parentLine.Words is { Count: 0 })
             {
                 parentLine.Words =

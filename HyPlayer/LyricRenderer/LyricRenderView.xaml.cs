@@ -5,7 +5,6 @@ using Microsoft.Graphics.Canvas;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Timers;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -93,6 +92,7 @@ namespace HyPlayer.LyricRenderer
         {
             Context.PreferTypography.Alignment = alignment;
             _isTypographyChanged = true;
+            _needRecalculateSize = true;
         }
 
         public void ChangeBeatPerMinute(float beatPerMinute)
@@ -190,6 +190,10 @@ namespace HyPlayer.LyricRenderer
                     {
                         Context.RenderOffsets[renderingLyricLine.Id].X =
                             (Context.ViewWidth - renderingLyricLine.RenderingWidth) / 2;
+                    }
+                    if (Context.PreferTypography?.Alignment is TextAlignment.Left)
+                    {
+                        Context.RenderOffsets[renderingLyricLine.Id].X = 0;
                     }
                 }
             }
@@ -372,6 +376,12 @@ namespace HyPlayer.LyricRenderer
                             Context.RenderOffsets[renderingLyricLine.Id].X =
                                 (Context.ViewWidth - renderingLyricLine.RenderingWidth) / 2;
                         }
+
+                        if ((renderingLyricLine.Typography?.Alignment ?? Context.PreferTypography?.Alignment) is
+                            TextAlignment.Left)
+                        {
+                            Context.RenderOffsets[renderingLyricLine.Id].X = 0;
+                        }
                     }
                 }
                 catch
@@ -440,23 +450,17 @@ namespace HyPlayer.LyricRenderer
             args.DrawingSession.Dispose();
         }
 
-        private long _lastRedesignedTime;
-
         public void Redesign(float width, float height)
         {
             Context.ViewWidth = width;
             Context.ViewHeight = height;
             _needRecalculateSize = true;
             _needRecalculate = true;
-            _lastRedesignedTime = Context.RenderTick;
         }
+
         private void LyricView_OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
-            // 每0.5s重新算一下布局，避免重复算占用过高
-            if (_lastRedesignedTime == 0 || Context.RenderTick - _lastRedesignedTime > 5000000)
-            {
-                Redesign((float)e.NewSize.Width, (float)e.NewSize.Height);
-            }
+            Redesign((float)e.NewSize.Width, (float)e.NewSize.Height);
         }
 
         private long _lastWheelTime;

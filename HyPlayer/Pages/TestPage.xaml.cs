@@ -68,7 +68,6 @@ public sealed partial class TestPage : Page
             CurrentUser = Common.LoginedUser,
             DeviceId = new EasClientDeviceInformation().Id.ToString(),
             IsInBackground = Common.IsInBackground,
-            IsUsingCache = Common.Setting.enableCache,
             IsLowCache = Common.Setting.forceMemoryGarbage,
             ErrorMessageList = Common.ErrorMessageList.TakeLast(15).ToList()
         }, Formatting.Indented);
@@ -90,7 +89,6 @@ public sealed partial class TestPage : Page
         public NCUser CurrentUser { get; set; }
         public string DeviceId { get; set; }
         public bool IsInBackground { get; set; }
-        public bool IsUsingCache { get; set; }
         public bool IsLowCache { get; set; }
         public List<string> ErrorMessageList { get; set; }
     }

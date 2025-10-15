@@ -273,7 +273,7 @@
                         x:Name="FirstGrid"
                         Grid.Column="0"
                         Margin="0,5,-15,0"
-                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         CornerRadius="8">
                         <StackPanel
@@ -306,7 +306,7 @@
                         Grid.Row="0"
                         Grid.Column="1"
                         Margin="-15,5,0,0"
-                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        Background="{ThemeResource LayerOnMicaBaseAltFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                         CornerRadius="8">
                         <StackPanel

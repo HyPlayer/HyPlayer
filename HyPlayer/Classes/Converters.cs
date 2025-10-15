@@ -28,7 +28,8 @@ namespace HyPlayer.Classes
                 };
                 return Brush;
             }
-            if (value is true && Common.Setting.CustomAcrylic is false) return Application.Current.Resources["NormalWindowBackgroundAcrylic"] as Brush;
+            if (value is true && Common.Setting.CustomAcrylic is false) 
+                return Application.Current.Resources["NormalWindowBackgroundAcrylic"] as Brush;
             return null;
         }
 
@@ -358,7 +359,7 @@ namespace HyPlayer.Classes
                 return Common.PageBase?.NavItemBlank;
             }
             Type pageType = value.GetType();
-            if (pageType == typeof(Home))
+            if (pageType == typeof(HomePage))
                 pageNavigationViewItem = Common.PageBase?.NavItemPageHome;
             else if (pageType == typeof(SongListDetail))
             {
@@ -444,7 +445,7 @@ namespace HyPlayer.Classes
         public object Convert(object value, Type targetType,
                               object parameter, string language)
         {
-            if (value is 7) return Visibility.Visible;
+            if (value is BackgroundType.Isolation) return Visibility.Visible;
             else return Visibility.Collapsed;
         }
 

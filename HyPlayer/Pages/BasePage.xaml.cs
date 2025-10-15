@@ -1,9 +1,16 @@
 ﻿#region
 
+using CommunityToolkit.WinUI;
+using CommunityToolkit.WinUI.Controls;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi.ApiContracts;
+using HyPlayer.NeteaseApi.ApiContracts.Login;
+using HyPlayer.NeteaseApi.ApiContracts.Playlist;
+using HyPlayer.NeteaseApi.ApiContracts.Recommend;
+using HyPlayer.NeteaseApi.ApiContracts.User;
+using HyPlayer.NeteaseApi.ApiContracts.Utils;
 using Microsoft.UI.Xaml.Controls;
 using QRCoder;
 using System;
@@ -19,6 +26,7 @@ using Windows.System.Profile;
 using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.ViewManagement;
+using Windows.UI.WindowManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
@@ -26,14 +34,8 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
-using HyPlayer.NeteaseApi.ApiContracts.Login;
-using HyPlayer.NeteaseApi.ApiContracts.Playlist;
-using HyPlayer.NeteaseApi.ApiContracts.Recommend;
-using HyPlayer.NeteaseApi.ApiContracts.User;
-using HyPlayer.NeteaseApi.ApiContracts.Utils;
 using NavigationView = Microsoft.UI.Xaml.Controls.NavigationView;
 using NavigationViewBackButtonVisible = Microsoft.UI.Xaml.Controls.NavigationViewBackButtonVisible;
-using NavigationViewBackRequestedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewBackRequestedEventArgs;
 using NavigationViewDisplayMode = Microsoft.UI.Xaml.Controls.NavigationViewDisplayMode;
 using NavigationViewDisplayModeChangedEventArgs = Microsoft.UI.Xaml.Controls.NavigationViewDisplayModeChangedEventArgs;
 using NavigationViewItem = Microsoft.UI.Xaml.Controls.NavigationViewItem;
@@ -53,7 +55,6 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class BasePage : Page
 {
-    private string nowplid;
     private string nowqrkey;
 
     public BasePage()
@@ -63,95 +64,41 @@ public sealed partial class BasePage : Page
         Common.GlobalTip = TheTeachingTip;
         HyPlayList.OnTimerTicked += () => Common.RollTeachingTip();
         HyPlayList.OnTimerTicked += Common.ChangePlaybarVisibillity;
-        if (HyPlayList.Player == null)
+        if (!HyPlayList.Player.PlayerCreated)
+        {
             HyPlayList.InitializeHyPlaylist();
+        }
         HyPlayList.OnPlayItemChange += OnChangePlayItem;
         HyPlayList.OnSongCoverChanged += HyPlayList_OnSongCoverChanged;
-        if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Desktop" && Common.Setting.EnableTitleBarImmerse)
-        {
-            CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
-            Window.Current.SetTitleBar(AppTitleBar);
-        }
-        else if (AnalyticsInfo.VersionInfo.DeviceFamily == "Windows.Xbox")
-        {
-            var result = ApplicationViewScaling.TrySetDisableLayoutScaling(true);
-            ApplicationView.GetForCurrentView().SetDesiredBoundsMode(ApplicationViewBoundsMode.UseCoreWindow);
-        }
 
         ApplicationView.TerminateAppOnFinalViewClose = false;
         Common.BaseFrame = BaseFrame;
         BaseFrame.IsNavigationStackEnabled = !Common.Setting.forceMemoryGarbage;
         Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
         Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
-        // Window.Current.CoreWindow.Dispatcher.AcceleratorKeyActivated += Dispatcher_AcceleratorKeyActivated;
     }
 
-    private async Task HyPlayList_OnSongCoverChanged(int hashCode, IBuffer coverStream)
+    private async void HyPlayList_OnSongCoverChanged(HyPlayItem playItem, IBuffer coverStream)
     {
-        await RefreshNavItemCover(hashCode, coverStream);
+        await RefreshNavItemCover(playItem, coverStream);
     }
 
-    /*
-    private void Dispatcher_AcceleratorKeyActivated(CoreDispatcher sender, AcceleratorKeyEventArgs args)
-    {
-        if(args.EventType== CoreAcceleratorKeyEventType.KeyDown)
-        {
-            if (Window.Current.CoreWindow.GetKeyState(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down))//判断ctrl是否按下
-            {
-                switch(args.VirtualKey)
-                {
-                    case VirtualKey.P:
-                        {
-
-                            if(HyPlayList.Player.PlaybackSession.PlaybackState==Windows.Media.Playback.MediaPlaybackState.Playing)
-                                HyPlayList.Player.Pause();
-                            else HyPlayList.Player.Play();
-                            break;
-                        }
-                    case VirtualKey.Left:
-                        {
-                            HyPlayList.SongMovePrevious();
-                            break;
-                        }
-                    case VirtualKey.Right:
-                        {
-
-                            HyPlayList.SongMoveNext();
-                            break;
-                        }
-                    case VirtualKey.M:
-                        {
-                            _ = ApplicationView.GetForCurrentView().TryEnterViewModeAsync(ApplicationViewMode.CompactOverlay);
-                            Common.PageMain.ExpandedPlayer.Navigate(typeof(CompactPlayerPage));
-                            break;
-                        }
-                }
-            }
-            else if(args.VirtualKey==VirtualKey.Space)
-            {
-                if (HyPlayList.Player.PlaybackSession.PlaybackState == Windows.Media.Playback.MediaPlaybackState.Playing)
-                    HyPlayList.Player.Pause();
-                else HyPlayList.Player.Play();
-            }
-        }
-        args.Handled = true;
-    }
-    */
-    private async void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs args)
+    
+    private void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs args)
     {
         if (args.CurrentPoint.Properties.IsXButton1Pressed)
             if (Common.isExpanded)
-                await Common.BarPlayBar.CollapseExpandedPlayer();
+                Common.BarPlayBar.CollapseExpandedPlayer();
             else
                 Common.NavigateBack();
     }
 
-    private async void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
+    private void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
     {
         if (args.VirtualKey == VirtualKey.GamepadB)
         {
             if (Common.isExpanded)
-                await Common.BarPlayBar.CollapseExpandedPlayer();
+                Common.BarPlayBar.CollapseExpandedPlayer();
             else
                 Common.NavigateBack();
             args.Handled = true;
@@ -159,12 +106,12 @@ public sealed partial class BasePage : Page
 
         if (args.VirtualKey == VirtualKey.GamepadY)
             if (HyPlayList.IsPlaying)
-                HyPlayList.Player.Pause();
-            else if (!HyPlayList.IsPlaying) HyPlayList.Player.Play();
+                HyPlayList.Player.PauseAll();
+            else if (!HyPlayList.IsPlaying) HyPlayList.Player.PlayAll();
 
         if (args.VirtualKey == VirtualKey.Escape)
             if (Common.isExpanded)
-                await Common.BarPlayBar.CollapseExpandedPlayer();
+                Common.BarPlayBar.CollapseExpandedPlayer();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -175,11 +122,11 @@ public sealed partial class BasePage : Page
             var dialog = new ContentDialog();
             dialog.Title = "重要提示";
             dialog.Content = "本软件仅供学习交流使用，下载后请在 24 小时内删除。\r\n请勿使用此软件登录网易云音乐或进行违反网易云音乐用户协议的行为";
-            dialog.CloseButtonText = "我已知晓";
-            dialog.PrimaryButtonText = "退出软件";
+            dialog.CloseButtonText = "退出软件";
+            dialog.PrimaryButtonText = "我已知晓";
             dialog.IsPrimaryButtonEnabled = true;
-            dialog.CloseButtonStyle = (Style)App.Current.Resources["AccentButtonStyle"];
-            dialog.PrimaryButtonClick += (_, _) => _ = ApplicationView.GetForCurrentView().TryConsolidateAsync();
+            dialog.DefaultButton = ContentDialogButton.Primary;
+            dialog.CloseButtonClick += (_, _) => _ = ApplicationView.GetForCurrentView().TryConsolidateAsync();
             _ = dialog.ShowAsync();
         }
 
@@ -330,7 +277,7 @@ public sealed partial class BasePage : Page
 
             if (result is null)
                 return false;
-            
+
             LoginStatus = result;
         }
         catch (Exception e)
@@ -386,7 +333,7 @@ public sealed partial class BasePage : Page
         {
             NavMain.SelectedItem = NavItemLogin;
         }
-        
+
         return true;
     }
 
@@ -419,7 +366,7 @@ public sealed partial class BasePage : Page
 
                 return js.Value;
             });
-            
+
             Common.LikedSongs = ids?.TrackIds?.ToList() ?? [];
         }
         catch (Exception ex)
@@ -556,7 +503,7 @@ public sealed partial class BasePage : Page
                 Common.NavigatePage(typeof(Search), null, new EntranceNavigationTransitionInfo());
                 break;
             case "PageHome":
-                Common.NavigatePage(typeof(Home), null, new EntranceNavigationTransitionInfo());
+                Common.NavigatePage(typeof(HomePage), null, new EntranceNavigationTransitionInfo());
                 break;
             case "PageSettings":
                 Common.NavigatePage(typeof(Settings), null, new EntranceNavigationTransitionInfo());
@@ -601,18 +548,6 @@ public sealed partial class BasePage : Page
     private async Task LoadHeartBeat()
     {
         await Api.EnterIntelligencePlay();
-    }
-
-    private void OnNavigateBack(NavigationView sender, NavigationViewBackRequestedEventArgs args)
-    {
-        try
-        {
-            NavViewBack();
-        }
-        catch (Exception)
-        {
-            //ignore
-        }
     }
 
     private void TextBoxAccount_OnKeyDown(object sender, KeyRoutedEventArgs e)
@@ -767,7 +702,7 @@ public sealed partial class BasePage : Page
                                             NavigationViewDisplayModeChangedEventArgs args)
     {
         const int topIndent = 16;
-        const int expandedIndent = 48;
+        const int expandedIndent = 0;
         var minimalIndent = 104;
         if (NavMain.IsBackButtonVisible.Equals(NavigationViewBackButtonVisible
                                                    .Collapsed))
@@ -782,8 +717,9 @@ public sealed partial class BasePage : Page
             AppTitleBar.Margin = new Thickness(expandedIndent, currMargin.Top, currMargin.Right, currMargin.Bottom);
     }
 
-    private async void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)
+    private void ItemPublicPlayList_Click(object sender, RoutedEventArgs e)
     {
+        /*
         try
         {
             var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaylistPrivacyApi,
@@ -801,10 +737,12 @@ public sealed partial class BasePage : Page
         {
             Common.AddToTeachingTipLists("公开歌单失败", ex.Message);
         }
+        */
     }
 
-    private async void ItemDelPlayList_Click(object sender, RoutedEventArgs e)
+    private void ItemDelPlayList_Click(object sender, RoutedEventArgs e)
     {
+        /*
         try
         {
             var json = await Common.NeteaseAPI.RequestAsync(NeteaseApis.PlaylistDeleteApi,
@@ -821,6 +759,7 @@ public sealed partial class BasePage : Page
         {
             Common.AddToTeachingTipLists("删除失败", ex.Message);
         }
+         */
     }
 
 
@@ -853,7 +792,7 @@ public sealed partial class BasePage : Page
                 Common.AddToTeachingTipLists("获取推荐词失败", json.Error.Message);
                 return;
             }
-            sender.ItemsSource = json.Value.Result.AllMatch.Select(t => t.Keyword).ToList();
+            sender.ItemsSource = json.Value.Result.AllMatch?.Select(t => t.Keyword).ToList();
         }
         catch (Exception ex)
         {
@@ -878,7 +817,7 @@ public sealed partial class BasePage : Page
         });
     }
 
-    public async Task RefreshNavItemCover(int hashCode, IBuffer coverStream)
+    public async Task RefreshNavItemCover(HyPlayItem playItem, IBuffer coverStream)
     {
         if (HyPlayList.CoverStream.Size == 0) return;
         await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
@@ -890,7 +829,7 @@ public sealed partial class BasePage : Page
             {
                 try
                 {
-                    if (hashCode != HyPlayList.NowPlayingHashCode) return;
+                    if (playItem != HyPlayList.NowPlayingItem) return;
                     await NavItemImageSource.SetSourceAsync(stream);
                 }
                 catch
@@ -900,7 +839,7 @@ public sealed partial class BasePage : Page
         });
     }
 
-    public async Task RefreshNavItemCover(double collapseTime, int hashCode, IRandomAccessStream coverStream)
+    public async Task RefreshNavItemCover(double collapseTime, HyPlayItem playItem, IRandomAccessStream coverStream)
     {
         await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
         {
@@ -911,7 +850,7 @@ public sealed partial class BasePage : Page
             {
                 try
                 {
-                    if (hashCode != HyPlayList.NowPlayingHashCode) return;
+                    if (playItem != HyPlayList.NowPlayingItem) return;
                     await NavItemImageSource.SetSourceAsync(stream);
                 }
                 catch
@@ -949,7 +888,7 @@ public sealed partial class BasePage : Page
     private void ButtonPreLoginPrimary_Click(ContentDialog sender, ContentDialogButtonClickEventArgs args)
     {
         DialogPreLoginHint.Hide();
-        DialogLogin.ShowAsync();
+        _ = DialogLogin.ShowAsync();
     }
 
     private async void BtnRamdomDeviceIdClick(object sender, RoutedEventArgs e)
@@ -962,8 +901,9 @@ public sealed partial class BasePage : Page
         var lines = await Windows.Storage.FileIO.ReadLinesAsync(storagefile);
         var idx = new Random().Next(lines.Count - 1);
         var deviceId = lines[idx];
-        Common.NeteaseAPI.Option.AdditionalParameters.Headers["deviceId"] = deviceId;
         Common.NeteaseAPI.Option.AdditionalParameters.Cookies["deviceId"] = deviceId;
+        Common.NeteaseAPI.Option.AdditionalParameters.Cookies["os"] = "pc";
+        Common.NeteaseAPI.Option.AdditionalParameters.Cookies["appver"] = "3.1.3.203419";
         Common.Setting.ApiAdditionalParameters = Common.NeteaseAPI.Option.AdditionalParameters;
         var rst = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.RegisterAnonymousApi, new RegisterAnonymousRequest()
         {
@@ -981,7 +921,6 @@ public sealed partial class BasePage : Page
 
         ButtonPreLoginPrimary_Click(null, null);
     }
-
     private async void BtnCurrentDeviceIdClick(object sender, RoutedEventArgs e)
     {
         try
@@ -1011,5 +950,24 @@ public sealed partial class BasePage : Page
             Common.AddToTeachingTipLists("设备ID注册失败, 请尝试其他方案", "错误: " + ex.Message);
             return;
         }
+    }
+    private void AppTitleBar_BackButtonClick(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            NavViewBack();
+        }
+        catch (Exception)
+        {
+            //ignore
+        }
+    }
+
+    private void AppTitleBar_PaneButtonClick(object sender, RoutedEventArgs e)
+    {
+        if (NavMain.IsPaneOpen)
+            NavMain.IsPaneOpen = false;
+        else
+            NavMain.IsPaneOpen = true;
     }
 }

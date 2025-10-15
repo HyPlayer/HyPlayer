@@ -2,11 +2,10 @@
 using HyPlayer.HyPlayControl;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.RollingCalculators;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Microsoft.Gaming.XboxGameBar;
 using Microsoft.Gaming.XboxGameBar.Input;
 using System;
-using System.Threading.Tasks;
-using Windows.Media.Playback;
 using Windows.System;
 using Windows.UI;
 using Windows.UI.Core;
@@ -71,7 +70,7 @@ public sealed partial class WidgetPage : Page
         _hotkeyWatcher.HotkeySetStateChanged += OnHotkeySetStateChanged;
         InitializeLyricView();
         PlayStateIcon.Glyph =
-                    HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
+                    HyPlayList.Player.GlobalPlaybackStatus == PlaybackStatus.Playing
                         ? "\uF8AE"
                         : "\uF5B0";
         LoadLyrics();
@@ -84,6 +83,7 @@ public sealed partial class WidgetPage : Page
         MovePreviousButton.Click += MovePreviousButton_Click;
         TipContent.Visibility = Visibility.Collapsed;
         _widget.CloseRequested += Widget_CloseRequested;
+        LyricView.Context.Debug = Common.Setting.LyricRendererDebugMode;
     }
 
     private void RequestedThemeChanged(XboxGameBarWidget sender, object args)
@@ -126,20 +126,10 @@ public sealed partial class WidgetPage : Page
             {
                 PositionProgressBar.Value = progress;
                 CurrentPositionText.Text = text;
-                if (HyPlayList.FadeProcessStatus && !HyPlayList.AutoFadeProcessing)
-                {
-                    PlayStateIcon.Glyph =
-                    HyPlayList.CurrentFadeInOutState == HyPlayList.FadeInOutState.FadeIn
+                PlayStateIcon.Glyph =
+                    HyPlayList.Player.GlobalPlaybackStatus == PlaybackStatus.Playing
                         ? "\uF8AE"
                         : "\uF5B0";
-                }
-                else
-                {
-                    PlayStateIcon.Glyph =
-                    HyPlayList.Player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing
-                        ? "\uF8AE"
-                        : "\uF5B0";
-                }
             });
     }
 
@@ -156,19 +146,20 @@ public sealed partial class WidgetPage : Page
            });
     }
 
-    private async void MovePreviousButton_Click(object sender, RoutedEventArgs e)
+    private void MovePreviousButton_Click(object sender, RoutedEventArgs e)
     {
-        await HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.UserNextFadeOut, HyPlayList.SongChangeType.Previous);
+        HyPlayList.SongMovePrevious();
     }
 
-    private async void MoveNextButton_Click(object sender, RoutedEventArgs e)
+    private void MoveNextButton_Click(object sender, RoutedEventArgs e)
     {
-        await HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.UserNextFadeOut, HyPlayList.SongChangeType.Next);
+        HyPlayList.SongMoveNext();
     }
 
-    private async void ChangePlayStateButton_Click(object sender, RoutedEventArgs e)
+    private void ChangePlayStateButton_Click(object sender, RoutedEventArgs e)
     {
-        await ChangePlayState();
+        if (HyPlayList.IsPlaying) HyPlayList.Player.PauseAll();
+        else HyPlayList.Player.PlayAll();
     }
 
     private void WidgetPage_PointerExited(object sender, PointerRoutedEventArgs e)
@@ -193,17 +184,13 @@ public sealed partial class WidgetPage : Page
         UpdateLyricSize();
     }
 
-    private async void OnHotkeySetStateChanged(XboxGameBarHotkeyWatcher sender, HotkeySetStateChangedArgs args)
+    private void OnHotkeySetStateChanged(XboxGameBarHotkeyWatcher sender, HotkeySetStateChangedArgs args)
     {
         if (args.HotkeySetDown)
         {
-            await ChangePlayState();
+            if (HyPlayList.IsPlaying) HyPlayList.Player.PauseAll();
+            else HyPlayList.Player.PlayAll();
         }
-    }
-    public async Task ChangePlayState()
-    {
-        if (HyPlayList.IsPlaying) await HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.PauseFadeOut);
-        else await HyPlayList.SongFadeRequest(HyPlayList.SongFadeEffectType.PlayFadeIn);
     }
 
     public void UpdateLyricViewSettings()
@@ -267,15 +254,16 @@ public sealed partial class WidgetPage : Page
 
     private void LyricView_OnBeforeRender(LyricRenderer.LyricRenderView view)
     {
-        view.Context.IsPlaying = HyPlayList.Player.PlaybackSession.PlaybackState == Windows.Media.Playback.MediaPlaybackState.Playing;
-        if (HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds < view.Context.CurrentLyricTime)
+        if (HyPlayList.Player.PrimaryAudioInputNode == null) return;
+        view.Context.IsPlaying = HyPlayList.Player.GlobalPlaybackStatus == PlaybackStatus.Playing;
+        if (HyPlayList.Player.PrimaryAudioInputNode.Position.TotalMilliseconds < view.Context.CurrentLyricTime)
         {
-            view.Context.CurrentLyricTime = (long)HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
+            view.Context.CurrentLyricTime = (long)HyPlayList.Player.PrimaryAudioInputNode.Position.TotalMilliseconds;
             LyricView.ReflowTime(0);
         }
         else
         {
-            view.Context.CurrentLyricTime = (long)HyPlayList.Player.PlaybackSession.Position.TotalMilliseconds;
+            view.Context.CurrentLyricTime = (long)HyPlayList.Player.PrimaryAudioInputNode.Position.TotalMilliseconds;
         }
     }
 

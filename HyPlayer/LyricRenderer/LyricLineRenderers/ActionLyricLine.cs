@@ -43,7 +43,7 @@ public class ActionLyricLine : RenderingLyricLine
             session.FillRoundedRectangle(offset.X, offset.Y,
                 RenderingWidth + 2, RenderingHeight + 8, 6, 6, color);
         }
-        float actualOffsetX = offset.X - (float)textLayout.LayoutBounds.Left;
+        float actualOffsetX = offset.X - (float)(textLayout?.LayoutBounds.Left ?? 0);
         switch (TypographySelector(t => t?.Alignment, context)!.Value)
         {
             case TextAlignment.Left:
@@ -103,7 +103,7 @@ public class ActionLyricLine : RenderingLyricLine
                 Math.Clamp(context.ItemWidth - 16, 0, int.MaxValue), _canvasHeight);
         }
 
-        RenderingHeight = (float)textLayout.LayoutBounds.Height;
-        RenderingWidth = (float)textLayout.LayoutBounds.Width;
+        RenderingHeight = (float)(textLayout?.LayoutBounds.Height ?? 0);
+        RenderingWidth = (float)(textLayout?.LayoutBounds.Width ?? 0);
     }
 }
