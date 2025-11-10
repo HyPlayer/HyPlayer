@@ -309,32 +309,38 @@ sealed partial class App : Application
 
             NavigateToRootPage();
             Window.Current.Activate();
-            if (!HyPlayList.Player.PlayerCreated)
+            
+            // Load files asynchronously to avoid blocking the splash screen
+            _ = Task.Run(async () =>
             {
-                HyPlayList.InitializeHyPlaylist();
-            }
-            foreach (var storageItem in (args as FileActivatedEventArgs).Files)
-            {
-                var file = (StorageFile)storageItem;
-                var folder = await file.GetParentAsync();
-                if (folder != null)
+                if (!HyPlayList.Player.PlayerCreated)
                 {
-                    if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(folder.Path.GetHashCode().ToString()))
-                        StorageApplicationPermissions.FutureAccessList.AddOrReplace(folder.Path.GetHashCode().ToString(),
-                            folder);
+                    HyPlayList.InitializeHyPlaylist();
                 }
-                else
+                
+                foreach (var storageItem in (args as FileActivatedEventArgs).Files)
                 {
-                    if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(file.Path.GetHashCode().ToString()))
-                        StorageApplicationPermissions.FutureAccessList.AddOrReplace(file.Path.GetHashCode().ToString(),
-                            file);
+                    var file = (StorageFile)storageItem;
+                    var folder = await file.GetParentAsync();
+                    if (folder != null)
+                    {
+                        if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(folder.Path.GetHashCode().ToString()))
+                            StorageApplicationPermissions.FutureAccessList.AddOrReplace(folder.Path.GetHashCode().ToString(),
+                                folder);
+                    }
+                    else
+                    {
+                        if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(file.Path.GetHashCode().ToString()))
+                            StorageApplicationPermissions.FutureAccessList.AddOrReplace(file.Path.GetHashCode().ToString(),
+                                file);
+                    }
+
+                    await HyPlayList.AppendStorageFile(file);
                 }
 
-                await HyPlayList.AppendStorageFile(file);
-            }
-
-            HyPlayList.PlaySourceId = "local";
-            HyPlayList.SongMoveTo(0);
+                HyPlayList.PlaySourceId = "local";
+                HyPlayList.SongMoveTo(0);
+            });
         }
 
 

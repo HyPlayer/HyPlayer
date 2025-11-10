@@ -177,5 +177,6 @@ public enum CacheType
     UserPlaylist,
     RadioPrograms,
     RadioInfo,
+    LocalMusicScan,
 
 }
