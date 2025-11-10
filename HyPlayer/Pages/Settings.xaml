@@ -1150,6 +1150,8 @@
                                                                     : 序号<LineBreak />
                                                                     &#x27A4;<Bold>{$CDNAME}</Bold>
                                                                     : CD 名称<LineBreak />
+                                                                    &#x27A4;<Bold>{$SONGID}</Bold>
+                                                                    : 歌曲 ID<LineBreak />
                                                                 </Paragraph>
                                                             </RichTextBlock>
                                                         </Flyout>
