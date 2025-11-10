@@ -75,6 +75,12 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
     {
         base.OnNavigatedTo(e);
         DownloadPageFrame.Navigate(typeof(DownloadPage));
+        
+        // Auto-load from cache if available on first navigation
+        if (CurrentFileScanTask == null && localHyItems.Count == 0)
+        {
+            CurrentFileScanTask = LoadLocalMusic(forceRefresh: false);
+        }
     }
 
     private void Playall_Click(object sender, RoutedEventArgs e)

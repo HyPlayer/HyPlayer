@@ -301,7 +301,7 @@ sealed partial class App : Application
 
         }
         // 本地播放
-        else if (args is FileActivatedEventArgs)
+        else if (args is FileActivatedEventArgs fileArgs)
         {
             HyPlayList.PlaySourceId = "local";
             Common.isExpanded = true;
@@ -318,7 +318,7 @@ sealed partial class App : Application
                     HyPlayList.InitializeHyPlaylist();
                 }
                 
-                foreach (var storageItem in (args as FileActivatedEventArgs).Files)
+                foreach (var storageItem in fileArgs.Files)
                 {
                     var file = (StorageFile)storageItem;
                     var folder = await file.GetParentAsync();
