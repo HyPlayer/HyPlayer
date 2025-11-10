@@ -1295,7 +1295,7 @@
                             Text="查看评论"
                             Visibility="{x:Bind hy:Common.Setting.notClearMode, Mode=OneWay}">
                             <MenuFlyoutItem.Icon>
-                                <FontIcon Glyph="&#xE1DA;" />
+                                <FontIcon Glyph="&#xE8F2;" />
                             </MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
                         <MenuFlyoutItem
