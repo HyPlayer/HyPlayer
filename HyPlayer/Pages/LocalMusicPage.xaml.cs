@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -74,6 +75,12 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
     {
         base.OnNavigatedTo(e);
         DownloadPageFrame.Navigate(typeof(DownloadPage));
+        
+        // Auto-load from cache if available on first navigation
+        if (CurrentFileScanTask == null && localHyItems.Count == 0)
+        {
+            CurrentFileScanTask = LoadLocalMusic(forceRefresh: false);
+        }
     }
 
     private void Playall_Click(object sender, RoutedEventArgs e)
@@ -86,10 +93,10 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
 
     private void Refresh_Click(object sender, RoutedEventArgs e)
     {
-        if (CurrentFileScanTask == null || CurrentFileScanTask.IsCompleted == true) CurrentFileScanTask = LoadLocalMusic();
+        if (CurrentFileScanTask == null || CurrentFileScanTask.IsCompleted == true) CurrentFileScanTask = LoadLocalMusic(forceRefresh: true);
     }
 
-    private async Task LoadLocalMusic()
+    private async Task LoadLocalMusic(bool forceRefresh = false)
     {
         ListBoxLocalMusicContainer.SelectionChanged -= ListBoxLocalMusicContainer_SelectionChanged;
         NotificationText = "正在扫描...";
@@ -97,73 +104,170 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
         var folder = !string.IsNullOrEmpty(Common.Setting.searchingDir)
             ? await StorageFolder.GetFolderFromPathAsync(Common.Setting.searchingDir)
             : KnownFolders.MusicLibrary;
-        // Use Query to boost? maybe?
+        
         FileLoadingIndicateRing.Visibility = Visibility.Visible;
         FileLoadingIndicateRing.IsActive = true;
+        
         var queryOptions = new QueryOptions(CommonFileQuery.DefaultQuery, supportedFormats);
         queryOptions.FolderDepth = FolderDepth.Deep;
         var files = await folder.CreateFileQueryWithOptions(queryOptions).GetFilesAsync();
 
-        if (!Common.Setting.localProgressiveLoad)
-        {
-            foreach (var storageFile in files)
+        // Create a unique cache key based on folder path
+        var cacheKey = folder.Path.GetHashCode().ToString();
+        
+        // Try to load from cache first
+        var cachedItems = await SimpleCacher.GetOrCreateCacheAsync<List<LocalMusicCacheItem>>(
+            CacheType.LocalMusicScan, 
+            cacheKey, 
+            async () =>
             {
-                _cancellationToken.ThrowIfCancellationRequested();
-                try
+                // If cache doesn't exist or is expired, scan the files
+                var cacheItems = new List<LocalMusicCacheItem>();
+                
+                if (!Common.Setting.localProgressiveLoad)
                 {
-                    var item = await HyPlayList.LoadStorageFile(storageFile);
-                    localHyItems.Add(item);
+                    foreach (var storageFile in files)
+                    {
+                        _cancellationToken.ThrowIfCancellationRequested();
+                        try
+                        {
+                            var item = await HyPlayList.LoadStorageFile(storageFile);
+                            var cacheItem = new LocalMusicCacheItem
+                            {
+                                FilePath = storageFile.Path,
+                                Name = item.PlayItem.Name,
+                                ArtistNames = item.PlayItem.Artist?.Select(a => a.name).ToList(),
+                                AlbumName = item.PlayItem.Album?.name,
+                                Bitrate = item.PlayItem.Bitrate,
+                                Duration = item.PlayItem.LengthInMilliseconds,
+                                FileType = storageFile.FileType,
+                                TrackId = item.PlayItem.TrackId,
+                                InfoTag = item.PlayItem.InfoTag
+                            };
+                            cacheItems.Add(cacheItem);
+                        }
+                        catch
+                        {
+                            //ignore
+                        }
+                    }
                 }
-                catch
+                else
                 {
-                    //ignore
+                    // Progressive load mode - cache minimal info
+                    foreach (var storageFile in files)
+                    {
+                        _cancellationToken.ThrowIfCancellationRequested();
+                        var cacheItem = new LocalMusicCacheItem
+                        {
+                            FilePath = storageFile.Path,
+                            Name = storageFile.Name,
+                            FileType = storageFile.FileType,
+                            IsProgressive = true
+                        };
+                        cacheItems.Add(cacheItem);
+                    }
+                }
+                
+                return cacheItems;
+            },
+            TimeSpan.FromHours(24), // Cache for 24 hours
+            forceRefresh: forceRefresh
+        );
+
+        // Build HyPlayItems from cached data
+        if (cachedItems != null)
+        {
+            if (!Common.Setting.localProgressiveLoad)
+            {
+                foreach (var cacheItem in cachedItems)
+                {
+                    _cancellationToken.ThrowIfCancellationRequested();
+                    try
+                    {
+                        var storageFile = await StorageFile.GetFileFromPathAsync(cacheItem.FilePath);
+                        var item = new HyPlayItem
+                        {
+                            ItemType = HyPlayItemType.Local,
+                            PlayItem = new PlayItem
+                            {
+                                Name = cacheItem.Name,
+                                Artist = cacheItem.ArtistNames?.Select(name => new NCArtist { name = name, Type = HyPlayItemType.Local }).ToList(),
+                                Album = new NCAlbum { name = cacheItem.AlbumName },
+                                Bitrate = cacheItem.Bitrate,
+                                LengthInMilliseconds = cacheItem.Duration,
+                                SubExt = cacheItem.FileType,
+                                TrackId = cacheItem.TrackId,
+                                CDName = "01",
+                                Url = cacheItem.FilePath,
+                                InfoTag = cacheItem.InfoTag ?? "本地歌曲",
+                                IsLocalFile = true,
+                                Type = HyPlayItemType.Local,
+                                DontSetLocalStorageFile = storageFile
+                            }
+                        };
+                        localHyItems.Add(item);
+                    }
+                    catch
+                    {
+                        // File might have been deleted, skip it
+                    }
                 }
             }
-
-        }
-        else
-        {
-            var undeterminedAlbum = new NCAlbum
+            else
             {
-                AlbumType = HyPlayItemType.LocalProgressive,
-                name = "未知专辑 - 播放后加载"
-            };
-            var undeterminedArtistList = new List<NCArtist>
-            {
-                new()
+                var undeterminedAlbum = new NCAlbum
                 {
-                    name = "未知歌手 - 播放后加载",
-                    Type = HyPlayItemType.LocalProgressive
-                }
-            };
-            foreach (var storageFile in files)
-            {
-                _cancellationToken.ThrowIfCancellationRequested();
-                var item = new HyPlayItem
+                    AlbumType = HyPlayItemType.LocalProgressive,
+                    name = "未知专辑 - 播放后加载"
+                };
+                var undeterminedArtistList = new List<NCArtist>
                 {
-                    ItemType = HyPlayItemType.LocalProgressive,
-                    PlayItem = new PlayItem
+                    new()
                     {
-                        Album = undeterminedAlbum,
-                        Artist = undeterminedArtistList,
-                        Bitrate = 0,
-                        DontSetLocalStorageFile = storageFile,
-                        IsLocalFile = true,
-                        LengthInMilliseconds = 0,
-                        Name = storageFile.Name,
-                        CDName = "01",
-                        Size = null,
-                        SubExt = storageFile.FileType,
-                        TrackId = 0,
-                        InfoTag = "本地歌曲",
-                        Type = HyPlayItemType.LocalProgressive,
-                        Url = storageFile.Path
+                        name = "未知歌手 - 播放后加载",
+                        Type = HyPlayItemType.LocalProgressive
                     }
                 };
-                localHyItems.Add(item);
+                
+                foreach (var cacheItem in cachedItems)
+                {
+                    _cancellationToken.ThrowIfCancellationRequested();
+                    try
+                    {
+                        var storageFile = await StorageFile.GetFileFromPathAsync(cacheItem.FilePath);
+                        var item = new HyPlayItem
+                        {
+                            ItemType = HyPlayItemType.LocalProgressive,
+                            PlayItem = new PlayItem
+                            {
+                                Album = undeterminedAlbum,
+                                Artist = undeterminedArtistList,
+                                Bitrate = 0,
+                                DontSetLocalStorageFile = storageFile,
+                                IsLocalFile = true,
+                                LengthInMilliseconds = 0,
+                                Name = cacheItem.Name,
+                                CDName = "01",
+                                Size = null,
+                                SubExt = cacheItem.FileType,
+                                TrackId = 0,
+                                InfoTag = "本地歌曲",
+                                Type = HyPlayItemType.LocalProgressive,
+                                Url = cacheItem.FilePath
+                            }
+                        };
+                        localHyItems.Add(item);
+                    }
+                    catch
+                    {
+                        // File might have been deleted, skip it
+                    }
+                }
             }
         }
-        NotificationText = "扫描完成, 共 " + files.Count + " 首音乐";
+        
+        NotificationText = "扫描完成, 共 " + localHyItems.Count + " 首音乐";
         FileLoadingIndicateRing.IsActive = false;
         FileLoadingIndicateRing.Visibility = Visibility.Collapsed;
         ListBoxLocalMusicContainer.SelectionChanged += ListBoxLocalMusicContainer_SelectionChanged;
@@ -220,4 +324,21 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
+}
+
+/// <summary>
+/// Cache item for local music scan results
+/// </summary>
+public class LocalMusicCacheItem
+{
+    public string FilePath { get; set; }
+    public string Name { get; set; }
+    public List<string> ArtistNames { get; set; }
+    public string AlbumName { get; set; }
+    public int Bitrate { get; set; }
+    public double Duration { get; set; }
+    public string FileType { get; set; }
+    public int TrackId { get; set; }
+    public string InfoTag { get; set; }
+    public bool IsProgressive { get; set; }
 }
