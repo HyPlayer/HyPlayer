@@ -1886,9 +1886,10 @@ public static class HyPlayList
             bool? hasMore = true;
             var page = 0;
             while (hasMore is true)
+            {
                 try
                 {
-                    var json = await Common.NeteaseAPI?.RequestAsync(NeteaseApis.DjChannelProgramsApi,
+                    var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.DjChannelProgramsApi,
                         new DjChannelProgramsRequest()
                         {
                             RadioId = radioId,
@@ -1913,6 +1914,9 @@ public static class HyPlayList
                     Common.AddToTeachingTipLists(ex.Message,
                         (ex.InnerException ?? new Exception()).Message);
                 }
+
+                page++;
+            }
 
             return true;
         }
