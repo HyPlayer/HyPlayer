@@ -60,5 +60,82 @@ namespace HyPlayer.Services
             }
             throw new ArgumentException(typeId);
         }
+
+        public async Task<(NCAlbum? album, List<NCSong>? songs)> GetAlbumDetailsAsync(string albumId, CancellationToken token)
+        {
+            var result = await _apiHandler.RequestAsync(
+                NeteaseApis.AlbumInfoApi,
+                new HyPlayer.NeteaseApi.ApiContracts.Album.AlbumInfoRequest() { AlbumId = albumId },
+                token);
+
+            return result.Match(
+                success => (
+                    success.Album.MapToNCAlbum(),
+                    success.Songs?.Select(s => s.MapToNCAlbumSong(success.Album.MapToNCAlbum())).ToList()
+                ),
+                error => throw new Exception(error.Message)
+            );
+        }
+
+        public async Task<(NCPlayList? playlist, List<NCSong>? songs)> GetPlaylistDetailsAsync(string playlistId, CancellationToken token)
+        {
+            var result = await _apiHandler.RequestAsync(
+                NeteaseApis.PlaylistDetailApi,
+                new HyPlayer.NeteaseApi.ApiContracts.Playlist.PlaylistDetailRequest() { Id = playlistId },
+                token);
+
+            return result.Match(
+                success =>
+                {
+                    var playlist = success.Playlist.MapToNCPlayList();
+                    var songIds = success.Playlist.TrackIds.Select(t => t.Id.ToString()).ToList();
+                    return (playlist, (List<NCSong>?)null); // Songs need separate API call
+                },
+                error => throw new Exception(error.Message)
+            );
+        }
+
+        public async Task<NCArtist?> GetArtistDetailsAsync(string artistId, CancellationToken token)
+        {
+            var result = await _apiHandler.RequestAsync(
+                NeteaseApis.ArtistDetailApi,
+                new HyPlayer.NeteaseApi.ApiContracts.Artist.ArtistDetailRequest() { ArtistId = artistId },
+                token);
+
+            return result.Match(
+                success => success.Artist.MapToNcArtist(),
+                error => throw new Exception(error.Message)
+            );
+        }
+
+        public async Task<List<NCSong>?> GetArtistHotSongsAsync(string artistId, CancellationToken token)
+        {
+            var result = await _apiHandler.RequestAsync(
+                NeteaseApis.ArtistTopSongApi,
+                new HyPlayer.NeteaseApi.ApiContracts.Artist.ArtistTopSongRequest() { ArtistId = artistId },
+                token);
+
+            return result.Match(
+                success => success.Songs?.Select(s => s.MapToNcSong()).ToList(),
+                error => throw new Exception(error.Message)
+            );
+        }
+
+        public async Task<List<NCAlbum>?> GetArtistAlbumsAsync(string artistId, int limit = 50, CancellationToken token = default)
+        {
+            var result = await _apiHandler.RequestAsync(
+                NeteaseApis.ArtistAlbumApi,
+                new HyPlayer.NeteaseApi.ApiContracts.Artist.ArtistAlbumRequest() 
+                { 
+                    ArtistId = artistId,
+                    Limit = limit
+                },
+                token);
+
+            return result.Match(
+                success => success.HotAlbums?.Select(a => a.MapToNCAlbum()).ToList(),
+                error => throw new Exception(error.Message)
+            );
+        }
     }
 }
