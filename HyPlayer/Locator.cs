@@ -34,6 +34,7 @@ public class Locator
         _servicesCollection.AddSingleton<NeteaseCloudMusicApiHandler>();
         _servicesCollection.AddSingleton<AudioGraphPlayer>();
         _servicesCollection.AddSingleton<INeteaseProviderService, NeteaseProviderService>();
+        _servicesCollection.AddSingleton<IDownloadManagementService, DownloadManagementService>();
 
         _servicesCollection.AddTransient<HomeViewModel>();
 

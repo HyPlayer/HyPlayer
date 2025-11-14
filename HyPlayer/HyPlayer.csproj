@@ -129,6 +129,7 @@
     <Compile Include="Classes\UpdateManager.cs" />
     <Compile Include="Classes\UserDisplay.cs" />
     <Compile Include="Common.cs" />
+    <Compile Include="Contracts\Services\IDownloadManagementService.cs" />
     <Compile Include="Contracts\Services\INeteaseProviderService.cs" />
     <Compile Include="Contracts\ViewModels\IViewModel.cs" />
     <Compile Include="Controls\AlignableWrapPanel\AlignableWrapPanel.cs" />
@@ -309,6 +310,7 @@
     <Compile Include="Resources\Theme.xaml.cs">
       <DependentUpon>Theme.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Services\DownloadManagementService.cs" />
     <Compile Include="Services\NeteaseProviderService.cs" />
     <Compile Include="ViewModels\HomeViewModel.cs" />
   </ItemGroup>
