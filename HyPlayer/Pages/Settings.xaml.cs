@@ -89,8 +89,8 @@ public sealed partial class Settings : Page, IDisposable
         var package = Package.Current;
         var packageId = package.Id;
         var version = packageId.Version;
-        VersionCode.Text = string.Format("Version {0}.{1}.{2}.{3}  (Package ID: {4})", version.Major, version.Minor,
-            version.Build, version.Revision, packageId.Name);
+        VersionCode.Text =
+            $"Version {version.Major}.{version.Minor}.{version.Build}.{version.Revision}  (#{BuildInfo.CommitSha.Substring(0, 8)}@{BuildInfo.BuildBranchId})";
         var deviceInfo = new EasClientDeviceInformation();
         DeviceInfo.Text = deviceInfo.Id.ToString();
         _lyricItem = new LyricItem(new SongLyric

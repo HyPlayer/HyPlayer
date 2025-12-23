@@ -49,6 +49,36 @@ steps:
       Set-Content -Path **\Package.appxmanifest -Value $MANIFEST.OuterXml
     displayName: 'Set Version'
 
+  - powershell: |
+      # 替换 BuildInfo.cs 中的占位符
+      $buildInfoPath = "HyPlayer/Classes/BuildInfo.cs"
+      if (Test-Path $buildInfoPath) {
+          $content = Get-Content $buildInfoPath -Raw
+          
+          # 获取 GitHub Commit SHA
+          $commitSha = "$(Build.SourceVersion)"
+          
+          # 获取编译时间
+          $buildTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+          
+          # 获取 JobId
+          $jobId = "$(Build.BuildId)"
+          
+          # 替换占位符
+          $content = $content -replace 'CommitSha = "__COMMIT_SHA__"', "CommitSha = `"$commitSha`""
+          $content = $content -replace 'BuildTime = "__BUILD_TIME__"', "BuildTime = `"$buildTime`""
+          $content = $content -replace 'BuildJobId = "__BUILD_JOB_ID__"', "BuildJobId = `"$jobId`""
+          
+          Set-Content -Path $buildInfoPath -Value $content
+          echo "BuildInfo.cs has been updated with:"
+          echo "  Commit SHA: $commitSha"
+          echo "  Build Time: $buildTime"
+          echo "  Job ID: $jobId"
+      } else {
+          echo "BuildInfo.cs not found at $buildInfoPath"
+      }
+    displayName: 'Set Build Information'
+
   - task: DownloadSecureFile@1
     name: certificate
     displayName: 'Download CA certificate'

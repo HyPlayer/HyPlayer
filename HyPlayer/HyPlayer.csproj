@@ -93,6 +93,7 @@
     <Compile Include="Behaviors\ButtonContentSnapBehavior.cs" />
     <Compile Include="Classes\Api.cs" />
     <Compile Include="Classes\BrushManagement.cs" />
+    <Compile Include="Classes\BuildInfo.cs" />
     <Compile Include="Classes\CloudUpload.cs" />
     <Compile Include="Classes\ColorExtractor.cs" />
     <Compile Include="Classes\Converters.cs" />
