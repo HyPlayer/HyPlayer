@@ -152,7 +152,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged, IDisp
                         LengthInMilliseconds = 0,
                         Name = storageFile.Name,
                         CDName = "01",
-                        Size = null,
+                        Size = 0,
                         SubExt = storageFile.FileType,
                         TrackId = 0,
                         InfoTag = "本地歌曲",

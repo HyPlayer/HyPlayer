@@ -427,7 +427,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                 CDName = ncsong.CDName,
                 Url = urlResult.Value.SongUrls[0].Url,
                 LengthInMilliseconds = ncsong.LengthInMilliseconds,
-                Size = urlResult.Value.SongUrls[0].Size.ToString(),
+                Size = urlResult.Value.SongUrls[0].Size,
                 //md5 = json["data"][0]["md5"].ToString()
             };
 

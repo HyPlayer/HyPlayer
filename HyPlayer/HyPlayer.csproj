@@ -123,6 +123,7 @@
     <Compile Include="Classes\NCMFile.cs" />
     <Compile Include="Classes\NCSong.cs" />
     <Compile Include="Classes\PersonalFM.cs" />
+    <Compile Include="Classes\RetryPolicies.cs" />
     <Compile Include="Classes\SimpleCacher.cs" />
     <Compile Include="Classes\StaticSource.cs" />
     <Compile Include="Classes\The163KeyHelper.cs" />
@@ -706,6 +707,9 @@
     </PackageReference>
     <PackageReference Include="TagLibSharp">
       <Version>2.3.0</Version>
+    </PackageReference>
+    <PackageReference Include="Polly">
+      <Version>8.6.5</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

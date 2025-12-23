@@ -118,6 +118,12 @@ public static class HyPlayList
     private static SemaphoreSlim _seekerSemaphoreSlim = new SemaphoreSlim(1, 1);
     private static readonly IProgress<DownloadOperation> DefaultProgressCallback = new Progress<DownloadOperation>(ProgressCallback);
 
+    // 常量定义
+    private const string NCM_FILE_EXTENSION = ".ncm";
+    private const string CACHE_FILE_NAME_FORMAT = "{0}.{1}";
+    private const string SONG_URL_CACHE_KEY_FORMAT = "{0}_{1}";
+    private const int SONG_URL_CACHE_MINUTES = 20;
+
     public static int LyricPos;
 
     public static string PlaySourceId;
@@ -321,119 +327,140 @@ public static class HyPlayList
         fop.FileTypeFilter.Add(".m4a");
         fop.FileTypeFilter.Add(".wav");
 
+        var files = await fop.PickMultipleFilesAsync();
+        if (files == null || files.Count == 0) return;
 
-        var files =
-            await fop.PickMultipleFilesAsync();
-        //HyPlayList.RemoveAllSong();
         var isFirstLoad = true;
+        
         foreach (var file in files)
         {
-            var folder = await file.GetParentAsync();
-            if (folder != null)
+            try
             {
-                if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(folder.Path.GetHashCode().ToString()))
-                    StorageApplicationPermissions.FutureAccessList.AddOrReplace(folder.Path.GetHashCode().ToString(),
-                        folder);
-            }
-            else
-            {
-                if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(file.Path.GetHashCode().ToString()))
-                    StorageApplicationPermissions.FutureAccessList.AddOrReplace(file.Path.GetHashCode().ToString(),
-                        file);
-            }
-
-            if (Path.GetExtension(file.Path) == ".ncm")
-            {
-                //脑残Music
-                using var stream = await file.OpenStreamForReadAsync();
-                if (NCMFile.IsCorrectNCMFile(stream))
+                // 使用 Polly 重试策略处理文件访问
+                await RetryPolicies.FileAccessPolicy.ExecuteAsync(async () =>
                 {
-                    var Info = NCMFile.GetNCMMusicInfo(stream);
-                    var hyitem = new HyPlayItem
+                    var folder = await file.GetParentAsync();
+                    if (folder != null)
                     {
-                        ItemType = HyPlayItemType.Netease,
-                        PlayItem = new PlayItem
+                        if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(folder.Path.GetHashCode().ToString()))
+                            StorageApplicationPermissions.FutureAccessList.AddOrReplace(folder.Path.GetHashCode().ToString(), folder);
+                    }
+                    else
+                    {
+                        if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(file.Path.GetHashCode().ToString()))
+                            StorageApplicationPermissions.FutureAccessList.AddOrReplace(file.Path.GetHashCode().ToString(), file);
+                    }
+
+                    if (Path.GetExtension(file.Path) == ".ncm")
+                    {
+                        //脑残Music
+                        using var stream = await file.OpenStreamForReadAsync();
+                        if (NCMFile.IsCorrectNCMFile(stream))
                         {
-                            DontSetLocalStorageFile = file,
-                            Album = new NCAlbum
+                            var Info = NCMFile.GetNCMMusicInfo(stream);
+                            var hyitem = new HyPlayItem
                             {
-                                name = Info.album,
-                                id = Info.albumId.ToString(),
-                                cover = Info.albumPic
-                            },
-                            Url = file.Path,
-                            SubExt = Info.format,
-                            Bitrate = Info.bitrate,
-                            IsLocalFile = true,
-                            Type = HyPlayItemType.Netease,
-                            LengthInMilliseconds = Info.duration,
-                            Id = Info.musicId.ToString(),
-                            TrackId = -1,
-                            CDName = "01",
-                            Artist = null,
-                            /*
-                            size = sf.GetBasicPropertiesAsync()
-                                .GetAwaiter()
-                                .GetResult()
-                                .Size.ToString(),
-                            */
-                            Name = Info.musicName,
-                            InfoTag = file.Provider.DisplayName + " NCM"
+                                ItemType = HyPlayItemType.Netease,
+                                PlayItem = new PlayItem
+                                {
+                                    DontSetLocalStorageFile = file,
+                                    Album = new NCAlbum
+                                    {
+                                        name = Info.album,
+                                        id = Info.albumId.ToString(),
+                                        cover = Info.albumPic
+                                    },
+                                    Url = file.Path,
+                                    SubExt = Info.format,
+                                    Bitrate = Info.bitrate,
+                                    IsLocalFile = true,
+                                    Type = HyPlayItemType.Netease,
+                                    LengthInMilliseconds = Info.duration,
+                                    Id = Info.musicId.ToString(),
+                                    TrackId = -1,
+                                    CDName = "01",
+                                    Artist = null,
+                                    Name = Info.musicName,
+                                    InfoTag = file.Provider.DisplayName + " NCM"
+                                }
+                            };
+                            hyitem.PlayItem.Artist = Info.artist.Select(t => new NCArtist
+                            { name = t[0].ToString(), id = t[1].ToString() })
+                                .ToList();
+
+                            List.Add(hyitem);
                         }
-                    };
-                    hyitem.PlayItem.Artist = Info.artist.Select(t => new NCArtist
-                    { name = t[0].ToString(), id = t[1].ToString() })
-                        .ToList();
+                        else
+                        {
+                            throw new Exception("NCM 文件格式不正确");
+                        }
+                    }
+                    else
+                    {
+                        await AppendStorageFile(file);
+                    }
+                });
 
-                    List.Add(hyitem);
-                }
+                if (!isFirstLoad) continue;
+                isFirstLoad = false;
             }
-            else
+            catch (Exception ex)
             {
-                await AppendStorageFile(file);
+                Common.AddToTeachingTipLists($"加载文件 {file.Name} 失败", ex.Message);
             }
-
-            if (!isFirstLoad) continue;
-            isFirstLoad = false;
         }
 
-        //HyPlayList.SongMoveTo(0);
         SongAppendDone();
-        SongMoveTo(List.Count - 1);
+        if (List.Count > 0)
+        {
+            SongMoveTo(List.Count - 1);
+        }
     }
 
 
     private static async Task LoadLocalFile(HyPlayItem targetItem)
     {
-        // 此处可以改进
-        if (targetItem.PlayItem.DontSetLocalStorageFile.FileType == ".ncm") throw new ArgumentException();
-        if (targetItem.PlayItem.DontSetLocalStorageFile != null)
+        // 使用 Polly 重试策略优化本地文件加载
+        await RetryPolicies.LocalFileLoadPolicy.ExecuteAsync(async () =>
         {
-            if (targetItem.ItemType != HyPlayItemType.LocalProgressive)
+            // 此处可以改进
+            if (targetItem.PlayItem.DontSetLocalStorageFile.FileType == ".ncm")
+                throw new ArgumentException("不支持的文件类型");
+
+            if (targetItem.PlayItem.DontSetLocalStorageFile != null)
             {
-                NowPlayingStorageFile = targetItem.PlayItem.DontSetLocalStorageFile;
+                if (targetItem.ItemType != HyPlayItemType.LocalProgressive)
+                {
+                    NowPlayingStorageFile = targetItem.PlayItem.DontSetLocalStorageFile;
+                }
+                else
+                {
+                    NowPlayingStorageFile = targetItem.PlayItem.DontSetLocalStorageFile;
+                    var item = await LoadStorageFile(targetItem.PlayItem.DontSetLocalStorageFile);
+                    targetItem.ItemType = HyPlayItemType.Local;
+                    targetItem.PlayItem = item.PlayItem;
+                    targetItem.PlayItem.DontSetLocalStorageFile = NowPlayingStorageFile;
+                }
             }
             else
             {
-                NowPlayingStorageFile = targetItem.PlayItem.DontSetLocalStorageFile;
-                var item = await LoadStorageFile(targetItem.PlayItem.DontSetLocalStorageFile);
-                targetItem.ItemType = HyPlayItemType.Local;
-                targetItem.PlayItem = item.PlayItem;
-                targetItem.PlayItem.DontSetLocalStorageFile = NowPlayingStorageFile;
+                NowPlayingStorageFile = await StorageFile.GetFileFromPathAsync(targetItem.PlayItem.Url);
             }
-        }
-        else
-        {
-            NowPlayingStorageFile = await StorageFile.GetFileFromPathAsync(targetItem.PlayItem.Url);
-        }
+        });
     }
 
     public async static Task LoadNCMFile(HyPlayItem targetItem)
     {
-        // 脑残Music解析
-        using var stream = await targetItem.PlayItem.DontSetLocalStorageFile.OpenStreamForReadAsync();
-        if (NCMFile.IsCorrectNCMFile(stream))
+        // 使用 Polly 重试策略优化 NCM 文件解析
+        await RetryPolicies.NcmFileLoadPolicy.ExecuteAsync(async () =>
         {
+            // 脑残Music解析
+            using var stream = await targetItem.PlayItem.DontSetLocalStorageFile.OpenStreamForReadAsync();
+            if (!NCMFile.IsCorrectNCMFile(stream))
+            {
+                throw new Exception("NCM 文件格式不正确");
+            }
+
             var info = NCMFile.GetNCMMusicInfo(stream);
             var coverArray = NCMFile.GetCoverByteArray(stream);
             var buffer = coverArray.AsBuffer();
@@ -446,7 +473,7 @@ public static class HyPlayList
             targetItem.PlayItem.NcmPlayableStream = songDataStream;
             NowPlayingStorageFile = targetItem.PlayItem.DontSetLocalStorageFile;
             targetItem.PlayItem.NcmPlayableStreamMIMEType = MIMEHelper.GetNCMFileMimeType(info.format);
-        }
+        });
     }
 
     /********        方法         ********/
@@ -553,28 +580,43 @@ public static class HyPlayList
     public static async void LikeSong()
     {
         var isLiked = Common.LikedSongs.Contains(NowPlayingItem.PlayItem.Id);
-        switch (NowPlayingItem.ItemType)
+        
+        try
         {
-            case HyPlayItemType.Netease:
+            // 使用 Polly 重试策略优化红心操作
+            await RetryPolicies.ApiCallPolicy.ExecuteAsync(async () =>
+            {
+                switch (NowPlayingItem.ItemType)
                 {
-                    bool res = await Api.LikeSong(NowPlayingItem.PlayItem.Id,
-                        !isLiked);
-                    if (res)
-                    {
-                        if (isLiked)
-                            Common.LikedSongs.Remove(NowPlayingItem.PlayItem.Id);
-                        else
-                            Common.LikedSongs.Add(NowPlayingItem.PlayItem.Id);
-                        OnSongLikeStatusChange?.Invoke(!isLiked);
-                    }
-
-                    break;
+                    case HyPlayItemType.Netease:
+                        {
+                            bool res = await Api.LikeSong(NowPlayingItem.PlayItem.Id, !isLiked);
+                            if (res)
+                            {
+                                if (isLiked)
+                                    Common.LikedSongs.Remove(NowPlayingItem.PlayItem.Id);
+                                else
+                                    Common.LikedSongs.Add(NowPlayingItem.PlayItem.Id);
+                                
+                                _ = Common.Invoke(() => OnSongLikeStatusChange?.Invoke(!isLiked));
+                            }
+                            else
+                            {
+                                throw new Exception("红心操作失败");
+                            }
+                            break;
+                        }
+                    case HyPlayItemType.Radio:
+                        // TODO: 待实现电台红心
+                        Common.AddToTeachingTipLists("暂不支持红心电台歌曲", "将在后续版本中支持");
+                        _ = Common.Invoke(() => OnSongLikeStatusChange?.Invoke(!isLiked));
+                        break;
                 }
-            case HyPlayItemType.Radio:
-                // TODO: 待实现电台红心
-                Common.AddToTeachingTipLists("暂不支持红心电台歌曲", "将在后续版本中支持");
-                OnSongLikeStatusChange?.Invoke(!isLiked);
-                break;
+            });
+        }
+        catch (Exception ex)
+        {
+            Common.AddToTeachingTipLists("红心操作失败", ex.Message);
         }
     }
     /********        相关事件处理        ********/
@@ -672,280 +714,224 @@ public static class HyPlayList
         return gainValue;
     }
 
-    private static async Task<string> GetNowPlayingUrl(HyPlayItem targetItem)
+    private static async Task<(string, long)> GetNowPlayingUrl(HyPlayItem targetItem)
     {
         var playUrl = targetItem.PlayItem.Url;
+        var size = targetItem.PlayItem.Size;
+        
         // 对了,先看看是否要刷新播放链接
         if ((string.IsNullOrEmpty(targetItem.PlayItem.Url) ||
              Common.Setting.songUrlLazyGet) && targetItem.PlayItem.Id != "-1")
-            try
+        {
+            // 使用 Polly 重试策略优化 URL 获取
+            var songResult = await RetryPolicies.UrlFetchPolicy.ExecuteAsync(async () =>
             {
-                var songResult = await SimpleCacher.GetOrCreateCacheAsync(CacheType.SongUrl, targetItem.PlayItem.Id + "_" + Common.Setting.audioRate, async () =>
-                {
-                    var songRequest = new SongUrlRequest
-                    { Level = Common.Setting.audioRate, Id = targetItem.PlayItem.Id };
-                    var songRes = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.SongUrlApi, songRequest);
-                    if (songRes.IsError)
+                var result = await SimpleCacher.GetOrCreateCacheAsync(
+                    CacheType.SongUrl,
+                    string.Format(SONG_URL_CACHE_KEY_FORMAT, targetItem.PlayItem.Id, Common.Setting.audioRate),
+                    async () =>
                     {
-                        return null;
-                    }
-
-                    return songRes.Value;
-                }, TimeSpan.FromMinutes(20));
-                if (songResult is not null)
-                {
-                    if (songResult?.SongUrls?[0].Code == 200)
-                    {
-                        if (songResult.SongUrls[0].FreeTrialInfo is not null && Common.Setting.jumpVipSongPlaying)
+                        var songRequest = new SongUrlRequest
                         {
-                            throw new Exception("当前歌曲为 VIP 试听, 已自动跳过");
-                        }
-
-                        playUrl = songResult.SongUrls[0].Url;
-                        if (Common.Setting.UseHttpWhenGettingSongs && playUrl.Contains("https://"))
-                        {
-                            playUrl = playUrl.Replace("https://", "http://");
-                        }
-
-
-                        var tag = songResult.SongUrls[0]?.Level
-                            switch
-                        {
-                            "standard" => "标准",
-                            "higher" => "较高",
-                            "exhigh" => "极高",
-                            "lossless" => "无损",
-                            "hires" => "Hi-Res",
-                            "jyeffect" => "高清环绕声",
-                            "sky" => "沉浸环绕声",
-                            "jymaster" => "超清母带",
-                            _ => "在线"
+                            Level = Common.Setting.audioRate,
+                            Id = targetItem.PlayItem.Id
                         };
-                        targetItem.PlayItem.QualityTag = tag;
-                        targetItem.PlayItem.Size = songResult.SongUrls[0]?.Size.ToString();
-                        targetItem.PlayItem.SubExt = songResult.SongUrls[0]?.Type.ToLowerInvariant();
-
-                        var volume = GetAudioGainMultiplier(songResult.SongUrls[0]?.Gain ?? 0f);
-                        targetItem.PlayItem.Volume = volume;
-                        _ = Common.Invoke(() =>
+                        
+                        var songRes = await Common.NeteaseAPI!.RequestAsync(
+                            NeteaseApis.SongUrlApi, songRequest);
+                        
+                        if (songRes.IsError)
                         {
-                            Common.BarPlayBar.TbSongTag.Text = targetItem.PlayItem.QualityTag;
-                            if (targetItem.PlayItem.QualityTag.Length > 2)
-                            {
-                                var backgroundbrush = new LinearGradientBrush();
-                                backgroundbrush.StartPoint = new Windows.Foundation.Point(0, 0);
-                                backgroundbrush.EndPoint = new Windows.Foundation.Point(1, 1);
+                            throw new Exception("API 请求失败");
+                        }
 
-                                backgroundbrush.GradientStops.Add(new GradientStop
-                                { Offset = 0, Color = Color.FromArgb(255, 251, 251, 206) });
-                                backgroundbrush.GradientStops.Add(new GradientStop
-                                { Offset = 1, Color = Color.FromArgb(255, 223, 155, 28) });
+                        return songRes.Value;
+                    },
+                    TimeSpan.FromMinutes(SONG_URL_CACHE_MINUTES));
 
-                                Common.BarPlayBar.SongInfoTag.Background = backgroundbrush;
-                                Common.BarPlayBar.SongInfoTag.BorderBrush =
-                                    new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
-                                Common.BarPlayBar.TbSongTag.Foreground =
-                                    new SolidColorBrush(Color.FromArgb(255, 0, 0, 0));
-                            }
-                            else
-                            {
-                                var brush = new SolidColorBrush(Colors.Red);
-                                Common.BarPlayBar.SongInfoTag.BorderBrush = brush;
-                                Common.BarPlayBar.SongInfoTag.Background = null;
-                                Common.BarPlayBar.TbSongTag.Foreground = brush;
-                            }
-                        });
-                    }
-                }
-                else
+                if (result == null)
                 {
-                    throw new Exception("下载链接获取失败"); //传一个播放失败
+                    throw new Exception("下载链接获取失败");
                 }
-            }
-            catch
-            {
-                throw new Exception("下载链接获取失败"); //传一个播放失败
-            }
 
-        return playUrl;
+                return result;
+            });
+
+            if (songResult?.SongUrls?[0].Code == 200)
+            {
+                if (songResult.SongUrls[0].FreeTrialInfo is not null && Common.Setting.jumpVipSongPlaying)
+                {
+                    throw new Exception("当前歌曲为 VIP 试听, 已自动跳过");
+                }
+
+                playUrl = songResult.SongUrls[0].Url;
+                size = songResult.SongUrls[0].Size;
+                if (Common.Setting.UseHttpWhenGettingSongs && playUrl.Contains("https://"))
+                {
+                    playUrl = playUrl.Replace("https://", "http://");
+                }
+
+                UpdatePlayItemQualityInfo(targetItem, songResult.SongUrls[0]);
+            }
+            else
+            {
+                throw new Exception("下载链接获取失败");
+            }
+        }
+
+        return (playUrl, size);
+    }
+
+    private static void UpdatePlayItemQualityInfo(HyPlayItem targetItem, SongUrlResponse.SongUrlItem urlInfo)
+    {
+        if (urlInfo == null) return;
+
+        var tag = urlInfo.Level switch
+        {
+            "standard" => "标准",
+            "higher" => "较高",
+            "exhigh" => "极高",
+            "lossless" => "无损",
+            "hires" => "Hi-Res",
+            "jyeffect" => "高清环绕声",
+            "sky" => "沉浸环绕声",
+            "jymaster" => "超清母带",
+            _ => "在线"
+        };
+        
+        targetItem.PlayItem.QualityTag = tag;
+        targetItem.PlayItem.Size = urlInfo.Size;
+        targetItem.PlayItem.SubExt = urlInfo.Type?.ToLowerInvariant();
+
+        var volume = GetAudioGainMultiplier(urlInfo.Gain ?? 0f);
+        targetItem.PlayItem.Volume = volume;
+        
+        UpdatePlayBarQualityDisplay(targetItem.PlayItem.QualityTag);
+    }
+
+    private static void UpdatePlayBarQualityDisplay(string qualityTag)
+    {
+        _ = Common.Invoke(() =>
+        {
+            Common.BarPlayBar.TbSongTag.Text = qualityTag;
+            if (qualityTag.Length > 2)
+            {
+                var backgroundbrush = new LinearGradientBrush();
+                backgroundbrush.StartPoint = new Windows.Foundation.Point(0, 0);
+                backgroundbrush.EndPoint = new Windows.Foundation.Point(1, 1);
+
+                backgroundbrush.GradientStops.Add(new GradientStop
+                { Offset = 0, Color = Color.FromArgb(255, 251, 251, 206) });
+                backgroundbrush.GradientStops.Add(new GradientStop
+                { Offset = 1, Color = Color.FromArgb(255, 223, 155, 28) });
+
+                Common.BarPlayBar.SongInfoTag.Background = backgroundbrush;
+                Common.BarPlayBar.SongInfoTag.BorderBrush =
+                    new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
+                Common.BarPlayBar.TbSongTag.Foreground =
+                    new SolidColorBrush(Color.FromArgb(255, 0, 0, 0));
+            }
+            else
+            {
+                var brush = new SolidColorBrush(Colors.Red);
+                Common.BarPlayBar.SongInfoTag.BorderBrush = brush;
+                Common.BarPlayBar.SongInfoTag.Background = null;
+                Common.BarPlayBar.TbSongTag.Foreground = brush;
+            }
+        });
+    }
+
+    /// <summary>
+    /// 安全地清理下载操作资源
+    /// </summary>
+    private static void CleanupDownloadOperation(HyPlayItem targetItem)
+    {
+        if (DownloadOperations.TryGetValue(targetItem, out var operation))
+        {
+            DownloadOperations.Remove(targetItem);
+            DownloadOperationsReverseDirectory.Remove(operation);
+        }
+    }
+
+    /// <summary>
+    /// 验证播放项是否有效
+    /// </summary>
+    private static bool ValidatePlayItem(HyPlayItem targetItem)
+    {
+        return targetItem?.PlayItem != null && !string.IsNullOrEmpty(targetItem.PlayItem.Name);
+    }
+
+    /// <summary>
+    /// 处理播放失败的通用方法
+    /// </summary>
+    private static void HandlePlaybackFailure(string message, Exception exception = null)
+    {
+        var errorMessage = $"{message}";
+        if (exception != null)
+        {
+            errorMessage += $"\n{exception.Message}";
+        }
+        
+        Common.ErrorMessageList.Add(errorMessage);
+        Common.AddToTeachingTipLists("播放失败", errorMessage);
+        SongMoveNext();
     }
 
     public static async Task LoadMediaSource(HyPlayItem targetItem, bool setAsPrimary = false, bool autoPlay = true)
     {
         var overdue = !await _loaderSemaphoreSlim.WaitAsync(0);
+        if (overdue) return;
+
         try
         {
-            if (overdue) return;
-            if (targetItem.PlayItem?.Name == null)
+            // 使用 Polly 重试策略优化核心逻辑
+            await RetryPolicies.MediaSourceLoadPolicy.ExecuteAsync(async () =>
             {
-                MoveSongPointer();
-                return;
-            }
-
-            if (CoverStream.Size != 0)
-            {
-                CoverStream.Size = 0;
-                CoverStream.Seek(0);
-            }
-
-
-            if (Player.PrimaryPlaybackSource != null && (!Common.Setting.CrossFade || (Common.Setting.CrossFade && !FadeManager.FadeProcessing)))
-            {
-                var primaryPlaybackSource = Player.PrimaryPlaybackSource as AudioGraphPlaybackSource;
-                Player.PausePlaybackSource(primaryPlaybackSource);
-                Player.DisconnectPlaybackSource(Player.PrimaryPlaybackSource);
-                if (primaryPlaybackSource != null)
+                if (targetItem.PlayItem?.Name == null)
                 {
-                    var item = primaryPlaybackSource.PlaybackSource.CustomProperties["nowPlayingItem"] as HyPlayItem;
-                    item?.PlayItem?.FreePlaybackResources();
+                    MoveSongPointer();
+                    return;
                 }
-            }
-            MediaSource mediaSource = null;
-            switch (targetItem.ItemType)
-            {
-                case HyPlayItemType.Netease:
-                case HyPlayItemType.Radio: //FM伪加载为普通歌曲
-                                           //先看看是不是本地文件
-                                           //本地文件的话尝试加载
-                                           //cnm的NCM,我试试其他方式
-                    if (Common.Setting.enableCache)
-                    {
-                        var playUrl = await GetNowPlayingUrl(targetItem);
-                        //再检测是否已经缓存且大小正常
-                        try
-                        {
-                            // 加载本地缓存文件
-                            var sf =
-                                await (await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir))
-                                    .GetFileAsync($"{targetItem.PlayItem.Id}.{targetItem.PlayItem?.SubExt}");
-                            if ((await sf.GetBasicPropertiesAsync()).Size.ToString() == targetItem.PlayItem.Size)
-                            {
-                                mediaSource = MediaSource.CreateFromStorageFile(sf);
-                                break;
-                            }
-                            else
-                            {
-                                await sf.DeleteAsync();
-                                throw new Exception("File Size Not Match");
-                            }
-                        }
-                        catch
-                        {
-                            DownloadOperation operation = null;
 
-                            var destinationFolder =
-                                        await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir);
-                            var destinationFile =
-                                            await destinationFolder.CreateFileAsync($"{targetItem.PlayItem.Id}.{targetItem.PlayItem?.SubExt}", CreationCollisionOption.ReplaceExisting);
-                            try
-                            {
-                                //尝试从DownloadOperation下载
-                                if (playUrl != null)
-                                {
-                                    if (!DownloadOperations.ContainsKey(targetItem))
-                                    {
-
-                                        operation =
-                                            Downloader.CreateDownload(new Uri(playUrl), destinationFile);
-                                        operation.IsRandomAccessRequired = true;
-                                        DownloadOperations[targetItem] = operation;
-                                        DownloadOperationsReverseDirectory[operation] = targetItem;
-                                        _ = operation.StartAsync().AsTask(DefaultProgressCallback);
-
-                                        mediaSource = MediaSource.CreateFromDownloadOperation(operation);
-                                        await mediaSource.OpenAsync();
-                                        break;
-                                    }
-                                }
-                            }
-                            catch
-                            {
-                                mediaSource?.Dispose();
-                                mediaSource = null;
-                                if (operation.CurrentWebErrorStatus != null)
-                                {
-                                    var item = DownloadOperations[targetItem];
-                                    DownloadOperations.Remove(targetItem);
-                                    DownloadOperationsReverseDirectory.Remove(item);
-                                    destinationFile = await destinationFolder.CreateFileAsync($"{targetItem.PlayItem.Id}.{targetItem.PlayItem?.SubExt}", CreationCollisionOption.ReplaceExisting);
-                                    operation =
-                                        Downloader.CreateDownload(new Uri(playUrl), destinationFile);
-                                    DownloadOperations[targetItem] = operation;
-                                    DownloadOperationsReverseDirectory[operation] = targetItem;
-                                    await operation.StartAsync().AsTask(DefaultProgressCallback);
-                                }
-                                if (playUrl != null)
-                                    mediaSource = MediaSource.CreateFromUri(new Uri(playUrl));
-                                await mediaSource?.OpenAsync();
-                                break;
-                            }
-                        }
-                    }
-
-                    if (targetItem.PlayItem.IsLocalFile)
-                    {
-                        if (targetItem.PlayItem.DontSetLocalStorageFile.FileType == ".ncm")
-                        {
-                            await LoadNCMFile(targetItem);
-                            mediaSource = MediaSource.CreateFromStream(targetItem.PlayItem.NcmPlayableStream, targetItem.PlayItem.NcmPlayableStreamMIMEType);
-                        }
-                        else
-                        {
-                            await LoadLocalFile(targetItem);
-                            mediaSource = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
-                        }
-                    }
-                    else
-                    {
-                        var playUrl = await GetNowPlayingUrl(targetItem);
-                        mediaSource = MediaSource.CreateFromUri(new Uri(playUrl));
-                    }
-                    break;
-                case HyPlayItemType.Local:
-                case HyPlayItemType.LocalProgressive:
-                    if (targetItem.PlayItem.DontSetLocalStorageFile == null && targetItem.PlayItem.Url != null)
-                    {
-                        targetItem.PlayItem.DontSetLocalStorageFile =
-                            await StorageFile.GetFileFromPathAsync(targetItem.PlayItem.Url);
-                    }
-
-                    if (targetItem.PlayItem.DontSetLocalStorageFile.FileType == ".ncm")
-                    {
-                        await LoadNCMFile(targetItem);
-                        mediaSource = MediaSource.CreateFromStream(targetItem.PlayItem.NcmPlayableStream, targetItem.PlayItem.NcmPlayableStreamMIMEType);
-                    }
-                    else
-                    {
-                        await LoadLocalFile(targetItem);
-                        mediaSource = MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
-                    }
-
-                    break;
-                default:
-                    mediaSource = null;
-                    break;
-            }
-
-            mediaSource?.CustomProperties.Add("nowPlayingItem", targetItem);
-            MediaSystemControls.IsEnabled = true;
-            if (!Common.Setting.enableCache) await mediaSource.OpenAsync();
-            var duration = mediaSource.Duration?.TotalMilliseconds;
-            if (duration != null)
-            {
-                if (targetItem.PlayItem.LengthInMilliseconds != duration.Value)
+                if (CoverStream.Size != 0)
                 {
-                    targetItem.PlayItem.LengthInMilliseconds = duration.Value;
+                    CoverStream.Size = 0;
+                    CoverStream.Seek(0);
                 }
-            }
-            var playbackSource = new AudioGraphPlaybackSource(mediaSource);
-            targetItem.PlayItem.AudioGraphPlaybackSource = playbackSource;
-            var targetVolume = Common.Setting.EnableAudioGain ? targetItem.PlayItem.Volume : 1d;
-            if (Common.Setting.CrossFade && FadeManager.FadeProcessing)
-            {
-                targetVolume = 0;
-            }
-            var options = new PlaybackOptions() { SetAsPrimarySource = setAsPrimary, AutoPlay = autoPlay, Volume = targetVolume };
-            await Player.ConnectPlaybackSourceAsync(playbackSource, options);
+
+                if (Player.PrimaryPlaybackSource != null && (!Common.Setting.CrossFade || (Common.Setting.CrossFade && !FadeManager.FadeProcessing)))
+                {
+                    var primaryPlaybackSource = Player.PrimaryPlaybackSource as AudioGraphPlaybackSource;
+                    Player.PausePlaybackSource(primaryPlaybackSource);
+                    Player.DisconnectPlaybackSource(Player.PrimaryPlaybackSource);
+                    if (primaryPlaybackSource != null)
+                    {
+                        var item = primaryPlaybackSource.PlaybackSource.CustomProperties["nowPlayingItem"] as HyPlayItem;
+                        item?.PlayItem?.FreePlaybackResources();
+                    }
+                }
+
+                var mediaSource = await CreateMediaSourceAsync(targetItem);
+                
+                mediaSource?.CustomProperties.Add("nowPlayingItem", targetItem);
+                MediaSystemControls.IsEnabled = true;
+                
+                if (!Common.Setting.enableCache) await mediaSource.OpenAsync();
+                
+                UpdatePlayItemDuration(targetItem, mediaSource);
+                
+                var playbackSource = new AudioGraphPlaybackSource(mediaSource);
+                targetItem.PlayItem.AudioGraphPlaybackSource = playbackSource;
+                
+                var targetVolume = Common.Setting.EnableAudioGain ? targetItem.PlayItem.Volume : 1d;
+                if (Common.Setting.CrossFade && FadeManager.FadeProcessing)
+                {
+                    targetVolume = 0;
+                }
+                
+                var options = new PlaybackOptions() { SetAsPrimarySource = setAsPrimary, AutoPlay = autoPlay, Volume = targetVolume };
+                await Player.ConnectPlaybackSourceAsync(playbackSource, options);
+            });
         }
         catch (Exception e)
         {
@@ -954,6 +940,146 @@ public static class HyPlayList
         finally
         {
             if(!overdue) _loaderSemaphoreSlim.Release();
+        }
+    }
+
+    private static async Task<MediaSource> CreateMediaSourceAsync(HyPlayItem targetItem)
+    {
+        return targetItem.ItemType switch
+        {
+            HyPlayItemType.Netease or HyPlayItemType.Radio => await CreateNeteaseMediaSourceAsync(targetItem),
+            HyPlayItemType.Local or HyPlayItemType.LocalProgressive => await CreateLocalMediaSourceAsync(targetItem),
+            _ => throw new NotSupportedException($"Unsupported item type: {targetItem.ItemType}")
+        };
+    }
+
+    private static async Task<MediaSource> CreateNeteaseMediaSourceAsync(HyPlayItem targetItem)
+    {
+        if (targetItem.PlayItem.IsLocalFile)
+        {
+            return await CreateLocalFileMediaSourceAsync(targetItem);
+        }
+
+        if (Common.Setting.enableCache)
+        {
+            return await CreateCachedMediaSourceAsync(targetItem);
+        }
+
+        var playUrl = await GetNowPlayingUrlWithRetry(targetItem);
+        return MediaSource.CreateFromUri(new Uri(playUrl.Item1));
+    }
+
+    private static async Task<MediaSource> CreateLocalFileMediaSourceAsync(HyPlayItem targetItem)
+    {
+        if (targetItem.PlayItem.DontSetLocalStorageFile.FileType == ".ncm")
+        {
+            await LoadNCMFile(targetItem);
+            return MediaSource.CreateFromStream(targetItem.PlayItem.NcmPlayableStream, targetItem.PlayItem.NcmPlayableStreamMIMEType);
+        }
+        else
+        {
+            await LoadLocalFile(targetItem);
+            return MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
+        }
+    }
+
+    private static async Task<MediaSource> CreateCachedMediaSourceAsync(HyPlayItem targetItem)
+    {
+        var playUrlRes = await GetNowPlayingUrlWithRetry(targetItem);
+
+        var cacheFile = await GetCacheFileAsync(targetItem);
+        if (cacheFile != null)
+        {
+            return MediaSource.CreateFromStorageFile(cacheFile);
+        }
+        
+        // 缓存文件无效，重新下载
+        var rst = await RetryPolicies.FastFailPolicy.ExecuteAndCaptureAsync(async () => await DownloadAndCreateMediaSourceAsync(targetItem, playUrlRes.Item1, playUrlRes.Item2));
+        return rst.Result;
+
+    }
+
+    private static async Task<StorageFile> GetCacheFileAsync(HyPlayItem targetItem)
+    {
+        try
+        {
+            var cacheFolder = await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir);
+            var fileName = string.Format(CACHE_FILE_NAME_FORMAT, targetItem.PlayItem.Id, targetItem.PlayItem?.SubExt);
+            var cacheFile = await cacheFolder.GetFileAsync(fileName);
+            
+            var properties = await cacheFile.GetBasicPropertiesAsync();
+            if (properties.Size == (ulong)(targetItem.PlayItem?.Size ?? -1))
+            {
+                return cacheFile;
+            }
+            else
+            {
+                await cacheFile.DeleteAsync();
+                return null;
+            }
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static async Task<MediaSource> DownloadAndCreateMediaSourceAsync(HyPlayItem targetItem, string playUrl, long size)
+    {
+        if (string.IsNullOrEmpty(playUrl))
+            throw new Exception("Play URL is null");
+
+        // 检查是否已存在下载操作
+        if (DownloadOperations.TryGetValue(targetItem, out var existingOperation))
+        {
+            return MediaSource.CreateFromDownloadOperation(existingOperation);
+        }
+
+        var destinationFolder = await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir);
+        var fileName = string.Format(CACHE_FILE_NAME_FORMAT, targetItem.PlayItem.Id, targetItem.PlayItem?.SubExt);
+        var destinationFile = await destinationFolder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
+        var operation = Downloader.CreateDownload(new Uri(playUrl), destinationFile);
+        //operation.IsRandomAccessRequired = true;
+        DownloadOperations[targetItem] = operation;
+        DownloadOperationsReverseDirectory[operation] = targetItem;
+        await operation.StartAsync();
+        _ = operation.AttachAsync().AsTask(DefaultProgressCallback);
+        var mediaSource = MediaSource.CreateFromDownloadOperation(operation);
+        return mediaSource;
+    }
+
+    private static async Task<MediaSource> CreateLocalMediaSourceAsync(HyPlayItem targetItem)
+    {
+        if (targetItem.PlayItem.DontSetLocalStorageFile == null && targetItem.PlayItem.Url != null)
+        {
+            targetItem.PlayItem.DontSetLocalStorageFile =
+                await StorageFile.GetFileFromPathAsync(targetItem.PlayItem.Url);
+        }
+
+        if (targetItem.PlayItem.DontSetLocalStorageFile.FileType == ".ncm")
+        {
+            await LoadNCMFile(targetItem);
+            return MediaSource.CreateFromStream(targetItem.PlayItem.NcmPlayableStream, targetItem.PlayItem.NcmPlayableStreamMIMEType);
+        }
+        else
+        {
+            await LoadLocalFile(targetItem);
+            return MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
+        }
+    }
+
+    private static async Task<(string, long)> GetNowPlayingUrlWithRetry(HyPlayItem targetItem)
+    {
+        return await RetryPolicies.UrlFetchPolicy.ExecuteAsync(async () =>
+            await GetNowPlayingUrl(targetItem));
+    }
+
+    private static void UpdatePlayItemDuration(HyPlayItem targetItem, MediaSource mediaSource)
+    {
+        var duration = mediaSource.Duration?.TotalMilliseconds;
+        if (duration != null && targetItem.PlayItem.LengthInMilliseconds != duration.Value)
+        {
+            targetItem.PlayItem.LengthInMilliseconds = duration.Value;
         }
     }
     private static void ProgressCallback(DownloadOperation obj)
@@ -2042,7 +2168,7 @@ public static class HyPlayList
                     CDName = "01",
                     Url = sf.Path,
                     SubExt = sf.FileType,
-                    Size = "0",
+                    Size = 0,
                     LengthInMilliseconds = tagFile.Properties.Duration.TotalMilliseconds
                 },
                 ItemType = HyPlayItemType.Local

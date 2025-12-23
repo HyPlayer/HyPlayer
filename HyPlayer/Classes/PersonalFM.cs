@@ -122,7 +122,8 @@ internal static class PersonalFM
                                             Name = "私人 DJ 推荐语",
                                             InfoTag = "私人 DJ",
                                             Type = HyPlayItemType.Netease,
-                                            Url = audioItem.Url
+                                            Url = audioItem.Url,
+                                            Size = audioItem.Size ?? 0
                                         }
                                     };
                                     HyPlayList.List.Add(playItem);

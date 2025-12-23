@@ -25,6 +25,7 @@ namespace HyPlayer.Classes
 
         private async void HyPlayList_OnMediaEnd(HyPlayItem hpi)
         {
+            if (!Common.Setting.CrossFade) return;
             if (HyPlayList.NowPlayType == PlayMode.SinglePlay || HyPlayList.List.Count <=1) return;
             if (FadeProcessing)
             {

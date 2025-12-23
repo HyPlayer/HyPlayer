@@ -297,7 +297,7 @@ public class PlayItem
     public bool IsLocalFile;
     public double LengthInMilliseconds;
     public string Name;
-    public string Size;
+    public long Size;
     public string SubExt;
     public string QualityTag;
     public string InfoTag;
