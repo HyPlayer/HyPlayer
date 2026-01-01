@@ -51,6 +51,18 @@ namespace HyPlayer
         public delegate void EnterForegroundFromBackgroundEvent();
         public delegate void PlaybarVisibilityChangedEvent(bool isActivated);
 
+        // Shared JSON serializer settings for all JSON operations in the application
+        // This reduces memory allocations by reusing the same settings instance
+        internal static readonly JsonSerializerSettings SharedJsonSettings = new JsonSerializerSettings
+        {
+            NullValueHandling = NullValueHandling.Ignore,
+            DefaultValueHandling = DefaultValueHandling.Ignore,
+            TypeNameHandling = TypeNameHandling.None,
+            MissingMemberHandling = MissingMemberHandling.Ignore,
+            MaxDepth = 32,
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+        };
+
         public static bool Logined = false;
         public static bool IsInFm = false;
         public static bool IsInBackground = false;
@@ -338,18 +350,10 @@ namespace HyPlayer
 
     internal class Setting : INotifyPropertyChanged
     {
-        // Shared JSON serializer settings for better performance and memory usage
-        private static readonly JsonSerializerSettings _jsonSettings = new JsonSerializerSettings
-        {
-            NullValueHandling = NullValueHandling.Ignore,
-            DefaultValueHandling = DefaultValueHandling.Ignore,
-            StringEscapeHandling = StringEscapeHandling.EscapeHtml,
-            TypeNameHandling = TypeNameHandling.None,
-            MissingMemberHandling = MissingMemberHandling.Ignore
-        };
-        
         // Cache for ApiAdditionalParameters to avoid repeated deserialization
-        private AdditionalParameters? _cachedApiAdditionalParameters;
+        // Uses volatile for thread-safe read without locks (write is rare and from UI thread)
+        private volatile AdditionalParameters? _cachedApiAdditionalParameters;
+        private readonly object _apiParamsLock = new object();
         
         public int ColorGeneratorType
         {
@@ -395,18 +399,28 @@ namespace HyPlayer
         {
             get
             {
+                // Double-checked locking for thread-safe lazy initialization
                 if (_cachedApiAdditionalParameters != null)
                     return _cachedApiAdditionalParameters;
-                    
-                _cachedApiAdditionalParameters = JsonConvert.DeserializeObject<AdditionalParameters>(
-                    GetSettings(nameof(ApiAdditionalParameters), "{}"), _jsonSettings) ?? new AdditionalParameters();
-                return _cachedApiAdditionalParameters;
+                
+                lock (_apiParamsLock)
+                {
+                    if (_cachedApiAdditionalParameters != null)
+                        return _cachedApiAdditionalParameters;
+                        
+                    _cachedApiAdditionalParameters = JsonConvert.DeserializeObject<AdditionalParameters>(
+                        GetSettings(nameof(ApiAdditionalParameters), "{}"), Common.SharedJsonSettings) ?? new AdditionalParameters();
+                    return _cachedApiAdditionalParameters;
+                }
             }
             set
             {
-                _cachedApiAdditionalParameters = value;
-                ApplicationData.Current.LocalSettings.Values[nameof(ApiAdditionalParameters)] = 
-                    JsonConvert.SerializeObject(value, _jsonSettings);
+                lock (_apiParamsLock)
+                {
+                    _cachedApiAdditionalParameters = value;
+                    ApplicationData.Current.LocalSettings.Values[nameof(ApiAdditionalParameters)] = 
+                        JsonConvert.SerializeObject(value, Common.SharedJsonSettings);
+                }
             }
         }
 
@@ -1822,16 +1836,9 @@ namespace HyPlayer
 
     internal class HistoryManagement
     {
-        // Reuse the same JsonSerializerSettings from Setting class
-        private static readonly JsonSerializerSettings _jsonSettings = new JsonSerializerSettings
-        {
-            NullValueHandling = NullValueHandling.Ignore,
-            DefaultValueHandling = DefaultValueHandling.Ignore,
-            TypeNameHandling = TypeNameHandling.None
-        };
-        
         // Cache for empty list serialization to avoid repeated serialization
-        private static readonly string _emptyListJson = JsonConvert.SerializeObject(new List<string>(), _jsonSettings);
+        // Uses the shared JsonSerializerSettings from Common class
+        private static readonly string _emptyListJson = JsonConvert.SerializeObject(new List<string>(), Common.SharedJsonSettings);
         
         public static void InitializeHistoryTrack()
         {
@@ -1854,19 +1861,19 @@ namespace HyPlayer
         public static void AddNCSongHistory(string songid)
         {
             var list = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
-                .Values["songHistory"].ToString(), _jsonSettings) ?? new List<string>();
+                .Values["songHistory"].ToString(), Common.SharedJsonSettings) ?? new List<string>();
 
             list.Remove(songid);
             list.Insert(0, songid);
             if (list.Count >= 300)
                 list.RemoveRange(9, list.Count - 300);
-            ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonConvert.SerializeObject(list, _jsonSettings);
+            ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonConvert.SerializeObject(list, Common.SharedJsonSettings);
         }
 
         public static void AddSearchHistory(string Text)
         {
             var list = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
-                .Values["searchHistory"].ToString(), _jsonSettings) ?? new List<string>();
+                .Values["searchHistory"].ToString(), Common.SharedJsonSettings) ?? new List<string>();
             if (!list.Contains(Text))
             {
                 list.Insert(0, Text);
@@ -1877,19 +1884,19 @@ namespace HyPlayer
                 list.Insert(0, Text);
             }
 
-            ApplicationData.Current.LocalSettings.Values["searchHistory"] = JsonConvert.SerializeObject(list, _jsonSettings);
+            ApplicationData.Current.LocalSettings.Values["searchHistory"] = JsonConvert.SerializeObject(list, Common.SharedJsonSettings);
         }
 
         public static void AddSonglistHistory(string playListid)
         {
             var list = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
-                .Values["songlistHistory"].ToString(), _jsonSettings) ?? new List<string>();
+                .Values["songlistHistory"].ToString(), Common.SharedJsonSettings) ?? new List<string>();
 
             list.Remove(playListid);
             list.Insert(0, playListid);
             if (list.Count >= 100)
                 list.RemoveRange(100, list.Count - 100);
-            ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list, _jsonSettings);
+            ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list, Common.SharedJsonSettings);
         }
 
         public static async Task SetcurPlayingListHistory(List<string> songids)
@@ -1908,7 +1915,7 @@ namespace HyPlayer
             else
                 //低级音乐存储
                 ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] =
-                    JsonConvert.SerializeObject(songids.Count > 100 ? songids.GetRange(0, 100) : songids, _jsonSettings);
+                    JsonConvert.SerializeObject(songids.Count > 100 ? songids.GetRange(0, 100) : songids, Common.SharedJsonSettings);
         }
 
         public static async Task ClearHistory()
@@ -1925,7 +1932,7 @@ namespace HyPlayer
             try
             {
                 var songIds = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
-                    .Values["songHistory"].ToString(), _jsonSettings);
+                    .Values["songHistory"].ToString(), Common.SharedJsonSettings);
                 var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.SongDetailApi,
                     new SongDetailRequest()
                     {
@@ -1947,7 +1954,7 @@ namespace HyPlayer
         public static List<string> GetSearchHistory()
         {
             return JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
-                .Values["searchHistory"].ToString(), _jsonSettings) ?? new List<string>();
+                .Values["searchHistory"].ToString(), Common.SharedJsonSettings) ?? new List<string>();
         }
 
         public static async Task<List<NCSong>> GetcurPlayingListHistory()
@@ -1961,7 +1968,7 @@ namespace HyPlayer
             else
                 //低级音乐存储
                 trackIds = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
-                    .Values["curPlayingListHistory"].ToString(), _jsonSettings) ?? new List<string>();
+                    .Values["curPlayingListHistory"].ToString(), Common.SharedJsonSettings) ?? new List<string>();
 
             if (trackIds == null || string.IsNullOrEmpty(trackIds.FirstOrDefault()))
                 return retsongs;
