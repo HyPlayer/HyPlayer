@@ -346,6 +346,29 @@ namespace HyPlayer
                 return Colors.Black;
             return Colors.White;
         }
+        
+        public static Color FromHsv(float h, float s, float v)
+        {
+            float c = v * s;
+            float x = c * (1 - Math.Abs((h / 60f) % 2f - 1f));
+            float m = v - c;
+
+            float r = 0, g = 0, b = 0;
+
+            if (h < 60)      { r = c; g = x; b = 0; }
+            else if (h < 120) { r = x; g = c; b = 0; }
+            else if (h < 180) { r = 0; g = c; b = x; }
+            else if (h < 240) { r = 0; g = x; b = c; }
+            else if (h < 300) { r = x; g = 0; b = c; }
+            else             { r = c; g = 0; b = x; }
+
+            return Color.FromArgb(
+                255,
+                (byte)((r + m) * 255),
+                (byte)((g + m) * 255),
+                (byte)((b + m) * 255)
+            );
+        }
     }
 
     internal class Setting : INotifyPropertyChanged
@@ -518,7 +541,7 @@ namespace HyPlayer
 
         public BackgroundType expandedPlayerBackgroundType
         {
-            get => GetSettings(nameof(expandedPlayerBackgroundType), BackgroundType.CoverBlur);
+            get => BackgroundType.Isolation;
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(expandedPlayerBackgroundType)] = (int)value;
@@ -1699,7 +1722,7 @@ namespace HyPlayer
         }
         public double IsolationFPS
         {
-            get => GetSettings(nameof(IsolationFPS), 24d);
+            get => Math.Max(GetSettings(nameof(IsolationFPS), 60d), 60d);
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(IsolationFPS)] = value;

@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.IO;
+using System.Threading;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
 using Windows.Storage;
@@ -19,7 +20,7 @@ public static class SimpleCacher
         // cacheFolder = await ApplicationData.Current.LocalCacheFolder.CreateFolderAsync("cache", CreationCollisionOption.OpenIfExists);
     }
 
-    public static async Task<T?> GetOrCreateCacheAsync<T>(CacheType cacheType, string id, Func<Task<T?>> creator, TimeSpan? expiration = null, bool forceRefresh = false, bool forceUseCache = false) where T : class
+    public static async Task<T?> GetOrCreateCacheAsync<T>(CacheType cacheType, string id, Func<Task<T?>> creator, TimeSpan? expiration = null, bool forceRefresh = false, bool forceUseCache = false, CancellationToken cancellationToken = default) where T : class
     {
         if (!Common.Setting.enableApiCache)
         {
@@ -34,6 +35,7 @@ public static class SimpleCacher
 
         // create new type dir
         var dir = await cacheFolder!.CreateFolderAsync(type, CreationCollisionOption.OpenIfExists);
+        cancellationToken.ThrowIfCancellationRequested();
     restart:
         var fileName = $"{id}.cache";
         bool hasCache = false;
@@ -42,6 +44,7 @@ public static class SimpleCacher
             hasCache = true;
             // Check for expiration
             var properties = await cacheFile.GetBasicPropertiesAsync();
+            cancellationToken.ThrowIfCancellationRequested();
             if (forceUseCache || !expiration.HasValue || DateTimeOffset.Now - properties.DateModified < expiration.Value)
             {
                 // Cache is still valid, read from it
@@ -71,6 +74,7 @@ public static class SimpleCacher
         try
         {
             data = await creator();
+            cancellationToken.ThrowIfCancellationRequested();
         }
         catch
         {
@@ -88,7 +92,8 @@ public static class SimpleCacher
 
         try
         {
-            var json = JsonConvert.SerializeObject(data, Common.SharedJsonSettings);
+            cancellationToken.ThrowIfCancellationRequested();
+            var json = JsonConvert.SerializeObject(data);
             var file = await dir.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
             await FileIO.WriteTextAsync(file, json);
         }

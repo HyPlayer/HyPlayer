@@ -7,53 +7,47 @@ using System.Threading.Tasks;
 using Windows.Media;
 using Windows.Media.Audio;
 using Windows.Media.Effects;
+using HyPlayer.UWP.Chopin.Utils;
 using Timer = System.Timers.Timer;
 
 namespace HyPlayer.UWP.Chopin.Abstractions.Models
 {
+    /// <summary>
+    /// 基于 AudioGraph 的音频播放器实现
+    /// 提供多音轨播放、设备切换、音量控制等功能
+    /// </summary>
     public class AudioGraphPlayer : IPlayer, IDisposable
     {
-        private ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode> _audioInputNodes = new ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode>();
-        private ConcurrentDictionary<MediaSourceAudioInputNode, AudioGraphPlaybackSource> _audioInputNodesReverseDictionary = new ConcurrentDictionary<MediaSourceAudioInputNode, AudioGraphPlaybackSource>();
+        #region Private Fields
+        private readonly ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode> _audioInputNodes = new ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode>();
+        private readonly ConcurrentDictionary<MediaSourceAudioInputNode, AudioGraphPlaybackSource> _audioInputNodesReverseDictionary = new ConcurrentDictionary<MediaSourceAudioInputNode, AudioGraphPlaybackSource>();
         private AudioGraph _defaultPlayer;
         private AudioDeviceOutputNode _outputNode;
-        private bool disposedValue;
-        private Timer PositionTimer = new Timer() { AutoReset = true, Interval = 100 };
+        private AudioFrameOutputNode _frameOutputNode;
+        private bool _disposedValue;
+        private readonly Timer _positionTimer = new Timer() { AutoReset = true, Interval = 100 };
         private TimeSpan _lastPosition = TimeSpan.Zero;
-        private string currentDeviceId = string.Empty;
-
-
-        public bool PlayerCreated => _defaultPlayer != null;
-        public delegate void PositionChangeHandler(TimeSpan position);
-        public event PositionChangeHandler OnPositionChanged;
-        public delegate void TrackReachesEndHandler(IPlaybackSource source);
-        public event TrackReachesEndHandler OnTrackReachesEnd;
-        public delegate void PlaybackSourceStatusChangeHandler(IPlaybackSource source, PlaybackStatus status);
-        public event PlaybackSourceStatusChangeHandler OnPlaybackSourceStatusChanged;
-        public delegate void GlobalPlaybackStatusChangeHandler(PlaybackStatus status);
-        public event GlobalPlaybackStatusChangeHandler OnGlobalPlaybackStatusChanged;
-        public delegate void PrimaryPlaybackSourceChangeHandler(IPlaybackSource source);
-        public event PrimaryPlaybackSourceChangeHandler OnPrimaryPlaybackSourceChanged;
-
-        public ISMTCManager SMTCManager { get; set; }
-        public double Volume { get => _volume; }
+        private string _currentDeviceId = string.Empty;
         private double _volume = 1;
+        private AudioGraphPlaybackSource _primaryPlaybackSource;
+        #endregion
+
+        #region Public Properties
+        public bool PlayerCreated => _defaultPlayer != null;
+        public double Volume => _volume;
+        
         public bool IsMuted
         {
             get => _outputNode?.OutgoingGain == 0;
             set
             {
                 if (_outputNode == null) return;
-                if (value == true)
-                {
-                    _outputNode.OutgoingGain = 0;
-                }
-                else
-                {
-                    _outputNode.OutgoingGain = _volume;
-                }
+                _outputNode.OutgoingGain = value ? 0 : _volume;
             }
         }
+
+        public FFTProcessor FFTProcessor = new FFTProcessor();
+        
         public IPlaybackSource PrimaryPlaybackSource
         {
             get => _primaryPlaybackSource;
@@ -64,217 +58,281 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 OnPrimaryPlaybackSourceChanged?.Invoke(source);
             }
         }
-        private AudioGraphPlaybackSource _primaryPlaybackSource;
+
         public PlaybackStatus GlobalPlaybackStatus { get; protected set; } = PlaybackStatus.Closed;
+        
         public MediaSourceAudioInputNode PrimaryAudioInputNode
         {
             get
             {
-                if (PrimaryPlaybackSource == null)
-                    return null;
-                else
-                {
-                    var source = PrimaryPlaybackSource as AudioGraphPlaybackSource;
-                    return _audioInputNodes[source];
-                }
+                if (PrimaryPlaybackSource == null) return null;
+                var source = PrimaryPlaybackSource as AudioGraphPlaybackSource;
+                return _audioInputNodes.TryGetValue(source, out var node) ? node : null;
             }
         }
+
         public int ConnectedPlaybackSourceCount => _audioInputNodes.Count;
+        public ISMTCManager SMTCManager { get; set; }
+        #endregion
+
+        #region Events
+        public delegate void PositionChangeHandler(TimeSpan position);
+        public event PositionChangeHandler OnPositionChanged;
+
+        public delegate void TrackReachesEndHandler(IPlaybackSource source);
+        public event TrackReachesEndHandler OnTrackReachesEnd;
+
+        public delegate void PlaybackSourceStatusChangeHandler(IPlaybackSource source, PlaybackStatus status);
+        public event PlaybackSourceStatusChangeHandler OnPlaybackSourceStatusChanged;
+
+        public delegate void GlobalPlaybackStatusChangeHandler(PlaybackStatus status);
+        public event GlobalPlaybackStatusChangeHandler OnGlobalPlaybackStatusChanged;
+
+        public delegate void PrimaryPlaybackSourceChangeHandler(IPlaybackSource source);
+        public event PrimaryPlaybackSourceChangeHandler OnPrimaryPlaybackSourceChanged;
+        #endregion
+
+        #region Initialization and Cleanup
+        public async Task InitializePlayer(IAudioSettings settings)
+        {
+            if (settings is not AudioGraphAudioSetting audioGraphSetting)
+                throw new ArgumentException("Setting is not AudioGraphSetting");
+
+            _positionTimer.Elapsed += PositionTimer_Elapsed;
+            
+            // 创建 AudioGraph 和输出节点
+            var setting = await audioGraphSetting.GetAudioGraphSettingsAsync();
+            var graphResult = await AudioGraph.CreateAsync(setting);
+            if (graphResult.Status != AudioGraphCreationStatus.Success)
+                throw graphResult.ExtendedError;
+            _defaultPlayer = graphResult.Graph;
+            _defaultPlayer.QuantumProcessed += GraphOnQuantumProcessed;
+            var outputResult = await _defaultPlayer.CreateDeviceOutputNodeAsync();
+            if (outputResult.Status != AudioDeviceNodeCreationStatus.Success)
+                throw outputResult.ExtendedError;
+            _outputNode = outputResult.DeviceOutputNode;
+            
+            var frameOutputResult = _defaultPlayer.CreateFrameOutputNode();
+            _frameOutputNode = frameOutputResult;
+
+            _outputNode.OutgoingGain = audioGraphSetting.OutputVolume;
+            _currentDeviceId = audioGraphSetting.DefaultDeviceId;
+            _positionTimer.Start();
+        }
+
+        private void GraphOnQuantumProcessed(AudioGraph sender, object args)
+        {
+            FFTProcessor.ProcessFFT(_frameOutputNode.GetFrame());
+        }
 
         public async Task ChangePlayerServiceImplementation(IAudioSettings settings)
         {
             ThrowExceptionIfDisposed();
-            PositionTimer.Stop();
-            if (settings is AudioGraphAudioSetting audioGraphSetting)
+            _positionTimer.Stop();
+
+            if (settings is not AudioGraphAudioSetting audioGraphSetting)
+                throw new ArgumentException("Setting is not AudioGraphSetting");
+
+            if (_currentDeviceId == audioGraphSetting.DefaultDeviceId)
+                return;
+
+            var oldPlayer = _defaultPlayer;
+            var oldOutputNode = _outputNode;
+            var oldNodes = _audioInputNodes.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+            try
             {
-                if(currentDeviceId == audioGraphSetting.DefaultDeviceId)
-                {
-                    return;
-                }
-                var oldPlayer = _defaultPlayer;
-                var oldOutputNode = _outputNode;
+                // 创建新的 AudioGraph
                 var setting = await audioGraphSetting.GetAudioGraphSettingsAsync();
                 var newPlayerResult = await AudioGraph.CreateAsync(setting);
-                AudioGraph newPlayer;
-                if (newPlayerResult.Status == AudioGraphCreationStatus.Success)
-                {
-                    newPlayer = newPlayerResult.Graph;
-                }
-                else
-                {
+                if (newPlayerResult.Status != AudioGraphCreationStatus.Success)
                     throw newPlayerResult.ExtendedError;
-                }
+                var newPlayer = newPlayerResult.Graph;
+                
+
                 oldPlayer.Stop();
-                var oldNodes = _audioInputNodes;
+
+                // 创建新的输出节点
                 var deviceNodeCreateResult = await newPlayer.CreateDeviceOutputNodeAsync();
-                if (deviceNodeCreateResult.Status != AudioDeviceNodeCreationStatus.Success) throw deviceNodeCreateResult.ExtendedError;
-                _outputNode = deviceNodeCreateResult.DeviceOutputNode;
+                if (deviceNodeCreateResult.Status != AudioDeviceNodeCreationStatus.Success)
+                    throw deviceNodeCreateResult.ExtendedError;
+                var newOutputNode = deviceNodeCreateResult.DeviceOutputNode;
+                newOutputNode.OutgoingGain = oldOutputNode.OutgoingGain;
+                
+                var frameOutputResult = newPlayer.CreateFrameOutputNode();
+                _frameOutputNode = frameOutputResult;
+
+                // 转移所有播放源
                 var newNodes = new ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode>();
                 var newNodesReverse = new ConcurrentDictionary<MediaSourceAudioInputNode, AudioGraphPlaybackSource>();
-                foreach (var node in oldNodes)
+
+                foreach (var (source, oldNode) in oldNodes)
                 {
-                    if (node.Key is AudioGraphPlaybackSource audioGraphPlaybackSource)
+                    // 捕获旧节点状态
+                    var position = oldNode.Position;
+                    var gain = oldNode.OutgoingGain;
+                    var factor = oldNode.PlaybackSpeedFactor;
+                    var effects = oldNode.EffectDefinitions.ToList();
+
+                    // 清理旧节点
+                    oldNode.Dispose();
+                    source.PlaybackSource?.Reset();
+
+                    // 准备播放源
+                    if (source.PlaybackSource == null)
+                        await source.CreatePlaybackSource();
+                    await source.PlaybackSource?.OpenAsync();
+
+                    // 在新图中创建节点
+                    var createResult = await newPlayer.CreateMediaSourceAudioInputNodeAsync(source.PlaybackSource);
+                    if (createResult.Status != MediaSourceAudioInputNodeCreationStatus.Success)
+                        throw createResult.ExtendedError;
+                    var newNode = createResult.Node;
+
+                    // 应用状态
+                    newNode.PlaybackSpeedFactor = factor;
+                    newNode.OutgoingGain = gain;
+                    newNode.AddOutgoingConnection(newOutputNode);
+
+                    // 应用效果
+                    foreach (var effect in effects)
                     {
-                        if (node.Key.PlaybackSource is null) await node.Key.CreatePlaybackSource();
-                        var position = node.Value.Position;
-                        var gain = node.Value.OutgoingGain;
-                        var factor = node.Value.PlaybackSpeedFactor;
-                        var effects = node.Value.EffectDefinitions.ToList();
-                        node.Value.Dispose();
-                        node.Key.PlaybackSource.Reset();
-                        await node.Key.PlaybackSource.OpenAsync();
-                        var createResult = await newPlayer.CreateMediaSourceAudioInputNodeAsync(node.Key.PlaybackSource);
-                        if (createResult.Status != MediaSourceAudioInputNodeCreationStatus.Success) throw createResult.ExtendedError;
-                        var outputNode = createResult.Node;
-                        newNodes[node.Key] = outputNode;
-                        newNodesReverse[outputNode] = node.Key;
-                        outputNode.PlaybackSpeedFactor = factor;
-                        outputNode.OutgoingGain = gain;
-                        outputNode.AddOutgoingConnection(_outputNode);
-                        foreach (var effect in effects)
-                        {
-                            outputNode.EnableEffectsByDefinition(effect);
-                        }
-                        await Task.Delay(250);
-                        outputNode.Seek(position);
-                        outputNode.Start();
+                        newNode.EnableEffectsByDefinition(effect);
                     }
+
+                    // 恢复位置并开始
+                    await Task.Delay(250);
+                    newNode.Seek(position);
+                    newNode.Start();
+
+                    newNodes[source] = newNode;
+                    newNodesReverse[newNode] = source;
                 }
-                _outputNode.OutgoingGain = oldOutputNode.OutgoingGain;
+
+                // 替换为新图
                 _defaultPlayer = newPlayer;
-                _audioInputNodes = newNodes;
-                _audioInputNodesReverseDictionary = newNodesReverse;
-                currentDeviceId = audioGraphSetting.DefaultDeviceId;
-                oldPlayer.Dispose();
+                newPlayer.QuantumProcessed += GraphOnQuantumProcessed;
+                _outputNode = newOutputNode;
+                _audioInputNodes.Clear();
+                foreach (var kvp in newNodes) _audioInputNodes[kvp.Key] = kvp.Value;
+                _audioInputNodesReverseDictionary.Clear();
+                foreach (var kvp in newNodesReverse) _audioInputNodesReverseDictionary[kvp.Key] = kvp.Value;
+
+                _currentDeviceId = audioGraphSetting.DefaultDeviceId;
                 newPlayer.Start();
             }
-            else
+            finally
             {
-                throw new ArgumentException("Setting is not AudioGraphSetting");
+                oldPlayer.Dispose();
+                _positionTimer.Start();
             }
-            PositionTimer.Start();
         }
 
-        public async Task InitializePlayer(IAudioSettings settings)
+        protected virtual void Dispose(bool disposing)
         {
-            if (settings is AudioGraphAudioSetting audioGraphSetting)
+            if (_disposedValue) return;
+
+            if (disposing)
             {
-                PositionTimer.Elapsed += PositionTimer_Elapsed;
-                var setting = await audioGraphSetting.GetAudioGraphSettingsAsync();
-                var newPlayerResult = await AudioGraph.CreateAsync(setting);
-                AudioGraph newPlayer;
-                if (newPlayerResult.Status == AudioGraphCreationStatus.Success)
-                {
-                    newPlayer = newPlayerResult.Graph;
-                }
-                else
-                {
-                    throw newPlayerResult.ExtendedError;
-                }
-                _defaultPlayer = newPlayer;
-                var createResult = await newPlayer.CreateDeviceOutputNodeAsync();
-                if (createResult.Status != AudioDeviceNodeCreationStatus.Success) throw createResult.ExtendedError;
-                _outputNode = createResult.DeviceOutputNode;
-                _outputNode.OutgoingGain = audioGraphSetting.OutputVolume;
-                currentDeviceId = audioGraphSetting.DefaultDeviceId;
-                PositionTimer.Start();
+                _positionTimer?.Stop();
+                _positionTimer?.Dispose();
             }
-            else
+
+            // 清理所有播放源
+            foreach (var item in _audioInputNodes.Values)
             {
-                throw new ArgumentException("Setting is not AudioGraphSetting");
+                item.RemoveOutgoingConnection(_outputNode);
+                item.RemoveOutgoingConnection(_frameOutputNode);
+                item.Dispose();
             }
+
+            _defaultPlayer?.Dispose();
+            _disposedValue = true;
         }
 
-        private void PositionTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        public void Dispose()
         {
-            if (PrimaryPlaybackSource is null || GlobalPlaybackStatus is PlaybackStatus.Paused) return;
-            var source = PrimaryPlaybackSource as AudioGraphPlaybackSource;
-            var track = _audioInputNodes[source];
-            var position = track?.Position;
-            if (position != null)
-            {
-                if (position != _lastPosition)
-                {
-                    _lastPosition = position.Value;
-                    OnPositionChanged?.Invoke(position.Value);
-                    var positionProperties = new SystemMediaTransportControlsTimelineProperties();
-                    positionProperties.Position = position.Value;
-                    positionProperties.StartTime = TimeSpan.Zero;
-                    positionProperties.MinSeekTime = TimeSpan.Zero;
-                    positionProperties.EndTime = track.EndTime ?? TimeSpan.Zero;
-                    positionProperties.MaxSeekTime = track.EndTime ?? TimeSpan.Zero;
-                    SMTCManager.OnPositionChange(positionProperties);
-                }
-            }
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
 
-        public void PauseAll()
+        ~AudioGraphPlayer()
         {
-            ThrowExceptionIfDisposed();
-            if (_defaultPlayer == null) return;
-            _defaultPlayer.Stop();
-            GlobalPlaybackStatus = PlaybackStatus.Paused;
-            SMTCManager?.OnPauseAll();
-            OnGlobalPlaybackStatusChanged?.Invoke(PlaybackStatus.Paused);
+            Dispose(disposing: false);
         }
+        #endregion
 
-        public void PausePlaybackSource(IPlaybackSource playbackSource)
-        {
-            ThrowExceptionIfDisposed();
-            var source = playbackSource as AudioGraphPlaybackSource;
-            if (source != null)
-            {
-                _audioInputNodes[source].Stop();
-                source.PlaybackStatus = PlaybackStatus.Paused;
-                OnPlaybackSourceStatusChanged?.Invoke(playbackSource, PlaybackStatus.Paused);
-            }
-            else
-            {
-                throw new ArgumentException("PlaybackSource is not AudioGraphPlaybackSource.");
-            }
-        }
-
+        #region Playback Control Methods
         public void PlayAll()
         {
             ThrowExceptionIfDisposed();
             if (_defaultPlayer == null) return;
+            
             _defaultPlayer.Start();
             GlobalPlaybackStatus = PlaybackStatus.Playing;
             OnGlobalPlaybackStatusChanged?.Invoke(PlaybackStatus.Playing);
             SMTCManager?.OnPlayAll();
         }
 
+        public void PauseAll()
+        {
+            ThrowExceptionIfDisposed();
+            if (_defaultPlayer == null) return;
+            
+            _defaultPlayer.Stop();
+            GlobalPlaybackStatus = PlaybackStatus.Paused;
+            SMTCManager?.OnPauseAll();
+            OnGlobalPlaybackStatusChanged?.Invoke(PlaybackStatus.Paused);
+        }
+
         public void PlayPlaybackSource(IPlaybackSource playbackSource)
         {
             ThrowExceptionIfDisposed();
+            var node = GetAudioInputNodeOrThrow(playbackSource);
+            
+            node.Start();
             var source = playbackSource as AudioGraphPlaybackSource;
             if (source != null)
             {
-                _audioInputNodes[source].Start();
                 source.PlaybackStatus = PlaybackStatus.Playing;
                 OnPlaybackSourceStatusChanged?.Invoke(playbackSource, PlaybackStatus.Playing);
             }
-            else
+        }
+
+        public void PausePlaybackSource(IPlaybackSource playbackSource)
+        {
+            ThrowExceptionIfDisposed();
+            var node = GetAudioInputNodeOrThrow(playbackSource);
+            
+            node.Stop();
+            var source = playbackSource as AudioGraphPlaybackSource;
+            if (source != null)
             {
-                throw new ArgumentException("PlaybackSource is not AudioGraphPlaybackSource.");
+                source.PlaybackStatus = PlaybackStatus.Paused;
+                OnPlaybackSourceStatusChanged?.Invoke(playbackSource, PlaybackStatus.Paused);
             }
         }
 
         public void SeekPlaybackSource(TimeSpan target, IPlaybackSource playbackSource)
         {
             ThrowExceptionIfDisposed();
+            var node = GetAudioInputNodeOrThrow(playbackSource);
             var source = playbackSource as AudioGraphPlaybackSource;
-            if (source != null)
+            
+            // 确保不超过音频源时长
+            if (source?.PlaybackSource?.Duration != null)
             {
-                var value = Math.Min(target.TotalMilliseconds, source.PlaybackSource.Duration?.TotalMilliseconds ?? 0d);
-                _audioInputNodes[source].Seek(TimeSpan.FromMilliseconds(value));
+                var value = Math.Min(target.TotalMilliseconds, source.PlaybackSource.Duration.Value.TotalMilliseconds);
+                node.Seek(TimeSpan.FromMilliseconds(value));
             }
             else
             {
-                throw new ArgumentException("PlaybackSource is not AudioGraphPlaybackSource.");
+                node.Seek(target);
             }
         }
+        #endregion
 
+        #region Volume and Speed Control
         public void SetOutputVolume(double volume)
         {
             ThrowExceptionIfDisposed();
@@ -288,138 +346,103 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         public void SetPlaybackSourceOutputVolume(double volume, IPlaybackSource playbackSource)
         {
             ThrowExceptionIfDisposed();
-            var source = playbackSource as AudioGraphPlaybackSource;
-            if (source != null)
-            {
-                var success = _audioInputNodes.TryGetValue(source, out var item);
-                if (success)
-                {
-                    item.OutgoingGain = volume;
-                }
-            }
-            else
-            {
-                throw new ArgumentException("PlaybackSource is not AudioGraphPlaybackSource.");
-            }
+            var node = GetAudioInputNodeOrThrow(playbackSource);
+            node.OutgoingGain = volume;
         }
 
         public void SetPlaybackSourceSpeed(double speed, IPlaybackSource playbackSource)
         {
             ThrowExceptionIfDisposed();
-            var source = playbackSource as AudioGraphPlaybackSource;
-            if (source != null)
-            {
-                var item = _audioInputNodes[source];
-                item.PlaybackSpeedFactor = speed;
-            }
-            else
-            {
-                throw new ArgumentException("PlaybackSource is not AudioGraphPlaybackSource.");
-            }
+            var node = GetAudioInputNodeOrThrow(playbackSource);
+            node.PlaybackSpeedFactor = speed;
         }
+
         public double GetPlaybackSourceSpeed(IPlaybackSource playbackSource)
         {
             ThrowExceptionIfDisposed();
-            var source = playbackSource as AudioGraphPlaybackSource;
-            if (source != null)
-            {
-                var item = _audioInputNodes[source];
-                return item.PlaybackSpeedFactor;
-            }
-            else
-            {
-                throw new ArgumentException("PlaybackSource is not AudioGraphPlaybackSource.");
-            }
+            var node = GetAudioInputNodeOrThrow(playbackSource);
+            return node.PlaybackSpeedFactor;
         }
+        #endregion
+
+        #region Playback Source Management
         public async Task ConnectPlaybackSourceAsync(IPlaybackSource playbackSource, PlaybackOptions options = null)
         {
             ThrowExceptionIfDisposed();
-            if (options == null)
-            {
-                options = new PlaybackOptions();
-            }
+            options ??= new PlaybackOptions();
+
+            // 验证播放源类型
             var source = playbackSource as AudioGraphPlaybackSource;
-            if (_audioInputNodes.ContainsKey(source)) throw new ArgumentException("PlaybackSource has been connected to the player.");
-            if (source != null)
+            if (source == null)
+                throw new ArgumentException("PlaybackSource is not AudioGraphPlaybackSource.");
+
+            // 检查是否已连接
+            if (_audioInputNodes.ContainsKey(source))
+                throw new ArgumentException("PlaybackSource has been connected to the player.");
+
+            if (_defaultPlayer == null) return;
+
+            // 确保播放源已创建
+            if (source.PlaybackSource == null)
+                await playbackSource.CreatePlaybackSource();
+
+            // 创建音频输入节点
+            var nodeResult = await _defaultPlayer.CreateMediaSourceAudioInputNodeAsync(source.PlaybackSource);
+            if (nodeResult.Status != MediaSourceAudioInputNodeCreationStatus.Success)
+                throw nodeResult.ExtendedError;
+
+            var node = nodeResult.Node;
+
+            // 配置节点
+            node.OutgoingGain = options.Volume;
+            node.AddOutgoingConnection(_outputNode);
+            node.AddOutgoingConnection(_frameOutputNode);
+            node.MediaSourceCompleted += OnMediaSourceCompleted;
+
+            // 根据选项设置播放状态
+            if (!options.AutoPlay)
             {
-                if (_defaultPlayer == null) return;
-                if (source.PlaybackSource == null) await playbackSource.CreatePlaybackSource();
-                var nodeResult = await _defaultPlayer.CreateMediaSourceAudioInputNodeAsync(source.PlaybackSource);
-                if (nodeResult.Status != MediaSourceAudioInputNodeCreationStatus.Success) throw nodeResult.ExtendedError;
-                _audioInputNodes[source] = nodeResult.Node;
-                _audioInputNodesReverseDictionary[nodeResult.Node] = source;
-                nodeResult.Node.OutgoingGain = options.Volume;
-                if (!options.AutoPlay)
-                {
-                    nodeResult.Node.Stop();
-                    source.PlaybackStatus = PlaybackStatus.Paused;
-                }
-                else
-                {
-                    if (GlobalPlaybackStatus == PlaybackStatus.Closed)
-                    {
-                        PlayAll();
-                    }
-                }
-                nodeResult.Node.AddOutgoingConnection(_outputNode);
-                if (_audioInputNodes.Count == 1 || options.SetAsPrimarySource) PrimaryPlaybackSource = playbackSource;
-                _audioInputNodes[source].MediaSourceCompleted += OnMediaSourceCompleted;
+                node.Stop();
+                source.PlaybackStatus = PlaybackStatus.Paused;
             }
             else
             {
-                throw new ArgumentException("PlaybackSource is not AudioGraphPlaybackSource.");
+                if (GlobalPlaybackStatus is PlaybackStatus.Closed or PlaybackStatus.Playing)
+                {
+                    PlayAll();
+                }
             }
 
-        }
+            // 注册节点
+            _audioInputNodes[source] = node;
+            _audioInputNodesReverseDictionary[node] = source;
 
-        private void OnMediaSourceCompleted(MediaSourceAudioInputNode sender, object args)
-        {
-            var playbackSource = _audioInputNodesReverseDictionary[sender];
-            OnTrackReachesEnd?.Invoke(playbackSource);
+            // 设置为主播放源
+            if (_audioInputNodes.Count == 1 || options.SetAsPrimarySource)
+                PrimaryPlaybackSource = playbackSource;
         }
 
         public void DisconnectPlaybackSource(IPlaybackSource playbackSource)
         {
             ThrowExceptionIfDisposed();
             var source = playbackSource as AudioGraphPlaybackSource;
-            if (source != null)
-            {
-                if (!_audioInputNodes.ContainsKey(source)) return;
-                var item = _audioInputNodes[source];
-                _audioInputNodes[source].MediaSourceCompleted -= OnMediaSourceCompleted;
-                if (PrimaryPlaybackSource == source) PrimaryPlaybackSource = null;
-                item.RemoveOutgoingConnection(_outputNode);
-                item.Dispose();
-                _audioInputNodes.TryRemove(source, out _);
-                _audioInputNodesReverseDictionary.TryRemove(item, out _);
-            }
-            else throw new ArgumentException("PlaybackSource is not AudioGraphPlaybackSource.");
-        }
+            if (source == null)
+                throw new ArgumentException("PlaybackSource is not AudioGraphPlaybackSource.");
 
-        public List<AudioGraphPlaybackSource> GetConnectedPlaybackSource()
-        {
-            ThrowExceptionIfDisposed();
-            return _audioInputNodes.Keys.ToList();
-        }
+            if (!_audioInputNodes.ContainsKey(source)) return;
 
-        public MediaSourceAudioInputNode GetAudioInputNode(AudioGraphPlaybackSource playbackSource)
-        {
-            ThrowExceptionIfDisposed();
-            return _audioInputNodes[playbackSource];
-        }
+            var node = _audioInputNodes[source];
+            node.MediaSourceCompleted -= OnMediaSourceCompleted;
 
-        public void AddEffectToPlaybackSource(IAudioEffectDefinition definition, AudioGraphPlaybackSource playbackSource)
-        {
-            ThrowExceptionIfDisposed();
-            var node = _audioInputNodes[playbackSource];
-            node.EnableEffectsByDefinition(definition);
-        }
+            if (PrimaryPlaybackSource == source)
+                PrimaryPlaybackSource = null;
 
-        public void RemoveEffectFromPlaybackSource(IAudioEffectDefinition definition, AudioGraphPlaybackSource playbackSource)
-        {
-            ThrowExceptionIfDisposed();
-            var node = _audioInputNodes[playbackSource];
-            node.DisableEffectsByDefinition(definition);
+            node.RemoveOutgoingConnection(_outputNode);
+            node.RemoveOutgoingConnection(_frameOutputNode);
+            node.Dispose();
+
+            _audioInputNodes.TryRemove(source, out _);
+            _audioInputNodesReverseDictionary.TryRemove(node, out _);
         }
 
         public void RemoveAllPlaybackSource()
@@ -436,40 +459,88 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             _primaryPlaybackSource = null;
         }
 
-        protected virtual void Dispose(bool disposing)
+        public List<AudioGraphPlaybackSource> GetConnectedPlaybackSource()
         {
-            if (!disposedValue)
+            ThrowExceptionIfDisposed();
+            return _audioInputNodes.Keys.ToList();
+        }
+
+        public MediaSourceAudioInputNode GetAudioInputNode(AudioGraphPlaybackSource playbackSource)
+        {
+            ThrowExceptionIfDisposed();
+            return _audioInputNodes[playbackSource];
+        }
+        #endregion
+
+        #region Effect Management
+        public void AddEffectToPlaybackSource(IAudioEffectDefinition definition, AudioGraphPlaybackSource playbackSource)
+        {
+            ThrowExceptionIfDisposed();
+            var node = GetAudioInputNodeOrThrow(playbackSource);
+            node.EnableEffectsByDefinition(definition);
+        }
+
+        public void RemoveEffectFromPlaybackSource(IAudioEffectDefinition definition, AudioGraphPlaybackSource playbackSource)
+        {
+            ThrowExceptionIfDisposed();
+            var node = GetAudioInputNodeOrThrow(playbackSource);
+            node.DisableEffectsByDefinition(definition);
+        }
+        #endregion
+
+        #region Event Handlers
+        private void PositionTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            if (PrimaryPlaybackSource is null || GlobalPlaybackStatus is PlaybackStatus.Paused) return;
+
+            var source = PrimaryPlaybackSource as AudioGraphPlaybackSource;
+            if (!_audioInputNodes.TryGetValue(source, out var track)) return;
+
+            var position = track?.Position;
+            if (position == null || position == _lastPosition) return;
+
+            _lastPosition = position.Value;
+            OnPositionChanged?.Invoke(position.Value);
+
+            // 更新系统媒体传输控制
+            var positionProperties = new SystemMediaTransportControlsTimelineProperties
             {
-                if (disposing)
-                {
+                Position = position.Value,
+                StartTime = TimeSpan.Zero,
+                MinSeekTime = TimeSpan.Zero,
+                EndTime = track.EndTime ?? TimeSpan.Zero,
+                MaxSeekTime = track.EndTime ?? TimeSpan.Zero
+            };
+            SMTCManager?.OnPositionChange(positionProperties);
+        }
 
-                }
-
-                foreach (var item in _audioInputNodes.Values)
-                {
-                    item.RemoveOutgoingConnection(_outputNode);
-                    item.Dispose();
-                }
-                _defaultPlayer?.Dispose();
-                PositionTimer?.Stop();
-                PositionTimer?.Dispose();
-                disposedValue = true;
+        private void OnMediaSourceCompleted(MediaSourceAudioInputNode sender, object args)
+        {
+            if (_audioInputNodesReverseDictionary.TryGetValue(sender, out var playbackSource))
+            {
+                OnTrackReachesEnd?.Invoke(playbackSource);
             }
         }
+        #endregion
 
-        ~AudioGraphPlayer()
+        #region Helper Methods
+        private MediaSourceAudioInputNode GetAudioInputNodeOrThrow(IPlaybackSource playbackSource)
         {
-            Dispose(disposing: false);
+            var source = playbackSource as AudioGraphPlaybackSource;
+            if (source == null)
+                throw new ArgumentException("PlaybackSource is not AudioGraphPlaybackSource.");
+
+            if (!_audioInputNodes.TryGetValue(source, out var node))
+                throw new ArgumentException("PlaybackSource is not connected to the player.");
+
+            return node;
         }
 
-        public void Dispose()
+        private void ThrowExceptionIfDisposed()
         {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
+            if (_disposedValue)
+                throw new ObjectDisposedException(nameof(AudioGraphPlayer));
         }
-        public void ThrowExceptionIfDisposed()
-        {
-            if (disposedValue) throw new ObjectDisposedException(nameof(AudioGraphPlayer));
-        }
+        #endregion
     }
 }
