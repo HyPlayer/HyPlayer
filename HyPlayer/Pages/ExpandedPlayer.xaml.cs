@@ -1498,6 +1498,8 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 });
                 ImageAlbumSource = null;
                 LyricList.Clear();
+                albumColorVectors.Clear();
+                albumColors.Clear();
             }
 
             // Unsubscribe from all event handlers
@@ -1519,6 +1521,15 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
             {
                 LyricBox.OnBeforeRender -= LyricBox_OnBeforeRender;
                 LyricBox.OnLyricLineClicked -= LyricBoxOnOnRequestSeek;
+            }
+            
+            // Unsubscribe from LuminousBackground events
+            if (LuminousBackground != null)
+            {
+                LuminousBackground.SizeChanged -= LuminousBackground_SizeChanged;
+                LuminousBackground.CreateResources -= LuminousBackground_CreateResources;
+                LuminousBackground.Update -= LuminousBackground_Update;
+                LuminousBackground.Draw -= LuminousBackground_Draw;
             }
             
             // Cleanup expandedPlayerWindow
