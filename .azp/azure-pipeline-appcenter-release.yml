@@ -33,7 +33,7 @@ steps:
   - task: NuGetCommand@2
     inputs:
       command: 'restore'
-      restoreSolution: '$(solution)'
+      restoreSolution: '$(solutionx)'
       feedsToUse: 'config'
       nugetConfigPath: 'nuget.config'
 
@@ -88,7 +88,7 @@ steps:
   - task: VSBuild@1
     displayName: 'Build solution HyPlayer.sln'
     inputs:
-      solution: '$(solution)'
+      solution: '$(solutionx)'
       msbuildArgs: '/p:AppxBundlePlatforms="$(buildPlatform)" /p:AppxPackageDir="$(Build.ArtifactStagingDirectory)\AppxPackages\\" /p:AppxBundle=Always /p:PackageCertificateThumbprint=""  /p:UapAppxPackageBuildMode=SideloadOnly  /p:AppxPackageSigningEnabled=true  /p:PackageCertificateKeyFile="$(certificate.secureFilePath)" /p:PackageCertificatePassword="$(signingCert.password)"'
       platform: x64
       configuration: '$(buildConfiguration)'
