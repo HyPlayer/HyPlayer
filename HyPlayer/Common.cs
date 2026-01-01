@@ -2024,7 +2024,8 @@ namespace HyPlayer
 
         public static string ToHexStringLower(this byte[] value)
         {
-            var sb = new StringBuilder();
+            // Pre-allocate StringBuilder with exact size needed
+            var sb = new StringBuilder(value.Length * 2);
             foreach (var t in value) sb.Append(t.ToString("x2"));
 
             return sb.ToString();
@@ -2032,7 +2033,8 @@ namespace HyPlayer
 
         public static string ToHexStringUpper(this byte[] value)
         {
-            var sb = new StringBuilder();
+            // Pre-allocate StringBuilder with exact size needed
+            var sb = new StringBuilder(value.Length * 2);
             foreach (var t in value) sb.Append(t.ToString("X2"));
 
             return sb.ToString();
