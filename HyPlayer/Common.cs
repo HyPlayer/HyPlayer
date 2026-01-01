@@ -399,18 +399,21 @@ namespace HyPlayer
         {
             get
             {
-                // Double-checked locking for thread-safe lazy initialization
-                if (_cachedApiAdditionalParameters != null)
-                    return _cachedApiAdditionalParameters;
+                // Double-checked locking with local variable for thread safety
+                var cached = _cachedApiAdditionalParameters;
+                if (cached != null)
+                    return cached;
                 
                 lock (_apiParamsLock)
                 {
-                    if (_cachedApiAdditionalParameters != null)
-                        return _cachedApiAdditionalParameters;
+                    cached = _cachedApiAdditionalParameters;
+                    if (cached != null)
+                        return cached;
                         
-                    _cachedApiAdditionalParameters = JsonConvert.DeserializeObject<AdditionalParameters>(
+                    cached = JsonConvert.DeserializeObject<AdditionalParameters>(
                         GetSettings(nameof(ApiAdditionalParameters), "{}"), Common.SharedJsonSettings) ?? new AdditionalParameters();
-                    return _cachedApiAdditionalParameters;
+                    _cachedApiAdditionalParameters = cached;
+                    return cached;
                 }
             }
             set
@@ -1865,8 +1868,8 @@ namespace HyPlayer
 
             list.Remove(songid);
             list.Insert(0, songid);
-            if (list.Count >= 300)
-                list.RemoveRange(9, list.Count - 300);
+            if (list.Count > 300)
+                list.RemoveRange(300, list.Count - 300);
             ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonConvert.SerializeObject(list, Common.SharedJsonSettings);
         }
 
