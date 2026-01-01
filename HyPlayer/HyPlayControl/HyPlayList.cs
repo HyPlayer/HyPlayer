@@ -129,14 +129,16 @@ public static class HyPlayList
 
     public static string PlaySourceId;
 
+    
+    private static double _playerOutgoingVolume;
     public static double PlayerOutgoingVolume
     {
-        get;
+        get => _playerOutgoingVolume;
         set
         {
-            field = value;
+            _playerOutgoingVolume = value;
             Common.Setting.Volume = (int)(value * 100);
-            OnVolumeChange?.Invoke(field);
+            OnVolumeChange?.Invoke(_playerOutgoingVolume);
             Player.SetOutputVolume(value);
         }
     }
@@ -1440,6 +1442,7 @@ public static class HyPlayList
 
 
     static Timer highTimer = new Timer(10);
+    
 
     private static void LoadLyricChange()
     {
