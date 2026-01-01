@@ -1,21 +1,23 @@
-﻿using HyPlayer.LyricRenderer.Abstraction;
+using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.Animator.EaseFunctions;
 using Microsoft.Graphics.Canvas;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Animation;
+using Microsoft.Graphics.Canvas.UI;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
 namespace HyPlayer.LyricRenderer
 {
-    public sealed partial class LyricRenderView : UserControl
+    public sealed class LyricRenderView
     {
         public RenderContext Context { get; } = new();
 
@@ -61,15 +63,8 @@ namespace HyPlayer.LyricRenderer
         {
             get => _jumpedLyrics;
         }
-
-        public int Fps { get; set; } = 60;
-
-        public LyricRenderView()
-        {
-            InitializeComponent();
-            this.Loaded += LyricRenderView_Loaded;
-        }
-
+        
+        
         private bool _isTypographyChanged = true;
 
         public void ChangeRenderColor(Color idleColor, Color focusingColor, Color? shadowColor = null)
@@ -180,21 +175,7 @@ namespace HyPlayer.LyricRenderer
                 foreach (var renderingLyricLine in Context.LyricLines)
                 {
                     renderingLyricLine.OnRenderSizeChanged(session, Context);
-                    if (Context.PreferTypography?.Alignment is TextAlignment.Right)
-                    {
-                        Context.RenderOffsets[renderingLyricLine.Id].X =
-                            Context.ViewWidth - renderingLyricLine.RenderingWidth;
-                    }
-
-                    if (Context.PreferTypography?.Alignment is TextAlignment.Center)
-                    {
-                        Context.RenderOffsets[renderingLyricLine.Id].X =
-                            (Context.ViewWidth - renderingLyricLine.RenderingWidth) / 2;
-                    }
-                    if (Context.PreferTypography?.Alignment is TextAlignment.Left)
-                    {
-                        Context.RenderOffsets[renderingLyricLine.Id].X = 0;
-                    }
+                    Context.RenderOffsets[renderingLyricLine.Id].X = CalculateRenderX(renderingLyricLine);
                 }
             }
             catch
@@ -331,10 +312,9 @@ namespace HyPlayer.LyricRenderer
         }
 
 
-        private void LyricView_Draw(Microsoft.Graphics.Canvas.UI.Xaml.ICanvasAnimatedControl sender,
-            Microsoft.Graphics.Canvas.UI.Xaml.CanvasAnimatedDrawEventArgs args)
+        public void Draw(CanvasDrawingSession session, CanvasTimingInformation timing)
         {
-            Context.RenderTick = args.Timing.TotalTime.Ticks;
+            Context.RenderTick = timing.ElapsedTime.Ticks;
             if (_initializing || Context.ViewHeight == 0 || Context.ViewWidth == 0) return;
             OnBeforeRender?.Invoke(this);
             // 鼠标滚轮时间 5 s 清零
@@ -362,26 +342,8 @@ namespace HyPlayer.LyricRenderer
                 {
                     foreach (var renderingLyricLine in Context.LyricLines)
                     {
-                        renderingLyricLine.OnTypographyChanged(args.DrawingSession, Context);
-                        if ((renderingLyricLine.Typography?.Alignment ?? Context.PreferTypography?.Alignment) is
-                            TextAlignment.Right)
-                        {
-                            Context.RenderOffsets[renderingLyricLine.Id].X =
-                                Context.ViewWidth - renderingLyricLine.RenderingWidth;
-                        }
-
-                        if ((renderingLyricLine.Typography?.Alignment ?? Context.PreferTypography?.Alignment) is
-                            TextAlignment.Center)
-                        {
-                            Context.RenderOffsets[renderingLyricLine.Id].X =
-                                (Context.ViewWidth - renderingLyricLine.RenderingWidth) / 2;
-                        }
-
-                        if ((renderingLyricLine.Typography?.Alignment ?? Context.PreferTypography?.Alignment) is
-                            TextAlignment.Left)
-                        {
-                            Context.RenderOffsets[renderingLyricLine.Id].X = 0;
-                        }
+                        renderingLyricLine.OnTypographyChanged(session, Context);
+                        Context.RenderOffsets[renderingLyricLine.Id].X = CalculateRenderX(renderingLyricLine);
                     }
                 }
                 catch
@@ -410,7 +372,7 @@ namespace HyPlayer.LyricRenderer
                 var targets = key == 0 ? Context.LyricLines : _targetingKeyFrames[key];
                 foreach (var renderingLyricLine in targets)
                 {
-                    renderingLyricLine.OnKeyFrame(args.DrawingSession, Context);
+                    renderingLyricLine.OnKeyFrame(session, Context);
                 }
 
                 _needRecalculate = true;
@@ -419,35 +381,51 @@ namespace HyPlayer.LyricRenderer
             if (_needRecalculateSize)
             {
                 _needRecalculateSize = false;
-                RecalculateItemsSize(args.DrawingSession);
+                RecalculateItemsSize(session);
             }
 
             if (_needRecalculate)
             {
                 _needRecalculate = false;
-                RecalculateRenderOffset(args.DrawingSession);
+                RecalculateRenderOffset(session);
             }
 
             foreach (var renderingLyricLine in Context.RenderingLyricLines)
             {
                 if (Context.RenderOffsets.GetValueOrDefault(renderingLyricLine.Id) is { } offset)
                 {
-                    var doRender = renderingLyricLine.Render(args.DrawingSession, offset, Context);
+                    var doRender = renderingLyricLine.Render(session, offset, Context);
                     if (doRender == false) break;
                 }
             }
 
             if (Context.Debug)
             {
-                args.DrawingSession.DrawText($"绘制时间: {args.Timing.ElapsedTime}", 0, 0, Colors.Yellow);
-                args.DrawingSession.DrawText($"滚动偏移: {Context.ScrollingDelta}", 0, 15, Colors.Yellow);
-                args.DrawingSession.DrawText($"歌词时间: {Context.CurrentLyricTime}", 0, 30, Colors.Yellow);
-                args.DrawingSession.DrawText($"绘制行数: {Context.RenderingLyricLines.Count}", 0, 45, Colors.Yellow);
+                session.DrawText($"绘制时间: {timing.ElapsedTime}", 0, 0, Colors.Yellow);
+                session.DrawText($"滚动偏移: {Context.ScrollingDelta}", 0, 15, Colors.Yellow);
+                session.DrawText($"歌词时间: {Context.CurrentLyricTime}", 0, 30, Colors.Yellow);
+                session.DrawText($"绘制行数: {Context.RenderingLyricLines.Count}", 0, 45, Colors.Yellow);
                 // 绘制绘制边框
-                args.DrawingSession.DrawRectangle(0, 0, Context.ViewWidth, Context.ViewHeight, Colors.Red, 5);
+                session.DrawRectangle(0, 0, Context.ViewWidth, Context.ViewHeight, Colors.Red, 5);
             }
 
-            args.DrawingSession.Dispose();
+            session.Dispose();
+        }
+
+        private float CalculateRenderX(RenderingLyricLine renderingLyricLine)
+        {
+            switch ((renderingLyricLine.Typography?.Alignment ?? Context.PreferTypography?.Alignment))
+            {
+                case TextAlignment.Center:
+                    return Context.RenderOffsets[renderingLyricLine.Id].X =
+                        (Context.ViewWidth - renderingLyricLine.RenderingWidth) / 2;
+                    break;
+                case TextAlignment.Right:
+                    return Context.ViewWidth - renderingLyricLine.RenderingWidth;
+                    break;
+                default:
+                    return Context.RenderOffsets[renderingLyricLine.Id].X = 0;
+            }
         }
 
         public void Redesign(float width, float height)
@@ -457,17 +435,13 @@ namespace HyPlayer.LyricRenderer
             _needRecalculateSize = true;
             _needRecalculate = true;
         }
-
-        private void LyricView_OnSizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            Redesign((float)e.NewSize.Width, (float)e.NewSize.Height);
-        }
+        
 
         private long _lastWheelTime;
 
-        private void LyricView_OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
+        public void LyricView_OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
         {
-            var delta = e.GetCurrentPoint(this).Properties.MouseWheelDelta;
+            var delta = e.GetCurrentPoint((UIElement)sender).Properties.MouseWheelDelta;
             var min = -(long)Context.LyricLines
                 .Where(p => Context.LyricLines.IndexOf(p) >= Context.CurrentLyricLineIndex)
                 .Sum(p => p.RenderingHeight + Context.LineSpacing);
@@ -480,7 +454,7 @@ namespace HyPlayer.LyricRenderer
         }
 
 
-        private void LyricView_OnPointerMoved(object sender, PointerRoutedEventArgs e)
+        public void LyricView_OnPointerMoved(object sender, PointerRoutedEventArgs e)
         {
             // 指针事件
             // 获取在指针范围的行（二分法查找）
@@ -495,10 +469,10 @@ namespace HyPlayer.LyricRenderer
                 {
                     attemptCount += 1;
                     int renderOffsetsKey = (firstPosition + lastPosition) / 2;
-                    if (Context.RenderOffsets[renderOffsetsKey].Y <= e.GetCurrentPoint(this).Position.Y &&
+                    if (Context.RenderOffsets[renderOffsetsKey].Y <= e.GetCurrentPoint((UIElement)sender).Position.Y &&
                         Context.RenderOffsets[renderOffsetsKey].Y +
                         Context.LyricLines[renderOffsetsKey].RenderingHeight >=
-                        e.GetCurrentPoint(this).Position.Y)
+                        e.GetCurrentPoint((UIElement)sender).Position.Y)
                     {
                         if (Context.PointerFocusingIndex == renderOffsetsKey) return;
                         Context.LyricLines[renderOffsetsKey].GoToReactionState(ReactionState.Enter, Context);
@@ -507,10 +481,10 @@ namespace HyPlayer.LyricRenderer
                     }
                     else if (lastPosition - firstPosition == 1) //结束时刻前面是下取整，两个都不是那就是没移到上面
                     {
-                        if (Context.RenderOffsets[renderOffsetsKey + 1].Y <= e.GetCurrentPoint(this).Position.Y &&
+                        if (Context.RenderOffsets[renderOffsetsKey + 1].Y <= e.GetCurrentPoint((UIElement)sender).Position.Y &&
                             Context.RenderOffsets[renderOffsetsKey + 1].Y +
                             Context.LyricLines[renderOffsetsKey + 1].RenderingHeight >=
-                            e.GetCurrentPoint(this).Position.Y)
+                            e.GetCurrentPoint((UIElement)sender).Position.Y)
                         {
                             if (Context.PointerFocusingIndex == renderOffsetsKey + 1) return;
                             Context.LyricLines[renderOffsetsKey + 1].GoToReactionState(ReactionState.Enter, Context);
@@ -521,7 +495,7 @@ namespace HyPlayer.LyricRenderer
                     }
                     else
                     {
-                        if (Context.RenderOffsets[renderOffsetsKey].Y <= e.GetCurrentPoint(this).Position.Y)
+                        if (Context.RenderOffsets[renderOffsetsKey].Y <= e.GetCurrentPoint((UIElement)sender).Position.Y)
                         {
                             firstPosition = renderOffsetsKey;
                         }
@@ -539,7 +513,7 @@ namespace HyPlayer.LyricRenderer
             }
             else if (_pointerPressed == true && _lastPointerPressedYValue != null)
             {
-                var yValue = e.GetCurrentPoint(this).Position.Y;
+                var yValue = e.GetCurrentPoint((UIElement)sender).Position.Y;
                 var delta = (long)(yValue - _lastPointerPressedYValue);
                 if (Math.Abs(delta) > 20)
                 {
@@ -560,22 +534,11 @@ namespace HyPlayer.LyricRenderer
             }
             else if (_lastPointerPressedYValue == null)
             {
-                _lastPointerPressedYValue = e.GetCurrentPoint(this).Position.Y;
+                _lastPointerPressedYValue = e.GetCurrentPoint((UIElement)sender).Position.Y;
             }
         }
-        private void LyricRenderView_Loaded(object sender, RoutedEventArgs e)
-        {
-            Redesign((float)LyricView.Size.Width, (float)LyricView.Size.Height);
-            LyricView.TargetElapsedTime = TimeSpan.FromMilliseconds(16.6 * (60d / Fps));
-        }
-
-        private void LyricRenderView_OnUnloaded(object sender, RoutedEventArgs e)
-        {
-            LyricView.RemoveFromVisualTree();
-            LyricView = null;
-        }
-
-        private void LyricView_OnPointerExited(object sender, PointerRoutedEventArgs e)
+        
+        public void LyricView_OnPointerExited(object sender, PointerRoutedEventArgs e)
         {
             if (Context.PointerFocusingIndex != -1 && Context.LyricLines.Count > Context.PointerFocusingIndex)
                 Context.LyricLines[Context.PointerFocusingIndex].GoToReactionState(ReactionState.Leave, Context);
@@ -585,26 +548,26 @@ namespace HyPlayer.LyricRenderer
         }
 
 
-        private void LyricView_OnPointerPressed(object sender, PointerRoutedEventArgs e)
+        public void LyricView_OnPointerPressed(object sender, PointerRoutedEventArgs e)
         {
             _pointerPressed = true;
         }
 
-        private void LyricView_PointerReleased(object sender, PointerRoutedEventArgs e)
+        public void LyricView_PointerReleased(object sender, PointerRoutedEventArgs e)
         {
             _pointerPressed = false;
             _lastPointerPressedYValue = null;
         }
 
-        private void LyricView_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+        public void OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
             foreach (var renderOffsetsKey in Context.RenderOffsets.Keys)
             {
                 if (Context.LyricLines[renderOffsetsKey].Hidden)
                     continue;
-                if (Context.RenderOffsets[renderOffsetsKey].Y <= e.GetPosition(this).Y &&
+                if (Context.RenderOffsets[renderOffsetsKey].Y <= e.GetPosition((UIElement)sender).Y &&
                     Context.RenderOffsets[renderOffsetsKey].Y + Context.LyricLines[renderOffsetsKey].RenderingHeight >=
-                    e.GetPosition(this).Y)
+                    e.GetPosition((UIElement)sender).Y)
                 {
                     Context.LyricLines[renderOffsetsKey].GoToReactionState(ReactionState.Press, Context);
                     OnLyricLineClicked?.Invoke(Context.LyricLines[renderOffsetsKey]);
@@ -620,11 +583,6 @@ namespace HyPlayer.LyricRenderer
         private void LyricView_Tapped(object sender, TappedRoutedEventArgs e)
         {
             _jumpedLyrics = false;
-        }
-
-        public void PauseLyricRender(bool targetPauseMode)
-        {
-            LyricView.Paused = targetPauseMode;
         }
     }
 }

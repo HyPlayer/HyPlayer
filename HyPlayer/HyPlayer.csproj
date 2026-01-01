@@ -212,7 +212,7 @@
     <Compile Include="LyricRenderer\LyricLineRenderers\BreathPointRenderingLyricLine.cs" />
     <Compile Include="LyricRenderer\LyricLineRenderers\ProgressBarRenderingLyricLine.cs" />
     <Compile Include="LyricRenderer\LyricLineRenderers\SyllablesRenderingLyricLine.cs" />
-    <Compile Include="LyricRenderer\LyricRenderView.xaml.cs" />
+    <Compile Include="LyricRenderer\LyricRenderer.cs" />
     <Compile Include="LyricRenderer\RollingCalculators\CircleEaseRollingCalculator.cs" />
     <Compile Include="LyricRenderer\RollingCalculators\EaseRollingCalculator.cs" />
     <Compile Include="LyricRenderer\RollingCalculators\ElasticEaseRollingCalculator.cs" />
@@ -482,9 +482,6 @@
     </Page>
     <Page Include="Controls\SimpleLinerList.xaml" />
     <Page Include="Controls\SongListSelect.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="LyricRenderer\LyricRenderView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Content Include="Resources\Dark.xaml" />
