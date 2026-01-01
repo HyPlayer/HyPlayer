@@ -99,6 +99,7 @@ public static class HyPlayList
     public static LyricInfo LyricInfo = new();
     public static TimeSpan LyricOffset = TimeSpan.Zero;
     public static PropertySet AudioEffectsProperties = new PropertySet();
+    private static CancellationTokenSource _mediaSourceCancellationTokenSource = new();
 
     /********        API        ********/
     public static AudioGraphPlayer Player = Locator.Instance.GetService<AudioGraphPlayer>();
@@ -110,7 +111,7 @@ public static class HyPlayList
     private static Dictionary<DownloadOperation, HyPlayItem> DownloadOperationsReverseDirectory = new();
     public static InMemoryRandomAccessStream CoverStream = new InMemoryRandomAccessStream();
     public static IBuffer CoverBuffer;
-
+    
     public static RandomAccessStreamReference CoverStreamReference =
         RandomAccessStreamReference.CreateFromStream(CoverStream);
 
@@ -127,16 +128,15 @@ public static class HyPlayList
     public static int LyricPos;
 
     public static string PlaySourceId;
-    private static double _playerOutgoingVolume;
 
     public static double PlayerOutgoingVolume
     {
-        get => _playerOutgoingVolume;
+        get;
         set
         {
-            _playerOutgoingVolume = value;
+            field = value;
             Common.Setting.Volume = (int)(value * 100);
-            OnVolumeChange?.Invoke(_playerOutgoingVolume);
+            OnVolumeChange?.Invoke(field);
             Player.SetOutputVolume(value);
         }
     }
@@ -163,8 +163,7 @@ public static class HyPlayList
     {
         get
         {
-            var source = Player.PrimaryPlaybackSource as AudioGraphPlaybackSource;
-            if (source != null && source.PlaybackSource.IsOpen)
+            if (Player.PrimaryPlaybackSource is AudioGraphPlaybackSource source && source.PlaybackSource.IsOpen)
             {
                 return source.PlaybackSource.CustomProperties["nowPlayingItem"] as HyPlayItem;
             }
@@ -418,11 +417,13 @@ public static class HyPlayList
     }
 
 
-    private static async Task LoadLocalFile(HyPlayItem targetItem)
+    private static async Task LoadLocalFile(HyPlayItem targetItem, CancellationToken ctk)
     {
         // 使用 Polly 重试策略优化本地文件加载
         await RetryPolicies.LocalFileLoadPolicy.ExecuteAsync(async () =>
         {
+            ctk.ThrowIfCancellationRequested();
+            
             // 此处可以改进
             if (targetItem.PlayItem.DontSetLocalStorageFile.FileType == ".ncm")
                 throw new ArgumentException("不支持的文件类型");
@@ -436,7 +437,7 @@ public static class HyPlayList
                 else
                 {
                     NowPlayingStorageFile = targetItem.PlayItem.DontSetLocalStorageFile;
-                    var item = await LoadStorageFile(targetItem.PlayItem.DontSetLocalStorageFile);
+                    var item = await LoadStorageFile(targetItem.PlayItem.DontSetLocalStorageFile, ctk);
                     targetItem.ItemType = HyPlayItemType.Local;
                     targetItem.PlayItem = item.PlayItem;
                     targetItem.PlayItem.DontSetLocalStorageFile = NowPlayingStorageFile;
@@ -449,11 +450,13 @@ public static class HyPlayList
         });
     }
 
-    public async static Task LoadNCMFile(HyPlayItem targetItem)
+    public async static Task LoadNCMFile(HyPlayItem targetItem, CancellationToken ctk)
     {
         // 使用 Polly 重试策略优化 NCM 文件解析
         await RetryPolicies.NcmFileLoadPolicy.ExecuteAsync(async () =>
         {
+            ctk.ThrowIfCancellationRequested();
+            
             // 脑残Music解析
             using var stream = await targetItem.PlayItem.DontSetLocalStorageFile.OpenStreamForReadAsync();
             if (!NCMFile.IsCorrectNCMFile(stream))
@@ -714,7 +717,7 @@ public static class HyPlayList
         return gainValue;
     }
 
-    private static async Task<(string, long)> GetNowPlayingUrl(HyPlayItem targetItem)
+    private static async Task<(string, long)> GetNowPlayingUrl(HyPlayItem targetItem, CancellationToken ctk)
     {
         var playUrl = targetItem.PlayItem.Url;
         var size = targetItem.PlayItem.Size;
@@ -731,6 +734,8 @@ public static class HyPlayList
                     string.Format(SONG_URL_CACHE_KEY_FORMAT, targetItem.PlayItem.Id, Common.Setting.audioRate),
                     async () =>
                     {
+                        ctk.ThrowIfCancellationRequested();
+                        
                         var songRequest = new SongUrlRequest
                         {
                             Level = Common.Setting.audioRate,
@@ -747,7 +752,8 @@ public static class HyPlayList
 
                         return songRes.Value;
                     },
-                    TimeSpan.FromMinutes(SONG_URL_CACHE_MINUTES));
+                    TimeSpan.FromMinutes(SONG_URL_CACHE_MINUTES),
+                    cancellationToken: ctk);
 
                 if (result == null)
                 {
@@ -879,20 +885,25 @@ public static class HyPlayList
 
     public static async Task LoadMediaSource(HyPlayItem targetItem, bool setAsPrimary = false, bool autoPlay = true)
     {
-        var overdue = !await _loaderSemaphoreSlim.WaitAsync(0);
+        _mediaSourceCancellationTokenSource.Cancel();
+        _mediaSourceCancellationTokenSource = new CancellationTokenSource();
+        var ctk = _mediaSourceCancellationTokenSource.Token;
+        var overdue = !await _loaderSemaphoreSlim.WaitAsync(-1, ctk);
         if (overdue) return;
+        
 
         try
         {
             // 使用 Polly 重试策略优化核心逻辑
             await RetryPolicies.MediaSourceLoadPolicy.ExecuteAsync(async () =>
             {
+                if (ctk.IsCancellationRequested) return;
                 if (targetItem.PlayItem?.Name == null)
                 {
                     MoveSongPointer();
                     return;
                 }
-
+                
                 if (CoverStream.Size != 0)
                 {
                     CoverStream.Size = 0;
@@ -911,8 +922,8 @@ public static class HyPlayList
                     }
                 }
 
-                var mediaSource = await CreateMediaSourceAsync(targetItem);
-                
+                var mediaSource = await CreateMediaSourceAsync(targetItem, ctk);
+                ctk.ThrowIfCancellationRequested();
                 mediaSource?.CustomProperties.Add("nowPlayingItem", targetItem);
                 MediaSystemControls.IsEnabled = true;
                 
@@ -943,63 +954,63 @@ public static class HyPlayList
         }
     }
 
-    private static async Task<MediaSource> CreateMediaSourceAsync(HyPlayItem targetItem)
+    private static async Task<MediaSource> CreateMediaSourceAsync(HyPlayItem targetItem, CancellationToken ctk)
     {
         return targetItem.ItemType switch
         {
-            HyPlayItemType.Netease or HyPlayItemType.Radio => await CreateNeteaseMediaSourceAsync(targetItem),
-            HyPlayItemType.Local or HyPlayItemType.LocalProgressive => await CreateLocalMediaSourceAsync(targetItem),
+            HyPlayItemType.Netease or HyPlayItemType.Radio => await CreateNeteaseMediaSourceAsync(targetItem, ctk),
+            HyPlayItemType.Local or HyPlayItemType.LocalProgressive => await CreateLocalMediaSourceAsync(targetItem, ctk),
             _ => throw new NotSupportedException($"Unsupported item type: {targetItem.ItemType}")
         };
     }
 
-    private static async Task<MediaSource> CreateNeteaseMediaSourceAsync(HyPlayItem targetItem)
+    private static async Task<MediaSource> CreateNeteaseMediaSourceAsync(HyPlayItem targetItem, CancellationToken ctk)
     {
         if (targetItem.PlayItem.IsLocalFile)
         {
-            return await CreateLocalFileMediaSourceAsync(targetItem);
+            return await CreateLocalFileMediaSourceAsync(targetItem, ctk);
         }
 
         if (Common.Setting.enableCache)
         {
-            return await CreateCachedMediaSourceAsync(targetItem);
+            return await CreateCachedMediaSourceAsync(targetItem, ctk);
         }
 
-        var playUrl = await GetNowPlayingUrlWithRetry(targetItem);
+        var playUrl = await GetNowPlayingUrlWithRetry(targetItem, ctk);
         return MediaSource.CreateFromUri(new Uri(playUrl.Item1));
     }
 
-    private static async Task<MediaSource> CreateLocalFileMediaSourceAsync(HyPlayItem targetItem)
+    private static async Task<MediaSource> CreateLocalFileMediaSourceAsync(HyPlayItem targetItem, CancellationToken ctk)
     {
         if (targetItem.PlayItem.DontSetLocalStorageFile.FileType == ".ncm")
         {
-            await LoadNCMFile(targetItem);
+            await LoadNCMFile(targetItem, ctk);
             return MediaSource.CreateFromStream(targetItem.PlayItem.NcmPlayableStream, targetItem.PlayItem.NcmPlayableStreamMIMEType);
         }
         else
         {
-            await LoadLocalFile(targetItem);
+            await LoadLocalFile(targetItem, ctk);
             return MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
         }
     }
 
-    private static async Task<MediaSource> CreateCachedMediaSourceAsync(HyPlayItem targetItem)
+    private static async Task<MediaSource> CreateCachedMediaSourceAsync(HyPlayItem targetItem, CancellationToken ctk = default)
     {
-        var playUrlRes = await GetNowPlayingUrlWithRetry(targetItem);
+        var playUrlRes = await GetNowPlayingUrlWithRetry(targetItem, ctk);
 
-        var cacheFile = await GetCacheFileAsync(targetItem);
+        var cacheFile = await GetCacheFileAsync(targetItem, ctk);
         if (cacheFile != null)
         {
             return MediaSource.CreateFromStorageFile(cacheFile);
         }
         
         // 缓存文件无效，重新下载
-        var rst = await RetryPolicies.FastFailPolicy.ExecuteAndCaptureAsync(async () => await DownloadAndCreateMediaSourceAsync(targetItem, playUrlRes.Item1, playUrlRes.Item2));
+        var rst = await RetryPolicies.FastFailPolicy.ExecuteAndCaptureAsync(async () => await DownloadAndCreateMediaSourceAsync(targetItem, playUrlRes.Item1, playUrlRes.Item2, ctk));
         return rst.Result;
 
     }
 
-    private static async Task<StorageFile> GetCacheFileAsync(HyPlayItem targetItem)
+    private static async Task<StorageFile> GetCacheFileAsync(HyPlayItem targetItem, CancellationToken ctk = default)
     {
         try
         {
@@ -1024,7 +1035,7 @@ public static class HyPlayList
         }
     }
 
-    private static async Task<MediaSource> DownloadAndCreateMediaSourceAsync(HyPlayItem targetItem, string playUrl, long size)
+    private static async Task<MediaSource> DownloadAndCreateMediaSourceAsync(HyPlayItem targetItem, string playUrl, long size, CancellationToken ctk)
     {
         if (string.IsNullOrEmpty(playUrl))
             throw new Exception("Play URL is null");
@@ -1037,18 +1048,18 @@ public static class HyPlayList
 
         var destinationFolder = await StorageFolder.GetFolderFromPathAsync(Common.Setting.cacheDir);
         var fileName = string.Format(CACHE_FILE_NAME_FORMAT, targetItem.PlayItem.Id, targetItem.PlayItem?.SubExt);
-        var destinationFile = await destinationFolder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
+        var destinationFile = await destinationFolder.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
         var operation = Downloader.CreateDownload(new Uri(playUrl), destinationFile);
         //operation.IsRandomAccessRequired = true;
         DownloadOperations[targetItem] = operation;
         DownloadOperationsReverseDirectory[operation] = targetItem;
-        await operation.StartAsync();
-        _ = operation.AttachAsync().AsTask(DefaultProgressCallback);
+        await operation.StartAsync().AsTask(ctk);
+        _ = operation.AttachAsync().AsTask(ctk, DefaultProgressCallback);
         var mediaSource = MediaSource.CreateFromDownloadOperation(operation);
         return mediaSource;
     }
 
-    private static async Task<MediaSource> CreateLocalMediaSourceAsync(HyPlayItem targetItem)
+    private static async Task<MediaSource> CreateLocalMediaSourceAsync(HyPlayItem targetItem, CancellationToken ctk)
     {
         if (targetItem.PlayItem.DontSetLocalStorageFile == null && targetItem.PlayItem.Url != null)
         {
@@ -1058,20 +1069,20 @@ public static class HyPlayList
 
         if (targetItem.PlayItem.DontSetLocalStorageFile.FileType == ".ncm")
         {
-            await LoadNCMFile(targetItem);
+            await LoadNCMFile(targetItem, ctk);
             return MediaSource.CreateFromStream(targetItem.PlayItem.NcmPlayableStream, targetItem.PlayItem.NcmPlayableStreamMIMEType);
         }
         else
         {
-            await LoadLocalFile(targetItem);
+            await LoadLocalFile(targetItem, ctk);
             return MediaSource.CreateFromStorageFile(NowPlayingStorageFile);
         }
     }
 
-    private static async Task<(string, long)> GetNowPlayingUrlWithRetry(HyPlayItem targetItem)
+    private static async Task<(string, long)> GetNowPlayingUrlWithRetry(HyPlayItem targetItem, CancellationToken ctk)
     {
         return await RetryPolicies.UrlFetchPolicy.ExecuteAsync(async () =>
-            await GetNowPlayingUrl(targetItem));
+            await GetNowPlayingUrl(targetItem, ctk));
     }
 
     private static void UpdatePlayItemDuration(HyPlayItem targetItem, MediaSource mediaSource)
@@ -1475,9 +1486,9 @@ public static class HyPlayList
         else if (status == PlaybackStatus.Paused)
             OnPause?.Invoke();
     }
-    private static async Task LoadLyrics(HyPlayItem hpi)
+    private static async Task LoadLyrics(HyPlayItem hpi, CancellationToken ctk = default)
     {
-        var cache = await SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricInfo, hpi.PlayItem.Id, () => Task.FromResult<LyricInfo>(null));
+        var cache = await SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricInfo, hpi.PlayItem.Id, () => Task.FromResult<LyricInfo>(null), cancellationToken: ctk);
         if (cache is not null)
         {
             LyricInfo = cache;
@@ -1490,7 +1501,7 @@ public static class HyPlayList
         switch (hpi.ItemType)
         {
             case HyPlayItemType.Netease:
-                pureLyricInfo = await LoadNcLyric(hpi);
+                pureLyricInfo = await LoadNcLyric(hpi, ctk);
                 break;
             case HyPlayItemType.Local:
                 try
@@ -1554,7 +1565,7 @@ public static class HyPlayList
         OnLyricChange?.Invoke();
         if (hpi.ItemType == HyPlayItemType.Netease)
         {
-            _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricInfo, hpi.PlayItem.Id, () => Task.FromResult(LyricInfo));
+            _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricInfo, hpi.PlayItem.Id, () => Task.FromResult(LyricInfo), cancellationToken: CancellationToken.None);
         }
 
         try
@@ -1603,7 +1614,7 @@ public static class HyPlayList
 
                 OnLyricLoaded?.Invoke();
                 OnLyricChange?.Invoke();
-                _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricInfo, hpi.PlayItem.Id, () => Task.FromResult(LyricInfo));
+                _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricInfo, hpi.PlayItem.Id, () => Task.FromResult(LyricInfo), cancellationToken: CancellationToken.None);
             }
         }
         catch
@@ -1613,7 +1624,7 @@ public static class HyPlayList
     }
 
 
-    private static async Task<PureLyricInfo> LoadNcLyric(HyPlayItem ncp)
+    private static async Task<PureLyricInfo> LoadNcLyric(HyPlayItem ncp, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -1639,7 +1650,7 @@ public static class HyPlayList
                         }
 
                         return resp.Value;
-                    });
+                    }, cancellationToken: cancellationToken);
                 string lrc, romaji, karaoklrc, translrc, yrromaji, yrtranslrc;
                 if (lyricResult is null)
                 {
@@ -1954,7 +1965,7 @@ public static class HyPlayList
                 }
 
                 return j1.Value?.Songs;
-            });
+            }, cancellationToken: CancellationToken.None);
 
             AppendNcSongs(rst.Select(t => t.MapNcSong()).ToList(), false);
             return true;
@@ -1985,7 +1996,7 @@ public static class HyPlayList
                 }
 
                 return json.Value;
-            });
+            }, cancellationToken: CancellationToken.None);
 
 
             if (rst is null)
@@ -2069,7 +2080,7 @@ public static class HyPlayList
                 }
 
                 return detailResponse.Value;
-            });
+            }, cancellationToken: CancellationToken.None);
 
 
             var nowIndex = 0;
@@ -2091,7 +2102,7 @@ public static class HyPlayList
                         }
 
                         return songResponse.Value;
-                    });
+                    }, cancellationToken: CancellationToken.None);
 
                     var songs = songDetailResp.Songs;
                     var privileges = songDetailResp.Privileges;
@@ -2129,12 +2140,14 @@ public static class HyPlayList
 
     public static async Task<bool> AppendStorageFile(StorageFile sf, bool nocheck163 = false)
     {
-        List.Add(await LoadStorageFile(sf));
+        List.Add(await LoadStorageFile(sf, CancellationToken.None));
         return true;
     }
 
-    public static async Task<HyPlayItem> LoadStorageFile(StorageFile sf, bool nocheck163 = false)
+    public static async Task<HyPlayItem> LoadStorageFile(StorageFile sf, CancellationToken ctk = default, bool nocheck163 = false)
     {
+        ctk.ThrowIfCancellationRequested();
+        
         var abstraction = new UwpStorageFileAbstraction(sf);
         var tagFile = File.Create(abstraction);
         if (nocheck163 ||
@@ -2180,7 +2193,7 @@ public static class HyPlayList
             return hyPlayItem;
         }
 
-        if (string.IsNullOrEmpty(mi.musicName)) return await LoadStorageFile(sf, true);
+        if (string.IsNullOrEmpty(mi.musicName)) return await LoadStorageFile(sf, CancellationToken.None, true);
 
         var hpi = new PlayItem
         {
