@@ -42,9 +42,10 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
+using HyPlayer.UWP.Chopin.Utils;
+using Microsoft.Graphics.Canvas;
 using ALRCLyricInfo = HyPlayer.Classes.ALRCLyricInfo;
 using Buffer = Windows.Storage.Streams.Buffer;
-using Color = System.Drawing.Color;
 using LrcConverter = HyPlayer.Classes.LrcConverter;
 
 #endregion
@@ -1089,17 +1090,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
         }
         return finalResult;
     }
-
-    public static Color GetPixel(byte[] pixels, int x, int y, uint width, uint height)
-    {
-        var i = x;
-        var j = y;
-        var k = (i * (int)width + j) * 3;
-        var r = pixels[k + 0];
-        var g = pixels[k + 1];
-        var b = pixels[k + 2];
-        return Color.FromArgb(0, r, g, b);
-    }
+    
 
     private void LyricOffsetAdd_Click(object sender, RoutedEventArgs e)
     {
@@ -1667,13 +1658,31 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
 
     private void LuminousBackground_Draw(Microsoft.Graphics.Canvas.UI.Xaml.ICanvasAnimatedControl sender, Microsoft.Graphics.Canvas.UI.Xaml.CanvasAnimatedDrawEventArgs args)
     {
-        using (var session = args.DrawingSession)
+        using var session = args.DrawingSession;
+        if (_shaderEffect == null) return;
+        session.DrawImage(_shaderEffect);
+        DrawAudioFFTGraph(sender, session);
+        if (!HyPlayList.IsPlaying || !_backgroundIsReady) sender.Paused = true;
+    }
+    
+    
+    private void DrawAudioFFTGraph(Microsoft.Graphics.Canvas.UI.Xaml.ICanvasAnimatedControl sender, CanvasDrawingSession session)
+    {
+        var fftTrans = HyPlayList.Player.FFTProcessor;
+        float width = (float)sender.Size.Width;
+        float height = (float)sender.Size.Height;
+        float barWidth = width / FFTProcessor.DisplayBandCount;
+        float scaleFactor = height / 80.0f; // 根据分贝值调整高度缩放
+        for (int i = 0; i < FFTProcessor.DisplayBandCount; i++)
         {
-            if (_shaderEffect != null)
-            {
-                session.DrawImage(_shaderEffect);
-                if (!HyPlayList.IsPlaying || !_backgroundIsReady) sender.Paused = true;
-            }
+            float barHeight = Math.Clamp(fftTrans.DisplayData[i] * scaleFactor, 0, height - 1);
+            // 使用渐变色会更好看，这里为了性能演示用纯色
+            session.FillRectangle(
+                i * barWidth,
+                height - barHeight,
+                barWidth - 1, // -1 留出间隔
+                barHeight,
+                Colors.DeepSkyBlue);
         }
     }
 
