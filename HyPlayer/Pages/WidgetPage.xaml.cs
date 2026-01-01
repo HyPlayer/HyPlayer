@@ -99,13 +99,11 @@ public sealed partial class WidgetPage : Page, IDisposable
 
     private void Widget_CloseRequested(XboxGameBarWidget sender, XboxGameBarWidgetCloseRequestedEventArgs args)
     {
-        CleanupResources();
+        Dispose();
     }
     
     private void CleanupResources()
     {
-        if (disposedValue) return; // Prevent multiple cleanup calls
-        
         HyPlayList.OnLyricLoaded -= OnPlaylistLyricLoaded;
 
         if (_widget != null)
@@ -326,8 +324,13 @@ public sealed partial class WidgetPage : Page, IDisposable
     {
         if (!disposedValue)
         {
-            // Perform cleanup
-            CleanupResources();
+            if (disposing)
+            {
+                // Dispose managed resources
+                CleanupResources();
+            }
+            
+            // Free unmanaged resources (if any)
             
             disposedValue = true;
         }
