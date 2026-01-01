@@ -38,7 +38,7 @@ using Windows.UI.Xaml.Media.Animation;
 
 namespace HyPlayer.Controls;
 
-public sealed partial class PlayBar
+public sealed partial class PlayBar : IDisposable
 {
     private SolidColorBrush BackgroundElayBrush = new(Colors.Transparent);
     private bool _isSliding = false;
@@ -49,6 +49,7 @@ public sealed partial class PlayBar
     private ManipulationStartedRoutedEventArgs? _slidingEventArgs = null;
 #nullable restore
     private bool realSelectSong;
+    private bool disposedValue;
 
     /*
 private Storyboard TbSongNameScrollStoryBoard;
@@ -950,4 +951,41 @@ DoubleAnimation verticalAnimation;
         HyPlayList.SongAppendDone();
         HyPlayList.NowPlaying = HyPlayList.List.Count - HyPlayList.NowPlaying - 1;
     }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            if (disposing)
+            {
+                PlayItems.Clear();
+            }
+
+            // Unsubscribe from all event handlers
+            HyPlayList.Player.OnGlobalPlaybackStatusChanged -= Player_OnGlobalPlaybackStatusChanged;
+            HyPlayList.OnPlayItemChange -= LoadPlayingFile;
+            HyPlayList.OnPlayPositionChange -= OnPlayPositionChange;
+            HyPlayList.OnPlayListAddDone -= RefreshSongList;
+            HyPlayList.OnSongRemoveAll -= HyPlayListOnOnSongRemoveAll;
+            HyPlayList.OnLoginDone -= HyPlayListOnOnLoginDone;
+            HyPlayList.OnSongLikeStatusChange -= HyPlayList_OnSongLikeStatusChange;
+            HyPlayList.OnSongCoverChanged -= RefreshPlayBarCover;
+            Common.OnEnterForegroundFromBackground -= OnEnteringForeground;
+
+            // Stop animations
+            if (PlayBarBackgroundAni != null)
+            {
+                PlayBarBackgroundAni.Stop();
+            }
+
+            disposedValue = true;
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+}
 }

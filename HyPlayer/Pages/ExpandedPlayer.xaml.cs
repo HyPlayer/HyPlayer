@@ -1500,23 +1500,51 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 LyricList.Clear();
             }
 
+            // Unsubscribe from all event handlers
             HyPlayList.OnPause -= HyPlayList_OnPause;
             HyPlayList.OnPlay -= HyPlayList_OnPlay;
             HyPlayList.OnPlayItemChange -= OnSongChange;
             HyPlayList.OnLyricLoaded -= HyPlayList_OnLyricLoaded;
+            HyPlayList.OnManualSeek -= HyPlayList_OnManualSeek;
             HyPlayList.OnTimerTicked -= HyPlayList_OnTimerTicked;
-            Common.OnEnterForegroundFromBackground -= OnEnteringForeground;
             HyPlayList.OnSongCoverChanged -= RefreshAlbumCover;
+            Common.OnEnterForegroundFromBackground -= OnEnteringForeground;
             Common.OnPlaybarVisibilityChanged -= OnPlaybarVisibilityChanged;
-            //HyPlayList.Player.PlaybackSession.SeekCompleted -= Player_SeekCompleted;
+            
             if (Window.Current != null)
                 Window.Current.SizeChanged -= Current_SizeChanged;
+            
+            // Unsubscribe from LyricBox events
+            if (LyricBox != null)
+            {
+                LyricBox.OnBeforeRender -= LyricBox_OnBeforeRender;
+                LyricBox.OnLyricLineClicked -= LyricBoxOnOnRequestSeek;
+            }
+            
+            // Cleanup expandedPlayerWindow
+            if (expandedPlayerWindow != null)
+            {
+                expandedPlayerWindow.Closed -= ExpandedPlayerClosed;
+            }
+            
+            // Stop all storyboards
             if (Common.Setting.albumRotate)
                 RotateAnimationSet.Stop();
             if (Common.Setting.expandAlbumBreath)
             {
                 ImageAlbumAni?.Stop();
             }
+            if (bpmAniStoryboard != null)
+            {
+                bpmAniStoryboard.Stop();
+                bpmAniStoryboard.Children.Clear();
+            }
+            if (luminousColorsRotateStoryBoard != null)
+            {
+                luminousColorsRotateStoryBoard.Stop();
+                luminousColorsRotateStoryBoard.Children.Clear();
+            }
+            
             _shaderEffect = null;
 
             disposedValue = true;
