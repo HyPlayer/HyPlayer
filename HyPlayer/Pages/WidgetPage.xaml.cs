@@ -19,10 +19,11 @@ using Windows.UI.Xaml.Navigation;
 
 namespace HyPlayer.Pages;
 
-public sealed partial class WidgetPage : Page
+public sealed partial class WidgetPage : Page, IDisposable
 {
     private XboxGameBarWidget _widget;
     private XboxGameBarHotkeyWatcher _hotkeyWatcher;
+    private bool disposedValue;
 
 
     public WidgetPage()
@@ -98,14 +99,28 @@ public sealed partial class WidgetPage : Page
 
     private void Widget_CloseRequested(XboxGameBarWidget sender, XboxGameBarWidgetCloseRequestedEventArgs args)
     {
+        CleanupResources();
+    }
+    
+    private void CleanupResources()
+    {
+        if (disposedValue) return; // Prevent multiple cleanup calls
+        
         HyPlayList.OnLyricLoaded -= OnPlaylistLyricLoaded;
 
-        _widget.WindowBoundsChanged -= OnResized;
-        _widget.RequestedThemeChanged -= RequestedThemeChanged;
-        _widget.CloseRequested -= Widget_CloseRequested;
-        _widget.SettingsClicked -= OnSettingsChecked;
-        _hotkeyWatcher.HotkeySetStateChanged -= OnHotkeySetStateChanged;
-        _hotkeyWatcher.Stop();
+        if (_widget != null)
+        {
+            _widget.WindowBoundsChanged -= OnResized;
+            _widget.RequestedThemeChanged -= RequestedThemeChanged;
+            _widget.CloseRequested -= Widget_CloseRequested;
+            _widget.SettingsClicked -= OnSettingsChecked;
+        }
+        
+        if (_hotkeyWatcher != null)
+        {
+            _hotkeyWatcher.HotkeySetStateChanged -= OnHotkeySetStateChanged;
+            _hotkeyWatcher.Stop();
+        }
 
         HyPlayList.OnPlayItemChange -= HyPlayList_OnPlayItemChange;
         HyPlayList.OnPlayPositionChange -= HyPlayList_OnPlayPositionChange;
@@ -120,10 +135,14 @@ public sealed partial class WidgetPage : Page
         {
             PointerEntered -= WidgetPage_PointerEntered;
             PointerExited -= WidgetPage_PointerExited;
-            ChangePlayStateButton.Click -= ChangePlayStateButton_Click;
-            MoveNextButton.Click -= MoveNextButton_Click;
-            MovePreviousButton.Click -= MovePreviousButton_Click;
-            FindLyricButton.Click -= FindLyricButton_Click;
+            if (ChangePlayStateButton != null)
+                ChangePlayStateButton.Click -= ChangePlayStateButton_Click;
+            if (MoveNextButton != null)
+                MoveNextButton.Click -= MoveNextButton_Click;
+            if (MovePreviousButton != null)
+                MovePreviousButton.Click -= MovePreviousButton_Click;
+            if (FindLyricButton != null)
+                FindLyricButton.Click -= FindLyricButton_Click;
         });
     }
 
@@ -301,6 +320,23 @@ public sealed partial class WidgetPage : Page
     private void CloseButton_Click(object sender, RoutedEventArgs e)
     {
         _widget.Close();
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposedValue)
+        {
+            // Perform cleanup
+            CleanupResources();
+            
+            disposedValue = true;
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 
 }
