@@ -101,11 +101,21 @@ public sealed partial class WidgetPage : Page
         HyPlayList.OnLyricLoaded -= OnPlaylistLyricLoaded;
 
         _widget.WindowBoundsChanged -= OnResized;
+        _widget.RequestedThemeChanged -= RequestedThemeChanged;
+        _widget.CloseRequested -= Widget_CloseRequested;
+        _widget.SettingsClicked -= OnSettingsChecked;
         _hotkeyWatcher.HotkeySetStateChanged -= OnHotkeySetStateChanged;
         _hotkeyWatcher.Stop();
 
         HyPlayList.OnPlayItemChange -= HyPlayList_OnPlayItemChange;
         HyPlayList.OnPlayPositionChange -= HyPlayList_OnPlayPositionChange;
+        
+        if (LyricView != null)
+        {
+            LyricView.OnBeforeRender -= LyricView_OnBeforeRender;
+            LyricView.OnLyricLineClicked -= LyricView_OnRequestSeek;
+        }
+        
         _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
         {
             PointerEntered -= WidgetPage_PointerEntered;
@@ -113,6 +123,7 @@ public sealed partial class WidgetPage : Page
             ChangePlayStateButton.Click -= ChangePlayStateButton_Click;
             MoveNextButton.Click -= MoveNextButton_Click;
             MovePreviousButton.Click -= MovePreviousButton_Click;
+            FindLyricButton.Click -= FindLyricButton_Click;
         });
     }
 
