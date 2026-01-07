@@ -159,6 +159,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 
 
                 oldPlayer.Stop();
+                oldPlayer.QuantumProcessed -= GraphOnQuantumProcessed;
 
                 // 创建新的输出节点
                 var deviceNodeCreateResult = await newPlayer.CreateDeviceOutputNodeAsync();
@@ -167,7 +168,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 var newOutputNode = deviceNodeCreateResult.DeviceOutputNode;
                 newOutputNode.OutgoingGain = oldOutputNode.OutgoingGain;
                 
-                var frameOutputResult = newPlayer.CreateFrameOutputNode();
+                var frameOutputResult = newPlayer.CreateFrameOutputNode(_frameEncodingProperties);
                 _frameOutputNode = frameOutputResult;
 
                 // 转移所有播放源
@@ -201,6 +202,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                     newNode.PlaybackSpeedFactor = factor;
                     newNode.OutgoingGain = gain;
                     newNode.AddOutgoingConnection(newOutputNode);
+                    newNode.AddOutgoingConnection(_frameOutputNode);
 
                     // 应用效果
                     foreach (var effect in effects)
@@ -460,6 +462,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             {
                 source.Value.MediaSourceCompleted -= OnMediaSourceCompleted;
                 source.Value.RemoveOutgoingConnection(_outputNode);
+                source.Value.RemoveOutgoingConnection(_frameOutputNode);
                 source.Value.Dispose();
             }
             _audioInputNodes.Clear();
