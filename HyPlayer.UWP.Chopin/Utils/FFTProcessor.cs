@@ -11,9 +11,10 @@ namespace HyPlayer.UWP.Chopin.Utils
     public class FFTProcessor
     {
         
-        public const int FftSize = 2048;           // FFT 窗口大小，必须是2的幂
-        public const int DisplayBandCount = 256;    // 最终显示的柱子数量
-        public const float SmoothingFactor = 0.8f; // 平滑系数 (0-1)，越高越平滑
+        public const int FftSize = 512;           // FFT 窗口大小，必须是2的幂
+        public int CurrentFftSize = FftSize;
+        public const int DisplayBandCount = 80;    // 最终显示的柱子数量
+        public const float SmoothingFactor = 0.85f; // 平滑系数 (0-1)，越高越平滑
         
         
         // --- 数据缓冲区 (全部预分配，避免GC) ---
@@ -47,28 +48,27 @@ namespace HyPlayer.UWP.Chopin.Utils
 
                 // 核心修正：根据实际拿到的内存大小决定处理多少数据
                 int totalSamples = (int)(capacity / sizeof(float));
-                int channels = 2; // 假设是立体声
-                int availablePairs = totalSamples / channels;
 
                 // 取 FftSize 和 实际可用数据量 的最小值，防止越界
-                int safeProcessingLimit = Math.Min(FftSize, availablePairs);
+                int safeProcessingLimit = Math.Min(FftSize, totalSamples);
+                CurrentFftSize = safeProcessingLimit;
 
                 // 如果连 128 个点都凑不够，这一帧就跳过
-                if (safeProcessingLimit < 128) return;
+                if (CurrentFftSize < 128) return;
 
-                for (int i = 0; i < safeProcessingLimit; i++)
+                for (int i = 0; i < CurrentFftSize; i++)
                 {
-                    float sample = dataInFloat[i * 2];
+                    float sample = dataInFloat[i];
 
                     // 鲁棒性检查：防止音频流输入 NaN 或 Inf
                     if (float.IsInfinity(sample)) sample = 0;
 
-                    float window = 0.5f * (1.0f - MathF.Cos(2.0f * MathF.PI * i / (safeProcessingLimit - 1)));
+                    float window = 0.5f * (1.0f - MathF.Cos(2.0f * MathF.PI * i / (CurrentFftSize - 1)));
                     _fftBuffer[i] = new Complex(sample * window, 0);
                 }
 
                 // 清空缓冲区剩余部分（Zero Padding），防止旧数据干扰
-                for (int i = safeProcessingLimit; i < FftSize; i++)
+                for (int i = CurrentFftSize; i < FftSize; i++)
                 {
                     _fftBuffer[i] = Complex.Zero;
                 }
@@ -77,7 +77,7 @@ namespace HyPlayer.UWP.Chopin.Utils
                 InPlaceFFT.Transform(_fftBuffer);
 
                 // 3. 计算幅值并转换为分贝 (仅取前半部分有效数据)
-                for (var i = 0; i < FftSize / 2; i++)
+                for (var i = 0; i < CurrentFftSize / 2; i++)
                 {
                     var magnitude = (float)_fftBuffer[i].Magnitude;
 
@@ -105,7 +105,7 @@ namespace HyPlayer.UWP.Chopin.Utils
         
         private void ProcessBandsLogarithmically()
         {
-            double logBase = Math.Pow(FftSize / 2.0, 1.0 / DisplayBandCount);
+            double logBase = Math.Pow(CurrentFftSize / 2.0, 1.0 / DisplayBandCount);
             int fftIndex = 1;
 
             for (int i = 0; i < DisplayBandCount; i++)
