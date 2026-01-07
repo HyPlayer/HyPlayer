@@ -99,6 +99,9 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
     private float _lyricRenderXOffset = 0;
     private float _lyricRenderYOffset = 0;
 
+    private readonly Color DarkSpectrumColor = Color.FromArgb(32, 0, 0, 0);
+    private readonly Color LightSpectrumColor = Color.FromArgb(32, 255, 255, 255);
+
     private LyricRenderView LyricBox = new LyricRenderView();
 
 
@@ -1696,7 +1699,7 @@ public sealed partial class ExpandedPlayer : Page, IDisposable
                 remainHeight + height - barHeight,
                 barWidth, // -1 留出间隔
                 barHeight,
-                albumMainColor.GetValueOrDefault());
+                Common.BrushManagement.IsBright ? DarkSpectrumColor : LightSpectrumColor);
         }
     }
 

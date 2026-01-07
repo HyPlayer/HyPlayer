@@ -9,6 +9,7 @@ using Windows.Media.Audio;
 using Windows.Media.Effects;
 using HyPlayer.UWP.Chopin.Utils;
 using Timer = System.Timers.Timer;
+using Windows.Media.MediaProperties;
 
 namespace HyPlayer.UWP.Chopin.Abstractions.Models
 {
@@ -21,6 +22,13 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         #region Private Fields
         private readonly ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode> _audioInputNodes = new ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode>();
         private readonly ConcurrentDictionary<MediaSourceAudioInputNode, AudioGraphPlaybackSource> _audioInputNodesReverseDictionary = new ConcurrentDictionary<MediaSourceAudioInputNode, AudioGraphPlaybackSource>();
+        private readonly AudioEncodingProperties _frameEncodingProperties = new AudioEncodingProperties()
+        {
+            SampleRate = 48000,
+            BitsPerSample = 16,
+            ChannelCount = 1,
+            Subtype = "Float"
+        };
         private AudioGraph _defaultPlayer;
         private AudioDeviceOutputNode _outputNode;
         private AudioFrameOutputNode _frameOutputNode;
@@ -112,7 +120,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 throw outputResult.ExtendedError;
             _outputNode = outputResult.DeviceOutputNode;
             
-            var frameOutputResult = _defaultPlayer.CreateFrameOutputNode();
+            var frameOutputResult = _defaultPlayer.CreateFrameOutputNode(_frameEncodingProperties);
             _frameOutputNode = frameOutputResult;
 
             _outputNode.OutgoingGain = audioGraphSetting.OutputVolume;
