@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace HyPlayer.Classes.LyricParser.Abstraction
 {
-    public interface ILyricCollection : IDisposable
+    public interface ILyricCollection
     {
         IList<LyricLine> Lines { get; }
     }

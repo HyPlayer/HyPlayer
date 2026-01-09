@@ -24,7 +24,7 @@ namespace HyPlayer.Pages;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class Search : Page, IDisposable
+public sealed partial class Search : Page
 {
     public static readonly DependencyProperty HasNextPageProperty = DependencyProperty.Register(
         "HasNextPage", typeof(bool), typeof(Search), new PropertyMetadata(default(bool)));
@@ -35,7 +35,6 @@ public sealed partial class Search : Page, IDisposable
     private readonly ObservableCollection<NCSong> SongResults = new ObservableCollection<NCSong>();
     private int page;
     private string searchText = "";
-    private bool disposedValue = false;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
     private Task _loadResultTask;
@@ -63,7 +62,7 @@ public sealed partial class Search : Page, IDisposable
     {
         if ((string)e.Parameter != null)
         {
-            searchText = (string) e.Parameter;
+            searchText = (string)e.Parameter;
             _loadResultTask = LoadResult();
         }
 
@@ -82,18 +81,16 @@ public sealed partial class Search : Page, IDisposable
             }
             catch
             {
-                Dispose();
-                return;
+                //Ignore
             }
         }
 
-        Dispose();
+        _cancellationTokenSource.Dispose();
     }
 
     private async Task LoadResult()
     {
         _cancellationToken.ThrowIfCancellationRequested();
-        if (disposedValue) throw new ObjectDisposedException(nameof(Search));
         if (string.IsNullOrEmpty(searchText)) return;
         if (Convert.ToBase64String(searchText.ToByteArrayUtf8()) == "6Ieq5p2A")
         {
@@ -148,7 +145,6 @@ public sealed partial class Search : Page, IDisposable
 
     private async Task LoadSongResult()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Search));
         var json = await Common.NeteaseAPI.RequestAsync
         <SearchSongResponse,
             SearchRequest, SearchResponse, ErrorResultBase, SearchActualRequest>(NeteaseApis.SearchApi,
@@ -200,7 +196,6 @@ public sealed partial class Search : Page, IDisposable
 
     private async Task LoadAlbumResult()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Search));
         var json = await Common.NeteaseAPI.RequestAsync
         <SearchAlbumResponse,
             SearchRequest, SearchResponse, ErrorResultBase, SearchActualRequest>(NeteaseApis.SearchApi,
@@ -253,7 +248,6 @@ public sealed partial class Search : Page, IDisposable
 
     private async Task LoadArtistResult()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Search));
         var json = await Common.NeteaseAPI.RequestAsync
         <SearchArtistResponse,
             SearchRequest, SearchResponse, ErrorResultBase, SearchActualRequest>(NeteaseApis.SearchApi,
@@ -306,7 +300,6 @@ public sealed partial class Search : Page, IDisposable
 
     private async Task LoadPlaylistResult()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Search));
         var json = await Common.NeteaseAPI.RequestAsync
         <SearchPlaylistResponse,
             SearchRequest, SearchResponse, ErrorResultBase, SearchActualRequest>(NeteaseApis.SearchApi,
@@ -359,7 +352,6 @@ public sealed partial class Search : Page, IDisposable
 
     private async Task LoadUserResult()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Search));
         var json = await Common.NeteaseAPI.RequestAsync
         <SearchUserResponse,
             SearchRequest, SearchResponse, ErrorResultBase, SearchActualRequest>(NeteaseApis.SearchApi,
@@ -410,7 +402,6 @@ public sealed partial class Search : Page, IDisposable
 
     private async Task LoadRadioResult()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Search));
         var json = await Common.NeteaseAPI.RequestAsync
         <SearchRadioResponse,
             SearchRequest, SearchResponse, ErrorResultBase, SearchActualRequest>(NeteaseApis.SearchApi,
@@ -465,7 +456,6 @@ public sealed partial class Search : Page, IDisposable
 
     private async Task LoadMVResult()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Search));
         var json = await Common.NeteaseAPI.RequestAsync
         <SearchMVResponse,
             SearchRequest, SearchResponse, ErrorResultBase, SearchActualRequest>(NeteaseApis.SearchApi,
@@ -515,7 +505,6 @@ public sealed partial class Search : Page, IDisposable
 
     private async Task LoadMlogResult()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Search));
         var json = await Common.NeteaseAPI.RequestAsync
         <SearchVideoResponse,
             SearchRequest, SearchResponse, ErrorResultBase, SearchActualRequest>(NeteaseApis.SearchApi,
@@ -566,7 +555,6 @@ public sealed partial class Search : Page, IDisposable
 
     private async Task LoadLyricResult()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Search));
         var i = 0;
         var json = await Common.NeteaseAPI.RequestAsync
         <SearchLyricResponse,
@@ -618,14 +606,12 @@ public sealed partial class Search : Page, IDisposable
 
     private void PrevPage_OnClick(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Search));
         page--;
         _loadResultTask = LoadResult();
     }
 
     private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Search));
         page++;
         _loadResultTask = LoadResult();
     }
@@ -633,7 +619,6 @@ public sealed partial class Search : Page, IDisposable
     private void NavigationView_OnSelectionChanged(NavigationView sender,
         NavigationViewSelectionChangedEventArgs args)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Search));
         page = 0;
         if ((args.SelectedItem as NavigationViewItem).Tag.ToString() == "1")
         {
@@ -651,20 +636,17 @@ public sealed partial class Search : Page, IDisposable
 
     private void SearchKeywordBox_LostFocus(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Search));
         ((AutoSuggestBox)sender).ItemsSource = null;
     }
 
     private void SearchKeywordBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Search));
         searchText = sender.Text;
         _loadResultTask = LoadResult();
     }
 
     private async void SearchKeywordBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Search));
         if (string.IsNullOrEmpty(sender.Text) || args.Reason != AutoSuggestionBoxTextChangeReason.UserInput)
         {
             return;
@@ -695,36 +677,9 @@ public sealed partial class Search : Page, IDisposable
 
     private void HistoryComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Search));
         if ((sender as ComboBox) is not null)
         {
             _loadResultTask = LoadResult();
         }
-    }
-
-    private void Dispose(bool disposing)
-    {
-        if (!disposedValue)
-        {
-            if (disposing)
-            {
-                SongResults.Clear();
-                SearchResultContainer.ListItems.Clear();
-                _cancellationTokenSource.Dispose();
-            }
-
-            disposedValue = true;
-        }
-    }
-
-    ~Search()
-    {
-        Dispose(disposing: false);
-    }
-
-    public void Dispose()
-    {
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
     }
 }

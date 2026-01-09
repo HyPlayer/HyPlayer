@@ -28,7 +28,7 @@ namespace HyPlayer.Pages;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class SongListDetail : Page, IDisposable
+public sealed partial class SongListDetail : Page
 {
     public static readonly DependencyProperty IsLoadingProperty = DependencyProperty.Register(
         "IsLoading", typeof(bool), typeof(SongListDetail), new PropertyMetadata(true));
@@ -36,7 +36,6 @@ public sealed partial class SongListDetail : Page, IDisposable
     private int page;
     public NCPlayList playList;
     public ObservableCollection<NCSong> Songs;
-    private bool disposedValue = false;
     private DataTransferManager _dataTransferManager = DataTransferManager.GetForCurrentView();
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
@@ -84,7 +83,6 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     public void LoadSongListDetail()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
         if (Common.Setting.noImage)
         {
             AlbumImageSource = null;
@@ -121,7 +119,6 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     public async Task LoadSongListItem()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
         IsLoading = true;
         if (playList.plid != "-666")
         {
@@ -139,7 +136,6 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     private async Task LoadDailyRcmdItems()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
         SongsList.ListSource = "content";
         try
         {
@@ -186,7 +182,6 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     private async Task LoadPlayListItems()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
         try
         {
             _cancellationToken.ThrowIfCancellationRequested();
@@ -291,7 +286,8 @@ public sealed partial class SongListDetail : Page, IDisposable
     {
         base.OnNavigatedFrom(e);
         _cancellationTokenSource.Cancel();
-        Dispose();
+        _dataTransferManager.DataRequested -= DataTransferManagerOnDataRequested;
+        _cancellationTokenSource.Dispose();
     }
 
     private async Task LoadPageData(string plid, bool loadPlaylist = false)
@@ -363,12 +359,12 @@ public sealed partial class SongListDetail : Page, IDisposable
                 treashold--;
                 return;
             }
-            if (Songs.Count > 0 && NextPage.Visibility == Visibility.Visible && treashold-- <= 0 && !disposedValue)
+            if (Songs.Count > 0 && NextPage.Visibility == Visibility.Visible && treashold-- <= 0)
             {
                 NextPage_OnClickPage_OnClick(null, null);
                 treashold = 3;
             }
-            else if (Songs.Count > 0 && NextPage.Visibility == Visibility.Collapsed || disposedValue)
+            else if (Songs.Count > 0 && NextPage.Visibility == Visibility.Collapsed)
             {
                 HyPlayList.OnTimerTicked -= GreedlyLoad;
             }
@@ -378,7 +374,6 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
         if (playList.plid != "-666")
         {
             HyPlayList.RemoveAllSong();
@@ -399,32 +394,27 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
         page++;
         _ = LoadPage();
     }
 
     private void ButtonComment_OnClick(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
         Common.NavigatePage(typeof(Comments), "pl" + playList.plid);
     }
 
     private void ButtonHeartBeat_OnClick(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
         _ = Api.EnterIntelligencePlay(_cancellationToken);
     }
 
     private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
         DownloadManager.AddDownload(Songs.ToList());
     }
 
     private async void LikeBtnClick(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
         var result = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.PlaylistSubscribeApi,
             new PlaylistSubscribeRequest()
             {
@@ -443,58 +433,25 @@ public sealed partial class SongListDetail : Page, IDisposable
 
     private void TextBoxAuthor_Tapped(object sender, RoutedEventArgs routedEventArgs)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
         Common.NavigatePage(typeof(Me), playList.creater.id);
     }
 
     private void BtnShare_Clicked(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
         DataTransferManager.ShowShareUI();
     }
 
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
         if (playList.plid != "-666")
             await HyPlayList.AppendPlayList(playList.plid);
         else
             HyPlayList.AppendNcSongs(Songs.ToList());
     }
 
-    private void Dispose(bool disposing)
-    {
-        if (!disposedValue)
-        {
-            if (disposing)
-            {
-                Songs.Clear();
-                playList = null;
-                AlbumImageSource = null;
-                _cancellationTokenSource.Dispose();
-            }
-            SongsList.Dispose();
-            _dataTransferManager.DataRequested -= DataTransferManagerOnDataRequested;
-            disposedValue = true;
-        }
-    }
-
-    ~SongListDetail()
-    {
-        Dispose(disposing: false);
-    }
-
-    public void Dispose()
-    {
-        // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
-    }
-
     private void BtnComment_OnClick(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
         Common.NavigatePage(typeof(Comments), "pl" + playList.plid);
     }
 
@@ -502,7 +459,6 @@ public sealed partial class SongListDetail : Page, IDisposable
     {
         try
         {
-            if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
             await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracks, playList.plid);
             await SimpleCacher.ResetCacheAsync(CacheType.PlaylistTracksDetail, playList.plid, true);
             await SimpleCacher.ResetCacheAsync(CacheType.PlaylistDetail, playList.plid);

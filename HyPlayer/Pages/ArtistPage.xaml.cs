@@ -24,7 +24,7 @@ namespace HyPlayer.Pages;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class ArtistPage : Page, IDisposable
+public sealed partial class ArtistPage : Page
 {
     public static readonly DependencyProperty SongHasMoreProperty = DependencyProperty.Register(
         "SongHasMore", typeof(bool), typeof(ArtistPage), new PropertyMetadata(default(bool)));
@@ -38,7 +38,6 @@ public sealed partial class ArtistPage : Page, IDisposable
     private Task _hotSongsLoaderTask;
     private Task _albumLoaderTask;
     private Task _songsLoaderTask;
-    private bool disposedValue = false;
 
     public ArtistPage()
     {
@@ -57,7 +56,6 @@ public sealed partial class ArtistPage : Page, IDisposable
         base.OnNavigatedTo(e);
         try
         {
-            if (disposedValue) throw new ObjectDisposedException(nameof(ArtistPage));
             var artistId = e.Parameter as string;
             if (artistId is null)
             {
@@ -161,11 +159,11 @@ public sealed partial class ArtistPage : Page, IDisposable
             {
             }
         }
+        _cancellationTokenSource.Dispose();
     }
 
     private async Task LoadHotSongs()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(ArtistPage));
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
@@ -220,7 +218,6 @@ public sealed partial class ArtistPage : Page, IDisposable
 
     private async Task LoadSongs()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(ArtistPage));
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
@@ -258,7 +255,6 @@ public sealed partial class ArtistPage : Page, IDisposable
 
     private void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(ArtistPage));
         try
         {
             HyPlayList.AppendNcSongs(hotSongs);
@@ -272,7 +268,6 @@ public sealed partial class ArtistPage : Page, IDisposable
 
     private void NextPage_Click(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(ArtistPage));
         page++;
         if (mp.SelectedIndex == 1)
             _songsLoaderTask = LoadSongs();
@@ -282,7 +277,6 @@ public sealed partial class ArtistPage : Page, IDisposable
 
     private async Task LoadAlbum()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(ArtistPage));
         try
         {
             _cancellationToken.ThrowIfCancellationRequested();
@@ -340,7 +334,6 @@ public sealed partial class ArtistPage : Page, IDisposable
 
     private void PrevPage_Click(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(ArtistPage));
         page--;
         if (mp.SelectedIndex == 1)
             _songsLoaderTask = LoadSongs();
@@ -350,13 +343,11 @@ public sealed partial class ArtistPage : Page, IDisposable
 
     private void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(ArtistPage));
         page = 0;
     }
 
     private void PivotView_HeaderScrollProgressChanged(object sender, EventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(ArtistPage));
         GridPersonalInformation.Opacity = 1 - PivotView.HeaderScrollProgress * 1.4;
         RectangleImageBack.Opacity = 1 - PivotView.HeaderScrollProgress * 1.1;
         RectangleImageBackAcrylic.Opacity = 1 - PivotView.HeaderScrollProgress * 1.1;
@@ -368,35 +359,5 @@ public sealed partial class ArtistPage : Page, IDisposable
         UserInfoScale.ScaleY = 1 - PivotView.HeaderScrollProgress * 0.6;
         DescScale.ScaleX = 1 - PivotView.HeaderScrollProgress * 0.4;
         DescScale.ScaleY = 1 - PivotView.HeaderScrollProgress * 0.4;
-    }
-
-    private void Dispose(bool disposing)
-    {
-        if (!disposedValue)
-        {
-            if (disposing)
-            {
-                allSongs.Clear();
-                hotSongs.Clear();
-                AllSongContainer.Dispose();
-                HotSongContainer.Dispose();
-                _cancellationTokenSource.Dispose();
-                artist = null;
-            }
-
-            disposedValue = true;
-        }
-    }
-
-    ~ArtistPage()
-    {
-        Dispose(disposing: false);
-    }
-
-    public void Dispose()
-    {
-        // 不要更改此代码。请将清理代码放入“Dispose(bool disposing)”方法中
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
     }
 }

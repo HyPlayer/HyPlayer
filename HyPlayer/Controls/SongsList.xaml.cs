@@ -25,7 +25,7 @@ using Windows.UI.Xaml.Media;
 
 namespace HyPlayer.Controls;
 
-public sealed partial class SongsList : UserControl, IDisposable
+public sealed partial class SongsList : UserControl
 {
     public static readonly DependencyProperty MultiSelectProperty =
         DependencyProperty.Register("MultiSelect", typeof(bool), typeof(SongsList), new PropertyMetadata(false));
@@ -73,6 +73,12 @@ public sealed partial class SongsList : UserControl, IDisposable
     {
         InitializeComponent();
         HyPlayList.OnPlayItemChange += HyPlayListOnOnPlayItemChange;
+        Unloaded += SongsList_Unloaded;
+    }
+
+    private void SongsList_Unloaded(object sender, RoutedEventArgs e)
+    {
+        HyPlayList.OnPlayItemChange -= HyPlayListOnOnPlayItemChange;
     }
 
     public bool MultiSelect
@@ -154,7 +160,6 @@ public sealed partial class SongsList : UserControl, IDisposable
     }
 
     public bool IsAddingSongToPlaylist = false;
-    private bool disposedValue;
 
     private async Task IndicateNowPlayingItem()
     {
@@ -470,40 +475,6 @@ public sealed partial class SongsList : UserControl, IDisposable
     {
     }
 
-    private void Dispose(bool disposing)
-    {
-        if (!disposedValue)
-        {
-            if (disposing)
-            {
-                VisibleSongs.Clear();
-            }
-
-            try
-            {
-                HyPlayList.OnPlayItemChange -= HyPlayListOnOnPlayItemChange;
-                Songs.CollectionChanged -= Songs_CollectionChanged;
-            }
-            catch
-            {
-                //可能已经被清除
-            }
-
-            disposedValue = true;
-        }
-    }
-
-    ~SongsList()
-    {
-        Dispose(disposing: false);
-    }
-
-    public void Dispose()
-    {
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
-    }
-
     private void FilterBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
     {
         var vpos = -1;
@@ -536,7 +507,6 @@ public sealed partial class SongsList : UserControl, IDisposable
                 SongContainer.ScrollIntoView(VisibleSongs[idx], ScrollIntoViewAlignment.Leading);
                 break;
             case "Comments":
-                if (disposedValue) throw new ObjectDisposedException(nameof(SongListDetail));
                 var page = (SongListDetail)((Grid)Parent).Parent;
                 Common.NavigatePage(typeof(Comments), "pl" + page.playList.plid);
                 break;

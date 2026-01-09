@@ -20,10 +20,9 @@ namespace HyPlayer.Pages;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class History : Page, IDisposable
+public sealed partial class History : Page
 {
     private readonly ObservableCollection<NCSong> Songs = new();
-    private bool disposedValue = false;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
     private Task _songRankWeekLoaderTask;
@@ -61,12 +60,11 @@ public sealed partial class History : Page, IDisposable
             {
             }
         }
-        Dispose();
+        _cancellationTokenSource.Dispose();
     }
     private async void NavigationView_SelectionChanged(NavigationView sender,
         NavigationViewSelectionChangedEventArgs args)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(History));
         switch ((sender.SelectedItem as NavigationViewItem).Name)
         {
             case "SongHis":
@@ -93,7 +91,6 @@ public sealed partial class History : Page, IDisposable
 
     private async Task LoadRankAll()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(History));
         Songs.Clear();
         _cancellationToken.ThrowIfCancellationRequested();
         try
@@ -123,7 +120,6 @@ public sealed partial class History : Page, IDisposable
 
     private async Task LoadRankWeek()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(History));
         Songs.Clear();
         _cancellationToken.ThrowIfCancellationRequested();
         try
@@ -149,29 +145,5 @@ public sealed partial class History : Page, IDisposable
             if (ex.GetType() != typeof(TaskCanceledException) && ex.GetType() != typeof(OperationCanceledException))
                 Common.AddToTeachingTipLists(ex.Message, (ex.InnerException ?? new Exception()).Message);
         }
-    }
-
-    private void Dispose(bool disposing)
-    {
-        if (!disposedValue)
-        {
-            if (disposing)
-            {
-                Songs.Clear();
-                _cancellationTokenSource.Dispose();
-            }
-            disposedValue = true;
-        }
-    }
-
-    ~History()
-    {
-        Dispose(disposing: false);
-    }
-
-    public void Dispose()
-    {
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
     }
 }

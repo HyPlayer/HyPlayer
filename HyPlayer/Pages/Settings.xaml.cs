@@ -41,12 +41,11 @@ namespace HyPlayer.Pages;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class Settings : Page, IDisposable
+public sealed partial class Settings : Page
 {
     private LyricItem _lyricItem;
     private bool isbyprogram;
     private int _elapse = 10;
-    private bool disposedValue = false;
 
 
     public static readonly DependencyProperty IsAdvancedLyricColorSettingsShowProperty = DependencyProperty.Register(
@@ -136,7 +135,6 @@ public sealed partial class Settings : Page, IDisposable
 
     private async Task GetRomaji()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         RomajiStatus.Header = "正在下载资源文件 请稍等";
         try
         {
@@ -157,7 +155,6 @@ public sealed partial class Settings : Page, IDisposable
 
     private async Task HandleDownloadAsync(DownloadOperation dl, bool b)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         var process = new Progress<DownloadOperation>(ProgressCallback);
         try
         {
@@ -172,7 +169,6 @@ public sealed partial class Settings : Page, IDisposable
 
     private void ProgressCallback(DownloadOperation obj)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         if (obj.Progress.TotalBytesToReceive == 0)
         {
             RomajiStatus.Header = "下载错误 " + obj.CurrentWebErrorStatus;
@@ -184,7 +180,6 @@ public sealed partial class Settings : Page, IDisposable
 
     private async Task OnRomajiDownloadDone(DownloadOperation obj)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         try
         {
             //下载完成
@@ -218,13 +213,11 @@ public sealed partial class Settings : Page, IDisposable
 
     private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         _ = GetRomaji();
     }
 
     private void ButtonXREALIPSave_OnClick(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         ApplicationData.Current.LocalSettings.Values["xRealIp"] =
             TextBoxXREALIP.Text == "" ? null : TextBoxXREALIP.Text;
         if (Common.NeteaseAPI != null)
@@ -235,7 +228,6 @@ public sealed partial class Settings : Page, IDisposable
 
     private async void ButtonDownloadSelect_OnClick(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         var folderPicker = new FolderPicker();
         folderPicker.SuggestedStartLocation = PickerLocationId.Desktop;
         folderPicker.FileTypeFilter.Add("*");
@@ -249,7 +241,6 @@ public sealed partial class Settings : Page, IDisposable
 
     private async void ButtonSearchingSelect_OnClick(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         var folderPicker = new FolderPicker();
         folderPicker.SuggestedStartLocation = PickerLocationId.Desktop;
         folderPicker.FileTypeFilter.Add("*");
@@ -264,14 +255,12 @@ public sealed partial class Settings : Page, IDisposable
 
     private void UIElement_OnTapped(object sender, TappedRoutedEventArgs tappedRoutedEventArgs)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         if (_elapse-- <= 0) Common.NavigatePage(typeof(TestPage));
     }
 
 
     private void ControlSoundChecked(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         if (isbyprogram) return;
         Common.Setting.uiSound = true;
         ElementSoundPlayer.State = ElementSoundPlayerState.On;
@@ -280,7 +269,6 @@ public sealed partial class Settings : Page, IDisposable
 
     private void ControlSoundUnChecked(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         if (isbyprogram) return;
         Common.Setting.uiSound = false;
         ElementSoundPlayer.State = ElementSoundPlayerState.Off;
@@ -289,14 +277,12 @@ public sealed partial class Settings : Page, IDisposable
 
     private void ClearHistory_Click(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         _ = HistoryManagement.ClearHistory();
     }
 
 
     private void CopyDeviceCode_Click(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         var deviceInfo = new EasClientDeviceInformation();
         var dp = new DataPackage();
         dp.SetText(deviceInfo.Id.ToString());
@@ -305,7 +291,6 @@ public sealed partial class Settings : Page, IDisposable
 
     private async void LyricSize_OnValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         if (isbyprogram) return;
         await Task.Delay(20);
         _lyricItem.RefreshFontSize();
@@ -313,7 +298,6 @@ public sealed partial class Settings : Page, IDisposable
 
     private void NBShadowDepth_OnValueChanged(object o, RangeBaseValueChangedEventArgs rangeBaseValueChangedEventArgs)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         if (isbyprogram) return;
         var size = 4;
         if (int.TryParse(SliderAlbumShadowDepth.Value.ToString(), out size))
@@ -323,7 +307,6 @@ public sealed partial class Settings : Page, IDisposable
 
     private async void ButtonCacheSelect_OnClick(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         var folderPicker = new FolderPicker();
         folderPicker.SuggestedStartLocation = PickerLocationId.Desktop;
         folderPicker.FileTypeFilter.Add("*");
@@ -336,32 +319,27 @@ public sealed partial class Settings : Page, IDisposable
     }
     private void StackPanel_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         _elapse -= 2;
         if (_elapse <= 0) ApplicationData.Current.RoamingSettings.Values["CanDownload"] = true;
     }
 
     private void DeviceInfo_RightTapped(object sender, RightTappedRoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         DeviceInfo.ContextFlyout.ShowAt(DeviceInfo);
     }
 
     private async void RestartBtn_Click(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         await CoreApplication.RequestRestartAsync("ChangeThemeRestart");
     }
 
     private void BtnXboxReserve_Click(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         Common.CollectGarbage();
     }
 
     private async void HotLyricOnStartUp_Checked(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         try
         {
             var uri = new Uri($"hot-lyric:///?from={Package.Current.Id.FamilyName}");
@@ -397,7 +375,6 @@ public sealed partial class Settings : Page, IDisposable
 
     private async void BtnChangeAudioRenderDevice_Click(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         var devicePicker = new DevicePicker();
         devicePicker.Filter.SupportedDeviceClasses.Add(DeviceClass.AudioRender);
         var ge = BtnChangeAudioRenderDevice.TransformToVisual(null);
@@ -411,19 +388,16 @@ public sealed partial class Settings : Page, IDisposable
 
     private void BtnChangeToDefaultAudioRenderDevice_Click(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         Common.Setting.AudioRenderDevice = "";
     }
 
     private async void CheckUpdate_Click(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         await UpdateManager.PopupVersionCheck();
     }
 
     private void ComboBoxSongBr_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         if (isbyprogram) return;
         var selectedItem = (ComboBoxItem)((ComboBox)sender).SelectedItem;
         Common.Setting.audioRate = selectedItem.Tag.ToString();
@@ -431,7 +405,6 @@ public sealed partial class Settings : Page, IDisposable
 
     private void ComboBoxSongDownloadBr_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         if (isbyprogram) return;
         var selectedItem = (ComboBoxItem)((ComboBox)sender).SelectedItem;
         Common.Setting.downloadAudioRate = selectedItem.Tag.ToString();
@@ -439,27 +412,23 @@ public sealed partial class Settings : Page, IDisposable
 
     private void CheckCanaryChannelButton_Click(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         _ = UpdateManager.GetUserCanaryChannelAvailability(canaryEmail.Text);
     }
 
     private async void ClearTileCache_Click(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         var storageFolder = await ApplicationData.Current.TemporaryFolder.TryGetItemAsync("LocalTileBackground");
         if (storageFolder != null) await storageFolder.DeleteAsync();
     }
 
     private async void LoginLastFMAccount_Click(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         var LoginBox = new LastFMLoginPage();
         await LoginBox.ShowAsync();
     }
 
     private void LogoffLastFMAccount_Click(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         LastFMManager.TryLogoffLastFM();
     }
 
@@ -493,30 +462,6 @@ public sealed partial class Settings : Page, IDisposable
         Common.Setting.karaokLyricFocusingColor = KaraokLyricFocusing.SelectedColor;
     }
 
-    private void Dispose(bool disposing)
-    {
-        if (!disposedValue)
-        {
-            if (disposing)
-            {
-                StackPanelLyricSet.Children.Clear();
-            }
-
-            disposedValue = true;
-        }
-    }
-
-    ~Settings()
-    {
-        Dispose(disposing: false);
-    }
-
-    public void Dispose()
-    {
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
-    }
-
     private void ApplyNewAcrylic()
     {
         var Brush = new Microsoft.UI.Xaml.Media.AcrylicBrush()
@@ -542,7 +487,6 @@ public sealed partial class Settings : Page, IDisposable
 
     private async void LyricAlignment_OnToggled(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(Settings));
         if (isbyprogram) return;
         await Task.Delay(20);
         _lyricItem.RefreshFontSize();

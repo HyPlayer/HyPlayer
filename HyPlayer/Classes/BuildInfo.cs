@@ -1,5 +1,3 @@
-using System;
-
 namespace HyPlayer.Classes
 {
     /// <summary>
@@ -21,7 +19,7 @@ namespace HyPlayer.Classes
         /// 编译的 JobId (占位符: __BUILD_JOB_ID__)
         /// </summary>
         public static readonly string BuildJobId = "__BUILD_JOB_ID__";
-        
+
         /// <summary>
         /// 编译的 BranchId (占位符: __BUILD_BRANCH_ID__)
         /// </summary>

@@ -1,7 +1,5 @@
 ﻿#region
 
-using CommunityToolkit.WinUI;
-using CommunityToolkit.WinUI.Controls;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
@@ -18,15 +16,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.Core;
 using Windows.Security.ExchangeActiveSyncProvisioning;
 using Windows.Storage.Streams;
 using Windows.System;
-using Windows.System.Profile;
 using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.ViewManagement;
-using Windows.UI.WindowManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
@@ -83,7 +78,7 @@ public sealed partial class BasePage : Page
         await RefreshNavItemCover(playItem, coverStream);
     }
 
-    
+
     private void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs args)
     {
         if (args.CurrentPoint.Properties.IsXButton1Pressed)
@@ -889,37 +884,6 @@ public sealed partial class BasePage : Page
     {
         DialogPreLoginHint.Hide();
         _ = DialogLogin.ShowAsync();
-    }
-
-    private async void BtnRamdomDeviceIdClick(object sender, RoutedEventArgs e)
-    {
-        Common.NeteaseAPI!.Option.Cookies.Clear();
-        Common.NeteaseAPI.Option.AdditionalParameters.Headers.Clear();
-        Common.Setting.SaveCookies();
-        var uri = new System.Uri("ms-appx:///Assets/deviceid.txt");
-        var storagefile = await Windows.Storage.StorageFile.GetFileFromApplicationUriAsync(uri);
-        var lines = await Windows.Storage.FileIO.ReadLinesAsync(storagefile);
-        var idx = new Random().Next(lines.Count - 1);
-        var deviceId = lines[idx];
-        Common.NeteaseAPI.Option.AdditionalParameters.Cookies["deviceId"] = deviceId;
-        Common.NeteaseAPI.Option.AdditionalParameters.Cookies["os"] = "pc";
-        Common.NeteaseAPI.Option.AdditionalParameters.Cookies["appver"] = "3.1.3.203419";
-        Common.Setting.ApiAdditionalParameters = Common.NeteaseAPI.Option.AdditionalParameters;
-        var rst = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.RegisterAnonymousApi, new RegisterAnonymousRequest()
-        {
-            DeviceId = deviceId
-        });
-        if (rst.IsError)
-        {
-            Common.AddToTeachingTipLists("随机设备ID注册失败", "获取失败: " + rst.Error.Message);
-            return;
-        }
-        else
-        {
-            Common.AddToTeachingTipLists("随机设备ID可用", "当前设备ID: " + deviceId);
-        }
-
-        ButtonPreLoginPrimary_Click(null, null);
     }
     private async void BtnCurrentDeviceIdClick(object sender, RoutedEventArgs e)
     {
