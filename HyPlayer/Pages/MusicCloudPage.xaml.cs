@@ -23,11 +23,10 @@ namespace HyPlayer.Pages;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class MusicCloudPage : Page, IDisposable
+public sealed partial class MusicCloudPage : Page
 {
     private readonly ObservableCollection<NCSong> Items = new();
     private int page;
-    private bool disposedValue = false;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
     private Task _loadResultTask;
@@ -41,7 +40,6 @@ public sealed partial class MusicCloudPage : Page, IDisposable
 
     public async Task LoadMusicCloudItem()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(MusicCloudPage));
         try
         {
             _cancellationToken.ThrowIfCancellationRequested();
@@ -115,12 +113,11 @@ public sealed partial class MusicCloudPage : Page, IDisposable
             }
             catch
             {
-                Dispose();
-                return;
+                //Ignore
             }
         }
 
-        Dispose();
+        _cancellationTokenSource.Dispose();
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -144,13 +141,12 @@ public sealed partial class MusicCloudPage : Page, IDisposable
                 return;
             }
 
-            if (SongContainer.Songs.Count > 0 && NextPage.Visibility == Visibility.Visible && treashold-- <= 0 &&
-                !disposedValue)
+            if (SongContainer.Songs.Count > 0 && NextPage.Visibility == Visibility.Visible && treashold-- <= 0)
             {
                 NextPage_OnClickPage_OnClick(null, null);
                 treashold = 3;
             }
-            else if (SongContainer.Songs.Count > 0 && NextPage.Visibility == Visibility.Collapsed || disposedValue)
+            else if (SongContainer.Songs.Count > 0 && NextPage.Visibility == Visibility.Collapsed)
             {
                 HyPlayList.OnTimerTicked -= GreedlyLoad;
                 OnLoadedAllSongs();
@@ -168,20 +164,17 @@ public sealed partial class MusicCloudPage : Page, IDisposable
 
     private void NextPage_OnClickPage_OnClick(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(MusicCloudPage));
         page++;
         _loadResultTask = LoadMusicCloudItem();
     }
 
     private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(MusicCloudPage));
         DownloadManager.AddDownload(Items.ToList());
     }
 
     private async void BtnUpload_Click(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(MusicCloudPage));
         var fop = new FileOpenPicker();
         fop.FileTypeFilter.Add(".flac");
         fop.FileTypeFilter.Add(".mp3");
@@ -203,33 +196,6 @@ public sealed partial class MusicCloudPage : Page, IDisposable
 
         Common.AddToTeachingTipLists("上传完成", "请重新加载云盘页面");
     }
-
-    private void Dispose(bool disposing)
-    {
-        if (!disposedValue)
-        {
-            if (disposing)
-            {
-                Items.Clear();
-                SongContainer.Dispose();
-                _cancellationTokenSource.Dispose();
-            }
-
-            disposedValue = true;
-        }
-    }
-
-    ~MusicCloudPage()
-    {
-        Dispose(disposing: false);
-    }
-
-    public void Dispose()
-    {
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
-    }
-
     private async void BtnRefresh_OnClick(object sender, RoutedEventArgs e)
     {
         await SimpleCacher.ResetCacheAsync(CacheType.Login, "userCloud_", true);

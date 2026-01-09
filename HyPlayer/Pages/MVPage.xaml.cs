@@ -22,13 +22,12 @@ namespace HyPlayer.Pages;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class MVPage : Page, IDisposable
+public sealed partial class MVPage : Page
 {
     private readonly List<NCMlog> sources = new();
     private string mvid;
     private string mvquality = "1080";
     private string songid;
-    private bool disposedValue = false;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
     private CancellationToken _cancellationToken;
     private Task _relateiveLoaderTask;
@@ -67,7 +66,6 @@ public sealed partial class MVPage : Page, IDisposable
 
     private async Task LoadRelateive()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(MVPage));
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
@@ -99,7 +97,6 @@ public sealed partial class MVPage : Page, IDisposable
 
     private void LoadComment()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(MVPage));
         if (Regex.IsMatch(mvid, "^[0-9]*$"))
             CommentFrame.Navigate(typeof(Comments), "mv" + mvid);
         else
@@ -146,12 +143,12 @@ public sealed partial class MVPage : Page, IDisposable
             }
         }
 
-        Dispose();
+        MediaPlayerElement.Source = null;
+        _cancellationTokenSource.Dispose();
     }
 
     private async Task LoadVideo()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(MVPage));
 
         //纯MV
         try
@@ -205,7 +202,6 @@ public sealed partial class MVPage : Page, IDisposable
 
     private async Task LoadVideoInfo()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(MVPage));
         _cancellationToken.ThrowIfCancellationRequested();
         if (Regex.IsMatch(mvid, "^[0-9]*$"))
         {
@@ -270,44 +266,13 @@ public sealed partial class MVPage : Page, IDisposable
 
     private void VideoQualityBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(MVPage));
         mvquality = VideoQualityBox.SelectedItem?.ToString();
         _videoLoaderTask = LoadVideo();
     }
 
     private void RelativeList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(MVPage));
         mvid = (RelativeList.SelectedItem is NCMlog ? (NCMlog)RelativeList.SelectedItem : default).id;
         LoadThings();
-    }
-
-    private void Dispose(bool disposing)
-    {
-        if (!disposedValue)
-        {
-            if (disposing)
-            {
-                MediaPlayerElement.Source = null;
-                sources.Clear();
-                mvid = null;
-                mvquality = null;
-                songid = null;
-                _cancellationTokenSource.Dispose();
-            }
-
-            disposedValue = true;
-        }
-    }
-
-    ~MVPage()
-    {
-        Dispose(disposing: false);
-    }
-
-    public void Dispose()
-    {
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
     }
 }

@@ -92,7 +92,7 @@ public static class UpdateManager
                 UpdateSource.Canary => 5,
                 UpdateSource.Release => 4,
                 UpdateSource.Dogfood => 6,
-                _ =>  4,
+                _ => 4,
             })}/latest"));
         if (!versionsResponse.IsSuccessStatusCode)
         {

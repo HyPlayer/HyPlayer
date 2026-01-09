@@ -2,16 +2,14 @@ using HyPlayer.LyricRenderer.Abstraction;
 using HyPlayer.LyricRenderer.Abstraction.Render;
 using HyPlayer.LyricRenderer.Animator.EaseFunctions;
 using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.UI;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using Windows.UI;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Animation;
-using Microsoft.Graphics.Canvas.UI;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
@@ -63,8 +61,8 @@ namespace HyPlayer.LyricRenderer
         {
             get => _jumpedLyrics;
         }
-        
-        
+
+
         private bool _isTypographyChanged = true;
 
         public void ChangeRenderColor(Color idleColor, Color focusingColor, Color? shadowColor = null)
@@ -419,10 +417,8 @@ namespace HyPlayer.LyricRenderer
                 case TextAlignment.Center:
                     return Context.RenderOffsets[renderingLyricLine.Id].X =
                         (Context.ViewWidth - renderingLyricLine.RenderingWidth) / 2;
-                    break;
                 case TextAlignment.Right:
                     return Context.ViewWidth - renderingLyricLine.RenderingWidth;
-                    break;
                 default:
                     return Context.RenderOffsets[renderingLyricLine.Id].X = 0;
             }
@@ -435,7 +431,7 @@ namespace HyPlayer.LyricRenderer
             _needRecalculateSize = true;
             _needRecalculate = true;
         }
-        
+
 
         private long _lastWheelTime;
 
@@ -537,7 +533,7 @@ namespace HyPlayer.LyricRenderer
                 _lastPointerPressedYValue = e.GetCurrentPoint((UIElement)sender).Position.Y;
             }
         }
-        
+
         public void LyricView_OnPointerExited(object sender, PointerRoutedEventArgs e)
         {
             if (Context.PointerFocusingIndex != -1 && Context.LyricLines.Count > Context.PointerFocusingIndex)

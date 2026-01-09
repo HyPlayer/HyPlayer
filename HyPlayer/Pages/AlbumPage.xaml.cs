@@ -26,7 +26,7 @@ namespace HyPlayer.Pages;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class AlbumPage : Page, IDisposable
+public sealed partial class AlbumPage : Page
 {
     private readonly ObservableCollection<NCSong> AlbumSongs = new();
     private NCAlbum Album;
@@ -37,7 +37,6 @@ public sealed partial class AlbumPage : Page, IDisposable
     private CancellationToken _cancellationToken;
     private Task _albumDynamicLoaderTask;
     private Task _albumInfoLoaderTask;
-    private bool disposedValue = false;
 
     public AlbumPage()
     {
@@ -89,13 +88,11 @@ public sealed partial class AlbumPage : Page, IDisposable
             {
             }
         }
-
-        Dispose();
+        _cancellationTokenSource.Dispose();
     }
 
     private async Task LoadAlbumDynamic()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(AlbumPage));
         _cancellationToken.ThrowIfCancellationRequested();
         var js = await SimpleCacher.GetOrCreateCacheAsync(CacheType.AlbumDynamic, albumid, async () =>
         {
@@ -116,7 +113,6 @@ public sealed partial class AlbumPage : Page, IDisposable
 
     private async Task LoadAlbumInfo()
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(AlbumPage));
         _cancellationToken.ThrowIfCancellationRequested();
         try
         {
@@ -193,7 +189,6 @@ public sealed partial class AlbumPage : Page, IDisposable
 
     private async void ButtonPlayAll_OnClick(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(AlbumPage));
         try
         {
             HyPlayList.RemoveAllSong();
@@ -210,7 +205,6 @@ public sealed partial class AlbumPage : Page, IDisposable
 
     private void ButtonDownloadAll_OnClick(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(AlbumPage));
         var songs = new List<NCSong>();
         foreach (var discSongs in (IEnumerable<DiscSongs>)AlbumSongsViewSource.Source) songs.AddRange(discSongs);
 
@@ -219,13 +213,11 @@ public sealed partial class AlbumPage : Page, IDisposable
 
     private void ButtonComment_OnClick(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(AlbumPage));
         Common.NavigatePage(typeof(Comments), "al" + Album.id);
     }
 
     private async void TextBoxAuthor_OnTapped(object sender, RoutedEventArgs routedEventArgs)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(AlbumPage));
         if (artists.Count > 1)
             await new ArtistSelectDialog(artists).ShowAsync();
         else
@@ -234,46 +226,13 @@ public sealed partial class AlbumPage : Page, IDisposable
 
     private void BtnSub_Click(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(AlbumPage));
         _ = Common.NeteaseAPI?.RequestAsync(NeteaseApis.AlbumSubscribeApi,
             new AlbumSubscribeRequest() { Id = albumid, IsSubscribe = BtnSub.IsChecked ?? false });
     }
 
     private async void BtnAddAll_Clicked(object sender, RoutedEventArgs e)
     {
-        if (disposedValue) throw new ObjectDisposedException(nameof(AlbumPage));
         await HyPlayList.AppendNcSource("al" + Album.id);
-    }
-
-    private void Dispose(bool disposing)
-    {
-        if (!disposedValue)
-        {
-            if (disposing)
-            {
-                AlbumSongs.Clear();
-                AlbumSongsViewSource.Source = null;
-                SongContainer.Dispose();
-                albumid = null;
-                Album = null;
-                artists = null;
-                ImageRect.ImageSource = null;
-                _cancellationTokenSource.Dispose();
-            }
-
-            disposedValue = true;
-        }
-    }
-
-    ~AlbumPage()
-    {
-        Dispose(disposing: false);
-    }
-
-    public void Dispose()
-    {
-        Dispose(disposing: true);
-        GC.SuppressFinalize(this);
     }
 }
 
