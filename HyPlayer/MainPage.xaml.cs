@@ -11,6 +11,7 @@ using Windows.UI;
 using Windows.UI.Composition;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
@@ -26,7 +27,7 @@ namespace HyPlayer;
 /// <summary>
 ///     可用于自身或导航至 Frame 内部的空白页。
 /// </summary>
-public sealed partial class MainPage
+public sealed partial class MainPage : Page
 {
     bool IsPlaybarOnShow = true;
     public bool IsExpandedPlayerInitialized = false;

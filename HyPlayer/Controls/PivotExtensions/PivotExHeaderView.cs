@@ -7,7 +7,7 @@ using Windows.UI.Xaml.Controls;
 
 namespace HyPlayer.Controls;
 
-public class PivotExHeaderView : ListView
+public partial class PivotExHeaderView : ListView
 {
     public static readonly DependencyProperty PivotProperty =
         DependencyProperty.Register("Pivot", typeof(PivotEx), typeof(PivotExHeaderView), new PropertyMetadata(null,

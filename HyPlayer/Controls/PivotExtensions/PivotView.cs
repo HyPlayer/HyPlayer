@@ -10,7 +10,7 @@ using Windows.UI.Xaml.Media;
 namespace HyPlayer.Controls;
 
 [ContentProperty(Name = "Pivot")]
-internal class PivotView : Control
+internal partial class PivotView : Control
 {
     public static readonly DependencyProperty PivotProperty =
         DependencyProperty.Register("Pivot", typeof(PivotEx), typeof(PivotView), new PropertyMetadata(null, (s, a) =>

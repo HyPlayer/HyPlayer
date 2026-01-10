@@ -1,28 +1,18 @@
 <Solution>
   <Configurations>
-    <Platform Name="ARM64" />
+    <Platform Name="arm64" />
     <Platform Name="x64" />
+    <Platform Name="x86" />
   </Configurations>
-  <Folder Name="/解决方案项/">
-    <File Path="global.json" />
-  </Folder>
-  <Project Path="HyPlayer.Frieren/HyPlayer.Frieren.csproj" Id="8db15c94-9cca-4b40-91f4-5919bbc67abb">
-    <Platform Solution="*|ARM64" Project="ARM64" />
-    <Platform Solution="*|x64" Project="x64" />
-  </Project>
+  <Project Path="HyPlayer.Frieren/HyPlayer.Frieren.csproj" />
   <Project Path="HyPlayer.NeteaseProvider/HyPlayer.NeteaseApi/HyPlayer.NeteaseApi.csproj" />
-  <Project Path="HyPlayer.UWP.Chopin/HyPlayer.UWP.Chopin.csproj" Id="ae7aa571-e532-4f0c-9d51-043dfecf9924">
-    <Platform Solution="*|ARM64" Project="ARM64" />
+  <Project Path="HyPlayer.UWP.Chopin/HyPlayer.UWP.Chopin.csproj" />
+  <Project Path="HyPlayer/HyPlayer.csproj">
+    <Platform Solution="*|arm64" Project="arm64" />
     <Platform Solution="*|x64" Project="x64" />
-  </Project>
-  <Project Path="HyPlayer/HyPlayer.csproj" Id="ddd54862-21fe-4810-b8ec-74bf0447e000">
-    <Platform Solution="*|ARM64" Project="ARM64" />
-    <Platform Solution="*|x64" Project="x64" />
+    <Platform Solution="*|x86" Project="x86" />
     <Deploy />
   </Project>
   <Project Path="Impressionist/Impressionist/Impressionist.csproj" />
-  <Project Path="Kawazu/Kawazu/Kawazu.csproj" Id="2dc18999-32f2-40d4-ad9b-c5a09514e087">
-    <Platform Solution="*|ARM64" Project="ARM64" />
-    <Platform Solution="*|x64" Project="x64" />
-  </Project>
+  <Project Path="Kawazu/Kawazu/Kawazu.csproj" />
 </Solution>

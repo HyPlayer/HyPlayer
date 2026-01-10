@@ -9,7 +9,7 @@ using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Song;
 using HyPlayer.Pages;
 using Kawazu;
-using Microsoft.Gaming.XboxGameBar;
+//using Microsoft.Gaming.XboxGameBar;
 using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.Toolkit.Uwp.UI;
 using Microsoft.UI.Xaml.Controls;
@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -65,7 +66,7 @@ namespace HyPlayer
         public static HttpClientHandler? HttpClientHandler;
         public static HttpClient? HttpClient;
         public static NeteaseCloudMusicApiHandler? NeteaseAPI;
-        public static XboxGameBarWidget? XboxGameBarWidget;
+//      public static XboxGameBarWidget? XboxGameBarWidget;
         public static PixelShaderEffect? PixelShaderShareEffect;
 #nullable restore
         public static BrushManagement BrushManagement = new();
@@ -78,6 +79,8 @@ namespace HyPlayer
         public static readonly Stack<NavigationHistoryItem> NavigationHistory = new();
         public static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).ToLocalTime();
 
+        [RequiresUnreferencedCode("Calls HyPlayer.Setting.ApiAdditionalParameters")]
+        [RequiresDynamicCode("Calls HyPlayer.Setting.ApiAdditionalParameters")]
         public static void InitializeHttpClientAndAPI()
         {
             HttpClientHandler = NeteaseCloudMusicApiHandler.HttpClientHandler;
@@ -402,7 +405,11 @@ namespace HyPlayer
 
         public AdditionalParameters ApiAdditionalParameters
         {
+            [RequiresUnreferencedCode("Calls Newtonsoft.Json.JsonConvert.DeserializeObject<T>(String)")]
+            [RequiresDynamicCode("Calls Newtonsoft.Json.JsonConvert.DeserializeObject<T>(String)")]
             get => JsonConvert.DeserializeObject<AdditionalParameters>(GetSettings(nameof(ApiAdditionalParameters), "{}")) ?? new AdditionalParameters();
+            [RequiresUnreferencedCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
+            [RequiresDynamicCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
             set => ApplicationData.Current.LocalSettings.Values[nameof(ApiAdditionalParameters)] = JsonConvert.SerializeObject(value);
         }
 
@@ -1818,6 +1825,8 @@ namespace HyPlayer
 
     internal class HistoryManagement
     {
+        [RequiresDynamicCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
+        [RequiresUnreferencedCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
         public static void InitializeHistoryTrack()
         {
             var list = new List<string>();
@@ -1839,6 +1848,8 @@ namespace HyPlayer
                 ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
         }
 
+        [RequiresUnreferencedCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
+        [RequiresDynamicCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
         public static void AddNCSongHistory(string songid)
         {
             var list = new List<string>();
@@ -1852,6 +1863,8 @@ namespace HyPlayer
             ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonConvert.SerializeObject(list);
         }
 
+        [RequiresUnreferencedCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
+        [RequiresDynamicCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
         public static void AddSearchHistory(string Text)
         {
             var list = new List<string>();
@@ -1870,6 +1883,8 @@ namespace HyPlayer
             ApplicationData.Current.LocalSettings.Values["searchHistory"] = JsonConvert.SerializeObject(list);
         }
 
+        [RequiresUnreferencedCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
+        [RequiresDynamicCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
         public static void AddSonglistHistory(string playListid)
         {
             var list = new List<string>();
@@ -1883,6 +1898,8 @@ namespace HyPlayer
             ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
         }
 
+        [RequiresUnreferencedCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
+        [RequiresDynamicCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
         public static async Task SetcurPlayingListHistory(List<string> songids)
         {
             if (Common.Setting.advancedMusicHistoryStorage)
@@ -1902,6 +1919,8 @@ namespace HyPlayer
                     JsonConvert.SerializeObject(songids.Count > 100 ? songids.GetRange(0, 100) : songids);
         }
 
+        [RequiresDynamicCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
+        [RequiresUnreferencedCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
         public static async Task ClearHistory()
         {
             var list = new List<string>();
@@ -1912,6 +1931,8 @@ namespace HyPlayer
                 CreationCollisionOption.OpenIfExists)).DeleteAsync();
         }
 
+        [RequiresUnreferencedCode("Calls Newtonsoft.Json.JsonConvert.DeserializeObject<T>(String)")]
+        [RequiresDynamicCode("Calls Newtonsoft.Json.JsonConvert.DeserializeObject<T>(String)")]
         public static async Task<List<NCSong>> GetNCSongHistory()
         {
             try
@@ -1936,12 +1957,16 @@ namespace HyPlayer
             return [];
         }
 
+        [RequiresUnreferencedCode("Calls Newtonsoft.Json.JsonConvert.DeserializeObject<T>(String)")]
+        [RequiresDynamicCode("Calls Newtonsoft.Json.JsonConvert.DeserializeObject<T>(String)")]
         public static List<string> GetSearchHistory()
         {
             return JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
                 .Values["searchHistory"].ToString());
         }
 
+        [RequiresUnreferencedCode("Calls Newtonsoft.Json.JsonConvert.DeserializeObject<T>(String)")]
+        [RequiresDynamicCode("Calls Newtonsoft.Json.JsonConvert.DeserializeObject<T>(String)")]
         public static async Task<List<NCSong>> GetcurPlayingListHistory()
         {
             var retsongs = new List<NCSong>();

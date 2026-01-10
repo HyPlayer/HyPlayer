@@ -12,7 +12,7 @@ using NavigationViewItem = Microsoft.UI.Xaml.Controls.NavigationViewItem;
 
 namespace HyPlayer.Classes
 {
-    public class BooleanToWindowBrushesConverter : IValueConverter
+    public partial class BooleanToWindowBrushesConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -38,7 +38,7 @@ namespace HyPlayer.Classes
             throw new NotImplementedException();
         }
     }
-    public class BooleanToBarPlayBarBrushesConverter : IValueConverter
+    public partial class BooleanToBarPlayBarBrushesConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -51,7 +51,7 @@ namespace HyPlayer.Classes
             throw new NotImplementedException();
         }
     }
-    public class BooleanToGridPlayBarBrushesConverter : IValueConverter
+    public partial class BooleanToGridPlayBarBrushesConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -65,7 +65,7 @@ namespace HyPlayer.Classes
             throw new NotImplementedException();
         }
     }
-    public class ReversedBooleanConverter : IValueConverter
+    public partial class ReversedBooleanConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -78,7 +78,7 @@ namespace HyPlayer.Classes
             throw new NotImplementedException();
         }
     }
-    public class ReversedBooleanToVisibilityConverter : IValueConverter
+    public partial class ReversedBooleanToVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -92,7 +92,7 @@ namespace HyPlayer.Classes
         }
     }
 
-    public class EnumToIntConverter : IValueConverter
+    public partial class EnumToIntConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -107,7 +107,7 @@ namespace HyPlayer.Classes
         }
     }
 
-    public class AlbumShadowConverter : IValueConverter
+    public partial class AlbumShadowConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -121,7 +121,7 @@ namespace HyPlayer.Classes
             throw new NotImplementedException();
         }
     }
-    public class ImageUrlToImageSourceConverter : IValueConverter
+    public partial class ImageUrlToImageSourceConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -133,7 +133,7 @@ namespace HyPlayer.Classes
             throw new NotImplementedException();
         }
     }
-    public class PausedToStringConverter : IValueConverter
+    public partial class PausedToStringConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -146,7 +146,7 @@ namespace HyPlayer.Classes
             throw new NotImplementedException();
         }
     }
-    public class PlayBarImageRadiusConverter : IValueConverter
+    public partial class PlayBarImageRadiusConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -158,7 +158,7 @@ namespace HyPlayer.Classes
             throw new NotImplementedException();
         }
     }
-    public class ThumbConverter : DependencyObject, IValueConverter
+    public partial class ThumbConverter : DependencyObject, IValueConverter
     {
         // Using a DependencyProperty as the backing store for SecondValue.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty SecondValueProperty =
@@ -184,7 +184,7 @@ namespace HyPlayer.Classes
             throw new NotImplementedException();
         }
     }
-    public class SongListSelectModeConverter : IValueConverter
+    public partial class SongListSelectModeConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -198,7 +198,7 @@ namespace HyPlayer.Classes
             throw new NotImplementedException();
         }
     }
-    public class PlayBarMarginConverter : IValueConverter
+    public partial class PlayBarMarginConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -211,7 +211,7 @@ namespace HyPlayer.Classes
         }
     }
 
-    public class PlayBarCornerRadiusConverter : IValueConverter
+    public partial class PlayBarCornerRadiusConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -224,7 +224,7 @@ namespace HyPlayer.Classes
         }
     }
 
-    public class NullableColorToColorConverter : IValueConverter
+    public partial class NullableColorToColorConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -244,7 +244,7 @@ namespace HyPlayer.Classes
             return value;
         }
     }
-    public class EmptyStringToVisibilityConverter : IValueConverter
+    public partial class EmptyStringToVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -257,7 +257,7 @@ namespace HyPlayer.Classes
             return value;
         }
     }
-    public class DateConverter : IValueConverter
+    public partial class DateConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -349,7 +349,7 @@ namespace HyPlayer.Classes
 
         }
     }
-    public class PageToNavigationViewIndicatorConverter : IValueConverter
+    public partial class PageToNavigationViewIndicatorConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
@@ -416,7 +416,7 @@ namespace HyPlayer.Classes
         }
     }
 
-    public class NegationBoolToVisibilityConverter : BoolToObjectConverter
+    public partial class NegationBoolToVisibilityConverter : BoolToObjectConverter
     {
         public NegationBoolToVisibilityConverter()
         {
@@ -425,7 +425,7 @@ namespace HyPlayer.Classes
         }
     }
 
-    public class TransparentColorConverter : IValueConverter
+    public partial class TransparentColorConverter : IValueConverter
     {
         public object Convert(object value, Type targetType,
                               object parameter, string language)
@@ -440,7 +440,7 @@ namespace HyPlayer.Classes
             throw new NotImplementedException();
         }
     }
-    public class ShaderConverter : IValueConverter
+    public partial class ShaderConverter : IValueConverter
     {
         public object Convert(object value, Type targetType,
                               object parameter, string language)
@@ -455,7 +455,7 @@ namespace HyPlayer.Classes
             throw new NotImplementedException();
         }
     }
-    public class LuminousConverter : IValueConverter
+    public partial class LuminousConverter : IValueConverter
     {
         public object Convert(object value, Type targetType,
                               object parameter, string language)

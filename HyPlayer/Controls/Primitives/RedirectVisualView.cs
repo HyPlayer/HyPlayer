@@ -9,7 +9,7 @@ using Windows.UI.Xaml.Markup;
 namespace HyPlayer.Controls.Primitives;
 
 [ContentProperty(Name = nameof(Child))]
-public class RedirectVisualView : Control
+public partial class RedirectVisualView : Control
 {
     public RedirectVisualView()
     {

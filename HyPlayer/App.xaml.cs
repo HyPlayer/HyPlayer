@@ -4,8 +4,9 @@ using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
 using Kawazu;
-using Microsoft.Gaming.XboxGameBar;
+//using Microsoft.Gaming.XboxGameBar;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
@@ -27,7 +28,7 @@ namespace HyPlayer;
 /// <summary>
 ///     提供特定于应用程序的行为，以补充默认的应用程序类。
 /// </summary>
-sealed partial class App : Application
+public sealed partial class App : Application
 {
     /// <summary>
     ///     初始化单一实例应用程序对象。这是执行的创作代码的第一行，
@@ -37,7 +38,8 @@ sealed partial class App : Application
     private ExtendedExecutionSession executionSession;
 #pragma warning restore CS0169 // 从不使用字段“App.executionSession”
     private Frame rootFrame;
-    private XboxGameBarWidget widget = null;
+
+    //    private XboxGameBarWidget widget = null;
 
     public App()
     {
@@ -48,19 +50,17 @@ sealed partial class App : Application
             RequiresPointerMode = ApplicationRequiresPointerMode.WhenRequested;
             FocusVisualKind = FocusVisualKind.Reveal;
         }
-
-
+        Common.InitializeHttpClientAndAPI();
         Suspending += OnSuspending;
+        MemoryManager.AppMemoryUsageIncreased += MemoryManagerOnAppMemoryUsageIncreased;
+        MemoryManager.AppMemoryUsageLimitChanging += MemoryManagerOnAppMemoryUsageLimitChanging;
         UnhandledException += App_UnhandledException;
         EnteredBackground += App_EnteredBackground;
         LeavingBackground += App_LeavingBackground;
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         var deviceInfo = new EasClientDeviceInformation();
-        MemoryManager.AppMemoryUsageIncreased += MemoryManagerOnAppMemoryUsageIncreased;
-        MemoryManager.AppMemoryUsageLimitChanging += MemoryManagerOnAppMemoryUsageLimitChanging;
         if (Common.Setting.themeRequest != 0)
             RequestedTheme = Common.Setting.themeRequest == 1 ? ApplicationTheme.Light : ApplicationTheme.Dark;
-        Common.InitializeHttpClientAndAPI();
         _ = InitializeThings();
     }
 
@@ -85,7 +85,6 @@ sealed partial class App : Application
             GC.Collect();
         }
     }
-
 
     private async Task InitializeThings()
     {
@@ -128,7 +127,7 @@ sealed partial class App : Application
 
     protected override void OnActivated(IActivatedEventArgs args)
     {
-        XboxGameBarWidgetActivatedEventArgs widgetArgs = null;
+        /*XboxGameBarWidgetActivatedEventArgs widgetArgs = null;
         if (args.Kind == ActivationKind.Protocol)
         {
             var protocolArgs = args as IProtocolActivatedEventArgs;
@@ -175,7 +174,7 @@ sealed partial class App : Application
                 // You can perform whatever behavior you need based on the URI payload.
             }
         }
-
+        */
         base.OnActivated(args);
         if (args.Kind == ActivationKind.ToastNotification)
         {
@@ -204,14 +203,14 @@ sealed partial class App : Application
 
     private void WidgetWindowClosed(object sender, Windows.UI.Core.CoreWindowEventArgs e)
     {
-        widget = null;
+        //widget = null;
         Window.Current.Closed -= WidgetWindowClosed;
     }
 
     private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
 #if RELEASE
-            Crashes.TrackError((Exception)e.ExceptionObject);
+            //Crashes.TrackError((Exception)e.ExceptionObject);
 #endif
 
         var Dialog = new ContentDialog
@@ -226,7 +225,7 @@ sealed partial class App : Application
     private void App_UnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
     {
 #if RELEASE
-            Crashes.TrackError(e.Exception);
+            //Crashes.TrackError(e.Exception);
 #endif
         e.Handled = true;
         /*
@@ -362,16 +361,20 @@ sealed partial class App : Application
     /// </summary>
     /// <param name="sender">挂起的请求的源。</param>
     /// <param name="e">有关挂起请求的详细信息。</param>
+    [RequiresUnreferencedCode("Calls HyPlayer.HistoryManagement.SetcurPlayingListHistory(List<String>)")]
+    [RequiresDynamicCode("Calls HyPlayer.HistoryManagement.SetcurPlayingListHistory(List<String>)")]
     private async void OnSuspending(object sender, SuspendingEventArgs e)
     {
         var deferral = e.SuspendingOperation.GetDeferral();
         await HistoryManagement.SetcurPlayingListHistory(HyPlayList.List
             .Where(t => t.ItemType == HyPlayItemType.Netease)
             .Select(t => t.PlayItem.Id).ToList());
+        /*
         if (Common.XboxGameBarWidget != null)
         {
             Common.XboxGameBarWidget.Close();
         }
+        */
         deferral.Complete();
     }
 }
