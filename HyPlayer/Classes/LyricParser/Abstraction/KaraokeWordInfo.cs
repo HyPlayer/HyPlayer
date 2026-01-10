@@ -1,6 +1,6 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Diagnostics;
+using System.Text.Json.Serialization;
 #nullable enable
 namespace HyPlayer.Classes.LyricParser.Abstraction
 {

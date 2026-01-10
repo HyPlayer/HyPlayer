@@ -292,10 +292,6 @@ namespace HyPlayer.Classes
         /// <returns></returns>
         public static string FriendFormat(DateTime dateTime)
         {
-            if (dateTime == null)
-            {
-                return string.Empty;
-            }
             try
             {
                 var now = DateTime.UtcNow.Ticks;

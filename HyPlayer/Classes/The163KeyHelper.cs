@@ -1,12 +1,10 @@
 ﻿#region
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using TagLib;
 
 #endregion
@@ -70,9 +68,8 @@ internal static class The163KeyHelper
             {
                 byt163Key = cryptoTransform.TransformFinalBlock(byt163Key, 0, byt163Key.Length);
             }
-            var jObject = JObject.Parse(Encoding.UTF8.GetString(byt163Key).Substring(6));
-            trackId = (ulong)jObject["musicId"];
-            jObject.RemoveAll();
+            var key = JsonSerializer.Deserialize<The163KeyClass>(Encoding.UTF8.GetString(byt163Key).Substring(6));
+            trackId = (ulong)key.musicId;
         }
         catch
         {
@@ -119,7 +116,7 @@ internal static class The163KeyHelper
                 byt163Key = cryptoTransform.TransformFinalBlock(byt163Key, 0, byt163Key.Length);
             }
 
-            KeyStruct = JsonConvert.DeserializeObject<The163KeyClass>(Encoding.UTF8.GetString(byt163Key)
+            KeyStruct = JsonSerializer.Deserialize<The163KeyClass>(Encoding.UTF8.GetString(byt163Key)
                 .Substring(6));
         }
         catch
@@ -134,7 +131,7 @@ internal static class The163KeyHelper
     {
         try
         {
-            var enc = "music:" + JsonConvert.SerializeObject(key);
+            var enc = "music:" + JsonSerializer.Serialize(key);
             var toEncryptArray = Encoding.UTF8.GetBytes(enc);
             byte[] resultArray;
             using (var cryptoTransform = _aes.CreateEncryptor())

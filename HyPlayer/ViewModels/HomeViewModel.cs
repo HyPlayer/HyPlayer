@@ -16,10 +16,14 @@ namespace HyPlayer.ViewModels
 #nullable enable
         private INeteaseProviderService _neteaseProviderService;
 
-        [ObservableProperty] private List<NCPlayList> _recommendedPlaylist;
-        [ObservableProperty] private List<NCPlayList> _toplistPlaylist;
-        [ObservableProperty] private List<NCSong> _recommendedSongs;
-        [ObservableProperty] private List<NCPlayList> _officialPlaylists;
+        [ObservableProperty] 
+        public partial List<NCPlayList> RecommendedPlaylist { get; set; }
+        [ObservableProperty] 
+        public partial List<NCPlayList> ToplistPlaylist { get; set; }
+        [ObservableProperty]
+        public partial List<NCSong> RecommendedSongs { get; set; }
+        [ObservableProperty] 
+        public partial List<NCPlayList> OfficialPlaylists { get; set; }
 #nullable restore
         public HomeViewModel(INeteaseProviderService neteaseProviderService)
         {

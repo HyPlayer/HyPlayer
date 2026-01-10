@@ -1,8 +1,7 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.Services.Store;
@@ -64,24 +63,7 @@ public static class UpdateManager
 
     public static async Task<RemoteVersionResult> GetVersionFromAppCenter(bool isCanary)
     {
-        using var versionsResponse = await Common.HttpClient.GetAsync(
-            new Uri($"https://hyplayer.kengwang.com.cn/Channel/{(isCanary ? 2 : 3)}/latest"));
-        if (!versionsResponse.IsSuccessStatusCode)
-        {
-            Common.AddToTeachingTipLists("获取更新失败", $"HTTP状态码:{versionsResponse.StatusCode}");
-            throw new Exception("获取更新失败");
-        }
-
-        var versionResp =
-            JsonConvert.DeserializeObject<LatestApplicationUpdate>(await versionsResponse.Content.ReadAsStringAsync());
-        return new RemoteVersionResult
-        {
-            UpdateSource = isCanary ? UpdateSource.AppCenterCanary : UpdateSource.AppCenter,
-            IsMandatory = versionResp?.Mandatory ?? false,
-            Version = Version.Parse(versionResp?.Version ?? ""),
-            DownloadLink = versionResp?.DownloadUrl,
-            UpdateLog = versionResp?.UpdateLog ?? ""
-        };
+        throw new NotSupportedException();
     }
 
     public static async Task<RemoteVersionResult> GetVersionFromSelfhost(UpdateSource source)
@@ -101,7 +83,7 @@ public static class UpdateManager
         }
 
         var versionResp =
-            JsonConvert.DeserializeObject<LatestApplicationUpdate>(await versionsResponse.Content.ReadAsStringAsync());
+            JsonSerializer.Deserialize<LatestApplicationUpdate>(await versionsResponse.Content.ReadAsStringAsync());
         return new RemoteVersionResult
         {
             UpdateSource = source,
@@ -114,34 +96,7 @@ public static class UpdateManager
 
     public static async Task<RemoteVersionResult> GetVersionFromGitHub()
     {
-        using HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Get, new Uri("https://api.github.com/repos/HyPlayer/HyPlayer/releases/latest"));
-        message.Headers.Add("user-agent", "HyPlayer-UpdateChecker");
-        using var versionsResponse = await Common.HttpClient.SendAsync(message);
-        if (!versionsResponse.IsSuccessStatusCode)
-        {
-            Common.AddToTeachingTipLists("获取更新失败", await versionsResponse.Content.ReadAsStringAsync());
-            throw new Exception("获取更新失败");
-        }
-        var versionData =
-            JObject.Parse(await versionsResponse.Content.ReadAsStringAsync());
-        var versionResp = new LatestApplicationUpdate()
-        {
-            Version = versionData["tag_name"].ToString(),
-            Date = DateTime.Parse(versionData["published_at"].ToString()),
-            Mandatory = false,
-            DownloadUrl = versionData["html_url"].ToString(),
-            UpdateLog = versionData["body"].ToString(),
-        };
-        var result = new RemoteVersionResult
-        {
-            UpdateSource = UpdateSource.GitHub,
-            IsMandatory = versionResp?.Mandatory ?? false,
-            Version = Version.Parse(versionResp?.Version ?? ""),
-            DownloadLink = versionResp?.DownloadUrl,
-            UpdateLog = versionResp?.UpdateLog ?? ""
-        };
-        versionData.RemoveAll();
-        return result;
+        throw new NotSupportedException();
     }
 
     public static async Task<RemoteVersionResult> GetRemoteVersion(UpdateSource updateSource)
@@ -209,5 +164,9 @@ public static class UpdateManager
             Common.AddToTeachingTipLists("未搜索到邮箱", "未搜索到此邮箱,请检查此邮箱是否是申请内测通道所使用的邮箱。\nCanary通道未能解锁");
             if (Common.Setting.UpdateSource == 2) Common.Setting.UpdateSource = 1;
         }
+    }
+    public class GitHubVersion
+    {
+
     }
 }

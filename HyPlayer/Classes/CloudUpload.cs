@@ -47,7 +47,7 @@ internal class CloudUpload
             album = tag?.Album;
             name = tag?.Title;
             artist = string.Join("; ", tag?.Performers ?? []);
-            coverBytes = tag?.Pictures.FirstOrDefault().Data?.Data;
+            coverBytes = tag?.Pictures?.FirstOrDefault()?.Data?.Data;
         }
         catch
         {
@@ -56,7 +56,7 @@ internal class CloudUpload
 
         var bytes = await FileIO.ReadBufferAsync(file);
         //再获取上传所需要的信息
-        var computedHash = new MD5CryptoServiceProvider().ComputeHash(bytes.ToArray());
+        var computedHash = MD5.HashData(bytes.ToArray());
         var sBuilder = new StringBuilder();
         foreach (var b in computedHash) sBuilder.Append(b.ToString("x2").ToLower());
         var md5 = sBuilder.ToString();
@@ -115,7 +115,7 @@ internal class CloudUpload
             // upload cover
             if (coverBytes != null)
             {
-                var imgcomputedHash = new MD5CryptoServiceProvider().ComputeHash(coverBytes);
+                var imgcomputedHash = MD5.HashData(coverBytes);
                 var imgsBuilder = new StringBuilder();
                 foreach (var b in imgcomputedHash) imgsBuilder.Append(b.ToString("x2").ToLower());
                 var imgmd5 = imgsBuilder.ToString();

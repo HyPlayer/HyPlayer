@@ -1543,7 +1543,7 @@ public static class HyPlayList
             if (Common.Setting.showComposerInLyric)
                 LyricInfo.Lyrics.Add(new SongLyric
                 {
-                    LyricLine = new LrcLyricsLine(pureLyricInfo.PureLyrics, TimeSpan.Zero)
+                    LyricLine = new LrcLyricsLine(NowPlayingItem.PlayItem.ArtistString, TimeSpan.Zero)
                 });
         }
         else
@@ -2279,21 +2279,6 @@ public static class HyPlayList
         if (currentTime >= Common.Setting.ABEndPoint && Common.Setting.ABEndPoint != TimeSpan.Zero &&
             Common.Setting.ABEndPoint > Common.Setting.ABStartPoint)
             Seek(Common.Setting.ABStartPoint);
-    }
-
-    public static async void UpdateLastFMNowPlayingAsync(HyPlayItem NowPlayingItem)
-    {
-        if (NowPlayingItem?.PlayItem != null && NowPlayingItem.ItemType == HyPlayItemType.Netease)
-        {
-            try
-            {
-                await LastFMManager.UpdateNowPlayingAsync(NowPlayingItem);
-            }
-            catch (Exception ex)
-            {
-                Common.AddToTeachingTipLists("同步Last.FM正在播放信息时发生错误", ex.Message);
-            }
-        }
     }
 }
 

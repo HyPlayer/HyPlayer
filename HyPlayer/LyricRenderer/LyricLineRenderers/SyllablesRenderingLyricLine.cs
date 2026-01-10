@@ -553,7 +553,7 @@ namespace HyPlayer.LyricRenderer.LyricLineRenderers
             if (textLayout is null || _sizeChanged)
             {
                 _sizeChanged = false;
-                _text = IsSyllable ? string.Join("", Syllables.Select(t => t.Syllable)) : Text ?? "";
+                _text = IsSyllable ? string.Join("", Syllables!.Select(t => t.Syllable)) : Text ?? "";
                 textLayout = new CanvasTextLayout(session, _text, textFormat,
                     Math.Clamp(context.ItemWidth - 16, 0, int.MaxValue), _canvasHeight);
                 // 创建所有行矩形

@@ -1,10 +1,10 @@
 ﻿using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.NeteaseApi;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using Windows.Security.ExchangeActiveSyncProvisioning;
 using Windows.Storage;
 using Windows.System;
@@ -35,7 +35,7 @@ public sealed partial class TestPage : Page
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        TbAdditionalApiParameters.Text = JsonConvert.SerializeObject(Common.Setting.ApiAdditionalParameters, Formatting.Indented);
+        TbAdditionalApiParameters.Text = JsonSerializer.Serialize(Common.Setting.ApiAdditionalParameters);
     }
 
     public string ResourceId
@@ -61,7 +61,7 @@ public sealed partial class TestPage : Page
 
     private async void DumpDebugInfo_Click(object sender, RoutedEventArgs e)
     {
-        var info = JsonConvert.SerializeObject(new DumpInfo
+        var info = JsonSerializer.Serialize(new DumpInfo
         {
             CurrentSong = HyPlayList.NowPlayingItem,
             CurrentPlaySource = HyPlayList.PlaySourceId,
@@ -70,7 +70,7 @@ public sealed partial class TestPage : Page
             IsInBackground = Common.IsInBackground,
             IsLowCache = Common.Setting.forceMemoryGarbage,
             ErrorMessageList = Common.ErrorMessageList.TakeLast(15).ToList()
-        }, Formatting.Indented);
+        });
         var file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("dump-" +
             DateTime.Now.ToString("yyyyMMddHHmmss") + "-" + Guid.NewGuid() + ".txt");
         await FileIO.WriteTextAsync(file, info);
@@ -102,7 +102,7 @@ public sealed partial class TestPage : Page
     {
         try
         {
-            var result = JsonConvert.DeserializeObject<AdditionalParameters>(TbAdditionalApiParameters.Text);
+            var result = JsonSerializer.Deserialize<AdditionalParameters>(TbAdditionalApiParameters.Text);
             if (result == null)
             {
                 throw new Exception("Invalid JSON");

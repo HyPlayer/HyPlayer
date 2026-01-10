@@ -613,65 +613,6 @@
                                     </controls3:SettingsCard>
                                 </controls3:SettingsExpander.Items>
                             </controls3:SettingsExpander>
-                            <controls3:SettingsExpander
-                                HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Stretch"
-                                Header="Last.FM设定"
-                                IsExpanded="True">
-                                <controls3:SettingsExpander.Transitions>
-                                    <TransitionCollection>
-                                        <RepositionThemeTransition />
-                                    </TransitionCollection>
-                                </controls3:SettingsExpander.Transitions>
-                                <controls3:SettingsExpander.Items>
-                                    <controls3:SettingsCard Header="上传播放记录至Last.FM">
-                                        <ToggleSwitch
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.UseLastFMScrobbler, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
-                                    <controls3:SettingsCard Header="上传正在播放至Last.FM">
-                                        <ToggleSwitch
-                                            MinWidth="10"
-                                            HorizontalAlignment="Right"
-                                            IsOn="{x:Bind hyplayer:Common.Setting.UpdateLastFMNowPlaying, Mode=TwoWay}" />
-                                    </controls3:SettingsCard>
-                                    <controls3:SettingsCard>
-                                        <Grid>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="Auto" />
-                                                <RowDefinition Height="Auto" />
-                                            </Grid.RowDefinitions>
-                                            <Grid Grid.Row="0" Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay}">
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="Auto" />
-                                                    <ColumnDefinition Width="Auto" />
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock
-                                                    Grid.Column="0"
-                                                    Text="已登录账号："
-                                                    Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay}" />
-                                                <TextBlock
-                                                    Grid.Column="1"
-                                                    Text="{x:Bind hyplayer:Common.Setting.LastFMUserName, Mode=OneWay}"
-                                                    Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay}" />
-                                            </Grid>
-                                            <Grid Grid.Row="1">
-                                                <Button
-                                                    x:Name="LogoffLastFMAccount"
-                                                    Click="LogoffLastFMAccount_Click"
-                                                    Content="注销LastFM账号"
-                                                    Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay}" />
-                                                <Button
-                                                    x:Name="LoginLastFMAccount"
-                                                    Click="LoginLastFMAccount_Click"
-                                                    Content="登录LastFM账号"
-                                                    Visibility="{x:Bind hyplayer:Common.Setting.LastFMLogined, Mode=OneWay, Converter={StaticResource ReversedBooleanToVisibilityConverter}}" />
-                                            </Grid>
-                                        </Grid>
-                                    </controls3:SettingsCard>
-                                </controls3:SettingsExpander.Items>
-                            </controls3:SettingsExpander>
                         </StackPanel>
                     </ScrollViewer>
                 </Grid>

@@ -6,7 +6,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls">
     <ResourceDictionary.ThemeDictionaries>
-        <ResourceDictionary x:Key="Dark" Source="Dark.xaml" />
-        <ResourceDictionary x:Key="Light" Source="Light.xaml" />
+        <ResourceDictionary x:Key="Dark" Source="ms-appx:///Resources/Dark.xaml" />
+        <ResourceDictionary x:Key="Light" Source="ms-appx:///Resources/Light.xaml" />
     </ResourceDictionary.ThemeDictionaries>
 </ResourceDictionary>

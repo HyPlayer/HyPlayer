@@ -421,16 +421,6 @@ public sealed partial class Settings : Page
         if (storageFolder != null) await storageFolder.DeleteAsync();
     }
 
-    private async void LoginLastFMAccount_Click(object sender, RoutedEventArgs e)
-    {
-        var LoginBox = new LastFMLoginPage();
-        await LoginBox.ShowAsync();
-    }
-
-    private void LogoffLastFMAccount_Click(object sender, RoutedEventArgs e)
-    {
-        LastFMManager.TryLogoffLastFM();
-    }
 
     private void ResetPureLyricIdleColor(object sender, RoutedEventArgs e)
     {

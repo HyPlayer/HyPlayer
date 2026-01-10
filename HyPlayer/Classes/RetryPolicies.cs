@@ -209,7 +209,7 @@ namespace HyPlayer.Classes
             int retryCount,
             TimeSpan baseDelay,
             bool exponential = true,
-            Action<Exception, TimeSpan, int, Context>? onRetryAction = null)
+            Action<Exception, TimeSpan, int, Context> onRetryAction = null)
         {
             return Policy
                 .Handle<Exception>()

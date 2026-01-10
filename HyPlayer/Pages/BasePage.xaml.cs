@@ -160,15 +160,6 @@ public sealed partial class BasePage : Page
         {
             // ignored
         }
-
-        try
-        {
-            LastFMManager.InitializeLastFMManager();
-        }
-        catch (Exception ex)
-        {
-            Common.AddToTeachingTipLists("登录Last.FM登录失败", ex.Message);
-        }
     }
 
     private async void ButtonLogin_OnClick(object sender, ContentDialogButtonClickEventArgs args)
@@ -316,9 +307,6 @@ public sealed partial class BasePage : Page
         // 执行签到操作
         // DoDailySign();
 
-        // 播放信息记录
-        HyPlayList.OnMediaEnd += Scrobble;
-
         HyPlayList.LoginDoneCall();
         _ = ((App)Application.Current).InitializeJumpList();
         if (Common.Setting.noImage)
@@ -331,20 +319,6 @@ public sealed partial class BasePage : Page
         }
 
         return true;
-    }
-
-    public async void Scrobble(HyPlayItem item)
-    {
-        // 播放数据记录
-        if (item.ItemType != HyPlayItemType.Netease) return;
-        try
-        {
-            await LastFMManager.ScrobbleAsync(item);
-        }
-        catch (Exception ex)
-        {
-            Common.AddToTeachingTipLists("记录上传至Last.FM时发生错误", ex.Message);
-        }
     }
 
     private static async Task LoadMyLikelist()

@@ -4,7 +4,6 @@ using ALRC.Abstraction;
 using HyPlayer.Classes.LyricParser.Abstraction;
 using HyPlayer.NeteaseApi.Models;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -380,22 +379,6 @@ public class NCArtist : ProvidableItemBase
     public string name;
     public string transname;
     public HyPlayItemType Type;
-
-    public static NCArtist CreateFromJson(JToken artist)
-    {
-        //TODO: 歌手这里尽量再来点信息
-        var art = new NCArtist
-        {
-            Type = HyPlayItemType.Netease,
-            id = artist["id"].ToString(),
-            name = artist["name"].ToString()
-        };
-        if (artist["alias"] != null)
-            art.alias = string.Join(" / ", artist["alias"].Select(t => t.ToString()).ToArray());
-        if (artist["trans"] != null) art.transname = artist["trans"].ToString();
-        if (artist["picUrl"] != null) art.avatar = artist["picUrl"].ToString();
-        return art;
-    }
 }
 
 public class NCAlbum : ProvidableItemBase
@@ -406,22 +389,6 @@ public class NCAlbum : ProvidableItemBase
     public string description;
     public string id;
     public string name;
-
-    public static NCAlbum CreateFromJson(JToken album)
-    {
-        if (album?.HasValues is not true) return new NCAlbum();
-        return new NCAlbum
-        {
-            AlbumType = HyPlayItemType.Netease,
-            alias = album["alias"] != null
-                ? string.Join(" / ", album["alias"].ToArray().Select(t => t.ToString()))
-                : "",
-            cover = album["picUrl"].ToString(),
-            description = album["description"] != null ? album["description"].ToString() : "",
-            id = album["id"].ToString(),
-            name = album["name"].ToString()
-        };
-    }
 }
 
 public class Comment : ProvidableItemBase

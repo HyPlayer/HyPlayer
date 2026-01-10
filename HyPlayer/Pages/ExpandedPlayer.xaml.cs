@@ -1039,7 +1039,7 @@ public sealed partial class ExpandedPlayer : Page
     private Windows.UI.Color? _karaokAccentColorCache;
     private SolidColorBrush? _pureAccentBrushCache;
 
-    private async Task<bool> IsBrightAsync(IRandomAccessStream coverStream)
+    private async Task<bool> IsBrightAsync(InMemoryRandomAccessStream coverStream)
     {
         lastSong = HyPlayList.NowPlayingItem;
         using var stream = coverStream.CloneStream();
@@ -1271,7 +1271,7 @@ public sealed partial class ExpandedPlayer : Page
     private void ImageAlbum_OnManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
     {
         if (e.PointerDeviceType == PointerDeviceType.Mouse || !Common.Setting.enableTouchGestureAction) return;
-        double manipulationDeltaRotateValue = new double();
+        double manipulationDeltaRotateValue;
         switch (Common.Setting.gestureMode)
         {
             case 3:
@@ -1627,10 +1627,7 @@ public sealed partial class ExpandedPlayer : Page
     private void LuminousBackground_Update(Microsoft.Graphics.Canvas.UI.Xaml.ICanvasAnimatedControl sender, Microsoft.Graphics.Canvas.UI.Xaml.CanvasAnimatedUpdateEventArgs args)
     {
         var progress = (float)args.Timing.TotalTime.TotalSeconds + _randomValue;
-        if (_shaderEffect != null)
-        {
-            _shaderEffect.Properties["iTime"] = progress;
-        }
+        _shaderEffect?.Properties["iTime"] = progress;
     }
 
     private void LuminousBackground_Draw(Microsoft.Graphics.Canvas.UI.Xaml.ICanvasAnimatedControl sender, Microsoft.Graphics.Canvas.UI.Xaml.CanvasAnimatedDrawEventArgs args)

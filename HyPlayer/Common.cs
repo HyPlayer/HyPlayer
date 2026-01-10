@@ -13,7 +13,6 @@ using Kawazu;
 using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.Toolkit.Uwp.UI;
 using Microsoft.UI.Xaml.Controls;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -25,6 +24,7 @@ using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Core;
 using Windows.Foundation;
@@ -79,8 +79,6 @@ namespace HyPlayer
         public static readonly Stack<NavigationHistoryItem> NavigationHistory = new();
         public static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).ToLocalTime();
 
-        [RequiresUnreferencedCode("Calls HyPlayer.Setting.ApiAdditionalParameters")]
-        [RequiresDynamicCode("Calls HyPlayer.Setting.ApiAdditionalParameters")]
         public static void InitializeHttpClientAndAPI()
         {
             HttpClientHandler = NeteaseCloudMusicApiHandler.HttpClientHandler;
@@ -405,12 +403,8 @@ namespace HyPlayer
 
         public AdditionalParameters ApiAdditionalParameters
         {
-            [RequiresUnreferencedCode("Calls Newtonsoft.Json.JsonConvert.DeserializeObject<T>(String)")]
-            [RequiresDynamicCode("Calls Newtonsoft.Json.JsonConvert.DeserializeObject<T>(String)")]
-            get => JsonConvert.DeserializeObject<AdditionalParameters>(GetSettings(nameof(ApiAdditionalParameters), "{}")) ?? new AdditionalParameters();
-            [RequiresUnreferencedCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
-            [RequiresDynamicCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
-            set => ApplicationData.Current.LocalSettings.Values[nameof(ApiAdditionalParameters)] = JsonConvert.SerializeObject(value);
+            get => JsonSerializer.Deserialize<AdditionalParameters>(GetSettings(nameof(ApiAdditionalParameters), "{}")) ?? new AdditionalParameters();
+            set => ApplicationData.Current.LocalSettings.Values[nameof(ApiAdditionalParameters)] = JsonSerializer.Serialize(value);
         }
 
         public string lyricFontFamily
@@ -1518,57 +1512,6 @@ namespace HyPlayer
             }
         }
 
-        public bool UseLastFMScrobbler
-        {
-            get => GetSettings("useLastFMScrobbler", false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values["useLastFMScrobbler"] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool UpdateLastFMNowPlaying
-        {
-            get => GetSettings("updateLastFMNowPlaying", false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values["updateLastFMNowPlaying"] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string LastFMUserName
-        {
-            get => GetSettings("lastFMUserName", string.Empty);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values["lastFMUserName"] = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string LastFMToken
-        {
-            get => GetSettings("lastFMToken", string.Empty);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values["lastFMToken"] = value;
-                OnPropertyChanged();
-                OnPropertyChanged(nameof(LastFMLogined));
-            }
-        }
-
-        public bool LastFMIsSubscriber
-        {
-            get => GetSettings("lastFMIsSubscriber", false);
-            set
-            {
-                ApplicationData.Current.LocalSettings.Values["lastFMisSubscriber"] = value;
-                OnPropertyChanged();
-            }
-        }
-
         public RomajiSource LyricRomajiSource
         {
             //  0 - 不进行转换  1 - 自动选择  2 - 网易云优先  3 - Kawazu 转换优先
@@ -1747,7 +1690,6 @@ namespace HyPlayer
             }
         }
 
-        public bool LastFMLogined => LastFMManager.LastfmLogined;
         public bool SaveCookies()
         {
             var container = ApplicationData.Current.LocalSettings.CreateContainer("LoginedUser", ApplicationDataCreateDisposition.Always);
@@ -1825,50 +1767,44 @@ namespace HyPlayer
 
     internal class HistoryManagement
     {
-        [RequiresDynamicCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
-        [RequiresUnreferencedCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
         public static void InitializeHistoryTrack()
         {
             var list = new List<string>();
             if (ApplicationData.Current.LocalSettings.Values["songHistory"] == null)
-                ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonConvert.SerializeObject(list);
+                ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonSerializer.Serialize(list);
             if (ApplicationData.Current.LocalSettings.Values["songHistory"].ToString().StartsWith("[{"))
-                ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonConvert.SerializeObject(list);
+                ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonSerializer.Serialize(list);
             if (ApplicationData.Current.LocalSettings.Values["searchHistory"] == null)
-                ApplicationData.Current.LocalSettings.Values["searchHistory"] = JsonConvert.SerializeObject(list);
+                ApplicationData.Current.LocalSettings.Values["searchHistory"] = JsonSerializer.Serialize(list);
             if (ApplicationData.Current.LocalSettings.Values["songlistHistory"] == null)
-                ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
+                ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonSerializer.Serialize(list);
             if (ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] == null)
                 ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] =
-                    JsonConvert.SerializeObject(list);
+                    JsonSerializer.Serialize(list);
             if (ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"].ToString().StartsWith("[{"))
                 ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] =
-                    JsonConvert.SerializeObject(list);
+                    JsonSerializer.Serialize(list);
             if (ApplicationData.Current.LocalSettings.Values["songlistHistory"].ToString().StartsWith("[{"))
-                ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
+                ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonSerializer.Serialize(list);
         }
 
-        [RequiresUnreferencedCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
-        [RequiresDynamicCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
         public static void AddNCSongHistory(string songid)
         {
             var list = new List<string>();
-            list = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
+            list = JsonSerializer.Deserialize<List<string>>(ApplicationData.Current.LocalSettings
                 .Values["songHistory"].ToString());
 
             list.Remove(songid);
             list.Insert(0, songid);
             if (list.Count >= 300)
                 list.RemoveRange(9, list.Count - 300);
-            ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonConvert.SerializeObject(list);
+            ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonSerializer.Serialize(list);
         }
 
-        [RequiresUnreferencedCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
-        [RequiresDynamicCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
         public static void AddSearchHistory(string Text)
         {
             var list = new List<string>();
-            list = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
+            list = JsonSerializer.Deserialize<List<string>>(ApplicationData.Current.LocalSettings
                 .Values["searchHistory"].ToString());
             if (!list.Contains(Text))
             {
@@ -1880,26 +1816,22 @@ namespace HyPlayer
                 list.Insert(0, Text);
             }
 
-            ApplicationData.Current.LocalSettings.Values["searchHistory"] = JsonConvert.SerializeObject(list);
+            ApplicationData.Current.LocalSettings.Values["searchHistory"] = JsonSerializer.Serialize(list);
         }
 
-        [RequiresUnreferencedCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
-        [RequiresDynamicCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
         public static void AddSonglistHistory(string playListid)
         {
             var list = new List<string>();
-            list = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
+            list = JsonSerializer.Deserialize<List<string>>(ApplicationData.Current.LocalSettings
                 .Values["songlistHistory"].ToString());
 
             list.Remove(playListid);
             list.Insert(0, playListid);
             if (list.Count >= 100)
                 list.RemoveRange(100, list.Count - 100);
-            ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
+            ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonSerializer.Serialize(list);
         }
 
-        [RequiresUnreferencedCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
-        [RequiresDynamicCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
         public static async Task SetcurPlayingListHistory(List<string> songids)
         {
             if (Common.Setting.advancedMusicHistoryStorage)
@@ -1916,28 +1848,24 @@ namespace HyPlayer
             else
                 //低级音乐存储
                 ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] =
-                    JsonConvert.SerializeObject(songids.Count > 100 ? songids.GetRange(0, 100) : songids);
+                    JsonSerializer.Serialize(songids.Count > 100 ? songids.GetRange(0, 100) : songids);
         }
 
-        [RequiresDynamicCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
-        [RequiresUnreferencedCode("Calls Newtonsoft.Json.JsonConvert.SerializeObject(Object)")]
         public static async Task ClearHistory()
         {
             var list = new List<string>();
-            ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonConvert.SerializeObject(list);
-            ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonConvert.SerializeObject(list);
-            ApplicationData.Current.LocalSettings.Values["searchHistory"] = JsonConvert.SerializeObject(list);
+            ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonSerializer.Serialize(list);
+            ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonSerializer.Serialize(list);
+            ApplicationData.Current.LocalSettings.Values["searchHistory"] = JsonSerializer.Serialize(list);
             await (await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("songPlayHistory",
                 CreationCollisionOption.OpenIfExists)).DeleteAsync();
         }
 
-        [RequiresUnreferencedCode("Calls Newtonsoft.Json.JsonConvert.DeserializeObject<T>(String)")]
-        [RequiresDynamicCode("Calls Newtonsoft.Json.JsonConvert.DeserializeObject<T>(String)")]
         public static async Task<List<NCSong>> GetNCSongHistory()
         {
             try
             {
-                var songIds = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
+                var songIds = JsonSerializer.Deserialize<List<string>>(ApplicationData.Current.LocalSettings
                     .Values["songHistory"].ToString());
                 var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.SongDetailApi,
                     new SongDetailRequest()
@@ -1957,16 +1885,12 @@ namespace HyPlayer
             return [];
         }
 
-        [RequiresUnreferencedCode("Calls Newtonsoft.Json.JsonConvert.DeserializeObject<T>(String)")]
-        [RequiresDynamicCode("Calls Newtonsoft.Json.JsonConvert.DeserializeObject<T>(String)")]
         public static List<string> GetSearchHistory()
         {
-            return JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
+            return JsonSerializer.Deserialize<List<string>>(ApplicationData.Current.LocalSettings
                 .Values["searchHistory"].ToString());
         }
 
-        [RequiresUnreferencedCode("Calls Newtonsoft.Json.JsonConvert.DeserializeObject<T>(String)")]
-        [RequiresDynamicCode("Calls Newtonsoft.Json.JsonConvert.DeserializeObject<T>(String)")]
         public static async Task<List<NCSong>> GetcurPlayingListHistory()
         {
             var retsongs = new List<NCSong>();
@@ -1977,7 +1901,7 @@ namespace HyPlayer
                         CreationCollisionOption.OpenIfExists))).Split("\r\n").ToList();
             else
                 //低级音乐存储
-                trackIds = JsonConvert.DeserializeObject<List<string>>(ApplicationData.Current.LocalSettings
+                trackIds = JsonSerializer.Deserialize<List<string>>(ApplicationData.Current.LocalSettings
                     .Values["curPlayingListHistory"].ToString()) ?? new List<string>();
 
             if (trackIds == null || string.IsNullOrEmpty(trackIds.FirstOrDefault()))

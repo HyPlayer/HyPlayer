@@ -197,7 +197,6 @@ public sealed partial class App : Application
         if (args.Kind == ActivationKind.Protocol)
         {
             var launchUri = (args as ProtocolActivatedEventArgs)?.Uri;
-            if (launchUri?.Host == "link.last.fm") _ = LastFMManager.TryLoginLastfmAccountFromBrowser(launchUri.Query.Replace("?token=", string.Empty));
         }
     }
 
@@ -361,8 +360,6 @@ public sealed partial class App : Application
     /// </summary>
     /// <param name="sender">挂起的请求的源。</param>
     /// <param name="e">有关挂起请求的详细信息。</param>
-    [RequiresUnreferencedCode("Calls HyPlayer.HistoryManagement.SetcurPlayingListHistory(List<String>)")]
-    [RequiresDynamicCode("Calls HyPlayer.HistoryManagement.SetcurPlayingListHistory(List<String>)")]
     private async void OnSuspending(object sender, SuspendingEventArgs e)
     {
         var deferral = e.SuspendingOperation.GetDeferral();

@@ -1,14 +1,13 @@
 ﻿#region
 
 using HyPlayer.HyPlayControl;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.Storage;
@@ -152,23 +151,10 @@ internal static class NCMFile
             var mdcLen = AesDecrypt(dontModifyDecryptChunk, _modifyBoxKey);
 
             // skip `music:`
-            using (var reader = new MemoryStream(dontModifyDecryptChunk, 6, mdcLen - 6))
+            using (var reader = new MemoryStream(dontModifyDecryptChunk, 6, mdcLen))
             {
                 var infoStr = Encoding.UTF8.GetString(reader.ToArray());
-                var obj = JsonConvert.DeserializeObject<JObject>(infoStr);
-                keys = new The163KeyClass
-                {
-                    albumId = obj["albumId"].ToObject<ulong>(),
-                    album = obj["album"].ToString(),
-                    musicId = long.Parse(Regex.Match(obj["musicId"].ToString(), "\\d*$").Value),
-                    musicName = obj["musicName"].ToString(),
-                    duration = obj["duration"].ToObject<int>(),
-                    bitrate = obj["bitrate"].ToObject<int>(),
-                    albumPic = obj["albumPic"].ToString(),
-                    format = obj["format"].ToString(),
-                    artist = obj["artist"].ToObject<List<List<object>>>()
-                };
-                obj.RemoveAll();
+                keys = JsonSerializer.Deserialize<The163KeyClass>(infoStr);
             }
         }
 
@@ -179,7 +165,7 @@ internal static class NCMFile
     {
         var buffer = new byte[8];
         stream.Seek(0, SeekOrigin.Begin);
-        stream.Read(buffer, 0, buffer.Length);
+        stream.ReadExactly(buffer);
         return buffer.SequenceEqual(_flag);
     }
 
@@ -207,7 +193,7 @@ internal static class NCMFile
         {
             var chunk = new byte[len];
             // unsafe
-            fs.Read(chunk, 0, (int)len);
+            fs.ReadExactly(chunk, 0, (int)len);
             return chunk;
         }
 
