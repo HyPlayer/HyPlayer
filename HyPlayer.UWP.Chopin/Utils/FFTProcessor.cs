@@ -2,6 +2,7 @@ using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Windows.Media;
+using WinRT;
 
 namespace HyPlayer.UWP.Chopin.Utils
 {
@@ -40,7 +41,7 @@ namespace HyPlayer.UWP.Chopin.Utils
             using (var reference = buffer.CreateReference())
             {
                 // ReSharper disable once SuspiciousTypeConversion.Global
-                ((IMemoryBufferByteAccess)reference).GetBuffer(out var dataInBytes, out var capacity);
+                reference.As<IMemoryBufferByteAccess>().GetBuffer(out var dataInBytes, out var capacity);
                 float* dataInFloat = (float*)dataInBytes;
 
                 // 核心修正：根据实际拿到的内存大小决定处理多少数据

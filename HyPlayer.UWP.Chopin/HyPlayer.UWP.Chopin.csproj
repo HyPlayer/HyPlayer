@@ -6,7 +6,7 @@
     <UseUwp>true</UseUwp>
     <DefaultLanguage>zh-CN</DefaultLanguage>
     <IsAotCompatible>true</IsAotCompatible>
-    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+    <DisableRuntimeMarshalling>false</DisableRuntimeMarshalling>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 </Project>
