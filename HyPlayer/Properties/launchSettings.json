@@ -1,9 +1,5 @@
 {
   "profiles": {
-    "WSL": {
-      "commandName": "WSL2",
-      "distributionName": ""
-    },
     "HyPlayer": {
       "commandName": "MsixPackage",
       "nativeDebugging": true
