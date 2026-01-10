@@ -93,4 +93,9 @@
     <ProjectReference Include="..\Impressionist\Impressionist\Impressionist.csproj" />
     <ProjectReference Include="..\Kawazu\Kawazu\Kawazu.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="Shaders\BackgroundShader.bin">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

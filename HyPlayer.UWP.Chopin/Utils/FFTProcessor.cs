@@ -27,21 +27,13 @@ namespace HyPlayer.UWP.Chopin.Utils
 
         private readonly object _bufferLock = new object();
 
-        [ComImport]
-        [Guid("5B0D3235-4DBA-4D44-865E-8F1D0E4FD04D")]
-        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-        unsafe interface IMemoryBufferByteAccess
-        {
-            void GetBuffer(out byte* buffer, out uint capacity);
-        }
-
         public unsafe void ProcessFFT(AudioFrame frame)
         {
             using (var buffer = frame.LockBuffer(AudioBufferAccessMode.Read))
             using (var reference = buffer.CreateReference())
             {
                 // ReSharper disable once SuspiciousTypeConversion.Global
-                reference.As<IMemoryBufferByteAccess>().GetBuffer(out var dataInBytes, out var capacity);
+                reference.GetBuffer(out var dataInBytes, out var capacity);
                 float* dataInFloat = (float*)dataInBytes;
 
                 // 核心修正：根据实际拿到的内存大小决定处理多少数据
