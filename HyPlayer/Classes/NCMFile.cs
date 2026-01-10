@@ -151,7 +151,7 @@ internal static class NCMFile
             var mdcLen = AesDecrypt(dontModifyDecryptChunk, _modifyBoxKey);
 
             // skip `music:`
-            using (var reader = new MemoryStream(dontModifyDecryptChunk, 6, mdcLen))
+            using (var reader = new MemoryStream(dontModifyDecryptChunk, 6, mdcLen - 6))
             {
                 var infoStr = Encoding.UTF8.GetString(reader.ToArray());
                 keys = JsonSerializer.Deserialize<The163KeyClass>(infoStr);
