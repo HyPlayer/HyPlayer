@@ -13,6 +13,7 @@ using Microsoft.UI.Xaml.Controls;
 using QRCoder;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -567,7 +568,19 @@ public sealed partial class BasePage : Page
     {
         try
         {
-            var key = await Common.NeteaseAPI.RequestAsync(NeteaseApis.LoginQrCodeUnikeyApi, new LoginQrCodeUnikeyRequest());
+            // 保持与原逻辑一致：不显式声明 Key 的泛型类型，避免在 UI 层引入额外类型依赖
+            dynamic key;
+            try
+            {
+                key = await Common.NeteaseAPI.RequestAsync(NeteaseApis.LoginQrCodeUnikeyApi, new LoginQrCodeUnikeyRequest());
+            }
+            catch (Exception ex)
+            {
+                Common.AddToTeachingTipLists("获取UniKey失败", ex.ToString());
+                Debug.WriteLine(ex);
+                return;
+            }
+
             if (key.IsError)
             {
                 Common.AddToTeachingTipLists("获取UniKey失败", key.Error.Message);

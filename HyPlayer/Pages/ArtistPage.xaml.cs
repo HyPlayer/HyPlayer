@@ -345,19 +345,4 @@ public sealed partial class ArtistPage : Page
     {
         page = 0;
     }
-
-    private void PivotView_HeaderScrollProgressChanged(object sender, EventArgs e)
-    {
-        GridPersonalInformation.Opacity = 1 - PivotView.HeaderScrollProgress * 1.4;
-        RectangleImageBack.Opacity = 1 - PivotView.HeaderScrollProgress * 1.1;
-        RectangleImageBackAcrylic.Opacity = 1 - PivotView.HeaderScrollProgress * 1.1;
-        TextBlockDesc.Opacity = 1 - PivotView.HeaderScrollProgress * 0.8;
-
-        UserScale.ScaleX = 1 - PivotView.HeaderScrollProgress * 0.8;
-        UserScale.ScaleY = 1 - PivotView.HeaderScrollProgress * 0.8;
-        UserInfoScale.ScaleX = 1 - PivotView.HeaderScrollProgress * 0.6;
-        UserInfoScale.ScaleY = 1 - PivotView.HeaderScrollProgress * 0.6;
-        DescScale.ScaleX = 1 - PivotView.HeaderScrollProgress * 0.4;
-        DescScale.ScaleY = 1 - PivotView.HeaderScrollProgress * 0.4;
-    }
 }

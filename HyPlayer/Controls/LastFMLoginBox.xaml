@@ -27,53 +27,51 @@
                 <RowDefinition />
                 <RowDefinition />
             </Grid.RowDefinitions>
-            <controls1:PivotView>
-                <controls1:PivotEx SelectionChanged="Pivot_SelectionChanged">
-                    <PivotItem Header="密码登录">
-                        <Grid Margin="0,48,0,0">
-                            <StackPanel Orientation="Vertical" Spacing="12">
-                                <TextBox
-                                    x:Name="TextBoxAccount"
-                                    KeyDown="TextBoxAccount_OnKeyDown"
-                                    PlaceholderText="Last.FM账号" />
-                                <PasswordBox
-                                    x:Name="TextBoxPassword"
-                                    KeyDown="TextBoxPassword_OnKeyDown"
-                                    PlaceholderText="Last.FM密码" />
+            <Pivot SelectionChanged="Pivot_SelectionChanged">
+                <PivotItem Header="密码登录">
+                    <Grid Margin="0,48,0,0">
+                        <StackPanel Orientation="Vertical" Spacing="12">
+                            <TextBox
+                                x:Name="TextBoxAccount"
+                                KeyDown="TextBoxAccount_OnKeyDown"
+                                PlaceholderText="Last.FM账号" />
+                            <PasswordBox
+                                x:Name="TextBoxPassword"
+                                KeyDown="TextBoxPassword_OnKeyDown"
+                                PlaceholderText="Last.FM密码" />
 
-                                <TextBlock
-                                    VerticalAlignment="Center"
-                                    Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
-                                    Text="登录代表你同意相关条款" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Foreground="{StaticResource SystemControlForegroundBaseMediumBrush}"
+                                Text="登录代表你同意相关条款" />
 
 
+                        </StackPanel>
+                    </Grid>
+                </PivotItem>
+                <PivotItem Header="使用浏览器登录">
+                    <Grid Margin="0,36,0,0">
+                        <StackPanel
+                            Margin="0,12,0,0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Top"
+                            Spacing="8">
+                            <TextBlock Text="等待浏览器完成认证中..." />
+                            <StackPanel Orientation="Horizontal">
+                                <Button
+                                    x:Name="ButtonCopyLink"
+                                    Margin="0,0,15,0"
+                                    Click="ButtonCopyLink_Click"
+                                    Content="复制认证地址" />
+                                <Button
+                                    x:Name="ButtonRelaunchBrowser"
+                                    Click="ButtonRelaunchBrowser_Click"
+                                    Content="重新打开浏览器" />
                             </StackPanel>
-                        </Grid>
-                    </PivotItem>
-                    <PivotItem Header="使用浏览器登录">
-                        <Grid Margin="0,36,0,0">
-                            <StackPanel
-                                Margin="0,12,0,0"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Top"
-                                Spacing="8">
-                                <TextBlock Text="等待浏览器完成认证中..." />
-                                <StackPanel Orientation="Horizontal">
-                                    <Button
-                                        x:Name="ButtonCopyLink"
-                                        Margin="0,0,15,0"
-                                        Click="ButtonCopyLink_Click"
-                                        Content="复制认证地址" />
-                                    <Button
-                                        x:Name="ButtonRelaunchBrowser"
-                                        Click="ButtonRelaunchBrowser_Click"
-                                        Content="重新打开浏览器" />
-                                </StackPanel>
-                            </StackPanel>
-                        </Grid>
-                    </PivotItem>
-                </controls1:PivotEx>
-            </controls1:PivotView>
+                        </StackPanel>
+                    </Grid>
+                </PivotItem>
+            </Pivot>
             <StackPanel
                 Grid.Row="2"
                 Width="400"
