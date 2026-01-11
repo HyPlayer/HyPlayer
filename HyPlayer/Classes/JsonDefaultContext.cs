@@ -10,10 +10,10 @@ using HyPlayer.NeteaseApi.ApiContracts.Recommend;
 using HyPlayer.NeteaseApi.ApiContracts.Song;
 using HyPlayer.NeteaseApi.ApiContracts.User;
 using HyPlayer.NeteaseApi.Models.ResponseModels;
+using System;
 using System.Collections.Generic;
-using System.Text.Json;
 using System.Text.Json.Serialization;
-using static HyPlayer.NeteaseApi.ApiContracts.Song.LyricResponse;
+using static HyPlayer.Classes.UpdateManager;
 
 namespace HyPlayer.Classes
 {
@@ -47,6 +47,7 @@ namespace HyPlayer.Classes
     [JsonSerializable(typeof(RecommendSongsResponse))]
     [JsonSerializable(typeof(PlaylistTracksGetResponse))]
     [JsonSerializable(typeof(PlaylistDetailResponse))]
+    [JsonSerializable(typeof(LatestApplicationUpdate))]
     public partial class JsonDefaultContext : JsonSerializerContext
     {
     }

@@ -1603,7 +1603,6 @@
                                                     <ComboBoxItem Content="Microsoft Store" />
                                                     <ComboBoxItem Content="App Center" IsEnabled="False" />
                                                     <ComboBoxItem Content="App Center(Canary)" IsEnabled="False" />
-                                                    <ComboBoxItem Content="GitHub" />
                                                     <ComboBoxItem Content="Release" />
                                                     <ComboBoxItem Content="Canary" />
                                                     <ComboBoxItem Content="Dogfood" />

@@ -30,6 +30,7 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
+using WinRT;
 using Point = Windows.Foundation.Point;
 
 #endregion
@@ -126,8 +127,8 @@ public sealed partial class Settings : Page
 
         return models.OrderBy(t => t.Name).ToList();
     }
-
-    public class FontInfo
+    [GeneratedBindableCustomProperty]
+    public partial class FontInfo
     {
         public string Name { get; set; }
         public string Value { get; set; }

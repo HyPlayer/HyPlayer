@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
-using System.Net.Http;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.Services.Store;
@@ -16,7 +16,6 @@ public static class UpdateManager
         MicrosoftStore,
         AppCenter,
         AppCenterCanary,
-        GitHub,
         Release,
         Canary,
         Dogfood
@@ -51,19 +50,42 @@ public static class UpdateManager
         };
     }
 
-    class LatestApplicationUpdate
+    public class LatestApplicationUpdate
     {
+        [JsonPropertyName("version")]
         public string Version { get; set; }
+        [JsonPropertyName("date")]
         public DateTime Date { get; set; }
+        [JsonPropertyName("mandatory")]
         public bool Mandatory { get; set; }
+        [JsonPropertyName("downloadUrl")]
         public string DownloadUrl { get; set; }
+        [JsonPropertyName("updateLog")]
         public string UpdateLog { get; set; }
+        [JsonPropertyName("size")]
         public int Size { get; set; }
     }
 
     public static async Task<RemoteVersionResult> GetVersionFromAppCenter(bool isCanary)
     {
-        throw new NotSupportedException();
+        using var versionsResponse = await Common.HttpClient.GetAsync(
+            new Uri($"https://hyplayer.kengwang.com.cn/Channel/{(isCanary ? 2 : 3)}/latest"));
+        if (!versionsResponse.IsSuccessStatusCode)
+        {
+            Common.AddToTeachingTipLists("获取更新失败", $"HTTP状态码:{versionsResponse.StatusCode}");
+            throw new Exception("获取更新失败");
+        }
+        var resp = await versionsResponse.Content.ReadAsStringAsync();
+        var versionResp =
+            JsonSerializer.Deserialize<LatestApplicationUpdate>(resp, Common.DefaultOptions);
+        return new RemoteVersionResult
+        {
+            UpdateSource = isCanary ? UpdateSource.AppCenterCanary : UpdateSource.AppCenter,
+            IsMandatory = versionResp?.Mandatory ?? false,
+            Version = Version.Parse(versionResp?.Version ?? ""),
+            DownloadLink = versionResp?.DownloadUrl,
+            UpdateLog = versionResp?.UpdateLog ?? ""
+        };
     }
 
     public static async Task<RemoteVersionResult> GetVersionFromSelfhost(UpdateSource source)
@@ -81,9 +103,9 @@ public static class UpdateManager
             Common.AddToTeachingTipLists("获取更新失败", $"HTTP状态码:{versionsResponse.StatusCode}");
             throw new Exception("获取更新失败");
         }
-
+        var resp = await versionsResponse.Content.ReadAsStringAsync();
         var versionResp =
-            JsonSerializer.Deserialize<LatestApplicationUpdate>(await versionsResponse.Content.ReadAsStringAsync(), Common.DefaultOptions);
+            JsonSerializer.Deserialize<LatestApplicationUpdate>(resp, Common.DefaultOptions);
         return new RemoteVersionResult
         {
             UpdateSource = source,
@@ -94,16 +116,13 @@ public static class UpdateManager
         };
     }
 
-    public static async Task<RemoteVersionResult> GetVersionFromGitHub()
-    {
-        throw new NotSupportedException();
-    }
-
     public static async Task<RemoteVersionResult> GetRemoteVersion(UpdateSource updateSource)
     {
         return updateSource switch
         {
             UpdateSource.MicrosoftStore => await GetVersionFromStore(),
+            UpdateSource.AppCenter => await GetVersionFromAppCenter(false),
+            UpdateSource.AppCenterCanary => await GetVersionFromAppCenter(true),
             _ => await GetVersionFromSelfhost(updateSource)
         };
     }
@@ -161,9 +180,5 @@ public static class UpdateManager
             Common.AddToTeachingTipLists("未搜索到邮箱", "未搜索到此邮箱,请检查此邮箱是否是申请内测通道所使用的邮箱。\nCanary通道未能解锁");
             if (Common.Setting.UpdateSource == 2) Common.Setting.UpdateSource = 1;
         }
-    }
-    public class GitHubVersion
-    {
-
     }
 }
