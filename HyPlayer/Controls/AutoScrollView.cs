@@ -10,7 +10,7 @@ namespace HyPlayer.Controls;
 /// <summary>
 /// Marquee effect for UIElement
 /// </summary>
-public class AutoScrollView : RedirectVisualView
+public partial class AutoScrollView : RedirectVisualView
 {
     public AutoScrollView()
     {
