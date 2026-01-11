@@ -1380,7 +1380,7 @@ public sealed partial class ExpandedPlayer : Page
     public async void RefreshAlbumCover(HyPlayItem playItem, IBuffer coverStream)
     {
         if (HyPlayList.CoverStream.Size == 0) return;
-        await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+        _ = Common.Invoke(async () =>
         {
             using var stream = new InMemoryRandomAccessStream();
             await stream.WriteAsync(coverStream);
