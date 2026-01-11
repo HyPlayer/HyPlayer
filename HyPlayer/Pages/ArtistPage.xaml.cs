@@ -182,13 +182,13 @@ public sealed partial class ArtistPage : Page
 
             hotSongs.Clear();
             var idx = 0;
-            var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.ArtistTopSongsDetail, artist.id, async () =>
+            var jv = await SimpleCacher.GetOrCreateCacheAsync(CacheType.SongDetail, artist.id, async () =>
             {
                 var json = await Common.NeteaseAPI!.RequestAsync(NeteaseApis.SongDetailApi,
                     new SongDetailRequest() { IdList = j1?.Select(t => t.Id).ToList() }, _cancellationToken);
                 if (json.IsError)
                 {
-                    Common.AddToTeachingTipLists("获取歌手热门歌曲失败", json.Error.Message);
+                    Common.AddToTeachingTipLists("获取歌手歌曲信息失败", json.Error.Message);
                     return null;
                 }
 
