@@ -13,6 +13,7 @@
 		<SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<PublishAot>true</PublishAot>
+		<DiableRuntimeMarshaling>true</DiableRuntimeMarshaling>
 	</PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ALRC.Abstraction">
