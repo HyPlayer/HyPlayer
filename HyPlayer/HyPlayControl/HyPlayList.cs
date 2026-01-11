@@ -96,7 +96,7 @@ public static class HyPlayList
     public static readonly List<HyPlayItem> List = new();
     public static readonly List<int> ShuffleList = new();
     public static int ShufflingIndex = -1;
-    public static LyricInfo LyricInfo = new();
+    public static HyLyricInfo HyLyricInfo = new();
     public static TimeSpan LyricOffset = TimeSpan.Zero;
     public static PropertySet AudioEffectsProperties = new PropertySet();
     private static CancellationTokenSource _mediaSourceCancellationTokenSource = new();
@@ -1447,22 +1447,22 @@ public static class HyPlayList
     private static void LoadLyricChange()
     {
         if (Player.PrimaryAudioInputNode == null) return;
-        if (LyricInfo.Lyrics.Count == 0) return;
-        if (LyricPos >= LyricInfo.Lyrics.Count || LyricPos < 0) LyricPos = 0;
+        if (HyLyricInfo.Lyrics.Count == 0) return;
+        if (LyricPos >= HyLyricInfo.Lyrics.Count || LyricPos < 0) LyricPos = 0;
         var changed = false;
         var realPos = Player.PrimaryAudioInputNode.Position - LyricOffset;
-        if (LyricInfo.Lyrics[LyricPos].LyricLine.StartTime > realPos) //当感知到进度回溯时执行
+        if (HyLyricInfo.Lyrics[LyricPos].LyricLine.StartTime > realPos) //当感知到进度回溯时执行
         {
-            LyricPos = LyricInfo.Lyrics.FindLastIndex(t => t.LyricLine.StartTime <= realPos) - 1;
+            LyricPos = HyLyricInfo.Lyrics.FindLastIndex(t => t.LyricLine.StartTime <= realPos) - 1;
             if (LyricPos == -2) LyricPos = -1;
             changed = true;
         }
 
         try
         {
-            if (LyricPos == 0 && LyricInfo.Lyrics.Count != 1) changed = false;
-            while (LyricInfo.Lyrics.Count > LyricPos + 1 &&
-                   LyricInfo.Lyrics[LyricPos + 1].LyricLine.StartTime <= realPos) //正常的滚歌词
+            if (LyricPos == 0 && HyLyricInfo.Lyrics.Count != 1) changed = false;
+            while (HyLyricInfo.Lyrics.Count > LyricPos + 1 &&
+                   HyLyricInfo.Lyrics[LyricPos + 1].LyricLine.StartTime <= realPos) //正常的滚歌词
             {
                 LyricPos++;
                 changed = true;
@@ -1491,10 +1491,10 @@ public static class HyPlayList
     }
     private static async Task LoadLyrics(HyPlayItem hpi, CancellationToken ctk = default)
     {
-        var cache = await SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricInfo, hpi.PlayItem.Id, () => Task.FromResult<LyricInfo>(null), cancellationToken: ctk);
+        var cache = await SimpleCacher.GetOrCreateCacheAsync(CacheType.HyLyricInfo, hpi.PlayItem.Id, () => Task.FromResult<HyLyricInfo>(null), cancellationToken: ctk);
         if (cache is not null)
         {
-            LyricInfo = cache;
+            HyLyricInfo = cache;
             OnLyricLoaded?.Invoke();
             OnLyricChange?.Invoke();
             return;
@@ -1531,17 +1531,17 @@ public static class HyPlayList
         //先进行歌词转换以免被搞
         if (pureLyricInfo is not KaraokLyricInfo || !Common.Setting.karaokLyric)
         {
-            LyricInfo.Lyrics = Utils.ConvertPureLyric(pureLyricInfo.PureLyrics, unionTranslation);
+            HyLyricInfo.Lyrics = Utils.ConvertPureLyric(pureLyricInfo.PureLyrics, unionTranslation);
         }
         else
         {
-            LyricInfo.Lyrics = Utils.ConvertKaraok(pureLyricInfo);
+            HyLyricInfo.Lyrics = Utils.ConvertKaraok(pureLyricInfo);
         }
 
-        if (LyricInfo.Lyrics.Count == 0)
+        if (HyLyricInfo.Lyrics.Count == 0)
         {
             if (Common.Setting.showComposerInLyric)
-                LyricInfo.Lyrics.Add(new SongLyric
+                HyLyricInfo.Lyrics.Add(new SongLyric
                 {
                     LyricLine = new LrcLyricsLine(NowPlayingItem.PlayItem.ArtistString, TimeSpan.Zero)
                 });
@@ -1549,18 +1549,18 @@ public static class HyPlayList
         else
         {
             if (pureLyricInfo is not KaraokLyricInfo karaoke)
-                Utils.ConvertTranslation(pureLyricInfo.TrLyrics, LyricInfo.Lyrics);
-            else Utils.ConvertYrcTranslation(karaoke, LyricInfo.Lyrics);
-            await Utils.ConvertRomaji(pureLyricInfo, LyricInfo.Lyrics);
+                Utils.ConvertTranslation(pureLyricInfo.TrLyrics, HyLyricInfo.Lyrics);
+            else Utils.ConvertYrcTranslation(karaoke, HyLyricInfo.Lyrics);
+            await Utils.ConvertRomaji(pureLyricInfo, HyLyricInfo.Lyrics);
 
-            if (LyricInfo.Lyrics.Count != 0 && LyricInfo.Lyrics[0].LyricLine.StartTime != TimeSpan.Zero)
-                LyricInfo.Lyrics.Insert(0,
+            if (HyLyricInfo.Lyrics.Count != 0 && HyLyricInfo.Lyrics[0].LyricLine.StartTime != TimeSpan.Zero)
+                HyLyricInfo.Lyrics.Insert(0,
                     new SongLyric { LyricLine = new LrcLyricsLine(string.Empty, TimeSpan.Zero) });
         }
 
-        LyricInfo.LyricMetadata = pureLyricInfo.LyricMetadata;
-        LyricInfo.SongMetadata = pureLyricInfo.SongMetadata;
-        LyricInfo.PureLyricInfo = pureLyricInfo;
+        HyLyricInfo.LyricMetadata = pureLyricInfo.LyricMetadata;
+        HyLyricInfo.SongMetadata = pureLyricInfo.SongMetadata;
+        HyLyricInfo.PureLyricInfo = pureLyricInfo;
 
         LyricPos = 0;
 
@@ -1568,7 +1568,7 @@ public static class HyPlayList
         OnLyricChange?.Invoke();
         if (hpi.ItemType == HyPlayItemType.Netease)
         {
-            _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricInfo, hpi.PlayItem.Id, () => Task.FromResult(LyricInfo), cancellationToken: CancellationToken.None);
+            _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.HyLyricInfo, hpi.PlayItem.Id, () => Task.FromResult(HyLyricInfo), cancellationToken: CancellationToken.None);
         }
 
         try
@@ -1583,7 +1583,7 @@ public static class HyPlayList
                 var alrc = ttmlConverter.Convert(ttml);
                 var lrc = lrcConverter.ConvertBack(alrc);
                 var trLrc = lrcTranslationConverter.Extract(alrc);
-                ALRCLyricInfo ttmlLyric = new ALRCLyricInfo()
+                HyALRCLyricInfo ttmlLyric = new HyALRCLyricInfo()
                 {
                     PureLyrics = lrc,
                     TrLyrics = trLrc,
@@ -1609,15 +1609,15 @@ public static class HyPlayList
                     SongMetadata = []
                 };
 
-                LyricInfo.Lyrics = Utils.ConvertPureLyric(ttmlLyric.PureLyrics, true);
-                Utils.ConvertTranslation(ttmlLyric.TrLyrics, LyricInfo.Lyrics);
-                LyricInfo.LyricMetadata = ttmlLyric.LyricMetadata;
-                LyricInfo.SongMetadata = ttmlLyric.SongMetadata;
-                LyricInfo.PureLyricInfo = ttmlLyric;
+                HyLyricInfo.Lyrics = Utils.ConvertPureLyric(ttmlLyric.PureLyrics, true);
+                Utils.ConvertTranslation(ttmlLyric.TrLyrics, HyLyricInfo.Lyrics);
+                HyLyricInfo.LyricMetadata = ttmlLyric.LyricMetadata;
+                HyLyricInfo.SongMetadata = ttmlLyric.SongMetadata;
+                HyLyricInfo.PureLyricInfo = ttmlLyric;
 
                 OnLyricLoaded?.Invoke();
                 OnLyricChange?.Invoke();
-                _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricInfo, hpi.PlayItem.Id, () => Task.FromResult(LyricInfo), cancellationToken: CancellationToken.None);
+                _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.HyLyricInfo, hpi.PlayItem.Id, () => Task.FromResult(HyLyricInfo), cancellationToken: CancellationToken.None);
             }
         }
         catch
@@ -2500,7 +2500,7 @@ public static class Utils
             return parsedLyrics.Lines.OrderBy(t => t.StartTime).Select(t => new SongLyric() { LyricLine = t }).ToList();
         }
 
-        throw new ArgumentException("LyricInfo is not KaraokeLyricInfo");
+        throw new ArgumentException("HyLyricInfo is not KaraokeLyricInfo");
     }
 }
 

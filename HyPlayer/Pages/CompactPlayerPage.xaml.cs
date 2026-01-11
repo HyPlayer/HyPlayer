@@ -217,8 +217,8 @@ public sealed partial class CompactPlayerPage : Page
     private void OnLyricChanged()
     {
         if (HyPlayList.LyricPos == -1) return;
-        if (HyPlayList.LyricInfo.Lyrics.Count <= HyPlayList.LyricPos) return;
-        if (HyPlayList.LyricInfo.Lyrics[HyPlayList.LyricPos].LyricLine is KaraokeLyricsLine kara)
+        if (HyPlayList.HyLyricInfo.Lyrics.Count <= HyPlayList.LyricPos) return;
+        if (HyPlayList.HyLyricInfo.Lyrics[HyPlayList.LyricPos].LyricLine is KaraokeLyricsLine kara)
         {
             LyricControl.QuickRenderMode = false;
             if (kara.Duration.TotalSeconds > 1)
@@ -227,9 +227,9 @@ public sealed partial class CompactPlayerPage : Page
                 return;
             }
         }
-        else if (HyPlayList.LyricPos < HyPlayList.LyricInfo.Lyrics.Count - 1 && HyPlayList.LyricInfo.Lyrics[HyPlayList.LyricPos + 1].LyricLine is LrcLyricsLine lrcLine)
+        else if (HyPlayList.LyricPos < HyPlayList.HyLyricInfo.Lyrics.Count - 1 && HyPlayList.HyLyricInfo.Lyrics[HyPlayList.LyricPos + 1].LyricLine is LrcLyricsLine lrcLine)
         {
-            if (lrcLine.StartTime.TotalSeconds - HyPlayList.LyricInfo.Lyrics[HyPlayList.LyricPos].LyricLine.StartTime.TotalSeconds > 1)
+            if (lrcLine.StartTime.TotalSeconds - HyPlayList.HyLyricInfo.Lyrics[HyPlayList.LyricPos].LyricLine.StartTime.TotalSeconds > 1)
             {
                 LyricControl.QuickRenderMode = false;
                 _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { ChangeLyric(); });
@@ -249,8 +249,8 @@ public sealed partial class CompactPlayerPage : Page
 
         _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
         {
-            LyricText = HyPlayList.LyricInfo.Lyrics[HyPlayList.LyricPos].LyricLine.CurrentLyric;
-            LyricControl.Lyric = HyPlayList.LyricInfo.Lyrics[HyPlayList.LyricPos];
+            LyricText = HyPlayList.HyLyricInfo.Lyrics[HyPlayList.LyricPos].LyricLine.CurrentLyric;
+            LyricControl.Lyric = HyPlayList.HyLyricInfo.Lyrics[HyPlayList.LyricPos];
         });
 
     }

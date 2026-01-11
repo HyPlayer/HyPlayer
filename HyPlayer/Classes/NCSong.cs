@@ -152,12 +152,12 @@ public class KaraokLyricInfo : PureLyricInfo
     public string YrNeteaseRomaji { get; set; }
 }
 
-public class ALRCLyricInfo : PureLyricInfo
+public class HyALRCLyricInfo : PureLyricInfo
 {
     public ALRCFile ALRC { get; set; }
 }
 
-[JsonDerivedType(typeof(ALRCLyricInfo), "ALRC")]
+[JsonDerivedType(typeof(HyALRCLyricInfo), "ALRC")]
 [JsonDerivedType(typeof(KaraokLyricInfo), "Karaok")]
 public class PureLyricInfo
 {

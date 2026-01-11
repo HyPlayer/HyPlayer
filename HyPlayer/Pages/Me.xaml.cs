@@ -96,7 +96,7 @@ public sealed partial class Me : Page
 
                 return json.Value;
             });
-            NCUser currentUser = resp.Profile.MapToNcUser();
+            NCUser currentUser = resp?.Profile?.MapToNcUser();
             userDisplay = new(currentUser);
         }
         catch (Exception ex)
@@ -132,7 +132,7 @@ public sealed partial class Me : Page
             });
 
             var subListIdx = 0;
-            foreach (var valuePlaylist in val.Playlists ?? [])
+            foreach (var valuePlaylist in val?.Playlists ?? [])
             {
                 _cancellationToken.ThrowIfCancellationRequested();
                 var playList = valuePlaylist.MapToNCPlayList();

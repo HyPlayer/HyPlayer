@@ -45,7 +45,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
-using ALRCLyricInfo = HyPlayer.Classes.ALRCLyricInfo;
+using HyALRCLyricInfo = HyPlayer.Classes.HyALRCLyricInfo;
 using Buffer = Windows.Storage.Streams.Buffer;
 using LrcConverter = HyPlayer.Classes.LrcConverter;
 
@@ -613,9 +613,9 @@ public sealed partial class ExpandedPlayer : Page
         {
             _lyricIsReadyToGo = true;
             if (_lyricIsCleaning) return;
-            if (HyPlayList.LyricInfo.PureLyricInfo is not ALRCLyricInfo alrcLyricInfo)
+            if (HyPlayList.HyLyricInfo.PureLyricInfo is not HyALRCLyricInfo alrcLyricInfo)
             {
-                LyricBox.SetLyricLines(LrcConverter.Convert(ConvertToALRC(HyPlayList.LyricInfo.Lyrics), HyPlayList.LyricInfo.LyricMetadata, HyPlayList.LyricInfo.SongMetadata));
+                LyricBox.SetLyricLines(LrcConverter.Convert(ConvertToALRC(HyPlayList.HyLyricInfo.Lyrics), HyPlayList.HyLyricInfo.LyricMetadata, HyPlayList.HyLyricInfo.SongMetadata));
             }
             else
             {
@@ -983,7 +983,7 @@ public sealed partial class ExpandedPlayer : Page
             var lrc = lrcConverter.ConvertBack(alrc);
             var trLrc = lrcTranslationConverter.Extract(alrc);
 
-            ALRCLyricInfo ttmlLyric = new ALRCLyricInfo()
+            HyALRCLyricInfo ttmlLyric = new HyALRCLyricInfo()
             {
                 PureLyrics = lrc,
                 TrLyrics = trLrc,
@@ -1001,16 +1001,16 @@ public sealed partial class ExpandedPlayer : Page
                 SongMetadata = []
             };
 
-            HyPlayList.LyricInfo = new LyricInfo();
-            HyPlayList.LyricInfo.LyricMetadata = ttmlLyric.LyricMetadata;
-            HyPlayList.LyricInfo.PureLyricInfo = ttmlLyric;
-            HyPlayList.LyricInfo.SongMetadata = ttmlLyric.SongMetadata;
-            HyPlayList.LyricInfo.Lyrics = Utils.ConvertPureLyric(ttmlLyric.PureLyrics, true);
-            Utils.ConvertTranslation(ttmlLyric.TrLyrics, HyPlayList.LyricInfo.Lyrics);
+            HyPlayList.HyLyricInfo = new HyLyricInfo();
+            HyPlayList.HyLyricInfo.LyricMetadata = ttmlLyric.LyricMetadata;
+            HyPlayList.HyLyricInfo.PureLyricInfo = ttmlLyric;
+            HyPlayList.HyLyricInfo.SongMetadata = ttmlLyric.SongMetadata;
+            HyPlayList.HyLyricInfo.Lyrics = Utils.ConvertPureLyric(ttmlLyric.PureLyrics, true);
+            Utils.ConvertTranslation(ttmlLyric.TrLyrics, HyPlayList.HyLyricInfo.Lyrics);
             if (HyPlayList.NowPlayingItem.ItemType == HyPlayItemType.Netease)
             {
-                _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.LyricInfo, HyPlayList.NowPlayingItem.PlayItem.Id,
-                    () => Task.FromResult(HyPlayList.LyricInfo)!, forceRefresh: true);
+                _ = SimpleCacher.GetOrCreateCacheAsync(CacheType.HyLyricInfo, HyPlayList.NowPlayingItem.PlayItem.Id,
+                    () => Task.FromResult(HyPlayList.HyLyricInfo)!, forceRefresh: true);
             }
 
 
@@ -1166,7 +1166,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private void BtnCopyLyricClicked(object sender, RoutedEventArgs e)
     {
-        _ = new LyricShareDialog { Lyrics = HyPlayList.LyricInfo.Lyrics }.ShowAsync();
+        _ = new LyricShareDialog { Lyrics = HyPlayList.HyLyricInfo.Lyrics }.ShowAsync();
     }
 
     private async void BtnToggleTinyModeClick(object sender, RoutedEventArgs e)

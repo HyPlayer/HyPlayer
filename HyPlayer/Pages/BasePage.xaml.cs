@@ -372,7 +372,7 @@ public sealed partial class BasePage : Page
             NavItemsMyLovedPlaylist.Visibility = Visibility.Visible;
             Common.MySongLists.Clear();
             var isliked = false;
-            foreach (var jToken in jv.Playlists ?? [])
+            foreach (var jToken in jv?.Playlists ?? [])
                 if (jToken.Subscribed)
                 {
                     var item = new NavigationViewItem

@@ -154,7 +154,7 @@ internal static class NCMFile
             using (var reader = new MemoryStream(dontModifyDecryptChunk, 6, mdcLen - 6))
             {
                 var infoStr = Encoding.UTF8.GetString(reader.ToArray());
-                keys = JsonSerializer.Deserialize<The163KeyClass>(infoStr);
+                keys = JsonSerializer.Deserialize<The163KeyClass>(infoStr, Common.DefaultOptions);
             }
         }
 

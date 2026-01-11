@@ -78,6 +78,10 @@ namespace HyPlayer
         public static DisplayRequest DisplayRequest = new();
         public static readonly Stack<NavigationHistoryItem> NavigationHistory = new();
         public static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).ToLocalTime();
+        public static JsonSerializerOptions DefaultOptions = new()
+        {
+            TypeInfoResolver = JsonDefaultContext.Default
+        };
 
         public static void InitializeHttpClientAndAPI()
         {
@@ -403,8 +407,8 @@ namespace HyPlayer
 
         public AdditionalParameters ApiAdditionalParameters
         {
-            get => JsonSerializer.Deserialize<AdditionalParameters>(GetSettings(nameof(ApiAdditionalParameters), "{}")) ?? new AdditionalParameters();
-            set => ApplicationData.Current.LocalSettings.Values[nameof(ApiAdditionalParameters)] = JsonSerializer.Serialize(value);
+            get => JsonSerializer.Deserialize<AdditionalParameters>(GetSettings(nameof(ApiAdditionalParameters), "{}"), Common.DefaultOptions) ?? new AdditionalParameters();
+            set => ApplicationData.Current.LocalSettings.Values[nameof(ApiAdditionalParameters)] = JsonSerializer.Serialize(value, Common.DefaultOptions);
         }
 
         public string lyricFontFamily
@@ -1771,41 +1775,41 @@ namespace HyPlayer
         {
             var list = new List<string>();
             if (ApplicationData.Current.LocalSettings.Values["songHistory"] == null)
-                ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonSerializer.Serialize(list);
+                ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonSerializer.Serialize(list, Common.DefaultOptions);
             if (ApplicationData.Current.LocalSettings.Values["songHistory"].ToString().StartsWith("[{"))
-                ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonSerializer.Serialize(list);
+                ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonSerializer.Serialize(list, Common.DefaultOptions);
             if (ApplicationData.Current.LocalSettings.Values["searchHistory"] == null)
-                ApplicationData.Current.LocalSettings.Values["searchHistory"] = JsonSerializer.Serialize(list);
+                ApplicationData.Current.LocalSettings.Values["searchHistory"] = JsonSerializer.Serialize(list, Common.DefaultOptions);
             if (ApplicationData.Current.LocalSettings.Values["songlistHistory"] == null)
-                ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonSerializer.Serialize(list);
+                ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonSerializer.Serialize(list, Common.DefaultOptions);
             if (ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] == null)
                 ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] =
-                    JsonSerializer.Serialize(list);
+                    JsonSerializer.Serialize(list, Common.DefaultOptions);
             if (ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"].ToString().StartsWith("[{"))
                 ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] =
-                    JsonSerializer.Serialize(list);
+                    JsonSerializer.Serialize(list, Common.DefaultOptions);
             if (ApplicationData.Current.LocalSettings.Values["songlistHistory"].ToString().StartsWith("[{"))
-                ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonSerializer.Serialize(list);
+                ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonSerializer.Serialize(list, Common.DefaultOptions);
         }
 
         public static void AddNCSongHistory(string songid)
         {
             var list = new List<string>();
             list = JsonSerializer.Deserialize<List<string>>(ApplicationData.Current.LocalSettings
-                .Values["songHistory"].ToString());
+                .Values["songHistory"].ToString(), Common.DefaultOptions);
 
             list.Remove(songid);
             list.Insert(0, songid);
             if (list.Count >= 300)
                 list.RemoveRange(9, list.Count - 300);
-            ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonSerializer.Serialize(list);
+            ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonSerializer.Serialize(list, Common.DefaultOptions);
         }
 
         public static void AddSearchHistory(string Text)
         {
             var list = new List<string>();
             list = JsonSerializer.Deserialize<List<string>>(ApplicationData.Current.LocalSettings
-                .Values["searchHistory"].ToString());
+                .Values["searchHistory"].ToString(), Common.DefaultOptions);
             if (!list.Contains(Text))
             {
                 list.Insert(0, Text);
@@ -1816,20 +1820,20 @@ namespace HyPlayer
                 list.Insert(0, Text);
             }
 
-            ApplicationData.Current.LocalSettings.Values["searchHistory"] = JsonSerializer.Serialize(list);
+            ApplicationData.Current.LocalSettings.Values["searchHistory"] = JsonSerializer.Serialize(list, Common.DefaultOptions);
         }
 
         public static void AddSonglistHistory(string playListid)
         {
             var list = new List<string>();
             list = JsonSerializer.Deserialize<List<string>>(ApplicationData.Current.LocalSettings
-                .Values["songlistHistory"].ToString());
+                .Values["songlistHistory"].ToString(), Common.DefaultOptions);
 
             list.Remove(playListid);
             list.Insert(0, playListid);
             if (list.Count >= 100)
                 list.RemoveRange(100, list.Count - 100);
-            ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonSerializer.Serialize(list);
+            ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonSerializer.Serialize(list, Common.DefaultOptions);
         }
 
         public static async Task SetcurPlayingListHistory(List<string> songids)
@@ -1848,15 +1852,15 @@ namespace HyPlayer
             else
                 //低级音乐存储
                 ApplicationData.Current.LocalSettings.Values["curPlayingListHistory"] =
-                    JsonSerializer.Serialize(songids.Count > 100 ? songids.GetRange(0, 100) : songids);
+                    JsonSerializer.Serialize(songids.Count > 100 ? songids.GetRange(0, 100) : songids, Common.DefaultOptions);
         }
 
         public static async Task ClearHistory()
         {
             var list = new List<string>();
-            ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonSerializer.Serialize(list);
-            ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonSerializer.Serialize(list);
-            ApplicationData.Current.LocalSettings.Values["searchHistory"] = JsonSerializer.Serialize(list);
+            ApplicationData.Current.LocalSettings.Values["songlistHistory"] = JsonSerializer.Serialize(list, Common.DefaultOptions);
+            ApplicationData.Current.LocalSettings.Values["songHistory"] = JsonSerializer.Serialize(list, Common.DefaultOptions);
+            ApplicationData.Current.LocalSettings.Values["searchHistory"] = JsonSerializer.Serialize(list, Common.DefaultOptions);
             await (await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("songPlayHistory",
                 CreationCollisionOption.OpenIfExists)).DeleteAsync();
         }
@@ -1866,7 +1870,7 @@ namespace HyPlayer
             try
             {
                 var songIds = JsonSerializer.Deserialize<List<string>>(ApplicationData.Current.LocalSettings
-                    .Values["songHistory"].ToString());
+                    .Values["songHistory"].ToString(), Common.DefaultOptions);
                 var result = await Common.NeteaseAPI.RequestAsync(NeteaseApis.SongDetailApi,
                     new SongDetailRequest()
                     {
@@ -1888,7 +1892,7 @@ namespace HyPlayer
         public static List<string> GetSearchHistory()
         {
             return JsonSerializer.Deserialize<List<string>>(ApplicationData.Current.LocalSettings
-                .Values["searchHistory"].ToString());
+                .Values["searchHistory"].ToString(), Common.DefaultOptions);
         }
 
         public static async Task<List<NCSong>> GetcurPlayingListHistory()
@@ -1902,7 +1906,7 @@ namespace HyPlayer
             else
                 //低级音乐存储
                 trackIds = JsonSerializer.Deserialize<List<string>>(ApplicationData.Current.LocalSettings
-                    .Values["curPlayingListHistory"].ToString()) ?? new List<string>();
+                    .Values["curPlayingListHistory"].ToString(), Common.DefaultOptions) ?? new List<string>();
 
             if (trackIds == null || string.IsNullOrEmpty(trackIds.FirstOrDefault()))
                 return retsongs;

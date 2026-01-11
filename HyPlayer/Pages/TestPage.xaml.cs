@@ -35,7 +35,7 @@ public sealed partial class TestPage : Page
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        TbAdditionalApiParameters.Text = JsonSerializer.Serialize(Common.Setting.ApiAdditionalParameters);
+        TbAdditionalApiParameters.Text = JsonSerializer.Serialize(Common.Setting.ApiAdditionalParameters, Common.DefaultOptions);
     }
 
     public string ResourceId
@@ -70,7 +70,7 @@ public sealed partial class TestPage : Page
             IsInBackground = Common.IsInBackground,
             IsLowCache = Common.Setting.forceMemoryGarbage,
             ErrorMessageList = Common.ErrorMessageList.TakeLast(15).ToList()
-        });
+        }, Common.DefaultOptions);
         var file = await ApplicationData.Current.LocalCacheFolder.CreateFileAsync("dump-" +
             DateTime.Now.ToString("yyyyMMddHHmmss") + "-" + Guid.NewGuid() + ".txt");
         await FileIO.WriteTextAsync(file, info);
@@ -82,17 +82,6 @@ public sealed partial class TestPage : Page
         Common.Setting.DisablePopUp = true;
     }
 
-    private class DumpInfo
-    {
-        public HyPlayItem CurrentSong { get; set; }
-        public string CurrentPlaySource { get; set; }
-        public NCUser CurrentUser { get; set; }
-        public string DeviceId { get; set; }
-        public bool IsInBackground { get; set; }
-        public bool IsLowCache { get; set; }
-        public List<string> ErrorMessageList { get; set; }
-    }
-
     private void ForceGC_Click(object sender, RoutedEventArgs e)
     {
         GC.Collect();
@@ -102,7 +91,7 @@ public sealed partial class TestPage : Page
     {
         try
         {
-            var result = JsonSerializer.Deserialize<AdditionalParameters>(TbAdditionalApiParameters.Text);
+            var result = JsonSerializer.Deserialize<AdditionalParameters>(TbAdditionalApiParameters.Text, Common.DefaultOptions);
             if (result == null)
             {
                 throw new Exception("Invalid JSON");

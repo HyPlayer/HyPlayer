@@ -56,7 +56,7 @@ public static class SimpleCacher
                 }
                 try
                 {
-                    var rst = JsonSerializer.Deserialize<T>(content);
+                    var rst = JsonSerializer.Deserialize<T>(content, Common.DefaultOptions);
                     return rst;
                 }
                 catch
@@ -92,7 +92,7 @@ public static class SimpleCacher
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var json = JsonSerializer.Serialize(data);
+            var json = JsonSerializer.Serialize(data, Common.DefaultOptions);
             var file = await dir.CreateFileAsync(fileName, CreationCollisionOption.OpenIfExists);
             await FileIO.WriteTextAsync(file, json);
         }
@@ -164,7 +164,7 @@ public enum CacheType
     Unspecified,
     Comments,
     SongUrl,
-    LyricInfo,
+    HyLyricInfo,
     LyricApi,
     SongDetail,
     AlbumInfo,

@@ -68,7 +68,7 @@ internal static class The163KeyHelper
             {
                 byt163Key = cryptoTransform.TransformFinalBlock(byt163Key, 0, byt163Key.Length);
             }
-            var key = JsonSerializer.Deserialize<The163KeyClass>(Encoding.UTF8.GetString(byt163Key).Substring(6));
+            var key = JsonSerializer.Deserialize<The163KeyClass>(Encoding.UTF8.GetString(byt163Key).Substring(6), Common.DefaultOptions);
             trackId = (ulong)key.musicId;
         }
         catch
@@ -117,7 +117,7 @@ internal static class The163KeyHelper
             }
 
             KeyStruct = JsonSerializer.Deserialize<The163KeyClass>(Encoding.UTF8.GetString(byt163Key)
-                .Substring(6));
+                .Substring(6), Common.DefaultOptions);
         }
         catch
         {
@@ -131,7 +131,7 @@ internal static class The163KeyHelper
     {
         try
         {
-            var enc = "music:" + JsonSerializer.Serialize(key);
+            var enc = "music:" + JsonSerializer.Serialize(key, Common.DefaultOptions);
             var toEncryptArray = Encoding.UTF8.GetBytes(enc);
             byte[] resultArray;
             using (var cryptoTransform = _aes.CreateEncryptor())
@@ -198,7 +198,7 @@ internal static class The163KeyHelper
     }
 }
 
-internal class The163KeyClass
+public class The163KeyClass
 {
     public ulong albumId { get; set; }
 

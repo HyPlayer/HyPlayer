@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace HyPlayer.Classes;
 
-public class LyricInfo
+public class HyLyricInfo
 {
     public List<SongLyric> Lyrics { get; set; } = [];
     public List<LyricInfoMetadata> LyricMetadata { get; set; } = [];

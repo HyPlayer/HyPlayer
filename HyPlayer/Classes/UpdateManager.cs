@@ -83,7 +83,7 @@ public static class UpdateManager
         }
 
         var versionResp =
-            JsonSerializer.Deserialize<LatestApplicationUpdate>(await versionsResponse.Content.ReadAsStringAsync());
+            JsonSerializer.Deserialize<LatestApplicationUpdate>(await versionsResponse.Content.ReadAsStringAsync(), Common.DefaultOptions);
         return new RemoteVersionResult
         {
             UpdateSource = source,
@@ -104,9 +104,6 @@ public static class UpdateManager
         return updateSource switch
         {
             UpdateSource.MicrosoftStore => await GetVersionFromStore(),
-            UpdateSource.AppCenter => await GetVersionFromAppCenter(false),
-            UpdateSource.AppCenterCanary => await GetVersionFromAppCenter(true),
-            UpdateSource.GitHub => await GetVersionFromGitHub(),
             _ => await GetVersionFromSelfhost(updateSource)
         };
     }
