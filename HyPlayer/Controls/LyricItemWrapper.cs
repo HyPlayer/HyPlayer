@@ -5,7 +5,7 @@ using Windows.UI.Xaml.Controls;
 
 namespace HyPlayer.Controls;
 
-public class LyricItemWrapper : ContentPresenter
+public partial class LyricItemWrapper : ContentPresenter
 {
     public static readonly DependencyProperty SongLyricProperty =
         DependencyProperty.Register("SongLyric", typeof(SongLyric), typeof(LyricItemWrapper), new PropertyMetadata(null,

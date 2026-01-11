@@ -110,7 +110,7 @@ namespace HyPlayer.Pages
         }
     }
 
-    public class HomePageBase : AppPageBase<HomeViewModel>
+    public partial class HomePageBase : AppPageBase<HomeViewModel>
     {
         public HomePageBase()
         {

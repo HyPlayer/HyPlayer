@@ -2,7 +2,7 @@
 
 namespace HyPlayer.Controls.CardButton
 {
-    public sealed class CardButton : ButtonBase
+    public sealed partial class CardButton : ButtonBase
     {
         public CardButton()
         {
