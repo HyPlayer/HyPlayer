@@ -6,8 +6,8 @@
     <UseUwp>true</UseUwp>
     <DefaultLanguage>zh-CN</DefaultLanguage>
     <IsAotCompatible>true</IsAotCompatible>
-    <DisableRuntimeMarshalling>false</DisableRuntimeMarshalling>
+    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <BaseOutputPath>bin\</BaseOutputPath>
+    <Platforms>x64;arm64</Platforms>
   </PropertyGroup>
 </Project>

@@ -74,7 +74,7 @@
                 PaneButtonClick="AppTitleBar_PaneButtonClick"
                 Subtitle="预览">
                 <controls:TitleBar.Icon>
-                    <BitmapIcon ShowAsMonochrome="False" UriSource="/Assets/icon.png" />
+                    <BitmapIcon ShowAsMonochrome="False" UriSource="ms-appx:///Assets/icon.png" />
                 </controls:TitleBar.Icon>
                 <controls:TitleBar.Content>
                     <AutoSuggestBox

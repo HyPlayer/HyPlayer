@@ -5,7 +5,7 @@
 		<TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
 		<Nullable>disable</Nullable>
 		<UseUwp>true</UseUwp>
-		<Platforms>x86;x64;arm64</Platforms>
+		<Platforms>x64;arm64</Platforms>
 		<RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
 		<DefaultLanguage>zh-CN</DefaultLanguage>
 		<LangVersion>preview</LangVersion>
@@ -15,6 +15,7 @@
 		<PublishAot>true</PublishAot>
 		<DiableRuntimeMarshaling>true</DiableRuntimeMarshaling>
 		<NoWarn>IL2026;IL3050</NoWarn>
+		<PublishProfile>win-$(Platform).pubxml</PublishProfile>
 	</PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ALRC.Abstraction">
