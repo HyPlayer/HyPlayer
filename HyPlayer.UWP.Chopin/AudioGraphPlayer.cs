@@ -106,7 +106,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             if (graphResult.Status != AudioGraphCreationStatus.Success)
                 throw graphResult.ExtendedError;
             _defaultPlayer = graphResult.Graph;
-            _defaultPlayer.QuantumProcessed += GraphOnQuantumProcessed;
+            _defaultPlayer.QuantumStarted += GraphOnQuantumStarted;
             var outputResult = await _defaultPlayer.CreateDeviceOutputNodeAsync();
             if (outputResult.Status != AudioDeviceNodeCreationStatus.Success)
                 throw outputResult.ExtendedError;
@@ -121,7 +121,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             _positionTimer.Start();
         }
 
-        private void GraphOnQuantumProcessed(AudioGraph sender, object args)
+        private void GraphOnQuantumStarted(AudioGraph sender, object args)
         {
             FFTProcessor.ProcessFFT(_frameOutputNode.GetFrame());
         }
@@ -152,7 +152,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
 
                 oldPlayer.Stop();
-                oldPlayer.QuantumProcessed -= GraphOnQuantumProcessed;
+                oldPlayer.QuantumProcessed -= GraphOnQuantumStarted;
 
                 // 创建新的输出节点
                 var deviceNodeCreateResult = await newPlayer.CreateDeviceOutputNodeAsync();
@@ -218,7 +218,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
                 // 替换为新图
                 _defaultPlayer = newPlayer;
-                newPlayer.QuantumProcessed += GraphOnQuantumProcessed;
+                newPlayer.QuantumProcessed += GraphOnQuantumStarted;
                 _outputNode = newOutputNode;
                 _audioInputNodes.Clear();
                 foreach (var kvp in newNodes) _audioInputNodes[kvp.Key] = kvp.Value;

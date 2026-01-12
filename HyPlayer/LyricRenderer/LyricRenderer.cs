@@ -166,20 +166,15 @@ namespace HyPlayer.LyricRenderer
 
         private void RecalculateItemsSize(CanvasDrawingSession session)
         {
-            try
-            {
-                Context.ItemWidth = Context.ViewWidth * Context.LyricWidthRatio;
 
-                foreach (var renderingLyricLine in Context.LyricLines)
-                {
-                    renderingLyricLine.OnRenderSizeChanged(session, Context);
-                    Context.RenderOffsets[renderingLyricLine.Id].X = CalculateRenderX(renderingLyricLine);
-                }
-            }
-            catch
+            Context.ItemWidth = Context.ViewWidth * Context.LyricWidthRatio;
+
+            foreach (var renderingLyricLine in Context.LyricLines)
             {
-                //Ignore
+                renderingLyricLine.OnRenderSizeChanged(session, Context);
+                Context.RenderOffsets[renderingLyricLine.Id].X = CalculateRenderX(renderingLyricLine);
             }
+
         }
 
         private readonly Dictionary<long, bool> _keyFrameRendered = new();
@@ -312,102 +307,105 @@ namespace HyPlayer.LyricRenderer
 
         public void Draw(CanvasDrawingSession session, CanvasTimingInformation timing)
         {
-            Context.RenderTick = timing.ElapsedTime.Ticks;
-            if (_initializing || Context.ViewHeight == 0 || Context.ViewWidth == 0) return;
-            OnBeforeRender?.Invoke(this);
-            // 鼠标滚轮时间 5 s 清零
-            if ((Context.ScrollingDelta != 0 || (Context.IsScrolling && !_pointerPressed)) &&
-                Context.RenderTick - _lastWheelTime > 50000000 && Context.IsPlaying || Context.IsSeek)
+            try
             {
-                // 缓动来一下吧
-                // 0.5 秒缓动到 0
-                Context.IsScrolling = false;
-                var progress = Math.Clamp((Context.RenderTick - _lastWheelTime - 50000000) / 5000000.0, 0, 1);
-                Context.ScrollingDelta = (int)(Context.ScrollingDelta * _circleEase.Ease(1 - progress));
-                if (Math.Abs(progress - 1) < Epsilon || Context.IsSeek)
+                Context.RenderTick = timing.ElapsedTime.Ticks;
+                if (_initializing || Context.ViewHeight == 0 || Context.ViewWidth == 0) return;
+                OnBeforeRender?.Invoke(this);
+                // 鼠标滚轮时间 5 s 清零
+                if ((Context.ScrollingDelta != 0 || (Context.IsScrolling && !_pointerPressed)) &&
+                    Context.RenderTick - _lastWheelTime > 50000000 && Context.IsPlaying || Context.IsSeek)
                 {
-                    _lastWheelTime = 0;
-                    Context.ScrollingDelta = 0;
+                    // 缓动来一下吧
+                    // 0.5 秒缓动到 0
+                    Context.IsScrolling = false;
+                    var progress = Math.Clamp((Context.RenderTick - _lastWheelTime - 50000000) / 5000000.0, 0, 1);
+                    Context.ScrollingDelta = (int)(Context.ScrollingDelta * _circleEase.Ease(1 - progress));
+                    if (Math.Abs(progress - 1) < Epsilon || Context.IsSeek)
+                    {
+                        _lastWheelTime = 0;
+                        Context.ScrollingDelta = 0;
+                    }
+
+                    _needRecalculate = true;
                 }
 
-                _needRecalculate = true;
-            }
-
-            if (_isTypographyChanged)
-            {
-                _isTypographyChanged = false;
-                try
+                if (_isTypographyChanged)
                 {
+                    _isTypographyChanged = false;
                     foreach (var renderingLyricLine in Context.LyricLines)
                     {
                         renderingLyricLine.OnTypographyChanged(session, Context);
                         Context.RenderOffsets[renderingLyricLine.Id].X = CalculateRenderX(renderingLyricLine);
                     }
                 }
-                catch
-                {
-                    //Ignore
-                }
-            }
 
-            foreach (var key in _keyFrameRendered.Keys.ToArray())
-            {
-                if (_keyFrameRendered[key]) continue;
-                if (key >= Context.CurrentLyricTime && key != 0) continue;
-                // 该 KeyFrame 尚未渲染
-                _keyFrameRendered[key] = true;
-                //if (!_needRecalculate)
-                Context.CurrentKeyframe = key;
-                // 视图快照
-                //if (!_needRecalculate)
-                foreach (var (i, value) in Context.RenderOffsets)
+                foreach (var key in _keyFrameRendered.Keys.ToArray())
                 {
-                    Context.SnapshotRenderOffsets[i].Y = value.Y;
-                }
+                    if (_keyFrameRendered[key]) continue;
+                    if (key >= Context.CurrentLyricTime && key != 0) continue;
+                    // 该 KeyFrame 尚未渲染
+                    _keyFrameRendered[key] = true;
+                    //if (!_needRecalculate)
+                    Context.CurrentKeyframe = key;
+                    // 视图快照
+                    //if (!_needRecalculate)
+                    foreach (var (i, value) in Context.RenderOffsets)
+                    {
+                        Context.SnapshotRenderOffsets[i].Y = value.Y;
+                    }
 
 
-                // 0 时刻渲染所有, 也就是初始化
-                var targets = key == 0 ? Context.LyricLines : _targetingKeyFrames[key];
-                foreach (var renderingLyricLine in targets)
-                {
-                    renderingLyricLine.OnKeyFrame(session, Context);
+                    // 0 时刻渲染所有, 也就是初始化
+                    var targets = key == 0 ? Context.LyricLines : _targetingKeyFrames[key];
+                    foreach (var renderingLyricLine in targets)
+                    {
+                        renderingLyricLine.OnKeyFrame(session, Context);
+                    }
+
+                    _needRecalculate = true;
                 }
 
-                _needRecalculate = true;
-            }
-
-            if (_needRecalculateSize)
-            {
-                _needRecalculateSize = false;
-                RecalculateItemsSize(session);
-            }
-
-            if (_needRecalculate)
-            {
-                _needRecalculate = false;
-                RecalculateRenderOffset(session);
-            }
-
-            foreach (var renderingLyricLine in Context.RenderingLyricLines)
-            {
-                if (Context.RenderOffsets.GetValueOrDefault(renderingLyricLine.Id) is { } offset)
+                if (_needRecalculateSize)
                 {
-                    var doRender = renderingLyricLine.Render(session, offset, Context);
-                    if (doRender == false) break;
+                    _needRecalculateSize = false;
+                    RecalculateItemsSize(session);
                 }
-            }
 
-            if (Context.Debug)
+                if (_needRecalculate)
+                {
+                    _needRecalculate = false;
+                    RecalculateRenderOffset(session);
+                }
+
+                foreach (var renderingLyricLine in Context.RenderingLyricLines)
+                {
+                    if (Context.RenderOffsets.GetValueOrDefault(renderingLyricLine.Id) is { } offset)
+                    {
+                        var doRender = renderingLyricLine.Render(session, offset, Context);
+                        if (doRender == false) break;
+                    }
+                }
+
+                if (Context.Debug)
+                {
+                    session.DrawText($"绘制时间: {timing.ElapsedTime}", 0, 0, Colors.Yellow);
+                    session.DrawText($"滚动偏移: {Context.ScrollingDelta}", 0, 15, Colors.Yellow);
+                    session.DrawText($"歌词时间: {Context.CurrentLyricTime}", 0, 30, Colors.Yellow);
+                    session.DrawText($"绘制行数: {Context.RenderingLyricLines.Count}", 0, 45, Colors.Yellow);
+                    // 绘制绘制边框
+                    session.DrawRectangle(0, 0, Context.ViewWidth, Context.ViewHeight, Colors.Red, 5);
+                }
+
+            }
+            catch
             {
-                session.DrawText($"绘制时间: {timing.ElapsedTime}", 0, 0, Colors.Yellow);
-                session.DrawText($"滚动偏移: {Context.ScrollingDelta}", 0, 15, Colors.Yellow);
-                session.DrawText($"歌词时间: {Context.CurrentLyricTime}", 0, 30, Colors.Yellow);
-                session.DrawText($"绘制行数: {Context.RenderingLyricLines.Count}", 0, 45, Colors.Yellow);
-                // 绘制绘制边框
-                session.DrawRectangle(0, 0, Context.ViewWidth, Context.ViewHeight, Colors.Red, 5);
+                //Ignore
             }
-
-            session.Dispose();
+            finally
+            {
+                session.Dispose();
+            }
         }
 
         private float CalculateRenderX(RenderingLyricLine renderingLyricLine)
