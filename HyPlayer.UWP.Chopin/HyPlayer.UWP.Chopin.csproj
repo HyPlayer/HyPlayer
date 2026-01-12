@@ -8,5 +8,6 @@
     <IsAotCompatible>true</IsAotCompatible>
     <DisableRuntimeMarshalling>false</DisableRuntimeMarshalling>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <BaseOutputPath>bin\</BaseOutputPath>
   </PropertyGroup>
 </Project>

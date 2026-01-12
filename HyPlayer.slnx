@@ -1,13 +1,19 @@
 <Solution>
   <Configurations>
+    <Platform Name="Any CPU" />
     <Platform Name="arm64" />
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
   <Project Path="HyPlayer.Frieren/HyPlayer.Frieren.csproj" />
   <Project Path="HyPlayer.NeteaseProvider/HyPlayer.NeteaseApi/HyPlayer.NeteaseApi.csproj" />
+  <Project Path="HyPlayer.Package/HyPlayer.Package.wapproj" Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5" Id="4a6ea262-870a-44ee-9777-87691d25b32c">
+    <Platform Solution="*|arm64" Project="ARM64" />
+    <Deploy />
+  </Project>
   <Project Path="HyPlayer.UWP.Chopin/HyPlayer.UWP.Chopin.csproj" />
   <Project Path="HyPlayer/HyPlayer.csproj">
+    <Platform Solution="*|Any CPU" Project="x64" />
     <Platform Solution="*|arm64" Project="arm64" />
     <Platform Solution="*|x64" Project="x64" />
     <Platform Solution="*|x86" Project="x86" />
