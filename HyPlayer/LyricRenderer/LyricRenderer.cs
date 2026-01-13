@@ -402,10 +402,6 @@ namespace HyPlayer.LyricRenderer
             {
                 //Ignore
             }
-            finally
-            {
-                session.Dispose();
-            }
         }
 
         private float CalculateRenderX(RenderingLyricLine renderingLyricLine)

@@ -1626,8 +1626,8 @@ public sealed partial class ExpandedPlayer : Page
             DrawAudioFFTGraph(sender, session);
         }
         using var lyricCommand = new CanvasCommandList(session);
-        var lyricSession = lyricCommand.CreateDrawingSession();
-        LyricBox.Draw(lyricSession, args.Timing);;
+        using var lyricSession = lyricCommand.CreateDrawingSession();
+        LyricBox.Draw(lyricSession, args.Timing); ;
         session.DrawImage(lyricCommand, _lyricRenderXOffset, _lyricRenderYOffset);
     }
 
