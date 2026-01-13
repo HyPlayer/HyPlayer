@@ -16,6 +16,7 @@ using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Kawazu;
 using Microsoft.Toolkit.Uwp.Notifications;
+using Nito.AsyncEx;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -89,7 +90,7 @@ public static class HyPlayList
 
     public delegate void SongLikeStatusChanged(bool isLiked);
 
-    public delegate void SongCoverChanged(HyPlayItem playItem, IBuffer coverStream);
+    public delegate void SongCoverChanged(HyPlayItem playItem);
 
     public static int NowPlaying;
     private static readonly Timer SecTimer = new(1000); // 公用秒表
@@ -110,7 +111,7 @@ public static class HyPlayList
     private static Dictionary<HyPlayItem, DownloadOperation> DownloadOperations = new();
     private static Dictionary<DownloadOperation, HyPlayItem> DownloadOperationsReverseDirectory = new();
     public static InMemoryRandomAccessStream CoverStream = new InMemoryRandomAccessStream();
-    public static IBuffer CoverBuffer;
+    public static AsyncLock CoverLock = new AsyncLock();
 
     public static RandomAccessStreamReference CoverStreamReference =
         RandomAccessStreamReference.CreateFromStream(CoverStream);
@@ -470,7 +471,10 @@ public static class HyPlayList
             var info = NCMFile.GetNCMMusicInfo(stream);
             var coverArray = NCMFile.GetCoverByteArray(stream);
             var buffer = coverArray.AsBuffer();
-            await CoverStream.WriteAsync(buffer);
+            using (await CoverLock.LockAsync())
+            {
+                await CoverStream.WriteAsync(buffer);
+            }
             using var encStream = NCMFile.GetEncryptedStream(stream);
             encStream.Seek(0, SeekOrigin.Begin);
             var songDataStream = new InMemoryRandomAccessStream();
@@ -907,12 +911,6 @@ public static class HyPlayList
                     return;
                 }
 
-                if (CoverStream.Size != 0)
-                {
-                    CoverStream.Size = 0;
-                    CoverStream.Seek(0);
-                }
-
                 if (Player.PrimaryPlaybackSource != null && (!Common.Setting.CrossFade || (Common.Setting.CrossFade && !FadeManager.FadeProcessing)))
                 {
                     var primaryPlaybackSource = Player.PrimaryPlaybackSource as AudioGraphPlaybackSource;
@@ -1152,14 +1150,18 @@ public static class HyPlayList
                         if ((playItemWhenRequested == NowPlayingItem) && !Common.Setting.noImage)
                         {
                             CoverStream.Seek(0);
-                            OnSongCoverChanged?.Invoke(playItemWhenRequested, CoverBuffer);
+                            OnSongCoverChanged?.Invoke(playItemWhenRequested);
                         }
                     }
                     //更新磁贴
                     if (playItemWhenRequested == NowPlayingItem)
                     {
                         CoverStream.Seek(0);
-                        await RefreshTile(playItemWhenRequested, playItemWhenRequested, CoverStream);
+                        using (await CoverLock.LockAsync())
+                        {
+                            CoverStream.Seek(0);
+                            await RefreshTile(playItemWhenRequested, playItemWhenRequested, CoverStream);
+                        }
                     }
 
                     if (playItemWhenRequested == NowPlayingItem)
@@ -1202,8 +1204,15 @@ public static class HyPlayList
                             await thumbnail.ReadAsync(buffer, (uint)thumbnail.Size, InputStreamOptions.None);
                             if (playItem == NowPlayingItem)
                             {
-                                await CoverStream.WriteAsync(buffer);
-                                CoverBuffer = buffer;
+                                using (await CoverLock.LockAsync())
+                                {
+                                    if (CoverStream.Size != 0)
+                                    {
+                                        CoverStream.Size = 0;
+                                        CoverStream.Seek(0);
+                                    }
+                                    await CoverStream.WriteAsync(buffer);
+                                }
                             }
                         }
                         else
@@ -1214,8 +1223,15 @@ public static class HyPlayList
                             await thumbnail.ReadAsync(buffer, (uint)thumbnail.Size, InputStreamOptions.None);
                             if (playItem == NowPlayingItem)
                             {
-                                await CoverStream.WriteAsync(buffer);
-                                CoverBuffer = buffer;
+                                using (await CoverLock.LockAsync())
+                                {
+                                    if (CoverStream.Size != 0)
+                                    {
+                                        CoverStream.Size = 0;
+                                        CoverStream.Seek(0);
+                                    }
+                                    await CoverStream.WriteAsync(buffer);
+                                }
                             }
                         }
                     }
@@ -1225,8 +1241,15 @@ public static class HyPlayList
                         var buffer = bufferByte.AsBuffer();
                         if (playItem == NowPlayingItem)
                         {
-                            await CoverStream.WriteAsync(buffer);
-                            CoverBuffer = buffer;
+                            using (await CoverLock.LockAsync())
+                            {
+                                if (CoverStream.Size != 0)
+                                {
+                                    CoverStream.Size = 0;
+                                    CoverStream.Seek(0);
+                                }
+                                await CoverStream.WriteAsync(buffer);
+                            }
                         }
                     }
                 }
@@ -1244,12 +1267,17 @@ public static class HyPlayList
                 }
 
                 var buffer = (await result.Content.ReadAsByteArrayAsync()).AsBuffer();
-                CoverStream.Size = 0;
-                CoverStream.Seek(0);
                 if (playItem == NowPlayingItem)
                 {
-                    await CoverStream.WriteAsync(buffer);
-                    CoverBuffer = buffer;
+                    using(await CoverLock.LockAsync())
+                    {
+                        if (CoverStream.Size != 0)
+                        {
+                            CoverStream.Size = 0;
+                            CoverStream.Seek(0);
+                        }
+                        await CoverStream.WriteAsync(buffer);
+                    }
                 }
             }
         }

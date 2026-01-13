@@ -517,7 +517,7 @@ public sealed partial class ExpandedPlayer : Page
         try
         {
             OnSongChange(HyPlayList.List[HyPlayList.NowPlaying]);
-            RefreshAlbumCover(HyPlayList.NowPlayingItem, HyPlayList.CoverBuffer);
+            RefreshAlbumCover(HyPlayList.NowPlayingItem);
             ChangeWindowMode();
             needRedesign++;
         }
@@ -674,7 +674,7 @@ public sealed partial class ExpandedPlayer : Page
     public void OnEnteringForeground()
     {
         OnSongChange(HyPlayList.NowPlayingItem);
-        RefreshAlbumCover(HyPlayList.NowPlayingItem, HyPlayList.CoverBuffer);
+        RefreshAlbumCover(HyPlayList.NowPlayingItem);
         if (!_lyricHasBeenLoaded) HyPlayList_OnLyricLoaded();
     }
 
@@ -1027,10 +1027,9 @@ public sealed partial class ExpandedPlayer : Page
     private Windows.UI.Color? _karaokAccentColorCache;
     private SolidColorBrush? _pureAccentBrushCache;
 
-    private async Task<bool> IsBrightAsync(InMemoryRandomAccessStream coverStream)
+    private async Task<bool> IsBrightAsync(InMemoryRandomAccessStream stream)
     {
         lastSong = HyPlayList.NowPlayingItem;
-        using var stream = coverStream.CloneStream();
         var finalResult = false; //在不手动指定背景类型为2至5时需要执行颜色采样
         var resultGenerated = false; //标志返回颜色已经生成
         if (Common.Setting.lyricColor != 0 && Common.Setting.lyricColor != 3)
@@ -1360,28 +1359,30 @@ public sealed partial class ExpandedPlayer : Page
     }
 
 
-    public async void RefreshAlbumCover(HyPlayItem playItem, IBuffer coverStream)
+    public async void RefreshAlbumCover(HyPlayItem playItem)
     {
         if (HyPlayList.CoverStream.Size == 0) return;
         _ = Common.Invoke(async () =>
         {
-            using var stream = new InMemoryRandomAccessStream();
-            await stream.WriteAsync(coverStream);
-            stream.Seek(0);
             if (!Common.Setting.noImage)
             {
                 try
                 {
                     if (playItem != HyPlayList.NowPlayingItem) return;
-                    var isBright = await IsBrightAsync(stream);
+                    var isBright = await IsBrightAsync(HyPlayList.CoverStream);
                     Common.BrushManagement.IsBright = isBright;
-                    await ImageAlbumSource.SetSourceAsync(stream);
+
+                    using (await HyPlayList.CoverLock.LockAsync())
+                    {
+                        HyPlayList.CoverStream.Seek(0);
+                        await ImageAlbumSource.SetSourceAsync(HyPlayList.CoverStream);
+                    }
                     if (Common.Setting.expandedPlayerBackgroundType == 0 && Background?.GetType() != typeof(ImageBrush))
                     {
                         var brush = new ImageBrush
                         { Stretch = Stretch.UniformToFill };
                         Background = brush;
-                        brush.ImageSource = (ImageSource)ImageAlbum.Source;
+                        brush.ImageSource = ImageAlbumSource;
                     }
 
                     if (playItem != HyPlayList.NowPlayingItem) return;

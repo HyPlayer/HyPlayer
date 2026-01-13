@@ -95,20 +95,21 @@ public sealed partial class CompactPlayerPage : Page
         });
     }
 
-    private async void HyPlayList_OnSongCoverChanged(HyPlayItem playItem, IBuffer coverStream)
+    private async void HyPlayList_OnSongCoverChanged(HyPlayItem playItem)
     {
         if (HyPlayList.CoverStream.Size == 0) return;
         await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
         {
-            using var stream = new InMemoryRandomAccessStream();
-            await stream.WriteAsync(coverStream);
-            stream.Seek(0);
-            if (!Common.Setting.noImage && stream.Size != 0)
+            if (!Common.Setting.noImage && HyPlayList.CoverStream.Size != 0)
             {
                 try
                 {
                     if (playItem != HyPlayList.NowPlayingItem) return;
-                    await AlbumImageBrushSource.SetSourceAsync(stream);
+                    using (await HyPlayList.CoverLock.LockAsync())
+                    {
+                        HyPlayList.CoverStream.Seek(0);
+                        await AlbumImageBrushSource.SetSourceAsync(HyPlayList.CoverStream);
+                    }
                 }
                 catch
                 {
@@ -299,7 +300,7 @@ public sealed partial class CompactPlayerPage : Page
     {
         base.OnNavigatedTo(e);
         OnChangePlayItem(HyPlayList.NowPlayingItem);
-        HyPlayList_OnSongCoverChanged(HyPlayList.NowPlayingItem, HyPlayList.CoverBuffer);
+        HyPlayList_OnSongCoverChanged(HyPlayList.NowPlayingItem);
         PlayStateIcon.Glyph = HyPlayList.IsPlaying ? "\uEDB4" : "\uEDB5";
         //Common.BarPlayBar.Visibility = Visibility.Collapsed;
         (e.Parameter as AppWindow).TitleBar.ExtendsContentIntoTitleBar = true;

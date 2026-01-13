@@ -27,10 +27,9 @@ namespace HyPlayer.Classes
             }
         }
         public static readonly uint PICTURE_FILE_HEADER_CAPACITY = 10;
-        public static async Task<Guid> GetPictureCodecFromStream(IRandomAccessStream stream)
+        public static async Task<Guid> GetPictureCodecFromStream(IRandomAccessStream pictureStream)
         {
             var buffer = new Buffer(PICTURE_FILE_HEADER_CAPACITY);
-            using var pictureStream = stream.CloneStream();
             await pictureStream.ReadAsync(buffer, PICTURE_FILE_HEADER_CAPACITY, InputStreamOptions.None);
             if (buffer.Length < PICTURE_FILE_HEADER_CAPACITY) throw new ArgumentOutOfRangeException();
             var byteArray = buffer.ToArray();

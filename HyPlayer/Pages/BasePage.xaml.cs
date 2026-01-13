@@ -74,9 +74,9 @@ public sealed partial class BasePage : Page
         Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
     }
 
-    private async void HyPlayList_OnSongCoverChanged(HyPlayItem playItem, IBuffer coverStream)
+    private async void HyPlayList_OnSongCoverChanged(HyPlayItem playItem)
     {
-        await RefreshNavItemCover(playItem, coverStream);
+        await RefreshNavItemCover(playItem);
     }
 
 
@@ -641,6 +641,7 @@ public sealed partial class BasePage : Page
                 await writer.StoreAsync();
             }
 
+
             await img.SetSourceAsync(stream);
             QrContainer.Source = img;
         }
@@ -799,20 +800,21 @@ public sealed partial class BasePage : Page
         });
     }
 
-    public async Task RefreshNavItemCover(HyPlayItem playItem, IBuffer coverStream)
+    public async Task RefreshNavItemCover(HyPlayItem playItem)
     {
         if (HyPlayList.CoverStream.Size == 0) return;
         await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
         {
-            using var stream = new InMemoryRandomAccessStream();
-            await stream.WriteAsync(coverStream);
-            stream.Seek(0);
-            if (NavItemBlank.Opacity != 0 && !Common.isExpanded && !Common.Setting.noImage && stream.Size != 0)
+            if (NavItemBlank.Opacity != 0 && !Common.isExpanded && !Common.Setting.noImage && HyPlayList.CoverStream.Size != 0)
             {
                 try
                 {
                     if (playItem != HyPlayList.NowPlayingItem) return;
-                    await NavItemImageSource.SetSourceAsync(stream);
+                    using (await HyPlayList.CoverLock.LockAsync())
+                    {
+                        HyPlayList.CoverStream.Seek(0);
+                        await NavItemImageSource.SetSourceAsync(HyPlayList.CoverStream);
+                    }
                 }
                 catch
                 {
@@ -821,11 +823,10 @@ public sealed partial class BasePage : Page
         });
     }
 
-    public async Task RefreshNavItemCover(double collapseTime, HyPlayItem playItem, IRandomAccessStream coverStream)
+    public async Task RefreshNavItemCover(double collapseTime, HyPlayItem playItem, IRandomAccessStream stream)
     {
         await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
         {
-            using var stream = coverStream.CloneStream();
             var time = TimeSpan.FromSeconds(collapseTime + 0.25);
             await Task.Delay(time);
             if (NavItemBlank.Opacity != 0 && !Common.isExpanded && !Common.Setting.noImage && stream.Size != 0)
@@ -833,7 +834,11 @@ public sealed partial class BasePage : Page
                 try
                 {
                     if (playItem != HyPlayList.NowPlayingItem) return;
-                    await NavItemImageSource.SetSourceAsync(stream);
+                    using (await HyPlayList.CoverLock.LockAsync())
+                    {
+                        HyPlayList.CoverStream.Seek(0);
+                        await NavItemImageSource.SetSourceAsync(HyPlayList.CoverStream);
+                    }
                 }
                 catch
                 {

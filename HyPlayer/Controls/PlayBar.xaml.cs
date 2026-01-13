@@ -473,7 +473,7 @@ DoubleAnimation verticalAnimation;
         var region = Common.PageBase.AppTitleBar.FindDescendant("PART_DragRegion") as Grid;
         Window.Current.SetTitleBar(region);
         Common.isExpanded = false;
-        RefreshPlayBarCover(HyPlayList.NowPlayingItem, HyPlayList.CoverBuffer);
+        RefreshPlayBarCover(HyPlayList.NowPlayingItem);
     }
 
     private void ButtonCleanAll_OnClick(object sender, RoutedEventArgs e)
@@ -739,7 +739,7 @@ DoubleAnimation verticalAnimation;
     private void OnEnteringForeground()
     {
         LoadPlayingFile(HyPlayList.NowPlayingItem);
-        RefreshPlayBarCover(HyPlayList.NowPlayingItem, HyPlayList.CoverBuffer);
+        RefreshPlayBarCover(HyPlayList.NowPlayingItem);
     }
 
     private async void UserControl_Loaded(object sender, RoutedEventArgs e)
@@ -811,22 +811,23 @@ DoubleAnimation verticalAnimation;
 
     }
 
-    public async void RefreshPlayBarCover(HyPlayItem playItem, IBuffer coverStream)
+    public async void RefreshPlayBarCover(HyPlayItem playItem)
     {
         if (HyPlayList.CoverStream.Size == 0) return;
         await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
         {
-            using var stream = new InMemoryRandomAccessStream();
-            await stream.WriteAsync(coverStream);
-            stream.Seek(0);
             if (GridSongInfo.Visibility == Visibility.Visible && Opacity != 0)
             {
                 try
                 {
-                    if (stream.Size != 0)
+                    if (HyPlayList.CoverStream.Size != 0)
                     {
                         if (playItem != HyPlayList.NowPlayingItem) return;
-                        await AlbumImageSource.SetSourceAsync(stream);
+                        using (await HyPlayList.CoverLock.LockAsync())
+                        {
+                            HyPlayList.CoverStream.Seek(0);
+                            await AlbumImageSource.SetSourceAsync(HyPlayList.CoverStream);
+                        }
                     }
                 }
                 catch

@@ -123,7 +123,7 @@ public sealed partial class MainPage : Page
             //lyricstoryboard.Begin();
 
             PointerInAni.Begin();
-            Common.BarPlayBar.RefreshPlayBarCover(HyPlayList.NowPlayingItem, HyPlayList.CoverBuffer);
+            Common.BarPlayBar.RefreshPlayBarCover(HyPlayList.NowPlayingItem);
             var BlankAni = new DoubleAnimation
             {
                 To = 0,
@@ -200,8 +200,7 @@ public sealed partial class MainPage : Page
         Storyboard.SetTargetProperty(BlankAni, "Opacity");
         storyboard.Children.Add(BlankAni);
         storyboard.Begin();
-        using var coverStream = HyPlayList.CoverStream.CloneStream();
-        await Common.PageBase.RefreshNavItemCover(3, HyPlayList.NowPlayingItem, coverStream);
+        await Common.PageBase.RefreshNavItemCover(3, HyPlayList.NowPlayingItem, HyPlayList.CoverStream);
 
     }
     private void Page_PointerEntered(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
