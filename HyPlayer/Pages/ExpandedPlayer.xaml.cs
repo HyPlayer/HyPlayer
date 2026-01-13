@@ -1571,7 +1571,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private async void LuminousBackground_CreateResources(Microsoft.Graphics.Canvas.UI.Xaml.CanvasAnimatedControl sender, Microsoft.Graphics.Canvas.UI.CanvasCreateResourcesEventArgs args)
     {
-        if (_shaderEffect == null)
+        if (_shaderEffect == null && Common.Setting.expandedPlayerBackgroundType == BackgroundType.Isolation)
         {
             if (Common.PixelShaderShareEffect == null)
             {
@@ -1591,13 +1591,13 @@ public sealed partial class ExpandedPlayer : Page
             }
         }
         LuminousBackground.DpiScale = Common.Setting.IsolationScale;
-        _shaderEffect.Properties["Width"] = (float)LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualWidth, Microsoft.Graphics.Canvas.CanvasDpiRounding.Round);
-        _shaderEffect.Properties["Height"] = (float)LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualHeight, Microsoft.Graphics.Canvas.CanvasDpiRounding.Round);
-        _shaderEffect.Properties["EnableLightWave"] = Common.Setting.IsolationLightWave;
+        _shaderEffect?.Properties["Width"] = (float)LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualWidth, Microsoft.Graphics.Canvas.CanvasDpiRounding.Round);
+        _shaderEffect?.Properties["Height"] = (float)LuminousBackground.ConvertDipsToPixels((float)LuminousBackground.ActualHeight, Microsoft.Graphics.Canvas.CanvasDpiRounding.Round);
+        _shaderEffect?.Properties["EnableLightWave"] = Common.Setting.IsolationLightWave;
         var random = new Random();
-        _shaderEffect.Properties["RandomValue1"] = (float)random.Next(-50, +50);
-        _shaderEffect.Properties["RandomValue2"] = (float)random.Next(-50, +50);
-        _shaderEffect.Properties["RandomValue3"] = (float)random.Next(-50, +50);
+        _shaderEffect?.Properties["RandomValue1"] = (float)random.Next(-50, +50);
+        _shaderEffect?.Properties["RandomValue2"] = (float)random.Next(-50, +50);
+        _shaderEffect?.Properties["RandomValue3"] = (float)random.Next(-50, +50);
         if (!Common.Setting.IsolationFullThrottle)
         {
             LuminousBackground.IsFixedTimeStep = true;
@@ -1607,7 +1607,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private void LuminousBackground_Update(Microsoft.Graphics.Canvas.UI.Xaml.ICanvasAnimatedControl sender, Microsoft.Graphics.Canvas.UI.Xaml.CanvasAnimatedUpdateEventArgs args)
     {
-        if (HyPlayList.IsPlaying)
+        if (HyPlayList.IsPlaying && Common.Setting.expandedPlayerBackgroundType == BackgroundType.Isolation)
         {
             var progress = (float)args.Timing.TotalTime.TotalSeconds + _randomValue;
             _shaderEffect?.Properties["iTime"] = progress;
