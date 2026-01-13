@@ -813,22 +813,16 @@ DoubleAnimation verticalAnimation;
 
     public async void RefreshPlayBarCover(HyPlayItem playItem)
     {
-        if (HyPlayList.CoverStream.Size == 0) return;
+        if (HyPlayList.CoverStream == null) return;
         await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
         {
             if (GridSongInfo.Visibility == Visibility.Visible && Opacity != 0)
             {
                 try
                 {
-                    if (HyPlayList.CoverStream.Size != 0)
-                    {
-                        if (playItem != HyPlayList.NowPlayingItem) return;
-                        using (await HyPlayList.CoverLock.LockAsync())
-                        {
-                            HyPlayList.CoverStream.Seek(0);
-                            await AlbumImageSource.SetSourceAsync(HyPlayList.CoverStream);
-                        }
-                    }
+                    if (playItem != HyPlayList.NowPlayingItem) return;
+                    using var stream = HyPlayList.CoverStream.CloneStream();
+                    await AlbumImageSource.SetSourceAsync(stream);
                 }
                 catch
                 {

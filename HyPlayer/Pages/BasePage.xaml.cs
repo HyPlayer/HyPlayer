@@ -802,19 +802,16 @@ public sealed partial class BasePage : Page
 
     public async Task RefreshNavItemCover(HyPlayItem playItem)
     {
-        if (HyPlayList.CoverStream.Size == 0) return;
+        if (HyPlayList.CoverStream == null) return;
         await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
         {
-            if (NavItemBlank.Opacity != 0 && !Common.isExpanded && !Common.Setting.noImage && HyPlayList.CoverStream.Size != 0)
+            if (NavItemBlank.Opacity != 0 && !Common.isExpanded && !Common.Setting.noImage)
             {
                 try
                 {
                     if (playItem != HyPlayList.NowPlayingItem) return;
-                    using (await HyPlayList.CoverLock.LockAsync())
-                    {
-                        HyPlayList.CoverStream.Seek(0);
-                        await NavItemImageSource.SetSourceAsync(HyPlayList.CoverStream);
-                    }
+                    using var stream = HyPlayList.CoverStream.CloneStream();
+                    await NavItemImageSource.SetSourceAsync(HyPlayList.CoverStream);
                 }
                 catch
                 {
@@ -823,22 +820,19 @@ public sealed partial class BasePage : Page
         });
     }
 
-    public async Task RefreshNavItemCover(double collapseTime, HyPlayItem playItem, IRandomAccessStream stream)
+    public async Task RefreshNavItemCover(double collapseTime, HyPlayItem playItem)
     {
         await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
         {
             var time = TimeSpan.FromSeconds(collapseTime + 0.25);
             await Task.Delay(time);
-            if (NavItemBlank.Opacity != 0 && !Common.isExpanded && !Common.Setting.noImage && stream.Size != 0)
+            if (NavItemBlank.Opacity != 0 && !Common.isExpanded && !Common.Setting.noImage)
             {
                 try
                 {
-                    if (playItem != HyPlayList.NowPlayingItem) return;
-                    using (await HyPlayList.CoverLock.LockAsync())
-                    {
-                        HyPlayList.CoverStream.Seek(0);
-                        await NavItemImageSource.SetSourceAsync(HyPlayList.CoverStream);
-                    }
+                    if (playItem != HyPlayList.NowPlayingItem || HyPlayList.CoverStream == null) return;
+                    using var stream = HyPlayList.CoverStream.CloneStream();
+                    await NavItemImageSource.SetSourceAsync(HyPlayList.CoverStream);
                 }
                 catch
                 {

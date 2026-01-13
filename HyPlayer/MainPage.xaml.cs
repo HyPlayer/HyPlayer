@@ -200,7 +200,7 @@ public sealed partial class MainPage : Page
         Storyboard.SetTargetProperty(BlankAni, "Opacity");
         storyboard.Children.Add(BlankAni);
         storyboard.Begin();
-        await Common.PageBase.RefreshNavItemCover(3, HyPlayList.NowPlayingItem, HyPlayList.CoverStream);
+        await Common.PageBase.RefreshNavItemCover(3, HyPlayList.NowPlayingItem);
 
     }
     private void Page_PointerEntered(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)

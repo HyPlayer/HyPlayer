@@ -97,19 +97,16 @@ public sealed partial class CompactPlayerPage : Page
 
     private async void HyPlayList_OnSongCoverChanged(HyPlayItem playItem)
     {
-        if (HyPlayList.CoverStream.Size == 0) return;
+        if (HyPlayList.CoverStream == null) return;
         await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
         {
-            if (!Common.Setting.noImage && HyPlayList.CoverStream.Size != 0)
+            if (!Common.Setting.noImage)
             {
                 try
                 {
                     if (playItem != HyPlayList.NowPlayingItem) return;
-                    using (await HyPlayList.CoverLock.LockAsync())
-                    {
-                        HyPlayList.CoverStream.Seek(0);
-                        await AlbumImageBrushSource.SetSourceAsync(HyPlayList.CoverStream);
-                    }
+                    using var stream = HyPlayList.CoverStream.CloneStream();
+                    await AlbumImageBrushSource.SetSourceAsync(HyPlayList.CoverStream);
                 }
                 catch
                 {

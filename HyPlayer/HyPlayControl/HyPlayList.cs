@@ -16,7 +16,6 @@ using HyPlayer.UWP.Chopin.Abstractions.Interfaces;
 using HyPlayer.UWP.Chopin.Abstractions.Models;
 using Kawazu;
 using Microsoft.Toolkit.Uwp.Notifications;
-using Nito.AsyncEx;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -110,11 +109,10 @@ public static class HyPlayList
     private static SystemMediaTransportControlsDisplayUpdater _controlsDisplayUpdater;
     private static Dictionary<HyPlayItem, DownloadOperation> DownloadOperations = new();
     private static Dictionary<DownloadOperation, HyPlayItem> DownloadOperationsReverseDirectory = new();
-    public static InMemoryRandomAccessStream CoverStream = new InMemoryRandomAccessStream();
-    public static AsyncLock CoverLock = new AsyncLock();
-
-    public static RandomAccessStreamReference CoverStreamReference =
-        RandomAccessStreamReference.CreateFromStream(CoverStream);
+#nullable enable
+    public static InMemoryRandomAccessStream? CoverStream;
+    public static RandomAccessStreamReference? CoverStreamReference;
+#nullable restore
 
     private static SemaphoreSlim _loaderSemaphoreSlim = new SemaphoreSlim(1, 1);
     private static SemaphoreSlim _seekerSemaphoreSlim = new SemaphoreSlim(1, 1);
@@ -471,10 +469,13 @@ public static class HyPlayList
             var info = NCMFile.GetNCMMusicInfo(stream);
             var coverArray = NCMFile.GetCoverByteArray(stream);
             var buffer = coverArray.AsBuffer();
-            using (await CoverLock.LockAsync())
-            {
-                await CoverStream.WriteAsync(buffer);
-            }
+            var oldCoverStream = CoverStream;
+            CoverStream = null;
+            CoverStreamReference = null;
+            oldCoverStream?.Dispose();
+            CoverStream = new InMemoryRandomAccessStream();
+            await CoverStream.WriteAsync(buffer);
+            CoverStreamReference = RandomAccessStreamReference.CreateFromStream(CoverStream);
             using var encStream = NCMFile.GetEncryptedStream(stream);
             encStream.Seek(0, SeekOrigin.Begin);
             var songDataStream = new InMemoryRandomAccessStream();
@@ -1141,33 +1142,26 @@ public static class HyPlayList
             }
 
             // 图片加载放在之后
-            if (CoverStream.Size == 0 && !Common.Setting.noImage && NowPlayingItem == playItemWhenRequested)
+            if (!Common.Setting.noImage && NowPlayingItem == playItemWhenRequested)
             {
                 _ = RefreshAlbumCover(playItemWhenRequested).ContinueWith(async (_) =>
                 {
-                    if (CoverStream.Size != 0)
+
+                    if ((playItemWhenRequested == NowPlayingItem) && !Common.Setting.noImage)
                     {
-                        if ((playItemWhenRequested == NowPlayingItem) && !Common.Setting.noImage)
-                        {
-                            CoverStream.Seek(0);
-                            OnSongCoverChanged?.Invoke(playItemWhenRequested);
-                        }
+                        OnSongCoverChanged?.Invoke(playItemWhenRequested);
                     }
+
                     //更新磁贴
                     if (playItemWhenRequested == NowPlayingItem)
                     {
-                        CoverStream.Seek(0);
-                        using (await CoverLock.LockAsync())
-                        {
-                            CoverStream.Seek(0);
-                            await RefreshTile(playItemWhenRequested, playItemWhenRequested, CoverStream);
-                        }
+                        using var stream = CoverStream.CloneStream();
+                        await RefreshTile(playItemWhenRequested, playItemWhenRequested, stream);
                     }
 
                     if (playItemWhenRequested == NowPlayingItem)
                     {
                         // RASR 罪大恶极，害的磁贴怨声载道
-                        CoverStream.Seek(0);
                         _controlsDisplayUpdater.Thumbnail = CoverStreamReference;
                         _controlsDisplayUpdater.Update();
                     }
@@ -1204,15 +1198,13 @@ public static class HyPlayList
                             await thumbnail.ReadAsync(buffer, (uint)thumbnail.Size, InputStreamOptions.None);
                             if (playItem == NowPlayingItem)
                             {
-                                using (await CoverLock.LockAsync())
-                                {
-                                    if (CoverStream.Size != 0)
-                                    {
-                                        CoverStream.Size = 0;
-                                        CoverStream.Seek(0);
-                                    }
-                                    await CoverStream.WriteAsync(buffer);
-                                }
+                                var oldCoverStream = CoverStream;
+                                CoverStream = null;
+                                CoverStreamReference = null;
+                                oldCoverStream?.Dispose();
+                                CoverStream = new InMemoryRandomAccessStream();
+                                await CoverStream.WriteAsync(buffer);
+                                CoverStreamReference = RandomAccessStreamReference.CreateFromStream(CoverStream);
                             }
                         }
                         else
@@ -1223,15 +1215,13 @@ public static class HyPlayList
                             await thumbnail.ReadAsync(buffer, (uint)thumbnail.Size, InputStreamOptions.None);
                             if (playItem == NowPlayingItem)
                             {
-                                using (await CoverLock.LockAsync())
-                                {
-                                    if (CoverStream.Size != 0)
-                                    {
-                                        CoverStream.Size = 0;
-                                        CoverStream.Seek(0);
-                                    }
-                                    await CoverStream.WriteAsync(buffer);
-                                }
+                                var oldCoverStream = CoverStream;
+                                CoverStream = null;
+                                CoverStreamReference = null;
+                                oldCoverStream?.Dispose();
+                                CoverStream = new InMemoryRandomAccessStream();
+                                await CoverStream.WriteAsync(buffer);
+                                CoverStreamReference = RandomAccessStreamReference.CreateFromStream(CoverStream);
                             }
                         }
                     }
@@ -1241,15 +1231,13 @@ public static class HyPlayList
                         var buffer = bufferByte.AsBuffer();
                         if (playItem == NowPlayingItem)
                         {
-                            using (await CoverLock.LockAsync())
-                            {
-                                if (CoverStream.Size != 0)
-                                {
-                                    CoverStream.Size = 0;
-                                    CoverStream.Seek(0);
-                                }
-                                await CoverStream.WriteAsync(buffer);
-                            }
+                            var oldCoverStream = CoverStream;
+                            CoverStream = null;
+                            CoverStreamReference = null;
+                            oldCoverStream?.Dispose();
+                            CoverStream = new InMemoryRandomAccessStream();
+                            await CoverStream.WriteAsync(buffer);
+                            CoverStreamReference = RandomAccessStreamReference.CreateFromStream(CoverStream);
                         }
                     }
                 }
@@ -1269,15 +1257,13 @@ public static class HyPlayList
                 var buffer = (await result.Content.ReadAsByteArrayAsync()).AsBuffer();
                 if (playItem == NowPlayingItem)
                 {
-                    using(await CoverLock.LockAsync())
-                    {
-                        if (CoverStream.Size != 0)
-                        {
-                            CoverStream.Size = 0;
-                            CoverStream.Seek(0);
-                        }
-                        await CoverStream.WriteAsync(buffer);
-                    }
+                    var oldCoverStream = CoverStream;
+                    CoverStream = null;
+                    CoverStreamReference = null;
+                    oldCoverStream?.Dispose();
+                    CoverStream = new InMemoryRandomAccessStream();
+                    await CoverStream.WriteAsync(buffer);
+                    CoverStreamReference = RandomAccessStreamReference.CreateFromStream(CoverStream);
                 }
             }
         }

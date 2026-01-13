@@ -1361,7 +1361,7 @@ public sealed partial class ExpandedPlayer : Page
 
     public async void RefreshAlbumCover(HyPlayItem playItem)
     {
-        if (HyPlayList.CoverStream.Size == 0) return;
+        if (HyPlayList.CoverStream == null) return;
         _ = Common.Invoke(async () =>
         {
             if (!Common.Setting.noImage)
@@ -1372,11 +1372,8 @@ public sealed partial class ExpandedPlayer : Page
                     var isBright = await IsBrightAsync(HyPlayList.CoverStream);
                     Common.BrushManagement.IsBright = isBright;
 
-                    using (await HyPlayList.CoverLock.LockAsync())
-                    {
-                        HyPlayList.CoverStream.Seek(0);
-                        await ImageAlbumSource.SetSourceAsync(HyPlayList.CoverStream);
-                    }
+                    using var stream = HyPlayList.CoverStream.CloneStream();
+                    await ImageAlbumSource.SetSourceAsync(stream);
                     if (Common.Setting.expandedPlayerBackgroundType == 0 && Background?.GetType() != typeof(ImageBrush))
                     {
                         var brush = new ImageBrush
