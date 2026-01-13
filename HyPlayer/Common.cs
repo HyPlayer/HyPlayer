@@ -502,7 +502,7 @@ namespace HyPlayer
 
         public BackgroundType expandedPlayerBackgroundType
         {
-            get => BackgroundType.Isolation;
+            get => GetSettings(nameof(expandedPlayerBackgroundType), BackgroundType.CoverBlur);
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(expandedPlayerBackgroundType)] = (int)value;
@@ -926,6 +926,16 @@ namespace HyPlayer
             set
             {
                 ApplicationData.Current.LocalSettings.Values[nameof(lyricRenderFade)] = value;
+                OnPropertyChanged();
+            }
+        }
+        public bool EnableFFT
+        {
+            get => GetSettings(nameof(EnableFFT), false);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(EnableFFT)] = value;
+                HyPlayList.Player?.EnableFFTProcessing = value;
                 OnPropertyChanged();
             }
         }

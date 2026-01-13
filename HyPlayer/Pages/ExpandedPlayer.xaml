@@ -85,7 +85,7 @@
             Color="Black" />
     </Page.Resources>
     <!--  Grid Beam~  -->
-    <Grid x:Name="PageContainer">
+    <Grid x:Name="PageContainer" Unloaded="LuminousBackground_OnUnloaded">
         <Grid.RowDefinitions>
             <RowDefinition Height="30" />
             <!--  Title Bar  -->
@@ -119,32 +119,24 @@
             Grid.Row="0"
             Grid.Column="0"
             Background="Transparent" />
-        <ContentControl
-            x:Name="ShaderLuminousBackgroundContainer"
+        <win2d:CanvasAnimatedControl
+            x:Name="LuminousBackground"
             Grid.Row="0"
             Grid.RowSpan="3"
             Grid.Column="0"
-            HorizontalContentAlignment="Stretch"
-            VerticalContentAlignment="Stretch"
-            Canvas.ZIndex="-1"
-            Unloaded="LuminousBackground_OnUnloaded"
-            Visibility="{x:Bind hyplayer:Common.Setting.expandedPlayerBackgroundType, Converter={StaticResource ShaderConverter}}">
-            <win2d:CanvasAnimatedControl
-                x:Name="LuminousBackground"
-                RightTapped="LyricBoxContainer_RightTapped"
-                PointerWheelChanged="LyricBoxContainer_OnPointerWheelChanged"
-                Tapped="LyricBox_Tapped"
-                CreateResources="LuminousBackground_CreateResources"
-                Draw="LuminousBackground_Draw"
-                SizeChanged="LuminousBackground_SizeChanged"
-                Update="LuminousBackground_Update"
-                DoubleTapped="LyricView_DoubleTapped"
-                PointerExited="LyricView_OnPointerExited"
-                PointerMoved="LyricView_OnPointerMoved"
-                PointerPressed="LyricView_OnPointerPressed"
-                PointerReleased="LyricView_PointerReleased"
-                />
-        </ContentControl>
+            Canvas.ZIndex="0"
+            CreateResources="LuminousBackground_CreateResources"
+            DoubleTapped="LyricView_DoubleTapped"
+            Draw="LuminousBackground_Draw"
+            PointerExited="LyricView_OnPointerExited"
+            PointerMoved="LyricView_OnPointerMoved"
+            PointerPressed="LyricView_OnPointerPressed"
+            PointerReleased="LyricView_PointerReleased"
+            PointerWheelChanged="LyricBoxContainer_OnPointerWheelChanged"
+            RightTapped="LyricBoxContainer_RightTapped"
+            SizeChanged="LuminousBackground_SizeChanged"
+            Tapped="LyricBox_Tapped"
+            Update="LuminousBackground_Update" />
         <Grid
             x:Name="LuminousBackgroundContainer"
             Grid.Row="0"
@@ -215,7 +207,7 @@
             </Grid.ColumnDefinitions>
             <ScrollViewer
                 x:Name="UIAugmentationSys"
-                Canvas.ZIndex="0"
+                Canvas.ZIndex="1"
                 HorizontalScrollMode="Disabled"
                 VerticalScrollBarVisibility="Hidden"
                 VerticalScrollMode="Disabled">
@@ -425,7 +417,7 @@
                     <RowDefinition x:Name="DefaultRow" Height="25*" />
                     <RowDefinition x:Name="ImmersiveRow" Height="1*" />
                 </Grid.RowDefinitions>
-                <Grid></Grid>
+                <Grid />
             </Grid>
             <Button
                 x:Name="MoreBtn"

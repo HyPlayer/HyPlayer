@@ -1,8 +1,8 @@
 using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Windows.Media;
-using WinRT;
 
 namespace HyPlayer.UWP.Chopin.Utils
 {
@@ -25,7 +25,7 @@ namespace HyPlayer.UWP.Chopin.Utils
         // 4. 上一帧的显示数据，用于平滑计算
         private float[] _previousDisplayData = new float[DisplayBandCount];
 
-        private readonly object _bufferLock = new object();
+        private readonly Lock _bufferLock = new Lock();
 
         public unsafe void ProcessFFT(AudioFrame frame)
         {
@@ -34,10 +34,12 @@ namespace HyPlayer.UWP.Chopin.Utils
             {
                 // ReSharper disable once SuspiciousTypeConversion.Global
                 reference.GetBuffer(out var dataInBytes, out var capacity);
-                float* dataInFloat = (float*)dataInBytes;
+                int totalSamples = (int)(capacity / sizeof(float));
+                var dataInFloat = new float[totalSamples];
+                Marshal.Copy((IntPtr)dataInBytes, dataInFloat, 0, totalSamples);
 
                 // 核心修正：根据实际拿到的内存大小决定处理多少数据
-                int totalSamples = (int)(capacity / sizeof(float));
+
                 // 取 FftSize 和 实际可用数据量 的最小值，防止越界
                 int safeProcessingLimit = Math.Min(FftSize, totalSamples);
                 CurrentFftSize = safeProcessingLimit;
@@ -85,7 +87,7 @@ namespace HyPlayer.UWP.Chopin.Utils
 
                 // 4. 将线性频率数据合并为较少的显示频段 (对数映射)
                 // 并应用时间平滑。
-                lock (_bufferLock) // 加锁快速写入显示缓冲区
+                lock (_bufferLock)
                 {
                     ProcessBandsLogarithmically();
                 }

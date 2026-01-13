@@ -28,7 +28,6 @@ namespace HyPlayer.Pages;
 /// </summary>
 public sealed partial class AlbumPage : Page
 {
-    private readonly ObservableCollection<NCSong> AlbumSongs = new();
     private NCAlbum Album;
     private string albumid;
     private readonly CollectionViewSource AlbumSongsViewSource = new() { IsSourceGrouped = true };

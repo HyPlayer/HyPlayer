@@ -12,11 +12,17 @@
 		<EnableMsixTooling>true</EnableMsixTooling>
 		<SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<PublishAot>true</PublishAot>
+		<PublishAot>False</PublishAot>
 		<DiableRuntimeMarshaling>true</DiableRuntimeMarshaling>
 		<NoWarn>IL2026;IL3050</NoWarn>
+		<WindowsSdkPackageVersion>10.0.26100.73-preview</WindowsSdkPackageVersion>
 		<PublishProfile>win-$(Platform).pubxml</PublishProfile>
 	</PropertyGroup>
+	<ItemGroup>
+	  <Content Include="Shaders\BackgroundShader.bin">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
   <ItemGroup>
     <PackageReference Include="ALRC.Abstraction">
       <Version>1.1.0</Version>
@@ -92,10 +98,5 @@
     <ProjectReference Include="..\HyPlayer.UWP.Chopin\HyPlayer.UWP.Chopin.csproj" />
     <ProjectReference Include="..\Impressionist\Impressionist\Impressionist.csproj" />
     <ProjectReference Include="..\Kawazu\Kawazu\Kawazu.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="Shaders\BackgroundShader.bin">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 </Project>

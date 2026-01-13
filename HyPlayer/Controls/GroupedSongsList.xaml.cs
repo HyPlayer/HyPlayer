@@ -13,6 +13,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
+using WinRT;
 
 #endregion
 
@@ -20,6 +21,7 @@ using Windows.UI.Xaml.Input;
 
 namespace HyPlayer.Controls;
 
+[GeneratedBindableCustomProperty]
 public sealed partial class GroupedSongsList
 {
     public static readonly DependencyProperty GroupedSongsProperty = DependencyProperty.Register(

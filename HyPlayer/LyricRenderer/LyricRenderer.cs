@@ -309,7 +309,7 @@ namespace HyPlayer.LyricRenderer
         {
             try
             {
-                Context.RenderTick = timing.ElapsedTime.Ticks;
+                Context.RenderTick = timing.TotalTime.Ticks;
                 if (_initializing || Context.ViewHeight == 0 || Context.ViewWidth == 0) return;
                 OnBeforeRender?.Invoke(this);
                 // 鼠标滚轮时间 5 s 清零

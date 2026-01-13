@@ -355,68 +355,70 @@
                         <RowDefinition />
                         <RowDefinition />
                     </Grid.RowDefinitions>
-                    <Pivot SelectionChanged="Pivot_SelectionChanged">
-                        <PivotItem Header="密码登录">
-                            <Grid Margin="0,48,0,0">
-                                <StackPanel Orientation="Vertical" Spacing="12">
-                                    <TextBox
-                                        x:Name="TextBoxAccount"
-                                        KeyDown="TextBoxAccount_OnKeyDown"
-                                        PlaceholderText="手机 / 邮箱" />
-                                    <PasswordBox
-                                        x:Name="TextBoxPassword"
-                                        KeyDown="TextBoxPassword_OnKeyDown"
-                                        PlaceholderText="密码" />
-                                    <Grid>
-                                        <TextBlock
-                                            VerticalAlignment="Center"
-                                            Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
-                                            Text="登录代表你同意相关条款" />
-                                    </Grid>
+                    <controls1:PivotView>
+                        <controls1:PivotEx SelectionChanged="Pivot_SelectionChanged">
+                            <PivotItem Header="密码登录">
+                                <Grid Margin="0,48,0,0">
+                                    <StackPanel Orientation="Vertical" Spacing="12">
+                                        <TextBox
+                                            x:Name="TextBoxAccount"
+                                            KeyDown="TextBoxAccount_OnKeyDown"
+                                            PlaceholderText="手机 / 邮箱" />
+                                        <PasswordBox
+                                            x:Name="TextBoxPassword"
+                                            KeyDown="TextBoxPassword_OnKeyDown"
+                                            PlaceholderText="密码" />
+                                        <Grid>
+                                            <TextBlock
+                                                VerticalAlignment="Center"
+                                                Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                                                Text="登录代表你同意相关条款" />
+                                        </Grid>
 
-                                </StackPanel>
-                            </Grid>
-                        </PivotItem>
-                        <PivotItem Header="扫码登录" Tapped="LoadQr">
-                            <Grid Margin="0,36,0,0">
-                                <Image
-                                    x:Name="QrContainer"
-                                    Height="160"
-                                    Margin="0,12,0,0"
-                                    HorizontalAlignment="Left"
-                                    Tapped="LoadQr" />
-                                <StackPanel
-                                    Margin="0,12,0,0"
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Top"
-                                    Spacing="8">
-                                    <Button Tapped="LoadQr">
-                                        <StackPanel Orientation="Horizontal" Spacing="14">
-                                            <FontIcon FontSize="14" Glyph="&#xE149;" />
-                                            <TextBlock Text="刷新" />
-                                        </StackPanel>
-                                    </Button>
-                                    <Button
-                                        x:Name="BtnScaleQrCode"
+                                    </StackPanel>
+                                </Grid>
+                            </PivotItem>
+                            <PivotItem Header="扫码登录" Tapped="LoadQr">
+                                <Grid Margin="0,36,0,0">
+                                    <Image
+                                        x:Name="QrContainer"
+                                        Height="160"
+                                        Margin="0,12,0,0"
+                                        HorizontalAlignment="Left"
+                                        Tapped="LoadQr" />
+                                    <StackPanel
+                                        Margin="0,12,0,0"
                                         HorizontalAlignment="Right"
-                                        VerticalAlignment="Bottom"
-                                        Content="查看大图">
-                                        <Button.Flyout>
-                                            <Flyout Placement="Left">
-                                                <Image
-                                                    x:Name="QrContainer2"
-                                                    Height="320"
-                                                    Margin="0,12,0,0"
-                                                    HorizontalAlignment="Center"
-                                                    Source="{x:Bind QrContainer.Source, Mode=OneWay}" />
-                                            </Flyout>
-                                        </Button.Flyout>
-                                    </Button>
-                                </StackPanel>
+                                        VerticalAlignment="Top"
+                                        Spacing="8">
+                                        <Button Tapped="LoadQr">
+                                            <StackPanel Orientation="Horizontal" Spacing="14">
+                                                <FontIcon FontSize="14" Glyph="&#xE149;" />
+                                                <TextBlock Text="刷新" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button
+                                            x:Name="BtnScaleQrCode"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Bottom"
+                                            Content="查看大图">
+                                            <Button.Flyout>
+                                                <Flyout Placement="Left">
+                                                    <Image
+                                                        x:Name="QrContainer2"
+                                                        Height="320"
+                                                        Margin="0,12,0,0"
+                                                        HorizontalAlignment="Center"
+                                                        Source="{x:Bind QrContainer.Source, Mode=OneWay}" />
+                                                </Flyout>
+                                            </Button.Flyout>
+                                        </Button>
+                                    </StackPanel>
 
-                            </Grid>
-                        </PivotItem>
-                    </Pivot>
+                                </Grid>
+                            </PivotItem>
+                        </controls1:PivotEx>
+                    </controls1:PivotView>
 
                     <StackPanel
                         Grid.Row="2"

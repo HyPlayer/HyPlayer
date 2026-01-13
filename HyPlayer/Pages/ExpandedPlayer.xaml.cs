@@ -86,14 +86,12 @@ public sealed partial class ExpandedPlayer : Page
     private int offset;
     private bool programClick;
     private bool realclick;
-    private int sclock;
     private ExpandedWindowMode WindowMode;
     private AppWindow? expandedPlayerWindow;
     public Windows.UI.Color? albumMainColor;
     public System.Diagnostics.Stopwatch time = new System.Diagnostics.Stopwatch();
     private PixelShaderEffect? _shaderEffect;
     private float _randomValue = -1;
-    private bool _backgroundIsReady = false;
 
     private float _lyricRenderXOffset = 0;
     private float _lyricRenderYOffset = 0;
@@ -228,10 +226,6 @@ public sealed partial class ExpandedPlayer : Page
                     luminousColorsRotateStoryBoard.Resume();
                 }
             }
-            if (LuminousBackground != null)
-            {
-                LuminousBackground.Paused = false;
-            }
         });
     }
 
@@ -255,17 +249,12 @@ public sealed partial class ExpandedPlayer : Page
             {
                 luminousColorsRotateStoryBoard.Pause();
             }
-            if (LuminousBackground != null)
-            {
-                LuminousBackground.Paused = true;
-            }
         });
     }
 
     private void HyPlayList_OnTimerTicked()
     {
         if (Common.IsInBackground) return;
-        if (sclock > 0) sclock--;
         if (needRedesign > 0)
         {
             needRedesign--;
@@ -792,7 +781,6 @@ public sealed partial class ExpandedPlayer : Page
 
     private void LyricBoxContainer_OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
     {
-        sclock = 5;
         LyricBox.LyricView_OnPointerWheelChanged(sender, e);
     }
 
@@ -1259,11 +1247,6 @@ public sealed partial class ExpandedPlayer : Page
         {
             luminousColorsRotateStoryBoard.Resume();
         }
-        if (LuminousBackground != null)
-        {
-            LuminousBackground.Paused = false;//先初始化
-
-        }
 
         LoadLyricsBox();
     }
@@ -1492,7 +1475,6 @@ public sealed partial class ExpandedPlayer : Page
                             _shaderEffect.Properties["RandomValue2"] = (float)random.Next(-50, +50);
                             _shaderEffect.Properties["RandomValue3"] = (float)random.Next(-50, +50);
                         }
-                        if (!HyPlayList.IsPlaying) LuminousBackground.Paused = true;
                     }
                 }
                 catch
@@ -1505,7 +1487,7 @@ public sealed partial class ExpandedPlayer : Page
 
     private void LuminousBackground_OnUnloaded(object sender, RoutedEventArgs e)
     {
-        if (Common.Setting.expandedPlayerBackgroundType == BackgroundType.Isolation) LuminousBackground.RemoveFromVisualTree();
+        LuminousBackground.RemoveFromVisualTree();
         LuminousBackground = null;
     }
     public Task Show()
@@ -1621,30 +1603,35 @@ public sealed partial class ExpandedPlayer : Page
             LuminousBackground.IsFixedTimeStep = true;
             LuminousBackground.TargetElapsedTime = TimeSpan.FromMilliseconds(16.6 * (60d / Common.Setting.IsolationFPS));
         }
-        _backgroundIsReady = true;
     }
 
     private void LuminousBackground_Update(Microsoft.Graphics.Canvas.UI.Xaml.ICanvasAnimatedControl sender, Microsoft.Graphics.Canvas.UI.Xaml.CanvasAnimatedUpdateEventArgs args)
     {
-        var progress = (float)args.Timing.TotalTime.TotalSeconds + _randomValue;
-        _shaderEffect?.Properties["iTime"] = progress;
+        if (HyPlayList.IsPlaying)
+        {
+            var progress = (float)args.Timing.TotalTime.TotalSeconds + _randomValue;
+            _shaderEffect?.Properties["iTime"] = progress;
+        }
     }
 
     private void LuminousBackground_Draw(Microsoft.Graphics.Canvas.UI.Xaml.ICanvasAnimatedControl sender, Microsoft.Graphics.Canvas.UI.Xaml.CanvasAnimatedDrawEventArgs args)
     {
         using var session = args.DrawingSession;
-        if (_shaderEffect == null) return;
-        session.DrawImage(_shaderEffect);
-        DrawAudioFFTGraph(sender, session);
-        var lyricCommand = new CanvasCommandList(session);
+        if (_shaderEffect != null && Common.Setting.expandedPlayerBackgroundType == BackgroundType.Isolation)
+        {
+            session.DrawImage(_shaderEffect);
+        }
+        if (Common.Setting.EnableFFT)
+        {
+            DrawAudioFFTGraph(sender, session);
+        }
+        using var lyricCommand = new CanvasCommandList(session);
         var lyricSession = lyricCommand.CreateDrawingSession();
-        LyricBox.Draw(lyricSession, args.Timing);
-        lyricSession.Dispose();
+        LyricBox.Draw(lyricSession, args.Timing);;
         session.DrawImage(lyricCommand, _lyricRenderXOffset, _lyricRenderYOffset);
-        if (!HyPlayList.IsPlaying || !_backgroundIsReady) sender.Paused = true;
     }
 
-
+    
     private void DrawAudioFFTGraph(Microsoft.Graphics.Canvas.UI.Xaml.ICanvasAnimatedControl sender, CanvasDrawingSession session)
     {
         var fftTrans = HyPlayList.Player.FFTProcessor;

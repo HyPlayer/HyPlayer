@@ -10,13 +10,13 @@
             <ResourceDictionary.MergedDictionaries>
                 <theme:Theme />
 
-                <ResourceDictionary Source="ms-appx:///Resources/Acrylic.xaml" />
-                <ResourceDictionary Source="ms-appx:///Resources/Theme.xaml" />
-                <ResourceDictionary Source="ms-appx:///Resources/UnsupportedFontIcon.xaml" />
-                <ResourceDictionary Source="ms-appx:///Classes/ConvertersDictionary.xaml" />
-                <ResourceDictionary Source="ms-appx:///Resources/ListView.xaml" />
-                <ResourceDictionary Source="ms-appx:///Resources/NavigationView.xaml" />
-                <ResourceDictionary Source="ms-appx:///Resources/ContentDialog.xaml" />
+                <ResourceDictionary Source="/Resources/Acrylic.xaml" />
+                <ResourceDictionary Source="/Resources/Theme.xaml" />
+                <ResourceDictionary Source="/Resources/UnsupportedFontIcon.xaml" />
+                <ResourceDictionary Source="/Classes/ConvertersDictionary.xaml" />
+                <ResourceDictionary Source="/Resources/ListView.xaml" />
+                <ResourceDictionary Source="/Resources/NavigationView.xaml" />
+                <ResourceDictionary Source="/Resources/ContentDialog.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <Style x:Key="BaseStyle" TargetType="controls:ImageEx">
                 <Setter Property="IsCacheEnabled" Value="False" />

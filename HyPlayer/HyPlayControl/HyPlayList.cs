@@ -219,7 +219,8 @@ public static class HyPlayList
                 {
                     DefaultDeviceId = Common.Setting.AudioRenderDevice,
                     OutputVolume = Common.Setting.Volume / 100d,
-                    AutoFallback = true
+                    AutoFallback = true,
+                    EnableFFTProcessing = Common.Setting.EnableFFT
                 });
             }
             MediaSystemControls = SystemMediaTransportControls.GetForCurrentView();
@@ -1757,12 +1758,12 @@ public static class HyPlayList
         {
             FadeManager.PauseFadeProcessing();
             if (string.IsNullOrEmpty(Common.Setting.AudioRenderDevice)) await Player.ChangePlayerServiceImplementation(new AudioGraphAudioSetting() { OutputVolume = PlayerOutgoingVolume });
-            else await Player.ChangePlayerServiceImplementation(new AudioGraphAudioSetting() { OutputVolume = PlayerOutgoingVolume, DefaultDeviceId = Common.Setting.AudioRenderDevice });
+            else await Player.ChangePlayerServiceImplementation(new AudioGraphAudioSetting() { OutputVolume = PlayerOutgoingVolume, DefaultDeviceId = Common.Setting.AudioRenderDevice, EnableFFTProcessing = Common.Setting.EnableFFT });
         }
         catch (Exception ex)
         {
             Common.AddToTeachingTipLists("在切换输出设备时发生错误", ex.Message);
-            await Player.ChangePlayerServiceImplementation(new AudioGraphAudioSetting() { OutputVolume = PlayerOutgoingVolume });
+            await Player.ChangePlayerServiceImplementation(new AudioGraphAudioSetting() { OutputVolume = PlayerOutgoingVolume, EnableFFTProcessing = Common.Setting.EnableFFT });
         }
         finally
         {

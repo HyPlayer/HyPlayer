@@ -47,7 +47,7 @@ public sealed partial class LyricItem : UserControl
     private void LyricItem_Unloaded(object sender, RoutedEventArgs e)
     {
         if (_lyricIsKaraokeLyric) HyPlayList.OnPlayPositionChange -= RefreshWordColor;
-        HyPlayList.OnLyricColorChange -= LyricColorRefresh; throw new NotImplementedException();
+        HyPlayList.OnLyricColorChange -= LyricColorRefresh;
     }
 
     private void LyricColorRefresh()

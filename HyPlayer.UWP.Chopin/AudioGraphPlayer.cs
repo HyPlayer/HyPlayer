@@ -3,6 +3,7 @@ using HyPlayer.UWP.Chopin.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.Media;
@@ -73,6 +74,8 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
         public int ConnectedPlaybackSourceCount => _audioInputNodes.Count;
         public ISMTCManager SMTCManager { get; set; }
+        public bool EnableFFTProcessing { get; set; } = false;
+
         #endregion
 
         #region Events
@@ -106,7 +109,8 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             if (graphResult.Status != AudioGraphCreationStatus.Success)
                 throw graphResult.ExtendedError;
             _defaultPlayer = graphResult.Graph;
-            _defaultPlayer.QuantumStarted += GraphOnQuantumStarted;
+            _defaultPlayer.QuantumProcessed += GraphOnQuantumProcessed;
+            EnableFFTProcessing = settings.EnableFFTProcessing;
             var outputResult = await _defaultPlayer.CreateDeviceOutputNodeAsync();
             if (outputResult.Status != AudioDeviceNodeCreationStatus.Success)
                 throw outputResult.ExtendedError;
@@ -121,9 +125,17 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             _positionTimer.Start();
         }
 
-        private void GraphOnQuantumStarted(AudioGraph sender, object args)
+        private void GraphOnQuantumProcessed(AudioGraph sender, object args)
         {
-            FFTProcessor.ProcessFFT(_frameOutputNode.GetFrame());
+            if (!EnableFFTProcessing) return;
+            try
+            {
+                FFTProcessor.ProcessFFT(_frameOutputNode.GetFrame());
+            }
+            catch
+            {
+                Debug.WriteLine("QuantumError");
+            }
         }
 
         public async Task ChangePlayerServiceImplementation(IAudioSettings settings)
@@ -152,7 +164,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
 
                 oldPlayer.Stop();
-                oldPlayer.QuantumProcessed -= GraphOnQuantumStarted;
+                oldPlayer.QuantumProcessed -= GraphOnQuantumProcessed;
 
                 // 创建新的输出节点
                 var deviceNodeCreateResult = await newPlayer.CreateDeviceOutputNodeAsync();
@@ -218,7 +230,8 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
                 // 替换为新图
                 _defaultPlayer = newPlayer;
-                newPlayer.QuantumProcessed += GraphOnQuantumStarted;
+                newPlayer.QuantumProcessed += GraphOnQuantumProcessed;
+                EnableFFTProcessing = settings.EnableFFTProcessing;
                 _outputNode = newOutputNode;
                 _audioInputNodes.Clear();
                 foreach (var kvp in newNodes) _audioInputNodes[kvp.Key] = kvp.Value;

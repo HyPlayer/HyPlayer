@@ -12,6 +12,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         public string DefaultDeviceId { get; set; } = string.Empty;
         public double OutputVolume { get; set; } = 1d;
         public bool AutoFallback { get; set; } = false;
+        public bool EnableFFTProcessing { get; set; } = false;
         private AudioGraphSettings _settings;
         public async Task<AudioGraphSettings> GetAudioGraphSettingsAsync()
         {
