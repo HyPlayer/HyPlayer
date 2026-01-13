@@ -6,7 +6,7 @@ using Windows.UI.Xaml.Media;
 
 namespace HyPlayer.Classes
 {
-    public class BrushManagement : INotifyPropertyChanged
+    public partial class BrushManagement : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")

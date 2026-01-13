@@ -73,7 +73,7 @@ public partial class LyricItemWrapper : ContentPresenter
     }
 }
 
-public class LyricItemModel : INotifyPropertyChanged
+public partial class LyricItemModel : INotifyPropertyChanged
 {
     private bool isShow;
 

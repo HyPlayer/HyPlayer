@@ -235,7 +235,7 @@ public sealed partial class AlbumPage : Page
     }
 }
 
-public class DiscSongs : List<NCAlbumSong>
+public partial class DiscSongs : List<NCAlbumSong>
 {
     public DiscSongs(IEnumerable<NCAlbumSong> items) : base(items)
     {

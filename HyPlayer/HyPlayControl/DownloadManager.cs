@@ -536,7 +536,7 @@ internal static class DownloadManager
     }
 }
 
-public class UwpStorageFileAbstraction : File.IFileAbstraction, IDisposable
+public partial class UwpStorageFileAbstraction : File.IFileAbstraction, IDisposable
 {
     private readonly IStorageFile file;
     private bool disposedValue;

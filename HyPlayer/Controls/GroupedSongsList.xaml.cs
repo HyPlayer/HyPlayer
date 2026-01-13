@@ -21,8 +21,7 @@ using WinRT;
 
 namespace HyPlayer.Controls;
 
-[GeneratedBindableCustomProperty]
-public sealed partial class GroupedSongsList
+public sealed partial class GroupedSongsList : UserControl
 {
     public static readonly DependencyProperty GroupedSongsProperty = DependencyProperty.Register(
         "GroupedSongs", typeof(CollectionViewSource), typeof(GroupedSongsList),
