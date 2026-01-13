@@ -118,7 +118,8 @@
             x:Name="AppTitleBar"
             Grid.Row="0"
             Grid.Column="0"
-            Background="Transparent" />
+            Background="Transparent"
+            Canvas.ZIndex="1" />
         <win2d:CanvasAnimatedControl
             x:Name="LuminousBackground"
             Grid.Row="0"
