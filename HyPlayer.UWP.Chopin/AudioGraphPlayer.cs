@@ -17,7 +17,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
     /// 基于 AudioGraph 的音频播放器实现
     /// 提供多音轨播放、设备切换、音量控制等功能
     /// </summary>
-    public class AudioGraphPlayer : IPlayer, IDisposable
+    public partial class AudioGraphPlayer : IPlayer, IDisposable
     {
         #region Private Fields
         private readonly ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode> _audioInputNodes = new ConcurrentDictionary<AudioGraphPlaybackSource, MediaSourceAudioInputNode>();

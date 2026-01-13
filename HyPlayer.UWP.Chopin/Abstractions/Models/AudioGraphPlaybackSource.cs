@@ -6,7 +6,7 @@ using Windows.Storage;
 
 namespace HyPlayer.UWP.Chopin.Abstractions.Models
 {
-    public class AudioGraphPlaybackSource : IPlaybackSource, IDisposable
+    public partial class AudioGraphPlaybackSource : IPlaybackSource, IDisposable
     {
         private bool disposedValue;
 
