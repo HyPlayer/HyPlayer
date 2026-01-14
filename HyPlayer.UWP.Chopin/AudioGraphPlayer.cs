@@ -119,7 +119,6 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             encodingProperties.ChannelCount = 1;
             var frameOutputResult = _defaultPlayer.CreateFrameOutputNode(encodingProperties);
             _frameOutputNode = frameOutputResult;
-
             _outputNode.OutgoingGain = audioGraphSetting.OutputVolume;
             _currentDeviceId = audioGraphSetting.DefaultDeviceId;
             _positionTimer.Start();
@@ -127,14 +126,15 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
 
         private void GraphOnQuantumProcessed(AudioGraph sender, object args)
         {
+            using var frame = _frameOutputNode.GetFrame();
             if (!EnableFFTProcessing) return;
             try
             {
-                FFTProcessor.ProcessFFT(_frameOutputNode.GetFrame());
+                FFTProcessor.ProcessFFT(frame);
             }
             catch
             {
-                Debug.WriteLine("QuantumError");
+                //Ignore
             }
         }
 
@@ -239,7 +239,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 foreach (var kvp in newNodesReverse) _audioInputNodesReverseDictionary[kvp.Key] = kvp.Value;
 
                 _currentDeviceId = audioGraphSetting.DefaultDeviceId;
-                newPlayer.Start();
+                if(GlobalPlaybackStatus == PlaybackStatus.Playing) newPlayer.Start();
             }
             finally
             {
@@ -286,7 +286,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         public void PlayAll()
         {
             ThrowExceptionIfDisposed();
-            if (_defaultPlayer == null) return;
+            if (_defaultPlayer == null || GlobalPlaybackStatus == PlaybackStatus.Playing || ConnectedPlaybackSourceCount == 0) return;
 
             _defaultPlayer.Start();
             GlobalPlaybackStatus = PlaybackStatus.Playing;
@@ -297,7 +297,7 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
         public void PauseAll()
         {
             ThrowExceptionIfDisposed();
-            if (_defaultPlayer == null) return;
+            if (_defaultPlayer == null || GlobalPlaybackStatus == PlaybackStatus.Paused) return;
 
             _defaultPlayer.Stop();
             GlobalPlaybackStatus = PlaybackStatus.Paused;
@@ -419,6 +419,14 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             node.AddOutgoingConnection(_frameOutputNode);
             node.MediaSourceCompleted += OnMediaSourceCompleted;
 
+            // 注册节点
+            _audioInputNodes[source] = node;
+            _audioInputNodesReverseDictionary[node] = source;
+
+            // 设置为主播放源
+            if (_audioInputNodes.Count == 1 || options.SetAsPrimarySource)
+                PrimaryPlaybackSource = playbackSource;
+
             // 根据选项设置播放状态
             if (!options.AutoPlay)
             {
@@ -427,19 +435,11 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             }
             else
             {
-                if (GlobalPlaybackStatus is PlaybackStatus.Closed or PlaybackStatus.Playing)
+                if (GlobalPlaybackStatus is PlaybackStatus.Closed)
                 {
                     PlayAll();
                 }
             }
-
-            // 注册节点
-            _audioInputNodes[source] = node;
-            _audioInputNodesReverseDictionary[node] = source;
-
-            // 设置为主播放源
-            if (_audioInputNodes.Count == 1 || options.SetAsPrimarySource)
-                PrimaryPlaybackSource = playbackSource;
         }
 
         public void DisconnectPlaybackSource(IPlaybackSource playbackSource)
