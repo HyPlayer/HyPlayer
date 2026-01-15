@@ -9,7 +9,7 @@
         IgnorableNamespaces="uap mp uap3">
 
     <Identity
-            Name="48848aaaaaaccd.HyPlayer.Core"
+            Name="48848aaaaaaccd.HyPlayer"
             Publisher="CN=HyPlayer Team"
             Version="2.1.39.0"/>
 
