@@ -418,7 +418,6 @@
                     <RowDefinition x:Name="DefaultRow" Height="25*" />
                     <RowDefinition x:Name="ImmersiveRow" Height="1*" />
                 </Grid.RowDefinitions>
-                <Grid />
             </Grid>
             <Button
                 x:Name="MoreBtn"

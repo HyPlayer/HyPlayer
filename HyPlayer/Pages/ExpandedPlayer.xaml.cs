@@ -1372,6 +1372,7 @@ public sealed partial class ExpandedPlayer : Page
                     using var stream = HyPlayList.CoverStream.CloneStream();
                     var isBright = await IsBrightAsync(stream);
                     Common.BrushManagement.IsBright = isBright;
+                    stream.Seek(0);
                     await ImageAlbumSource.SetSourceAsync(stream);
                     if (Common.Setting.expandedPlayerBackgroundType == 0 && Background?.GetType() != typeof(ImageBrush))
                     {

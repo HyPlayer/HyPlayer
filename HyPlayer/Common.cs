@@ -11,6 +11,8 @@ using HyPlayer.Pages;
 using Kawazu;
 using LiteFM;
 using LiteFM.Abstractions;
+using Microsoft.Gaming.XboxGameBar;
+
 
 
 //using Microsoft.Gaming.XboxGameBar;
@@ -71,7 +73,7 @@ namespace HyPlayer
         public static HttpClient? HttpClient;
         public static NeteaseCloudMusicApiHandler? NeteaseAPI;
         public static LastFMClient? LastFMClient;
-        //      public static XboxGameBarWidget? XboxGameBarWidget;
+        public static XboxGameBarWidget? XboxGameBarWidget;
         public static PixelShaderEffect? PixelShaderShareEffect;
 #nullable restore
         public static BrushManagement BrushManagement = new();

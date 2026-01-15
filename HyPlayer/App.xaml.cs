@@ -4,6 +4,8 @@ using HyPlayer.Classes;
 using HyPlayer.HyPlayControl;
 using HyPlayer.Pages;
 using Kawazu;
+using Microsoft.Gaming.XboxGameBar;
+
 //using Microsoft.Gaming.XboxGameBar;
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -39,7 +41,7 @@ public sealed partial class App : Application
 #pragma warning restore CS0169 // 从不使用字段“App.executionSession”
     private Frame rootFrame;
 
-    //    private XboxGameBarWidget widget = null;
+    private XboxGameBarWidget widget = null;
 
     public App()
     {
@@ -127,7 +129,7 @@ public sealed partial class App : Application
 
     protected override void OnActivated(IActivatedEventArgs args)
     {
-        /*XboxGameBarWidgetActivatedEventArgs widgetArgs = null;
+        XboxGameBarWidgetActivatedEventArgs widgetArgs = null;
         if (args.Kind == ActivationKind.Protocol)
         {
             var protocolArgs = args as IProtocolActivatedEventArgs;
@@ -154,7 +156,7 @@ public sealed partial class App : Application
                         widgetArgs,
                         Window.Current.CoreWindow,
                         widgetFrame);
-                    widgetFrame.Navigate(typeof(WidgetSettingsPage), settingsWidget);
+                    widgetFrame.Navigate(typeof(WidgetSettingsPage), settingsWidget );
                 }
                 else
                 {
@@ -174,7 +176,7 @@ public sealed partial class App : Application
                 // You can perform whatever behavior you need based on the URI payload.
             }
         }
-        */
+        
         base.OnActivated(args);
         if (args.Kind == ActivationKind.ToastNotification)
         {
@@ -204,7 +206,7 @@ public sealed partial class App : Application
 
     private void WidgetWindowClosed(object sender, Windows.UI.Core.CoreWindowEventArgs e)
     {
-        //widget = null;
+        widget = null;
         Window.Current.Closed -= WidgetWindowClosed;
     }
 
@@ -368,12 +370,10 @@ public sealed partial class App : Application
         await HistoryManagement.SetcurPlayingListHistory(HyPlayList.List
             .Where(t => t.ItemType == HyPlayItemType.Netease)
             .Select(t => t.PlayItem.Id).ToList());
-        /*
         if (Common.XboxGameBarWidget != null)
         {
             Common.XboxGameBarWidget.Close();
         }
-        */
         deferral.Complete();
     }
 }

@@ -32,24 +32,6 @@ internal static class NCMFile
 
     private static byte[] _keyBox;
 
-    // 此处代码参考 https://github.com/anonymous5l/ncmdump-gui/blob/master/DesktopTool/NeteaseCrypto.cs
-    public static async Task<bool> DecryptNCMFileAsync(StorageFile file, StorageFile destinationFile)
-    {
-        var stream = await file.OpenStreamForReadAsync();
-        if (!IsCorrectNCMFile(stream)) return false;
-        var Info = GetNCMMusicInfo(stream);
-        var encStream = GetEncryptedStream(stream);
-        encStream.CopyTo(await destinationFile.OpenStreamForWriteAsync());
-        var tagFile = File.Create(new UwpStorageFileAbstraction(destinationFile));
-        The163KeyHelper.TrySetMusicInfo(tagFile.Tag, Info);
-        return true;
-    }
-
-    public static Stream GetCoverStream(Stream stream)
-    {
-        stream.Seek(9, SeekOrigin.Current);
-        return new MemoryStream(ReadChunk(stream));
-    }
     public static byte[] GetCoverByteArray(Stream stream)
     {
         stream.Seek(9, SeekOrigin.Current);

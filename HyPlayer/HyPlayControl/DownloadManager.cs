@@ -168,7 +168,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
         return Task.Run(async () =>
         {
             using var streamAbstraction = new UwpStorageFileAbstraction(ResultFile);
-            var file = File.Create(streamAbstraction);
+            using var file = File.Create(streamAbstraction);
             try
             {
                 if (Common.Setting.write163Info && DontUsePlayItem is not null)
@@ -227,12 +227,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                 });
                 Common.ErrorMessageList.Add("写入音乐信息时出现错误" + ex.Message);
                 Common.AddToTeachingTipLists("写入信息错误: " + ex.Message, (ex.InnerException ?? new Exception()).Message);
-            }
-            finally
-            {
                 file.Save();
-                file.Dispose();
-                streamAbstraction.Dispose();
             }
         });
     }

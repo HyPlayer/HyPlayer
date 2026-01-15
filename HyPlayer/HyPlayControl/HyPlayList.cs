@@ -2171,8 +2171,8 @@ public static class HyPlayList
     {
         ctk.ThrowIfCancellationRequested();
 
-        var abstraction = new UwpStorageFileAbstraction(sf);
-        var tagFile = File.Create(abstraction);
+        using var abstraction = new UwpStorageFileAbstraction(sf);
+        using var tagFile = File.Create(abstraction);
         if (nocheck163 ||
             !The163KeyHelper.TryGetMusicInfo(tagFile.Tag, out var mi))
         {

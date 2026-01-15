@@ -1,0 +1,89 @@
+﻿<Page
+    x:Class="HyPlayer.Pages.WidgetSettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
+    xmlns:controls1="using:Microsoft.UI.Xaml.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:HyPlayer.Pages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    mc:Ignorable="d">
+
+    <ScrollViewer VerticalScrollBarVisibility="Hidden">
+        <StackPanel Margin="12">
+            <controls1:InfoBar
+                IsClosable="False"
+                IsOpen="True"
+                Message="部分设置跟随应用" />
+            <controls:SettingsCard Header="显示翻译">
+                <ToggleSwitch HorizontalAlignment="Right" IsOn="{x:Bind _settings.EnableTranslation, Mode=TwoWay}" />
+            </controls:SettingsCard>
+            <controls:SettingsCard Header="显示发音">
+                <ToggleSwitch HorizontalAlignment="Right" IsOn="{x:Bind _settings.EnableTransliteration, Mode=TwoWay}" />
+            </controls:SettingsCard>
+
+            <controls:SettingsCard Description="0为自动" Header="歌词大小">
+                <controls1:NumberBox
+                    x:Name="LyricSize"
+                    MinWidth="100"
+                    HorizontalAlignment="Right"
+                    LargeChange="5"
+                    Minimum="0"
+                    SmallChange="1"
+                    SpinButtonPlacementMode="Inline"
+                    Value="{x:Bind _settings.LyricSize, Mode=TwoWay}" />
+            </controls:SettingsCard>
+            <controls:SettingsCard Description="0为自动" Header="翻译大小">
+                <controls1:NumberBox
+                    MinWidth="100"
+                    HorizontalAlignment="Right"
+                    LargeChange="5"
+                    Minimum="0"
+                    SmallChange="1"
+                    SpinButtonPlacementMode="Inline"
+                    Value="{x:Bind _settings.TranslationSize, Mode=TwoWay}" />
+            </controls:SettingsCard>
+            <controls:SettingsCard  Description="0为自动" Header="罗马字大小">
+                <controls1:NumberBox
+                    x:Name="RomajiSize"
+                    MinWidth="100"
+                    HorizontalAlignment="Right"
+                    LargeChange="5"
+                    Minimum="0"
+                    SmallChange="1"
+                    SpinButtonPlacementMode="Inline"
+                    Value="{x:Bind _settings.RomajiSize, Mode=TwoWay}" />
+            </controls:SettingsCard>
+            <controls:SettingsCard Header="歌词行间距">
+                <controls1:NumberBox
+                    MinWidth="100"
+                    HorizontalAlignment="Right"
+                    LargeChange="5"
+                    SmallChange="1"
+                    SpinButtonPlacementMode="Inline"
+                    Value="{x:Bind _settings.LyricLineSpacing, Mode=TwoWay}" />
+            </controls:SettingsCard>
+            <controls:SettingsCard Description="需重启小部件" Header="歌词字体">
+                <ComboBox
+                    x:Name="FontComboBox"
+                    MinWidth="10"
+                    HorizontalAlignment="Right"
+                    DisplayMemberPath="Name"
+                    SelectedValue="{x:Bind _settings.LyricFontFamily, Mode=TwoWay}"
+                    SelectedValuePath="Value" />
+            </controls:SettingsCard>
+            <controls:SettingsCard Header="对齐方式">
+                <ComboBox
+                    MinWidth="10"
+                    HorizontalAlignment="Right"
+                    SelectedIndex="{x:Bind _settings.LyricAlignment, Mode=TwoWay}">
+                    <ComboBoxItem Content="左对齐" />
+                    <ComboBoxItem Content="居中" />
+                    <ComboBoxItem Content="右对齐" />
+                </ComboBox>
+            </controls:SettingsCard>
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>

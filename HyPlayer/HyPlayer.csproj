@@ -99,5 +99,6 @@
     <ProjectReference Include="..\Impressionist\Impressionist\Impressionist.csproj" />
     <ProjectReference Include="..\Kawazu\Kawazu\Kawazu.csproj" />
     <ProjectReference Include="..\LiteFM\LiteFM\LiteFM.csproj" />
+    <ProjectReference Include="..\Microsoft.Gaming.XboxGameBar.Projection\Microsoft.Gaming.XboxGameBar.Projection.csproj" />
   </ItemGroup>
 </Project>
