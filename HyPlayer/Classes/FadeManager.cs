@@ -94,20 +94,28 @@ namespace HyPlayer.Classes
                 && HyPlayList.List.Count > 1
                 && !PauseProcessing)
             {
-                _loading = true;
-                FadeProcessing = true;
-                var current = (AudioGraphPlaybackSource)HyPlayList.Player.PrimaryPlaybackSource;
-                var currentItem = current.PlaybackSource.CustomProperties["nowPlayingItem"] as HyPlayItem;
-                HyPlayList.MoveSongPointer();
-                var nextItem = HyPlayList.List[HyPlayList.NowPlaying];
-                await HyPlayList.LoadMediaSource(nextItem, false, false);
-                _currentPlayItem = new Tuple<AudioGraphPlaybackSource, AudioGraphPlaybackSource>(current, nextItem.PlayItem.AudioGraphPlaybackSource);
-                var node1 = HyPlayList.Player.GetAudioInputNode(_currentPlayItem.Item1);
-                var node2 = HyPlayList.Player.GetAudioInputNode(_currentPlayItem.Item2);
-                _currentNode = new Tuple<MediaSourceAudioInputNode, MediaSourceAudioInputNode>(node1, node2);
-                _initialVolume[_currentPlayItem?.Item1] = currentItem.PlayItem.Volume;
-                _initialVolume[_currentPlayItem?.Item2] = nextItem.PlayItem.Volume;
-                _loading = false;
+                try
+                {
+                    _loading = true;
+                    FadeProcessing = true;
+                    var current = (AudioGraphPlaybackSource)HyPlayList.Player.PrimaryPlaybackSource;
+                    var currentItem = current.PlaybackSource.CustomProperties["nowPlayingItem"] as HyPlayItem;
+                    HyPlayList.MoveSongPointer();
+                    var nextItem = HyPlayList.List[HyPlayList.NowPlaying];
+                    await HyPlayList.LoadMediaSource(nextItem, false, false);
+                    _currentPlayItem = new Tuple<AudioGraphPlaybackSource, AudioGraphPlaybackSource>(current, nextItem.PlayItem.AudioGraphPlaybackSource);
+                    var node1 = HyPlayList.Player.GetAudioInputNode(_currentPlayItem.Item1);
+                    var node2 = HyPlayList.Player.GetAudioInputNode(_currentPlayItem.Item2);
+                    _currentNode = new Tuple<MediaSourceAudioInputNode, MediaSourceAudioInputNode>(node1, node2);
+                    _initialVolume[_currentPlayItem?.Item1] = currentItem.PlayItem.Volume;
+                    _initialVolume[_currentPlayItem?.Item2] = nextItem.PlayItem.Volume;
+                    _loading = false;
+                }
+                catch
+                {
+                    _loading = false;
+                    FadeProcessing = false;
+                }
             }
         }
         private void ProcessFade()

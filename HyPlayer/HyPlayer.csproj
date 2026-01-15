@@ -98,5 +98,6 @@
     <ProjectReference Include="..\HyPlayer.UWP.Chopin\HyPlayer.UWP.Chopin.csproj" />
     <ProjectReference Include="..\Impressionist\Impressionist\Impressionist.csproj" />
     <ProjectReference Include="..\Kawazu\Kawazu\Kawazu.csproj" />
+    <ProjectReference Include="..\LiteFM\LiteFM\LiteFM.csproj" />
   </ItemGroup>
 </Project>

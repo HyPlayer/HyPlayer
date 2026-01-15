@@ -613,6 +613,53 @@
                                         </controls3:SettingsCard>
                                     </controls3:SettingsExpander.Items>
                                 </controls3:SettingsExpander>
+                                <controls3:SettingsExpander
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Stretch"
+                                    Header="Last.FM设定"
+                                    IsExpanded="True">
+                                    <controls3:SettingsExpander.Transitions>
+                                        <TransitionCollection>
+                                            <RepositionThemeTransition />
+                                        </TransitionCollection>
+                                    </controls3:SettingsExpander.Transitions>
+                                    <controls3:SettingsExpander.Items>
+                                        <controls3:SettingsCard Header="上传正在播放至Last.FM">
+                                            <ToggleSwitch
+                                                MinWidth="10"
+                                                HorizontalAlignment="Right"
+                                                IsOn="{x:Bind hyplayer:Common.Setting.UpdateLastFMNowPlaying, Mode=TwoWay}" />
+                                        </controls3:SettingsCard>
+                                        <controls3:SettingsCard>
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
+                                                </Grid.RowDefinitions>
+                                                <Grid Grid.Row="0" Visibility="{x:Bind hyplayer:Common.Setting.LastFMSession, Mode=OneWay, Converter={StaticResource SessionToVisibilityConverter}}">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="已登录账号：" />
+                                                    <TextBlock Grid.Column="1" Text="{x:Bind hyplayer:Common.Setting.LastFMSession, Mode=OneWay, Converter={StaticResource SessionToStringConverter}}" />
+                                                </Grid>
+                                                <Grid Grid.Row="1">
+                                                    <Button
+                                                        x:Name="LogoffLastFMAccount"
+                                                        Click="LogoffLastFMAccount_Click"
+                                                        Content="登出LastFM账号"
+                                                        Visibility="{x:Bind hyplayer:Common.Setting.LastFMSession, Mode=OneWay, Converter={StaticResource SessionToVisibilityConverter}}" />
+                                                    <Button
+                                                        x:Name="LoginLastFMAccount"
+                                                        Click="LoginLastFMAccount_Click"
+                                                        Content="登录LastFM账号"
+                                                        Visibility="{x:Bind hyplayer:Common.Setting.LastFMSession, Mode=OneWay, Converter={StaticResource SessionToVisibilityReverseConverter}}" />
+                                                </Grid>
+                                            </Grid>
+                                        </controls3:SettingsCard>
+                                    </controls3:SettingsExpander.Items>
+                                </controls3:SettingsExpander>
                             </StackPanel>
                         </ScrollViewer>
                     </Grid>

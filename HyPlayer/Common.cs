@@ -9,6 +9,10 @@ using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Song;
 using HyPlayer.Pages;
 using Kawazu;
+using LiteFM;
+using LiteFM.Abstractions;
+
+
 //using Microsoft.Gaming.XboxGameBar;
 using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.Toolkit.Uwp.UI;
@@ -66,7 +70,8 @@ namespace HyPlayer
         public static HttpClientHandler? HttpClientHandler;
         public static HttpClient? HttpClient;
         public static NeteaseCloudMusicApiHandler? NeteaseAPI;
-//      public static XboxGameBarWidget? XboxGameBarWidget;
+        public static LastFMClient? LastFMClient;
+        //      public static XboxGameBarWidget? XboxGameBarWidget;
         public static PixelShaderEffect? PixelShaderShareEffect;
 #nullable restore
         public static BrushManagement BrushManagement = new();
@@ -77,7 +82,6 @@ namespace HyPlayer
         public static List<NCPlayList> MySongLists = new();
         public static DisplayRequest DisplayRequest = new();
         public static readonly Stack<NavigationHistoryItem> NavigationHistory = new();
-        public static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).ToLocalTime();
         public static JsonSerializerOptions DefaultOptions = new()
         {
             TypeInfoResolver = JsonDefaultContext.Default
@@ -87,10 +91,10 @@ namespace HyPlayer
         {
             HttpClientHandler = NeteaseCloudMusicApiHandler.HttpClientHandler;
             HttpClientHandler.UseProxy = Setting.EnableProxy;
+
             HttpClient = new HttpClient(HttpClientHandler);
-            NeteaseAPI = new NeteaseCloudMusicApiHandler(HttpClient);
             NeteaseAPI = Locator.Instance.GetService<NeteaseCloudMusicApiHandler>();
-            NeteaseAPI.HttpClient = HttpClient;
+            LastFMClient = Locator.Instance.GetService<LastFMClient>();
             NeteaseAPI.Option.AdditionalParameters = Setting.ApiAdditionalParameters;
             NeteaseAPI.Option.FakeCheckToken = Setting.EnableCheckTokenApi;
         }
@@ -409,6 +413,39 @@ namespace HyPlayer
         {
             get => JsonSerializer.Deserialize<AdditionalParameters>(GetSettings(nameof(ApiAdditionalParameters), "{}"), Common.DefaultOptions) ?? new AdditionalParameters();
             set => ApplicationData.Current.LocalSettings.Values[nameof(ApiAdditionalParameters)] = JsonSerializer.Serialize(value, Common.DefaultOptions);
+        }
+
+        public LastFMSession LastFMSession
+        {
+            get => JsonSerializer.Deserialize<LastFMSession>(GetSettings(nameof(LastFMSession), "{}"), Common.DefaultOptions);
+            set
+            {
+                if(value == null) 
+                {
+                    ApplicationData.Current.LocalSettings.Values[nameof(LastFMSession)] = null;
+                }
+                else
+                {
+                    ApplicationData.Current.LocalSettings.Values[nameof(LastFMSession)] = JsonSerializer.Serialize(value, Common.DefaultOptions);
+                }
+                OnPropertyChanged();
+            }
+        }
+        public bool UpdateLastFMNowPlaying
+        {
+            get => GetSettings(nameof(UpdateLastFMNowPlaying), true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(UpdateLastFMNowPlaying)] = value;
+            }
+        }
+        public bool LastFMScrobble
+        {
+            get => GetSettings(nameof(LastFMScrobble), true);
+            set
+            {
+                ApplicationData.Current.LocalSettings.Values[nameof(LastFMScrobble)] = value;
+            }
         }
 
         public string lyricFontFamily

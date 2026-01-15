@@ -22,4 +22,7 @@
     <classes:PageToNavigationViewIndicatorConverter x:Key="PageToNavigationViewIndicatorConverter" />
     <classes:ShaderConverter x:Key="ShaderConverter" />
     <classes:LuminousConverter x:Key="LuminousConverter" />
+    <classes:SessionToStringConverter x:Key="SessionToStringConverter" />
+    <classes:SessionToVisibilityConverter x:Key="SessionToVisibilityConverter" />
+    <classes:SessionToVisibilityReverseConverter x:Key="SessionToVisibilityReverseConverter" />
 </ResourceDictionary>

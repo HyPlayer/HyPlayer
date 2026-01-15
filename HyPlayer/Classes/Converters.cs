@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.WinUI.Converters;
 using HyPlayer.Pages;
+using LiteFM.Abstractions;
 using System;
 using System.Linq;
 using Windows.UI;
@@ -458,6 +459,52 @@ namespace HyPlayer.Classes
         {
             if (value is 6) return true;
             else return false;
+        }
+
+        public object ConvertBack(object value, Type targetType,
+                                  object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+    public partial class SessionToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType,
+                              object parameter, string language)
+        {
+            if ((value is LastFMSession session) && session.HasLogined) return Visibility.Visible;
+            else return Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType,
+                                  object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public partial class SessionToVisibilityReverseConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType,
+                              object parameter, string language)
+        {
+            if ((value is LastFMSession session) && session.HasLogined) return Visibility.Collapsed;
+            else return Visibility.Visible;
+        }
+
+        public object ConvertBack(object value, Type targetType,
+                                  object parameter, string language)
+        {
+            throw new NotImplementedException();
+        }
+    }
+    public partial class SessionToStringConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType,
+                              object parameter, string language)
+        {
+            if ((value is LastFMSession session) && session.HasLogined) return session.Name;
+            else return string.Empty;
         }
 
         public object ConvertBack(object value, Type targetType,

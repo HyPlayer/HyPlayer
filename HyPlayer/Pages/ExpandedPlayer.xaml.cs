@@ -1027,7 +1027,7 @@ public sealed partial class ExpandedPlayer : Page
     private Windows.UI.Color? _karaokAccentColorCache;
     private SolidColorBrush? _pureAccentBrushCache;
 
-    private async Task<bool> IsBrightAsync(InMemoryRandomAccessStream stream)
+    private async Task<bool> IsBrightAsync(IRandomAccessStream stream)
     {
         lastSong = HyPlayList.NowPlayingItem;
         var finalResult = false; //在不手动指定背景类型为2至5时需要执行颜色采样
@@ -1369,10 +1369,9 @@ public sealed partial class ExpandedPlayer : Page
                 try
                 {
                     if (playItem != HyPlayList.NowPlayingItem) return;
-                    var isBright = await IsBrightAsync(HyPlayList.CoverStream);
-                    Common.BrushManagement.IsBright = isBright;
-
                     using var stream = HyPlayList.CoverStream.CloneStream();
+                    var isBright = await IsBrightAsync(stream);
+                    Common.BrushManagement.IsBright = isBright;
                     await ImageAlbumSource.SetSourceAsync(stream);
                     if (Common.Setting.expandedPlayerBackgroundType == 0 && Background?.GetType() != typeof(ImageBrush))
                     {

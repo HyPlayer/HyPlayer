@@ -10,6 +10,7 @@ using HyPlayer.NeteaseApi.ApiContracts.Recommend;
 using HyPlayer.NeteaseApi.ApiContracts.Song;
 using HyPlayer.NeteaseApi.ApiContracts.User;
 using HyPlayer.NeteaseApi.Models.ResponseModels;
+using LiteFM.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
@@ -48,6 +49,7 @@ namespace HyPlayer.Classes
     [JsonSerializable(typeof(PlaylistTracksGetResponse))]
     [JsonSerializable(typeof(PlaylistDetailResponse))]
     [JsonSerializable(typeof(LatestApplicationUpdate))]
+    [JsonSerializable(typeof(LastFMSession))]
     public partial class JsonDefaultContext : JsonSerializerContext
     {
     }

@@ -502,4 +502,14 @@ public sealed partial class Settings : Page
     {
         await SimpleCacher.ClearAllCacheAsync();
     }
+
+    private void LogoffLastFMAccount_Click(object sender, RoutedEventArgs e)
+    {
+        Common.Setting.LastFMSession = null;
+    }
+
+    private void LoginLastFMAccount_Click(object sender, RoutedEventArgs e)
+    {
+        _ = Launcher.LaunchUriAsync(new Uri($"https://www.last.fm/api/auth?api_key={Common.LastFMClient.Options.ApiKey}&cb=hyplayer://link.last.fm"));
+    }
 }

@@ -718,6 +718,7 @@ public static class HyPlayList
         {
             Seek(TimeSpan.Zero);
         }
+        _ = LastFMManager.Scrobble(item);
     }
     public static double GetAudioGainMultiplier(double audioGainValue)
     {
@@ -1174,6 +1175,10 @@ public static class HyPlayList
             {
                 //加载歌词
                 _ = LoadLyrics(playItemWhenRequested);
+            }
+            if (Common.Setting.UpdateLastFMNowPlaying)
+            {
+                _ = LastFMManager.UpdateNowPlaying(playItemWhenRequested);
             }
             //这里要判断这么多次的原因在于如果只判断一次的话，后面如果切歌是无法知晓的。所以只能用这个蠢方法
         }
