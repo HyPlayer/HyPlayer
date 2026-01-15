@@ -1249,11 +1249,8 @@ public static class HyPlayList
             }
             else
             {
-                string param = Common.IsInImmersiveMode
-                    ? StaticSource.PICSIZE_IMMERSIVEMODE_COVER
-                    : StaticSource.PICSIZE_AUDIO_PLAYER_COVER;
                 using var result =
-                    await Common.HttpClient.GetAsync(new Uri(playItem.PlayItem.Album.cover + "?param=" + param));
+                    await Common.HttpClient.GetAsync(new Uri(playItem.PlayItem.Album.cover + "?param=" + StaticSource.PICSIZE_AUDIO_PLAYER_COVER));
                 if (!result.IsSuccessStatusCode)
                 {
                     throw new Exception("更新SMTC图片时发生异常");

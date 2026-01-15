@@ -48,6 +48,7 @@ using Windows.UI.Xaml.Navigation;
 using HyALRCLyricInfo = HyPlayer.Classes.HyALRCLyricInfo;
 using Buffer = Windows.Storage.Streams.Buffer;
 using LrcConverter = HyPlayer.Classes.LrcConverter;
+using Windows.UI.Xaml.Media.Imaging;
 
 #endregion
 
@@ -212,19 +213,16 @@ public sealed partial class ExpandedPlayer : Page
     {
         _ = Common.Invoke(() =>
         {
-            if (!Common.IsInImmersiveMode)
+            if (Common.Setting.albumRotate)
+                //网易云音乐圆形唱片
+                RotateAnimationSet.StartAsync();
+            if (Common.Setting.expandAlbumBreath)
             {
-                if (Common.Setting.albumRotate)
-                    //网易云音乐圆形唱片
-                    RotateAnimationSet.StartAsync();
-                if (Common.Setting.expandAlbumBreath)
-                {
-                    ImageAlbumAni.Begin();
-                }
-                if (luminousColorsRotateStoryBoard.Children.Count > 0)
-                {
-                    luminousColorsRotateStoryBoard.Resume();
-                }
+                ImageAlbumAni.Begin();
+            }
+            if (luminousColorsRotateStoryBoard.Children.Count > 0)
+            {
+                luminousColorsRotateStoryBoard.Resume();
             }
         });
     }
@@ -504,7 +502,6 @@ public sealed partial class ExpandedPlayer : Page
         base.OnNavigatedTo(e);
         Common.IsInBackground = false;
         Common.PageExpandedPlayer = this;
-        Common.IsInImmersiveMode = false;
         if (e.Parameter is null || (bool)e.Parameter)
             Window.Current.SetTitleBar(AppTitleBar);
 
@@ -1224,16 +1221,13 @@ public sealed partial class ExpandedPlayer : Page
                 break;
         }
 
-        if (!Common.IsInImmersiveMode)
+        if (Common.Setting.albumRotate)
+            //网易云音乐圆形唱片
+            if (HyPlayList.IsPlaying)
+                _ = RotateAnimationSet.StartAsync();
+        if (Common.Setting.expandAlbumBreath)
         {
-            if (Common.Setting.albumRotate)
-                //网易云音乐圆形唱片
-                if (HyPlayList.IsPlaying)
-                    _ = RotateAnimationSet.StartAsync();
-            if (Common.Setting.expandAlbumBreath)
-            {
-                ImageAlbumAni.Begin();
-            }
+            ImageAlbumAni.Begin();
         }
 
 
@@ -1373,20 +1367,24 @@ public sealed partial class ExpandedPlayer : Page
                     var isBright = await IsBrightAsync(stream);
                     Common.BrushManagement.IsBright = isBright;
                     stream.Seek(0);
-                    await ImageAlbumSource.SetSourceAsync(stream);
-                    if (Common.Setting.expandedPlayerBackgroundType == 0 && Background?.GetType() != typeof(ImageBrush))
+                    var bitmap = new BitmapImage();
+                    await bitmap.SetSourceAsync(stream);
+                    ImageAlbum.Source = bitmap;
+                    if (Common.Setting.expandedPlayerBackgroundType == 0 && Background is not ImageBrush)
                     {
                         var brush = new ImageBrush
                         { Stretch = Stretch.UniformToFill };
                         Background = brush;
-                        brush.ImageSource = ImageAlbumSource;
+                    }
+                    if(Background is ImageBrush imageBrush)
+                    {
+                        imageBrush.ImageSource = bitmap;
                     }
 
                     if (playItem != HyPlayList.NowPlayingItem) return;
                     if (albumMainColor != null)
                     {
                         var coverColor = albumMainColor.Value;
-                        ImmersiveCover.Color = coverColor;
                     }
                     if (Common.Setting.expandedPlayerBackgroundType == BackgroundType.Animated && isBright)
                         BlackCover.Fill = new SolidColorBrush(Windows.UI.Color.FromArgb(80, 255, 255, 255));
@@ -1398,14 +1396,12 @@ public sealed partial class ExpandedPlayer : Page
                         {
                             Common.BrushManagement.AccentBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0, 0, 0));
                             Common.BrushManagement.IdleBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(114, 0, 0, 0));
-                            ImmersiveTopStop.Color = Windows.UI.Color.FromArgb(0, 255, 255, 255);
                         }
                         else
                         {
                             Common.BrushManagement.AccentBrush =
                                 new SolidColorBrush(Windows.UI.Color.FromArgb(255, 255, 255, 255));
                             Common.BrushManagement.IdleBrush = new SolidColorBrush(Windows.UI.Color.FromArgb(66, 255, 255, 255));
-                            ImmersiveTopStop.Color = Windows.UI.Color.FromArgb(0, 0, 0, 0);
                         }
                     }
                     else
@@ -1419,7 +1415,7 @@ public sealed partial class ExpandedPlayer : Page
                                 var idleColor = AccentColor;
                                 idleColor.A = 150;
                                 Common.BrushManagement.IdleBrush = new SolidColorBrush(idleColor);
-                                ImmersiveTopStop.Color = Windows.UI.Color.FromArgb(0, 255, 255, 255);
+
                             }
                             else
                             {
@@ -1428,7 +1424,6 @@ public sealed partial class ExpandedPlayer : Page
                                 var idleColor = AdjustBrightness((Windows.UI.Color)AccentColor, -0.15f);
                                 idleColor.A = 150;
                                 Common.BrushManagement.IdleBrush = new SolidColorBrush(idleColor);
-                                ImmersiveTopStop.Color = Windows.UI.Color.FromArgb(0, 0, 0, 0);
                             }
                         }
                         else
@@ -1438,7 +1433,6 @@ public sealed partial class ExpandedPlayer : Page
                             var idleColor = AccentColor;
                             idleColor.A = 150;
                             Common.BrushManagement.IdleBrush = new SolidColorBrush(idleColor);
-                            ImmersiveTopStop.Color = Windows.UI.Color.FromArgb(0, 255, 255, 255);
                         }
                     }
 

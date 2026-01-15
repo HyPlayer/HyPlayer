@@ -10,7 +10,6 @@
     xmlns:ui="using:CommunityToolkit.WinUI"
     xmlns:win2d="using:Microsoft.Graphics.Canvas.UI.Xaml"
     Background="Transparent"
-    Unloaded="Page_Unloaded"
     mc:Ignorable="d">
     <Page.Resources>
         <SolidColorBrush x:Key="AccentBrush" Color="{ThemeResource SystemBaseHighColor}" />

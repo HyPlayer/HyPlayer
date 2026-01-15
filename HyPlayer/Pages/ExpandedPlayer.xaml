@@ -106,14 +106,7 @@
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
             Canvas.ZIndex="-1"
-            Opacity="0">
-            <Rectangle.Fill>
-                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                    <GradientStop x:Name="ImmersiveTopStop" Offset="0.25" />
-                    <GradientStop x:Name="ImmersiveCover" Offset="0.95" />
-                </LinearGradientBrush>
-            </Rectangle.Fill>
-        </Rectangle>
+            Opacity="0" />
         <Grid
             x:Name="AppTitleBar"
             Grid.Row="0"
@@ -278,7 +271,7 @@
                             </MenuFlyout>
                         </frieren:ImageEx.ContextFlyout>
                         <frieren:ImageEx.Source>
-                            <BitmapImage x:Name="ImageAlbumSource" UriSource="/Assets/icon.png" />
+                            <BitmapImage UriSource="/Assets/icon.png" />
                         </frieren:ImageEx.Source>
                     </frieren:ImageEx>
                     <StackPanel
@@ -289,23 +282,6 @@
                         IsTapEnabled="True"
                         Orientation="Vertical"
                         Spacing="12">
-                        <frieren:ImageEx
-                            x:Name="ImageAlbumImerssive"
-                            MaxWidth="250"
-                            MaxHeight="250"
-                            Margin="20,0,0,0"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Center"
-                            ui:Effects.Shadow="{StaticResource AlbumShadow}"
-                            ui:VisualExtensions.NormalizedCenterPoint="0.5"
-                            x:FieldModifier="public"
-                            BorderBrush="Black"
-                            CornerRadius="12"
-                            IsCacheEnabled="False"
-                            PlaceholderStretch="Uniform"
-                            Source="{x:Bind ImageAlbumSource}"
-                            Stretch="Uniform"
-                            Visibility="Collapsed" />
                         <Grid
                             MaxWidth="600"
                             Margin="20,0,20,20"
