@@ -50,6 +50,7 @@ namespace HyPlayer.Classes
     [JsonSerializable(typeof(PlaylistDetailResponse))]
     [JsonSerializable(typeof(LatestApplicationUpdate))]
     [JsonSerializable(typeof(LastFMSession))]
+    [JsonSerializable(typeof(AlbumDetailDynamicResponse))]
     public partial class JsonDefaultContext : JsonSerializerContext
     {
     }

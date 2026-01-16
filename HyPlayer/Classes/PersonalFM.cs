@@ -46,7 +46,7 @@ internal static class PersonalFM
             {
                 if (HyPlayList.NowPlaying + 1 >= HyPlayList.List.Count)
                 {
-                    var appendedIndex = HyPlayList.List.Count;
+                    var finalIndex = Math.Max(HyPlayList.List.Count - 1, 0);
                     if (!Common.Setting.useAiDj)
                     {
                         {
@@ -141,7 +141,8 @@ internal static class PersonalFM
                     }
 
                     HyPlayList.SongAppendDone();
-                    HyPlayList.SongMoveTo(appendedIndex);
+                    var item = HyPlayList.List[finalIndex];
+                    HyPlayList.SongMoveTo(item);
                 }
 
                 Common.IsInFm = true;

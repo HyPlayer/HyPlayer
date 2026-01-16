@@ -362,19 +362,18 @@ DoubleAnimation verticalAnimation;
         if (HyPlayList.NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating &&
             Common.Setting.displayShuffledList)
         {
-            if (ListBoxPlayList.SelectedIndex != -1 &&
-                ListBoxPlayList.SelectedIndex != HyPlayList.ShuffleList[ListBoxPlayList.SelectedIndex] &&
+            if (ListBoxPlayList.SelectedItem != null && ListBoxPlayList.SelectedItem != HyPlayList.NowPlayingItem &&
                 realSelectSong)
             {
-                HyPlayList.SongMoveTo(HyPlayList.ShuffleList[ListBoxPlayList.SelectedIndex]);
+                HyPlayList.SongMoveTo(ListBoxPlayList.SelectedItem as HyPlayItem);
                 HyPlayList.ShufflingIndex = ListBoxPlayList.SelectedIndex;
             }
         }
         else
         {
-            if (ListBoxPlayList.SelectedIndex != -1 && ListBoxPlayList.SelectedIndex != HyPlayList.NowPlaying &&
+            if (ListBoxPlayList.SelectedItem != null && ListBoxPlayList.SelectedItem != HyPlayList.NowPlayingItem &&
                 realSelectSong)
-                HyPlayList.SongMoveTo(ListBoxPlayList.SelectedIndex);
+                HyPlayList.SongMoveTo(ListBoxPlayList.SelectedItem as HyPlayItem);
         }
     }
 
@@ -515,6 +514,7 @@ DoubleAnimation verticalAnimation;
                     NowPlayType = PlayMode.Shuffled;
                     IconPlayType.Glyph = "\uE14B";
                     FlyoutPlayRollType.Text = "随机播放";
+                    RefreshSongList();
                     break;
                 case PlayMode.Shuffled:
                     //变成单曲
@@ -529,6 +529,7 @@ DoubleAnimation verticalAnimation;
                     NowPlayType = PlayMode.DefaultRoll;
                     IconPlayType.Glyph = "\uE169";
                     FlyoutPlayRollType.Text = "顺序播放";
+                    RefreshSongList();
                     break;
             }
 

@@ -225,7 +225,7 @@ public sealed partial class SongsList : UserControl
     {
         var ncsong = VisibleSongs[int.Parse((sender as Button).Tag.ToString())];
         _ = HyPlayList.AppendNcSong(ncsong);
-        HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem.Id == ncsong.sid));
+        HyPlayList.SongMoveTo(HyPlayList.List.Find(t => t.PlayItem.Id == ncsong.sid));
         if (ListSource.Substring(0, 2) == "pl" ||
             ListSource.Substring(0, 2) == "al")
             HyPlayList.PlaySourceId = ListSource.Substring(2);
@@ -249,9 +249,9 @@ public sealed partial class SongsList : UserControl
             _ = HyPlayList.AppendNcSong(ncsong);
         if (SongContainer.SelectedItem != null)
         {
-            var targetPlayItemIndex =
-                HyPlayList.List.FindIndex(t => t.PlayItem.Id == (SongContainer.SelectedItem as NCSong).sid);
-            HyPlayList.SongMoveTo(targetPlayItemIndex);
+            var targetPlayItem =
+                HyPlayList.List.Find(t => t.PlayItem.Id == (SongContainer.SelectedItem as NCSong).sid);
+            HyPlayList.SongMoveTo(targetPlayItem);
         }
     }
 
@@ -459,7 +459,7 @@ public sealed partial class SongsList : UserControl
 
         if (!shiftSong)
         {
-            HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem?.Id == ncSong.sid));
+            HyPlayList.SongMoveTo(HyPlayList.List.Find(t => t.PlayItem?.Id == ncSong.sid));
         }
         else
         {

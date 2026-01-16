@@ -160,8 +160,8 @@ public sealed partial class GroupedSongsList : UserControl
             _ = HyPlayList.AppendNcSong(ncsong);
         if (SongContainer.SelectedItem != null)
         {
-            var targetPlayItemIndex = HyPlayList.List.FindIndex(t => t.PlayItem.Id == (SongContainer.SelectedItem as NCSong).sid);
-            HyPlayList.SongMoveTo(targetPlayItemIndex);
+            var targetPlayItem = HyPlayList.List.Find(t => t.PlayItem.Id == (SongContainer.SelectedItem as NCSong).sid);
+            HyPlayList.SongMoveTo(targetPlayItem);
         }
     }
 
@@ -282,7 +282,7 @@ public sealed partial class GroupedSongsList : UserControl
             ListSource.Substring(0, 2) == "al")
             HyPlayList.PlaySourceId = ListSource.Substring(2);
         if (!shiftSong)
-            HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => t.PlayItem?.Id == (e.ClickedItem as NCSong).sid));
+            HyPlayList.SongMoveTo(HyPlayList.List.Find(t => t.PlayItem?.Id == (e.ClickedItem as NCSong).sid));
         else
             HyPlayList.NowPlaying =
                 HyPlayList.List.FindIndex(song => song.PlayItem.Id == ((e.ClickedItem as NCSong).sid));

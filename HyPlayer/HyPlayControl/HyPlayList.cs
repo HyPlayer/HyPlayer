@@ -91,7 +91,7 @@ public static class HyPlayList
 
     public delegate void SongCoverChanged(HyPlayItem playItem);
 
-    public static int NowPlaying;
+    public static int NowPlaying = -1;
     private static readonly Timer SecTimer = new(1000); // 公用秒表
     public static readonly List<HyPlayItem> List = new();
     public static readonly List<int> ShuffleList = new();
@@ -114,7 +114,6 @@ public static class HyPlayList
     public static RandomAccessStreamReference? CoverStreamReference;
 #nullable restore
 
-    private static SemaphoreSlim _loaderSemaphoreSlim = new SemaphoreSlim(1, 1);
     private static SemaphoreSlim _seekerSemaphoreSlim = new SemaphoreSlim(1, 1);
     private static readonly IProgress<DownloadOperation> DefaultProgressCallback = new Progress<DownloadOperation>(ProgressCallback);
 
@@ -414,7 +413,7 @@ public static class HyPlayList
         SongAppendDone();
         if (List.Count > 0)
         {
-            SongMoveTo(List.Count - 1);
+            SongMoveTo(List.LastOrDefault());
         }
     }
 
@@ -529,14 +528,19 @@ public static class HyPlayList
         }
     }
 
-    public static void SongMoveTo(int index)
+    public static void SongMoveTo(HyPlayItem item)
     {
-        if (List.Count <= index) return;
-        OnSongMoveNext?.Invoke();
-        NowPlaying = index;
+        if (!List.Contains(item)) return;
+        var index = List.IndexOf(item);
         if (NowPlayType == PlayMode.Shuffled && Common.Setting.shuffleNoRepeating)
             ShufflingIndex = ShuffleList.IndexOf(index);
-        _ = LoadMediaSource(List[NowPlaying], true);
+        var currentPlayItem = NowPlayingItem;
+        NowPlaying = index;
+        if (currentPlayItem != item)
+        {
+            _ = LoadMediaSource(item, true);
+            OnSongMoveNext?.Invoke();
+        }
     }
 
     public static void RemoveSong(int index)
@@ -897,10 +901,6 @@ public static class HyPlayList
         _mediaSourceCancellationTokenSource.Cancel();
         _mediaSourceCancellationTokenSource = new CancellationTokenSource();
         var ctk = _mediaSourceCancellationTokenSource.Token;
-        var overdue = !await _loaderSemaphoreSlim.WaitAsync(-1, ctk);
-        if (overdue) return;
-
-
         try
         {
             // 使用 Polly 重试策略优化核心逻辑
@@ -913,7 +913,7 @@ public static class HyPlayList
                     return;
                 }
 
-                if (Player.PrimaryPlaybackSource != null && (!Common.Setting.CrossFade || (Common.Setting.CrossFade && !FadeManager.FadeProcessing)))
+                if (Player.PrimaryPlaybackSource != null && !Common.Setting.CrossFade && !FadeManager.FadeProcessing)
                 {
                     var primaryPlaybackSource = Player.PrimaryPlaybackSource as AudioGraphPlaybackSource;
                     Player.PausePlaybackSource(primaryPlaybackSource);
@@ -950,10 +950,6 @@ public static class HyPlayList
         catch (Exception e)
         {
             PlayerOnMediaFailed(e.Message);
-        }
-        finally
-        {
-            if (!overdue) _loaderSemaphoreSlim.Release();
         }
     }
 

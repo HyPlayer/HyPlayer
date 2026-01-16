@@ -258,7 +258,7 @@ public sealed partial class ArtistPage : Page
         try
         {
             HyPlayList.AppendNcSongs(hotSongs);
-            HyPlayList.SongMoveTo(0);
+            HyPlayList.SongMoveTo(HyPlayList.List.FirstOrDefault());
         }
         catch (Exception ex)
         {

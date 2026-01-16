@@ -50,7 +50,7 @@ public static class Mapper
             TrackId = song.TrackNumber,
             transname = song.Translations is not null ? string.Join(",", song.Translations) : null,
             IsAvailable = true,
-            Type = HyPlayItemType.Netease,
+            Type = HyPlayItemType.Netease
         };
     }
 

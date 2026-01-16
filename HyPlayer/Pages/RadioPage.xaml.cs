@@ -7,6 +7,7 @@ using HyPlayer.NeteaseApi.ApiContracts.DjChannel;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
@@ -191,7 +192,7 @@ public sealed partial class RadioPage : Page
         {
             await HyPlayList.AppendNcSource("rd" + Radio.id);
             if (asc) HyPlayList.List.Reverse();
-            HyPlayList.SongMoveTo(0);
+            HyPlayList.SongMoveTo(HyPlayList.List.FirstOrDefault());
         }
         catch (Exception ex)
         {

@@ -214,6 +214,7 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                 };
                 file.Tag.Pictures[0].MimeType = "image/jpeg";
                 file.Tag.Pictures[0].Description = "cover.jpg";
+                file.Save();
             }
             catch (Exception ex)
             {
@@ -227,7 +228,6 @@ internal sealed class DownloadObject : INotifyPropertyChanged
                 });
                 Common.ErrorMessageList.Add("写入音乐信息时出现错误" + ex.Message);
                 Common.AddToTeachingTipLists("写入信息错误: " + ex.Message, (ex.InnerException ?? new Exception()).Message);
-                file.Save();
             }
         });
     }

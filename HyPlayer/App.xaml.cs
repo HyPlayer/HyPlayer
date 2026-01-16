@@ -336,7 +336,7 @@ public sealed partial class App : Application
             }
 
             HyPlayList.PlaySourceId = "local";
-            HyPlayList.SongMoveTo(0);
+            HyPlayList.SongMoveTo(HyPlayList.List.FirstOrDefault());
         }
 
 

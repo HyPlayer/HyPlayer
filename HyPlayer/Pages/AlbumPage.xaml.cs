@@ -193,7 +193,7 @@ public sealed partial class AlbumPage : Page
             HyPlayList.RemoveAllSong();
             await HyPlayList.AppendNcSource("al" + Album.id);
             HyPlayList.PlaySourceId = "al" + Album.id;
-            HyPlayList.SongMoveTo(0);
+            HyPlayList.SongMoveTo(HyPlayList.List.FirstOrDefault());
         }
         catch (Exception ex)
         {

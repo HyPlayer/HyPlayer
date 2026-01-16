@@ -5,6 +5,7 @@ using HyPlayer.NeteaseApi.ApiContracts;
 using HyPlayer.NeteaseApi.ApiContracts.Playlist;
 using HyPlayer.NeteaseApi.ApiContracts.Song;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -64,7 +65,7 @@ internal class Api
             try
             {
                 HyPlayList.SongAppendDone();
-                HyPlayList.SongMoveTo(0);
+                HyPlayList.SongMoveTo(HyPlayList.List.FirstOrDefault());
             }
             catch (Exception ex)
             {

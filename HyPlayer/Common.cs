@@ -259,7 +259,7 @@ namespace HyPlayer
                     break;
                 case "ns":
                     await HyPlayList.AppendNcSource(resourceId);
-                    HyPlayList.SongMoveTo(HyPlayList.List.FindIndex(t => "ns" + t.PlayItem.Id == resourceId));
+                    HyPlayList.SongMoveTo(HyPlayList.List.Find(t => "ns" + t.PlayItem.Id == resourceId));
                     break;
                 case "ml":
                     NavigatePage(typeof(MVPage), resourceId.Substring(2));

@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -80,7 +81,7 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
     {
         HyPlayList.RemoveAllSong();
         HyPlayList.List.AddRange(localHyItems);
-        HyPlayList.SongMoveTo(0);
+        HyPlayList.SongMoveTo(HyPlayList.List.FirstOrDefault());
     }
 
     private void Refresh_Click(object sender, RoutedEventArgs e)
@@ -171,10 +172,10 @@ public sealed partial class LocalMusicPage : Page, INotifyPropertyChanged
 
     private void ListBoxLocalMusicContainer_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (ListBoxLocalMusicContainer.SelectedIndex == -1) return;
+        if (ListBoxLocalMusicContainer.SelectedItem == null) return;
         HyPlayList.RemoveAllSong();
         HyPlayList.List.AddRange(localHyItems);
-        HyPlayList.SongMoveTo(ListBoxLocalMusicContainer.SelectedIndex);
+        HyPlayList.SongMoveTo(ListBoxLocalMusicContainer.SelectedItem as HyPlayItem);
     }
 
     private async void UploadCloud_Click(object sender, RoutedEventArgs e)
