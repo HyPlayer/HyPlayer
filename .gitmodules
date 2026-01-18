@@ -14,6 +14,3 @@
 [submodule "HyPlayer.NeteaseProvider"]
 	path = HyPlayer.NeteaseProvider
 	url = https://github.com/HyPlayer/HyPlayer.NeteaseProvider
-[submodule "LiteFM"]
-	path = LiteFM
-	url = https://github.com/Storyteller-Studios/LiteFM
