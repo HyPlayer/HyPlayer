@@ -338,7 +338,6 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
             ThrowExceptionIfDisposed();
             var node = GetAudioInputNodeOrThrow(playbackSource);
             var source = playbackSource as AudioGraphPlaybackSource;
-
             // 确保不超过音频源时长
             if (source?.PlaybackSource?.Duration != null)
             {
@@ -529,8 +528,8 @@ namespace HyPlayer.UWP.Chopin.Abstractions.Models
                 Position = position.Value,
                 StartTime = TimeSpan.Zero,
                 MinSeekTime = TimeSpan.Zero,
-                EndTime = track.EndTime ?? TimeSpan.Zero,
-                MaxSeekTime = track.EndTime ?? TimeSpan.Zero
+                EndTime = track.Duration,
+                MaxSeekTime = track.Duration
             };
             SMTCManager?.OnPositionChange(positionProperties);
         }

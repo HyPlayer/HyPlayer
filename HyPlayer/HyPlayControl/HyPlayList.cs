@@ -100,6 +100,7 @@ public static class HyPlayList
     public static TimeSpan LyricOffset = TimeSpan.Zero;
     public static PropertySet AudioEffectsProperties = new PropertySet();
     private static CancellationTokenSource _mediaSourceCancellationTokenSource = new();
+    private static SemaphoreSlim SeekerLock = new SemaphoreSlim(1);
 
     /********        API        ********/
     public static AudioGraphPlayer Player = Locator.Instance.GetService<AudioGraphPlayer>();
@@ -114,7 +115,6 @@ public static class HyPlayList
     public static RandomAccessStreamReference? CoverStreamReference;
 #nullable restore
 
-    private static SemaphoreSlim _seekerSemaphoreSlim = new SemaphoreSlim(1, 1);
     private static readonly IProgress<DownloadOperation> DefaultProgressCallback = new Progress<DownloadOperation>(ProgressCallback);
 
     // 常量定义
@@ -222,6 +222,7 @@ public static class HyPlayList
                 });
             }
             MediaSystemControls = SystemMediaTransportControls.GetForCurrentView();
+            MediaSystemControls.PlaybackPositionChangeRequested += MediaSystemControls_PlaybackPositionChangeRequested;
             Player.SMTCManager = new SMTCManager(MediaSystemControls);
             _controlsDisplayUpdater = MediaSystemControls.DisplayUpdater;
             MediaSystemControls.IsPlayEnabled = true;
@@ -253,19 +254,19 @@ public static class HyPlayList
         }
     }
 
-    public static async void Seek(TimeSpan targetTimeSpan)
+    public async static void Seek(TimeSpan targetTimeSpan)
     {
-        var overdue = !await _seekerSemaphoreSlim.WaitAsync(0);
         try
         {
-            if (overdue || Player.PrimaryPlaybackSource is null) return;
+            await SeekerLock.WaitAsync();
+            if (Player.PrimaryPlaybackSource is null) return;
             Player.SeekPlaybackSource(targetTimeSpan, Player.PrimaryPlaybackSource);
             OnManualSeek?.Invoke(targetTimeSpan);
-            await Task.Delay(250);
+            await Task.Delay(500);
         }
         finally
         {
-            if (!overdue) _seekerSemaphoreSlim.Release();
+            SeekerLock.Release();
         }
     }
 
