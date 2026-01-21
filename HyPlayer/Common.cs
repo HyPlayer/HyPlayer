@@ -1,6 +1,7 @@
 ﻿#region
 
 #nullable enable
+using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Classes;
 using HyPlayer.Controls;
 using HyPlayer.HyPlayControl;
@@ -69,7 +70,6 @@ namespace HyPlayer
         public static Frame? BaseFrame;
         public static BasePage? PageBase;
         public static KawazuConverter? KawazuConv;
-        public static HttpClientHandler? HttpClientHandler;
         public static HttpClient? HttpClient;
         public static NeteaseCloudMusicApiHandler? NeteaseAPI;
         public static LastFMClient? LastFMClient;
@@ -91,12 +91,9 @@ namespace HyPlayer
 
         public static void InitializeHttpClientAndAPI()
         {
-            HttpClientHandler = NeteaseCloudMusicApiHandler.HttpClientHandler;
-            HttpClientHandler.UseProxy = Setting.EnableProxy;
-
-            HttpClient = new HttpClient(HttpClientHandler);
-            NeteaseAPI = Locator.Instance.GetService<NeteaseCloudMusicApiHandler>();
-            LastFMClient = Locator.Instance.GetService<LastFMClient>();
+            HttpClient = Ioc.Default.GetService<HttpClient>();
+            NeteaseAPI = Ioc.Default.GetService<NeteaseCloudMusicApiHandler>();
+            LastFMClient = Ioc.Default.GetService<LastFMClient>();
             NeteaseAPI.Option.AdditionalParameters = Setting.ApiAdditionalParameters;
             NeteaseAPI.Option.FakeCheckToken = Setting.EnableCheckTokenApi;
         }

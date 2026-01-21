@@ -1,15 +1,24 @@
 ﻿#region
 
+using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Classes;
+using HyPlayer.Contracts.Services;
 using HyPlayer.HyPlayControl;
+using HyPlayer.NeteaseApi;
 using HyPlayer.Pages;
+using HyPlayer.Services;
+using HyPlayer.UWP.Chopin.Abstractions.Models;
+using HyPlayer.ViewModels;
 using Kawazu;
+using LiteFM;
+using LiteFM.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Gaming.XboxGameBar;
-
 //using Microsoft.Gaming.XboxGameBar;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
@@ -52,6 +61,7 @@ public sealed partial class App : Application
             RequiresPointerMode = ApplicationRequiresPointerMode.WhenRequested;
             FocusVisualKind = FocusVisualKind.Reveal;
         }
+        InitializeServices();
         Common.InitializeHttpClientAndAPI();
         Suspending += OnSuspending;
         MemoryManager.AppMemoryUsageIncreased += MemoryManagerOnAppMemoryUsageIncreased;
@@ -60,12 +70,27 @@ public sealed partial class App : Application
         EnteredBackground += App_EnteredBackground;
         LeavingBackground += App_LeavingBackground;
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-        var deviceInfo = new EasClientDeviceInformation();
         if (Common.Setting.themeRequest != 0)
             RequestedTheme = Common.Setting.themeRequest == 1 ? ApplicationTheme.Light : ApplicationTheme.Dark;
         _ = InitializeThings();
     }
 
+    private void InitializeServices()
+    {
+        var serviceCollection = new ServiceCollection();
+        var handler = NeteaseCloudMusicApiHandler.HttpClientHandler;
+        handler.UseProxy = Common.Setting.EnableProxy;
+        var client = new HttpClient(handler);
+        serviceCollection.AddSingleton(client);
+        serviceCollection.AddSingleton(new NeteaseCloudMusicApiHandler(client));
+        serviceCollection.AddSingleton(new LastFMClient(new LastFMOptions() { ApiKey = "641ef15109503085d966e37b73bdcb72", ApiSecret = "35c02c12c9c0fdc6f6c1de5d0a9227b5" }, Common.HttpClient));
+        serviceCollection.AddSingleton<AudioGraphPlayer>();
+        serviceCollection.AddSingleton<INeteaseProviderService, NeteaseProviderService>();
+
+        serviceCollection.AddTransient<HomeViewModel>();
+        var provider = serviceCollection.BuildServiceProvider();
+        Ioc.Default.ConfigureServices(provider);
+    }
 
     private void MemoryManagerOnAppMemoryUsageLimitChanging(object sender, AppMemoryUsageLimitChangingEventArgs e)
     {
@@ -116,7 +141,6 @@ public sealed partial class App : Application
         Common.IsInBackground = false;
 
         if (!Common.Setting.forceMemoryGarbage) return;
-        _ = InitializeThings();
         Common.NavigateBack();
 
         //ClearExtendedExecution(executionSession);

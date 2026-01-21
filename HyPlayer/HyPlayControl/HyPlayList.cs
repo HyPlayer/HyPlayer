@@ -2,6 +2,7 @@
 
 using ALRC.Converters;
 using ALRC.Converters.Enhancers;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using HyPlayer.Classes;
 using HyPlayer.Classes.LyricParser.Abstraction;
 using HyPlayer.Classes.LyricParser.Implementation;
@@ -103,7 +104,7 @@ public static class HyPlayList
     private static SemaphoreSlim SeekerLock = new SemaphoreSlim(1);
 
     /********        API        ********/
-    public static AudioGraphPlayer Player = Locator.Instance.GetService<AudioGraphPlayer>();
+    public static AudioGraphPlayer Player = Ioc.Default.GetService<AudioGraphPlayer>();
     public static FadeManager FadeManager = new FadeManager(Player);
     public static BackgroundDownloader Downloader = new();
     public static SystemMediaTransportControls MediaSystemControls;

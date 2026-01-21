@@ -1,4 +1,5 @@
-﻿using HyPlayer.Contracts.ViewModels;
+﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using HyPlayer.Contracts.ViewModels;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
@@ -20,7 +21,7 @@ namespace HyPlayer.Pages
 
         protected AppPageBase()
         {
-            ViewModel = Locator.Instance.GetService<TViewModel>();
+            ViewModel = Ioc.Default.GetService<TViewModel>();
             DataContext = ViewModel;
         }
     }
