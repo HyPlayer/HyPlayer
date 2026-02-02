@@ -665,7 +665,7 @@
       <Version>8.2.250402</Version>
     </PackageReference>
     <PackageReference Include="F23.StringSimilarity">
-      <Version>6.0.0</Version>
+      <Version>7.0.1</Version>
     </PackageReference>
     <PackageReference Include="HyPlayer.PlayCore.Abstraction">
       <Version>0.1.4</Version>
