@@ -644,7 +644,7 @@
       <Version>8.2.250402</Version>
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Uwp.Behaviors">
-      <Version>8.2.250402</Version>
+      <Version>8.2.251219</Version>
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Uwp.Controls.ColorPicker">
       <Version>8.2.250402</Version>
