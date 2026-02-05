@@ -81,8 +81,7 @@ public sealed partial class App : Application
         serviceCollection.AddSingleton(new LastFMClient(new LastFMOptions() { ApiKey = "641ef15109503085d966e37b73bdcb72", ApiSecret = "35c02c12c9c0fdc6f6c1de5d0a9227b5" }, Common.HttpClient));
         serviceCollection.AddSingleton<AudioGraphPlayer>();
         serviceCollection.AddTransient<HomeViewModel>();
-
-        serviceCollection.AddTransient<HomeViewModel>();
+        serviceCollection.AddTransient<MeViewModel>();
         var provider = serviceCollection.BuildServiceProvider();
         Ioc.Default.ConfigureServices(provider);
     }

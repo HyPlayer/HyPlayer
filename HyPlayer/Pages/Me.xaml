@@ -174,7 +174,11 @@
                             x:Load="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}"
                             Visibility="{x:Bind hyplayer:Common.Setting.listHeaderAcrylicBlur}">
                             <Border.Background>
-                                <ImageBrush ImageSource="{x:Bind userDisplay.AvatarSource}" Stretch="UniformToFill" />
+                                <ImageBrush Stretch="UniformToFill" >
+                                    <ImageBrush.ImageSource>
+                                        <BitmapImage UriSource="{x:Bind ViewModel.User.Avatar, Mode=OneWay}"/>
+                                    </ImageBrush.ImageSource>
+                                </ImageBrush>
                             </Border.Background>
                         </Border>
                         <Border
@@ -186,7 +190,11 @@
 
                     <Border x:Name="RectangleImageFallback" Visibility="{x:Bind hyplayer:Common.Setting.acrylicAvailabiliity, Converter={StaticResource BoolToVisibilityInverseConverter}}">
                         <Border.Background>
-                            <ImageBrush ImageSource="{x:Bind userDisplay.AvatarSource}" Stretch="UniformToFill" />
+                            <ImageBrush Stretch="UniformToFill" >
+                                <ImageBrush.ImageSource>
+                                    <BitmapImage UriSource="{x:Bind ViewModel.User.Avatar, Mode=OneWay}"/>
+                                </ImageBrush.ImageSource>
+                            </ImageBrush>
                         </Border.Background>
                     </Border>
 
@@ -203,7 +211,7 @@
                             Height="120"
                             Margin="20"
                             controls:DockPanel.Dock="Left"
-                            ProfilePicture="{x:Bind userDisplay.AvatarSource}">
+                            ProfilePicture="{x:Bind ViewModel.User.Avatar, Mode=OneWay}">
                             <ui:Effects.Shadow>
                                 <media:AttachedCardShadow
                                     CornerRadius="60"
@@ -221,13 +229,13 @@
                                 FontWeight="Bold"
                                 IsTextSelectionEnabled="True"
                                 Style="{StaticResource TitleTextBlockStyle}"
-                                Text="{x:Bind userDisplay.UserName}"
+                                Text="{x:Bind ViewModel.User.Name, Mode=OneWay}"
                                 TextWrapping="NoWrap" />
                             <controls1:SelectableTextBox
                                 x:Name="TextBoxSignature"
                                 FontSize="16"
                                 Foreground="{ThemeResource ApplicationForegroundThemeBrush}"
-                                Text="{x:Bind userDisplay.Signature}" />
+                                Text="{x:Bind ViewModel.User.Signature, Mode=OneWay}" />
                             <Button
                                 x:Name="ButtonLogout"
                                 VerticalAlignment="Bottom"
@@ -294,7 +302,7 @@
                             x:Name="MySongListBox"
                             Margin="0,60,0,0"
                             ItemTemplate="{StaticResource ListItemTemplate}"
-                            ItemsSource="{x:Bind myPlayList}">
+                            ItemsSource="{x:Bind ViewModel.MyPlaylist, Mode=OneWay}">
                             <muxc:ItemsRepeater.Layout>
                                 <muxc:StackLayout Orientation="Vertical" />
                             </muxc:ItemsRepeater.Layout>
@@ -326,7 +334,7 @@
                             Margin="0,60,10,0"
                             HorizontalAlignment="Stretch"
                             ItemTemplate="{StaticResource ListItemTemplate}"
-                            ItemsSource="{x:Bind likedPlayList}">
+                            ItemsSource="{x:Bind ViewModel.LikedPlaylist, Mode=OneWay}">
                             <muxc:ItemsRepeater.Layout>
                                 <muxc:StackLayout Orientation="Vertical" />
                             </muxc:ItemsRepeater.Layout>
